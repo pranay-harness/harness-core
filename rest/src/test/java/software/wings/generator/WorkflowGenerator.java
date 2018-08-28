@@ -1,14 +1,20 @@
 package software.wings.generator;
 
 import static io.harness.govern.Switch.unhandled;
+import static java.util.Arrays.asList;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
+import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
+import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -21,13 +27,16 @@ import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.generator.OwnerManager.Owners;
+import software.wings.generator.ResourceConstraintGenerator.ResourceConstraints;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 
 @Singleton
 public class WorkflowGenerator {
@@ -36,8 +45,9 @@ public class WorkflowGenerator {
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
 
-  public enum Workflows { BASIC_SIMPLE, BASIC_10_NODES }
+  public enum Workflows { BASIC_SIMPLE, BASIC_10_NODES, RESOURCE_CONSTRAINT }
 
   public Workflow ensurePredefined(Randomizer.Seed seed, Owners owners, Workflows predefined) {
     switch (predefined) {
@@ -45,6 +55,8 @@ public class WorkflowGenerator {
         return ensureBasicSimple(seed, owners);
       case BASIC_10_NODES:
         return ensureBasic10Nodes(seed, owners);
+      case RESOURCE_CONSTRAINT:
+        return ensureResourceConstraint(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -87,6 +99,38 @@ public class WorkflowGenerator {
 
     workflow = postProcess(workflow, PostProcessInfo.builder().selectNodeCount(10).build());
     return workflow;
+  }
+
+  private Workflow ensureResourceConstraint(Randomizer.Seed seed, Owners owners) {
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+
+    final ResourceConstraint asapResourceConstraint =
+        resourceConstraintGenerator.ensurePredefined(seed, owners, ResourceConstraints.GENERIC_ASAP_TEST);
+
+    return ensureWorkflow(seed, owners,
+        aWorkflow()
+            .withName("Resource constraint")
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withInfraMappingId(infrastructureMapping.getUuid())
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withWorkflowPhases(asList(
+                        aWorkflowPhase()
+                            .withInfraMappingId(infrastructureMapping.getUuid())
+                            .withPhaseSteps(asList(
+                                aPhaseStep(DEPLOY_SERVICE, Constants.DEPLOY_SERVICE)
+                                    .addStep(aGraphNode()
+                                                 .withType(RESOURCE_CONSTRAINT.name())
+                                                 .withName(asapResourceConstraint.getName())
+                                                 .addProperty("resourceConstraintId", asapResourceConstraint.getUuid())
+                                                 .addProperty("permits", 5)
+                                                 .addProperty("holdingScope", HoldingScope.WORKFLOW.name())
+                                                 .build())
+                                    .build()))
+                            .build()))
+                    .build())
+            .build());
   }
 
   public Workflow ensureWorkflow(Randomizer.Seed seed, OwnerManager.Owners owners, Workflow workflow) {

@@ -1,8 +1,8 @@
 package io.harness.distribution.constraint;
 
+import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
-import static io.harness.distribution.constraint.Consumer.State.RUNNING;
 import static java.util.Collections.synchronizedMap;
 
 import io.harness.distribution.constraint.Constraint.Spec;
@@ -40,7 +40,7 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
   }
 
   @Override
-  public boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning)
+  public boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning, Map<String, Object> context)
       throws UnableToRegisterConsumerException {
     synchronized (consumers) {
       List<Consumer> constraintConsumers = consumers.computeIfAbsent(id, key -> new ArrayList<>());
@@ -54,17 +54,21 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
   }
 
   @Override
-  public boolean consumerFinished(ConstraintId id, ConsumerId consumerId) {
-    return consumerStateChange(id, consumerId, FINISHED, RUNNING, null);
+  public boolean adjustRegisterConsumerContext(ConstraintId id, Map<String, Object> context) {
+    return false;
   }
 
   @Override
-  public boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, ExtraCheck extraCheck) {
-    return consumerStateChange(id, consumerId, RUNNING, BLOCKED, extraCheck);
+  public boolean consumerFinished(ConstraintId id, ConsumerId consumerId, Map<String, Object> context) {
+    return consumerStateChange(id, consumerId, FINISHED, ACTIVE);
   }
 
-  private boolean consumerStateChange(
-      ConstraintId id, ConsumerId consumerId, State newState, State expected, ExtraCheck extraCheck) {
+  @Override
+  public boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, Map<String, Object> context) {
+    return consumerStateChange(id, consumerId, ACTIVE, BLOCKED);
+  }
+
+  private boolean consumerStateChange(ConstraintId id, ConsumerId consumerId, State newState, State expected) {
     synchronized (consumers) {
       final List<Consumer> constraintConsumers = this.consumers.get(id);
 
@@ -73,9 +77,6 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
         Consumer consumer = iterator.next();
         if (consumer.getId().equals(consumerId)) {
           if (consumer.getState() != expected) {
-            return false;
-          }
-          if (extraCheck != null && !extraCheck.check(constraintConsumers, consumer)) {
             return false;
           }
           iterator.set(Consumer.builder().state(newState).id(consumer.getId()).permits(consumer.getPermits()).build());

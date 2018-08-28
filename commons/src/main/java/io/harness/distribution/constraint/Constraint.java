@@ -2,8 +2,8 @@ package io.harness.distribution.constraint;
 
 import static io.harness.distribution.constraint.Constraint.Strategy.ASAP;
 import static io.harness.distribution.constraint.Constraint.Strategy.FIFO;
+import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
-import static io.harness.distribution.constraint.Consumer.State.RUNNING;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 
@@ -16,6 +16,7 @@ import lombok.Value;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 /*
@@ -41,7 +42,6 @@ import java.util.Random;
 @Value
 @Builder
 public class Constraint {
-  private static final int OPTIMISTIC_RETRIES = 10;
   private static final int DELAY_FOR_OPTIMISTIC_RETRIES = 10;
 
   private ConstraintId id;
@@ -72,7 +72,7 @@ public class Constraint {
   }
 
   public static int getUsedPermits(List<Consumer> consumers) {
-    return consumers.stream().filter(item -> item.getState().equals(RUNNING)).mapToInt(item -> item.getPermits()).sum();
+    return consumers.stream().filter(item -> item.getState().equals(ACTIVE)).mapToInt(item -> item.getPermits()).sum();
   }
 
   private boolean enoughPermits(int permits, int usedPermits) {
@@ -83,8 +83,8 @@ public class Constraint {
     return consumers.stream().noneMatch(item -> item.getState().equals(BLOCKED));
   }
 
-  public State registerConsumer(ConsumerId consumerId, int permits, ConstraintRegistry registry)
-      throws InvalidPermitsException, UnableToRegisterConsumerException {
+  public State registerConsumer(ConsumerId consumerId, int permits, Map<String, Object> context,
+      ConstraintRegistry registry) throws InvalidPermitsException, UnableToRegisterConsumerException {
     if (permits <= 0) {
       throw new InvalidPermitsException("The permits should be positive number.");
     }
@@ -94,7 +94,7 @@ public class Constraint {
     }
 
     final Random random = new Random();
-    for (int i = 0; i < OPTIMISTIC_RETRIES; ++i) {
+    do {
       List<Consumer> consumers = registry.loadConsumers(id);
       final int usedPermits = getUsedPermits(consumers);
 
@@ -103,38 +103,35 @@ public class Constraint {
       final Strategy strategy = getSpec().getStrategy();
       switch (strategy) {
         case FIFO:
-          state = nonBlocked(consumers) && enoughPermits(permits, usedPermits) ? RUNNING : BLOCKED;
+          state = nonBlocked(consumers) && enoughPermits(permits, usedPermits) ? ACTIVE : BLOCKED;
           break;
         case ASAP:
-          state = enoughPermits(permits, usedPermits) ? RUNNING : BLOCKED;
+          state = enoughPermits(permits, usedPermits) ? ACTIVE : BLOCKED;
           break;
         default:
           unhandled(strategy);
       }
 
       if (registry.registerConsumer(
-              id, Consumer.builder().id(consumerId).permits(permits).state(state).build(), usedPermits)) {
+              id, Consumer.builder().id(consumerId).permits(permits).state(state).build(), usedPermits, context)) {
         return state;
       }
 
       Morpheus.quietSleep(Duration.ofMillis(random.nextInt(DELAY_FOR_OPTIMISTIC_RETRIES)));
-    }
+    } while (registry.adjustRegisterConsumerContext(id, context));
 
-    throw new RuntimeException("Unable to update the constraint after 10 attempts.");
+    throw new RuntimeException("Unable to register the constraint.");
   }
 
-  boolean consumerUnblocked(ConsumerId consumerId, int currentlyRunning, ConstraintRegistry registry) {
-    return registry.consumerUnblocked(id, consumerId,
-        (constraintConsumers, consumer)
-            -> enoughPermits(consumer.getPermits(), currentlyRunning)
-            && Constraint.getUsedPermits(constraintConsumers) == currentlyRunning);
+  public boolean consumerUnblocked(ConsumerId consumerId, Map<String, Object> context, ConstraintRegistry registry) {
+    return registry.consumerUnblocked(id, consumerId, context);
   }
 
   boolean consumerFinished(ConsumerId consumerId, ConstraintRegistry registry) {
-    return registry.consumerFinished(id, consumerId);
+    return registry.consumerFinished(id, consumerId, null);
   }
 
-  RunnableConsumers runnableConsumers(ConstraintRegistry registry) {
+  public RunnableConsumers runnableConsumers(ConstraintRegistry registry) {
     final List<Consumer> consumers = registry.loadConsumers(id);
     int usedPermits = getUsedPermits(consumers);
 

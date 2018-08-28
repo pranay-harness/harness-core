@@ -29,6 +29,7 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.BarrierService;
+import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -38,6 +39,8 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
+
+import java.util.Set;
 
 /**
  * The Class WorkflowExecutionUpdate.
@@ -57,6 +60,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   @Inject private Queue<ExecutionEvent> executionEventQueue;
   @Inject private AlertService alertService;
   @Inject private TriggerService triggerService;
+  @Inject private ResourceConstraintService resourceConstraintService;
   @Inject private BarrierService barrierService;
   @Inject private StateExecutionService stateExecutionService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
@@ -119,14 +123,6 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
    */
   @Override
   public void callback(ExecutionContext context, ExecutionStatus status, Exception ex) {
-    // TODO: this is temporary. this should be part of its own callback and with more precise filter
-    try {
-      barrierService.updateAllActiveBarriers(context.getAppId());
-    } catch (RuntimeException exception) {
-      // Do not block the execution for possible exception in the barrier update
-      logger.error("Something wrong with barrier update", exception);
-    }
-
     Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
                                          .filter("appId", appId)
                                          .filter(ID_KEY, workflowExecutionId)
@@ -165,6 +161,26 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
   }
 
   protected void handlePostExecution(ExecutionContext context) {
+    // TODO: this is temporary. this should be part of its own callback and with more precise filter
+    try {
+      barrierService.updateAllActiveBarriers(context.getAppId());
+    } catch (RuntimeException exception) {
+      // Do not block the execution for possible exception in the barrier update
+      logger.error("Something wrong with barrier update", exception);
+    }
+
+    // TODO: this is temporary. this should be part of its own callback and with more precise filter
+    try {
+      final Set<String> constraintIds =
+          resourceConstraintService.updateActiveConstraints(context.getAppId(), workflowExecutionId);
+
+      resourceConstraintService.updateBlockedConstraints(constraintIds);
+
+    } catch (RuntimeException exception) {
+      // Do not block the execution for possible exception in the barrier update
+      logger.error("Something wrong with resource constraints update", exception);
+    }
+
     try {
       WorkflowExecution workflowExecution =
           workflowExecutionService.getExecutionDetails(appId, workflowExecutionId, true, emptySet());

@@ -25,7 +25,6 @@ import lombok.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BarrierInstance;
-import software.wings.beans.BarrierInstance.Pipeline;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -87,7 +86,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
     }
 
     // First lets try to fill up all the missing data that is available already
-    final Pipeline pipeline = barrierInstance.getPipeline();
+    final BarrierInstance.Pipeline pipeline = barrierInstance.getPipeline();
     for (int index = 0; index < pipeline.getWorkflows().size(); ++index) {
       BarrierInstance.Workflow workflow = pipeline.getWorkflows().get(index);
       if (workflow.getPipelineStateExecutionId() == null) {
@@ -193,7 +192,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
   }
 
   private Forcer buildForcer(BarrierInstance barrierInstance) {
-    final Pipeline pipeline = barrierInstance.getPipeline();
+    final BarrierInstance.Pipeline pipeline = barrierInstance.getPipeline();
     final String appId = barrierInstance.getAppId();
     return Forcer.builder()
         .id(new ForcerId(pipeline.getExecutionId()))

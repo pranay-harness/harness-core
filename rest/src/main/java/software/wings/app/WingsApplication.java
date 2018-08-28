@@ -68,6 +68,7 @@ import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.PersistentLockCleanupJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.scheduler.ResourceConstraintBackupJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
 import software.wings.scheduler.YamlChangeSetPruneJob;
 import software.wings.scheduler.ZombieHunterJob;
@@ -377,6 +378,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       if (acquiredLock != null) {
         WorkflowExecutionMonitorJob.add(jobScheduler);
         BarrierBackupJob.addJob(jobScheduler);
+        ResourceConstraintBackupJob.addJob(jobScheduler);
         PersistentLockCleanupJob.add(jobScheduler);
         ZombieHunterJob.scheduleJobs(jobScheduler);
         AdministrativeJob.addJob(jobScheduler);

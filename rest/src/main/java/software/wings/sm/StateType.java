@@ -117,6 +117,7 @@ import software.wings.sm.states.PhaseStepSubWorkflow;
 import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.sm.states.PrometheusState;
 import software.wings.sm.states.RepeatState;
+import software.wings.sm.states.ResourceConstraintState;
 import software.wings.sm.states.RollingNodeSelectState;
 import software.wings.sm.states.ShellScriptState;
 import software.wings.sm.states.SplunkState;
@@ -179,6 +180,12 @@ public enum StateType implements StateTypeDescriptor {
    * Barrier state type.
    */
   BARRIER(BarrierState.class, FLOW_CONTROLS, 0, "Barrier", asList(), ORCHESTRATION_STENCILS, COMMON),
+
+  /**
+   * Resource Constraint state type.
+   */
+  RESOURCE_CONSTRAINT(
+      ResourceConstraintState.class, FLOW_CONTROLS, 0, "Resource Constraint", asList(), ORCHESTRATION_STENCILS, COMMON),
 
   /**
    * Script state type.

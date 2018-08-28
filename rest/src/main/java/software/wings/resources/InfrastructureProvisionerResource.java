@@ -42,9 +42,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-/**
- * Created by anubhaw on 1/10/17.
- */
 @Api("infrastructure-provisioners")
 @Path("infrastructure-provisioners")
 @Produces("application/json")
