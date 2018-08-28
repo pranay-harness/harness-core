@@ -11,7 +11,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
-import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.service.impl.splunk.LogMLClusterScores;
@@ -48,13 +47,13 @@ public class LogMLAnalysisRecord extends Base {
   private LogMLClusterScores cluster_scores;
   private byte[] analysisDetailsCompressedJson;
 
-  private @Transient List<List<SplunkAnalysisCluster>> unknown_events;
-  private @Transient Map<String, List<SplunkAnalysisCluster>> test_events;
-  private @Transient Map<String, List<SplunkAnalysisCluster>> control_events;
-  private @Transient Map<String, Map<String, SplunkAnalysisCluster>> control_clusters;
-  private @Transient Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
-  private @Transient Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
-  private @Transient Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
+  private List<List<SplunkAnalysisCluster>> unknown_events;
+  private Map<String, List<SplunkAnalysisCluster>> test_events;
+  private Map<String, List<SplunkAnalysisCluster>> control_events;
+  private Map<String, Map<String, SplunkAnalysisCluster>> control_clusters;
+  private Map<String, Map<String, SplunkAnalysisCluster>> unknown_clusters;
+  private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
+  private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
 
   @Builder
   private LogMLAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
