@@ -297,9 +297,13 @@ public class NotificationMessageResolver {
         }
 
         if (isEmpty(pipelineExecutionId)) {
+          String envId = "empty";
           // Direct WF execution
+          if (((ExecutionContextImpl) context).getEnv() != null) {
+            envId = ((ExecutionContextImpl) context).getEnv().getUuid();
+          }
           return buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
-              app.getUuid(), ((ExecutionContextImpl) context).getEnv().getUuid(), context.getWorkflowExecutionId()));
+              app.getUuid(), envId, context.getWorkflowExecutionId()));
         } else {
           // WF in a Pipeline execution
           return buildAbsoluteUrl(format("/account/%s/app/%s/pipeline-execution/%s/workflow-execution/%s/details",
@@ -310,8 +314,13 @@ public class NotificationMessageResolver {
         return "";
       }
     } else if (alertType.equals(AlertType.ManualInterventionNeeded)) {
+      String envId = "empty";
+      if (((ExecutionContextImpl) context).getEnv() != null) {
+        envId = ((ExecutionContextImpl) context).getEnv().getUuid();
+      }
+
       return buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
-          app.getUuid(), ((ExecutionContextImpl) context).getEnv().getUuid(), context.getWorkflowExecutionId()));
+          app.getUuid(), envId, context.getWorkflowExecutionId()));
     } else {
       logger.warn("Unhandled case. No URL can be generated for alertType ", alertType.name());
       return "";

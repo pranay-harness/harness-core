@@ -73,7 +73,7 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
         String.format("PORTAL_URL/#/account/%s/app/%s/pipeline-execution/%s/workflow-execution/undefined/details",
             ACCOUNT_ID, APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
 
-    final String ManualInterventionUrl = String.format("PORTAL_URL/#/account/%s/app/%s/env/%s/executions/%s/details",
+    String ManualInterventionUrl = String.format("PORTAL_URL/#/account/%s/app/%s/env/%s/executions/%s/details",
         ACCOUNT_ID, APP_ID, ENV_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
     Application app = anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build();
 
@@ -101,6 +101,14 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
     assertThat(placeholderValues.get("WORKFLOW_NAME")).isEqualTo(BUILD_JOB_NAME);
     assertThat(placeholderValues.get("WORKFLOW_URL")).isEqualTo(ManualInterventionUrl);
 
+    // Manual Intervention URL (No Environment)
+    ManualInterventionUrl = String.format("PORTAL_URL/#/account/%s/app/%s/env/empty/executions/%s/details", ACCOUNT_ID,
+        APP_ID, PIPELINE_WORKFLOW_EXECUTION_ID);
+    when(context.getEnv()).thenReturn(null);
+    placeholderValues = notificationMessageResolver.getPlaceholderValues(
+        context, "", 500L, 100L, "1000", "", "", ExecutionStatus.PAUSED, AlertType.ManualInterventionNeeded);
+    assertThat(placeholderValues.get("WORKFLOW_URL")).isEqualTo(ManualInterventionUrl);
+
     // Direct workflow placeholder values
     Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build();
     when(context.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
@@ -109,6 +117,20 @@ public class NotificationMessageResolverTest extends WingsBaseTest {
     when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
     ApprovalUrl = String.format("PORTAL_URL/#/account/%s/app/%s/env/%s/executions/%s/details", ACCOUNT_ID, APP_ID,
         ENV_ID, WORKFLOW_EXECUTION_ID);
+
+    placeholderValues = notificationMessageResolver.getPlaceholderValues(
+        context, "", 500L, 100L, "1000", "", "", ExecutionStatus.ABORTED, AlertType.ApprovalNeeded);
+    assertThat(placeholderValues.get("VERB")).isEqualTo("aborted");
+    assertThat(placeholderValues.get("WORKFLOW_NAME")).isEqualTo(BUILD_JOB_NAME);
+    assertThat(placeholderValues.get("WORKFLOW_URL")).isEqualTo(ApprovalUrl);
+
+    // Direct workflow placeholder values (No Environment)
+    when(context.getWorkflowExecutionId()).thenReturn(WORKFLOW_EXECUTION_ID);
+    when(context.getWorkflowExecutionName()).thenReturn(BUILD_JOB_NAME);
+    when(context.getWorkflowType()).thenReturn(WorkflowType.ORCHESTRATION);
+    when(context.getEnv()).thenReturn(null);
+    ApprovalUrl = String.format(
+        "PORTAL_URL/#/account/%s/app/%s/env/empty/executions/%s/details", ACCOUNT_ID, APP_ID, WORKFLOW_EXECUTION_ID);
 
     placeholderValues = notificationMessageResolver.getPlaceholderValues(
         context, "", 500L, 100L, "1000", "", "", ExecutionStatus.ABORTED, AlertType.ApprovalNeeded);
