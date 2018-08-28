@@ -1,0 +1,2 @@
+#Uses script from Ansible to configure WinRM over HTTPS
+Invoke-Expression ((New-Object System.Net.Webclient).DownloadString('https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1'))
