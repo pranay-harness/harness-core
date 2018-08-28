@@ -59,18 +59,22 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
     String envId = context.getEntityIdMap().get(EntityType.ENVIRONMENT.name());
     String infraMappingId = null;
     String infraMappingName = null;
-    String deploymentTypeString = null;
+    // @Todo read from yaml itslf rather than infraMapping
+    String deploymentTypeString = yaml.getType();
 
-    if (envId != null) {
+    if (envId != null && isNotEmpty(yaml.getInfraMappingName())) {
       InfrastructureMapping infraMapping =
           infraMappingService.getInfraMappingByName(appId, envId, yaml.getInfraMappingName());
       infraMappingId = infraMapping != null ? infraMapping.getUuid() : null;
       infraMappingName = infraMapping != null ? infraMapping.getName() : null;
-      deploymentTypeString = infraMapping != null ? infraMapping.getDeploymentType() : null;
+      // deploymentTypeString = infraMapping != null ? infraMapping.getDeploymentType() : null;
     }
 
-    Service service = serviceResourceService.getServiceByName(appId, yaml.getServiceName());
-    String serviceId = service != null ? service.getUuid() : null;
+    String serviceId = null;
+    if (isNotEmpty(yaml.getServiceName())) {
+      Service service = serviceResourceService.getServiceByName(appId, yaml.getServiceName());
+      serviceId = service != null ? service.getUuid() : null;
+    }
 
     // phase step
     List<PhaseStep> phaseSteps = Lists.newArrayList();
@@ -168,22 +172,23 @@ public class WorkflowPhaseYamlHandler extends BaseYamlHandler<WorkflowPhase.Yaml
 
     String deploymentType = Util.getStringFromEnum(bean.getDeploymentType());
     String serviceName = null;
-    if (isNotEmpty(bean.getServiceId())) {
+    if (isNotEmpty(bean.getServiceId()) && !bean.checkServiceTemplatized()) {
       Service service = serviceResourceService.get(appId, bean.getServiceId());
       serviceName = service != null ? service.getName() : null;
     }
 
     String infraMappingName = null;
     String infraMappingId = bean.getInfraMappingId();
-    if (isNotEmpty(infraMappingId)) {
+    if (isNotEmpty(infraMappingId) && !bean.checkInfraTemplatized()) {
       InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
 
+      // dont set infraName is its templatized
       if (infrastructureMapping != null) {
         infraMappingName = infrastructureMapping.getName();
       }
 
       // when templatized infraMappings used, we do expect infraMapping can be null, so don't perform this check
-      if (infrastructureMapping == null && !bean.checkInfraTemplatized()) {
+      if (infrastructureMapping == null) {
         String message = format("Infra-mapping:%s could not be found for workflowPhase:%s, for app:%s", infraMappingId,
             bean.getName(), appId);
         throw new WingsException(ErrorCode.GENERAL_ERROR, USER).addParam("message", message);

@@ -472,7 +472,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (workflowHIterator != null) {
         while (workflowHIterator.hasNext()) {
           Workflow workflow = workflowHIterator.next();
-          if (workflow.getEnvId() != null && workflow.getEnvId().equals(envId)) {
+          if (workflow.getEnvId() != null && !workflow.checkEnvironmentTemplatized()
+              && workflow.getEnvId().equals(envId)) {
             referencedWorkflows.add(workflow.getName());
           }
         }
@@ -938,15 +939,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     // prune state machines
     wingsPersistence.delete(wingsPersistence.createQuery(StateMachine.class).filter("appId", appId));
-  }
-
-  @Override
-  public void pruneByEnvironment(String appId, String envId) {
-    wingsPersistence.createQuery(Workflow.class)
-        .filter("appId", appId)
-        .filter("envId", envId)
-        .asKeyList()
-        .forEach(key -> pruneWorkflow(appId, key.getId().toString()));
   }
 
   private Workflow createDefaultSimpleWorkflow(String appId, String envId) {

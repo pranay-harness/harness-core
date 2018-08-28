@@ -21,7 +21,6 @@ import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.ownership.OwnedByApplication;
-import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -39,7 +38,7 @@ import javax.validation.constraints.NotNull;
  *
  * @author Rishi
  */
-public interface WorkflowService extends OwnedByApplication, OwnedByEnvironment, SettingsServiceManipulationObserver {
+public interface WorkflowService extends OwnedByApplication, SettingsServiceManipulationObserver {
   PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest);
   List<String> isEnvironmentReferenced(String appId, @NotEmpty String envId);
 
