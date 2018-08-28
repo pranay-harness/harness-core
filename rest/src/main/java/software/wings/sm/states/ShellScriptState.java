@@ -83,7 +83,6 @@ public class ShellScriptState extends State {
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
   @NotEmpty @Getter @Setter @Attributes(title = "Target Host") private String host;
-  @NotEmpty @Getter @Setter @Attributes(title = "Tags") private List<String> tags;
 
   public enum ConnectionType { SSH, WINRM }
 
@@ -266,7 +265,6 @@ public class ShellScriptState extends State {
             .withTaskType(TaskType.SCRIPT)
             .withAccountId(executionContext.getApp().getAccountId())
             .withWaitId(activityId)
-            .withTags(tags)
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(new Object[] {ShellScriptParameters.builder()
                                               .accountId(executionContext.getApp().getAccountId())
