@@ -234,6 +234,29 @@ public class DelegateResource {
   }
 
   @DelegateAuth
+  @PUT
+  @Path("{delegateId}/tags")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Delegate> updateTags(@PathParam("delegateId") @NotEmpty String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId, DelegateTags delegateTags) {
+    Delegate delegate = delegateService.get(accountId, delegateId);
+    if (isNotEmpty(delegateTags.getTags())) {
+      delegate.setTags(delegateTags.getTags());
+    }
+    return new RestResponse<>(delegateService.updateTags(delegate));
+  }
+  private static class DelegateTags {
+    private List<String> tags;
+    public List<String> getTags() {
+      return tags;
+    }
+    public void setTags(List<String> tags) {
+      this.tags = tags;
+    }
+  }
+
+  @DelegateAuth
   @POST
   @Path("register")
   @Timed
