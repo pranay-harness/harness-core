@@ -575,9 +575,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void ensureServiceSafeToDelete(Service service) {
     List<Workflow> workflows = getWorkflows(service);
 
+    // If service is templatized in workflow, dont count that workflow
     List<Workflow> serviceWorkflows =
         workflows.stream()
-            .filter(wfl -> wfl.getServices().stream().anyMatch(s -> service.getUuid().equals(s.getUuid())))
+            .filter(wfl
+                -> wfl.getServices().stream().anyMatch(s
+                    -> service.getUuid().equals(s.getUuid())
+                        && (wfl.getOrchestrationWorkflow() == null
+                               || !wfl.getOrchestrationWorkflow().isServiceTemplatized())))
             .collect(toList());
 
     if (isNotEmpty(serviceWorkflows)) {

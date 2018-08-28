@@ -382,7 +382,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     inOrder.verify(wingsPersistence).delete(any(Environment.class));
     inOrder.verify(activityService).pruneByEnvironment(APP_ID, ENV_ID);
     inOrder.verify(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
-    inOrder.verify(workflowService).pruneByEnvironment(APP_ID, ENV_ID);
   }
 
   @Test
@@ -393,7 +392,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);
     inOrder.verify(activityService).pruneByEnvironment(APP_ID, ENV_ID);
     inOrder.verify(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
-    inOrder.verify(workflowService).pruneByEnvironment(APP_ID, ENV_ID);
   }
 
   @Test
@@ -406,7 +404,6 @@ public class EnvironmentServiceTest extends WingsBaseTest {
         inOrder(wingsPersistence, activityService, serviceTemplateService, notificationService, workflowService);
     inOrder.verify(activityService).pruneByEnvironment(APP_ID, ENV_ID);
     inOrder.verify(serviceTemplateService).pruneByEnvironment(APP_ID, ENV_ID);
-    inOrder.verify(workflowService).pruneByEnvironment(APP_ID, ENV_ID);
   }
 
   /**

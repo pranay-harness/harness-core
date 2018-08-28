@@ -1370,6 +1370,6 @@ public class WorkflowServiceHelper {
     phase.setComputeProviderId(null);
     phase.setInfraMappingId(null);
     phase.setInfraMappingName(null);
-    phase.setDeploymentType(null);
+    // phase.setDeploymentType(null);
   }
 }

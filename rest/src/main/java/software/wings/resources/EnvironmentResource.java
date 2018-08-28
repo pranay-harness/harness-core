@@ -99,10 +99,14 @@ public class EnvironmentResource {
   @ExceptionMetered
   public RestResponse<Environment> get(
       @QueryParam("appId") String appId, @PathParam("envId") String envId, @QueryParam("status") SetupStatus status) {
-    if (status == null) {
-      status = SetupStatus.COMPLETE;
+    try {
+      if (status == null) {
+        status = SetupStatus.COMPLETE;
+      }
+      return new RestResponse<>(environmentService.get(appId, envId, status));
+    } catch (Exception e) {
+      return new RestResponse<>();
     }
-    return new RestResponse<>(environmentService.get(appId, envId, status));
   }
 
   /**
