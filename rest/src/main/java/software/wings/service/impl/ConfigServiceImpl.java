@@ -353,8 +353,6 @@ public class ConfigServiceImpl implements ConfigService {
       updateMap.put("description", inputConfigFile.getDescription());
     }
 
-    updateMap.put("defaultVersion", inputConfigFile.getDefaultVersion());
-
     if (inputConfigFile.getEnvIdVersionMap() != null) {
       updateMap.put("envIdVersionMap", inputConfigFile.getEnvIdVersionMap());
     }
