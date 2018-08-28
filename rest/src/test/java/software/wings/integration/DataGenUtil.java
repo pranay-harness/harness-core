@@ -88,6 +88,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
+import software.wings.beans.ResourceConstraint;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -122,6 +123,8 @@ import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.PipelineGenerator;
 import software.wings.generator.PipelineGenerator.Pipelines;
 import software.wings.generator.Randomizer.Seed;
+import software.wings.generator.ResourceConstraintGenerator;
+import software.wings.generator.ResourceConstraintGenerator.ResourceConstraints;
 import software.wings.generator.SecretGenerator;
 import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.generator.ServiceGenerator;
@@ -212,6 +215,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   @Inject private LicenseGenerator licenseGenerator;
+  @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
   @Inject private PipelineGenerator pipelineGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private ServiceTemplateGenerator serviceTemplateGenerator;
@@ -561,11 +565,20 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     final Owners owners = ownerManager.create();
 
-    Environment environment = environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST);
-    owners.add(environment);
+    Environment environment =
+        owners.obtainEnvironment(() -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
 
-    Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
-    owners.add(service);
+    Service service =
+        owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));
+
+    final ResourceConstraint asapResourceConstraint =
+        resourceConstraintGenerator.ensurePredefined(seed, owners, ResourceConstraints.GENERIC_ASAP_TEST);
+    final ResourceConstraint fifoResourceConstraint =
+        resourceConstraintGenerator.ensurePredefined(seed, owners, ResourceConstraints.GENERIC_FIFO_TEST);
+
+    workflowGenerator.ensurePredefined(seed, owners, Workflows.RESOURCE_CONSTRAINT);
+
+    pipelineGenerator.ensurePredefined(seed, owners, Pipelines.RESOURCE_CONSTRAINT_WORKFLOW);
 
     Workflow workflow1 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_SIMPLE);
 

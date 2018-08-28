@@ -53,6 +53,20 @@ public class OwnerManager {
       return account;
     }
 
+    public Account obtainAccount(Generator<Account> generator) {
+      Account account = obtainAccount();
+      if (account != null) {
+        return account;
+      }
+
+      account = generator.generate();
+      if (account != null) {
+        add(account);
+      }
+
+      return account;
+    }
+
     public Application obtainApplication() {
       Application application = objects.stream()
                                     .filter(obj -> obj instanceof Application)
@@ -87,9 +101,7 @@ public class OwnerManager {
       return application;
     }
 
-    interface Generator<T> {
-      T generate();
-    }
+    public interface Generator<T> { T generate(); }
 
     public Application obtainApplication(Generator<Application> generator) {
       Application application = obtainApplication();
@@ -129,6 +141,20 @@ public class OwnerManager {
 
     public Service obtainService() {
       return objects.stream().filter(obj -> obj instanceof Service).findFirst().map(obj -> (Service) obj).orElse(null);
+    }
+
+    public Service obtainService(Generator<Service> generator) {
+      Service service = obtainService();
+      if (service != null) {
+        return service;
+      }
+
+      service = generator.generate();
+      if (service != null) {
+        add(service);
+      }
+
+      return service;
     }
 
     public ServiceTemplate obtainServiceTemplate() {

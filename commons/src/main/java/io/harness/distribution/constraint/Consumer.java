@@ -9,12 +9,12 @@ public class Consumer {
   private ConsumerId id;
   private int permits;
 
-  enum State {
+  public enum State {
     // The consumer is blocked from currently running consumers
     BLOCKED,
 
     // The currently uses the resource
-    RUNNING,
+    ACTIVE,
 
     // The consumer is already done
     FINISHED

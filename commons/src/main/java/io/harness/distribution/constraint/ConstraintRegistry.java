@@ -3,6 +3,7 @@ package io.harness.distribution.constraint;
 import io.harness.distribution.constraint.Constraint.Spec;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ConstraintRegistry {
   void save(ConstraintId id, Spec spec) throws UnableToSaveConstraintException;
@@ -10,13 +11,11 @@ public interface ConstraintRegistry {
   List<Consumer> loadConsumers(ConstraintId id);
 
   // When a new consumer is registered it goes into either blocked or running state.
-  boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning)
+  boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning, Map<String, Object> context)
       throws UnableToRegisterConsumerException;
 
-  interface ExtraCheck {
-    boolean check(List<Consumer> constraintConsumers, Consumer consumer);
-  }
+  boolean adjustRegisterConsumerContext(ConstraintId id, Map<String, Object> context);
 
-  boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, ExtraCheck extraCheck);
-  boolean consumerFinished(ConstraintId id, ConsumerId consumerId);
+  boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, Map<String, Object> context);
+  boolean consumerFinished(ConstraintId id, ConsumerId consumerId, Map<String, Object> context);
 }

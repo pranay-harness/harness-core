@@ -5,9 +5,6 @@ import software.wings.sm.StepExecutionSummary;
 
 import java.util.Map;
 
-/**
- * Created by rishi on 4/3/17.
- */
 public class BarrierExecutionData extends StateExecutionData {
   private String identifier;
 

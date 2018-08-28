@@ -7,6 +7,7 @@ import static software.wings.beans.Account.Builder.anAccount;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.github.benas.randombeans.api.EnhancedRandom;
 import lombok.Setter;
 import software.wings.beans.Account;
 import software.wings.dl.WingsPersistence;
@@ -52,6 +53,12 @@ public class AccountGenerator {
       this.account = accountService.save(accountObj);
     }
     return this.account;
+  }
+
+  public Account ensureRandom(Randomizer.Seed seed, Owners owners) {
+    EnhancedRandom random = Randomizer.instance(seed);
+    Accounts predefined = random.nextObject(Accounts.class);
+    return ensurePredefined(seed, owners, predefined);
   }
 
   // TODO: Very dummy version, implement this
