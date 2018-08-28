@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
 import com.google.common.base.Charsets;
@@ -278,7 +279,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     }
 
     if (instanceId == -1) {
-      throw new WingsException(ErrorCode.NEWRELIC_CONFIGURATION_ERROR)
+      throw new WingsException(ErrorCode.NEWRELIC_CONFIGURATION_ERROR, USER)
           .addParam("reason", "No node with name " + hostName + " found reporting to new relic");
     }
 
