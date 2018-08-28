@@ -268,7 +268,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     verify(wingsPersistence).updateFields(eq(ConfigFile.class), eq(FILE_ID), argumentCaptor.capture());
 
     Map<String, Object> updateMap = argumentCaptor.getValue();
-    assertThat(updateMap.size()).isEqualTo(6);
+    assertThat(updateMap.size()).isEqualTo(5);
     assertThat(updateMap.get("encrypted")).isEqualTo(true);
     assertThat(updateMap.get("encryptedFileId")).isNotNull();
     assertThat(updateMap.get("size")).isNotNull();
