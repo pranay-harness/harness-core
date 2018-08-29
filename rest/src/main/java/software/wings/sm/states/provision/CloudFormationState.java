@@ -37,6 +37,7 @@ import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandType;
 import software.wings.exception.InvalidRequestException;
+import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandExecutionResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCommandResponse;
 import software.wings.helpers.ext.cloudformation.response.CloudFormationCreateStackResponse;
@@ -167,6 +168,15 @@ public abstract class CloudFormationState extends State {
         .withDelegateTaskId(delegateTaskId)
         .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
+  }
+
+  protected void setTimeOutOnRequest(CloudFormationCommandRequest request) {
+    if (request != null) {
+      Integer timeout = getTimeoutMillis();
+      if (timeout != null) {
+        request.setTimeoutInMs(timeout);
+      }
+    }
   }
 
   protected void updateInfraMappings(

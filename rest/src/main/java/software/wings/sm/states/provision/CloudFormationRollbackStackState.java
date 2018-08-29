@@ -117,6 +117,7 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
                                                      .commandName(commandUnit())
                                                      .awsConfig(awsConfig)
                                                      .build();
+      setTimeOutOnRequest(request);
       delegateTask = aDelegateTask()
                          .withTaskType(CLOUD_FORMATION_TASK)
                          .withAccountId(executionContext.getApp().getAccountId())
@@ -138,13 +139,15 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
           .commandName(commandUnit())
           .variables(stackElement.getOldStackParameters())
           .awsConfig(awsConfig);
+      CloudFormationCreateStackRequest request = builder.build();
+      setTimeOutOnRequest(request);
       delegateTask = aDelegateTask()
                          .withTaskType(CLOUD_FORMATION_TASK)
                          .withAccountId(executionContext.getApp().getAccountId())
                          .withWaitId(activityId)
                          .withAppId(executionContext.getApp().getUuid())
-                         .withParameters(new Object[] {
-                             builder.build(), secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+                         .withParameters(
+                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
                          .build();
     }
     if (getTimeoutMillis() != null) {

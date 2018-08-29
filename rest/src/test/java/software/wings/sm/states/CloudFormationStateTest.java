@@ -261,6 +261,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Test
   public void testExecute_createStackState() {
     cloudFormationCreateStackState.setRegion(Regions.US_EAST_1.name());
+    cloudFormationCreateStackState.setTimeoutMillis(1000);
     ExecutionResponse executionResponse = cloudFormationCreateStackState.execute(context);
     assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
 
@@ -279,11 +280,13 @@ public class CloudFormationStateTest extends WingsBaseTest {
     assertEquals(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY,
         cloudFormationCreateStackRequest.getCreateType());
     assertEquals("Template Body", cloudFormationCreateStackRequest.getData());
+    assertEquals(1000, cloudFormationCreateStackRequest.getTimeoutInMs());
   }
 
   @Test
   public void testExecute_deleteStackState() {
     cloudFormationDeleteStackState.setRegion(Regions.US_EAST_1.name());
+    cloudFormationDeleteStackState.setTimeoutMillis(1000);
     ExecutionResponse executionResponse = cloudFormationDeleteStackState.execute(context);
     assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
 
@@ -300,5 +303,6 @@ public class CloudFormationStateTest extends WingsBaseTest {
     assertEquals(ACCOUNT_ID, cloudFormationDeleteStackRequest.getAccountId());
     assertEquals("Delete Stack", cloudFormationDeleteStackRequest.getCommandName());
     assertEquals(EXPECTED_SUFFIX, cloudFormationDeleteStackRequest.getStackNameSuffix());
+    assertEquals(1000, cloudFormationDeleteStackRequest.getTimeoutInMs());
   }
 }

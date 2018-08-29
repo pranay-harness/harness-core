@@ -86,6 +86,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
                                                          .build();
     doReturn(singletonList(stackElement)).when(mockContext).getContextElementList(any());
     state.setProvisionerId(PROVISIONER_ID);
+    state.setTimeoutMillis(1000);
     ExecutionResponse response = state.execute(mockContext);
     assertEquals(ExecutionStatus.SUCCESS, response.getExecutionStatus());
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
@@ -99,6 +100,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
         (CloudFormationCreateStackRequest) delegateTask.getParameters()[0];
     assertEquals(createStackRequest.getCommandType(), CREATE_STACK);
     assertEquals(createStackRequest.getData(), "oldBody");
+    assertEquals(createStackRequest.getTimeoutInMs(), 1000);
     Map<String, String> stackParam = createStackRequest.getVariables();
     assertNotNull(stackParam);
     assertEquals(stackParam.size(), 1);
