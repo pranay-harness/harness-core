@@ -55,11 +55,13 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 4/24/18.
@@ -147,6 +149,12 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     List<NewRelicApplication> applications = Lists.newArrayList(
         NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build(),
         NewRelicApplication.builder().name(UUID.randomUUID().toString()).id(new Random().nextInt()).build());
+
+    List<NewRelicApplication> sortedApplicationsByName =
+        applications.stream()
+            .sorted(Comparator.comparing(application -> application.getName()))
+            .collect(Collectors.toList());
+
     when(restCall.execute()).thenReturn(Response.success(applications));
     when(appdynamicsRestClient.listAllApplications(anyString())).thenReturn(restCall);
 
@@ -155,7 +163,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     RestResponse<List<NewRelicApplication>> allApplications =
         appdynamicsResource.getAllApplications(accountId, savedAttributeId);
     assertTrue(allApplications.getResponseMessages().isEmpty());
-    assertEquals(applications, allApplications.getResource());
+    assertEquals(sortedApplicationsByName, allApplications.getResource());
   }
 
   @Test
