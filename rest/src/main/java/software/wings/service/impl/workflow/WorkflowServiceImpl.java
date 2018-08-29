@@ -84,6 +84,7 @@ import software.wings.beans.CustomOrchestrationWorkflow;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
+import software.wings.beans.Environment;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
@@ -325,12 +326,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Predicate<Stencil> predicate = stencil -> true;
     if (filterForWorkflow) {
       if (filterForPhase) {
-        if (workflowPhase != null && workflowPhase.getInfraMappingId() != null
-            && !workflowPhase.checkInfraTemplatized()) {
-          InfrastructureMapping infrastructureMapping =
-              infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-          if (infrastructureMapping != null) {
-            predicate = stencil -> stencil.matches(infrastructureMapping);
+        if (workflowPhase != null) {
+          // For workflow having Service templatized, do not show commands section
+          // if service is templatized, infra will always be templatized
+          if (workflowPhase.checkServiceTemplatized()) {
+            predicate = stencil -> stencil.getStencilCategory() != StencilCategory.COMMANDS;
+          } else if (workflowPhase.getInfraMappingId() != null) {
+            InfrastructureMapping infrastructureMapping =
+                infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+            if (infrastructureMapping != null) {
+              predicate = stencil -> stencil.matches(infrastructureMapping);
+            }
           }
         }
       } else {
@@ -511,6 +517,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     StateMachine stateMachine = readStateMachine(
         workflow.getAppId(), workflow.getUuid(), version == null ? workflow.getDefaultVersion() : version);
     if (stateMachine != null) {
+      // @TODO This check needs to be removed once on teplatizing, env is set to null.
+      if (workflow.checkEnvironmentTemplatized()) {
+        if (workflow.getEnvId() != null) {
+          Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId());
+          workflow.setEnvId(environment == null ? null : environment.getUuid());
+        }
+      }
+
       workflow.setOrchestrationWorkflow(stateMachine.getOrchestrationWorkflow());
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       if (orchestrationWorkflow != null) {
@@ -1227,7 +1241,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String infraMappingId = workflowPhase.getInfraMappingId();
     if (!orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
       Service service = serviceResourceService.get(appId, workflowPhase.getServiceId(), false);
-      if (service == null) {
+      if (service == null && !workflowPhase.checkServiceTemplatized()) {
         throw new InvalidRequestException("Service [" + workflowPhase.getServiceId() + "] does not exist", USER);
       }
       InfrastructureMapping infrastructureMapping = null;
@@ -1593,11 +1607,17 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     for (GraphNode step : phaseStep.getSteps()) {
       if ("COMMAND".equals(step.getType())) {
         if (serviceId != null) {
-          ServiceCommand command = serviceResourceService.getCommandByName(
-              appId, serviceId, (String) step.getProperties().get("commandName"));
-          if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
+          Service service = serviceResourceService.get(appId, serviceId);
+          if (service == null) {
             artifactNeeded = true;
-            break;
+          } else {
+            ServiceCommand command = serviceResourceService.getCommandByName(
+                appId, serviceId, (String) step.getProperties().get("commandName"));
+
+            if (command != null && command.getCommand() != null && command.getCommand().isArtifactNeeded()) {
+              artifactNeeded = true;
+              break;
+            }
           }
         }
       } else if (StateType.HTTP.name().equals(step.getType())

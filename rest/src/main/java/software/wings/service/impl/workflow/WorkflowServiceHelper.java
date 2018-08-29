@@ -231,7 +231,7 @@ public class WorkflowServiceHelper {
   public List<String> getKeywords(Workflow workflow) {
     List<Object> keywords = workflow.generateKeywords();
     if (workflow.getEnvId() != null) {
-      Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId(), false);
+      Environment environment = environmentService.get(workflow.getAppId(), workflow.getEnvId());
       if (environment != null) {
         keywords.add(environment.getName());
       }
@@ -1243,7 +1243,11 @@ public class WorkflowServiceHelper {
       return;
     }
     Service oldService = serviceResourceService.get(appId, oldServiceId, false);
-    notNullCheck("service", oldService, USER);
+    if (oldService == null) {
+      // As service has been deleted, compatibility check does not make sense here
+      return;
+    }
+
     Service newService = serviceResourceService.get(appId, serviceId, false);
     notNullCheck("service", newService, USER);
     if (oldService.getArtifactType() != null && !oldService.getArtifactType().equals(newService.getArtifactType())) {

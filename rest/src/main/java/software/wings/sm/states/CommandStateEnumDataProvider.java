@@ -38,7 +38,8 @@ public class CommandStateEnumDataProvider implements DataProvider {
         services = serviceResourceService.list(aPageRequest().addFilter("appId", EQ, appId).build(), false, true)
                        .getResponse();
       } else {
-        services = Collections.singletonList(serviceResourceService.get(appId, serviceId, true));
+        Service service = serviceResourceService.get(appId, serviceId, true);
+        services = service == null ? Collections.EMPTY_LIST : Collections.singletonList(service);
       }
       return services.stream()
           .filter(service -> service.getServiceCommands() != null)

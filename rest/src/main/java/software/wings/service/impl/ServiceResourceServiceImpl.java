@@ -575,22 +575,26 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private void ensureServiceSafeToDelete(Service service) {
     List<Workflow> workflows = getWorkflows(service);
 
-    // If service is templatized in workflow, dont count that workflow
-    List<Workflow> serviceWorkflows =
+    List<String> referencingWorkflowNames =
         workflows.stream()
-            .filter(wfl
-                -> wfl.getServices().stream().anyMatch(s
-                    -> service.getUuid().equals(s.getUuid())
-                        && (wfl.getOrchestrationWorkflow() == null
-                               || !wfl.getOrchestrationWorkflow().isServiceTemplatized())))
+            .filter(wfl -> {
+              if (wfl.getOrchestrationWorkflow() != null
+                  && wfl.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+                Map<String, WorkflowPhase> workflowPhaseIdMap =
+                    ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
+                return workflowPhaseIdMap.values().stream().anyMatch(workflowPhase
+                    -> !workflowPhase.checkServiceTemplatized()
+                        && service.getUuid().equals(workflowPhase.getServiceId()));
+              }
+              return false;
+            })
+            .map(Workflow::getName)
             .collect(toList());
 
-    if (isNotEmpty(serviceWorkflows)) {
-      String workflowNames = serviceWorkflows.stream().map(Workflow::getName).collect(joining(","));
+    if (isNotEmpty(referencingWorkflowNames)) {
       throw new InvalidRequestException(
-          format("Service [%s] couldn't be deleted. Remove Service reference from the following "
-                  + plural("workflow", serviceWorkflows.size()) + " [" + workflowNames + "]",
-              service.getName()),
+          format("Service %s is in use by %s %s [%s].", service.getUuid(), referencingWorkflowNames.size(),
+              plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)),
           USER);
     }
 
@@ -659,10 +663,13 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     for (Workflow workflow : workflows) {
       OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
       if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
-        if (orchestrationWorkflow.isServiceTemplatized()) {
+        List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+
+        // May happen if no phase created for Canary workflow
+        if (isEmpty(workflowPhases)) {
           continue;
         }
-        List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+
         for (WorkflowPhase workflowPhase : workflowPhases) {
           if (workflowPhase.checkServiceTemplatized() || !service.getUuid().equals(workflowPhase.getServiceId())) {
             continue;
