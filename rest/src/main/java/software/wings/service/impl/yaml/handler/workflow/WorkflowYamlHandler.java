@@ -327,8 +327,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
   protected void toYaml(Y yaml, Workflow workflow, String appId) {
     // Environment can be null in case of incomplete cloned workflows
     String envName = null;
-    if (isNotBlank(workflow.getEnvId()) && !workflow.checkEnvironmentTemplatized()) {
-      Environment environment = environmentService.get(appId, workflow.getEnvId(), false);
+    if (isNotBlank(workflow.getEnvId())) {
+      Environment environment = environmentService.get(appId, workflow.getEnvId());
       envName = environment != null ? environment.getName() : null;
     }
 

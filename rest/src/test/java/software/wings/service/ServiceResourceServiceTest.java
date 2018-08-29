@@ -20,6 +20,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
 import static software.wings.beans.CommandCategory.Type.COPY;
@@ -110,6 +111,7 @@ import software.wings.beans.SearchFilter;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -377,22 +379,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThrowExceptionOnReferencedServiceDelete() {
-    when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(aPageResponse()
-                        .withResponse(asList(WorkflowBuilder.aWorkflow()
-                                                 .withName(WORKFLOW_NAME)
-                                                 .withServices(asList(Service.builder().uuid(SERVICE_ID).build()))
-                                                 .build()))
-                        .build());
-    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
-    verify(wingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
-    verify(workflowService).listWorkflows(any(PageResponse.class));
-  }
-
-  @Test
   public void shouldCloneService() throws IOException {
     PageRequest<ServiceCommand> serviceCommandPageRequest = getServiceCommandPageRequest();
 
@@ -511,7 +497,14 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(workflowService.listWorkflows(any(PageRequest.class)))
         .thenReturn(aPageResponse()
                         .withResponse(asList(
-                            aWorkflow().withServices(asList(Service.builder().uuid(SERVICE_ID).build())).build()))
+                            aWorkflow()
+                                .withName(WORKFLOW_NAME)
+                                .withOrchestrationWorkflow(
+                                    aBasicOrchestrationWorkflow()
+                                        .withWorkflowPhaseIdMap(ImmutableMap.of("PHASE_ID",
+                                            WorkflowPhaseBuilder.aWorkflowPhase().withServiceId(SERVICE_ID).build()))
+                                        .build())
+                                .build()))
                         .build());
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
