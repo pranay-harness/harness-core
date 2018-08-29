@@ -44,6 +44,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
+import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
@@ -51,7 +52,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
@@ -63,7 +63,6 @@ import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
@@ -78,6 +77,7 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
@@ -113,11 +113,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceVariableService serviceVariableService;
-  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private PersistentLocker persistentLocker;
   @Inject private WorkflowService workflowService;
   @Inject private TriggerService triggerService;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject private YamlPushService yamlPushService;
 
   /**
    * {@inheritDoc}
@@ -217,7 +217,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     serviceTemplateService.createDefaultTemplatesByEnv(savedEnvironment);
     sendNotifaction(savedEnvironment, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
-    yamlChangeSetHelper.environmentYamlChangeAsync(savedEnvironment, ChangeType.ADD);
+    String accountId = appService.getAccountIdByAppId(savedEnvironment.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, null, savedEnvironment, Type.CREATE, environment.isSyncFromGit(), false);
 
     return savedEnvironment;
   }
@@ -284,7 +286,11 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     Environment updatedEnvironment =
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
-    yamlChangeSetHelper.environmentUpdateYamlChangeAsync(savedEnvironment, updatedEnvironment);
+    String accountId = appService.getAccountIdByAppId(savedEnvironment.getAppId());
+    boolean isRename = !savedEnvironment.getName().equals(updatedEnvironment.getName());
+
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedEnvironment, updatedEnvironment, Type.UPDATE, environment.isSyncFromGit(), isRename);
 
     return updatedEnvironment;
   }
@@ -294,10 +300,16 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    */
   @Override
   public void delete(String appId, String envId) {
+    delete(appId, envId, false);
+  }
+
+  @Override
+  public void delete(String appId, String envId, boolean syncFromGit) {
     Environment environment = wingsPersistence.get(Environment.class, appId, envId);
     if (environment == null) {
       return;
     }
+    environment.setSyncFromGit(syncFromGit);
     ensureEnvironmentSafeToDelete(environment);
     delete(environment);
   }
@@ -374,7 +386,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
     // may result in deleting object from a new application created after the first one was deleted,
     // or preexisting being renamed to the vacated name. This is why we have to do this synchronously.
-    yamlChangeSetHelper.environmentYamlChange(environment, ChangeType.DELETE);
+
+    String accountId = appService.getAccountIdByAppId(environment.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, environment, null, Type.DELETE, environment.isSyncFromGit(), false);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
     PruneEntityJob.addDefaultJob(

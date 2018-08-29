@@ -76,7 +76,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.EnvironmentServiceImpl;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
@@ -89,6 +88,7 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -109,8 +109,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   @Mock private ServiceVariableService serviceVariableService;
   @Mock private WingsPersistence wingsPersistence;
   @Mock private WorkflowService workflowService;
-  @Mock private YamlChangeSetHelper yamlChangeSetHelper;
+  @Mock private YamlPushService yamlPushService;
   @Mock private YamlDirectoryService yamlDirectoryService;
+
   @Inject @InjectMocks private EnvironmentService environmentService;
 
   @Spy @InjectMocks private EnvironmentService spyEnvService = new EnvironmentServiceImpl();

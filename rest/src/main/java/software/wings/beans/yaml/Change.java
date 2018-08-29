@@ -15,6 +15,7 @@ public class Change {
   private String accountId;
   private ChangeType changeType;
   private String oldFilePath;
+  private boolean syncFromGit;
 
   public enum ChangeType { ADD, MODIFY, RENAME, DELETE }
 
@@ -25,7 +26,8 @@ public class Change {
         .withFileContent(getFileContent())
         .withAccountId(getAccountId())
         .withChangeType(getChangeType())
-        .withOldFilePath(getOldFilePath());
+        .withOldFilePath(getOldFilePath())
+        .withSyncFromGit(isSyncFromGit());
   }
 
   public static final class Builder {
@@ -64,13 +66,19 @@ public class Change {
       return this;
     }
 
+    public Builder withSyncFromGit(boolean syncFromGit) {
+      change.setSyncFromGit(syncFromGit);
+      return this;
+    }
+
     public Builder but() {
       return aFileChange()
           .withFilePath(change.getFilePath())
           .withFileContent(change.getFileContent())
           .withAccountId(change.getAccountId())
           .withChangeType(change.getChangeType())
-          .withOldFilePath(change.getOldFilePath());
+          .withOldFilePath(change.getOldFilePath())
+          .withSyncFromGit(change.isSyncFromGit());
     }
 
     public Change build() {

@@ -22,6 +22,7 @@ public class GitFileChange extends Change {
     private String accountId;
     private ChangeType changeType;
     private String oldFilePath;
+    private boolean syncFromGit;
 
     private Builder() {}
 
@@ -64,6 +65,11 @@ public class GitFileChange extends Change {
       return this;
     }
 
+    public Builder withSyncFromGit(boolean syncFromGit) {
+      this.syncFromGit = syncFromGit;
+      return this;
+    }
+
     public Builder but() {
       return aGitFileChange()
           .withCommitId(commitId)
@@ -72,7 +78,8 @@ public class GitFileChange extends Change {
           .withFileContent(fileContent)
           .withAccountId(accountId)
           .withOldFilePath(oldFilePath)
-          .withChangeType(changeType);
+          .withChangeType(changeType)
+          .withSyncFromGit(syncFromGit);
     }
 
     public GitFileChange build() {
@@ -84,6 +91,7 @@ public class GitFileChange extends Change {
       gitFileChange.setAccountId(accountId);
       gitFileChange.setChangeType(changeType);
       gitFileChange.setOldFilePath(oldFilePath);
+      gitFileChange.setSyncFromGit(syncFromGit);
       return gitFileChange;
     }
   }

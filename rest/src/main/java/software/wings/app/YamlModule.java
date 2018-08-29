@@ -56,6 +56,7 @@ import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
 import software.wings.service.impl.yaml.YamlGitServiceImpl;
 import software.wings.service.impl.yaml.YamlHistoryServiceImpl;
+import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.impl.yaml.YamlResourceServiceImpl;
 import software.wings.service.impl.yaml.handler.artifactstream.AcrArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.AmazonS3ArtifactStreamYamlHandler;
@@ -150,6 +151,7 @@ import software.wings.service.intfc.yaml.YamlArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlHistoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -172,6 +174,7 @@ public class YamlModule extends AbstractModule {
     bind(YamlGitService.class).to(YamlGitServiceImpl.class);
     bind(YamlArtifactStreamService.class).to(YamlArtifactStreamServiceImpl.class);
     bind(YamlService.class).to(YamlServiceImpl.class);
+    bind(YamlPushService.class).to(YamlPushServiceImpl.class);
 
     MapBinder<String, ArtifactStreamYamlHandler> artifactStreamYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, ArtifactStreamYamlHandler.class);

@@ -5,7 +5,9 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Environment;
 import software.wings.beans.yaml.YamlType;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.app.ApplicationYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.ArtifactStreamYamlHandler;
@@ -213,5 +215,23 @@ public class YamlHandlerFactory {
     }
 
     return (T) yamlHandler;
+  }
+
+  public <T> YamlType obtainEntityYamlType(T entity) {
+    if (entity instanceof Environment) {
+      return YamlType.ENVIRONMENT;
+    } else {
+      throw new InvalidRequestException(
+          "Unhandled case while getting yaml type for entity type " + entity.getClass().getSimpleName());
+    }
+  }
+
+  public <T> String obtainEntityName(T entity) {
+    if (entity instanceof Environment) {
+      return ((Environment) entity).getName();
+    } else {
+      throw new InvalidRequestException(
+          "Unhandled case while getting yaml name for entity type " + entity.getClass().getSimpleName());
+    }
   }
 }
