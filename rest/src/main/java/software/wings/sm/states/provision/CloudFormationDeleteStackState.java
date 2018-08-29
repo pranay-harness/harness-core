@@ -42,6 +42,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
             .commandName(commandUnit())
             .awsConfig(awsConfig)
             .build();
+    setTimeOutOnRequest(request);
     return aDelegateTask()
         .withTaskType(CLOUD_FORMATION_TASK)
         .withAccountId(executionContext.getApp().getAccountId())

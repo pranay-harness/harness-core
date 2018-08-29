@@ -66,13 +66,14 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .commandName(commandUnit())
         .variables(getVariableMap(provisioner, executionContext))
         .awsConfig(awsConfig);
+    CloudFormationCreateStackRequest request = builder.build();
+    setTimeOutOnRequest(request);
     return aDelegateTask()
         .withTaskType(CLOUD_FORMATION_TASK)
         .withAccountId(executionContext.getApp().getAccountId())
         .withWaitId(activityId)
         .withAppId(executionContext.getApp().getUuid())
-        .withParameters(
-            new Object[] {builder.build(), secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+        .withParameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
         .build();
   }
   @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")

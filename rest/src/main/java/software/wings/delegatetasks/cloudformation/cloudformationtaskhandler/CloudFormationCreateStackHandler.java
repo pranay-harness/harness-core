@@ -207,7 +207,7 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
       }
       sleep(ofSeconds(10));
     }
-    String errorMessage = String.format("# Timing out while Updating stack: %s", createStackRequest.getStackName());
+    String errorMessage = String.format("# Timing out while Creating stack: %s", createStackRequest.getStackName());
     executionLogCallback.saveExecutionLog(errorMessage, LogLevel.ERROR);
     builder.errorMessage(errorMessage).commandExecutionStatus(CommandExecutionStatus.FAILURE);
   }
