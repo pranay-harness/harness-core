@@ -86,17 +86,18 @@ public class ResourceConstraintState extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    final Builder executionResponseBuilder = executionResponseBuilder();
+    String accountId = applicationService.getAccountIdByAppId(context.getAppId());
+    final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
+    final Builder executionResponseBuilder = executionResponseBuilder(resourceConstraint);
     return executionResponseBuilder.build();
   }
 
   private ExecutionResponse executeInternal(ExecutionContext context) {
-    final Builder executionResponseBuilder = executionResponseBuilder();
-
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
-
     final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
     final Constraint constraint = resourceConstraintService.createAbstraction(resourceConstraint);
+
+    final Builder executionResponseBuilder = executionResponseBuilder(resourceConstraint);
 
     String releaseEntityId = null;
     switch (HoldingScope.valueOf(holdingScope)) {
@@ -129,8 +130,11 @@ public class ResourceConstraintState extends State {
     return executionResponseBuilder.withAsync(true).withCorrelationIds(asList(consumerId)).build();
   }
 
-  private Builder executionResponseBuilder() {
+  private Builder executionResponseBuilder(ResourceConstraint resourceConstraint) {
     ResourceConstraintExecutionData stateExecutionData = new ResourceConstraintExecutionData();
+    stateExecutionData.setResourceConstraintName(resourceConstraint.getName());
+    stateExecutionData.setResourceConstraintCapacity(resourceConstraint.getCapacity());
+    stateExecutionData.setUsage(permits);
     return anExecutionResponse().withStateExecutionData(stateExecutionData);
   }
 }

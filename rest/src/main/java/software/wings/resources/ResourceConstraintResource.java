@@ -16,6 +16,7 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.swagger.annotations.Api;
 import software.wings.beans.ResourceConstraint;
+import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -26,6 +27,7 @@ import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ResourceConstraintService;
 
+import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -92,5 +94,16 @@ public class ResourceConstraintResource {
       @QueryParam("accountId") String accountId, @PathParam("resourceConstraintId") String resourceConstraintId) {
     resourceConstraintService.delete(accountId, resourceConstraintId);
     return new RestResponse();
+  }
+
+  @POST
+  @Path("usage")
+  @Timed
+  @ExceptionMetered
+  @ListAPI(ResourceType.SETTING)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT, action = READ)
+  public RestResponse<List<ResourceConstraintUsage>> usage(
+      @QueryParam("accountId") String accountId, List<String> resourceConstraintIds) {
+    return new RestResponse<>(resourceConstraintService.usage(accountId, resourceConstraintIds));
   }
 }

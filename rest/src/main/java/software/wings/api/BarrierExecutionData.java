@@ -1,20 +1,14 @@
 package software.wings.api;
 
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
 
 import java.util.Map;
 
 public class BarrierExecutionData extends StateExecutionData {
-  private String identifier;
-
-  public String getIdentifier() {
-    return identifier;
-  }
-
-  public void setIdentifier(String identifier) {
-    this.identifier = identifier;
-  }
+  @Getter @Setter private String identifier;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
