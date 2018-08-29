@@ -5,6 +5,7 @@ import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -44,7 +45,9 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -53,6 +56,8 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 public class YamlChangeSetHelper {
   private static final Logger logger = LoggerFactory.getLogger(YamlChangeSetHelper.class);
+
+  private static final Set<String> nonLeafEntities = new HashSet(obtainNonLeafEntities());
 
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
@@ -244,56 +249,6 @@ public class YamlChangeSetHelper {
                         .build());
       changeSet.add(entityUpdateService.getAppGitSyncFile(newApp, ChangeType.MODIFY));
       changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId)); // full sync on name change
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
-  }
-
-  public void environmentUpdateYamlChangeAsync(Environment savedEnvironment, Environment updatedEnvironment) {
-    executorService.submit(() -> {
-      if (!savedEnvironment.getName().equals(updatedEnvironment.getName())) {
-        moveEnvironmentChange(savedEnvironment, updatedEnvironment);
-      } else {
-        environmentYamlChangeSet(updatedEnvironment, ChangeType.MODIFY);
-      }
-    });
-  }
-
-  public void environmentYamlChangeAsync(Environment savedEnvironment, ChangeType changeType) {
-    executorService.submit(() -> environmentYamlChange(savedEnvironment, changeType));
-  }
-
-  public void environmentYamlChange(Environment savedEnvironment, ChangeType changeType) {
-    environmentYamlChangeSet(savedEnvironment, changeType);
-  }
-
-  private void moveEnvironmentChange(Environment oldEnv, Environment newEnv) {
-    String accountId = appService.getAccountIdByAppId(newEnv.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      String oldEnvnPath = yamlDirectoryService.getRootPathByEnvironment(oldEnv);
-      String newEnvnPath = yamlDirectoryService.getRootPathByEnvironment(newEnv);
-
-      changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(accountId)
-                        .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newEnvnPath)
-                        .withOldFilePath(oldEnvnPath)
-                        .build());
-      changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, newEnv, ChangeType.MODIFY));
-      changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId)); // full sync on name change
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
-  }
-
-  private void environmentYamlChangeSet(Environment environment, ChangeType crudType) {
-    // check whether we need to push changes (through git sync)
-    String accountId = appService.getAccountIdByAppId(environment.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, environment, crudType));
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
@@ -539,5 +494,74 @@ public class YamlChangeSetHelper {
                       .append("\n git may be in inconsistent state, please perform git full sync/Reset")
                       .toString());
     }
+  }
+
+  public <T> void entityUpdateYamlChange(String accountId, T oldEntity, T newEntity, boolean isRename) {
+    if (isRename) {
+      entityRenameYamlChange(accountId, oldEntity, newEntity);
+    } else {
+      entityYamlChangeSet(accountId, newEntity, ChangeType.MODIFY);
+    }
+  }
+
+  public <T> void entityYamlChangeSet(String accountId, T entity, ChangeType crudType) {
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+
+    if (ygs != null) {
+      List<GitFileChange> changeSet = entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, entity, crudType);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    }
+  }
+
+  private <T> void entityRenameYamlChange(String accountId, T oldEntity, T newEntity) {
+    String entityName = oldEntity.getClass().getSimpleName().toLowerCase();
+
+    if (isNonLeafEntity(entityName)) {
+      nonLeafEntityRenameYamlChange(accountId, oldEntity, newEntity);
+    } else {
+      leafEntityRenameYamlChange(accountId, oldEntity, newEntity);
+    }
+  }
+
+  private <T> void nonLeafEntityRenameYamlChange(String accountId, T oldEntity, T newEntity) {
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+
+    if (ygs != null) {
+      String oldEnvnPath = yamlDirectoryService.obtainEntityRootPath(oldEntity);
+      String newEnvnPath = yamlDirectoryService.obtainEntityRootPath(newEntity);
+
+      List<GitFileChange> changeSet = new ArrayList<>();
+      changeSet.add(GitFileChange.Builder.aGitFileChange()
+                        .withAccountId(accountId)
+                        .withChangeType(ChangeType.RENAME)
+                        .withFilePath(newEnvnPath)
+                        .withOldFilePath(oldEnvnPath)
+                        .build());
+      changeSet.addAll(entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, newEntity, ChangeType.MODIFY));
+      changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
+
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    }
+  }
+
+  private <T> void leafEntityRenameYamlChange(String accountId, T oldEntity, T newEntity) {
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+
+    if (ygs != null) {
+      List<GitFileChange> changeSet = new ArrayList<>();
+
+      // Rename is delete old and add new
+      changeSet.add(getGitSyncFile(accountId, oldEntity, ChangeType.DELETE));
+      changeSet.add(getGitSyncFile(accountId, newEntity, ChangeType.ADD));
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    }
+  }
+
+  private boolean isNonLeafEntity(String entity) {
+    return nonLeafEntities.contains(entity);
+  }
+
+  private static List<String> obtainNonLeafEntities() {
+    return Lists.newArrayList(EntityType.ENVIRONMENT.toString().toLowerCase());
   }
 }

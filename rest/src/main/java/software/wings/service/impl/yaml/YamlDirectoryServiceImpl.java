@@ -67,6 +67,7 @@ import software.wings.beans.yaml.GitFileChange.Builder;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
@@ -1281,6 +1282,16 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     } else {
       Application application = appService.get(settingAttribute.getAppId());
       return APPLICATIONS_FOLDER + PATH_DELIMITER + application.getName();
+    }
+  }
+
+  @Override
+  public <T> String obtainEntityRootPath(T entity) {
+    if (entity instanceof Environment) {
+      return getRootPathByEnvironment((Environment) entity);
+    } else {
+      throw new InvalidRequestException(
+          "Unhandled case while obtaining yaml entity root path for entity type " + entity.getClass().getSimpleName());
     }
   }
 }

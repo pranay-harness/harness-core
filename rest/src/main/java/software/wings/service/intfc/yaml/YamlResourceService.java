@@ -105,4 +105,6 @@ public interface YamlResourceService {
       String accountId, String appId, String pcfServiceSpecificationId);
 
   RestResponse<YamlPayload> getProvisioner(String appId, String provisionerId);
+
+  <T> RestResponse<YamlPayload> obtainEntityYamlVersion(String accountId, T entity);
 }

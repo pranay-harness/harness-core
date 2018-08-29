@@ -288,6 +288,10 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
   @Override
   public void saveChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> gitFileChanges) {
+    if (isEmpty(gitFileChanges)) {
+      return;
+    }
+
     YamlChangeSet yamlChangeSet = YamlChangeSet.builder()
                                       .accountId(yamlGitConfig.getAccountId())
                                       .gitFileChanges(gitFileChanges)

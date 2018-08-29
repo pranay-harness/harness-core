@@ -146,4 +146,6 @@ public interface EnvironmentService extends OwnedByApplication {
       String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload);
 
   Environment update(Environment environment, boolean fromYaml);
+
+  void delete(String appId, String envId, boolean syncFromGit);
 }

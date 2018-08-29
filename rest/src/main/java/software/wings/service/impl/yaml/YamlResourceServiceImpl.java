@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
@@ -35,6 +36,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
@@ -479,5 +481,31 @@ public class YamlResourceServiceImpl implements YamlResourceService {
             .toYaml(configFile, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, configFile.getUuid(), accountId, yaml, yaml.getFileName() + YAML_EXTENSION);
+  }
+
+  @Override
+  public <T> RestResponse<YamlPayload> obtainEntityYamlVersion(String accountId, T entity) {
+    if (entity instanceof Base) {
+      String appId = ((Base) entity).getAppId();
+      String entityId = ((Base) entity).getUuid();
+
+      entity = preProcessEntity(appId, entityId, entity);
+      YamlType yamlType = yamlHandlerFactory.obtainEntityYamlType(entity);
+      String entityName = yamlHandlerFactory.obtainEntityName(entity);
+      BaseYaml yaml = yamlHandlerFactory.getYamlHandler(yamlType).toYaml(entity, appId);
+
+      return YamlHelper.getYamlRestResponse(yamlGitSyncService, entityId, accountId, yaml, entityName + YAML_EXTENSION);
+    }
+
+    throw new InvalidRequestException(
+        "Unhandled case while getting entity yaml version for entity type " + entity.getClass().getSimpleName());
+  }
+
+  private <T> T preProcessEntity(String appId, String entityId, T entity) {
+    if (entity instanceof Environment) {
+      return (T) environmentService.get(appId, entityId, true);
+    }
+
+    return entity;
   }
 }

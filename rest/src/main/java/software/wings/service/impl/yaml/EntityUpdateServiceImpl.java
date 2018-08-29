@@ -39,6 +39,7 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Util;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -269,13 +270,18 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     }
   }
 
-  public GitFileChange getEnvironmentGitSyncFile(String accountId, Environment environment, ChangeType changeType) {
+  public List<GitFileChange> getEnvironmentGitSyncFile(
+      String accountId, Environment environment, ChangeType changeType) {
+    List<GitFileChange> gitFileChanges = new ArrayList<>();
+
     String yaml = null;
     if (!changeType.equals(ChangeType.DELETE)) {
       yaml = yamlResourceService.getEnvironment(environment.getAppId(), environment.getUuid()).getResource().getYaml();
     }
-    return createGitFileChange(accountId, yamlDirectoryService.getRootPathByEnvironment(environment),
-        YamlConstants.INDEX, yaml, changeType, true);
+
+    gitFileChanges.add(createGitFileChange(accountId, yamlDirectoryService.getRootPathByEnvironment(environment),
+        YamlConstants.INDEX, yaml, changeType, true));
+    return gitFileChanges;
   }
 
   @Override
@@ -342,5 +348,20 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     return createGitFileChange(accountId,
         yamlDirectoryService.getRootPathBySettingAttribute(settingAttribute, settingVariableType),
         settingAttribute.getName(), yaml, changeType, false);
+  }
+
+  @Override
+  public <T> List<GitFileChange> obtainEntityGitSyncFileChangeSet(String accountId, T entity, ChangeType changeType) {
+    List<GitFileChange> gitFileChanges = new ArrayList<>();
+    String yaml = null;
+
+    if (!changeType.equals(ChangeType.DELETE)) {
+      yaml = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource().getYaml();
+    }
+
+    gitFileChanges.add(createGitFileChange(
+        accountId, yamlDirectoryService.obtainEntityRootPath(entity), YamlConstants.INDEX, yaml, changeType, true));
+
+    return gitFileChanges;
   }
 }

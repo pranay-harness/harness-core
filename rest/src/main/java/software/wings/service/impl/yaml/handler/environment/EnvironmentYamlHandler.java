@@ -170,6 +170,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                               .withHelmValueYamlByServiceTemplateId(yaml.getHelmValueYamlByServiceTemplateId())
                               .withEnvironmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
                               .build();
+    current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
     Environment previous = yamlHelper.getEnvironment(appId, changeContext.getChange().getFilePath());
 
@@ -215,7 +216,8 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       return;
     }
 
-    environmentService.delete(optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid());
+    environmentService.delete(optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(),
+        changeContext.getChange().isSyncFromGit());
   }
 
   @SuppressFBWarnings({"UC_USELESS_OBJECT", "UC_USELESS_OBJECT"})

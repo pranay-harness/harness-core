@@ -218,8 +218,8 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       notNullCheck("No environment found for given id: " + envId, env, USER);
       YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
       if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getEnvironmentGitSyncFile(accountId, env, ChangeType.MODIFY));
+        List<GitFileChange> changeSet =
+            entityUpdateService.getEnvironmentGitSyncFile(accountId, env, ChangeType.MODIFY);
         yamlChangeSetService.saveChangeSet(ygs, changeSet);
       }
     }

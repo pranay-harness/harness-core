@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.PrePersist;
@@ -72,6 +73,20 @@ public class Base implements UuidAware {
   @JsonIgnore
   @Transient
   public transient String entityYamlPath; // TODO:: remove it with changeSet batching
+
+  @JsonIgnore @SchemaIgnore @Getter @Setter private transient boolean syncFromGit;
+
+  public Base(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
+      long lastUpdatedAt, List<String> keywords, String entityYamlPath) {
+    this.uuid = uuid;
+    this.appId = appId;
+    this.createdBy = createdBy;
+    this.createdAt = createdAt;
+    this.lastUpdatedBy = lastUpdatedBy;
+    this.lastUpdatedAt = lastUpdatedAt;
+    this.keywords = keywords;
+    this.entityYamlPath = entityYamlPath;
+  }
 
   /**
    * Invoked before inserting document in mongo by morphia.

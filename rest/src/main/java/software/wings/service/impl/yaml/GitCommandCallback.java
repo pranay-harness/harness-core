@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -8,6 +9,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GitCommit;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitConnectionErrorAlert;
@@ -21,6 +23,7 @@ import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.YamlProcessingException;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
@@ -54,6 +57,7 @@ public class GitCommandCallback implements NotifyCallback {
   @Transient @Inject private transient YamlService yamlService;
 
   @Transient @Inject private transient YamlGitService yamlGitService;
+  @Transient @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void notify(Map<String, NotifyResponseData> response) {
@@ -107,6 +111,8 @@ public class GitCommandCallback implements NotifyCallback {
       } else if (gitCommandResult.getGitCommandType().equals(GitCommandType.DIFF)) {
         GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
         List<GitFileChange> gitFileChangeList = gitDiffResult.getGitFileChanges();
+        applySyncFromGit(gitFileChangeList);
+
         try {
           // ensure gitCommit is not already processed
           boolean commitAlreadyProcessed =
@@ -158,5 +164,15 @@ public class GitCommandCallback implements NotifyCallback {
   public void notifyError(Map<String, NotifyResponseData> response) {
     logger.warn("Git request failed [{}] for changeSetId [{}] for account {}", response, changeSetId, accountId);
     yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+  }
+
+  private void applySyncFromGit(List<GitFileChange> gitFileChangeList) {
+    if (!featureFlagService.isEnabled(FeatureName.OPTMIZE_SYNC_FROM_GIT, accountId) || isEmpty(gitFileChangeList)) {
+      return;
+    }
+
+    for (GitFileChange gitFileChange : gitFileChangeList) {
+      gitFileChange.setSyncFromGit(true);
+    }
   }
 }

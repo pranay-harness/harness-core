@@ -106,4 +106,6 @@ public interface YamlDirectoryService {
   void getGitFileChange(DirectoryNode dn, String path, String accountId, boolean includeFiles,
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,
       boolean gitSyncPath);
+
+  <T> String obtainEntityRootPath(T entity);
 }
