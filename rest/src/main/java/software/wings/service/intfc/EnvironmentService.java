@@ -144,4 +144,6 @@ public interface EnvironmentService extends OwnedByApplication {
 
   Environment setHelmValueYamlForService(
       String appId, String envId, String serviceTemplateId, KubernetesPayload kubernetesPayload);
+
+  Environment update(Environment environment, boolean fromYaml);
 }

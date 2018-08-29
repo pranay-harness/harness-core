@@ -175,7 +175,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
-      current = environmentService.update(current);
+      current = environmentService.update(current, true);
       Yaml previousYaml = toYaml(previous, previous.getAppId());
       List<ServiceVariable> currentVariableList = getAllVariableOverridesForEnv(previous);
       saveOrUpdateVariableOverrides(previousYaml.getVariableOverrides(), yaml.getVariableOverrides(),

@@ -231,11 +231,16 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                   .build());
   }
 
+  @Override
+  public Environment update(Environment environment) {
+    return update(environment, false);
+  }
+
   /**
    * {@inheritDoc}
    */
   @Override
-  public Environment update(Environment environment) {
+  public Environment update(Environment environment, boolean fromYaml) {
     Environment savedEnvironment =
         wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
 
@@ -248,28 +253,30 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             .set("description", Optional.ofNullable(environment.getDescription()).orElse(""))
             .set("keywords", keywords);
 
-    if (isNotBlank(environment.getConfigMapYaml())) {
-      updateOperations.set("configMapYaml", environment.getConfigMapYaml());
-    } else {
-      updateOperations.unset("configMapYaml");
-    }
+    if (fromYaml) {
+      if (isNotBlank(environment.getConfigMapYaml())) {
+        updateOperations.set("configMapYaml", environment.getConfigMapYaml());
+      } else {
+        updateOperations.unset("configMapYaml");
+      }
 
-    if (isNotEmpty(environment.getConfigMapYamlByServiceTemplateId())) {
-      updateOperations.set("configMapYamlByServiceTemplateId", environment.getConfigMapYamlByServiceTemplateId());
-    } else {
-      updateOperations.unset("configMapYamlByServiceTemplateId");
-    }
+      if (isNotEmpty(environment.getConfigMapYamlByServiceTemplateId())) {
+        updateOperations.set("configMapYamlByServiceTemplateId", environment.getConfigMapYamlByServiceTemplateId());
+      } else {
+        updateOperations.unset("configMapYamlByServiceTemplateId");
+      }
 
-    if (isNotBlank(environment.getHelmValueYaml())) {
-      updateOperations.set("helmValueYaml", environment.getHelmValueYaml());
-    } else {
-      updateOperations.unset("helmValueYaml");
-    }
+      if (isNotBlank(environment.getHelmValueYaml())) {
+        updateOperations.set("helmValueYaml", environment.getHelmValueYaml());
+      } else {
+        updateOperations.unset("helmValueYaml");
+      }
 
-    if (isNotEmpty(environment.getHelmValueYamlByServiceTemplateId())) {
-      updateOperations.set("helmValueYamlByServiceTemplateId", environment.getHelmValueYamlByServiceTemplateId());
-    } else {
-      updateOperations.unset("helmValueYamlByServiceTemplateId");
+      if (isNotEmpty(environment.getHelmValueYamlByServiceTemplateId())) {
+        updateOperations.set("helmValueYamlByServiceTemplateId", environment.getHelmValueYamlByServiceTemplateId());
+      } else {
+        updateOperations.unset("helmValueYamlByServiceTemplateId");
+      }
     }
 
     wingsPersistence.update(savedEnvironment, updateOperations);
