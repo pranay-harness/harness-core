@@ -22,11 +22,12 @@ import java.util.Date;
     fields = { @Field("resourceConstraintId")
                , @Field("order") }))
 public class ResourceConstraintInstance extends Base {
-  public static final String RELEASE_ENTITY_TYPE_KEY = "releaseEntityType";
+  public static final String ACQUIRED_AT_KEY = "acquiredAt";
+  public static final String ORDER_KEY = "order";
   public static final String RELEASE_ENTITY_ID_KEY = "releaseEntityId";
+  public static final String RELEASE_ENTITY_TYPE_KEY = "releaseEntityType";
   public static final String RESOURCE_CONSTRAINT_ID_KEY = "resourceConstraintId";
   public static final String STATE_KEY = "state";
-  public static final String ORDER_KEY = "order";
 
   private String accountId;
 
@@ -39,6 +40,8 @@ public class ResourceConstraintInstance extends Base {
   private String releaseEntityType;
   private String releaseEntityId;
 
+  private long acquiredAt;
+
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
@@ -46,7 +49,7 @@ public class ResourceConstraintInstance extends Base {
 
   @Builder
   private ResourceConstraintInstance(String uuid, String accountId, String appId, String resourceConstraintId,
-      int order, String state, int permits, String releaseEntityType, String releaseEntityId) {
+      int order, String state, int permits, String releaseEntityType, String releaseEntityId, long acquiredAt) {
     setUuid(uuid);
     setAccountId(accountId);
     setAppId(appId);
@@ -56,5 +59,6 @@ public class ResourceConstraintInstance extends Base {
     this.permits = permits;
     this.releaseEntityType = releaseEntityType;
     this.releaseEntityId = releaseEntityId;
+    this.acquiredAt = acquiredAt;
   }
 }

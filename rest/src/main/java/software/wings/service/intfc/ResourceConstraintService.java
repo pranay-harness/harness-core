@@ -6,10 +6,12 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ResourceConstraint;
+import software.wings.beans.ResourceConstraintUsage;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
+import java.util.List;
 import java.util.Set;
 import javax.validation.Valid;
 
@@ -35,4 +37,6 @@ public interface ResourceConstraintService extends OwnedByAccount {
   Set<String> selectBlockedConstraints();
 
   void updateBlockedConstraints(Set<String> constraintIds);
+
+  List<ResourceConstraintUsage> usage(String accountId, List<String> resourceConstraintIds);
 }

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 
@@ -32,6 +33,10 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.ResourceConstraintInstance;
+import software.wings.beans.ResourceConstraintInstance.ResourceConstraintInstanceBuilder;
+import software.wings.beans.ResourceConstraintUsage;
+import software.wings.beans.ResourceConstraintUsage.ActiveScope;
+import software.wings.beans.ResourceConstraintUsage.ActiveScope.ActiveScopeBuilder;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
@@ -46,10 +51,12 @@ import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -212,6 +219,52 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
+  public List<ResourceConstraintUsage> usage(String accountId, List<String> resourceConstraintIds) {
+    Map<String, List<ResourceConstraintUsage.ActiveScope>> map = new HashMap<>();
+
+    try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
+             wingsPersistence.createQuery(ResourceConstraintInstance.class)
+                 .field(ResourceConstraintInstance.RESOURCE_CONSTRAINT_ID_KEY)
+                 .in(resourceConstraintIds)
+                 .filter(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name())
+                 .order(Sort.ascending(ResourceConstraintInstance.ORDER_KEY))
+                 .fetch())) {
+      while (iterator.hasNext()) {
+        ResourceConstraintInstance instance = iterator.next();
+        final List<ActiveScope> activeScopes =
+            map.computeIfAbsent(instance.getResourceConstraintId(), key -> new ArrayList<ActiveScope>());
+
+        final ActiveScopeBuilder builder = ActiveScope.builder()
+                                               .releaseEntityType(instance.getReleaseEntityType())
+                                               .releaseEntityId(instance.getReleaseEntityId())
+                                               .acquiredAt(instance.getAcquiredAt());
+
+        HoldingScope scope = HoldingScope.valueOf(instance.getReleaseEntityType());
+        switch (scope) {
+          case WORKFLOW:
+            final WorkflowExecution workflowExecution =
+                workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
+            builder.releaseEntityName(workflowExecution.getDisplayName());
+            break;
+          default:
+            unhandled(scope);
+        }
+
+        activeScopes.add(builder.build());
+      }
+    }
+
+    return map.entrySet()
+        .stream()
+        .map(entry
+            -> ResourceConstraintUsage.builder()
+                   .resourceConstraintId(entry.getKey())
+                   .activeScopes(entry.getValue())
+                   .build())
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public ConstraintRegistry getRegistry() {
     return (ConstraintRegistry) this;
   }
@@ -273,7 +326,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       throw new InvalidRequestException(format("There is no resource constraint with id: %s", id.getValue()));
     }
 
-    ResourceConstraintInstance instance =
+    final ResourceConstraintInstanceBuilder builder =
         ResourceConstraintInstance.builder()
             .uuid(consumer.getId().getValue())
             .appId((String) context.get(ResourceConstraintInstance.APP_ID_KEY))
@@ -282,11 +335,14 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
             .releaseEntityId((String) context.get(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY))
             .permits(consumer.getPermits())
             .state(consumer.getState().name())
-            .order((int) context.get(ResourceConstraintInstance.ORDER_KEY))
-            .build();
+            .order((int) context.get(ResourceConstraintInstance.ORDER_KEY));
+
+    if (consumer.getState() == State.ACTIVE) {
+      builder.acquiredAt(currentTimeMillis());
+    }
 
     try {
-      wingsPersistence.save(instance);
+      wingsPersistence.save(builder.build());
     } catch (DuplicateKeyException exception) {
       return false;
     }
@@ -318,7 +374,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
     final UpdateOperations<ResourceConstraintInstance> ops =
         wingsPersistence.createUpdateOperations(ResourceConstraintInstance.class)
-            .set(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name());
+            .set(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name())
+            .set(ResourceConstraintInstance.ACQUIRED_AT_KEY, currentTimeMillis());
 
     wingsPersistence.update(query, ops);
     return true;
