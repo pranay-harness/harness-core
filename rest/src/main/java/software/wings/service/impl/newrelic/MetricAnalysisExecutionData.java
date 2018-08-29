@@ -2,6 +2,7 @@ package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import lombok.AllArgsConstructor;
@@ -73,14 +74,24 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
         breakdown.setSuccess(Math.min(elapsedMinutes, total));
         break;
     }
+    Set<String> crypticHostnames = Sets.newHashSet("testNode", "controlNode-1", "controlNode-2", "controlNode-3",
+        "controlNode-4", "controlNode-5", "controlNode-6", "controlNode-7");
+    Set<String> oldHostNames = lastExecutionNodes;
+    Set<String> newHostNames = canaryNewHostNames;
+    if (oldHostNames != null) {
+      oldHostNames.removeAll(crypticHostnames);
+    }
+    if (newHostNames != null) {
+      newHostNames.removeAll(crypticHostnames);
+    }
     putNotNull(
         executionDetails, "breakdown", ExecutionDataValue.builder().displayName("breakdown").value(breakdown).build());
     putNotNull(executionDetails, "timeDuration",
         ExecutionDataValue.builder().displayName("Analysis duration").value(timeDuration).build());
     putNotNull(executionDetails, "newVersionNodes",
-        ExecutionDataValue.builder().displayName("New version nodes").value(canaryNewHostNames).build());
+        ExecutionDataValue.builder().displayName("New version nodes").value(newHostNames).build());
     putNotNull(executionDetails, "previousVersionNodes",
-        ExecutionDataValue.builder().displayName("Previous version nodes").value(lastExecutionNodes).build());
+        ExecutionDataValue.builder().displayName("Previous version nodes").value(oldHostNames).build());
     return executionDetails;
   }
 }
