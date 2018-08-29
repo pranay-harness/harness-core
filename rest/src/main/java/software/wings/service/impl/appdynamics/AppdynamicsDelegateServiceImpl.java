@@ -37,11 +37,13 @@ import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 4/17/17.
@@ -64,7 +66,10 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails));
     final Response<List<NewRelicApplication>> response = request.execute();
     if (response.isSuccessful()) {
-      return response.body();
+      return response.body()
+          .stream()
+          .sorted(Comparator.comparing(application -> application.getName()))
+          .collect(Collectors.toList());
     } else {
       logger.info("Request not successful. Reason: {}", response);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
@@ -81,7 +86,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     final Response<Set<AppdynamicsTier>> response = request.execute();
     if (response.isSuccessful()) {
       response.body().forEach(tier -> tier.setExternalTiers(new HashSet<>()));
-      return response.body();
+      return response.body().stream().sorted(Comparator.comparing(tier -> tier.getName())).collect(Collectors.toSet());
     } else {
       logger.info("Request not successful. Reason: {}", response);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR).addParam("reason", "could not fetch Appdynamics tiers");
