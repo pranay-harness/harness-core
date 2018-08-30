@@ -1,24 +1,17 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
-import static software.wings.common.Constants.URL_STRING;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.inject.Inject;
 
 import com.sumologic.client.SumoLogicClient;
-import com.sumologic.client.model.LogMessage;
-import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
-import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
-import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.ThirdPartyApiCallLog;
-import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
-import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.LogElement;
@@ -29,10 +22,9 @@ import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -44,9 +36,11 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(SumoDataCollectionTask.class);
   private SumoDataCollectionInfo dataCollectionInfo;
   private SumoLogicClient sumoClient;
+  public static final String DEFAULT_TIME_ZONE = "UTC";
 
   @Inject private LogAnalysisStoreService logAnalysisStoreService;
   @Inject private DelegateLogService delegateLogService;
+  @Inject private SumoDelegateServiceImpl sumoDelegateService;
 
   public SumoDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
       Supplier<Boolean> preExecute) {
@@ -64,13 +58,8 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
         DataCollectionTaskResult.builder().status(DataCollectionTaskStatus.SUCCESS).stateType(StateType.SUMO).build();
     this.dataCollectionInfo = (SumoDataCollectionInfo) parameters[0];
     logger.info("log collection - dataCollectionInfo: {}", dataCollectionInfo);
-    try {
-      sumoClient = SumoDelegateServiceImpl.getSumoClient(
-          dataCollectionInfo.getSumoConfig(), dataCollectionInfo.getEncryptedDataDetails(), encryptionService);
-    } catch (MalformedURLException e) {
-      taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
-      taskResult.setErrorMessage("Invalid server URL " + dataCollectionInfo.getSumoConfig().getSumoUrl());
-    }
+    sumoClient = sumoDelegateService.getSumoClient(
+        dataCollectionInfo.getSumoConfig(), dataCollectionInfo.getEncryptedDataDetails(), encryptionService);
     return taskResult;
   }
 
@@ -81,7 +70,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new SumoDataCollector(getTaskId(), sumoClient, dataCollectionInfo, logAnalysisStoreService, taskResult);
+    return new SumoDataCollector(getTaskId(), dataCollectionInfo, logAnalysisStoreService, taskResult);
   }
 
   protected int getInitialDelayMinutes() {
@@ -90,18 +79,15 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   private class SumoDataCollector implements Runnable {
     private String delegateTaskId;
-    private SumoLogicClient sumoClient;
     private final SumoDataCollectionInfo dataCollectionInfo;
     private final LogAnalysisStoreService logAnalysisStoreService;
     private long collectionStartTime;
     private int logCollectionMinute;
     private DataCollectionTaskResult taskResult;
 
-    private SumoDataCollector(String delegateTaskId, SumoLogicClient sumoClient,
-        SumoDataCollectionInfo dataCollectionInfo, LogAnalysisStoreService logAnalysisStoreService,
-        DataCollectionTaskResult taskResult) {
+    private SumoDataCollector(String delegateTaskId, SumoDataCollectionInfo dataCollectionInfo,
+        LogAnalysisStoreService logAnalysisStoreService, DataCollectionTaskResult taskResult) {
       this.delegateTaskId = delegateTaskId;
-      this.sumoClient = sumoClient;
       this.dataCollectionInfo = dataCollectionInfo;
       this.logAnalysisStoreService = logAnalysisStoreService;
       this.logCollectionMinute = dataCollectionInfo.getStartMinute();
@@ -137,63 +123,17 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 throw new IllegalArgumentException("No hosts found for Sumo task " + dataCollectionInfo.toString());
               }
 
-              hostStr = " | where " + hostStr + " ";
-
-              String searchQuery = query + hostStr + " | timeslice 1m";
-
-              final long endTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
               ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
-              apiCallLog.setTitle("Fetch request to " + dataCollectionInfo.getSumoConfig().getSumoUrl());
-              apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                               .name(URL_STRING)
-                                               .value(dataCollectionInfo.getSumoConfig().getSumoUrl())
-                                               .type(FieldType.URL)
-                                               .build());
-              apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                               .name("Search Query")
-                                               .value(searchQuery)
-                                               .type(FieldType.TEXT)
-                                               .build());
-              apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                               .name("Start Time")
-                                               .value(Long.toString(collectionStartTime))
-                                               .type(FieldType.TIMESTAMP)
-                                               .build());
-              apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                               .name("End Time")
-                                               .value(Long.toString(endTime))
-                                               .type(FieldType.TIMESTAMP)
-                                               .build());
-              apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-              logger.info("triggering sumo query startTime: " + collectionStartTime + " endTime: " + endTime
-                  + " query: " + searchQuery + " url: " + dataCollectionInfo.getSumoConfig().getSumoUrl());
-              String searchJobId = sumoClient.createSearchJob(
-                  searchQuery, Long.toString(collectionStartTime), Long.toString(endTime), "UTC");
+              final long collectionEndTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
 
-              int messageCount;
-              GetSearchJobStatusResponse getSearchJobStatusResponse = null;
-              // We will loop until the search job status
-              // is either "DONE GATHERING RESULTS" or
-              // "CANCELLED".
-              while (getSearchJobStatusResponse == null
-                  || (!getSearchJobStatusResponse.getState().equals("DONE GATHERING RESULTS")
-                         && !getSearchJobStatusResponse.getState().equals("CANCELLED"))) {
-                Thread.sleep(5000);
-
-                // Get the latest search job status.
-                getSearchJobStatusResponse = sumoClient.getSearchJobStatus(searchJobId);
-                logger.info(
-                    "Waiting on search job ID: " + searchJobId + " status: " + getSearchJobStatusResponse.getState());
-              }
-
-              apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-              apiCallLog.addFieldToResponse(HttpStatus.SC_OK, getSearchJobStatusResponse, FieldType.JSON);
-              // If the last search job status indicated
-              // that the search job was "CANCELLED", we
-              // can't get messages or records.
-              if (getSearchJobStatusResponse.getState().equals("CANCELLED")) {
+              try {
+                List<LogElement> logElementsResponse =
+                    sumoDelegateService.getResponse(dataCollectionInfo.getSumoConfig(), query, "1m",
+                        dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getHostnameField(), host,
+                        collectionStartTime, collectionEndTime, DEFAULT_TIME_ZONE, 1000, apiCallLog);
+                logElements.addAll(logElementsResponse);
+              } catch (CancellationException e) {
                 logger.info("Ugh. Search job was cancelled. Retrying ...");
-                delegateLogService.save(getAccountId(), apiCallLog);
                 if (++retry == RETRIES) {
                   taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                   taskResult.setErrorMessage("Sumo Logic cancelled search job " + RETRIES + " times");
@@ -201,33 +141,6 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   break;
                 }
                 continue;
-              }
-
-              delegateLogService.save(getAccountId(), apiCallLog);
-              messageCount = getSearchJobStatusResponse.getMessageCount();
-
-              int clusterLabel = 0;
-              int messageOffset = 0;
-              int messageLength = Math.min(messageCount, 1000);
-              if (messageCount > 0) {
-                do {
-                  GetMessagesForSearchJobResponse getMessagesForSearchJobResponse =
-                      sumoClient.getMessagesForSearchJob(searchJobId, messageOffset, messageLength);
-                  for (LogMessage logMessage : getMessagesForSearchJobResponse.getMessages()) {
-                    final LogElement sumoLogElement = new LogElement();
-                    sumoLogElement.setQuery(query);
-                    sumoLogElement.setClusterLabel(String.valueOf(clusterLabel++));
-                    sumoLogElement.setCount(1);
-                    sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
-                    sumoLogElement.setTimeStamp(Long.parseLong(logMessage.getProperties().get("_timeslice")));
-                    sumoLogElement.setLogCollectionMinute(logCollectionMinute);
-                    logElements.add(sumoLogElement);
-                    sumoLogElement.setHost(host);
-                  }
-                  messageCount -= messageLength;
-                  messageOffset += messageLength;
-                  messageLength = Math.min(messageCount, 1000);
-                } while (messageCount > 0);
               }
             }
 

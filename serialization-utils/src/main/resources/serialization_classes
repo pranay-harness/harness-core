@@ -520,3 +520,4 @@ software.wings.api.cloudformation.CloudFormationRollbackInfoElement, 5480
 software.wings.sm.states.APMVerificationState$Method, 5481
 software.wings.api.ResourceConstraintExecutionData, 5482
 software.wings.api.ResourceConstraintStepExecutionSummary, 5483
+software.wings.service.impl.analysis.LogElement, 5484

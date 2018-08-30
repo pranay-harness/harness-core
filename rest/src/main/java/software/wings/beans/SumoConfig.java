@@ -24,6 +24,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"accessId", "accessKey"})
+@Builder
 public class SumoConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Sumo Logic API Server URL", required = true) @NotEmpty private String sumoUrl;
 
@@ -41,6 +42,17 @@ public class SumoConfig extends SettingValue implements Encryptable {
    **/
   public SumoConfig() {
     super(SettingVariableTypes.SUMO.name());
+  }
+
+  private SumoConfig(String sumoUrl, char[] accessId, char[] accessKey, String accountId, String encryptedAccessId,
+      String encryptedAccessKey) {
+    this();
+    this.sumoUrl = sumoUrl;
+    this.accessId = accessId.clone();
+    this.accessKey = accessKey.clone();
+    this.accountId = accountId;
+    this.encryptedAccessId = encryptedAccessId;
+    this.encryptedAccessKey = encryptedAccessKey;
   }
 
   @Data

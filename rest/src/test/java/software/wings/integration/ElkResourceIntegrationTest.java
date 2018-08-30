@@ -73,7 +73,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void validateQuery() {
     WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
-        + LogAnalysisResource.ELK_VALIDATE_QUERY + "?accountId=" + accountId + "&query=(.*exception.*)");
+        + LogAnalysisResource.VALIDATE_QUERY + "?accountId=" + accountId + "&query=(.*exception.*)");
 
     RestResponse<Boolean> restResponse =
         getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});
@@ -83,7 +83,7 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   @Test
   public void validateQueryFail() {
     WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
-        + LogAnalysisResource.ELK_VALIDATE_QUERY + "?accountId=" + accountId + "&query=(.*exception.*))");
+        + LogAnalysisResource.VALIDATE_QUERY + "?accountId=" + accountId + "&query=(.*exception.*))");
 
     try {
       getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});

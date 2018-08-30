@@ -54,7 +54,7 @@ public class SumoDelegateServiceImplTest {
     } catch (WingsException e) {
       exceptionMsg = e.getMessage();
     }
-    assertThat(exceptionMsg).contains("is not a valid url");
+    assertThat(exceptionMsg).contains("Error from Sumo xxxxxxxx Unable to create SumoLogic Client");
   }
 
   @Test(expected = SumoClientException.class)

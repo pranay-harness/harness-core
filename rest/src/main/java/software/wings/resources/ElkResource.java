@@ -99,7 +99,7 @@ public class ElkResource implements LogAnalysisResource {
   }
 
   @GET
-  @Path(LogAnalysisResource.ELK_VALIDATE_QUERY)
+  @Path(LogAnalysisResource.VALIDATE_QUERY)
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> validateQuery(

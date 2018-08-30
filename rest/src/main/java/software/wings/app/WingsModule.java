@@ -176,6 +176,7 @@ import software.wings.service.impl.security.ManagerDecryptionServiceImpl;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
+import software.wings.service.impl.sumo.SumoLogicAnalysisServiceImpl;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
@@ -291,6 +292,7 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
+import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -466,6 +468,7 @@ public class WingsModule extends AbstractModule {
     bind(AwsLambdaHelperServiceManager.class).to(AwsLambdaHelperServiceManagerImpl.class);
     bind(DelegateProfileService.class).to(DelegateProfileServiceImpl.class);
     bind(AwsCFHelperServiceManager.class).to(AwsCFHelperServiceManagerImpl.class);
+    bind(SumoLogicAnalysisService.class).to(SumoLogicAnalysisServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
