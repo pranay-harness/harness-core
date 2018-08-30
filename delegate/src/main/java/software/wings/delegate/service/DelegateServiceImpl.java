@@ -219,6 +219,7 @@ public class DelegateServiceImpl implements DelegateService {
   private final AtomicBoolean acquireTasks = new AtomicBoolean(true);
   private final AtomicBoolean initializing = new AtomicBoolean(false);
   private final AtomicBoolean multiVersionWatcherStarted = new AtomicBoolean(false);
+  private final AtomicBoolean pollingForTasks = new AtomicBoolean(false);
 
   private Socket socket;
   private RequestBuilder request;
@@ -328,8 +329,7 @@ public class DelegateServiceImpl implements DelegateService {
       sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
 
       if (delegateConfiguration.isPollForTasks()) {
-        startTaskPolling();
-        startHeartbeat();
+        pollingForTasks.set(true);
       } else {
         Client client = ClientFactory.getDefault().newClient();
 
@@ -397,6 +397,9 @@ public class DelegateServiceImpl implements DelegateService {
 
         startHeartbeat(builder, socket);
       }
+
+      startTaskPolling();
+      startHeartbeat();
 
       if (!multiVersion) {
         startUpgradeCheck(getVersion());
@@ -467,10 +470,12 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void handleClose(Object o) {
     logger.info("Event:{}, message:[{}]", Event.CLOSE.name(), o.toString());
+    pollingForTasks.set(true);
   }
 
   private void handleReopened(Object o, Builder builder) {
     logger.info("Event:{}, message:[{}]", Event.REOPENED.name(), o.toString());
+    pollingForTasks.set(false);
     try {
       socket.fire(
           builder.but().withLastHeartBeat(clock.millis()).withStatus(Status.ENABLED).withConnected(true).build());
@@ -789,25 +794,27 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void pollForTask() {
-    try {
-      List<DelegateTaskEvent> taskEvents = timeLimiter.callWithTimeout(
-          () -> execute(managerClient.pollTaskEvents(delegateId, accountId)), 15L, TimeUnit.SECONDS, true);
-      if (isNotEmpty(taskEvents)) {
-        logger.info("Processing DelegateTaskEvents {}", taskEvents);
-        for (DelegateTaskEvent taskEvent : taskEvents) {
-          try (TaskLogContext ctx = new TaskLogContext(taskEvent.getDelegateTaskId())) {
-            if (taskEvent instanceof DelegateTaskAbortEvent) {
-              abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
-            } else {
-              dispatchDelegateTask(taskEvent);
+    if (pollingForTasks.get()) {
+      try {
+        List<DelegateTaskEvent> taskEvents = timeLimiter.callWithTimeout(
+            () -> execute(managerClient.pollTaskEvents(delegateId, accountId)), 15L, TimeUnit.SECONDS, true);
+        if (isNotEmpty(taskEvents)) {
+          logger.info("Processing DelegateTaskEvents {}", taskEvents);
+          for (DelegateTaskEvent taskEvent : taskEvents) {
+            try (TaskLogContext ctx = new TaskLogContext(taskEvent.getDelegateTaskId())) {
+              if (taskEvent instanceof DelegateTaskAbortEvent) {
+                abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
+              } else {
+                dispatchDelegateTask(taskEvent);
+              }
             }
           }
         }
+      } catch (UncheckedTimeoutException tex) {
+        logger.warn("Timed out fetching delegate task events");
+      } catch (Exception e) {
+        logger.error("Exception while decoding task", e);
       }
-    } catch (UncheckedTimeoutException tex) {
-      logger.warn("Timed out fetching delegate task events");
-    } catch (Exception e) {
-      logger.error("Exception while decoding task", e);
     }
   }
 
@@ -831,16 +838,18 @@ public class DelegateServiceImpl implements DelegateService {
   private void startHeartbeat() {
     logger.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
     heartbeatExecutor.scheduleAtFixedRate(() -> {
-      try {
-        systemExecutorService.submit(() -> {
-          try {
-            sendHeartbeat();
-          } catch (Exception ex) {
-            logger.error("Exception while sending heartbeat", ex);
-          }
-        });
-      } catch (Exception e) {
-        logger.error("Exception while scheduling heartbeat", e);
+      if (pollingForTasks.get()) {
+        try {
+          systemExecutorService.submit(() -> {
+            try {
+              sendHeartbeat();
+            } catch (Exception ex) {
+              logger.error("Exception while sending heartbeat", ex);
+            }
+          });
+        } catch (Exception e) {
+          logger.error("Exception while scheduling heartbeat", e);
+        }
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
