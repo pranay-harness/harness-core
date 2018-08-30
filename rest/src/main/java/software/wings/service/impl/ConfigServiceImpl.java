@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -243,6 +244,11 @@ public class ConfigServiceImpl implements ConfigService {
     int fileVersion = (version == null) ? configFile.getDefaultVersion() : version;
     String fileId = fileService.getFileIdByVersion(configId, fileVersion, CONFIGS);
 
+    // if default version is already set 0, fileId may be null or not latest.
+    if (isEmpty(fileId) || !fileService.getLatestFileId(configId, CONFIGS).equals(fileId)) {
+      fileId = configFile.getFileUuid();
+    }
+
     File file = new File(Files.createTempDir(), new File(configFile.getRelativeFilePath()).getName());
     if (configFile.isEncrypted()) {
       file = getDecryptedFile(configFile, file, appId, null);
@@ -361,23 +367,13 @@ public class ConfigServiceImpl implements ConfigService {
       updateMap.put("configOverrideType", inputConfigFile.getConfigOverrideType());
     }
 
+    updateMap.put("defaultVersion", savedConfigFile.getDefaultVersion() + 1);
+
     if (inputConfigFile.getConfigOverrideExpression() != null) {
       updateMap.put("configOverrideExpression", inputConfigFile.getConfigOverrideExpression());
     }
 
     wingsPersistence.updateFields(ConfigFile.class, inputConfigFile.getUuid(), updateMap);
-
-    //    ConfigFile configFile = get(inputConfigFile.getAppId(), inputConfigFile.getUuid());
-    //
-    //    if (inputConfigFile.getEntityType() == SERVICE) {
-    //      String fileContent = null;
-    //      if (!configFile.isEncrypted()) {
-    //        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-    //        fileService.downloadToStream(inputConfigFile.getUuid(), outputStream, FileBucket.CONFIGS);
-    //        fileContent = outputStream.toString();
-    //      }
-    //      yamlChangeSetHelper.configFileYamlChangeAsync(configFile, Change.ChangeType.MODIFY);
-    //    }
   }
 
   /**
