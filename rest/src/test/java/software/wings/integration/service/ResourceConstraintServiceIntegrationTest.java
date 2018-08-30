@@ -56,9 +56,7 @@ public class ResourceConstraintServiceIntegrationTest extends WingsBaseTest {
         context.put(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY, "WORKFLOW");
         context.put(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY, generateUuid());
         context.put(ResourceConstraintInstance.ORDER_KEY,
-            resourceConstraintService.getMaxOrder(
-                ResourceConstraintInstance.GLOBAL_APP_ID, resourceConstraint.getUuid())
-                + 1);
+            resourceConstraintService.getMaxOrder(resourceConstraint.getUuid()) + 1);
 
         try {
           constraint.registerConsumer(
@@ -69,8 +67,6 @@ public class ResourceConstraintServiceIntegrationTest extends WingsBaseTest {
       }
     });
 
-    assertThat(
-        resourceConstraintService.getMaxOrder(ResourceConstraintInstance.GLOBAL_APP_ID, resourceConstraint.getUuid()))
-        .isEqualTo(100);
+    assertThat(resourceConstraintService.getMaxOrder(resourceConstraint.getUuid())).isEqualTo(100);
   }
 }

@@ -271,10 +271,9 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
-  public int getMaxOrder(String appId, String resourceConstraintId) {
+  public int getMaxOrder(String resourceConstraintId) {
     final ResourceConstraintInstance resourceConstraintInstance =
         wingsPersistence.createQuery(ResourceConstraintInstance.class)
-            .filter(ResourceConstraintInstance.APP_ID_KEY, appId)
             .filter(ResourceConstraintInstance.RESOURCE_CONSTRAINT_ID_KEY, resourceConstraintId)
             .order(Sort.descending(ResourceConstraintInstance.ORDER_KEY))
             .get(new FindOptions().limit(1));
@@ -353,7 +352,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
 
   @Override
   public boolean adjustRegisterConsumerContext(ConstraintId id, Map<String, Object> context) {
-    final int order = getMaxOrder((String) context.get(ResourceConstraintInstance.APP_ID_KEY), id.getValue()) + 1;
+    final int order = getMaxOrder(id.getValue()) + 1;
     if (order == (int) context.get(ResourceConstraintInstance.ORDER_KEY)) {
       return false;
     }

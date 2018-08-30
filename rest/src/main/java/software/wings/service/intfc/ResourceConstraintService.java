@@ -28,7 +28,7 @@ public interface ResourceConstraintService extends OwnedByAccount {
 
   ConstraintRegistry getRegistry();
 
-  int getMaxOrder(String accountId, String resourceConstraintId);
+  int getMaxOrder(String resourceConstraintId);
 
   Constraint createAbstraction(ResourceConstraint resourceConstraint);
 

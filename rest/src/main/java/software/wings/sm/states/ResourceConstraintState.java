@@ -112,8 +112,8 @@ public class ResourceConstraintState extends State {
     constraintContext.put(ResourceConstraintInstance.APP_ID_KEY, context.getAppId());
     constraintContext.put(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY, holdingScope);
     constraintContext.put(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY, releaseEntityId);
-    constraintContext.put(ResourceConstraintInstance.ORDER_KEY,
-        resourceConstraintService.getMaxOrder(context.getAppId(), resourceConstraintId) + 1);
+    constraintContext.put(
+        ResourceConstraintInstance.ORDER_KEY, resourceConstraintService.getMaxOrder(resourceConstraintId) + 1);
 
     String consumerId = generateUuid();
     try {
