@@ -18,7 +18,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.data.structure.ListUtils;
-import migrations.all.SystemTemplateGalleryMigration;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -45,7 +44,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 @ValidateOnExecution
 public class TemplateGalleryServiceImpl implements TemplateGalleryService {
-  private static final Logger logger = getLogger(SystemTemplateGalleryMigration.class);
+  private static final Logger logger = getLogger(TemplateGalleryServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TemplateFolderService templateFolderService;
   @Inject private TemplateService templateService;
@@ -135,7 +134,6 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
     templateService.loadDefaultTemplates(TemplateType.SSH, GLOBAL_ACCOUNT_ID, gallery.getName());
     logger.info("Loading default templates for command success");
     templateService.loadDefaultTemplates(TemplateType.HTTP, GLOBAL_ACCOUNT_ID, gallery.getName());
-    copyHarnessTemplates();
   }
 
   public TemplateGallery saveHarnessGallery() {
@@ -152,8 +150,10 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   public void copyHarnessTemplates() {
     List<Account> accounts = accountService.listAllAccounts();
     for (Account account : accounts) {
-      deleteByAccountId(account.getUuid());
-      copyHarnessTemplatesToAccount(account.getUuid(), account.getAccountName());
+      if (!GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
+        deleteByAccountId(account.getUuid());
+        copyHarnessTemplatesToAccount(account.getUuid(), account.getAccountName());
+      }
     }
   }
 
@@ -195,7 +195,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
                                               .name(accountName)
                                               .appId(GLOBAL_APP_ID)
                                               .accountId(accountId)
-                                              .referencedGalleryId(harnessTemplateGallery.getReferencedGalleryId())
+                                              .referencedGalleryId(harnessTemplateGallery.getUuid())
                                               .build());
     logger.info("Creating Account gallery success");
     logger.info("Copying harness template folders to account {}", accountName);

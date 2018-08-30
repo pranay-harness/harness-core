@@ -12,6 +12,7 @@ public class SeedDataMigrationList {
     return new ImmutableList.Builder<Pair<Integer, Class<? extends SeedDataMigration>>>()
         .add(Pair.of(1, BaseSeedDataMigration.class))
         .add(Pair.of(2, TemplateGalleryDefaultTemplatesMigration.class))
+        .add(Pair.of(3, TemplateGalleryDefaultTemplatesMigration.class))
         .build();
   }
 }
