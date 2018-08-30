@@ -294,8 +294,11 @@ public class WorkflowServiceHelper {
     }
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-    notNullCheck("InfraMapping", infrastructureMapping, USER);
-
+    if (infrastructureMapping == null) {
+      logger.warn(
+          "Service Infrastructure with id {}  for appId {} does not exist", workflowPhase.getInfraMappingId(), appId);
+      throw new InvalidRequestException("ServiceInfrastructure does not exist", USER);
+    }
     workflowPhase.setComputeProviderId(infrastructureMapping.getComputeProviderSettingId());
     workflowPhase.setInfraMappingName(infrastructureMapping.getName());
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));

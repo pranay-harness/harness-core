@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -67,6 +68,7 @@ import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -234,11 +236,15 @@ public class AppServiceImpl implements AppService {
 
     List<SettingAttribute> settingAttributes =
         settingsService.listApplicationDefaults(application.getAccountId(), application.getUuid());
+
     application.setDefaults(
         settingAttributes.stream()
-            .filter(settingAttribute -> settingAttribute.getValue() instanceof StringValue)
+            .filter(settingAttribute
+                -> settingAttribute.getValue() instanceof StringValue && isNotEmpty(settingAttribute.getName()))
             .collect(Collectors.toMap(SettingAttribute::getName,
-                settingAttribute -> ((StringValue) settingAttribute.getValue()).getValue(), (a, b) -> b)));
+                settingAttribute
+                -> Optional.ofNullable(((StringValue) settingAttribute.getValue()).getValue()).orElse(""),
+                (a, b) -> b)));
     return application;
   }
 

@@ -47,6 +47,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Notification;
 import software.wings.beans.Service;
+import software.wings.beans.StringValue;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -220,8 +221,22 @@ public class AppServiceTest extends WingsBaseTest {
                         .withAccountId(ACCOUNT_ID)
                         .withDefaults(ImmutableMap.of("Param1", "Value1"))
                         .build());
+    when(settingsService.listApplicationDefaults(ACCOUNT_ID, APP_ID))
+        .thenReturn(asList(aSettingAttribute()
+                               .withName("NAME")
+                               .withAccountId("ACCOUNT_ID")
+                               .withValue(StringValue.Builder.aStringValue().build())
+                               .build(),
+            aSettingAttribute()
+                .withName("NAME2")
+                .withAccountId("ACCOUNT_ID")
+                .withValue(StringValue.Builder.aStringValue().withValue("VALUE").build())
+                .build()));
+
     Application application = appService.getApplicationWithDefaults(APP_ID);
     assertThat(application).isNotNull();
+    assertThat(application.getDefaults()).isNotEmpty().containsKeys("NAME", "NAME2");
+    assertThat(application.getDefaults()).isNotEmpty().containsValues("", "VALUE");
     verify(wingsPersistence).get(Application.class, APP_ID);
     verify(settingsService).listApplicationDefaults(ACCOUNT_ID, APP_ID);
   }

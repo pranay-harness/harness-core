@@ -704,10 +704,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   public Workflow updateLinkedWorkflow(Workflow workflow, Workflow existingWorkflow) {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow();
-    notNullCheck("Orchestration workflow required", orchestrationWorkflow, USER);
+    notNullCheck(
+        "Orchestration not associated to the workflow [" + workflow.getName() + "]", orchestrationWorkflow, USER);
+
     CanaryOrchestrationWorkflow existingOrchestrationWorkflow =
         (CanaryOrchestrationWorkflow) existingWorkflow.getOrchestrationWorkflow();
-    notNullCheck("Orchestration workflow required", existingOrchestrationWorkflow, USER);
+    notNullCheck("Previous orchestration workflow with name [" + workflow.getName() + "] does not exist",
+        existingOrchestrationWorkflow, USER);
 
     // Update Linked Predeployment steps
     workflowServiceTemplateHelper.updateLinkedPhaseStepTemplate(
