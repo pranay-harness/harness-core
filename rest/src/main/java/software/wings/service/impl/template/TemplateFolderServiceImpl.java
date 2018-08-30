@@ -70,13 +70,15 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
 
   @Override
   public TemplateFolder save(TemplateFolder templateFolder) {
-    TemplateGallery templateGallery;
-    if (isEmpty(templateFolder.getGalleryId())) {
-      templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateGallery templateGallery = null;
+    String galleryId = templateFolder.getGalleryId();
+    if (isEmpty(galleryId)) {
+      templateGallery = templateGalleryService.getByAccount(templateFolder.getAccountId());
+      notNullCheck("Template gallery does not exist", templateGallery, USER);
     } else {
-      templateGallery = templateGalleryService.get(templateFolder.getGalleryId());
+      templateGallery = templateGalleryService.get(galleryId);
     }
-    notNullCheck("Template Gallery", templateGallery, USER);
+    notNullCheck("Template Gallery does not exist", templateGallery, USER);
     templateFolder.setGalleryId(templateGallery.getUuid());
     if (!isEmpty(templateFolder.getParentId())) {
       TemplateFolder parentFolder = get(templateFolder.getParentId());

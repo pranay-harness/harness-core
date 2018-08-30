@@ -19,5 +19,5 @@ public class HttpTemplate implements BaseTemplate {
   private String body;
   private String assertion;
   private transient boolean executeWithPreviousSteps;
-  private int socketTimeoutMillis = 10000;
+  @Builder.Default private int socketTimeoutMillis = 10000;
 }

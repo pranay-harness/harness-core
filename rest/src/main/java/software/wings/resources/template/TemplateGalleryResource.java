@@ -112,6 +112,7 @@ public class TemplateGalleryResource {
   public RestResponse<TemplateFolder> saveFolder(
       @QueryParam("accountId") String accountId, TemplateFolder templateFolder) {
     templateFolder.setAppId(GLOBAL_APP_ID);
+    templateFolder.setAccountId(accountId);
     return new RestResponse<>(templateFolderService.save(templateFolder));
   }
 

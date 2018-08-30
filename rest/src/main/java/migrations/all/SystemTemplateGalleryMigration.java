@@ -16,5 +16,6 @@ public class SystemTemplateGalleryMigration implements Migration {
   public void migrate() {
     logger.info("Migrating Harness Inc Gallery");
     templateGalleryService.loadHarnessGallery();
+    templateGalleryService.copyHarnessTemplates();
   }
 }

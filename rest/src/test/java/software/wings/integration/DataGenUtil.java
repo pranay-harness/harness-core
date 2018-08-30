@@ -261,6 +261,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Test
   public void populateData() throws IOException {
     templateGalleryService.loadHarnessGallery();
+    templateGalleryService.copyHarnessTemplates();
 
     Account account = createLicenseAndDefaultUsers();
     accountGenerator.setAccount(account);

@@ -35,6 +35,7 @@ public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigrati
       if (rootTemplateGalleryDoesNotExist) {
         logger.error("TemplateGalleryDefaultTemplatesMigration root template gallery not found");
         templateGalleryService.loadHarnessGallery(); // takes care of copying templates to individual accounts
+        templateGalleryService.copyHarnessTemplates();
       } else {
         // in case previous migration failed while copying Harness templates
         copyHarnessTemplateToAccounts();
@@ -58,7 +59,9 @@ public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigrati
                                                     .getKey()
               == null;
           if (templateGalleryDoesNotExist) {
-            templateGalleryService.copyHarnessTemplatesToAccount(account.getUuid(), account.getAccountName());
+            if (!GLOBAL_ACCOUNT_ID.equals(account.getUuid())) {
+              templateGalleryService.copyHarnessTemplatesToAccount(account.getUuid(), account.getAccountName());
+            }
           } else {
             logger.info("TemplateGalleryDefaultTemplatesMigration gallery already exists for account [{}]. do nothing",
                 account.getUuid());

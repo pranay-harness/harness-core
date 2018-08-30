@@ -134,5 +134,6 @@ public class HttpTemplateProcessor extends AbstractTemplateProcessor {
     if (isNotEmpty(httpTemplate.getAssertion())) {
       properties.put("assertion", httpTemplate.getAssertion());
     }
+    properties.put("socketTimeoutMillis", httpTemplate.getSocketTimeoutMillis());
   }
 }
