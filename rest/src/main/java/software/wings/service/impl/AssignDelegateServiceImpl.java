@@ -73,6 +73,25 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         && (isEmpty(tags) || (isNotEmpty(delegate.getTags()) && delegate.getTags().containsAll(tags)));
   }
 
+  @Override
+  public boolean canAssignTags(Delegate delegate, DelegateTask task) {
+    return isEmpty(task.getTags())
+        || (isNotEmpty(delegate.getTags()) && delegate.getTags().containsAll(task.getTags()));
+  }
+
+  @Override
+  public boolean canAssignScopes(Delegate delegate, DelegateTask task) {
+    return (isEmpty(delegate.getIncludeScopes())
+               || delegate.getIncludeScopes().stream().anyMatch(scope
+                      -> scopeMatch(scope, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(),
+                          isNotBlank(task.getTaskType()) ? TaskType.valueOf(task.getTaskType()).getTaskGroup() : null)))
+        && (isEmpty(delegate.getExcludeScopes())
+               || delegate.getExcludeScopes().stream().noneMatch(scope
+                      -> scopeMatch(scope, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(),
+                          isNotBlank(task.getTaskType()) ? TaskType.valueOf(task.getTaskType()).getTaskGroup()
+                                                         : null)));
+  }
+
   private boolean scopeMatch(
       DelegateScope scope, String appId, String envId, String infraMappingId, TaskGroup taskGroup) {
     if (!scope.isValid()) {
