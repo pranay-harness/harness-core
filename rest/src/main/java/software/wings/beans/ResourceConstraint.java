@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import io.harness.data.validator.Trimmed;
 import io.harness.distribution.constraint.Constraint;
 import lombok.Builder;
 import lombok.Data;
@@ -12,6 +13,9 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+
 @Entity(value = "resourceConstraint", noClassnameStored = true)
 @Indexes(@Index(
     options = @IndexOptions(unique = true, name = "uniqueName"), fields = { @Field("accountId")
@@ -23,8 +27,8 @@ public class ResourceConstraint extends Base {
   public static final String NAME_KEY = "name";
 
   @NotEmpty private String accountId;
-  private String name;
-  private int capacity;
+  @NotEmpty @Trimmed private String name;
+  @Min(value = 1) @Max(value = 1000) private int capacity;
   private Constraint.Strategy strategy;
 
   @Builder

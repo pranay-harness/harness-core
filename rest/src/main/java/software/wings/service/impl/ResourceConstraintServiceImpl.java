@@ -186,9 +186,10 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
           constraintIds.remove(instance.getResourceConstraintId());
           continue;
         }
-        if (State.BLOCKED.name().equals(instance.getState())
-            && !excludeConstraintIds.contains(instance.getResourceConstraintId())) {
-          constraintIds.add(instance.getResourceConstraintId());
+        if (State.BLOCKED.name().equals(instance.getState())) {
+          if (!excludeConstraintIds.contains(instance.getResourceConstraintId())) {
+            constraintIds.add(instance.getResourceConstraintId());
+          }
           continue;
         }
         unhandled(instance.getState());
@@ -344,6 +345,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     try {
       wingsPersistence.save(builder.build());
     } catch (DuplicateKeyException exception) {
+      logger.info("Failed to add ResourceConstraintInstance", exception);
       return false;
     }
     return true;
