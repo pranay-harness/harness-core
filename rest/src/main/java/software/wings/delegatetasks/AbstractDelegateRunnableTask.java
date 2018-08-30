@@ -127,7 +127,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
     isAsync = async;
   }
 
-  ThirdPartyApiCallLog createApiCallLog(String stateExecutionId) {
+  public ThirdPartyApiCallLog createApiCallLog(String stateExecutionId) {
     return ThirdPartyApiCallLog.builder()
         .accountId(getAccountId())
         .appId(getAppId())

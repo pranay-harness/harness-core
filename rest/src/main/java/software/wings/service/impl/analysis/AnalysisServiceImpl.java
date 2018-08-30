@@ -975,6 +975,11 @@ public class AnalysisServiceImpl implements AnalysisService {
               aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
           return delegateProxyFactory.get(LogzDelegateService.class, logzTaskContext)
               .getLogSample((LogzConfig) settingAttribute.getValue(), encryptedDataDetails);
+        case SUMO:
+          errorCode = ErrorCode.SUMO_CONFIGURATION_ERROR;
+          SyncTaskContext sumoTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+          return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
+              .getLogSample((SumoConfig) settingAttribute.getValue(), index, encryptedDataDetails);
         default:
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;
           throw new IllegalStateException("Invalid state type: " + stateType);

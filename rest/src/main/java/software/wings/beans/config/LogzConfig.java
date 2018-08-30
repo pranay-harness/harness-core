@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,7 +41,6 @@ public class LogzConfig extends SettingValue implements Encryptable {
     super(StateType.LOGZ.name());
   }
 
-  @SuppressFBWarnings("EI_EXPOSE_REP2")
   private LogzConfig(String logzUrl, char[] token, String accountId, String encryptedToken) {
     this();
     this.logzUrl = logzUrl;

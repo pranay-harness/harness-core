@@ -58,6 +58,14 @@ public interface AnalysisService {
   boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
       String workflowId, String workflowExecutionId, String serviceId);
 
+  /**
+   * Method to return Sample data for given configurations.
+   * @param accountId
+   * @param analysisServerConfigId
+   * @param index
+   * @param stateType
+   * @return
+   */
   Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType);
 
   boolean purgeLogs();
