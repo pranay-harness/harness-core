@@ -284,7 +284,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     createTestApplication(account);
     // createSeedEntries();
-    //    executorService.submit(() -> loadAppStackCatalogs());
+    executorService.submit(() -> loadAppStackCatalogs());
   }
 
   private void createSeedEntries() {
