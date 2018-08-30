@@ -57,8 +57,6 @@ import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.Container;
-import io.fabric8.kubernetes.api.model.EnvFromSource;
-import io.fabric8.kubernetes.api.model.EnvFromSourceBuilder;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.EnvVarBuilder;
 import io.fabric8.kubernetes.api.model.EnvVarSource;
@@ -172,6 +170,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   @Transient private static final String STAGE_SERVICE_NAME_PLACEHOLDER_REGEX = "\\$\\{STAGE_SERVICE_NAME}";
   @Transient private static final String STAGE_SERVICE_PORT_PLACEHOLDER_REGEX = "\\$\\{STAGE_SERVICE_PORT}";
+  @Transient private static final int MAX_ENV_VAR_LENGTH = 2000;
 
   @Inject private transient GkeClusterService gkeClusterService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;
@@ -1594,11 +1593,41 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         mergeMaps(podTemplateSpec.getMetadata().getAnnotations(), harnessAnnotations));
     podTemplateSpec.getMetadata().setLabels(mergeMaps(podTemplateSpec.getMetadata().getLabels(), controllerLabels));
 
+    Map<String, EnvVar> configMapEnvVars = new HashMap<>();
+
+    if (configMap != null) {
+      for (String key : configMap.getData().keySet()) {
+        String value = configMap.getData().get(key);
+        if (envVarPattern.matcher(key).matches() && isNotBlank(value) && value.length() <= MAX_ENV_VAR_LENGTH) {
+          EnvVarSource varSource = new EnvVarSourceBuilder()
+                                       .withNewConfigMapKeyRef()
+                                       .withName(configMap.getMetadata().getName())
+                                       .withKey(key)
+                                       .endConfigMapKeyRef()
+                                       .build();
+          configMapEnvVars.put(key, new EnvVarBuilder().withName(key).withValueFrom(varSource).build());
+        } else {
+          String msg = "";
+          if (!envVarPattern.matcher(key).matches()) {
+            msg = format("Key name [%s] from config map is not a valid environment variable name. Skipping...", key);
+          } else if (isBlank(value)) {
+            msg = format("Value for [%s] from config map is blank. Skipping as environment variable...", key);
+          } else if (value.length() > MAX_ENV_VAR_LENGTH) {
+            msg = format(
+                "Value for [%s] from config map has length %d which exceeds the maximum environment variable length of %d. Skipping...",
+                key, value.length(), MAX_ENV_VAR_LENGTH);
+          }
+          executionLogCallback.saveExecutionLog(msg, LogLevel.WARN);
+        }
+      }
+    }
+
     Map<String, EnvVar> secretEnvVars = new HashMap<>();
 
     if (secretMap != null) {
       for (String key : secretMap.getStringData().keySet()) {
-        if (envVarPattern.matcher(key).matches()) {
+        String value = secretMap.getStringData().get(key);
+        if (envVarPattern.matcher(key).matches() && isNotBlank(value) && value.length() <= MAX_ENV_VAR_LENGTH) {
           EnvVarSource varSource = new EnvVarSourceBuilder()
                                        .withNewSecretKeyRef()
                                        .withName(secretMap.getMetadata().getName())
@@ -1607,32 +1636,33 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                        .build();
           secretEnvVars.put(key, new EnvVarBuilder().withName(key).withValueFrom(varSource).build());
         } else {
-          String msg =
-              format("Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
+          String msg = "";
+          if (!envVarPattern.matcher(key).matches()) {
+            msg = format("Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
+          } else if (isBlank(value)) {
+            msg = format("Value for [%s] from secret map is blank. Skipping as environment variable...", key);
+          } else if (value.length() > MAX_ENV_VAR_LENGTH) {
+            msg = format(
+                "Value for [%s] from secret map has length %d which exceeds the maximum environment variable length of %d. Skipping...",
+                key, value.length(), MAX_ENV_VAR_LENGTH);
+          }
           executionLogCallback.saveExecutionLog(msg, LogLevel.WARN);
         }
       }
     }
 
     for (Container container : podTemplateSpec.getSpec().getContainers()) {
-      if (configMap != null) {
-        List<EnvFromSource> envSourceList = new ArrayList<>();
-        if (container.getEnvFrom() != null) {
-          envSourceList.addAll(container.getEnvFrom());
-        }
-        envSourceList.add(new EnvFromSourceBuilder()
-                              .withNewConfigMapRef()
-                              .withName(configMap.getMetadata().getName())
-                              .endConfigMapRef()
-                              .build());
-        container.setEnvFrom(envSourceList);
-      }
-      if (isNotEmpty(secretEnvVars)) {
+      if (isNotEmpty(configMapEnvVars) || isNotEmpty(secretEnvVars)) {
         Map<String, EnvVar> containerEnvVars = new HashMap<>();
         if (container.getEnv() != null) {
           container.getEnv().forEach(envVar -> containerEnvVars.put(envVar.getName(), envVar));
         }
-        containerEnvVars.putAll(secretEnvVars);
+        if (isNotEmpty(configMapEnvVars)) {
+          containerEnvVars.putAll(configMapEnvVars);
+        }
+        if (isNotEmpty(secretEnvVars)) {
+          containerEnvVars.putAll(secretEnvVars);
+        }
         container.setEnv(new ArrayList<>(containerEnvVars.values()));
       }
     }
