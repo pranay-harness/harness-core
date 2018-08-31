@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.Encryptable;
 import software.wings.annotation.Encrypted;
@@ -23,6 +24,7 @@ import software.wings.yaml.setting.CloudProviderYaml;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
+@ToString(exclude = "password")
 public class PcfConfig extends SettingValue implements Encryptable {
   @Attributes(title = "Endpoint URL", required = true) @NotEmpty private String endpointUrl;
   @Attributes(title = "Username", required = true) @NotEmpty private String username;

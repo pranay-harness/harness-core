@@ -11,6 +11,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.cloudfoundry.operations.organizations.OrganizationSummary;
+import software.wings.beans.PcfConfig;
 import software.wings.utils.Misc;
 
 import java.util.Collections;
@@ -179,5 +180,20 @@ public class PcfDeploymentManagerImpl implements PcfDeploymentManager {
       }
     }
     return -1;
+  }
+
+  public String checkConnectivity(PcfConfig pcfConfig) {
+    try {
+      getOrganizations(PcfRequestConfig.builder()
+                           .endpointUrl(pcfConfig.getEndpointUrl())
+                           .userName(pcfConfig.getUsername())
+                           .password(String.valueOf(pcfConfig.getPassword()))
+                           .timeOutIntervalInMins(5)
+                           .build());
+    } catch (PivotalClientApiException e) {
+      return e.getMessage();
+    }
+
+    return "SUCCESS";
   }
 }

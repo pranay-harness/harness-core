@@ -15,7 +15,6 @@ import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.artifactory.ArtifactoryServiceImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
 import software.wings.helpers.ext.pcf.PcfClientImpl;
-import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
 import software.wings.service.impl.AmazonS3BuildServiceImpl;
 import software.wings.service.impl.ArtifactoryBuildServiceImpl;
@@ -66,12 +65,14 @@ public class WingsTestModule extends AbstractModule {
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
     bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
     bind(ContainerService.class).to(ContainerServiceImpl.class);
-    bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
+    // bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
+
     bind(PcfClient.class).to(PcfClientImpl.class);
     DelegateLogService mockDelegateLogService = mock(DelegateLogService.class);
     bind(DelegateLogService.class).toInstance(mockDelegateLogService);
     GitClientHelper gitClientHelper = mock(GitClientHelper.class);
     bind(GitClientImpl.class);
+    bind(PcfDeploymentManagerImpl.class);
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
 
     bind(ExecutorService.class)

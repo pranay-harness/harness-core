@@ -60,6 +60,8 @@ import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
+import software.wings.helpers.ext.pcf.PcfDeploymentManager;
+import software.wings.helpers.ext.pcf.PcfDeploymentManagerUnsupported;
 import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseManager;
 import software.wings.licensing.LicenseManagerImpl;
@@ -511,6 +513,7 @@ public class WingsModule extends AbstractModule {
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
     bind(ThirdPartyApiService.class).to(ThirdPartyApiServiceImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
+    bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
