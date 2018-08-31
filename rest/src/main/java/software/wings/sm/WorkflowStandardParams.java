@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
+import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.PHASE_PARAM;
 
 import com.google.inject.Inject;
@@ -113,6 +114,9 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
         buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(), app.getUuid(),
             BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : env.getUuid(),
             context.getWorkflowExecutionId())));
+    if (currentUser != null) {
+      map.put(DEPLOYMENT_TRIGGERED_BY, currentUser.getName());
+    }
 
     ServiceElement serviceElement = fetchServiceElement(context);
     Artifact artifact;
