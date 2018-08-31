@@ -91,41 +91,44 @@ public class MigrationServiceImpl implements MigrationService {
       }
 
       int currentBackgroundVersion = schema.getBackgroundVersion();
-      executorService.submit(() -> {
-        try (AcquiredLock backgroundLock =
-                 persistentLocker.acquireLock(Schema.class, "Background-" + SCHEMA_ID, ofMinutes(120 + 1))) {
-          timeLimiter.<Boolean>callWithTimeout(() -> {
-            logger.info("[Migration] - Updating schema background version from {} to {}", currentBackgroundVersion,
-                maxBackgroundVersion);
+      if (currentBackgroundVersion < maxBackgroundVersion) {
+        executorService.submit(() -> {
+          try (AcquiredLock ignore =
+                   persistentLocker.acquireLock(Schema.class, "Background-" + SCHEMA_ID, ofMinutes(120 + 1))) {
+            timeLimiter.<Boolean>callWithTimeout(() -> {
+              logger.info("[Migration] - Updating schema background version from {} to {}", currentBackgroundVersion,
+                  maxBackgroundVersion);
 
-            for (int i = currentBackgroundVersion + 1; i <= maxBackgroundVersion; i++) {
-              if (!backgroundMigrations.containsKey(i)) {
-                continue;
+              for (int i = currentBackgroundVersion + 1; i <= maxBackgroundVersion; i++) {
+                if (!backgroundMigrations.containsKey(i)) {
+                  continue;
+                }
+                Class<? extends Migration> migration = backgroundMigrations.get(i);
+                logger.info("[Migration] - Migrating to background version {}: {} ...", i, migration.getSimpleName());
+                injector.getInstance(migration).migrate();
+
+                final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
+                updateOperations.set(Schema.BACKGROUND_VERSION_KEY, i);
+                wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
               }
-              Class<? extends Migration> migration = backgroundMigrations.get(i);
-              logger.info("[Migration] - Background Migrating to version {}: {} ...", i, migration.getSimpleName());
-              injector.getInstance(migration).migrate();
 
-              final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
-              updateOperations.set(Schema.BACKGROUND_VERSION_KEY, i);
-              wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
-            }
-
-            // If the current version is bigger from the code version, we probably downgrading.
-            // Restore the max version to the previous
-            if (currentBackgroundVersion > maxBackgroundVersion) {
-              final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
-              updateOperations.set(Schema.BACKGROUND_VERSION_KEY, maxBackgroundVersion);
-              wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
-            }
-
-            logger.info("[Migration] - Background migration complete");
-            return true;
-          }, 2, TimeUnit.HOURS, true);
-        } catch (Exception ex) {
-          logger.warn("background work", ex);
-        }
-      });
+              logger.info("[Migration] - Background migration complete");
+              return true;
+            }, 2, TimeUnit.HOURS, true);
+          } catch (Exception ex) {
+            logger.warn("background work", ex);
+          }
+        });
+      } else if (currentBackgroundVersion > maxBackgroundVersion) {
+        // If the current version is bigger than the max version we are downgrading. Restore to the previous version
+        logger.info("[Migration] - Rolling back schema background version from {} to {}", currentBackgroundVersion,
+            maxBackgroundVersion);
+        final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
+        updateOperations.set(Schema.BACKGROUND_VERSION_KEY, maxBackgroundVersion);
+        wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
+      } else {
+        logger.info("[Migration] - Schema background is up to date");
+      }
 
       if (schema.getVersion() < maxVersion) {
         logger.info("[Migration] - Updating schema version from {} to {}", schema.getVersion(), maxVersion);
@@ -161,11 +164,9 @@ public class MigrationServiceImpl implements MigrationService {
           }
           logger.info("Git full sync on all the accounts completed");
         });
-        // If the current version is bigger from the code version, we probably downgrading.
-        // Restore the max version to the previous
       } else if (schema.getVersion() > maxVersion) {
-        logger.info(
-            "[Migration] - Rolling back schema version from {} to {}", schema.getSeedDataVersion(), maxSeedDataVersion);
+        // If the current version is bigger than the max version we are downgrading. Restore to the previous version
+        logger.info("[Migration] - Rolling back schema version from {} to {}", schema.getVersion(), maxVersion);
         final UpdateOperations<Schema> updateOperations = wingsPersistence.createUpdateOperations(Schema.class);
         updateOperations.set(Schema.VERSION_KEY, maxVersion);
         wingsPersistence.update(wingsPersistence.createQuery(Schema.class), updateOperations);
@@ -173,7 +174,7 @@ public class MigrationServiceImpl implements MigrationService {
         logger.info("[Migration] - Schema is up to date");
       }
 
-      /**
+      /*
        * We run the seed data migration only once, so even in case of a rollback, we do not reset the seedDataVersion to
        * the previous version This has been done on purpose to simplify the migrations, where the migrations do not have
        * any special logic to check if they have already been run or not.
