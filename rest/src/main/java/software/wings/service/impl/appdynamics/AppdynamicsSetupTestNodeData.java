@@ -3,6 +3,7 @@ package software.wings.service.impl.appdynamics;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
 import software.wings.service.impl.analysis.SetupTestNodeData;
@@ -12,6 +13,7 @@ import software.wings.service.impl.analysis.SetupTestNodeData;
  */
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 public class AppdynamicsSetupTestNodeData extends SetupTestNodeData {
   private long applicationId;

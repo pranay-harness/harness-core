@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
@@ -32,6 +33,7 @@ import software.wings.service.intfc.EnvironmentService;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -73,14 +75,12 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         && (isEmpty(tags) || (isNotEmpty(delegate.getTags()) && delegate.getTags().containsAll(tags)));
   }
 
-  @Override
-  public boolean canAssignTags(Delegate delegate, DelegateTask task) {
+  private boolean canAssignTags(Delegate delegate, DelegateTask task) {
     return isEmpty(task.getTags())
         || (isNotEmpty(delegate.getTags()) && delegate.getTags().containsAll(task.getTags()));
   }
 
-  @Override
-  public boolean canAssignScopes(Delegate delegate, DelegateTask task) {
+  private boolean canAssignScopes(Delegate delegate, DelegateTask task) {
     return (isEmpty(delegate.getIncludeScopes())
                || delegate.getIncludeScopes().stream().anyMatch(scope
                       -> scopeMatch(scope, task.getAppId(), task.getEnvId(), task.getInfrastructureMappingId(),
@@ -255,5 +255,56 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public void clearConnectionResults(String delegateId) {
     wingsPersistence.delete(
         wingsPersistence.createQuery(DelegateConnectionResult.class).filter("delegateId", delegateId));
+  }
+
+  @Override
+  public String getActiveDelegateAssignmentErrorMessage(DelegateTask delegateTask) {
+    logger.info("Delegate task {} is terminated", delegateTask.getUuid());
+
+    List<Delegate> activeDelegates = wingsPersistence.createQuery(Delegate.class)
+                                         .filter("accountId", delegateTask.getAccountId())
+                                         .field("lastHeartBeat")
+                                         .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
+                                         .asList();
+
+    logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
+
+    List<Delegate> eligibleDelegates =
+        activeDelegates.stream().filter(delegate -> canAssign(delegate.getUuid(), delegateTask)).collect(toList());
+
+    String errorMessage;
+    if (activeDelegates.isEmpty()) {
+      errorMessage = "There were no active delegates to complete the task.";
+    } else if (eligibleDelegates.isEmpty()) {
+      StringBuilder msg = new StringBuilder();
+      for (Delegate delegate : activeDelegates) {
+        msg.append(" ===> ").append(delegate.getHostName()).append(": ");
+        boolean cannotAssignScope = !canAssignScopes(delegate, delegateTask);
+        boolean cannotAssignTags = !canAssignTags(delegate, delegateTask);
+        if (cannotAssignScope) {
+          msg.append("Cannot assign due to scope");
+        }
+        if (cannotAssignScope && cannotAssignTags) {
+          msg.append(" - ");
+        }
+        if (cannotAssignTags) {
+          List<String> delegateTags = Optional.ofNullable(delegate.getTags()).orElse(emptyList());
+          List<String> taskTags = delegateTask.getTags();
+          msg.append("Cannot assign due to tags: delegate tags: ")
+              .append(delegateTags)
+              .append(", task tags: ")
+              .append(taskTags);
+        }
+        msg.append('\n');
+      }
+      errorMessage = "None of the active delegates were eligible to complete the task.\n\n" + msg.toString();
+    } else if (delegateTask.getDelegateId() != null) {
+      Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateTask.getDelegateId());
+      errorMessage = "Delegate task timed out. Delegate: "
+          + (delegate != null ? delegate.getHostName() : "not found: " + delegateTask.getDelegateId());
+    } else {
+      errorMessage = "Delegate task was never assigned and timed out.";
+    }
+    return errorMessage;
   }
 }
