@@ -86,6 +86,8 @@ public interface DelegateService {
 
   void abortTask(String accountId, String delegateTaskId);
 
+  void expireTask(String accountId, String delegateTaskId);
+
   List<DelegateTaskEvent> getDelegateTaskEvents(String accountId, String delegateId, boolean syncOnly);
 
   Delegate updateHeartbeat(String accountId, String delegateId);

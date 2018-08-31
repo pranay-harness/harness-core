@@ -531,7 +531,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
         DelegateTaskEvent delegateTaskEvent = JsonUtils.asObject(message, DelegateTaskEvent.class);
-        try (TaskLogContext ctx = new TaskLogContext(delegateTaskEvent.getDelegateTaskId())) {
+        try (TaskLogContext ignore = new TaskLogContext(delegateTaskEvent.getDelegateTaskId())) {
           if (delegateTaskEvent instanceof DelegateTaskAbortEvent) {
             abortDelegateTask((DelegateTaskAbortEvent) delegateTaskEvent);
           } else {

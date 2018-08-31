@@ -1251,23 +1251,56 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
+  public void expireTask(String accountId, String delegateTaskId) {
+    if (delegateTaskId == null) {
+      logger.warn("Delegate task id was null", new IllegalArgumentException());
+      return;
+    }
+    logger.info("Expiring delegate task {}", delegateTaskId);
+    Query<DelegateTask> delegateTaskQuery = getRunningTaskQuery(accountId, delegateTaskId);
+
+    DelegateTask delegateTask = delegateTaskQuery.get();
+
+    if (delegateTask != null) {
+      String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
+      logger.info("Marking task as expired - {}: {}", delegateTask.getUuid(), errorMessage);
+
+      if (isNotBlank(delegateTask.getWaitId())) {
+        waitNotifyEngine.notify(
+            delegateTask.getWaitId(), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
+      }
+    }
+
+    endTask(accountId, delegateTaskId, delegateTaskQuery, ERROR);
+  }
+
+  @Override
   public void abortTask(String accountId, String delegateTaskId) {
     if (delegateTaskId == null) {
       logger.warn("Delegate task id was null", new IllegalArgumentException());
       return;
     }
     logger.info("Aborting delegate task {}", delegateTaskId);
+    endTask(accountId, delegateTaskId, getRunningTaskQuery(accountId, delegateTaskId), ABORTED);
+  }
+
+  private void endTask(
+      String accountId, String delegateTaskId, Query<DelegateTask> delegateTaskQuery, DelegateTask.Status error) {
+    wingsPersistence.update(
+        delegateTaskQuery, wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", error));
+
+    broadcasterFactory.lookup("/stream/delegate/" + accountId, true)
+        .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
+  }
+
+  private Query<DelegateTask> getRunningTaskQuery(String accountId, String delegateTaskId) {
     Query<DelegateTask> delegateTaskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                                 .filter(ID_KEY, delegateTaskId)
                                                 .filter("accountId", accountId)
                                                 .filter("async", true);
     delegateTaskQuery.or(
         delegateTaskQuery.criteria("status").equal(QUEUED), delegateTaskQuery.criteria("status").equal(STARTED));
-    wingsPersistence.update(
-        delegateTaskQuery, wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ABORTED));
-
-    broadcasterFactory.lookup("/stream/delegate/" + accountId, true)
-        .broadcast(aDelegateTaskAbortEvent().withAccountId(accountId).withDelegateTaskId(delegateTaskId).build());
+    return delegateTaskQuery;
   }
 
   @Override

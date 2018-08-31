@@ -7,6 +7,7 @@ import static io.harness.threading.Morpheus.quietSleep;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -852,14 +853,18 @@ public class StateMachineExecutor {
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       injector.injectMembers(currentState);
       if (isNotBlank(stateExecutionInstance.getDelegateTaskId())) {
-        delegateService.abortTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
+        if (finalStatus == ABORTED) {
+          delegateService.abortTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
+        } else {
+          delegateService.expireTask(context.getApp().getAccountId(), stateExecutionInstance.getDelegateTaskId());
+        }
       }
       if (stateExecutionInstance.getStateParams() != null) {
         MapperUtils.mapObject(stateExecutionInstance.getStateParams(), currentState);
       }
       currentState.handleAbortEvent(context);
       updated = updateStateExecutionData(
-          stateExecutionInstance, null, finalStatus, null, asList(DISCONTINUING), null, null, null);
+          stateExecutionInstance, null, finalStatus, null, singletonList(DISCONTINUING), null, null, null);
       invokeAdvisors(context, currentState);
 
       endTransition(context, stateExecutionInstance, finalStatus, null);

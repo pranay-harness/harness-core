@@ -2,14 +2,12 @@ package software.wings.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.time.Duration.ofMinutes;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.DelegateTask.Status.ERROR;
 import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTask.Status.STARTED;
-import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
@@ -27,7 +25,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.WhereCriteria;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
@@ -36,13 +33,11 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AssignDelegateService;
-import software.wings.service.intfc.DelegateService;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.time.Clock;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -63,7 +58,6 @@ public class DelegateQueueTask implements Runnable {
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private TimeLimiter timeLimiter;
   @Inject private AssignDelegateService assignDelegateService;
-  @Inject private DelegateService delegateService;
   @Inject private ConfigurationController configurationController;
 
   /* (non-Javadoc)
@@ -142,57 +136,8 @@ public class DelegateQueueTask implements Runnable {
 
     delegateTasks.forEach(delegateTask -> {
       if (isNotBlank(delegateTask.getWaitId())) {
-        logger.info("Delegate task {} is terminated", delegateTask.getUuid());
-
-        List<Delegate> activeDelegates = wingsPersistence.createQuery(Delegate.class)
-                                             .filter("accountId", delegateTask.getAccountId())
-                                             .field("lastHeartBeat")
-                                             .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
-                                             .asList();
-
-        logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
-
-        List<Delegate> eligibleDelegates =
-            activeDelegates.stream()
-                .filter(delegate -> assignDelegateService.canAssign(delegate.getUuid(), delegateTask))
-                .collect(toList());
-
-        String errorMessage;
-        if (activeDelegates.isEmpty()) {
-          errorMessage = "There were no active delegates to complete the task.";
-        } else if (eligibleDelegates.isEmpty()) {
-          StringBuilder msg = new StringBuilder();
-          for (Delegate delegate : activeDelegates) {
-            msg.append("   -- ").append(delegate.getHostName()).append(": ");
-            boolean cannotAssignScope = !assignDelegateService.canAssignScopes(delegate, delegateTask);
-            boolean cannotAssignTags = !assignDelegateService.canAssignTags(delegate, delegateTask);
-            if (cannotAssignScope) {
-              msg.append("Cannot assign due to scope");
-            }
-            if (cannotAssignScope && cannotAssignTags) {
-              msg.append(" - ");
-            }
-            if (cannotAssignTags) {
-              List<String> delegateTags = Optional.ofNullable(delegate.getTags()).orElse(emptyList());
-              List<String> taskTags = delegateTask.getTags();
-              msg.append("Cannot assign due to tags: delegate tags: ")
-                  .append(delegateTags)
-                  .append(", task tags: ")
-                  .append(taskTags);
-            }
-            msg.append('\n');
-          }
-          errorMessage = "None of the active delegates were eligible to complete the task.\n\n" + msg.toString();
-        } else if (delegateTask.getDelegateId() != null) {
-          Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateTask.getDelegateId());
-          errorMessage = "Delegate task timed out. Delegate: "
-              + (delegate != null ? delegate.getHostName() : "not found: " + delegateTask.getDelegateId());
-        } else {
-          errorMessage = "Delegate task was never assigned and timed out.";
-        }
-
+        String errorMessage = assignDelegateService.getActiveDelegateAssignmentErrorMessage(delegateTask);
         logger.info("Marking task as failed - {}: {}", delegateTask.getUuid(), errorMessage);
-
         waitNotifyEngine.notify(
             delegateTask.getWaitId(), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
       }
