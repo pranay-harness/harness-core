@@ -9,7 +9,7 @@ import java.util.Map;
  * Created by rsingh on 5/15/17.
  */
 @Data
-public class AppdynamicsNode {
+public class AppdynamicsNode implements Comparable<AppdynamicsNode> {
   private long id;
   private String name;
   private String type;
@@ -27,4 +27,9 @@ public class AppdynamicsNode {
   // backward compatibilty
   private String machineAgentVersion;
   private String nodeUniqueLocalId;
+
+  @Override
+  public int compareTo(AppdynamicsNode o) {
+    return name.compareTo(o.getName());
+  }
 }
