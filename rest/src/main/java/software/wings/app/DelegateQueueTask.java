@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateTask;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
@@ -63,6 +64,7 @@ public class DelegateQueueTask implements Runnable {
   @Inject private TimeLimiter timeLimiter;
   @Inject private AssignDelegateService assignDelegateService;
   @Inject private DelegateService delegateService;
+  @Inject private ConfigurationController configurationController;
 
   /* (non-Javadoc)
    * @see java.lang.Runnable#run()
@@ -76,8 +78,10 @@ public class DelegateQueueTask implements Runnable {
     try (AcquiredLock ignore =
              persistentLocker.acquireLock(DelegateQueueTask.class, DelegateQueueTask.class.getName(), ofMinutes(1))) {
       timeLimiter.callWithTimeout(() -> {
-        markTimedOutTasksAsFailed();
-        markLongQueuedTasksAsFailed();
+        if (configurationController.isPrimary()) {
+          markTimedOutTasksAsFailed();
+          markLongQueuedTasksAsFailed();
+        }
         rebroadcastUnassignedTasks();
         return true;
       }, 1L, TimeUnit.MINUTES, true);
@@ -92,9 +96,7 @@ public class DelegateQueueTask implements Runnable {
 
   private void markTimedOutTasksAsFailed() {
     Query<DelegateTask> longRunningTimedOutTasksQuery =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-            .filter("status", STARTED)
-            .filter("version", versionInfoManager.getVersionInfo().getVersion());
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", STARTED);
     longRunningTimedOutTasksQuery.and(new WhereCriteria("this.lastUpdatedAt + this.timeout < " + clock.millis()));
 
     List<Key<DelegateTask>> longRunningTimedOutTaskKeys = longRunningTimedOutTasksQuery.asKeyList();
@@ -108,9 +110,8 @@ public class DelegateQueueTask implements Runnable {
 
   private void markLongQueuedTasksAsFailed() {
     // Find tasks which have been queued for too long and update their status to ERROR.
-    Query<DelegateTask> longQueuedTasksQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                                   .filter("status", QUEUED)
-                                                   .filter("version", versionInfoManager.getVersionInfo().getVersion());
+    Query<DelegateTask> longQueuedTasksQuery =
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", QUEUED);
     longQueuedTasksQuery.and(new WhereCriteria("this.createdAt + this.timeout < " + clock.millis()));
 
     List<Key<DelegateTask>> longQueuedTaskKeys = longQueuedTasksQuery.asKeyList();
@@ -123,10 +124,8 @@ public class DelegateQueueTask implements Runnable {
   }
 
   private void markTasksAsFailed(List<String> taskIds) {
-    Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                          .field(ID_KEY)
-                                          .in(taskIds)
-                                          .filter("version", versionInfoManager.getVersionInfo().getVersion());
+    Query<DelegateTask> updateQuery =
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(ID_KEY).in(taskIds);
     UpdateOperations<DelegateTask> updateOperations =
         wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ERROR);
     wingsPersistence.update(updateQuery, updateOperations);
@@ -134,7 +133,6 @@ public class DelegateQueueTask implements Runnable {
     List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                            .field(ID_KEY)
                                            .in(taskIds)
-                                           .filter("version", versionInfoManager.getVersionInfo().getVersion())
                                            .project(ID_KEY, true)
                                            .project("delegateId", true)
                                            .project("waitId", true)

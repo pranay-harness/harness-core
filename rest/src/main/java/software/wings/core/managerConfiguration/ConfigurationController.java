@@ -1,7 +1,7 @@
 package software.wings.core.managerConfiguration;
 
 import static io.harness.threading.Morpheus.sleep;
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.collections.MapUtils.synchronizedMap;
 import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
 import static software.wings.beans.ManagerConfiguration.MATCH_ALL_VERSION;
@@ -37,7 +37,6 @@ public class ConfigurationController implements Managed {
   private final Map<ConfigChangeListener, List<ConfigChangeEvent>> configChangeListeners =
       synchronizedMap(new HashMap<>());
   private final AtomicBoolean primary = new AtomicBoolean(true);
-  private ManagerConfiguration managerConfiguration;
   private long pollIntervalInMillis;
 
   public ConfigurationController() {
@@ -54,7 +53,7 @@ public class ConfigurationController implements Managed {
 
   @Override
   public void start() {
-    executorService.submit(() -> run());
+    executorService.submit(this ::run);
   }
 
   @Override
@@ -72,7 +71,7 @@ public class ConfigurationController implements Managed {
 
   private void run() {
     while (running.get()) {
-      managerConfiguration = wingsPersistence.createQuery(ManagerConfiguration.class).get();
+      ManagerConfiguration managerConfiguration = wingsPersistence.createQuery(ManagerConfiguration.class).get();
       if (managerConfiguration == null) {
         wingsPersistence.save(aManagerConfiguration().withPrimaryVersion(MATCH_ALL_VERSION).build());
         return;
@@ -87,7 +86,7 @@ public class ConfigurationController implements Managed {
         synchronized (configChangeListeners) {
           configChangeListeners.forEach((k, v) -> executorService.submit(() -> {
             if (configChangeListeners.get(k).contains(PrimaryChanged)) {
-              k.onConfigChange(asList(PrimaryChanged));
+              k.onConfigChange(singletonList(PrimaryChanged));
             }
           }));
         }
