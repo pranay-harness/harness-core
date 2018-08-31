@@ -282,22 +282,19 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
         boolean cannotAssignScope = !canAssignScopes(delegate, delegateTask);
         boolean cannotAssignTags = !canAssignTags(delegate, delegateTask);
         if (cannotAssignScope) {
-          msg.append("Cannot assign due to scope");
+          msg.append("Not in scope");
         }
         if (cannotAssignScope && cannotAssignTags) {
           msg.append(" - ");
         }
         if (cannotAssignTags) {
-          List<String> delegateTags = Optional.ofNullable(delegate.getTags()).orElse(emptyList());
-          List<String> taskTags = delegateTask.getTags();
-          msg.append("Cannot assign due to tags: delegate tags: ")
-              .append(delegateTags)
-              .append(", task tags: ")
-              .append(taskTags);
+          msg.append("Tag mismatch: ").append(Optional.ofNullable(delegate.getTags()).orElse(emptyList()));
         }
         msg.append('\n');
       }
-      errorMessage = "None of the active delegates were eligible to complete the task.\n\n" + msg.toString();
+      String taskTagsMsg = isNotEmpty(delegateTask.getTags()) ? " Task tags: " + delegateTask.getTags() : "";
+      errorMessage =
+          "None of the active delegates were eligible to complete the task." + taskTagsMsg + "\n\n" + msg.toString();
     } else if (delegateTask.getDelegateId() != null) {
       Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateTask.getDelegateId());
       errorMessage = "Delegate task timed out. Delegate: "
