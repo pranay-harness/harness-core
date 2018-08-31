@@ -1,9 +1,12 @@
 package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.Builder.Default;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 8/3/18.
@@ -18,8 +21,8 @@ public class SetupTestNodeData {
   private InstanceElement instanceElement;
   private String hostExpression;
   private String workflowId;
-  private long fromTime;
-  private long toTime;
+  @Default private long toTime = System.currentTimeMillis();
+  @Default private long fromTime = toTime - TimeUnit.MINUTES.toMillis(15);
 
   public SetupTestNodeData(String appId, String settingId, String instanceName, InstanceElement instanceElement,
       String hostExpression, String workflowId, long fromTime, long toTime) {

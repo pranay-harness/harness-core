@@ -2,6 +2,7 @@ package software.wings.service.impl.appdynamics;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Http.validUrl;
+import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.DURATION_TO_ASK_MINUTES;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
 import com.google.common.base.Preconditions;
@@ -26,6 +27,8 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric.AppdynamicsMetricType;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
@@ -41,7 +44,10 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
@@ -177,6 +183,22 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         parseAndAddExternalTier(externalTiers, childMetric, allTiers);
       }
     });
+  }
+
+  @Override
+  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
+      List<EncryptedDataDetail> encryptionDetails) throws IOException {
+    final Call<List<AppdynamicsNode>> request =
+        getAppdynamicsRestClient(appDynamicsConfig)
+            .listNodes(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
+    final Response<List<AppdynamicsNode>> response = request.execute();
+    if (response.isSuccessful()) {
+      return response.body();
+    } else {
+      logger.error("Request not successful. Reason: {}", response);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason", "could not fetch Appdynamics nodes : " + response);
+    }
   }
 
   @Override
@@ -390,6 +412,52 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       throw new WingsException("Unsuccessful response while fetching data from AppDynamics. Error code: "
           + response.code() + ". Error message: " + response.errorBody());
     }
+  }
+
+  @Override
+  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(AppDynamicsConfig appDynamicsConfig,
+      List<EncryptedDataDetail> encryptionDetails, long applicationId, long tierId, String hostName, long fromTime,
+      long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException, CloneNotSupportedException {
+    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, applicationId, tierId, encryptionDetails);
+    final List<AppdynamicsMetric> tierMetrics =
+        getTierBTMetrics(appDynamicsConfig, applicationId, tierId, encryptionDetails, apiCallLog);
+
+    if (isEmpty(tierMetrics)) {
+      return VerificationNodeDataSetupResponse.builder()
+          .providerReachable(true)
+          .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
+          .build();
+    }
+    final SortedSet<AppdynamicsMetricData> metricsData = new TreeSet<>();
+    List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
+    for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
+      callables.add(
+          ()
+              -> getTierBTMetricData(appDynamicsConfig, applicationId, tier.getName(), appdynamicsMetric.getName(),
+                  hostName, DURATION_TO_ASK_MINUTES, encryptionDetails, apiCallLog));
+    }
+    List<Optional<List<AppdynamicsMetricData>>> results = dataCollectionService.executeParrallel(callables);
+    results.forEach(result -> {
+      if (result.isPresent()) {
+        metricsData.addAll(result.get());
+      }
+    });
+
+    for (Iterator<AppdynamicsMetricData> iterator = metricsData.iterator(); iterator.hasNext();) {
+      AppdynamicsMetricData appdynamicsMetricData = iterator.next();
+      String metricName = appdynamicsMetricData.getMetricName();
+      if (metricName.contains("|")) {
+        metricName = metricName.substring(metricName.lastIndexOf('|') + 1);
+      }
+      if (!AppdynamicsTimeSeries.getMetricsToTrack().contains(metricName)) {
+        iterator.remove();
+      }
+    }
+    return VerificationNodeDataSetupResponse.builder()
+        .providerReachable(true)
+        .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(tierMetrics).build())
+        .dataForNode(metricsData)
+        .build();
   }
 
   @Override

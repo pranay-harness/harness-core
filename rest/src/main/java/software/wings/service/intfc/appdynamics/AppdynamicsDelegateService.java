@@ -5,8 +5,10 @@ import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
+import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 
@@ -26,6 +28,9 @@ public interface AppdynamicsDelegateService {
   Set<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       List<EncryptedDataDetail> encryptionDetails) throws IOException;
 
+  List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
+      List<EncryptedDataDetail> encryptionDetails) throws IOException;
+
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_MAP)
   Set<AppdynamicsTier> getTierDependencies(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       List<EncryptedDataDetail> encryptionDetails) throws IOException;
@@ -43,4 +48,9 @@ public interface AppdynamicsDelegateService {
 
   AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
       List<EncryptedDataDetail> encryptionDetails) throws IOException;
+
+  @DelegateTaskType(TaskType.APPDYNAMICS_METRIC_DATA_FOR_NODE)
+  VerificationNodeDataSetupResponse getMetricsWithDataForNode(AppDynamicsConfig appDynamicsConfig,
+      List<EncryptedDataDetail> encryptionDetails, long applicationId, long tierId, String hostName, long fromTime,
+      long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException, CloneNotSupportedException;
 }
