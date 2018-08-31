@@ -184,6 +184,9 @@ public class DelegateQueueTask implements Runnable {
         } else {
           errorMessage = "Delegate task was never assigned and timed out.";
         }
+
+        logger.info("Marking task as failed - {}: {}", delegateTask.getUuid(), errorMessage);
+
         waitNotifyEngine.notify(
             delegateTask.getWaitId(), ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
       }
