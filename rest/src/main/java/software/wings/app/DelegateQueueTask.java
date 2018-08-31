@@ -165,7 +165,7 @@ public class DelegateQueueTask implements Runnable {
         } else if (eligibleDelegates.isEmpty()) {
           StringBuilder msg = new StringBuilder();
           for (Delegate delegate : activeDelegates) {
-            msg.append(delegate.getHostName()).append(": ");
+            msg.append("   -- ").append(delegate.getHostName()).append(": ");
             boolean cannotAssignScope = !assignDelegateService.canAssignScopes(delegate, delegateTask);
             boolean cannotAssignTags = !assignDelegateService.canAssignTags(delegate, delegateTask);
             if (cannotAssignScope) {
@@ -177,9 +177,9 @@ public class DelegateQueueTask implements Runnable {
             if (cannotAssignTags) {
               List<String> delegateTags = Optional.ofNullable(delegate.getTags()).orElse(emptyList());
               List<String> taskTags = delegateTask.getTags();
-              msg.append("Cannot assign due to tags. Delegate tags: ")
+              msg.append("Cannot assign due to tags: delegate tags: ")
                   .append(delegateTags)
-                  .append(" Task tags: ")
+                  .append(", task tags: ")
                   .append(taskTags);
             }
             msg.append('\n');
