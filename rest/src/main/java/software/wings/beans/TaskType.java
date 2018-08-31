@@ -73,6 +73,7 @@ import software.wings.delegatetasks.validation.KubernetesSwapServiceSelectorsVal
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
+import software.wings.delegatetasks.validation.PCFCommandValidation;
 import software.wings.delegatetasks.validation.PrometheusValidation;
 import software.wings.delegatetasks.validation.SecretManagerDecryptValidation;
 import software.wings.delegatetasks.validation.SecretManagerValidation;
@@ -204,7 +205,7 @@ public enum TaskType {
   HELM_COMMAND_TASK(TaskGroup.HELM, HelmCommandTask.class, HelmCommandValidation.class),
   KUBERNETES_STEADY_STATE_CHECK_TASK(
       TaskGroup.CONTAINER, KubernetesSteadyStateCheckTask.class, KubernetesSteadyStateCheckValidation.class),
-  PCF_COMMAND_TASK(TaskGroup.PCF, PcfCommandTask.class, AlwaysTrueValidation.class),
+  PCF_COMMAND_TASK(TaskGroup.PCF, PcfCommandTask.class, PCFCommandValidation.class),
   COLLABORATION_PROVIDER_TASK(
       TaskGroup.COLLABORATION_PROVIDER, CollaborationProviderTask.class, CollaborationProviderTaskValidation.class),
   PROMETHEUS_VALIDATE_CONFIGURATION_TASK(

@@ -2,6 +2,7 @@ package software.wings.helpers.ext.pcf;
 
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
+import software.wings.beans.PcfConfig;
 
 import java.util.List;
 
@@ -34,4 +35,6 @@ public interface PcfDeploymentManager {
       throws PivotalClientApiException;
 
   List<String> getRouteMaps(PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException;
+
+  String checkConnectivity(PcfConfig pcfConfig);
 }
