@@ -1136,6 +1136,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     keywords.add(workflowExecution.getCreatedBy().getName());
     keywords.add(workflowExecution.getCreatedBy().getEmail());
+    stdParams.setCurrentUser(workflowExecution.getCreatedBy());
 
     ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
     if (executionArgs != null) {

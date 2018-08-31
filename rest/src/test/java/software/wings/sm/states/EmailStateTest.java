@@ -26,6 +26,7 @@ import software.wings.api.EmailStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
+import software.wings.beans.EmbeddedUser;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
@@ -75,6 +76,7 @@ public class EmailStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("app", anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
     on(workflowStandardParams).set("env", anEnvironment().withUuid(ENV_ID).build());
     on(workflowStandardParams).set("configuration", configuration);
+    on(workflowStandardParams).set("currentUser", EmbeddedUser.builder().name("admin").build());
     context.pushContextElement(workflowStandardParams);
 
     HostElement host = new HostElement();
@@ -184,5 +186,37 @@ public class EmailStateTest extends WingsBaseTest {
     assertThat(executionResponse.getErrorMessage()).isNotNull().isEqualTo("RuntimeException: Test exception");
 
     verify(emailNotificationService).send(emailData);
+  }
+
+  /**
+   * Should render deployment triggered by for email subject and body.
+   */
+  @Test
+  public void shouldRenderDeploymentTriggeredBy() {
+    emailState.setBody("Deployment triggered by: ${deploymentTriggeredBy}");
+    emailState.setSubject("Deployment triggered by: ${deploymentTriggeredBy}");
+
+    ExecutionResponse executionResponse = emailState.execute(context);
+    assertThat(executionResponse)
+        .extracting(ExecutionResponse::getExecutionStatus)
+        .containsExactly(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData())
+        .isInstanceOf(EmailStateExecutionData.class)
+        .isEqualTo(expected.but()
+                       .withSubject("Deployment triggered by: admin")
+                       .withBody("Deployment triggered by: admin")
+                       .build());
+    assertThat(executionResponse.getErrorMessage()).isNull();
+
+    verify(emailNotificationService)
+        .send(
+
+            EmailData.builder()
+                .to(Lists.newArrayList("to1", "to2"))
+                .accountId(ACCOUNT_ID)
+                .cc(Lists.newArrayList("cc1", "cc2"))
+                .subject("Deployment triggered by: admin")
+                .body("Deployment triggered by: admin")
+                .build());
   }
 }

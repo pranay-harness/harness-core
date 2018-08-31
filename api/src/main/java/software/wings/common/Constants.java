@@ -870,4 +870,5 @@ public interface Constants {
 
   String PRIMARY_SERVICE_NAME_EXPRESSION = "${PRIMARY_SERVICE_NAME}";
   String STAGE_SERVICE_NAME_EXPRESSION = "${STAGE_SERVICE_NAME}";
+  String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
 }

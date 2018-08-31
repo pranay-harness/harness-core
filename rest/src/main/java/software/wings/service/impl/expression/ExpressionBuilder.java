@@ -14,6 +14,7 @@ import static software.wings.common.Constants.ARTIFACT_SOURCE_REPOSITORY_NAME_KE
 import static software.wings.common.Constants.ARTIFACT_SOURCE_USER_NAME_KEY;
 import static software.wings.common.Constants.ASSERTION_STATEMENT;
 import static software.wings.common.Constants.ASSERTION_STATUS;
+import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 import static software.wings.common.Constants.HTTP_RESPONSE_BODY;
 import static software.wings.common.Constants.HTTP_RESPONSE_CODE;
@@ -148,8 +149,8 @@ public abstract class ExpressionBuilder {
     Set<String> expressions = new TreeSet<>();
     expressions.addAll(asList(APP_NAME, APP_DESCRIPTION));
     expressions.addAll(asList(ARTIFACT_DISPLAY_NAME, ARTIFACT_BUILDNO, ARTIFACT_REVISION, ARTIFACT_DESCRIPTION,
-        ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_URL,
-        ARTIFACT_SOURCE_USER_NAME, ARTIFACT_SOURCE_REGISTRY_URL, ARTIFACT_SOURCE_REPOSITORY_NAME));
+        ARTIFACT_FILE_NAME, ARTIFACT_BUILD_FULL_DISPLAYNAME, ARTIFACT_BUCKET_NAME, ARTIFACT_BUCKET_KEY, ARTIFACT_PATH,
+        ARTIFACT_URL, ARTIFACT_SOURCE_USER_NAME, ARTIFACT_SOURCE_REGISTRY_URL, ARTIFACT_SOURCE_REPOSITORY_NAME));
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
     expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION, WORKFLOW_DISPLAY_NAME, WORKFLOW_RELEASE_NO,
@@ -163,6 +164,8 @@ public abstract class ExpressionBuilder {
         HOST_INSTANCE_VPCID));
 
     expressions.add(INFRA_KUBERNETES_NAMESPACE);
+
+    expressions.add(DEPLOYMENT_TRIGGERED_BY);
 
     return expressions;
   }
