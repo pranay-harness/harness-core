@@ -107,11 +107,6 @@ public abstract class ExpressionBuilder {
 
   protected static final String INFRA_KUBERNETES_NAMESPACE = "infra.kubernetes.namespace";
 
-  protected static final String START_TS = "startTs";
-  protected static final String END_TS = "endTs";
-  protected static final String STATUS = "status";
-  protected static final String ERROR_MSG = "errorMsg";
-
   protected static final String APPROVEDBY_NAME = "approvedBy.name";
   protected static final String APPROVEDBY_EMAIL = "approvedBy.email";
 
@@ -171,7 +166,7 @@ public abstract class ExpressionBuilder {
   }
 
   public static Set<String> getStateTypeExpressions(StateType stateType) {
-    Set<String> expressions = new TreeSet<>(asList(START_TS, END_TS, STATUS, ERROR_MSG, DEPLOYMENT_URL));
+    Set<String> expressions = new TreeSet<>(asList(DEPLOYMENT_URL));
     switch (stateType) {
       case SHELL_SCRIPT:
         expressions.addAll(asList(WINGS_RUNTIME_PATH, WINGS_STAGING_PATH, WINGS_BACKUP_PATH, HARNESS_KUBE_CONFIG_PATH));
