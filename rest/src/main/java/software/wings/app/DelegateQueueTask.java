@@ -92,7 +92,9 @@ public class DelegateQueueTask implements Runnable {
 
   private void markTimedOutTasksAsFailed() {
     Query<DelegateTask> longRunningTimedOutTasksQuery =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", STARTED);
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+            .filter("status", STARTED)
+            .filter("version", versionInfoManager.getVersionInfo().getVersion());
     longRunningTimedOutTasksQuery.and(new WhereCriteria("this.lastUpdatedAt + this.timeout < " + clock.millis()));
 
     List<Key<DelegateTask>> longRunningTimedOutTaskKeys = longRunningTimedOutTasksQuery.asKeyList();
@@ -106,8 +108,9 @@ public class DelegateQueueTask implements Runnable {
 
   private void markLongQueuedTasksAsFailed() {
     // Find tasks which have been queued for too long and update their status to ERROR.
-    Query<DelegateTask> longQueuedTasksQuery =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", QUEUED);
+    Query<DelegateTask> longQueuedTasksQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                                   .filter("status", QUEUED)
+                                                   .filter("version", versionInfoManager.getVersionInfo().getVersion());
     longQueuedTasksQuery.and(new WhereCriteria("this.createdAt + this.timeout < " + clock.millis()));
 
     List<Key<DelegateTask>> longQueuedTaskKeys = longQueuedTasksQuery.asKeyList();
@@ -120,8 +123,10 @@ public class DelegateQueueTask implements Runnable {
   }
 
   private void markTasksAsFailed(List<String> taskIds) {
-    Query<DelegateTask> updateQuery =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(ID_KEY).in(taskIds);
+    Query<DelegateTask> updateQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                          .field(ID_KEY)
+                                          .in(taskIds)
+                                          .filter("version", versionInfoManager.getVersionInfo().getVersion());
     UpdateOperations<DelegateTask> updateOperations =
         wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ERROR);
     wingsPersistence.update(updateQuery, updateOperations);
@@ -129,9 +134,12 @@ public class DelegateQueueTask implements Runnable {
     List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
                                            .field(ID_KEY)
                                            .in(taskIds)
+                                           .filter("version", versionInfoManager.getVersionInfo().getVersion())
                                            .project(ID_KEY, true)
                                            .project("delegateId", true)
                                            .project("waitId", true)
+                                           .project("tags", true)
+                                           .project("accountId", true)
                                            .asList();
 
     delegateTasks.forEach(delegateTask -> {
