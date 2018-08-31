@@ -41,7 +41,6 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.KubernetesResourceList;
 import io.fabric8.kubernetes.api.model.Namespace;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
-import io.fabric8.kubernetes.api.model.NamespaceList;
 import io.fabric8.kubernetes.api.model.NodeList;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodCondition;
@@ -853,15 +852,23 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   @Override
   public void createNamespaceIfNotExist(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
-    NamespaceList namespaces =
-        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails).namespaces().list();
-    if (namespaces.getItems().stream().noneMatch(
-            namespace -> namespace.getMetadata().getName().equals(kubernetesConfig.getNamespace()))) {
-      logger.info("Creating namespace [{}]", kubernetesConfig.getNamespace());
-      kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
-          .namespaces()
-          .create(
-              new NamespaceBuilder().withNewMetadata().withName(kubernetesConfig.getNamespace()).endMetadata().build());
+    try {
+      Namespace namespace = kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+                                .namespaces()
+                                .withName(kubernetesConfig.getNamespace())
+                                .get();
+      if (namespace == null) {
+        logger.info("Creating namespace [{}]", kubernetesConfig.getNamespace());
+        kubernetesHelperService.getKubernetesClient(kubernetesConfig, encryptedDataDetails)
+            .namespaces()
+            .create(new NamespaceBuilder()
+                        .withNewMetadata()
+                        .withName(kubernetesConfig.getNamespace())
+                        .endMetadata()
+                        .build());
+      }
+    } catch (Exception e) {
+      logger.error("Couldn't get or create namespace {}", kubernetesConfig.getNamespace(), e);
     }
   }
 
