@@ -367,6 +367,7 @@ public class AwsLambdaState extends State {
     String vpcId = infrastructureMapping.getVpcId();
     AwsLambdaVpcConfigBuilder builder = AwsLambdaVpcConfig.builder();
     if (vpcId != null) {
+      builder.vpcId(vpcId);
       List<String> subnetIds = infrastructureMapping.getSubnetIds();
       List<String> securityGroupIds = infrastructureMapping.getSecurityGroupIds();
       if (!securityGroupIds.isEmpty() && !subnetIds.isEmpty()) {

@@ -175,13 +175,17 @@ public class AwsLambdaHelperServiceDelegateImpl
 
   private void createFunctionAlias(AWSLambdaClient lambdaClient, String functionName, String functionVersion,
       List<String> evaluatedAliases, ExecutionLogCallback logCallback) {
-    evaluatedAliases.forEach(alias -> {
-      logCallback.saveExecutionLog(format("Creating Function Alias: [%s]", alias));
-      CreateAliasResult createAliasResult = lambdaClient.createAlias(
-          new CreateAliasRequest().withFunctionName(functionName).withFunctionVersion(functionVersion).withName(alias));
-      logCallback.saveExecutionLog(format("Created Function Alias with name:[%s], arn:[%s]",
-          createAliasResult.getName(), createAliasResult.getAliasArn()));
-    });
+    if (isNotEmpty(evaluatedAliases)) {
+      evaluatedAliases.forEach(alias -> {
+        logCallback.saveExecutionLog(format("Creating Function Alias: [%s]", alias));
+        CreateAliasResult createAliasResult = lambdaClient.createAlias(new CreateAliasRequest()
+                                                                           .withFunctionName(functionName)
+                                                                           .withFunctionVersion(functionVersion)
+                                                                           .withName(alias));
+        logCallback.saveExecutionLog(format("Created Function Alias with name:[%s], arn:[%s]",
+            createAliasResult.getName(), createAliasResult.getAliasArn()));
+      });
+    }
   }
 
   private void updateFunctionAlias(AWSLambdaClient lambdaClient, String functionName, String functionArn,
@@ -308,23 +312,32 @@ public class AwsLambdaHelperServiceDelegateImpl
       logCallback.saveExecutionLog(format("Published function ARN: [%s]", publishVersionResult.getFunctionArn()));
       ListAliasesResult listAliasesResult =
           lambdaClient.listAliases(new ListAliasesRequest().withFunctionName(functionParams.getFunctionName()));
-      List<String> newAliases = evaluatedAliases.stream()
-                                    .filter(alias
-                                        -> listAliasesResult.getAliases().stream().noneMatch(
-                                            aliasConfiguration -> aliasConfiguration.getName().equals(alias)))
-                                    .collect(toList());
+
+      List<String> newAliases = new ArrayList<>();
+      if (isNotEmpty(evaluatedAliases)) {
+        newAliases.addAll(evaluatedAliases.stream()
+                              .filter(alias
+                                  -> listAliasesResult.getAliases().stream().noneMatch(
+                                      aliasConfiguration -> aliasConfiguration.getName().equals(alias)))
+                              .collect(toList()));
+      }
       if (isNotEmpty(newAliases)) {
         createFunctionAlias(
             lambdaClient, functionParams.getFunctionName(), publishVersionResult.getVersion(), newAliases, logCallback);
       }
-      List<String> updateAlias =
-          evaluatedAliases.stream()
-              .filter(alias -> newAliases != null && newAliases.stream().noneMatch(s -> s.equals(alias)))
-              .collect(toList());
+
+      List<String> updateAlias = new ArrayList<>();
+      if (isNotEmpty(evaluatedAliases)) {
+        updateAlias.addAll(
+            evaluatedAliases.stream()
+                .filter(alias -> newAliases != null && newAliases.stream().noneMatch(s -> s.equals(alias)))
+                .collect(toList()));
+      }
       if (isNotEmpty(updateAlias)) {
         updateFunctionAlias(lambdaClient, functionParams.getFunctionName(), publishVersionResult.getVersion(),
             updateAlias, logCallback);
       }
+
       functionMeta = FunctionMeta.newBuilder()
                          .withFunctionArn(publishVersionResult.getFunctionArn())
                          .withFunctionName(publishVersionResult.getFunctionName())
