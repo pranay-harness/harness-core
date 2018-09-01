@@ -170,7 +170,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   @Transient private static final String STAGE_SERVICE_NAME_PLACEHOLDER_REGEX = "\\$\\{STAGE_SERVICE_NAME}";
   @Transient private static final String STAGE_SERVICE_PORT_PLACEHOLDER_REGEX = "\\$\\{STAGE_SERVICE_PORT}";
-  @Transient private static final int MAX_ENV_VAR_LENGTH = 2000;
+  @Transient private static final int MAX_ENV_VAR_LENGTH = 4000;
 
   @Inject private transient GkeClusterService gkeClusterService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;
