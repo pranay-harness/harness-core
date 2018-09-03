@@ -54,8 +54,10 @@ import software.wings.utils.KubernetesConvention;
 
 import java.lang.reflect.InvocationTargetException;
 import java.time.Clock;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -72,25 +74,26 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                                   .password("password".toCharArray())
                                                   .namespace("default")
                                                   .build();
-  private KubernetesSetupParams setupParams =
-      aKubernetesSetupParams()
-          .withAppName(APP_NAME)
-          .withEnvName(ENV_NAME)
-          .withServiceName(SERVICE_NAME)
-          .withImageDetails(ImageDetails.builder()
-                                .registryUrl("gcr.io")
-                                .sourceName("GCR")
-                                .name("exploration-161417/todolist")
-                                .tag("v1")
-                                .build())
-          .withInfraMappingId(INFRA_MAPPING_ID)
-          .withPort(80)
-          .withProtocol(KubernetesPortProtocol.TCP)
-          .withServiceType(KubernetesServiceType.ClusterIP)
-          .withTargetPort(8080)
-          .withControllerNamePrefix(APP_NAME + "." + ENV_NAME + "." + SERVICE_NAME)
-          .withClusterName("cluster")
-          .build();
+  private KubernetesSetupParams setupParams = aKubernetesSetupParams()
+                                                  .withAppName(APP_NAME)
+                                                  .withEnvName(ENV_NAME)
+                                                  .withServiceName(SERVICE_NAME)
+                                                  .withControllerNamePrefix("app-name-service-name-env-name")
+                                                  .withImageDetails(ImageDetails.builder()
+                                                                        .registryUrl("gcr.io")
+                                                                        .sourceName("GCR")
+                                                                        .name("exploration-161417/todolist")
+                                                                        .tag("v1")
+                                                                        .build())
+                                                  .withInfraMappingId(INFRA_MAPPING_ID)
+                                                  .withPort(80)
+                                                  .withProtocol(KubernetesPortProtocol.TCP)
+                                                  .withServiceType(KubernetesServiceType.ClusterIP)
+                                                  .withTargetPort(8080)
+                                                  .withClusterName("cluster")
+                                                  .withUseFixedInstances(true)
+                                                  .withFixedInstances(3)
+                                                  .build();
   private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
   private CommandExecutionContext context = aCommandExecutionContext()
                                                 .withCloudProviderSetting(computeProvider)
@@ -409,5 +412,58 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                       .build();
 
     MethodUtils.invokeMethod(kubernetesSetupCommandUnit, true, "validateBlueGreenConfig", new Object[] {setupParams});
+  }
+
+  @Test
+  public void shouldExecuteWithDownsize() {
+    String controllerName0 = KubernetesConvention.getControllerName(
+        KubernetesConvention.getControllerNamePrefix("app-name", "service-name", "env-name"), 0);
+    String controllerName1 = KubernetesConvention.getControllerName(
+        KubernetesConvention.getControllerNamePrefix("app-name", "service-name", "env-name"), 1);
+    String controllerName2 = KubernetesConvention.getControllerName(
+        KubernetesConvention.getControllerNamePrefix("app-name", "service-name", "env-name"), 2);
+    ReplicationController controller0 = new ReplicationControllerBuilder()
+                                            .withNewMetadata()
+                                            .withName(controllerName0)
+                                            .withCreationTimestamp(new Date().toString())
+                                            .endMetadata()
+                                            .withNewSpec()
+                                            .withReplicas(2)
+                                            .endSpec()
+                                            .build();
+    ReplicationController controller1 = new ReplicationControllerBuilder()
+                                            .withNewMetadata()
+                                            .withName(controllerName1)
+                                            .withCreationTimestamp(new Date().toString())
+                                            .endMetadata()
+                                            .withNewSpec()
+                                            .withReplicas(4)
+                                            .endSpec()
+                                            .build();
+
+    LinkedHashMap<String, Integer> active = new LinkedHashMap<>();
+    active.put(controllerName0, 2);
+    active.put(controllerName1, 4);
+
+    when(kubernetesContainerService.listControllers(kubernetesConfig, emptyList()))
+        .thenReturn((List) Arrays.asList(controller0, controller1));
+    when(kubernetesContainerService.getActiveServiceCounts(kubernetesConfig, emptyList(), controllerName2))
+        .thenReturn(active);
+    when(kubernetesContainerService.getRunningPods(kubernetesConfig, emptyList(), controllerName0))
+        .thenReturn(emptyList());
+
+    CommandExecutionStatus status = kubernetesSetupCommandUnit.execute(context);
+
+    assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+    verify(gkeClusterService).getCluster(any(SettingAttribute.class), eq(emptyList()), anyString(), anyString());
+    verify(kubernetesContainerService)
+        .createOrReplaceController(eq(kubernetesConfig), any(), any(ReplicationController.class));
+
+    verify(kubernetesContainerService)
+        .setControllerPodCount(eq(kubernetesConfig), eq(emptyList()), eq(setupParams.getClusterName()),
+            eq(controllerName0), eq(2), eq(0), eq(setupParams.getServiceSteadyStateTimeout()), any());
+    verify(kubernetesContainerService)
+        .setControllerPodCount(eq(kubernetesConfig), eq(emptyList()), eq(setupParams.getClusterName()),
+            eq(controllerName1), eq(4), eq(3), eq(setupParams.getServiceSteadyStateTimeout()), any());
   }
 }
