@@ -274,7 +274,7 @@ public class KubernetesContainerTask extends ContainerTask {
     }
 
     if (!limits.isEmpty()) {
-      containerBuilder.withNewResources().withLimits(limits).endResources();
+      containerBuilder.withNewResources().withLimits(limits).withRequests(limits).endResources();
     }
 
     if (wingsContainerDefinition.getPortMappings() != null) {
