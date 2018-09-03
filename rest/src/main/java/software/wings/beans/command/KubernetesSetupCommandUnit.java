@@ -1493,7 +1493,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             lastRevision.set(revision);
           }
         });
-    return lastDeployment.get() != null ? lastDeployment.get() : null;
+    return lastDeployment.get();
   }
 
   private int getRevisionNumber(HasMetadata kubernetesResource) {
@@ -1767,8 +1767,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           kubernetesConfig, encryptedDataDetails, containerServiceName);
     }
 
-    String latestHealthyController = null;
     if (activeCounts.size() > 1) {
+      List<String> unhealthyControllers = new ArrayList<>();
       executionLogCallback.saveExecutionLog("\nActive pods:");
       for (String activeControllerName : activeCounts.keySet()) {
         List<Pod> pods =
@@ -1778,18 +1778,40 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             encryptedDataDetails, activeControllerName, 0, 1, pods, false, executionLogCallback, false, clock.millis());
         boolean allContainersSuccess =
             containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
-        if (allContainersSuccess) {
-          latestHealthyController = activeControllerName;
+        if (!allContainersSuccess) {
+          unhealthyControllers.add(activeControllerName);
         }
       }
 
-      for (Entry<String, Integer> entry : activeCounts.entrySet()) {
-        String controllerName = entry.getKey();
-        if (!controllerName.equals(latestHealthyController)) {
-          executionLogCallback.saveExecutionLog("");
-          kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
-              setupParams.getClusterName(), controllerName, entry.getValue(), 0,
-              setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+      // Get the max instance count of any controller, healthy or not
+      int maxInstances =
+          activeCounts.values().stream().mapToInt(Integer::intValue).max().orElse(setupParams.getMaxInstances());
+
+      // Downsize all unhealthy
+      for (String controllerName : unhealthyControllers) {
+        executionLogCallback.saveExecutionLog("");
+        kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
+            setupParams.getClusterName(), controllerName, activeCounts.remove(controllerName), 0,
+            setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+      }
+
+      int maxAllowed = setupParams.isUseFixedInstances() ? setupParams.getFixedInstances() : maxInstances;
+      int totalHealthyInstances = activeCounts.values().stream().mapToInt(Integer::intValue).sum();
+      int downsizeCount = Math.max(totalHealthyInstances - maxAllowed, 0);
+
+      if (downsizeCount > 0) {
+        // Downsize healthy from oldest to newest until at most maxAllowed instances remain
+        for (Map.Entry<String, Integer> entry : activeCounts.entrySet()) {
+          int previousCount = entry.getValue();
+          int desiredCount = Math.max(previousCount - downsizeCount, 0);
+
+          if (desiredCount < previousCount) {
+            kubernetesContainerService.setControllerPodCount(kubernetesConfig, encryptedDataDetails,
+                setupParams.getClusterName(), entry.getKey(), previousCount, desiredCount,
+                setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
+          }
+
+          downsizeCount -= previousCount - desiredCount;
         }
       }
     }
