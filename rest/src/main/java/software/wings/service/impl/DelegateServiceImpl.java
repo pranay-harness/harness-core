@@ -451,8 +451,6 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
       delegateStorageUrl = delegateMetadataUrl.substring(0, delegateMetadataUrl.lastIndexOf('/'));
-      String delegateMatadata = delegateVersionCache.get(accountId);
-      jarRelativePath = substringAfter(delegateMatadata, " ").trim();
       delegateCheckLocation = delegateMetadataUrl.substring(delegateMetadataUrl.lastIndexOf('/') + 1);
 
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES) {
@@ -463,10 +461,12 @@ public class DelegateServiceImpl implements DelegateService {
         versionChanged = true;
       } else {
         logger.info("Delegate metadata URL is " + delegateMetadataUrl);
+        String delegateMatadata = delegateVersionCache.get(accountId);
         logger.info("Delegate metadata: [{}]", delegateMatadata);
         latestVersion = substringBefore(delegateMatadata, " ").trim();
-        versionChanged = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
+        jarRelativePath = substringAfter(delegateMatadata, " ").trim();
         delegateJarDownloadUrl = delegateStorageUrl + "/" + jarRelativePath;
+        versionChanged = !(Version.valueOf(version).equals(Version.valueOf(latestVersion)));
       }
 
       if (versionChanged) {
