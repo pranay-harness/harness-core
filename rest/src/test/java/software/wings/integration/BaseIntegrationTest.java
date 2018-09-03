@@ -111,6 +111,8 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
 
   protected String accountId = "INVALID_ID";
   protected String userToken = "INVALID_TOKEN";
+  protected final int TIMES_TO_REPEAT = 3;
+  protected final int SUCCESS_COUNT = 1;
 
   //  @Rule public ThreadDumpRule threadDumpRule = new ThreadDumpRule();
 

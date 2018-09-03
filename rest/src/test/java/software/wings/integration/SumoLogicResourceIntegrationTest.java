@@ -77,6 +77,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   public void testGetSampleLogRecord() {
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
         + LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL + "?accountId=" + accountId
@@ -89,7 +90,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Repeat(times = 3, successes = 1)
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
   public void testGetLogRecords() {
     SumoLogicSetupTestNodedata testNodedata = getSumoLogicSampledata();
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
