@@ -67,7 +67,7 @@ public class UserGroup extends Base {
         .lastUpdatedBy(null)
         .lastUpdatedAt(0)
         .keywords(getKeywords())
-        .entityYamlPath(entityYamlPath)
+        .entityYamlPath(getEntityYamlPath())
         .name(newName)
         .description(newDescription)
         .accountId(accountId)

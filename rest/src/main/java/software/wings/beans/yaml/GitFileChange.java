@@ -1,5 +1,7 @@
 package software.wings.beans.yaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -22,7 +24,7 @@ public class GitFileChange extends Change {
     private String accountId;
     private ChangeType changeType;
     private String oldFilePath;
-    private boolean syncFromGit;
+    @JsonIgnore @SchemaIgnore private boolean syncFromGit;
 
     private Builder() {}
 
