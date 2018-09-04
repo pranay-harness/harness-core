@@ -39,7 +39,7 @@ elif [[ "${DEPLOY_MODE}" == "ONPREM" ]]; then
         sed -i "s|<interfaces enabled=\"false\">|<interfaces enabled=\"true\">|" /opt/harness/hazelcast.xml
         sed -i "s|<interface>10.10.1.*</interface>|<interface>${CIDR}</interface>|" /opt/harness/hazelcast.xml
     fi
-elif [[ "${DEPLOY_MODE}" == "KUBERNETES" ]]; then
+elif [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
     sed -i "s|<property name=\"hazelcast.discovery.enabled\">false|<property name=\"hazelcast.discovery.enabled\">true|" /opt/harness/hazelcast.xml
     sed -i "s|<discovery-strategy enabled=\"false\" class=\"com.hazelcast.aws.AwsDiscoveryStrategy\"| <discovery-strategy enabled=\"true\" class=\"com.hazelcast.kubernetes.HazelcastKubernetesDiscoveryStrategy\"|" /opt/harness/hazelcast.xml
 
