@@ -32,7 +32,7 @@ if [[ "${DISABLE_NEW_RELIC}" != "true" ]]; then
 fi
 
 
-if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]]; then
+if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
     java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/config.yml
 else
     java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/config.yml > /opt/harness/logs/portal.log 2>&1
