@@ -576,7 +576,7 @@ public class DataGenUtil extends BaseIntegrationTest {
         resourceConstraintGenerator.ensurePredefined(seed, owners, ResourceConstraints.GENERIC_FIFO_TEST);
 
     pipelineGenerator.ensurePredefined(seed, owners, Pipelines.RESOURCE_CONSTRAINT_WORKFLOW);
-    workflowGenerator.ensurePredefined(seed, owners, Workflows.RESOURCE_CONSTRAINT);
+    workflowGenerator.ensurePredefined(seed, owners, Workflows.PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT);
 
     Workflow workflow1 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_SIMPLE);
 

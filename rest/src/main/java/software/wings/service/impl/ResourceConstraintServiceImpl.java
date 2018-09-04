@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.sm.states.ResourceConstraintState.HoldingScope.WORKFLOW;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -137,7 +138,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       query.filter(ResourceConstraintInstance.APP_ID_KEY, appId);
     }
     if (workflowExecutionId != null) {
-      query.filter(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY, HoldingScope.WORKFLOW)
+      query.filter(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY, WORKFLOW.name())
           .filter(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY, workflowExecutionId);
     }
 
@@ -312,6 +313,9 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
                           .id(new ConsumerId(instance.getUuid()))
                           .state(State.valueOf(instance.getState()))
                           .permits(instance.getPermits())
+                          .context(ImmutableMap.of(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY,
+                              instance.getReleaseEntityType(), ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY,
+                              instance.getReleaseEntityId()))
                           .build());
       }
     }
@@ -320,7 +324,29 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
-  public boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning, Map<String, Object> context)
+  public boolean overlappingScope(Consumer consumer, Consumer blockedConsumer) {
+    String releaseScope = (String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY);
+    String blockedReleaseScope =
+        (String) blockedConsumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY);
+
+    if (!WORKFLOW.name().equals(releaseScope)) {
+      unhandled(releaseScope);
+      return false;
+    }
+    if (!WORKFLOW.name().equals(blockedReleaseScope)) {
+      unhandled(blockedReleaseScope);
+      return false;
+    }
+
+    String workflowExecutionId = (String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY);
+    String blockedWorkflowExecutionId =
+        (String) blockedConsumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY);
+
+    return workflowExecutionId.equals(blockedWorkflowExecutionId);
+  }
+
+  @Override
+  public boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning)
       throws UnableToRegisterConsumerException {
     ResourceConstraint resourceConstraint = get(null, id.getValue());
     if (resourceConstraint == null) {
@@ -330,13 +356,13 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     final ResourceConstraintInstanceBuilder builder =
         ResourceConstraintInstance.builder()
             .uuid(consumer.getId().getValue())
-            .appId((String) context.get(ResourceConstraintInstance.APP_ID_KEY))
+            .appId((String) consumer.getContext().get(ResourceConstraintInstance.APP_ID_KEY))
             .resourceConstraintId(id.getValue())
-            .releaseEntityType((String) context.get(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY))
-            .releaseEntityId((String) context.get(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY))
+            .releaseEntityType((String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY))
+            .releaseEntityId((String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY))
             .permits(consumer.getPermits())
             .state(consumer.getState().name())
-            .order((int) context.get(ResourceConstraintInstance.ORDER_KEY));
+            .order((int) consumer.getContext().get(ResourceConstraintInstance.ORDER_KEY));
 
     if (consumer.getState() == State.ACTIVE) {
       builder.acquiredAt(currentTimeMillis());

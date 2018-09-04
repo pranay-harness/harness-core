@@ -11,11 +11,13 @@ public interface ConstraintRegistry {
   List<Consumer> loadConsumers(ConstraintId id);
 
   // When a new consumer is registered it goes into either blocked or running state.
-  boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning, Map<String, Object> context)
+  boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning)
       throws UnableToRegisterConsumerException;
 
   boolean adjustRegisterConsumerContext(ConstraintId id, Map<String, Object> context);
 
   boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, Map<String, Object> context);
   boolean consumerFinished(ConstraintId id, ConsumerId consumerId, Map<String, Object> context);
+
+  boolean overlappingScope(Consumer consumer, Consumer blockedConsumer);
 }

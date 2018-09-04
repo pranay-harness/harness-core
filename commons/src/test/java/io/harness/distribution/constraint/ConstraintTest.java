@@ -63,8 +63,8 @@ public class ConstraintTest {
   }
 
   @Test
-  public void testRegisterConsumerFIFO()
-      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
+  public void testRegisterConsumerFIFO() throws UnableToSaveConstraintException, InvalidPermitsException,
+                                                UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.FIFO).limits(10).build(), registry);
@@ -74,8 +74,8 @@ public class ConstraintTest {
   }
 
   @Test
-  public void testRegisterConsumerASAP()
-      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
+  public void testRegisterConsumerASAP() throws UnableToSaveConstraintException, InvalidPermitsException,
+                                                UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
@@ -87,7 +87,8 @@ public class ConstraintTest {
 
   @Test
   public void testRegisterConsumerUnblocked()
-      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
+      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
+             PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
@@ -111,7 +112,8 @@ public class ConstraintTest {
 
   @Test
   public void testRegisterConsumerFinished()
-      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
+      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
+             PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
@@ -129,7 +131,8 @@ public class ConstraintTest {
 
   @Test
   public void testRunnableConsumersASAP()
-      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
+      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
+             PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
@@ -147,7 +150,8 @@ public class ConstraintTest {
 
   @Test
   public void testRunnableConsumersFIFO()
-      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
+      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException,
+             PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.FIFO).limits(10).build(), registry);
@@ -164,8 +168,8 @@ public class ConstraintTest {
   }
 
   @Test
-  public void testSimulation()
-      throws UnableToSaveConstraintException, InvalidPermitsException, UnableToRegisterConsumerException {
+  public void testSimulation() throws UnableToSaveConstraintException, InvalidPermitsException,
+                                      UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.FIFO).limits(10).build(), registry);
