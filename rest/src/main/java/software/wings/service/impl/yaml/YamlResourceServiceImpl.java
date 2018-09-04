@@ -485,6 +485,11 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
   @Override
   public <T> RestResponse<YamlPayload> obtainEntityYamlVersion(String accountId, T entity) {
+    if (entity instanceof ArtifactStream) {
+      ArtifactStream artifactStream = (ArtifactStream) entity;
+      return getTrigger(artifactStream.getAppId(), artifactStream.getUuid());
+    }
+
     if (entity instanceof Base) {
       String appId = ((Base) entity).getAppId();
       String entityId = ((Base) entity).getUuid();
@@ -510,6 +515,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       return (T) pipelineService.readPipeline(appId, entityId, false);
     } else if (entity instanceof Workflow) {
       return (T) workflowService.readWorkflow(appId, entityId);
+    } else if (entity instanceof Service) {
+      return (T) serviceResourceService.get(appId, entityId, true);
     }
 
     return entity;

@@ -1,14 +1,11 @@
 package software.wings.service.intfc.yaml;
 
-import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
@@ -25,8 +22,6 @@ import java.util.List;
  * @author bsollish
  */
 public interface EntityUpdateService {
-  GitFileChange getAppGitSyncFile(Application app, ChangeType changeType);
-
   GitFileChange getServiceGitSyncFile(String accountId, Service service, ChangeType changeType);
 
   GitFileChange getDefaultVarGitSyncFile(String accountId, String appId, ChangeType changeType);
@@ -53,10 +48,6 @@ public interface EntityUpdateService {
       String accountId, Environment environment, ConfigFile configFile, ChangeType changeType, String fileContent);
 
   List<GitFileChange> getEnvironmentGitSyncFile(String accountId, Environment environment, ChangeType changeType);
-
-  GitFileChange getInfraMappingGitSyncFile(String accountId, InfrastructureMapping infraMapping, ChangeType changeType);
-
-  GitFileChange getArtifactStreamGitSyncFile(String accountId, ArtifactStream ArtifactStream, ChangeType changeType);
 
   GitFileChange getSettingAttributeGitSyncFile(
       String accountId, SettingAttribute settingAttribute, ChangeType changeType);

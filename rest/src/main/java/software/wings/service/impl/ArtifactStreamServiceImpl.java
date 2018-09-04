@@ -34,12 +34,11 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactSourceable;
-import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -47,7 +46,6 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.scheduler.ArtifactCollectionJob;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -56,16 +54,12 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
-import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Util;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,14 +79,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private BuildSourceService buildSourceService;
-  @Inject private EntityUpdateService entityUpdateService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private AppService appService;
   @Inject private TriggerService triggerService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
-  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private SettingsService settingsService;
   @Inject private ArtifactService artifactService; // Do not delete it is being used by Prune
+  @Inject private YamlPushService yamlPushService;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -130,22 +121,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String id = wingsPersistence.save(artifactStream);
     ArtifactCollectionJob.addDefaultJob(jobScheduler, artifactStream.getAppId(), artifactStream.getUuid());
 
-    executorService.submit(() -> { artifactStreamChangeSetAsync(artifactStream); });
+    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, null, artifactStream, Type.CREATE, artifactStream.isSyncFromGit(), false);
 
     return get(artifactStream.getAppId(), id);
-  }
-
-  public void artifactStreamChangeSetAsync(ArtifactStream artifactStream) {
-    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      // add GitSyncFiles for trigger (artifact stream)
-      changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.MODIFY));
-
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
   }
 
   /**
@@ -188,18 +168,18 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     validateArtifactSourceData(artifactStream);
 
     artifactStream.setSourceName(artifactStream.generateSourceName());
-    artifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
+    ArtifactStream finalArtifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
 
-    if (!savedArtifactStream.getSourceName().equals(artifactStream.getSourceName())) {
+    if (!savedArtifactStream.getSourceName().equals(finalArtifactStream.getSourceName())) {
       executorService.submit(() -> triggerService.updateByApp(savedArtifactStream.getAppId()));
     }
 
-    ArtifactStream finalArtifactStream = artifactStream;
-    yamlChangeSetHelper.updateYamlChangeAsync(finalArtifactStream, savedArtifactStream,
-        appService.getAccountIdByAppId(finalArtifactStream.getAppId()),
-        !(finalArtifactStream.getName().equals(savedArtifactStream.getName())));
+    boolean isRename = !artifactStream.getName().equals(savedArtifactStream.getName());
+    String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedArtifactStream, finalArtifactStream, Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
 
-    return artifactStream;
+    return finalArtifactStream;
   }
 
   private void validateArtifactSourceData(ArtifactStream artifactStream) {
@@ -226,10 +206,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public boolean delete(String appId, String artifactStreamId) {
-    return delete(appId, artifactStreamId, false);
+    return delete(appId, artifactStreamId, false, false);
   }
 
-  private boolean delete(String appId, String artifactStreamId, boolean forceDelete) {
+  @Override
+  public boolean deleteByYamlGit(String appId, String artifactStreamId, boolean syncFromGit) {
+    return delete(appId, artifactStreamId, false, syncFromGit);
+  }
+
+  private boolean delete(String appId, String artifactStreamId, boolean forceDelete, boolean syncFromGit) {
     ArtifactStream artifactStream = get(appId, artifactStreamId);
     if (artifactStream == null) {
       return true;
@@ -239,13 +224,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     }
 
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      changeSet.add(entityUpdateService.getArtifactStreamGitSyncFile(accountId, artifactStream, ChangeType.DELETE));
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
+    yamlPushService.pushYamlChangeSet(accountId, artifactStream, null, Type.DELETE, syncFromGit, false);
 
     return pruneArtifactStream(appId, artifactStreamId);
   }

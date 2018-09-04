@@ -9,9 +9,12 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
+import software.wings.beans.Service;
 import software.wings.beans.Workflow;
+import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.InvalidRequestException;
@@ -243,6 +246,10 @@ public class YamlHandlerFactory {
       return YamlType.INFRA_MAPPING;
     } else if (entity instanceof Workflow) {
       return YamlType.WORKFLOW;
+    } else if (entity instanceof InfrastructureProvisioner) {
+      return YamlType.PROVISIONER;
+    } else if (entity instanceof Service) {
+      return YamlType.SERVICE;
     }
 
     throw new InvalidRequestException(
@@ -262,6 +269,12 @@ public class YamlHandlerFactory {
       return ((InfrastructureMapping) entity).getName();
     } else if (entity instanceof Workflow) {
       return ((Workflow) entity).getName();
+    } else if (entity instanceof InfrastructureProvisioner) {
+      return ((InfrastructureProvisioner) entity).getName();
+    } else if (entity instanceof ArtifactStream) {
+      return ((ArtifactStream) entity).getName();
+    } else if (entity instanceof Service) {
+      return ((Service) entity).getName();
     }
 
     throw new InvalidRequestException(
@@ -299,13 +312,15 @@ public class YamlHandlerFactory {
       return ((Workflow) entity).getOrchestrationWorkflow().getOrchestrationWorkflowType().name();
     } else if (entity instanceof InfrastructureMapping) {
       return ((InfrastructureMapping) entity).getInfraMappingType();
+    } else if (entity instanceof InfrastructureProvisioner) {
+      return ((InfrastructureProvisioner) entity).getInfrastructureProvisionerType();
     }
 
     return null;
   }
 
   private static List<String> obtainNonLeafEntities() {
-    return Lists.newArrayList("Environment", "Application");
+    return Lists.newArrayList("Environment", "Application", "Service");
   }
 
   private static List<String> obtainLeafEntities() {
@@ -313,6 +328,10 @@ public class YamlHandlerFactory {
         "PhysicalInfrastructureMappingWinRm", "", "Workflow", "PcfInfrastructureMapping",
         "GcpKubernetesInfrastructureMapping", "EcsInfrastructureMapping", "DirectKubernetesInfrastructureMapping",
         "CodeDeployInfrastructureMapping", "AzureKubernetesInfrastructureMapping", "AwsLambdaInfraStructureMapping",
-        "AwsInfrastructureMapping", "AwsAmiInfrastructureMapping");
+        "AwsInfrastructureMapping", "AwsAmiInfrastructureMapping", "ArtifactStream", "InfrastructureProvisioner",
+        "TerraformInfrastructureProvisioner", "CloudFormationInfrastructureProvisioner", "JenkinsArtifactStream",
+        "NexusArtifactStream", "GcsArtifactStream", "GcrArtifactStream", "EcrArtifactStream", "DockerArtifactStream",
+        "BambooArtifactStream", "ArtifactoryArtifactStream", "AmiArtifactStream", "AmazonS3ArtifactStream",
+        "AcrArtifactStream");
   }
 }

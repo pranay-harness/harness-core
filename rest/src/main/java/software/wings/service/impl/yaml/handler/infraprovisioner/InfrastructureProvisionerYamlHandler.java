@@ -104,11 +104,14 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
     String serviceId = getServiceId(appId, yaml.getServiceName());
     notNullCheck("Couldn't retrieve service from yaml:" + yamlFilePath, serviceId, USER);
 
-    List<NameValuePair> nameValuePairList =
-        yaml.getProperties()
-            .stream()
-            .map(nvpYaml -> NameValuePair.builder().name(nvpYaml.getName()).value(nvpYaml.getValue()).build())
-            .collect(toList());
+    List<NameValuePair> nameValuePairList = null;
+    if (yaml.getProperties() != null) {
+      nameValuePairList =
+          yaml.getProperties()
+              .stream()
+              .map(nvpYaml -> NameValuePair.builder().name(nvpYaml.getName()).value(nvpYaml.getValue()).build())
+              .collect(toList());
+    }
 
     return InfrastructureMappingBlueprint.builder()
         .cloudProviderType(yaml.getCloudProviderType())
@@ -164,7 +167,8 @@ public abstract class InfrastructureProvisionerYamlHandler<Y extends Yaml, B ext
     InfrastructureProvisioner infrastructureProvisioner =
         yamlHelper.getInfrastructureProvisionerByAppIdYamlPath(optionalApplication.get().getUuid(), yamlFilePath);
     if (infrastructureProvisioner != null) {
-      infrastructureProvisionerService.delete(optionalApplication.get().getUuid(), infrastructureProvisioner.getUuid());
+      infrastructureProvisionerService.delete(optionalApplication.get().getUuid(), infrastructureProvisioner.getUuid(),
+          changeContext.getChange().isSyncFromGit());
     }
   }
 }

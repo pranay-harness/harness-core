@@ -59,6 +59,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
+      current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
       return (TerraformInfrastructureProvisioner) infrastructureProvisionerService.update(current);
     } else {
       return (TerraformInfrastructureProvisioner) infrastructureProvisionerService.save(current);
