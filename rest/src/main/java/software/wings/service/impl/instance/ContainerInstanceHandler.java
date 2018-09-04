@@ -561,15 +561,14 @@ public class ContainerInstanceHandler extends InstanceHandler {
       software.wings.beans.infrastructure.instance.ContainerDeploymentInfo containerDeploymentInfo =
           containerSvcNameDeploymentInfoMap.get(containerSvcName);
       if (containerDeploymentInfo == null) {
-        containerDeploymentInfo =
-            software.wings.beans.infrastructure.instance.ContainerDeploymentInfo.Builder.aContainerDeploymentInfo()
-                .withAppId(context.getAppId())
-                .withContainerSvcName(containerSvcName)
-                .withInfraMappingId(infrastructureMappingId)
-                .withWorkflowId(context.getWorkflowId())
-                .withWorkflowExecutionId(context.getWorkflowExecutionId())
-                .withServiceId(serviceId)
-                .build();
+        containerDeploymentInfo = software.wings.beans.infrastructure.instance.ContainerDeploymentInfo.builder()
+                                      .appId(context.getAppId())
+                                      .containerSvcName(containerSvcName)
+                                      .infraMappingId(infrastructureMappingId)
+                                      .workflowId(context.getWorkflowId())
+                                      .workflowExecutionId(context.getWorkflowExecutionId())
+                                      .serviceId(serviceId)
+                                      .build();
 
         containerSvcNameDeploymentInfoMap.put(containerSvcName, containerDeploymentInfo);
       }

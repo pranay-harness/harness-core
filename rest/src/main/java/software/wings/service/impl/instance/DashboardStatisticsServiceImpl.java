@@ -12,10 +12,9 @@ import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.ErrorCode.NO_APPS_ASSIGNED;
 import static software.wings.beans.SearchFilter.Operator.EQ;
+import static software.wings.beans.SearchFilter.Operator.HAS;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
-import static software.wings.beans.WorkflowType.PIPELINE;
-import static software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder.aPipelineExecutionHistory;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
@@ -34,9 +33,9 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.ErrorCode;
 import software.wings.beans.ExecutionArgs;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute.Category;
@@ -47,19 +46,20 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.SyncStatus;
 import software.wings.beans.instance.dashboard.ArtifactSummary;
+import software.wings.beans.instance.dashboard.ArtifactSummary.ArtifactSummaryBuilder;
 import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.beans.instance.dashboard.EntitySummaryStats;
 import software.wings.beans.instance.dashboard.EnvironmentSummary;
+import software.wings.beans.instance.dashboard.EnvironmentSummary.EnvironmentSummaryBuilder;
 import software.wings.beans.instance.dashboard.InstanceStats;
 import software.wings.beans.instance.dashboard.InstanceStatsByArtifact;
 import software.wings.beans.instance.dashboard.InstanceStatsByEnvironment;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStats;
 import software.wings.beans.instance.dashboard.ServiceSummary;
+import software.wings.beans.instance.dashboard.ServiceSummary.ServiceSummaryBuilder;
 import software.wings.beans.instance.dashboard.service.CurrentActiveInstances;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
-import software.wings.beans.instance.dashboard.service.PipelineExecutionHistory;
-import software.wings.beans.instance.dashboard.service.PipelineExecutionHistory.Builder;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -74,23 +74,23 @@ import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.Aggre
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl.AggregationInfo.EnvInfo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.sm.ExecutionStatus;
-import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.PipelineSummary;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+
 /**
  * @author rktummala on 8/13/17
  */
@@ -103,6 +103,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
+  @Inject private InfrastructureMappingService infraMappingService;
 
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(List<String> appIds, List<String> groupByEntityTypes) {
@@ -225,11 +226,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .aggregate(EnvironmentSummaryStats.class)
         .forEachRemaining(environmentSummaryStats -> {
           String envType = environmentSummaryStats.getEnvType();
-          EntitySummary entitySummary = EntitySummary.Builder.anEntitySummary()
-                                            .name(envType)
-                                            .type(EntityType.ENVIRONMENT.name())
-                                            .id(envType)
-                                            .build();
+          EntitySummary entitySummary =
+              EntitySummary.builder().name(envType).type(EntityType.ENVIRONMENT.name()).id(envType).build();
           EntitySummaryStats entitySummaryStats = EntitySummaryStats.Builder.anEntitySummaryStats()
                                                       .entitySummary(entitySummary)
                                                       .count(environmentSummaryStats.getCount())
@@ -241,7 +239,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private EntitySummaryStats getEntitySummaryStats(FlatEntitySummaryStats flatEntitySummaryStats, String entityType) {
-    EntitySummary entitySummary = EntitySummary.Builder.anEntitySummary()
+    EntitySummary entitySummary = EntitySummary.builder()
                                       .id(flatEntitySummaryStats.entityId)
                                       .name(flatEntitySummaryStats.entityName)
                                       .type(entityType)
@@ -361,7 +359,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       List<EntitySummary> instanceList = Lists.newArrayListWithExpectedSize(size);
       for (EntitySummary instanceSummary : aggregationInfo.getInstanceInfoList()) {
         // We have to clone the entity summary because type is not present in database.
-        EntitySummary newInstanceSummary = EntitySummary.Builder.anEntitySummary()
+        EntitySummary newInstanceSummary = EntitySummary.builder()
                                                .name(instanceSummary.getName())
                                                .id(instanceSummary.getId())
                                                .type(EntityType.INSTANCE.name())
@@ -413,7 +411,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private InstanceStatsByArtifact getInstanceStatsByArtifact(
       AggregationInfo instanceInfo, InstanceStats instanceStats) {
     ArtifactInfo newArtifactInfo = instanceInfo.getArtifactInfo();
-    ArtifactSummary.Builder builder = ArtifactSummary.Builder.anArtifactSummary();
+    ArtifactSummaryBuilder builder = ArtifactSummary.builder();
     builder.buildNo(newArtifactInfo.buildNo)
         .artifactSourceName(newArtifactInfo.sourceName)
         .name(newArtifactInfo.getName())
@@ -429,7 +427,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private InstanceStatsByEnvironment getInstanceStatsByEnvironment(
       String appId, String serviceId, AggregationInfo instanceInfo, List<InstanceStatsByArtifact> currentArtifactList) {
-    EnvironmentSummary.Builder builder = EnvironmentSummary.Builder.anEnvironmentSummary();
+    EnvironmentSummaryBuilder builder = EnvironmentSummary.builder();
     AggregationInfo.EnvInfo envInfo = instanceInfo.getEnvInfo();
     builder.prod("PROD".equals(envInfo.getType()))
         .id(envInfo.getId())
@@ -456,14 +454,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private InstanceStatsByService getInstanceStatsByService(AggregationInfo instanceInfo,
       AtomicLong totalInstanceCountForService, List<InstanceStatsByEnvironment> currentEnvList) {
-    ServiceSummary.Builder serviceBuilder = ServiceSummary.Builder.aServiceSummary();
+    ServiceSummaryBuilder serviceBuilder = ServiceSummary.builder();
     EntitySummary serviceInfo = instanceInfo.getServiceInfo();
     EntitySummary appInfo = instanceInfo.getAppInfo();
-    EntitySummary appSummary = EntitySummary.Builder.anEntitySummary()
-                                   .name(appInfo.getName())
-                                   .id(appInfo.getId())
-                                   .type(APPLICATION.name())
-                                   .build();
+    EntitySummary appSummary =
+        EntitySummary.builder().name(appInfo.getName()).id(appInfo.getId()).type(APPLICATION.name()).build();
 
     serviceBuilder.appSummary(appSummary)
         .id(serviceInfo.getId())
@@ -489,88 +484,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Override
   public ServiceInstanceDashboard getServiceInstanceDashboard(String appId, String serviceId) {
     List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(appId, serviceId);
-    List<PipelineExecutionHistory> pipelineExecutionHistory = getPipelineExecutionHistory(appId, serviceId);
     List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(appId, serviceId);
     Service service = serviceResourceService.get(appId, serviceId);
     Validator.notNullCheck("Service not found", service);
     EntitySummary serviceSummary = getEntitySummary(service.getName(), serviceId, EntityType.SERVICE.name());
-    return ServiceInstanceDashboard.Builder.aServiceInstanceDashboard()
-        .withServiceSummary(serviceSummary)
-        .withCurrentActiveInstancesList(currentActiveInstances)
-        .withDeploymentHistoryList(deploymentHistoryList)
-        .withPipelineExecutionHistoryList(pipelineExecutionHistory)
+    return ServiceInstanceDashboard.builder()
+        .serviceSummary(serviceSummary)
+        .currentActiveInstancesList(currentActiveInstances)
+        .deploymentHistoryList(deploymentHistoryList)
         .build();
-  }
-
-  private List<PipelineExecutionHistory> getPipelineExecutionHistory(String appId, String serviceId) {
-    PageRequest<WorkflowExecution> pageRequest = aPageRequest()
-                                                     .withLimit("10")
-                                                     .addFilter("appId", EQ, appId)
-                                                     .addFilter("workflowType", EQ, PIPELINE)
-                                                     .addFilter("serviceIds", IN, serviceId)
-                                                     .addOrder("createdAt", OrderType.DESC)
-                                                     .build();
-    PageResponse<WorkflowExecution> pageResponse = workflowExecutionService.listExecutions(pageRequest, false);
-
-    List<PipelineExecutionHistory> pipelineExecutionHistoryList = new ArrayList<>();
-    if (pageResponse == null || isEmpty(pageResponse.getResponse())) {
-      return pipelineExecutionHistoryList;
-    }
-
-    for (WorkflowExecution workflowExecution : pageResponse.getResponse()) {
-      try {
-        List<EntitySummary> environmentList = Lists.newArrayList();
-        Set<String> envEntitySummarySet = new HashSet<>();
-        workflowExecution.getPipelineExecution()
-            .getPipelineStageExecutions()
-            .stream()
-            .flatMap(pipelineStageExecution -> pipelineStageExecution.getWorkflowExecutions().stream())
-            .forEach(workflowExecution1 -> {
-              if (!envEntitySummarySet.contains(workflowExecution1.getEnvId())) {
-                environmentList.add(getEntitySummary(
-                    workflowExecution1.getEnvName(), workflowExecution1.getEnvId(), EntityType.ENVIRONMENT.name()));
-                envEntitySummarySet.add(workflowExecution1.getEnvId());
-              }
-            });
-        EntitySummary pipelineSummary =
-            getEntitySummary(workflowExecution.getPipelineExecution().getPipeline().getName(),
-                workflowExecution.getUuid(), EntityType.PIPELINE.name());
-
-        ArtifactSummary artifactSummary = null;
-        List<Artifact> artifacts = workflowExecution.getExecutionArgs().getArtifacts();
-        if (artifacts != null) {
-          Artifact artifact = workflowExecution.getExecutionArgs()
-                                  .getArtifacts()
-                                  .stream()
-                                  .filter(artifact1 -> artifact1.getServiceIds().contains(serviceId))
-                                  .findFirst()
-                                  .orElse(null);
-          if (artifact != null) {
-            artifactSummary = getArtifactSummary(
-                artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
-          }
-        }
-
-        Builder builder = aPipelineExecutionHistory()
-                              .withPipeline(pipelineSummary)
-                              .withArtifact(artifactSummary)
-                              .withEnvironmentList(environmentList)
-                              .withStatus(workflowExecution.getStatus().name());
-        if (workflowExecution.getStartTs() != null) {
-          builder.withStartTime(new Date(workflowExecution.getStartTs()));
-        }
-        if (workflowExecution.getEndTs() != null) {
-          builder.withEndTime(new Date(workflowExecution.getEndTs()));
-        }
-        PipelineExecutionHistory pipelineExecutionHistory = builder.build();
-        pipelineExecutionHistoryList.add(pipelineExecutionHistory);
-      } catch (Exception e) {
-        logger.error(
-            "Error in preparing PipelineExecutionHistory for workflowExecution : {}", workflowExecution.getUuid(), e);
-      }
-    }
-
-    return pipelineExecutionHistoryList;
   }
 
   private List<CurrentActiveInstances> getCurrentActiveInstances(String appId, String serviceId) {
@@ -600,10 +522,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
                     projection("deployedAt", "lastDeployedAt"), projection("sourceName", "lastArtifactSourceName"))))
         .sort(descending("count"))
         .aggregate(AggregationInfo.class)
-        .forEachRemaining(instanceInfo -> {
-          instanceInfoList.add(instanceInfo);
-          logger.info(instanceInfo.toString());
-        });
+        .forEachRemaining(instanceInfo -> instanceInfoList.add(instanceInfo));
     return constructCurrentActiveInstances(instanceInfoList);
   }
 
@@ -629,12 +548,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
       long deployedAt = aggregationInfo.getArtifactInfo().getDeployedAt();
 
-      CurrentActiveInstances currentActiveInstances = CurrentActiveInstances.Builder.aCurrentActiveInstances()
-                                                          .withArtifact(artifactSummary)
-                                                          .withDeployedAt(new Date(deployedAt))
-                                                          .withEnvironment(environmentSummary)
-                                                          .withInstanceCount(count)
-                                                          .withServiceInfra(serviceInfraSummary)
+      CurrentActiveInstances currentActiveInstances = CurrentActiveInstances.builder()
+                                                          .artifact(artifactSummary)
+                                                          .deployedAt(new Date(deployedAt))
+                                                          .environment(environmentSummary)
+                                                          .instanceCount(count)
+                                                          .serviceInfra(serviceInfraSummary)
                                                           .build();
       currentActiveInstancesList.add(currentActiveInstances);
     }
@@ -649,20 +568,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private List<DeploymentHistory> getDeploymentHistory(String appId, String serviceId) {
     List<DeploymentHistory> deploymentExecutionHistoryList = new ArrayList<>();
-    List<Environment> environments = environmentService.getEnvByApp(appId);
-    if (isEmpty(environments)) {
-      return deploymentExecutionHistoryList;
-    }
-    List<String> envIds = environments.stream()
-                              .filter(environment -> environment.getEnvironmentType() == EnvironmentType.PROD)
-                              .map(Environment::getUuid)
-                              .collect(toList());
 
     PageRequest<WorkflowExecution> pageRequest = aPageRequest()
                                                      .addFilter("appId", EQ, appId)
                                                      .addFilter("workflowType", EQ, ORCHESTRATION)
-                                                     .addFilter("serviceIds", IN, serviceId)
-                                                     .addFilter("envIds", IN, envIds)
+                                                     .addFilter("serviceIds", HAS, serviceId)
                                                      .addOrder("createdAt", OrderType.DESC)
                                                      .withLimit("10")
                                                      .build();
@@ -677,12 +587,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     for (WorkflowExecution workflowExecution : workflowExecutionList) {
       PipelineSummary pipelineSummary = workflowExecution.getPipelineSummary();
       EntitySummary pipelineEntitySummary = null;
-      if (pipelineSummary == null) {
-        // This is temporary fix to work around ui bug. UI code assumed the pipeline is always present
-        pipelineEntitySummary = getEntitySummary("", "dummy", EntityType.PIPELINE.name());
-      } else {
+      if (pipelineSummary != null) {
         pipelineEntitySummary = getEntitySummary(
-            pipelineSummary.getPipelineName(), pipelineSummary.getPipelineId(), EntityType.PIPELINE.name());
+            pipelineSummary.getPipelineName(), workflowExecution.getPipelineExecutionId(), EntityType.PIPELINE.name());
       }
 
       EntitySummary workflowExecutionSummary =
@@ -695,19 +602,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       }
 
       Integer instancesCount = null;
-      EntitySummary infraMappingEntitySummary = null;
       List<ElementExecutionSummary> serviceExecutionSummaries = workflowExecution.getServiceExecutionSummaries();
 
       if (isNotEmpty(serviceExecutionSummaries)) {
         // we always have one execution summary per workflow
         ElementExecutionSummary elementExecutionSummary = serviceExecutionSummaries.get(0);
         instancesCount = elementExecutionSummary.getInstancesCount();
-        List<InfraMappingSummary> infraMappingSummaries = elementExecutionSummary.getInfraMappingSummaries();
-        if (isNotEmpty(infraMappingSummaries)) {
-          InfraMappingSummary infraMappingSummary = infraMappingSummaries.get(0);
-          infraMappingEntitySummary = getEntitySummary(infraMappingSummary.getDisplayName(),
-              infraMappingSummary.getInfraMappingId(), EntityType.INFRASTRUCTURE_MAPPING.name());
-        }
       }
 
       long instanceCount = 0L;
@@ -761,15 +661,62 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
         ArtifactSummary artifactSummary = getArtifactSummary(
             artifact.getDisplayName(), artifact.getUuid(), artifact.getBuildNo(), artifact.getArtifactSourceName());
-        DeploymentHistory deploymentHistory = DeploymentHistory.Builder.aDeploymentHistory()
-                                                  .withArtifact(artifactSummary)
-                                                  .withDeployedAt(startDate)
-                                                  .withInstanceCount(instanceCount)
-                                                  .withPipeline(pipelineEntitySummary)
-                                                  .withServiceInfra(infraMappingEntitySummary)
-                                                  .withStatus(executionStatus)
-                                                  .withTriggeredBy(triggeredBySummary)
-                                                  .withWorkflow(workflowExecutionSummary)
+
+        List<String> envIdList = workflowExecution.getEnvIds();
+        List<EntitySummary> envList = null;
+        if (isNotEmpty(envIdList)) {
+          PageRequest<Environment> envPageRequest =
+              aPageRequest().addFilter("_id", IN, envIdList.toArray()).addFieldsIncluded("_id", "name").build();
+
+          PageResponse<Environment> pageResponse = environmentService.list(envPageRequest, false);
+
+          List<Environment> environmentList = pageResponse.getResponse();
+          if (isNotEmpty(environmentList)) {
+            envList = environmentList.stream()
+                          .map(env
+                              -> EntitySummary.builder()
+                                     .id(env.getUuid())
+                                     .name(env.getName())
+                                     .type(EntityType.ENVIRONMENT.name())
+                                     .build())
+                          .collect(toList());
+          }
+        }
+
+        List<EntitySummary> serviceInfraList = null;
+        List<String> infraMappingIdList = workflowExecution.getInfraMappingIds();
+        if (isNotEmpty(infraMappingIdList)) {
+          PageRequest<InfrastructureMapping> envPageRequest = aPageRequest()
+                                                                  .addFilter("_id", IN, infraMappingIdList.toArray())
+                                                                  .addFilter("serviceId", EQ, serviceId)
+                                                                  .addFieldsIncluded("_id", "name")
+                                                                  .build();
+
+          PageResponse<InfrastructureMapping> pageResponse = infraMappingService.list(envPageRequest);
+
+          List<InfrastructureMapping> infraList = pageResponse.getResponse();
+          if (isNotEmpty(infraList)) {
+            serviceInfraList = infraList.stream()
+                                   .map(infraMapping
+                                       -> EntitySummary.builder()
+                                              .id(infraMapping.getUuid())
+                                              .name(infraMapping.getName())
+                                              .type(EntityType.INFRASTRUCTURE_MAPPING.name())
+                                              .build())
+                                   .collect(toList());
+          }
+        }
+
+        DeploymentHistory deploymentHistory = DeploymentHistory.builder()
+                                                  .artifact(artifactSummary)
+                                                  .envs(envList)
+                                                  .inframappings(serviceInfraList)
+                                                  .deployedAt(startDate)
+                                                  .instanceCount(instanceCount)
+                                                  .pipeline(pipelineEntitySummary)
+                                                  .status(executionStatus)
+                                                  .triggeredBy(triggeredBySummary)
+                                                  .workflow(workflowExecutionSummary)
                                                   .build();
         deploymentExecutionHistoryList.add(deploymentHistory);
       }
@@ -779,12 +726,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private EntitySummary getEntitySummary(String name, String id, String type) {
-    return EntitySummary.Builder.anEntitySummary().type(type).id(id).name(name).build();
+    return EntitySummary.builder().type(type).id(id).name(name).build();
   }
 
   private ArtifactSummary getArtifactSummary(String name, String id, String buildNum, String artifactSourceName) {
-    ArtifactSummary.Builder builder =
-        ArtifactSummary.Builder.anArtifactSummary().buildNo(buildNum).artifactSourceName(artifactSourceName);
+    ArtifactSummaryBuilder builder = ArtifactSummary.builder().buildNo(buildNum).artifactSourceName(artifactSourceName);
     return builder.type(ARTIFACT.name()).id(id).name(name).build();
   }
 

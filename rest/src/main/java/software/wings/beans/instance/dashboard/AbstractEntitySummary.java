@@ -1,31 +1,18 @@
 package software.wings.beans.instance.dashboard;
 
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
 public abstract class AbstractEntitySummary {
   private String id;
   private String name;
   private String type;
 
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
+  public AbstractEntitySummary(String id, String name, String type) {
     this.id = id;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
     this.name = name;
-  }
-
-  public String getType() {
-    return type;
-  }
-
-  public void setType(String type) {
     this.type = type;
   }
 }
