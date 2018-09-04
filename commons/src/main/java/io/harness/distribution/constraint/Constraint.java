@@ -83,8 +83,25 @@ public class Constraint {
     return consumers.stream().noneMatch(item -> item.getState().equals(BLOCKED));
   }
 
-  public State registerConsumer(ConsumerId consumerId, int permits, Map<String, Object> context,
-      ConstraintRegistry registry) throws InvalidPermitsException, UnableToRegisterConsumerException {
+  private void checkForBadBlock(Consumer consumer, List<Consumer> consumers, ConstraintRegistry registry)
+      throws PermanentlyBlockedConsumerException {
+    int sameScopePermits = consumer.getPermits();
+    for (Consumer blockedConsumer : consumers) {
+      if (registry.overlappingScope(consumer, blockedConsumer)) {
+        sameScopePermits += blockedConsumer.getPermits();
+      }
+    }
+
+    if (sameScopePermits > getSpec().getLimits()) {
+      throw new PermanentlyBlockedConsumerException(
+          format("Consumer %s will be permanently blocked from other consumers in the same scope",
+              consumer.getId().getValue()));
+    }
+  }
+
+  public State registerConsumer(
+      ConsumerId consumerId, int permits, Map<String, Object> context, ConstraintRegistry registry)
+      throws InvalidPermitsException, UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
     if (permits <= 0) {
       throw new InvalidPermitsException("The permits should be positive number.");
     }
@@ -112,15 +129,21 @@ public class Constraint {
           unhandled(strategy);
       }
 
-      if (registry.registerConsumer(
-              id, Consumer.builder().id(consumerId).permits(permits).state(state).build(), usedPermits, context)) {
+      final Consumer consumer =
+          Consumer.builder().id(consumerId).permits(permits).state(state).context(context).build();
+
+      if (BLOCKED.equals(state)) {
+        checkForBadBlock(consumer, consumers, registry);
+      }
+
+      if (registry.registerConsumer(id, consumer, usedPermits)) {
         return state;
       }
 
       Morpheus.quietSleep(Duration.ofMillis(random.nextInt(DELAY_FOR_OPTIMISTIC_RETRIES)));
     } while (registry.adjustRegisterConsumerContext(id, context));
 
-    throw new RuntimeException("Unable to register the constraint.");
+    throw new UnableToRegisterConsumerException("Unable to register the constraint.");
   }
 
   public boolean consumerUnblocked(ConsumerId consumerId, Map<String, Object> context, ConstraintRegistry registry) {

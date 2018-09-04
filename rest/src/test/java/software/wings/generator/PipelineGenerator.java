@@ -14,8 +14,8 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static software.wings.generator.PipelineGenerator.Pipelines.BARRIER;
 import static software.wings.generator.PipelineGenerator.Pipelines.RESOURCE_CONSTRAINT_WORKFLOW;
-import static software.wings.generator.WorkflowGenerator.Workflows.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 import static software.wings.sm.states.ResourceConstraintState.NotificationEvent.BLOCKED;
 import static software.wings.sm.states.ResourceConstraintState.NotificationEvent.UNBLOCKED;
 

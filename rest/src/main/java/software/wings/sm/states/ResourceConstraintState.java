@@ -35,7 +35,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationService;
@@ -155,10 +154,12 @@ public class ResourceConstraintState extends State {
         return executionResponseBuilder.withExecutionStatus(ExecutionStatus.SUCCESS).build();
       }
     } catch (ConstraintException exception) {
-      throw new WingsException(exception);
+      return executionResponseBuilder.withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage(exception.getMessage())
+          .build();
     }
 
-    if (notificationEvents.contains(NotificationEvent.BLOCKED)) {
+    if (isNotEmpty(notificationEvents) && notificationEvents.contains(NotificationEvent.BLOCKED)) {
       sendNotification(accountId, context, resourceConstraint, RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION);
     }
 

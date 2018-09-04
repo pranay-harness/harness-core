@@ -40,7 +40,7 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
   }
 
   @Override
-  public boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning, Map<String, Object> context)
+  public boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning)
       throws UnableToRegisterConsumerException {
     synchronized (consumers) {
       List<Consumer> constraintConsumers = consumers.computeIfAbsent(id, key -> new ArrayList<>());
@@ -61,6 +61,11 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
   @Override
   public boolean consumerFinished(ConstraintId id, ConsumerId consumerId, Map<String, Object> context) {
     return consumerStateChange(id, consumerId, FINISHED, ACTIVE);
+  }
+
+  @Override
+  public boolean overlappingScope(Consumer consumer, Consumer blockedConsumer) {
+    return false;
   }
 
   @Override

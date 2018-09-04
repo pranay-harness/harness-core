@@ -3,6 +3,8 @@ package io.harness.distribution.constraint;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.Map;
+
 @Value
 @Builder
 public class Consumer {
@@ -21,4 +23,6 @@ public class Consumer {
   }
 
   private State state;
+
+  private Map<String, Object> context;
 }
