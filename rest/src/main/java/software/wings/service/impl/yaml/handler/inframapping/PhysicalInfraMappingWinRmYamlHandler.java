@@ -54,7 +54,7 @@ public class PhysicalInfraMappingWinRmYamlHandler
     PhysicalInfrastructureMappingWinRm previous =
         (PhysicalInfrastructureMappingWinRm) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    return upsertInfrastructureMapping(current, previous);
+    return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
   public void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMappingWinRm bean, String appId,

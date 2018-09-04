@@ -50,7 +50,7 @@ public class PcfInfraMappingYamlHandler
     PcfInfrastructureMapping previous =
         (PcfInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    return upsertInfrastructureMapping(current, previous);
+    return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
   private void toBean(PcfInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId, String envId,

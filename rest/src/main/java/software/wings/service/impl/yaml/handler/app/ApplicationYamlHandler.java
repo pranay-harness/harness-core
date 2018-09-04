@@ -28,7 +28,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
   public void delete(ChangeContext<Yaml> changeContext) throws HarnessException {
     Application application = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     if (application != null) {
-      appService.delete(application.getUuid());
+      appService.delete(application.getUuid(), changeContext.getChange().isSyncFromGit());
     }
   }
 
@@ -53,6 +53,7 @@ public class ApplicationYamlHandler extends BaseYamlHandler<Application.Yaml, Ap
     Application current =
         anApplication().withAccountId(accountId).withName(appName).withDescription(yaml.getDescription()).build();
 
+    current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
     if (previous != null) {
       current.setUuid(previous.getUuid());
       return appService.update(current);

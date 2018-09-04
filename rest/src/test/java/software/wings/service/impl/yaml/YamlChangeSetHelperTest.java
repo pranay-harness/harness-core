@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
+import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -22,8 +23,10 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
@@ -36,6 +39,8 @@ public class YamlChangeSetHelperTest {
   private YamlGitConfig yamlGitConfig;
   @Mock private YamlChangeSetService yamlChangeSetService;
   @Mock private EntityUpdateService entityUpdateService;
+  @Mock private YamlHandlerFactory yamlHandlerFactory;
+  @Mock private YamlDirectoryService yamlDirectoryService;
   @InjectMocks @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Before
@@ -66,17 +71,18 @@ public class YamlChangeSetHelperTest {
                                             .build();
 
     // Validate for InfrastructureMapping
-    when(entityUpdateService.getInfraMappingGitSyncFile(anyString(), any(), any()))
-        .thenReturn(gitFileChangeForDelete)
-        .thenReturn(gitFileChangeForADD);
+    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any()))
+        .thenReturn(Lists.newArrayList(gitFileChangeForDelete))
+        .thenReturn(Lists.newArrayList(gitFileChangeForADD));
     doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());
+    when(yamlDirectoryService.weNeedToPushChanges(any())).thenReturn(YamlGitConfig.builder().build());
     InfrastructureMapping oldValue =
         AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().withName(OLD).build();
     InfrastructureMapping newValue =
         AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().withName(NEW).build();
 
-    MethodUtils.invokeMethod(yamlChangeSetHelper, true, "updateYamlChange",
-        new Object[] {yamlGitConfig, oldValue, newValue, ACCOUNTID, true});
+    MethodUtils.invokeMethod(
+        yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, newValue, true});
 
     ArgumentCaptor<List> gitFileChangesCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<YamlGitConfig> yamlGitConfigCaptor = ArgumentCaptor.forClass(YamlGitConfig.class);
@@ -103,14 +109,16 @@ public class YamlChangeSetHelperTest {
                                                .build();
 
     // Validate for InfrastructureMapping
-    when(entityUpdateService.getInfraMappingGitSyncFile(anyString(), any(), any())).thenReturn(gitFileChangeForModify);
+    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any()))
+        .thenReturn(Lists.newArrayList(gitFileChangeForModify));
 
     doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());
+    when(yamlDirectoryService.weNeedToPushChanges(any())).thenReturn(YamlGitConfig.builder().build());
     InfrastructureMapping oldValue =
         AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping().withName(OLD).build();
 
-    MethodUtils.invokeMethod(yamlChangeSetHelper, true, "updateYamlChange",
-        new Object[] {yamlGitConfig, oldValue, oldValue, ACCOUNTID, false});
+    MethodUtils.invokeMethod(
+        yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, oldValue, false});
 
     ArgumentCaptor<List> fileChangesCaptor = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<YamlGitConfig> gitConfigCaptor = ArgumentCaptor.forClass(YamlGitConfig.class);

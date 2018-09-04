@@ -17,9 +17,6 @@ import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.yaml.Change.ChangeType.ADD;
-import static software.wings.beans.yaml.Change.ChangeType.DELETE;
-import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -42,6 +39,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.EntityType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflow;
@@ -55,8 +53,6 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.Trigger;
-import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -71,12 +67,9 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByPipeline;
-import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachine;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -95,14 +88,12 @@ public class PipelineServiceImpl implements PipelineService {
   private static final Logger logger = LoggerFactory.getLogger(PipelineServiceImpl.class);
 
   @Inject private AppService appService;
-  @Inject private EntityUpdateService entityUpdateService;
   @Inject private ExecutorService executorService;
   @Inject private TriggerService triggerService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private YamlPushService yamlPushService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -172,13 +163,18 @@ public class PipelineServiceImpl implements PipelineService {
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
 
-    if (!savedPipeline.getName().equals(pipeline.getName())) {
+    Pipeline updatedPipeline = wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+    boolean isRename = !savedPipeline.getName().equals(pipeline.getName());
+
+    if (isRename) {
       executorService.submit(() -> triggerService.updateByApp(pipeline.getAppId()));
     }
 
-    sendYamlUpdate(pipeline, MODIFY);
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedPipeline, updatedPipeline, Type.UPDATE, pipeline.isSyncFromGit(), isRename);
 
-    return pipeline;
+    return updatedPipeline;
   }
 
   private void ensurePipelineStageUuids(Pipeline pipeline) {
@@ -261,10 +257,10 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public boolean deletePipeline(String appId, String pipelineId) {
-    return deletePipeline(appId, pipelineId, false);
+    return deletePipeline(appId, pipelineId, false, false);
   }
 
-  private boolean deletePipeline(String appId, String pipelineId, boolean forceDelete) {
+  private boolean deletePipeline(String appId, String pipelineId, boolean forceDelete, boolean syncFromGit) {
     Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
     if (pipeline == null) {
       return true;
@@ -274,18 +270,15 @@ public class PipelineServiceImpl implements PipelineService {
       ensurePipelineSafeToDelete(pipeline);
     }
 
-    // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
-    // may result in deleting object from a new application created after the first one was deleted,
-    // or preexisting being renamed to the vacated name. This is why we have to do this synchronously.
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, DELETE));
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
+    yamlPushService.pushYamlChangeSet(accountId, pipeline, null, Type.DELETE, syncFromGit, false);
 
     return prunePipeline(appId, pipelineId);
+  }
+
+  @Override
+  public void deleteByYamlGit(String appId, String pipelineId, boolean syncFromGit) {
+    deletePipeline(appId, pipelineId, false, syncFromGit);
   }
 
   @Override
@@ -516,13 +509,13 @@ public class PipelineServiceImpl implements PipelineService {
     List<Object> keywords = pipeline.generateKeywords();
     validatePipeline(pipeline, keywords);
     pipeline.setKeywords(trimList(keywords));
-    pipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
-    wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
+    Pipeline finalPipeline = wingsPersistence.saveAndGet(Pipeline.class, pipeline);
+    wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(finalPipeline, workflowService.stencilMap()));
 
-    Pipeline finalPipeline = pipeline;
-    sendYamlUpdate(finalPipeline, ADD);
+    String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, null, finalPipeline, Type.CREATE, pipeline.isSyncFromGit(), false);
 
-    return pipeline;
+    return finalPipeline;
   }
 
   private void validatePipeline(Pipeline pipeline, List<Object> keywords) {
@@ -575,19 +568,6 @@ public class PipelineServiceImpl implements PipelineService {
       }
     }
     keywords.addAll(services.stream().map(service -> service.getName()).distinct().collect(toList()));
-  }
-
-  private void sendYamlUpdate(Pipeline pipeline, ChangeType changeType) {
-    executorService.submit(() -> {
-      String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getPipelineGitSyncFile(accountId, pipeline, changeType));
-
-        yamlChangeSetService.saveChangeSet(ygs, changeSet);
-      }
-    });
   }
 
   private boolean prunePipeline(String appId, String pipelineId) {

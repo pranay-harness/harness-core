@@ -267,6 +267,7 @@ public class Workflow extends Base {
     private boolean templatized;
     private List<TemplateExpression> templateExpressions;
     private List<String> linkedTemplateUuids;
+    private boolean syncFromGit;
 
     private WorkflowBuilder() {}
 
@@ -369,6 +370,11 @@ public class Workflow extends Base {
       return this;
     }
 
+    public WorkflowBuilder withSyncFromGit(boolean syncFromGit) {
+      this.syncFromGit = syncFromGit;
+      return this;
+    }
+
     public Workflow build() {
       Workflow workflow = new Workflow();
       workflow.setName(name);
@@ -392,6 +398,7 @@ public class Workflow extends Base {
       workflow.setTemplateExpressions(templateExpressions);
       workflow.setNotes(notes);
       workflow.setLinkedTemplateUuids(linkedTemplateUuids);
+      workflow.setSyncFromGit(syncFromGit);
       return workflow;
     }
   }

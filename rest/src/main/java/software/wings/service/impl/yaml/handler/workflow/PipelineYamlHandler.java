@@ -130,6 +130,7 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
 
     Pipeline current = toBean(changeContext, changeSetContext, previous);
 
+    current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
     if (previous != null) {
       current.setUuid(previous.getUuid());
       return pipelineService.update(current);
@@ -159,7 +160,8 @@ public class PipelineYamlHandler extends BaseYamlHandler<Yaml, Pipeline> {
 
     Pipeline pipeline = yamlHelper.getPipelineByAppIdYamlPath(optionalApplication.get().getUuid(), filePath);
     if (pipeline != null) {
-      pipelineService.deletePipeline(pipeline.getAppId(), pipeline.getUuid());
+      pipelineService.deleteByYamlGit(
+          pipeline.getAppId(), pipeline.getUuid(), changeContext.getChange().isSyncFromGit());
     }
   }
 }

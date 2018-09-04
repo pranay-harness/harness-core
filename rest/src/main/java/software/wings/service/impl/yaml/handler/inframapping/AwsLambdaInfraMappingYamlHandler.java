@@ -55,7 +55,7 @@ public class AwsLambdaInfraMappingYamlHandler
     AwsLambdaInfraStructureMapping previous =
         (AwsLambdaInfraStructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    return upsertInfrastructureMapping(current, previous);
+    return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
   private void toBean(AwsLambdaInfraStructureMapping bean, ChangeContext<Yaml> changeContext, String appId,

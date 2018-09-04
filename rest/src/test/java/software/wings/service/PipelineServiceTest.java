@@ -277,7 +277,7 @@ public class PipelineServiceTest extends WingsBaseTest {
         .doesNotContainNull()
         .contains(asList(failureStrategy));
 
-    verify(wingsPersistence).get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    verify(wingsPersistence, times(2)).get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     verify(wingsPersistence).createQuery(Pipeline.class);
     verify(pipelineQuery, times(2)).filter(any(), any());
     verify(wingsPersistence).createUpdateOperations(Pipeline.class);

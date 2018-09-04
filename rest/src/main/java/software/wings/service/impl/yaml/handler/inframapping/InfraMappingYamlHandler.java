@@ -106,7 +106,8 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     InfrastructureMapping infraMapping = yamlHelper.getInfraMappingByAppIdYamlPath(
         optionalApplication.get().getUuid(), optionalEnvironment.get().getUuid(), yamlFilePath);
     if (infraMapping != null) {
-      infraMappingService.delete(optionalApplication.get().getUuid(), infraMapping.getUuid());
+      infraMappingService.deleteByYamlGit(
+          optionalApplication.get().getUuid(), infraMapping.getUuid(), changeContext.getChange().isSyncFromGit());
     }
   }
 
@@ -133,7 +134,10 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
     bean.setName(name);
   }
 
-  protected <T extends InfrastructureMapping> T upsertInfrastructureMapping(T current, T previous) {
+  protected <T extends InfrastructureMapping> T upsertInfrastructureMapping(
+      T current, T previous, boolean syncFromGit) {
+    current.setSyncFromGit(syncFromGit);
+
     if (previous != null) {
       current.setUuid(previous.getUuid());
       return (T) infraMappingService.update(current);

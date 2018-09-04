@@ -85,6 +85,7 @@ import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.Environment;
+import software.wings.beans.Event.Type;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
@@ -118,8 +119,6 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.trigger.Trigger;
-import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFileChange;
 import software.wings.common.Constants;
 import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
@@ -153,6 +152,7 @@ import software.wings.service.intfc.ownership.OwnedByWorkflow;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateMachine;
@@ -164,7 +164,6 @@ import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.Validator;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -230,6 +229,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private WorkflowServiceHelper workflowServiceHelper;
   @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
   @Inject private HostService hostService;
+  @Inject private YamlPushService yamlPushService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -612,7 +612,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow newWorkflow = readWorkflow(workflow.getAppId(), key, workflow.getDefaultVersion());
     updateKeywordsAndLinkedTemplateUuids(newWorkflow, linkedTemplateUuids);
 
-    executorService.submit(() -> { checkForYamlChanges(workflow, ChangeType.ADD); });
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, null, newWorkflow, Type.CREATE, workflow.isSyncFromGit(), false);
 
     return newWorkflow;
   }
@@ -629,16 +630,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         (KubernetesContainerTask) serviceResourceService.getContainerTaskByDeploymentType(
             appId, serviceId, KUBERNETES.name());
     return containerTask != null && containerTask.checkStatefulSet();
-  }
-
-  private void checkForYamlChanges(Workflow workflow, ChangeType add) {
-    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getWorkflowGitSyncFile(accountId, workflow, add));
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
   }
 
   private void addLinkedPreOrPostDeploymentSteps(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
@@ -741,6 +732,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private Workflow updateWorkflow(Workflow workflow, OrchestrationWorkflow orchestrationWorkflow,
       boolean onSaveCallNeeded, boolean inframappingChanged, boolean envChanged, boolean cloned) {
+    Workflow savedWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid());
+
     UpdateOperations<Workflow> ops = wingsPersistence.createUpdateOperations(Workflow.class);
     setUnset(ops, "description", workflow.getDescription());
     setUnset(ops, "name", workflow.getName());
@@ -750,6 +743,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String serviceId = workflow.getServiceId();
     String envId = workflow.getEnvId();
     String inframappingId = workflow.getInfraMappingId();
+    boolean isRename = !workflow.getName().equals(savedWorkflow.getName());
 
     if (orchestrationWorkflow == null) {
       workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
@@ -797,17 +791,19 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                 .filter(ID_KEY, workflow.getUuid()),
         ops);
 
-    workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
+    Workflow finalWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
 
-    Workflow finalWorkflow = workflow;
-    executorService.submit(() -> { checkForYamlChanges(finalWorkflow, ChangeType.MODIFY); });
+    String accountId = appService.getAccountIdByAppId(finalWorkflow.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, savedWorkflow, finalWorkflow, Type.UPDATE, workflow.isSyncFromGit(), isRename);
+
     if (workflowName != null) {
-      if (!workflowName.equals(workflow.getName())) {
+      if (!workflowName.equals(finalWorkflow.getName())) {
         executorService.submit(() -> triggerService.updateByApp(finalWorkflow.getAppId()));
       }
     }
-    updateKeywordsAndLinkedTemplateUuids(workflow, linkedTemplateUuids);
-    return workflow;
+    updateKeywordsAndLinkedTemplateUuids(finalWorkflow, linkedTemplateUuids);
+    return finalWorkflow;
   }
 
   private void populateServices(Workflow workflow) {
@@ -885,10 +881,10 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public boolean deleteWorkflow(String appId, String workflowId) {
-    return deleteWorkflow(appId, workflowId, false);
+    return deleteWorkflow(appId, workflowId, false, false);
   }
 
-  private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete) {
+  private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete, boolean syncFromGit) {
     Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
     if (workflow == null) {
       return true;
@@ -898,9 +894,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       ensureWorkflowSafeToDelete(workflow);
     }
 
-    checkForYamlChanges(workflow, ChangeType.DELETE);
+    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, workflow, null, Type.DELETE, syncFromGit, false);
 
     return pruneWorkflow(appId, workflowId);
+  }
+
+  @Override
+  public boolean deleteByYamlGit(String appId, String workflowId, boolean syncFromGit) {
+    return deleteWorkflow(appId, workflowId, false, syncFromGit);
   }
 
   /**
@@ -1466,12 +1468,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     wingsPersistence.update(
         workflow, wingsPersistence.createUpdateOperations(Workflow.class).set("defaultVersion", defaultVersion));
 
-    workflow = readWorkflow(appId, workflowId, defaultVersion);
+    Workflow finalWorkflow = readWorkflow(appId, workflowId, defaultVersion);
 
-    Workflow finalWorkflow = workflow;
-    executorService.submit(() -> { checkForYamlChanges(finalWorkflow, ChangeType.MODIFY); });
+    String accountId = appService.getAccountIdByAppId(finalWorkflow.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, workflow, finalWorkflow, Type.UPDATE, false, false);
 
-    return workflow;
+    return finalWorkflow;
   }
 
   @Override

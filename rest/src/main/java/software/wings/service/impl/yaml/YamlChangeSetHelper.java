@@ -5,14 +5,12 @@ import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -29,7 +27,9 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
+import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
@@ -45,9 +45,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -56,8 +54,6 @@ import java.util.concurrent.ExecutorService;
 @Singleton
 public class YamlChangeSetHelper {
   private static final Logger logger = LoggerFactory.getLogger(YamlChangeSetHelper.class);
-
-  private static final Set<String> nonLeafEntities = new HashSet(obtainNonLeafEntities());
 
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
@@ -68,32 +64,7 @@ public class YamlChangeSetHelper {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private FileService fileService;
-
-  public void applicationUpdateYamlChangeAsync(Application savedApp, Application updatedApp) {
-    executorService.submit(() -> {
-      if (!savedApp.getName().equals(updatedApp.getName())) {
-        moveApplicationYamlChange(savedApp, updatedApp);
-      } else {
-        applicationYamlChange(
-            updatedApp.getAccountId(), entityUpdateService.getAppGitSyncFile(updatedApp, ChangeType.MODIFY));
-      }
-    });
-  }
-
-  public void applicationYamlChangeAsync(Application app, ChangeType changeType) {
-    executorService.submit(() -> applicationYamlChange(app, changeType));
-  }
-
-  public void applicationYamlChange(Application app, ChangeType changeType) {
-    applicationYamlChange(app.getAccountId(), entityUpdateService.getAppGitSyncFile(app, changeType));
-  }
-
-  private void applicationYamlChange(String accountId, GitFileChange gitFileChange) {
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      yamlChangeSetService.saveChangeSet(ygs, asList(gitFileChange));
-    }
-  }
+  @Inject private YamlHandlerFactory yamlHandlerFactory;
 
   public void containerTaskYamlChangeAsync(
       String accountId, Service service, ContainerTask containerTask, ChangeType changeType) {
@@ -232,27 +203,6 @@ public class YamlChangeSetHelper {
     queueYamlChangeSet(accountId, asList(gitFileChange));
   }
 
-  private void moveApplicationYamlChange(Application oldApp, Application newApp) {
-    String accountId = newApp.getAccountId();
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      String oldPath = yamlDirectoryService.getRootPathByApp(oldApp);
-      String newPath = yamlDirectoryService.getRootPathByApp(newApp);
-
-      changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(accountId)
-                        .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newPath)
-                        .withOldFilePath(oldPath)
-                        .build());
-      changeSet.add(entityUpdateService.getAppGitSyncFile(newApp, ChangeType.MODIFY));
-      changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId)); // full sync on name change
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
-  }
-
   public void serviceUpdateYamlChangeAsync(Service service, Service savedService, Service updatedService) {
     executorService.submit(() -> {
       if (!savedService.getName().equals(updatedService.getName())) { // Service name changed
@@ -288,21 +238,6 @@ public class YamlChangeSetHelper {
                         .build());
       changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, newService, ChangeType.MODIFY));
       changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
-  }
-
-  public void notificationGroupYamlChangeAsync(NotificationGroup notificationGroup, ChangeType change) {
-    executorService.submit(() -> notificationGroupYamlChangeSet(notificationGroup, change));
-  }
-
-  public void notificationGroupYamlChangeSet(NotificationGroup notificationGroup, ChangeType crudType) {
-    // check whether we need to push changes (through git sync)
-    String accountId = notificationGroup.getAccountId();
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getNotificationGroupGitSyncFile(accountId, notificationGroup, crudType));
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
@@ -362,13 +297,11 @@ public class YamlChangeSetHelper {
   private <T> GitFileChange getGitSyncFile(String accountId, T value, ChangeType changeType) {
     GitFileChange gitFileChange = null;
     if (value instanceof InfrastructureMapping) {
-      gitFileChange =
-          entityUpdateService.getInfraMappingGitSyncFile(accountId, (InfrastructureMapping) value, changeType);
+      throw new InvalidRequestException("Infra mapping yaml changeset should not reach here" + value);
     } else if (value instanceof ArtifactStream) {
       gitFileChange = entityUpdateService.getArtifactStreamGitSyncFile(accountId, (ArtifactStream) value, changeType);
     } else if (value instanceof NotificationGroup) {
-      gitFileChange =
-          entityUpdateService.getNotificationGroupGitSyncFile(accountId, (NotificationGroup) value, changeType);
+      throw new InvalidRequestException("Notification Group yaml changeset should not reach here" + value);
     }
 
     return gitFileChange;
@@ -514,9 +447,7 @@ public class YamlChangeSetHelper {
   }
 
   private <T> void entityRenameYamlChange(String accountId, T oldEntity, T newEntity) {
-    String entityName = oldEntity.getClass().getSimpleName().toLowerCase();
-
-    if (isNonLeafEntity(entityName)) {
+    if (yamlHandlerFactory.isNonLeafEntity(oldEntity)) {
       nonLeafEntityRenameYamlChange(accountId, oldEntity, newEntity);
     } else {
       leafEntityRenameYamlChange(accountId, oldEntity, newEntity);
@@ -551,17 +482,10 @@ public class YamlChangeSetHelper {
       List<GitFileChange> changeSet = new ArrayList<>();
 
       // Rename is delete old and add new
-      changeSet.add(getGitSyncFile(accountId, oldEntity, ChangeType.DELETE));
-      changeSet.add(getGitSyncFile(accountId, newEntity, ChangeType.ADD));
+      changeSet.addAll(entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, oldEntity, ChangeType.DELETE));
+      changeSet.addAll(entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, newEntity, ChangeType.ADD));
+
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
-  }
-
-  private boolean isNonLeafEntity(String entity) {
-    return nonLeafEntities.contains(entity);
-  }
-
-  private static List<String> obtainNonLeafEntities() {
-    return Lists.newArrayList(EntityType.ENVIRONMENT.toString().toLowerCase());
   }
 }

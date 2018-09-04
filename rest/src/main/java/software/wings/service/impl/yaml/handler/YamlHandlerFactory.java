@@ -1,11 +1,18 @@
 package software.wings.service.impl.yaml.handler;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.Environment;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.NotificationGroup;
+import software.wings.beans.Pipeline;
+import software.wings.beans.Workflow;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
@@ -44,7 +51,10 @@ import software.wings.service.impl.yaml.handler.workflow.StepYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowPhaseYamlHandler;
 import software.wings.service.impl.yaml.handler.workflow.WorkflowYamlHandler;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author rktummala on 10/19/17
@@ -52,6 +62,9 @@ import java.util.Map;
 @Singleton
 public class YamlHandlerFactory {
   private static final Logger logger = LoggerFactory.getLogger(YamlHandlerFactory.class);
+
+  private static final Set<String> nonLeafEntities = new HashSet(obtainNonLeafEntities());
+  private static final Set<String> leafEntities = new HashSet<>(obtainLeafEntities());
 
   @Inject private Map<String, ArtifactStreamYamlHandler> artifactStreamHelperMap;
   @Inject private Map<String, InfraMappingYamlHandler> infraMappingHelperMap;
@@ -220,18 +233,86 @@ public class YamlHandlerFactory {
   public <T> YamlType obtainEntityYamlType(T entity) {
     if (entity instanceof Environment) {
       return YamlType.ENVIRONMENT;
-    } else {
-      throw new InvalidRequestException(
-          "Unhandled case while getting yaml type for entity type " + entity.getClass().getSimpleName());
+    } else if (entity instanceof NotificationGroup) {
+      return YamlType.NOTIFICATION_GROUP;
+    } else if (entity instanceof Pipeline) {
+      return YamlType.PIPELINE;
+    } else if (entity instanceof Application) {
+      return YamlType.APPLICATION;
+    } else if (entity instanceof InfrastructureMapping) {
+      return YamlType.INFRA_MAPPING;
+    } else if (entity instanceof Workflow) {
+      return YamlType.WORKFLOW;
     }
+
+    throw new InvalidRequestException(
+        "Unhandled case while getting yaml type for entity type " + entity.getClass().getSimpleName());
   }
 
   public <T> String obtainEntityName(T entity) {
     if (entity instanceof Environment) {
       return ((Environment) entity).getName();
-    } else {
-      throw new InvalidRequestException(
-          "Unhandled case while getting yaml name for entity type " + entity.getClass().getSimpleName());
+    } else if (entity instanceof NotificationGroup) {
+      return ((NotificationGroup) entity).getName();
+    } else if (entity instanceof Pipeline) {
+      return ((Pipeline) entity).getName();
+    } else if (entity instanceof Application) {
+      return ((Application) entity).getName();
+    } else if (entity instanceof InfrastructureMapping) {
+      return ((InfrastructureMapping) entity).getName();
+    } else if (entity instanceof Workflow) {
+      return ((Workflow) entity).getName();
     }
+
+    throw new InvalidRequestException(
+        "Unhandled case while getting yaml name for entity type " + entity.getClass().getSimpleName());
+  }
+
+  public <T> String obtainYamlFileName(T entity) {
+    String entityName = entity.getClass().getSimpleName();
+
+    if (nonLeafEntities.contains(entityName)) {
+      return YamlConstants.INDEX;
+    } else if (leafEntities.contains(entityName)) {
+      return obtainEntityName(entity);
+    }
+
+    throw new InvalidRequestException(
+        "Unhandled entity while getting yaml file name " + entity.getClass().getSimpleName());
+  }
+
+  public <T> boolean isNonLeafEntity(T entity) {
+    String entityName = entity.getClass().getSimpleName();
+
+    if (nonLeafEntities.contains(entityName)) {
+      return true;
+    } else if (leafEntities.contains(entityName)) {
+      return false;
+    }
+
+    throw new InvalidRequestException("Unhandled case while verifying if its a leaf or non leaf entity for entity type"
+        + entity.getClass().getSimpleName());
+  }
+
+  public <T> String obtainYamlHandlerSubtype(T entity) {
+    if (entity instanceof Workflow) {
+      return ((Workflow) entity).getOrchestrationWorkflow().getOrchestrationWorkflowType().name();
+    } else if (entity instanceof InfrastructureMapping) {
+      return ((InfrastructureMapping) entity).getInfraMappingType();
+    }
+
+    return null;
+  }
+
+  private static List<String> obtainNonLeafEntities() {
+    return Lists.newArrayList("Environment", "Application");
+  }
+
+  private static List<String> obtainLeafEntities() {
+    return Lists.newArrayList("NotificationGroup", "Pipeline", "InfrastructureMapping", "PhysicalInfrastructureMapping",
+        "PhysicalInfrastructureMappingWinRm", "", "Workflow", "PcfInfrastructureMapping",
+        "GcpKubernetesInfrastructureMapping", "EcsInfrastructureMapping", "DirectKubernetesInfrastructureMapping",
+        "CodeDeployInfrastructureMapping", "AzureKubernetesInfrastructureMapping", "AwsLambdaInfraStructureMapping",
+        "AwsInfrastructureMapping", "AwsAmiInfrastructureMapping");
   }
 }

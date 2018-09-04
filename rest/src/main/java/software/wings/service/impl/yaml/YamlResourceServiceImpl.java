@@ -488,11 +488,13 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     if (entity instanceof Base) {
       String appId = ((Base) entity).getAppId();
       String entityId = ((Base) entity).getUuid();
+      // Validator.notNullCheck("No account found for appId:" + appId, accountId);
 
       entity = preProcessEntity(appId, entityId, entity);
       YamlType yamlType = yamlHandlerFactory.obtainEntityYamlType(entity);
       String entityName = yamlHandlerFactory.obtainEntityName(entity);
-      BaseYaml yaml = yamlHandlerFactory.getYamlHandler(yamlType).toYaml(entity, appId);
+      String yamlHandlerSubType = yamlHandlerFactory.obtainYamlHandlerSubtype(entity);
+      BaseYaml yaml = yamlHandlerFactory.getYamlHandler(yamlType, yamlHandlerSubType).toYaml(entity, appId);
 
       return YamlHelper.getYamlRestResponse(yamlGitSyncService, entityId, accountId, yaml, entityName + YAML_EXTENSION);
     }
@@ -504,6 +506,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   private <T> T preProcessEntity(String appId, String entityId, T entity) {
     if (entity instanceof Environment) {
       return (T) environmentService.get(appId, entityId, true);
+    } else if (entity instanceof Pipeline) {
+      return (T) pipelineService.readPipeline(appId, entityId, false);
+    } else if (entity instanceof Workflow) {
+      return (T) workflowService.readWorkflow(appId, entityId);
     }
 
     return entity;

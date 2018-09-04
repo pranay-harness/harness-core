@@ -95,7 +95,7 @@ public class DirectKubernetesInfraMappingYamlHandler
     DirectKubernetesInfrastructureMapping previous =
         (DirectKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    return upsertInfrastructureMapping(current, previous);
+    return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
   private void toBean(DirectKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,

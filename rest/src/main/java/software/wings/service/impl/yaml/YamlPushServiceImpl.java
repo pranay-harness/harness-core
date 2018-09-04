@@ -6,9 +6,12 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.Event.Type;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.concurrent.ExecutorService;
@@ -17,6 +20,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class YamlPushServiceImpl implements YamlPushService {
+  private static final Logger logger = LoggerFactory.getLogger(YamlPushServiceImpl.class);
+
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private ExecutorService executorService;
 
@@ -28,24 +33,28 @@ public class YamlPushServiceImpl implements YamlPushService {
     }
 
     executorService.submit(() -> {
-      switch (type) {
-        case CREATE:
-          validateCreate(oldEntity, newEntity);
-          pushYamlChangeSetOnCreate(accountId, newEntity);
-          break;
+      try {
+        switch (type) {
+          case CREATE:
+            validateCreate(oldEntity, newEntity);
+            pushYamlChangeSetOnCreate(accountId, newEntity);
+            break;
 
-        case UPDATE:
-          validateUpdate(oldEntity, newEntity);
-          pushYamlChangeSetOnUpdate(accountId, oldEntity, newEntity, isRename);
-          break;
+          case UPDATE:
+            validateUpdate(oldEntity, newEntity);
+            pushYamlChangeSetOnUpdate(accountId, oldEntity, newEntity, isRename);
+            break;
 
-        case DELETE:
-          validateDelete(oldEntity, newEntity);
-          pushYamlChangeSetOnDelete(accountId, oldEntity);
-          break;
+          case DELETE:
+            validateDelete(oldEntity, newEntity);
+            pushYamlChangeSetOnDelete(accountId, oldEntity);
+            break;
 
-        default:
-          unhandled(type);
+          default:
+            unhandled(type);
+        }
+      } catch (Exception e) {
+        logger.error("Exception in pushing yaml changeset " + Misc.getMessage(e));
       }
     });
   }

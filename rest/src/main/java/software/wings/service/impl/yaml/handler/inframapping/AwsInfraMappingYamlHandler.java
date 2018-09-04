@@ -100,7 +100,7 @@ public class AwsInfraMappingYamlHandler
     AwsInfrastructureMapping previous =
         (AwsInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    return upsertInfrastructureMapping(current, previous);
+    return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
   private List<NameValuePair.Yaml> getTagsYaml(List<Tag> tagList) {

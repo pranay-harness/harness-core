@@ -127,4 +127,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   List<String> lisRouteMapsForPcf(String appId, String computeProviderId, String organization, String spaces)
       throws WingsException;
+
+  void deleteByYamlGit(String appId, String infraMappingId, boolean syncFromGit);
 }

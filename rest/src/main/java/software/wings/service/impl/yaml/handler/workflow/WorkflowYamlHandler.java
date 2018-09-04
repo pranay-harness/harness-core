@@ -72,7 +72,10 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
     WorkflowBuilder workflowBuilder = WorkflowBuilder.aWorkflow();
     toBean(changeContext, changeSetContext, workflowBuilder, previous);
 
+    workflowBuilder.withSyncFromGit(changeContext.getChange().isSyncFromGit());
+
     if (previous != null) {
+      previous.setSyncFromGit(changeContext.getChange().isSyncFromGit());
       workflowBuilder.withUuid(previous.getUuid());
       return workflowService.updateLinkedWorkflow(workflowBuilder.build(), previous);
     } else {
@@ -435,7 +438,8 @@ public abstract class WorkflowYamlHandler<Y extends WorkflowYaml> extends BaseYa
 
     Workflow workflow = yamlHelper.getWorkflowByAppIdYamlPath(optionalApplication.get().getUuid(), yamlFilePath);
     if (workflow != null) {
-      workflowService.deleteWorkflow(workflow.getAppId(), workflow.getUuid());
+      workflowService.deleteByYamlGit(
+          workflow.getAppId(), workflow.getUuid(), changeContext.getChange().isSyncFromGit());
     }
   }
 
