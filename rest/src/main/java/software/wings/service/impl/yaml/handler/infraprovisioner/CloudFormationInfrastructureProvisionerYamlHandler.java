@@ -58,6 +58,7 @@ public class CloudFormationInfrastructureProvisionerYamlHandler
     CloudFormationInfrastructureProvisioner previous =
         (CloudFormationInfrastructureProvisioner) infrastructureProvisionerService.getByName(appId, name);
 
+    current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
     if (previous != null) {
       current.setUuid(previous.getUuid());
       return (CloudFormationInfrastructureProvisioner) infrastructureProvisionerService.update(current);

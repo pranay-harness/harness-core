@@ -125,6 +125,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       currentService.setAppContainer(appContainer);
     }
     Service previousService = get(accountId, yamlFilePath);
+    currentService.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
     if (previousService != null) {
       currentService.setUuid(previousService.getUuid());
@@ -283,6 +284,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     }
 
     Service service = serviceOptional.get();
-    serviceResourceService.delete(service.getAppId(), service.getUuid());
+    serviceResourceService.deleteByYamlGit(
+        service.getAppId(), service.getUuid(), changeContext.getChange().isSyncFromGit());
   }
 }

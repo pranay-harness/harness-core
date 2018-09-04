@@ -14,12 +14,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.LambdaSpecification;
-import software.wings.beans.NotificationGroup;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
@@ -27,7 +24,6 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
@@ -201,127 +197,6 @@ public class YamlChangeSetHelper {
 
   private void queueYamlChangeSet(String accountId, GitFileChange gitFileChange) {
     queueYamlChangeSet(accountId, asList(gitFileChange));
-  }
-
-  public void serviceUpdateYamlChangeAsync(Service service, Service savedService, Service updatedService) {
-    executorService.submit(() -> {
-      if (!savedService.getName().equals(updatedService.getName())) { // Service name changed
-        moveServiceChange(savedService, service);
-      } else {
-        serviceYamlChangeSet(updatedService, ChangeType.MODIFY);
-      }
-    });
-  }
-
-  public void serviceYamlChangeAsync(Service finalSavedService, ChangeType change) {
-    executorService.submit(() -> serviceYamlChange(finalSavedService, change));
-  }
-
-  public void serviceYamlChange(Service finalSavedService, ChangeType change) {
-    serviceYamlChangeSet(finalSavedService, change);
-  }
-
-  private void moveServiceChange(Service oldService, Service newService) {
-    String accountId = appService.getAccountIdByAppId(newService.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-
-      String oldPath = yamlDirectoryService.getRootPathByService(oldService);
-      String newPath = yamlDirectoryService.getRootPathByService(newService);
-
-      changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(accountId)
-                        .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newPath)
-                        .withOldFilePath(oldPath)
-                        .build());
-      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, newService, ChangeType.MODIFY));
-      changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
-  }
-
-  /**
-   * This is called when a yaml file has been renamed.
-   * e.g. When Service Infra name is changed, it causes rename operation for its yaml file.
-   * NOTE: here only file name is changing and not the path.
-   * @param updatedValue
-   * @param oldValue
-   * @param accountId
-   */
-  public <T> void updateYamlChangeAsync(T updatedValue, T oldValue, String accountId, boolean isRename) {
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      executorService.submit(() -> updateYamlChange(ygs, updatedValue, oldValue, accountId, isRename));
-    }
-  }
-
-  private <T> void updateYamlChange(YamlGitConfig ygs, T updatedValue, T oldValue, String accountId, boolean isRename) {
-    try {
-      if (isRename) {
-        // Name was changed, so yaml file name will also change
-        yamlFileRenameChange(ygs, updatedValue, oldValue, accountId);
-      } else {
-        yamlFileUpdateChange(ygs, updatedValue, accountId);
-      }
-    } catch (Exception e) {
-      logger.error("Error in git sync update for: " + updatedValue + ", can not execute getName method");
-    }
-  }
-
-  /**
-   * This method is called when a yaml file is renamed and not dir.
-   * So path remains the same, only file name changes.
-   * This does not affect any other files as it happens in case of YAML DIR node rename like App.
-   * @param ygs
-   * @param newValue
-   * @param oldValue
-   * @param accountId
-   */
-  private <T> void yamlFileRenameChange(YamlGitConfig ygs, T newValue, T oldValue, String accountId) {
-    List<GitFileChange> changeSet = new ArrayList<>();
-    // Rename is delete old and add new
-    changeSet.add(getGitSyncFile(accountId, oldValue, ChangeType.DELETE));
-    changeSet.add(getGitSyncFile(accountId, newValue, ChangeType.ADD));
-    yamlChangeSetService.saveChangeSet(ygs, changeSet);
-  }
-
-  private <T> void yamlFileUpdateChange(YamlGitConfig ygs, T value, String accountId) {
-    List<GitFileChange> changeSet = new ArrayList<>();
-
-    changeSet.add(getGitSyncFile(accountId, value, ChangeType.MODIFY));
-    yamlChangeSetService.saveChangeSet(ygs, changeSet);
-  }
-
-  private <T> GitFileChange getGitSyncFile(String accountId, T value, ChangeType changeType) {
-    GitFileChange gitFileChange = null;
-    if (value instanceof InfrastructureMapping) {
-      throw new InvalidRequestException("Infra mapping yaml changeset should not reach here" + value);
-    } else if (value instanceof ArtifactStream) {
-      gitFileChange = entityUpdateService.getArtifactStreamGitSyncFile(accountId, (ArtifactStream) value, changeType);
-    } else if (value instanceof NotificationGroup) {
-      throw new InvalidRequestException("Notification Group yaml changeset should not reach here" + value);
-    }
-
-    return gitFileChange;
-  }
-
-  private void serviceYamlChangeSet(Service service, ChangeType crudType) {
-    // check whether we need to push changes (through git sync)
-    String accountId = appService.getAccountIdByAppId(service.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, crudType));
-      if (crudType.equals(ChangeType.ADD) && !serviceResourceService.hasInternalCommands(service)) {
-        serviceResourceService.getServiceCommands(service.getAppId(), service.getUuid())
-            .forEach(serviceCommand
-                -> changeSet.add(
-                    entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
-      }
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
   }
 
   public void queueSettingUpdateYamlChangeAsync(

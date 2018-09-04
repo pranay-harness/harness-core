@@ -95,4 +95,6 @@ public interface ArtifactStreamService extends OwnedByService {
   List<ArtifactStream> fetchArtifactStreamsForService(String appId, String serviceId);
 
   List<String> fetchArtifactStreamIdsForService(String appId, String serviceId);
+
+  boolean deleteByYamlGit(String appId, String artifactStreamId, boolean syncFromGit);
 }

@@ -61,6 +61,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Event.Type;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
@@ -122,6 +123,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByService;
 import software.wings.service.intfc.template.TemplateService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.stencils.DataProvider;
@@ -180,6 +182,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private TemplateHelper templateHelper;
   @Inject private HelmHelper helmHelper;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private YamlPushService yamlPushService;
 
   /**
    * {@inheritDoc}
@@ -223,7 +226,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
     if (!createdFromYaml) {
-      yamlChangeSetHelper.serviceYamlChangeAsync(savedService, ChangeType.ADD);
+      String accountId = appService.getAccountIdByAppId(service.getAppId());
+      yamlPushService.pushYamlChangeSet(accountId, null, savedService, Type.CREATE, service.isSyncFromGit(), false);
     }
 
     return savedService;
@@ -481,7 +485,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     if (!fromYaml) {
-      yamlChangeSetHelper.serviceUpdateYamlChangeAsync(service, savedService, updatedService);
+      String accountId = appService.getAccountIdByAppId(service.getAppId());
+      boolean isRename = !savedService.getName().equals(service.getName());
+      yamlPushService.pushYamlChangeSet(
+          accountId, savedService, updatedService, Type.UPDATE, service.isSyncFromGit(), isRename);
     }
 
     return updatedService;
@@ -538,20 +545,27 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public void delete(String appId, String serviceId) {
+    delete(appId, serviceId, false, false);
+  }
+
+  @Override
+  public void deleteByYamlGit(String appId, String serviceId, boolean syncFromGit) {
+    delete(appId, serviceId, false, syncFromGit);
+  }
+
+  private void delete(String appId, String serviceId, boolean forceDelete, boolean syncFromGit) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     if (service == null) {
       return;
     }
-    delete(service, false);
-  }
 
-  private void delete(Service service, boolean forceDelete) {
     if (!forceDelete) {
       // Ensure service is safe to delete
       ensureServiceSafeToDelete(service);
     }
 
-    yamlChangeSetHelper.serviceYamlChange(service, ChangeType.DELETE);
+    String accountId = appService.getAccountIdByAppId(service.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, service, null, Type.DELETE, syncFromGit, false);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
     PruneEntityJob.addDefaultJob(

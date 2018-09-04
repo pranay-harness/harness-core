@@ -12,12 +12,10 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
@@ -30,6 +28,7 @@ import software.wings.beans.yaml.YamlConstants;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
@@ -54,6 +53,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private AppService appService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
+  @Inject private ServiceResourceService serviceResourceService;
 
   private GitFileChange createGitFileChange(
       String accountId, String path, String name, String yamlContent, ChangeType changeType, boolean isDirectory) {
@@ -75,16 +75,6 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
         .withFileContent(content)
         .withFilePath(path + "/" + fileName)
         .build();
-  }
-
-  @Override
-  public GitFileChange getAppGitSyncFile(Application app, ChangeType changeType) {
-    String yaml = null;
-    if (!changeType.equals(ChangeType.DELETE)) {
-      yaml = appYamlResourceService.getApp(app.getUuid()).getResource().getYaml();
-    }
-    return createGitFileChange(
-        app.getAccountId(), yamlDirectoryService.getRootPathByApp(app), YamlConstants.INDEX, yaml, changeType, true);
   }
 
   @Override
@@ -273,19 +263,6 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   }
 
   @Override
-  public GitFileChange getInfraMappingGitSyncFile(
-      String accountId, InfrastructureMapping infraMapping, ChangeType changeType) {
-    String yaml = null;
-    if (!changeType.equals(ChangeType.DELETE)) {
-      yaml = yamlResourceService.getInfraMapping(accountId, infraMapping.getAppId(), infraMapping.getUuid())
-                 .getResource()
-                 .getYaml();
-    }
-    return createGitFileChange(accountId, yamlDirectoryService.getRootPathByInfraMapping(infraMapping),
-        infraMapping.getName(), yaml, changeType, false);
-  }
-
-  @Override
   public GitFileChange getInfraProvisionerGitSyncFile(
       String accountId, InfrastructureProvisioner provisioner, ChangeType changeType) {
     String yaml = null;
@@ -294,17 +271,6 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     }
     return createGitFileChange(accountId, yamlDirectoryService.getRootPathByInfraProvisioner(provisioner),
         provisioner.getName(), yaml, changeType, false);
-  }
-
-  public GitFileChange getArtifactStreamGitSyncFile(
-      String accountId, ArtifactStream artifactStream, ChangeType changeType) {
-    String yaml = null;
-    if (!changeType.equals(ChangeType.DELETE)) {
-      yaml =
-          yamlResourceService.getTrigger(artifactStream.getAppId(), artifactStream.getUuid()).getResource().getYaml();
-    }
-    return createGitFileChange(accountId, yamlDirectoryService.getRootPathByArtifactStream(artifactStream),
-        artifactStream.getName(), yaml, changeType, false);
   }
 
   public GitFileChange getSettingAttributeGitSyncFile(
@@ -333,6 +299,24 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
 
     gitFileChanges.add(createGitFileChange(
         accountId, yamlDirectoryService.obtainEntityRootPath(entity), yamlFileName, yaml, changeType, isNonLeafEntity));
+    gitFileChanges.addAll(obtainAdditionalGitSyncFileChangeSet(accountId, entity, changeType));
+
+    return gitFileChanges;
+  }
+
+  private <T> List<GitFileChange> obtainAdditionalGitSyncFileChangeSet(
+      String accountId, T entity, ChangeType changeType) {
+    List<GitFileChange> gitFileChanges = new ArrayList<>();
+
+    if (entity instanceof Service) {
+      Service service = (Service) entity;
+
+      if (changeType.equals(ChangeType.ADD) && !serviceResourceService.hasInternalCommands(service)) {
+        serviceResourceService.getServiceCommands(service.getAppId(), service.getUuid())
+            .forEach(serviceCommand
+                -> gitFileChanges.add(getCommandGitSyncFile(accountId, service, serviceCommand, ChangeType.ADD)));
+      }
+    }
 
     return gitFileChanges;
   }

@@ -59,12 +59,12 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.dl.PageRequest;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.Collections;
 import java.util.List;
@@ -72,7 +72,7 @@ import java.util.Map;
 
 public class ArtifactStreamServiceTest extends WingsBaseTest {
   @Mock private JobScheduler jobScheduler;
-  @Mock private YamlChangeSetHelper yamlChangeSetHelper;
+  @Mock private YamlPushService yamlPushService;
   @Mock private AppService appService;
   @Mock private BuildSourceService buildSourceService;
   @Mock private TriggerService triggerService;
@@ -164,8 +164,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedJenkinsArtifactStream.getArtifactPaths().contains("*WAR_Changed"));
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
   }
 
   @Test
@@ -208,8 +209,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedBambooArtifactStream.getArtifactPaths().contains("artifacts/todolist_changed.war"));
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
   }
 
   private ArtifactStream createBambooArtifactStream() {
@@ -302,8 +304,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedNexusArtifactStream.getArtifactPaths().contains("todolist-changed"));
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
   }
 
   @Test
@@ -396,8 +399,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedNexusArtifactStream.getImageName()).isEqualTo("wingsplugings/todolist-changed");
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
   }
 
   @Test
@@ -588,8 +592,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactoryArtifactStream.getRepositoryType().equals("maven"));
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
   }
@@ -684,8 +689,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactoryArtifactStream.getRepositoryType().equals("any"));
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
 
     verify(buildSourceService, times(2))
         .validateArtifactSource(anyString(), anyString(), any(ArtifactStreamAttributes.class));
@@ -774,8 +780,9 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(updatedArtifactStream.getRegion()).isEqualTo("us-west");
 
     verify(appService, times(2)).getAccountIdByAppId(APP_ID);
-    verify(yamlChangeSetHelper)
-        .updateYamlChangeAsync(any(ArtifactStream.class), any(ArtifactStream.class), anyString(), anyBoolean());
+    verify(yamlPushService, times(2))
+        .pushYamlChangeSet(
+            any(String.class), any(ArtifactStream.class), any(ArtifactStream.class), any(), anyBoolean(), anyBoolean());
   }
 
   @Test

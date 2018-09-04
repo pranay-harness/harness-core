@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
@@ -44,11 +45,13 @@ import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Misc;
@@ -71,6 +74,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject ServiceResourceService serviceResourceService;
   @Inject SettingsService settingService;
   @Inject AwsCFHelperServiceManager awsCFHelperServiceManager;
+  @Inject private AppService appService;
+  @Inject YamlPushService yamlPushService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -79,13 +84,31 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Override
   @ValidationGroups(Create.class)
   public InfrastructureProvisioner save(@Valid InfrastructureProvisioner infrastructureProvisioner) {
-    return wingsPersistence.saveAndGet(InfrastructureProvisioner.class, infrastructureProvisioner);
+    InfrastructureProvisioner finalInfraProvisioner =
+        wingsPersistence.saveAndGet(InfrastructureProvisioner.class, infrastructureProvisioner);
+
+    String accountId = appService.getAccountIdByAppId(infrastructureProvisioner.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, null, infrastructureProvisioner, Type.CREATE, infrastructureProvisioner.isSyncFromGit(), false);
+
+    return finalInfraProvisioner;
   }
 
   @Override
   @ValidationGroups(Update.class)
   public InfrastructureProvisioner update(@Valid InfrastructureProvisioner infrastructureProvisioner) {
-    return wingsPersistence.saveAndGet(InfrastructureProvisioner.class, infrastructureProvisioner);
+    InfrastructureProvisioner savedInfraProvisioner =
+        get(infrastructureProvisioner.getAppId(), infrastructureProvisioner.getUuid());
+
+    InfrastructureProvisioner updatedInfraProvisioner =
+        wingsPersistence.saveAndGet(InfrastructureProvisioner.class, infrastructureProvisioner);
+
+    String accountId = appService.getAccountIdByAppId(infrastructureProvisioner.getAppId());
+    boolean isRename = !infrastructureProvisioner.getName().equals(savedInfraProvisioner.getName());
+    yamlPushService.pushYamlChangeSet(accountId, savedInfraProvisioner, updatedInfraProvisioner, Type.UPDATE,
+        infrastructureProvisioner.isSyncFromGit(), isRename);
+
+    return updatedInfraProvisioner;
   }
 
   @Override
@@ -208,11 +231,22 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public void delete(String appId, String infrastructureProvisionerId) {
-    if (get(appId, infrastructureProvisionerId) == null) {
+    delete(appId, infrastructureProvisionerId, false);
+  }
+
+  @Override
+  public void delete(String appId, String infrastructureProvisionerId, boolean syncFromGit) {
+    InfrastructureProvisioner infrastructureProvisioner = get(appId, infrastructureProvisionerId);
+
+    if (infrastructureProvisioner == null) {
       return;
     }
 
     ensureSafeToDelete(appId, infrastructureProvisionerId);
+
+    String accountId = appService.getAccountIdByAppId(infrastructureProvisioner.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, infrastructureProvisioner, null, Type.DELETE, syncFromGit, false);
+
     wingsPersistence.delete(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
   }
 

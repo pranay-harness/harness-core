@@ -430,4 +430,6 @@ public interface ServiceResourceService extends OwnedByApplication {
       @NotEmpty String appId, @NotEmpty String serviceId, @NotEmpty String commandName);
 
   boolean checkArtifactNeededForHelm(String appId, String serviceTemplateId);
+
+  void deleteByYamlGit(String appId, String serviceId, boolean syncFromGit);
 }

@@ -150,6 +150,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.stencils.Stencil;
 import software.wings.utils.BoundedInputStream;
 
@@ -202,6 +203,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private ExecutorService executorService;
   @Mock private JobScheduler jobScheduler;
   @Mock private TemplateService templateService;
+  @Mock private YamlPushService yamlPushService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 

@@ -145,17 +145,18 @@ public class YamlChangeSetHelperTest {
                                             .build();
 
     // Validate for Artifact Stream
-    when(entityUpdateService.getArtifactStreamGitSyncFile(anyString(), any(), any()))
-        .thenReturn(gitFileChangeForDelete)
-        .thenReturn(gitFileChangeForADD);
+    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any()))
+        .thenReturn(Lists.newArrayList(gitFileChangeForDelete))
+        .thenReturn(Lists.newArrayList(gitFileChangeForADD));
+    when(yamlDirectoryService.weNeedToPushChanges(any())).thenReturn(YamlGitConfig.builder().build());
     doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());
     ArtifactStream oldValue = new DockerArtifactStream();
     oldValue.setName(OLD);
     ArtifactStream newValue = new DockerArtifactStream();
     oldValue.setName(NEW);
 
-    MethodUtils.invokeMethod(yamlChangeSetHelper, true, "updateYamlChange",
-        new Object[] {yamlGitConfig, oldValue, newValue, ACCOUNTID, true});
+    MethodUtils.invokeMethod(
+        yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, newValue, true});
 
     ArgumentCaptor<List> gitFileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<YamlGitConfig> yamlGitConfigCaptorForAS = ArgumentCaptor.forClass(YamlGitConfig.class);
@@ -182,14 +183,14 @@ public class YamlChangeSetHelperTest {
                                                .build();
 
     // Validate for Artifact Stream
-    when(entityUpdateService.getArtifactStreamGitSyncFile(anyString(), any(), any()))
-        .thenReturn(gitFileChangeForModify);
-
+    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any()))
+        .thenReturn(Lists.newArrayList(gitFileChangeForModify));
+    when(yamlDirectoryService.weNeedToPushChanges(any())).thenReturn(YamlGitConfig.builder().build());
     doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());
     ArtifactStream oldValue = new DockerArtifactStream();
     oldValue.setName(OLD);
-    MethodUtils.invokeMethod(yamlChangeSetHelper, true, "updateYamlChange",
-        new Object[] {yamlGitConfig, oldValue, oldValue, ACCOUNTID, false});
+    MethodUtils.invokeMethod(
+        yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, oldValue, false});
 
     ArgumentCaptor<List> fileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
     ArgumentCaptor<YamlGitConfig> gitConfigCaptorForAS = ArgumentCaptor.forClass(YamlGitConfig.class);

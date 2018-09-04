@@ -1299,6 +1299,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathByInfraMapping((InfrastructureMapping) entity);
     } else if (entity instanceof Workflow) {
       return getRootPathByWorkflow((Workflow) entity);
+    } else if (entity instanceof ArtifactStream) {
+      return getRootPathByArtifactStream((ArtifactStream) entity);
+    } else if (entity instanceof InfrastructureProvisioner) {
+      return getRootPathByInfraProvisioner((InfrastructureProvisioner) entity);
+    } else if (entity instanceof Service) {
+      return getRootPathByService((Service) entity);
     }
 
     throw new InvalidRequestException(
