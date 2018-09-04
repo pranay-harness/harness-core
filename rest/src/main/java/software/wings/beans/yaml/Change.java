@@ -1,5 +1,7 @@
 package software.wings.beans.yaml;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.ToString;
@@ -15,7 +17,7 @@ public class Change {
   private String accountId;
   private ChangeType changeType;
   private String oldFilePath;
-  private boolean syncFromGit;
+  @JsonIgnore @SchemaIgnore private boolean syncFromGit;
 
   public enum ChangeType { ADD, MODIFY, RENAME, DELETE }
 

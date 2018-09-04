@@ -53,6 +53,6 @@ public class KmsConfig extends Base implements EncryptionConfig {
     return "KmsConfig{"
         + "name='" + name + '\'' + ", accessKey='" + accessKey + '\'' + ", isDefault=" + isDefault + ", accountId='"
         + accountId + '\'' + ", encryptionType=" + encryptionType + ", appId='" + appId + '\'' + ", entityYamlPath='"
-        + entityYamlPath + '\'' + "} " + super.toString();
+        + getEntityYamlPath() + '\'' + "} " + super.toString();
   }
 }

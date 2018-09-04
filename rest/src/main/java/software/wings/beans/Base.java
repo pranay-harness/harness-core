@@ -6,11 +6,9 @@ import static java.lang.System.currentTimeMillis;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.validation.Update;
-import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Id;
@@ -68,13 +66,22 @@ public class Base implements UuidAware {
 
   @SchemaIgnore @Indexed private List<String> keywords;
 
-  @Getter(AccessLevel.NONE)
   @SchemaIgnore
   @JsonIgnore
   @Transient
-  public transient String entityYamlPath; // TODO:: remove it with changeSet batching
+  private transient String entityYamlPath; // TODO:: remove it with changeSet batching
 
-  @JsonIgnore @SchemaIgnore @Getter @Setter private transient boolean syncFromGit;
+  public String getEntityYamlPath() {
+    return entityYamlPath;
+  }
+
+  @JsonIgnore @SchemaIgnore @Setter private transient boolean syncFromGit;
+
+  @JsonIgnore
+  @SchemaIgnore
+  public boolean isSyncFromGit() {
+    return syncFromGit;
+  }
 
   public Base(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, List<String> keywords, String entityYamlPath) {
