@@ -15,6 +15,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.ApplicationGenerator.Applications;
+import software.wings.generator.ArtifactStreamGenerator.ArtifactStreams;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
@@ -23,6 +24,7 @@ import software.wings.utils.ArtifactType;
 public class ServiceGenerator {
   @Inject private OwnerManager ownerManager;
   @Inject ApplicationGenerator applicationGenerator;
+  @Inject ArtifactStreamGenerator artifactStreamGenerator;
 
   @Inject ServiceResourceService serviceResourceService;
   @Inject WingsPersistence wingsPersistence;
@@ -43,30 +45,23 @@ public class ServiceGenerator {
   }
 
   private Service ensureGenericTest(Randomizer.Seed seed, Owners owners) {
-    Application application = owners.obtainApplication();
-    if (application == null) {
-      application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
-      owners.add(application);
-    }
-    return ensureService(seed, owners, builder().name("Test Service").artifactType(ArtifactType.WAR).build());
+    Application application =
+        owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+    owners.add(ensureService(seed, owners, builder().name("Test Service").artifactType(ArtifactType.WAR).build()));
+    artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
+    return owners.obtainService();
   }
 
   private Service ensureKubernetesGenericTest(Randomizer.Seed seed, Owners owners) {
-    Application application = owners.obtainApplication();
-    if (application == null) {
-      application = applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST);
-      owners.add(application);
-    }
-
+    Application application =
+        owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     return ensureService(
         seed, owners, builder().name(KUBERNETES_GENERIC_TEST.name()).artifactType(ArtifactType.DOCKER).build());
   }
 
   public Service ensureRandom(Randomizer.Seed seed, Owners owners) {
     EnhancedRandom random = Randomizer.instance(seed);
-
     Services predefined = random.nextObject(Services.class);
-
     return ensurePredefined(seed, owners, predefined);
   }
 
@@ -80,20 +75,12 @@ public class ServiceGenerator {
   public Service ensureService(Randomizer.Seed seed, Owners owners, Service service) {
     EnhancedRandom random = Randomizer.instance(seed);
 
-    if (owners == null) {
-      owners = ownerManager.create();
-    }
-
     ServiceBuilder builder = Service.builder();
 
     if (service != null && service.getAppId() != null) {
       builder.appId(service.getAppId());
     } else {
-      Application application = owners.obtainApplication();
-      if (application == null) {
-        application = applicationGenerator.ensureRandom(seed, owners);
-        owners.add(application);
-      }
+      Application application = owners.obtainApplication(() -> applicationGenerator.ensureRandom(seed, owners));
       builder.appId(application.getUuid());
     }
 

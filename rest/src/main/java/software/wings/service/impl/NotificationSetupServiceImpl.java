@@ -107,6 +107,15 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   }
 
   @Override
+  public List<NotificationGroup> readNotificationGroups(String accountId, List<String> notificationGroupIds) {
+    return wingsPersistence.createQuery(NotificationGroup.class)
+        .filter(NotificationGroup.ACCOUNT_ID_KEY, accountId)
+        .field(NotificationGroup.ID_KEY)
+        .in(notificationGroupIds)
+        .asList();
+  }
+
+  @Override
   public NotificationGroup readNotificationGroupByName(String accountId, String notificationGroupName) {
     PageRequest<NotificationGroup> pageRequest = aPageRequest()
                                                      .addFilter("accountId", Operator.EQ, accountId)

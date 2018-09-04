@@ -16,6 +16,8 @@ import static software.wings.generator.PipelineGenerator.Pipelines.BARRIER;
 import static software.wings.generator.PipelineGenerator.Pipelines.RESOURCE_CONSTRAINT_WORKFLOW;
 import static software.wings.generator.WorkflowGenerator.Workflows.RESOURCE_CONSTRAINT;
 import static software.wings.sm.StateType.ENV_STATE;
+import static software.wings.sm.states.ResourceConstraintState.NotificationEvent.BLOCKED;
+import static software.wings.sm.states.ResourceConstraintState.NotificationEvent.UNBLOCKED;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -25,6 +27,7 @@ import io.github.benas.randombeans.api.EnhancedRandom;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -33,6 +36,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
+import software.wings.generator.NotificationGroupGenerator.NotificationGroups;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.ServiceGenerator.Services;
 import software.wings.generator.WorkflowGenerator.PostProcessInfo;
@@ -41,12 +45,13 @@ import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 
 @Singleton
 public class PipelineGenerator {
-  @Inject PipelineService pipelineService;
+  @Inject private PipelineService pipelineService;
 
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
   @Inject private ServiceGenerator serviceGenerator;
+  @Inject private NotificationGroupGenerator notificationGroupGenerator;
 
   public enum Pipelines { BARRIER, RESOURCE_CONSTRAINT_WORKFLOW }
 
@@ -144,6 +149,9 @@ public class PipelineGenerator {
 
     final Service service = serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST);
 
+    final NotificationGroup notificationGroup =
+        notificationGroupGenerator.ensurePredefined(seed, owners, NotificationGroups.GENERIC_TEST);
+
     Workflow[] workflows = new Workflow[3];
 
     for (int i = 0; i < 3; i++) {
@@ -162,6 +170,8 @@ public class PipelineGenerator {
                                            .addProperty("resourceConstraintId", asapResourceConstraint.getUuid())
                                            .addProperty("permits", 4)
                                            .addProperty("holdingScope", HoldingScope.WORKFLOW.name())
+                                           .addProperty("notificationEvents", asList(BLOCKED, UNBLOCKED))
+                                           .addProperty("notificationGroups", asList(notificationGroup.getUuid()))
                                            .build())
                               .build())
                       .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())

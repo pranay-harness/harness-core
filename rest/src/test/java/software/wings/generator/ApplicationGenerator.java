@@ -67,11 +67,7 @@ public class ApplicationGenerator {
     if (application != null && application.getAccountId() != null) {
       builder.withAccountId(application.getAccountId());
     } else {
-      Account account = owners.obtainAccount();
-      if (account == null) {
-        account = accountGenerator.randomAccount();
-        owners.add(account);
-      }
+      Account account = owners.obtainAccount(() -> accountGenerator.randomAccount());
       builder.withAccountId(account.getUuid());
     }
 
