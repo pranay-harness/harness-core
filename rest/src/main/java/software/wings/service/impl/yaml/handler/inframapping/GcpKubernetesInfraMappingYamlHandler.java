@@ -51,7 +51,7 @@ public class GcpKubernetesInfraMappingYamlHandler
     GcpKubernetesInfrastructureMapping previous =
         (GcpKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    return upsertInfrastructureMapping(current, previous);
+    return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
   private void toBean(GcpKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,

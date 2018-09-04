@@ -114,4 +114,6 @@ public interface PipelineService extends OwnedByApplication {
   Pipeline clonePipeline(String originalPipelineId, Pipeline pipeline);
 
   List<EntityType> getRequiredEntities(String appId, String pipelineId);
+
+  void deleteByYamlGit(String appId, String pipelineId, boolean syncFromGit);
 }

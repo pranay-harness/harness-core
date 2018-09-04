@@ -54,7 +54,7 @@ public class PhysicalInfraMappingYamlHandler
     PhysicalInfrastructureMapping previous =
         (PhysicalInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    return upsertInfrastructureMapping(current, previous);
+    return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
   protected void toBean(ChangeContext<Yaml> changeContext, PhysicalInfrastructureMapping bean, String appId,

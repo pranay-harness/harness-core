@@ -79,6 +79,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
     NotificationGroup previous = get(accountId, changeContext.getChange().getFilePath());
 
     NotificationGroup notificationGroup = toBean(changeContext);
+    notificationGroup.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
     if (previous != null) {
       notificationGroup.setUuid(previous.getUuid());
@@ -123,6 +124,7 @@ public class NotificationGroupYamlHandler extends BaseYamlHandler<Yaml, Notifica
     NotificationGroup notificationGroup =
         notificationSetupService.readNotificationGroupByName(accountId, notificationGroupName);
     notNullCheck("No Notification Group exists with the given name: " + notificationGroupName, notificationGroup, USER);
-    notificationSetupService.deleteNotificationGroups(accountId, notificationGroup.getUuid());
+    notificationSetupService.deleteNotificationGroups(
+        accountId, notificationGroup.getUuid(), changeContext.getChange().isSyncFromGit());
   }
 }

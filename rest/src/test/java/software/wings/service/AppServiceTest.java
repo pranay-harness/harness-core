@@ -45,6 +45,7 @@ import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Notification;
 import software.wings.beans.Service;
 import software.wings.beans.StringValue;
@@ -54,7 +55,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
@@ -68,6 +68,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
@@ -93,7 +94,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock UpdateOperations<Application> updateOperations;
 
   @Mock private WingsPersistence wingsPersistence;
-  @Mock private YamlChangeSetHelper yamlChangeSetHelper;
+  @Mock private YamlPushService yamlPushService;
 
   @Inject @InjectMocks AppService appService;
 
@@ -266,16 +267,21 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateApplication() throws IOException {
     try (UserThreadLocal.Guard guard = userGuard(null)) {
-      Application application = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
+      Application application = anApplication().withUuid(APP_ID).withName(APP_NAME).withAccountId(ACCOUNT_ID).build();
       when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
-      appService.update(anApplication().withUuid(APP_ID).withName("App_Name").withDescription("Description").build());
+      appService.update(anApplication()
+                            .withUuid(APP_ID)
+                            .withName("App_Name")
+                            .withDescription("Description")
+                            .withAccountId(ACCOUNT_ID)
+                            .build());
       verify(query).filter(ID_KEY, APP_ID);
       verify(updateOperations).set("name", "App_Name");
       verify(updateOperations).set("description", "Description");
       verify(updateOperations).set("keywords", asList("App_Name".toLowerCase(), "Description".toLowerCase()));
       verify(wingsPersistence).update(query, updateOperations);
       verify(wingsPersistence, times(2)).get(Application.class, APP_ID);
-      verify(yamlChangeSetHelper).applicationUpdateYamlChangeAsync(application, application);
+      verify(yamlPushService).pushYamlChangeSet(ACCOUNT_ID, application, application, Type.UPDATE, false, true);
     }
   }
 

@@ -153,4 +153,6 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   List<EntityType> getRequiredEntities(String appId, String workflowId);
 
   Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow);
+
+  boolean deleteByYamlGit(String appId, String workflowId, boolean syncFromGit);
 }

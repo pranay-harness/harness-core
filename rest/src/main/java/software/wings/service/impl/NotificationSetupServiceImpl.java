@@ -17,6 +17,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.beans.Application;
+import software.wings.beans.Event;
+import software.wings.beans.Event.Type;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
@@ -24,17 +26,16 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
@@ -56,7 +57,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   @Inject private SettingsService settingsService;
 
   @Inject private WorkflowService workflowService;
-  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private YamlPushService yamlPushService;
   @Inject private UserService userService;
 
   /**
@@ -122,7 +123,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
                                      -> wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup),
             "name", notificationGroup.getName());
 
-    yamlChangeSetHelper.notificationGroupYamlChangeAsync(savedNotificationGroup, ChangeType.ADD);
+    yamlPushService.pushYamlChangeSet(notificationGroup.getAccountId(), null, savedNotificationGroup, Event.Type.CREATE,
+        notificationGroup.isSyncFromGit(), false);
     return savedNotificationGroup;
   }
 
@@ -137,13 +139,20 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
     NotificationGroup updatedGroup =
         wingsPersistence.saveAndGet(NotificationGroup.class, notificationGroup); // TODO:: selective update
 
-    yamlChangeSetHelper.updateYamlChangeAsync(updatedGroup, existingGroup, updatedGroup.getAccountId(),
-        !(updatedGroup.getName().equals(existingGroup.getName())));
+    boolean isRename = !updatedGroup.getName().equals(existingGroup.getName());
+    yamlPushService.pushYamlChangeSet(updatedGroup.getAccountId(), existingGroup, updatedGroup, Type.UPDATE,
+        notificationGroup.isSyncFromGit(), isRename);
+
     return updatedGroup;
   }
 
   @Override
   public boolean deleteNotificationGroups(String accountId, String notificationGroupId) {
+    return deleteNotificationGroups(accountId, notificationGroupId, false);
+  }
+
+  @Override
+  public boolean deleteNotificationGroups(String accountId, String notificationGroupId, boolean syncFromGit) {
     NotificationGroup notificationGroup = wingsPersistence.get(NotificationGroup.class, notificationGroupId);
     if (!notificationGroup.isEditable()) {
       throw new InvalidRequestException("Default Notification group can not be deleted");
@@ -175,7 +184,8 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
           inUse.size(), plural("workflow", inUse.size()), Joiner.on("', '").join(inUse)));
     }
 
-    yamlChangeSetHelper.notificationGroupYamlChangeSet(notificationGroup, ChangeType.DELETE);
+    yamlPushService.pushYamlChangeSet(accountId, notificationGroup, null, Type.DELETE, syncFromGit, false);
+
     return wingsPersistence.delete(NotificationGroup.class, notificationGroupId);
   }
 

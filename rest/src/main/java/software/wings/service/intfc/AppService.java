@@ -107,4 +107,6 @@ public interface AppService extends OwnedByAccount, Exterminator {
   List<String> getAppNamesByAccountId(String accountId);
 
   String getAccountIdByAppId(String appId);
+
+  void delete(String appId, boolean syncFromGit);
 }

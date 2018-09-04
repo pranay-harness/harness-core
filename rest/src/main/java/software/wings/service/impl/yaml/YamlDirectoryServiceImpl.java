@@ -1289,9 +1289,19 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   public <T> String obtainEntityRootPath(T entity) {
     if (entity instanceof Environment) {
       return getRootPathByEnvironment((Environment) entity);
-    } else {
-      throw new InvalidRequestException(
-          "Unhandled case while obtaining yaml entity root path for entity type " + entity.getClass().getSimpleName());
+    } else if (entity instanceof NotificationGroup) {
+      return getRootPathByNotificationGroup((NotificationGroup) entity);
+    } else if (entity instanceof Pipeline) {
+      return getRootPathByPipeline((Pipeline) entity);
+    } else if (entity instanceof Application) {
+      return getRootPathByApp((Application) entity);
+    } else if (entity instanceof InfrastructureMapping) {
+      return getRootPathByInfraMapping((InfrastructureMapping) entity);
+    } else if (entity instanceof Workflow) {
+      return getRootPathByWorkflow((Workflow) entity);
     }
+
+    throw new InvalidRequestException(
+        "Unhandled case while obtaining yaml entity root path for entity type " + entity.getClass().getSimpleName());
   }
 }

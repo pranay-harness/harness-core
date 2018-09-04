@@ -93,4 +93,6 @@ public interface NotificationSetupService {
   List<NotificationGroup> listDefaultNotificationGroup(String accountId);
 
   List<String> getUserEmailAddressFromNotificationGroups(String accountId, List<NotificationGroup> notificationGroups);
+
+  boolean deleteNotificationGroups(String accountId, String notificationGroupId, boolean syncFromGit);
 }

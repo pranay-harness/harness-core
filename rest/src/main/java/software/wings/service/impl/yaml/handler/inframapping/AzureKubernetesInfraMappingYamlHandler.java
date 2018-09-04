@@ -50,7 +50,7 @@ public class AzureKubernetesInfraMappingYamlHandler
     AzureKubernetesInfrastructureMapping previous =
         (AzureKubernetesInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    return upsertInfrastructureMapping(current, previous);
+    return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
   private void toBean(AzureKubernetesInfrastructureMapping bean, ChangeContext<Yaml> changeContext, String appId,

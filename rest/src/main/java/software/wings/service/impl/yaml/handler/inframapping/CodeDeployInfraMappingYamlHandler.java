@@ -54,7 +54,7 @@ public class CodeDeployInfraMappingYamlHandler
     CodeDeployInfrastructureMapping previous =
         (CodeDeployInfrastructureMapping) infraMappingService.getInfraMappingByName(appId, envId, name);
 
-    return upsertInfrastructureMapping(current, previous);
+    return upsertInfrastructureMapping(current, previous, changeContext.getChange().isSyncFromGit());
   }
 
   private void toBean(CodeDeployInfrastructureMapping bean, ChangeContext<Yaml> context, String appId, String envId,

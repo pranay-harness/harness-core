@@ -69,6 +69,7 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Event.Type;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
@@ -92,7 +93,6 @@ import software.wings.beans.WorkflowPhase;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.HQuery.QueryChecks;
@@ -105,7 +105,6 @@ import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
@@ -124,9 +123,7 @@ import software.wings.service.intfc.aws.manager.AwsIamHelperServiceManager;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
@@ -136,7 +133,6 @@ import software.wings.utils.HostValidationService;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 import software.wings.utils.Util;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -146,7 +142,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import javax.validation.Valid;
@@ -167,8 +162,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   // DO NOT DELETE THIS, PRUNE logic needs it
   @SuppressWarnings("unused") @Inject private InstanceService instanceService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
-  @Inject private EntityUpdateService entityUpdateService;
-  @Inject private ExecutorService executorService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private ServiceResourceService serviceResourceService;
@@ -176,17 +169,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private SettingsService settingsService;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private WorkflowService workflowService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private SecretManager secretManager;
   @Inject private ExpressionEvaluator evaluator;
-  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private PcfHelperService pcfHelperService;
   @Inject private AwsEcsHelperServiceManager awsEcsHelperServiceManager;
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject private YamlPushService yamlPushService;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -303,7 +294,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     InfrastructureMapping savedInfraMapping = duplicateCheck(
         () -> wingsPersistence.saveAndGet(InfrastructureMapping.class, infraMapping), "name", infraMapping.getName());
-    executorService.submit(() -> saveYamlChangeSet(savedInfraMapping, ChangeType.ADD));
+
+    String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
+    yamlPushService.pushYamlChangeSet(
+        accountId, null, savedInfraMapping, Type.CREATE, infraMapping.isSyncFromGit(), false);
+
     return savedInfraMapping;
   }
 
@@ -524,8 +519,11 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     wingsPersistence.updateFields(
         infrastructureMapping.getClass(), infrastructureMapping.getUuid(), keyValuePairs, fieldsToRemove);
     InfrastructureMapping updatedInfraMapping = get(infrastructureMapping.getAppId(), infrastructureMapping.getUuid());
-    yamlChangeSetHelper.updateYamlChangeAsync(updatedInfraMapping, savedInfraMapping, savedInfraMapping.getAccountId(),
-        !(updatedInfraMapping.getName().equals(savedInfraMapping.getName())));
+
+    boolean isRename = !updatedInfraMapping.getName().equals(savedInfraMapping.getName());
+    yamlPushService.pushYamlChangeSet(savedInfraMapping.getAccountId(), savedInfraMapping, updatedInfraMapping,
+        Type.UPDATE, infrastructureMapping.isSyncFromGit(), isRename);
+
     return updatedInfraMapping;
   }
 
@@ -545,15 +543,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER).addParam("args", "Host names must not be empty");
     }
     return hostNames;
-  }
-
-  private void saveYamlChangeSet(InfrastructureMapping infraMapping, ChangeType crudType) {
-    String accountId = appService.getAccountIdByAppId(infraMapping.getAppId());
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      yamlChangeSetService.saveChangeSet(
-          ygs, asList(entityUpdateService.getInfraMappingGitSyncFile(accountId, infraMapping, crudType)));
-    }
   }
 
   /**
@@ -785,10 +774,15 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public void delete(String appId, String infraMappingId) {
-    delete(appId, infraMappingId, false);
+    delete(appId, infraMappingId, false, false);
   }
 
-  private void delete(String appId, String infraMappingId, boolean forceDelete) {
+  @Override
+  public void deleteByYamlGit(String appId, String infraMappingId, boolean syncFromGit) {
+    delete(appId, infraMappingId, false, syncFromGit);
+  }
+
+  private void delete(String appId, String infraMappingId, boolean forceDelete, boolean syncFromGit) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
     if (infrastructureMapping == null) {
       return;
@@ -798,7 +792,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       ensureSafeToDelete(appId, infraMappingId);
     }
 
-    saveYamlChangeSet(infrastructureMapping, ChangeType.DELETE);
+    String accountId = appService.getAccountIdByAppId(infrastructureMapping.getAppId());
+    yamlPushService.pushYamlChangeSet(accountId, infrastructureMapping, null, Type.DELETE, syncFromGit, false);
 
     prune(appId, infraMappingId);
   }
@@ -878,7 +873,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                 .filter("appId", appId)
                                                 .filter("serviceTemplateId", serviceTemplateId)
                                                 .asKeyList();
-    keys.forEach(key -> delete(appId, (String) key.getId(), true));
+    keys.forEach(key -> delete(appId, (String) key.getId(), true, false));
   }
 
   @Override

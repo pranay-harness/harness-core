@@ -6,11 +6,8 @@ import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.LambdaSpecification;
-import software.wings.beans.NotificationGroup;
-import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -29,9 +26,6 @@ import java.util.List;
  */
 public interface EntityUpdateService {
   GitFileChange getAppGitSyncFile(Application app, ChangeType changeType);
-
-  GitFileChange getNotificationGroupGitSyncFile(
-      String accountId, NotificationGroup notificationGroup, ChangeType changeType);
 
   GitFileChange getServiceGitSyncFile(String accountId, Service service, ChangeType changeType);
 
@@ -61,10 +55,6 @@ public interface EntityUpdateService {
   List<GitFileChange> getEnvironmentGitSyncFile(String accountId, Environment environment, ChangeType changeType);
 
   GitFileChange getInfraMappingGitSyncFile(String accountId, InfrastructureMapping infraMapping, ChangeType changeType);
-
-  GitFileChange getWorkflowGitSyncFile(String accountId, Workflow workflow, ChangeType changeType);
-
-  GitFileChange getPipelineGitSyncFile(String accountId, Pipeline pipeline, ChangeType changeType);
 
   GitFileChange getArtifactStreamGitSyncFile(String accountId, ArtifactStream ArtifactStream, ChangeType changeType);
 

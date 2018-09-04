@@ -32,10 +32,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.Event.Type;
 import software.wings.beans.Role;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -49,7 +49,6 @@ import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.service.impl.security.auth.AuthHandler;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -65,11 +64,10 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByApplication;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -87,7 +85,6 @@ public class AppServiceImpl implements AppService {
   @Inject private ArtifactService artifactService;
   @Inject private AuthHandler authHandler;
   @Inject private EnvironmentService environmentService;
-  @Inject private ExecutorService executorService;
   @Inject private InstanceService instanceService;
   @Inject private NotificationService notificationService;
   @Inject private PipelineService pipelineService;
@@ -99,8 +96,7 @@ public class AppServiceImpl implements AppService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
-  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
-  @Inject private YamlDirectoryService yamlDirectoryService;
+  @Inject private YamlPushService yamlPushService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -127,7 +123,7 @@ public class AppServiceImpl implements AppService {
     sendNotification(application, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
     InstanceSyncJob.add(jobScheduler, application.getUuid());
 
-    yamlChangeSetHelper.applicationYamlChangeAsync(application, ChangeType.ADD);
+    yamlPushService.pushYamlChangeSet(app.getAccountId(), null, application, Type.CREATE, app.isSyncFromGit(), false);
 
     return get(application.getUuid());
   }
@@ -271,22 +267,21 @@ public class AppServiceImpl implements AppService {
     wingsPersistence.update(query, operations);
     Application updatedApp = get(app.getUuid());
 
-    yamlChangeSetHelper.applicationUpdateYamlChangeAsync(savedApp, updatedApp);
+    boolean isRename = !savedApp.getName().equals(app.getName());
+    yamlPushService.pushYamlChangeSet(
+        app.getAccountId(), savedApp, updatedApp, Type.UPDATE, app.isSyncFromGit(), isRename);
+
     return updatedApp;
   }
 
   @Override
-  public void delete(String appId) {
+  public void delete(String appId, boolean syncFromGit) {
     Application application = wingsPersistence.get(Application.class, appId);
     if (application == null) {
       return;
     }
 
-    // YAML is identified by name that can be reused after deletion. Pruning yaml eventual consistent
-    // may result in deleting object from a new application created after the first one was deleted,
-    // or preexisting being renamed to the vacated name. This is why we have to do this synchronously.
-    application.setEntityYamlPath(yamlDirectoryService.getRootPathByApp(application));
-    yamlChangeSetHelper.applicationYamlChange(application, ChangeType.DELETE);
+    yamlPushService.pushYamlChangeSet(application.getAccountId(), application, null, Type.DELETE, syncFromGit, false);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
     PruneEntityJob.addDefaultJob(jobScheduler, Application.class, appId, appId, ofSeconds(5), ofSeconds(15));
@@ -309,7 +304,12 @@ public class AppServiceImpl implements AppService {
 
   @Override
   public void delete(String appId, String entityId) {
-    delete(entityId);
+    delete(entityId, false);
+  }
+
+  @Override
+  public void delete(String appId) {
+    delete(appId, false);
   }
 
   @Override
