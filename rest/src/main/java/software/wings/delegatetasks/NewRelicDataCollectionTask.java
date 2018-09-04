@@ -289,18 +289,18 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
     private Set<NewRelicMetric> getTxnsToCollect() throws IOException {
       logger.info("Collecting txn names for {}", dataCollectionInfo);
-      logger.info("all txns far {}", allTxns.size());
+      logger.info("all txns so far {} for {}", allTxns.size(), dataCollectionInfo.getStateExecutionId());
       Set<NewRelicMetric> newTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
           createApiCallLog(dataCollectionInfo.getStateExecutionId()));
       newTxns.removeAll(allTxns);
-      logger.info("new txns {}", newTxns.size());
+      logger.info("new txns {} for {}", newTxns.size(), dataCollectionInfo.getStateExecutionId());
       Set<NewRelicMetric> txnsWithData = newRelicDelegateService.getTxnsWithDataInLastHour(allTxns,
           dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
           dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
-      logger.info("txns with data {}", txnsWithData.size());
+      logger.info("txns with data {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
       txnsWithData.addAll(newTxns);
-      logger.info("txns to collect {}", txnsWithData.size());
+      logger.info("txns to collect {} for {}", txnsWithData.size(), dataCollectionInfo.getStateExecutionId());
       return txnsWithData;
     }
 
