@@ -1,9 +1,11 @@
 package software.wings.generator;
 
 import static io.harness.govern.Switch.unhandled;
+import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
+import static software.wings.generator.NotificationGroupGenerator.NotificationGroups.GENERIC_TEST;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -47,11 +49,15 @@ public class NotificationGroupGenerator {
   }
 
   private NotificationGroup ensureGenericTest(Randomizer.Seed seed, Owners owners) {
-    Account account = owners.obtainAccount();
-    if (account == null) {
-      account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
-    }
-    return ensureNotificationGroup(seed, owners, aNotificationGroup().withAccountId(account.getUuid()).build());
+    Account account =
+        owners.obtainAccount(() -> accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST));
+    return ensureNotificationGroup(seed, owners,
+        aNotificationGroup()
+            .withName(GENERIC_TEST.name())
+            .withAccountId(account.getUuid())
+            .addAddressesByChannelType(
+                NotificationChannelType.EMAIL, asList(System.getProperty("user.name") + "@harness.io"))
+            .build());
   }
 
   public NotificationGroup ensureRandom(Randomizer.Seed seed, Owners owners) {
@@ -77,11 +83,7 @@ public class NotificationGroupGenerator {
     if (notificationGroup != null && notificationGroup.getAccountId() != null) {
       builder.withAccountId(notificationGroup.getAccountId());
     } else {
-      Account account = owners.obtainAccount();
-      if (account == null) {
-        account = accountGenerator.randomAccount();
-        owners.add(account);
-      }
+      Account account = owners.obtainAccount(() -> accountGenerator.randomAccount());
       builder.withAccountId(account.getUuid());
     }
 

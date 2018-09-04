@@ -16,6 +16,7 @@ public class ResourceConstraintUsage {
     private String releaseEntityType;
     private String releaseEntityId;
     private String releaseEntityName;
+    private int permits;
     private long acquiredAt;
   }
 

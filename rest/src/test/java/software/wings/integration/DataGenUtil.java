@@ -101,7 +101,6 @@ import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
-import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.security.UserGroup;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
@@ -109,7 +108,6 @@ import software.wings.dl.PageResponse;
 import software.wings.generator.AccountGenerator;
 import software.wings.generator.ApplicationGenerator;
 import software.wings.generator.ArtifactStreamGenerator;
-import software.wings.generator.ArtifactStreamGenerator.ArtifactStreams;
 import software.wings.generator.EnvironmentGenerator;
 import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.InfrastructureMappingGenerator;
@@ -577,17 +575,13 @@ public class DataGenUtil extends BaseIntegrationTest {
     final ResourceConstraint fifoResourceConstraint =
         resourceConstraintGenerator.ensurePredefined(seed, owners, ResourceConstraints.GENERIC_FIFO_TEST);
 
-    workflowGenerator.ensurePredefined(seed, owners, Workflows.RESOURCE_CONSTRAINT);
-
     pipelineGenerator.ensurePredefined(seed, owners, Pipelines.RESOURCE_CONSTRAINT_WORKFLOW);
+    workflowGenerator.ensurePredefined(seed, owners, Workflows.RESOURCE_CONSTRAINT);
 
     Workflow workflow1 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_SIMPLE);
 
     InfrastructureMapping infrastructureMapping =
         infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
-
-    ArtifactStream artifactStream =
-        artifactStreamGenerator.ensurePredefined(seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
 
     Workflow workflow2 = workflowGenerator.ensurePredefined(seed, owners, Workflows.BASIC_10_NODES);
 

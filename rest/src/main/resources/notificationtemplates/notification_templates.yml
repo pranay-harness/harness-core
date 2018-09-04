@@ -75,3 +75,17 @@ MANUAL_INTERVENTION_NEEDED_NOTIFICATION:
       email:
           subject: Manual Intervention Needed for ${WORKFLOW_NAME}
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> requires manual intervention for <b>${ARTIFACT}</b> in <b>${ENV}</b>, triggered by <b>${USER_NAME}</b> in <b>${APP_NAME}</b> application</div> <<bottom-div>><<${VERB}-color>><i> Started ${START_DATE} and ${VERB} at ${END_DATE}</i><<img-path>>${VERB}<<img-suffix>>${DURATION}</span></div></div>
+
+RESOURCE_CONSTRAINT_BLOCKED_NOTIFICATION:
+      web: Resource constraint ${RESOURCE_CONSTRAINT_NAME} is in use and it is blocking ${WORKFLOW_NAME}> in ${APP_NAME}.
+      slack: Resource constraint ${RESOURCE_CONSTRAINT_NAME} is in use and it is blocking \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* in ${APP_NAME}.
+      email:
+          subject: Resource constraint ${RESOURCE_CONSTRAINT_NAME} for ${WORKFLOW_NAME} in ${APP_NAME} is currently blocked
+          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is blocked because the resource constraint ${RESOURCE_CONSTRAINT_NAME} is currently in use. For example in <<a>>href="${BLOCKING_WORKFLOW_URL}" target="_blank">${BLOCKING_WORKFLOW_NAME}</a>.</span></div></div>
+
+RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION:
+      web: Resource constraint ${RESOURCE_CONSTRAINT_NAME} for ${WORKFLOW_NAME} in ${APP_NAME} is now unblocked
+      slack: Resource constraint ${RESOURCE_CONSTRAINT_NAME} for \*<${WORKFLOW_URL}|${WORKFLOW_NAME}>\* in ${APP_NAME} is now unblocked
+      email:
+          subject: Resource constraint ${RESOURCE_CONSTRAINT_NAME} for ${WORKFLOW_NAME} in ${APP_NAME} is now unblocked
+          body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is now unblocked.</span></div></div>

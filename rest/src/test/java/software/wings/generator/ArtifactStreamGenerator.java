@@ -14,6 +14,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.dl.WingsPersistence;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.SettingGenerator.Settings;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -25,6 +26,8 @@ public class ArtifactStreamGenerator {
   @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private SettingGenerator settingGenerator;
+
+  @Inject WingsPersistence wingsPersistence;
 
   public enum ArtifactStreams {
     HARNESS_SAMPLE_ECHO_WAR,
@@ -52,6 +55,7 @@ public class ArtifactStreamGenerator {
         JenkinsArtifactStream.builder()
             .appId(environment.getAppId())
             .serviceId(service.getUuid())
+            .name("harness-samples")
             .sourceName(settingAttribute.getName())
             .jobname("harness-samples")
             .artifactPaths(asList("echo/target/echo.war"))
@@ -65,6 +69,14 @@ public class ArtifactStreamGenerator {
     ArtifactStreams predefined = random.nextObject(ArtifactStreams.class);
 
     return ensurePredefined(seed, owners, predefined);
+  }
+
+  public ArtifactStream exists(ArtifactStream artifactStream) {
+    return wingsPersistence.createQuery(ArtifactStream.class)
+        .filter(ArtifactStream.APP_ID_KEY, artifactStream.getAppId())
+        .filter(ArtifactStream.SERVICE_ID_KEY, artifactStream.getServiceId())
+        .filter(ArtifactStream.NAME_KEY, artifactStream.getName())
+        .get();
   }
 
   public ArtifactStream ensureArtifactStream(Randomizer.Seed seed, ArtifactStream artifactStream) {
@@ -84,18 +96,6 @@ public class ArtifactStreamGenerator {
         JenkinsArtifactStream jenkinsArtifactStream = (JenkinsArtifactStream) artifactStream;
         final JenkinsArtifactStreamBuilder builder = JenkinsArtifactStream.builder();
 
-        if (jenkinsArtifactStream != null && jenkinsArtifactStream.getJobname() != null) {
-          builder.jobname(jenkinsArtifactStream.getJobname());
-        } else {
-          throw new UnsupportedOperationException();
-        }
-
-        if (jenkinsArtifactStream != null && jenkinsArtifactStream.getArtifactPaths() != null) {
-          builder.artifactPaths(jenkinsArtifactStream.getArtifactPaths());
-        } else {
-          throw new UnsupportedOperationException();
-        }
-
         if (artifactStream != null && artifactStream.getAppId() != null) {
           builder.appId(artifactStream.getAppId());
         } else {
@@ -104,6 +104,29 @@ public class ArtifactStreamGenerator {
 
         if (artifactStream != null && artifactStream.getServiceId() != null) {
           builder.serviceId(artifactStream.getServiceId());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactStream != null && artifactStream.getName() != null) {
+          builder.name(artifactStream.getName());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        ArtifactStream existing = exists(builder.build());
+        if (existing != null) {
+          return existing;
+        }
+
+        if (jenkinsArtifactStream != null && jenkinsArtifactStream.getJobname() != null) {
+          builder.jobname(jenkinsArtifactStream.getJobname());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (jenkinsArtifactStream != null && jenkinsArtifactStream.getArtifactPaths() != null) {
+          builder.artifactPaths(jenkinsArtifactStream.getArtifactPaths());
         } else {
           throw new UnsupportedOperationException();
         }

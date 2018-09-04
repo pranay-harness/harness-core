@@ -36,6 +36,7 @@ import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.artifact.Artifact;
@@ -211,9 +212,8 @@ public class WorkflowNotificationHelper {
       endTs = clock.millis();
     }
 
-    String workflowUrl = buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", app.getAccountId(),
-        app.getUuid(), BUILD.equals(context.getOrchestrationWorkflowType()) ? "build" : env.getUuid(),
-        context.getWorkflowExecutionId()));
+    String workflowUrl = calculateWorkflowUrl(context.getWorkflowExecutionId(), context.getOrchestrationWorkflowType(),
+        app.getAccountId(), app.getUuid(), env == null ? null : env.getUuid());
 
     String pipelineMsg = "";
     if (workflowExecution.getPipelineExecutionId() != null) {
@@ -252,6 +252,12 @@ public class WorkflowNotificationHelper {
       placeHolderValues.put("ARTIFACTS", getArtifactsMessage(context, workflowExecution, WORKFLOW, null));
     }
     return placeHolderValues;
+  }
+
+  public String calculateWorkflowUrl(String workflowExecutionId, OrchestrationWorkflowType type, String accountId,
+      String appId, String environmentId) {
+    return buildAbsoluteUrl(format("/account/%s/app/%s/env/%s/executions/%s/details", accountId, appId,
+        BUILD.equals(type) ? "build" : environmentId, workflowExecutionId));
   }
 
   private String buildAbsoluteUrl(String fragment) {

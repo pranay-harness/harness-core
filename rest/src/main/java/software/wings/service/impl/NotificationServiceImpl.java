@@ -129,7 +129,7 @@ public class NotificationServiceImpl implements NotificationService {
         placeHolderData.put("USER_NAME",
             approvalNotification.getLastUpdatedBy() == null ? "Harness System"
                                                             : approvalNotification.getLastUpdatedBy().getName());
-      } else {
+      } else if (notification.getNotificationTemplateId() == null) {
         notification.setNotificationTemplateId(ARTIFACT_APPROVAL_NOTIFICATION.name());
       }
       notification.getNotificationTemplateVariables().putAll(placeHolderData);

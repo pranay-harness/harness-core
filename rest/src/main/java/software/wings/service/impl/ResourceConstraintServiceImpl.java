@@ -238,6 +238,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         final ActiveScopeBuilder builder = ActiveScope.builder()
                                                .releaseEntityType(instance.getReleaseEntityType())
                                                .releaseEntityId(instance.getReleaseEntityId())
+                                               .permits(instance.getPermits())
                                                .acquiredAt(instance.getAcquiredAt());
 
         HoldingScope scope = HoldingScope.valueOf(instance.getReleaseEntityType());
@@ -245,7 +246,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
           case WORKFLOW:
             final WorkflowExecution workflowExecution =
                 workflowExecutionService.getWorkflowExecution(instance.getAppId(), instance.getReleaseEntityId());
-            builder.releaseEntityName(workflowExecution.getDisplayName());
+            builder.releaseEntityName(workflowExecution.getName());
             break;
           default:
             unhandled(scope);
