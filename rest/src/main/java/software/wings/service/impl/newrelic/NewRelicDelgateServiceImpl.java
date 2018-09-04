@@ -273,7 +273,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     final long currentTime = System.currentTimeMillis();
     Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
     NewRelicMetricData metricData = getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId,
-        metricNames, currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog);
+        metricNames, currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog.copy());
 
     if (metricData == null) {
       throw new WingsException(ErrorCode.NEWRELIC_ERROR,
@@ -283,8 +283,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
     metricsWithNoData.removeAll(metricData.getMetrics_found());
 
-    NewRelicMetricData errorMetricData = getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId,
-        getErrorMetricNames(metricNames), currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog);
+    NewRelicMetricData errorMetricData =
+        getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId, getErrorMetricNames(metricNames),
+            currentTime - TimeUnit.HOURS.toMillis(1), currentTime, true, apiCallLog.copy());
 
     metricsWithNoData.removeAll(metricData.getMetrics_found());
 
