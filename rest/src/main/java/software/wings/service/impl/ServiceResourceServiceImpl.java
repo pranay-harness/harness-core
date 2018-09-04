@@ -755,11 +755,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String accountId = appService.getAccountIdByAppId(appId);
     Service service = get(appId, persistedContainerTask.getServiceId());
 
-    if (isCreate) {
-      yamlChangeSetHelper.containerTaskYamlChangeAsync(accountId, service, persistedContainerTask, ChangeType.ADD);
-    } else {
-      yamlChangeSetHelper.containerTaskYamlChangeAsync(accountId, service, persistedContainerTask, ChangeType.MODIFY);
-    }
+    Type type = isCreate ? Type.CREATE : Type.UPDATE;
+    yamlPushService.pushYamlChangeSet(accountId, service, persistedContainerTask, type, containerTask.isSyncFromGit());
 
     return persistedContainerTask;
   }
@@ -814,13 +811,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String accountId = appService.getAccountIdByAppId(appId);
     Service service = get(appId, persistedHelmChartSpecification.getServiceId());
 
-    if (isCreate) {
-      yamlChangeSetHelper.helmChartSpecificationYamlChangeAsync(
-          accountId, service, persistedHelmChartSpecification, ChangeType.ADD);
-    } else {
-      yamlChangeSetHelper.helmChartSpecificationYamlChangeAsync(
-          accountId, service, persistedHelmChartSpecification, ChangeType.MODIFY);
-    }
+    Type type = isCreate ? Type.CREATE : Type.UPDATE;
+    yamlPushService.pushYamlChangeSet(
+        accountId, service, persistedHelmChartSpecification, type, helmChartSpecification.isSyncFromGit());
 
     return persistedHelmChartSpecification;
   }
@@ -861,13 +854,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String accountId = appService.getAccountIdByAppId(appId);
     Service service = get(appId, persistedPcfServiceSpecification.getServiceId());
 
-    if (isCreate) {
-      yamlChangeSetHelper.pcfServiceSpecificationYamlChangeAsync(
-          accountId, service, persistedPcfServiceSpecification, ChangeType.ADD);
-    } else {
-      yamlChangeSetHelper.pcfServiceSpecificationYamlChangeAsync(
-          accountId, service, persistedPcfServiceSpecification, ChangeType.MODIFY);
-    }
+    Type type = isCreate ? Type.CREATE : Type.UPDATE;
+    yamlPushService.pushYamlChangeSet(
+        accountId, service, persistedPcfServiceSpecification, type, pcfServiceSpecification.isSyncFromGit());
 
     return persistedPcfServiceSpecification;
   }
@@ -1208,11 +1197,11 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String appId = persistedUserDataSpec.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
     Service service = get(appId, persistedUserDataSpec.getServiceId());
-    if (isCreate) {
-      yamlChangeSetHelper.userDataSpecYamlChangeAsync(accountId, service, persistedUserDataSpec, ChangeType.ADD);
-    } else {
-      yamlChangeSetHelper.userDataSpecYamlChangeAsync(accountId, service, persistedUserDataSpec, ChangeType.MODIFY);
-    }
+
+    Type type = isCreate ? Type.CREATE : Type.UPDATE;
+    yamlPushService.pushYamlChangeSet(
+        accountId, service, persistedUserDataSpec, type, userDataSpecification.isSyncFromGit());
+
     return persistedUserDataSpec;
   }
 
@@ -1399,11 +1388,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String appId = persistedLambdaSpec.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
     Service service = get(appId, persistedLambdaSpec.getServiceId());
-    if (isCreate) {
-      yamlChangeSetHelper.lamdbaSpecYamlChangeAsync(accountId, service, persistedLambdaSpec, ChangeType.ADD);
-    } else {
-      yamlChangeSetHelper.lamdbaSpecYamlChangeAsync(accountId, service, persistedLambdaSpec, ChangeType.MODIFY);
-    }
+
+    Type type = isCreate ? Type.CREATE : Type.UPDATE;
+    yamlPushService.pushYamlChangeSet(
+        accountId, service, persistedLambdaSpec, type, lambdaSpecification.isSyncFromGit());
 
     return persistedLambdaSpec;
   }

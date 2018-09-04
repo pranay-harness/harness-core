@@ -6,15 +6,22 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.container.EcsContainerTask;
+import software.wings.beans.container.HelmChartSpecification;
+import software.wings.beans.container.KubernetesContainerTask;
+import software.wings.beans.container.PcfServiceSpecification;
+import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.InvalidRequestException;
@@ -250,6 +257,18 @@ public class YamlHandlerFactory {
       return YamlType.PROVISIONER;
     } else if (entity instanceof Service) {
       return YamlType.SERVICE;
+    } else if (entity instanceof HelmChartSpecification) {
+      return YamlType.DEPLOYMENT_SPECIFICATION;
+    } else if (entity instanceof PcfServiceSpecification) {
+      return YamlType.DEPLOYMENT_SPECIFICATION;
+    } else if (entity instanceof LambdaSpecification) {
+      return YamlType.DEPLOYMENT_SPECIFICATION;
+    } else if (entity instanceof UserDataSpecification) {
+      return YamlType.DEPLOYMENT_SPECIFICATION;
+    } else if (entity instanceof EcsContainerTask) {
+      return YamlType.DEPLOYMENT_SPECIFICATION;
+    } else if (entity instanceof KubernetesContainerTask) {
+      return YamlType.DEPLOYMENT_SPECIFICATION;
     }
 
     throw new InvalidRequestException(
@@ -275,6 +294,18 @@ public class YamlHandlerFactory {
       return ((ArtifactStream) entity).getName();
     } else if (entity instanceof Service) {
       return ((Service) entity).getName();
+    } else if (entity instanceof HelmChartSpecification) {
+      return YamlConstants.HELM_CHART_YAML_FILE_NAME;
+    } else if (entity instanceof PcfServiceSpecification) {
+      return YamlConstants.PCF_MANIFEST_YAML_FILE_NAME;
+    } else if (entity instanceof LambdaSpecification) {
+      return YamlConstants.LAMBDA_SPEC_YAML_FILE_NAME;
+    } else if (entity instanceof UserDataSpecification) {
+      return YamlConstants.USER_DATA_SPEC_YAML_FILE_NAME;
+    } else if (entity instanceof EcsContainerTask) {
+      return YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME;
+    } else if (entity instanceof KubernetesContainerTask) {
+      return YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME;
     }
 
     throw new InvalidRequestException(
@@ -314,6 +345,18 @@ public class YamlHandlerFactory {
       return ((InfrastructureMapping) entity).getInfraMappingType();
     } else if (entity instanceof InfrastructureProvisioner) {
       return ((InfrastructureProvisioner) entity).getInfrastructureProvisionerType();
+    } else if (entity instanceof HelmChartSpecification) {
+      return DeploymentType.HELM.name();
+    } else if (entity instanceof PcfServiceSpecification) {
+      return DeploymentType.PCF.name();
+    } else if (entity instanceof LambdaSpecification) {
+      return DeploymentType.AWS_LAMBDA.name();
+    } else if (entity instanceof UserDataSpecification) {
+      return DeploymentType.AMI.name();
+    } else if (entity instanceof EcsContainerTask) {
+      return DeploymentType.ECS.name();
+    } else if (entity instanceof KubernetesContainerTask) {
+      return DeploymentType.KUBERNETES.name();
     }
 
     return null;
@@ -332,6 +375,7 @@ public class YamlHandlerFactory {
         "TerraformInfrastructureProvisioner", "CloudFormationInfrastructureProvisioner", "JenkinsArtifactStream",
         "NexusArtifactStream", "GcsArtifactStream", "GcrArtifactStream", "EcrArtifactStream", "DockerArtifactStream",
         "BambooArtifactStream", "ArtifactoryArtifactStream", "AmiArtifactStream", "AmazonS3ArtifactStream",
-        "AcrArtifactStream");
+        "AcrArtifactStream", "HelmChartSpecification", "PcfServiceSpecification", "LambdaSpecification",
+        "UserDataSpecification", "EcsContainerTask", "KubernetesContainerTask");
   }
 }

@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Event.Type;
+import software.wings.beans.Service;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.Misc;
@@ -59,6 +60,36 @@ public class YamlPushServiceImpl implements YamlPushService {
     });
   }
 
+  @Override
+  public <T> void pushYamlChangeSet(String accountId, Service service, T entity, Type type, boolean syncFromGit) {
+    if (syncFromGit) {
+      return;
+    }
+
+    executorService.submit(() -> {
+      try {
+        notNullCheck("entity", entity);
+        notNullCheck("service", service);
+        notNullCheck("accountId", accountId);
+
+        switch (type) {
+          case CREATE:
+            yamlChangeSetHelper.entitySpecYamlChangeSet(accountId, service, entity, ChangeType.ADD);
+            break;
+
+          case UPDATE:
+            yamlChangeSetHelper.entitySpecYamlChangeSet(accountId, service, entity, ChangeType.MODIFY);
+            break;
+
+          default:
+            unhandled(type);
+        }
+      } catch (Exception e) {
+        logger.error("Exception in pushing yaml changeset " + Misc.getMessage(e));
+      }
+    });
+  }
+
   private <T> void validateCreate(T oldEntity, T newEntity) {
     Validator.nullCheck("oldEntity", oldEntity);
     notNullCheck("newEntity", newEntity);
@@ -82,7 +113,6 @@ public class YamlPushServiceImpl implements YamlPushService {
     yamlChangeSetHelper.entityUpdateYamlChange(accountId, oldEntity, newEntity, isRename);
   }
 
-  // Delete is a blocking call
   private <T> void pushYamlChangeSetOnDelete(String accountId, T entity) {
     yamlChangeSetHelper.entityYamlChangeSet(accountId, entity, ChangeType.DELETE);
   }

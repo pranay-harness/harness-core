@@ -42,6 +42,8 @@ public class HelmChartSpecificationYamlHandler
     HelmChartSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     HelmChartSpecification helmChartSpecification = toBean(changeContext);
+    helmChartSpecification.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+
     if (previous != null) {
       helmChartSpecification.setUuid(previous.getUuid());
       return serviceResourceService.updateHelmChartSpecification(helmChartSpecification);

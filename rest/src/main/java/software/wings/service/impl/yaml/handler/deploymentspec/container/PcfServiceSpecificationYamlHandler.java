@@ -42,6 +42,7 @@ public class PcfServiceSpecificationYamlHandler
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
 
     PcfServiceSpecification pcfServiceSpecification = toBean(changeContext);
+    pcfServiceSpecification.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
     if (previous != null) {
       pcfServiceSpecification.setUuid(previous.getUuid());
