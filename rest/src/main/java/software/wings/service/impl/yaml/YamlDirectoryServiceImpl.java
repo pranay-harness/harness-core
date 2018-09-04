@@ -1286,7 +1286,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public <T> String obtainEntityRootPath(T entity) {
+  public <T> String obtainEntityRootPath(Service service, T entity) {
+    if (service != null) {
+      return getEntitySpecPathByService(service);
+    }
+
     if (entity instanceof Environment) {
       return getRootPathByEnvironment((Environment) entity);
     } else if (entity instanceof NotificationGroup) {
@@ -1309,5 +1313,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
     throw new InvalidRequestException(
         "Unhandled case while obtaining yaml entity root path for entity type " + entity.getClass().getSimpleName());
+  }
+
+  private String getEntitySpecPathByService(Service service) {
+    return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
   }
 }

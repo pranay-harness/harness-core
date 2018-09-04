@@ -71,6 +71,8 @@ public class LambdaSpecificationYamlHandler extends DeploymentSpecificationYamlH
     LambdaSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     LambdaSpecification lambdaSpecification = toBean(changeContext, changeSetContext);
+    lambdaSpecification.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+
     if (previous != null) {
       lambdaSpecification.setUuid(previous.getUuid());
       return serviceResourceService.updateLambdaSpecification(lambdaSpecification);

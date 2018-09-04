@@ -102,6 +102,8 @@ public abstract class ContainerTaskYamlHandler<Y extends ContainerTask.Yaml, C e
     String accountId = changeContext.getChange().getAccountId();
     C previous = get(accountId, changeContext.getChange().getFilePath());
     C containerTask = toBean(changeContext, changeSetContext);
+    containerTask.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+
     if (previous != null) {
       containerTask.setUuid(previous.getUuid());
       return (C) serviceResourceService.updateContainerTask(containerTask, false);

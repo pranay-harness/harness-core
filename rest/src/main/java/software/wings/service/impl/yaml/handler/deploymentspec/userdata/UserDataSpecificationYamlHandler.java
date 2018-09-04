@@ -42,6 +42,8 @@ public class UserDataSpecificationYamlHandler extends DeploymentSpecificationYam
     UserDataSpecification previous =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     UserDataSpecification userDataSpecification = toBean(changeContext);
+    userDataSpecification.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+
     if (previous != null) {
       userDataSpecification.setUuid(previous.getUuid());
       return serviceResourceService.updateUserDataSpecification(userDataSpecification);

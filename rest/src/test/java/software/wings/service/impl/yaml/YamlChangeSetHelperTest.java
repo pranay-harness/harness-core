@@ -71,7 +71,7 @@ public class YamlChangeSetHelperTest {
                                             .build();
 
     // Validate for InfrastructureMapping
-    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any()))
+    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any(), any()))
         .thenReturn(Lists.newArrayList(gitFileChangeForDelete))
         .thenReturn(Lists.newArrayList(gitFileChangeForADD));
     doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());
@@ -109,7 +109,7 @@ public class YamlChangeSetHelperTest {
                                                .build();
 
     // Validate for InfrastructureMapping
-    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any()))
+    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any(), any()))
         .thenReturn(Lists.newArrayList(gitFileChangeForModify));
 
     doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());
@@ -145,7 +145,7 @@ public class YamlChangeSetHelperTest {
                                             .build();
 
     // Validate for Artifact Stream
-    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any()))
+    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any(), any()))
         .thenReturn(Lists.newArrayList(gitFileChangeForDelete))
         .thenReturn(Lists.newArrayList(gitFileChangeForADD));
     when(yamlDirectoryService.weNeedToPushChanges(any())).thenReturn(YamlGitConfig.builder().build());
@@ -183,7 +183,7 @@ public class YamlChangeSetHelperTest {
                                                .build();
 
     // Validate for Artifact Stream
-    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any()))
+    when(entityUpdateService.obtainEntityGitSyncFileChangeSet(anyString(), any(), any(), any()))
         .thenReturn(Lists.newArrayList(gitFileChangeForModify));
     when(yamlDirectoryService.weNeedToPushChanges(any())).thenReturn(YamlGitConfig.builder().build());
     doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());

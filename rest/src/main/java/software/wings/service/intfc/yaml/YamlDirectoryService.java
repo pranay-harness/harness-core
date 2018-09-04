@@ -107,5 +107,5 @@ public interface YamlDirectoryService {
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,
       boolean gitSyncPath);
 
-  <T> String obtainEntityRootPath(T entity);
+  <T> String obtainEntityRootPath(Service service, T entity);
 }

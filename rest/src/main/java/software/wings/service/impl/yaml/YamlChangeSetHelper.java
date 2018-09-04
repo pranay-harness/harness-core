@@ -14,19 +14,13 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.LambdaSpecification;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.beans.container.ContainerTask;
-import software.wings.beans.container.HelmChartSpecification;
-import software.wings.beans.container.PcfServiceSpecification;
-import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -56,73 +50,10 @@ public class YamlChangeSetHelper {
   @Inject private EntityUpdateService entityUpdateService;
   @Inject private ExecutorService executorService;
   @Inject private YamlGitService yamlGitService;
-  @Inject private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private FileService fileService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
-
-  public void containerTaskYamlChangeAsync(
-      String accountId, Service service, ContainerTask containerTask, ChangeType changeType) {
-    executorService.submit(() -> containerTaskYamlChange(accountId, service, containerTask, changeType));
-  }
-
-  public void containerTaskYamlChange(
-      String accountId, Service service, ContainerTask containerTask, ChangeType changeType) {
-    GitFileChange gitSyncFile =
-        entityUpdateService.getContainerTaskGitSyncFile(accountId, service, containerTask, changeType);
-    queueYamlChangeSet(accountId, gitSyncFile);
-  }
-
-  public void helmChartSpecificationYamlChangeAsync(
-      String accountId, Service service, HelmChartSpecification helmChartSpecification, ChangeType changeType) {
-    executorService.submit(
-        () -> helmChartSpecificationYamlChange(accountId, service, helmChartSpecification, changeType));
-  }
-
-  public void pcfServiceSpecificationYamlChangeAsync(
-      String accountId, Service service, PcfServiceSpecification pcfServiceSpecification, ChangeType changeType) {
-    executorService.submit(
-        () -> pcfServiceSpecificationYamlChange(accountId, service, pcfServiceSpecification, changeType));
-  }
-
-  public void helmChartSpecificationYamlChange(
-      String accountId, Service service, HelmChartSpecification helmChartSpecification, ChangeType changeType) {
-    GitFileChange gitSyncFile =
-        entityUpdateService.getHelmChartGitSyncFile(accountId, service, helmChartSpecification, changeType);
-    queueYamlChangeSet(accountId, gitSyncFile);
-  }
-
-  public void pcfServiceSpecificationYamlChange(
-      String accountId, Service service, PcfServiceSpecification pcfServiceSpecification, ChangeType changeType) {
-    GitFileChange gitSyncFile =
-        entityUpdateService.getPcfServiceSpecification(accountId, service, pcfServiceSpecification, changeType);
-    queueYamlChangeSet(accountId, gitSyncFile);
-  }
-
-  public void lamdbaSpecYamlChangeAsync(
-      String accountId, Service service, LambdaSpecification lambdaSpec, ChangeType changeType) {
-    executorService.submit(() -> lamdbaSpecYamlChange(accountId, service, lambdaSpec, changeType));
-  }
-
-  public void lamdbaSpecYamlChange(
-      String accountId, Service service, LambdaSpecification lambdaSpec, ChangeType changeType) {
-    GitFileChange gitSyncFile =
-        entityUpdateService.getLamdbaSpecGitSyncFile(accountId, service, lambdaSpec, changeType);
-    queueYamlChangeSet(accountId, gitSyncFile);
-  }
-
-  public void userDataSpecYamlChangeAsync(
-      String accountId, Service service, UserDataSpecification userDataSpec, ChangeType changeType) {
-    executorService.submit(() -> userDataSpecYamlChange(accountId, service, userDataSpec, changeType));
-  }
-
-  public void userDataSpecYamlChange(
-      String accountId, Service service, UserDataSpecification userDataSpec, ChangeType changeType) {
-    GitFileChange gitSyncFile =
-        entityUpdateService.getUserDataGitSyncFile(accountId, service, userDataSpec, changeType);
-    queueYamlChangeSet(accountId, gitSyncFile);
-  }
 
   public void configFileYamlChangeAsync(ConfigFile configFile, ChangeType changeType) {
     executorService.submit(() -> configFileYamlChange(configFile, changeType));
@@ -316,7 +247,18 @@ public class YamlChangeSetHelper {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
 
     if (ygs != null) {
-      List<GitFileChange> changeSet = entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, entity, crudType);
+      List<GitFileChange> changeSet =
+          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, entity, crudType);
+      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    }
+  }
+
+  public <T> void entitySpecYamlChangeSet(String accountId, Service service, T entity, ChangeType crudType) {
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+
+    if (ygs != null) {
+      List<GitFileChange> changeSet =
+          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, service, entity, crudType);
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
   }
@@ -333,8 +275,8 @@ public class YamlChangeSetHelper {
     YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
 
     if (ygs != null) {
-      String oldEnvnPath = yamlDirectoryService.obtainEntityRootPath(oldEntity);
-      String newEnvnPath = yamlDirectoryService.obtainEntityRootPath(newEntity);
+      String oldEnvnPath = yamlDirectoryService.obtainEntityRootPath(null, oldEntity);
+      String newEnvnPath = yamlDirectoryService.obtainEntityRootPath(null, newEntity);
 
       List<GitFileChange> changeSet = new ArrayList<>();
       changeSet.add(GitFileChange.Builder.aGitFileChange()
@@ -343,7 +285,8 @@ public class YamlChangeSetHelper {
                         .withFilePath(newEnvnPath)
                         .withOldFilePath(oldEnvnPath)
                         .build());
-      changeSet.addAll(entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, newEntity, ChangeType.MODIFY));
+      changeSet.addAll(
+          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, newEntity, ChangeType.MODIFY));
       changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
 
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
@@ -357,8 +300,10 @@ public class YamlChangeSetHelper {
       List<GitFileChange> changeSet = new ArrayList<>();
 
       // Rename is delete old and add new
-      changeSet.addAll(entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, oldEntity, ChangeType.DELETE));
-      changeSet.addAll(entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, newEntity, ChangeType.ADD));
+      changeSet.addAll(
+          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, oldEntity, ChangeType.DELETE));
+      changeSet.addAll(
+          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, newEntity, ChangeType.ADD));
 
       yamlChangeSetService.saveChangeSet(ygs, changeSet);
     }
