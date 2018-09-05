@@ -38,8 +38,8 @@ public class JenkinsConfig extends SettingValue implements Encryptable, Artifact
   private String authMechanism;
 
   @Attributes(title = "Username") private String username;
-  @Attributes(title = "Password") @Encrypted private char[] password;
-  @Attributes(title = "Token") @Encrypted private char[] token;
+  @Attributes(title = "Password/ API Token") @Encrypted private char[] password;
+  @Attributes(title = "Bearer Token(HTTP Header)") @Encrypted private char[] token;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
