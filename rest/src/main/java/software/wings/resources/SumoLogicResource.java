@@ -19,6 +19,7 @@ import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
 import software.wings.sm.StateType;
 
 import javax.validation.Valid;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -35,6 +36,7 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class SumoLogicResource implements LogAnalysisResource {
   private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
+  private static final String DEFAULT_DURATION = "10"; // in minutes
 
   @Inject private SumoLogicAnalysisService analysisService;
 
@@ -42,9 +44,11 @@ public class SumoLogicResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL)
   @Timed
   @ExceptionMetered
-  public RestResponse<Object> getSampleLogRecord(
-      @QueryParam("accountId") String accountId, @QueryParam("serverConfigId") String analysisServerConfigId) {
-    return new RestResponse<>(analysisService.getLogSample(accountId, analysisServerConfigId, null, StateType.SUMO));
+  public RestResponse<Object> getSampleLogRecord(@QueryParam("accountId") String accountId,
+      @QueryParam("serverConfigId") String analysisServerConfigId,
+      @DefaultValue(DEFAULT_DURATION) @QueryParam("durationInMinutes") int duration) {
+    return new RestResponse<>(
+        analysisService.getLogSample(accountId, analysisServerConfigId, null, StateType.SUMO, duration));
   }
 
   /**

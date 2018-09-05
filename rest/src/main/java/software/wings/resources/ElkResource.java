@@ -14,7 +14,6 @@ import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.elk.ElkIndexTemplate;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
@@ -46,7 +45,7 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 public class ElkResource implements LogAnalysisResource {
-  private static final Logger logger = LoggerFactory.getLogger(AnalysisServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(ElkResource.class);
 
   @Inject private ElkAnalysisService analysisService;
 
@@ -60,7 +59,7 @@ public class ElkResource implements LogAnalysisResource {
     Map<String, Map<String, List<Map>>> result = null;
     try {
       result = (Map<String, Map<String, List<Map>>>) analysisService.getLogSample(
-          accountId, analysisServerConfigId, index, StateType.ELK);
+          accountId, analysisServerConfigId, index, StateType.ELK, -1);
       return new RestResponse<>(result.get("hits").get("hits").get(0).get("_source"));
     } catch (Exception ex) {
       logger.warn("Failed to get elk sample record " + result, ex);
