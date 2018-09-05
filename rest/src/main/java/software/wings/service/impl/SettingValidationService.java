@@ -97,7 +97,7 @@ public class SettingValidationService {
             .filter("category", settingAttribute.getCategory())
             .get()
         != null) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
           .addParam("args",
               "The name " + settingAttribute.getName() + " already exists in " + settingAttribute.getCategory() + ".");
     }
