@@ -29,7 +29,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 public class ArtifactoryConfig extends SettingValue implements Encryptable, ArtifactSourceable {
   @Attributes(title = "Artifactory URL", required = true) @NotEmpty private String artifactoryUrl;
 
-  @Attributes(title = "User Name") private String username;
+  @Attributes(title = "Username") private String username;
 
   @Attributes(title = "Password") @Encrypted private char[] password;
 
