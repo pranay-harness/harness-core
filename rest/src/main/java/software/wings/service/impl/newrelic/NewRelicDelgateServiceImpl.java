@@ -96,14 +96,13 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       apiCallLog = apiCallLog.copy();
       apiCallLog.setTitle("Fetching applications from " + newRelicConfig.getNewRelicUrl());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToRequest(
-          ThirdPartyApiCallField.builder()
-              .name(URL_STRING)
-              .value(newRelicConfig.getNewRelicUrl() + "/v2/applications.json?page=" + pageCount)
-              .type(FieldType.URL)
-              .build());
       final Call<NewRelicApplicationsResponse> request =
           getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listAllApplications(pageCount);
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                       .name(URL_STRING)
+                                       .value(request.request().url().toString())
+                                       .type(FieldType.URL)
+                                       .build());
       final Response<NewRelicApplicationsResponse> response = request.execute();
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       if (response.isSuccessful()) {
@@ -141,15 +140,14 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       apiCallLog = apiCallLog.copy();
       apiCallLog.setTitle("Fetching application instances from " + newRelicConfig.getNewRelicUrl());
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                       .name(URL_STRING)
-                                       .value(newRelicConfig.getNewRelicUrl() + "/v2/applications/"
-                                           + newRelicApplicationId + "/instances.json?page=" + pageCount)
-                                       .type(FieldType.URL)
-                                       .build());
       final Call<NewRelicApplicationInstancesResponse> request =
           getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
               .listAppInstances(newRelicApplicationId, pageCount);
+      apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                       .name(URL_STRING)
+                                       .value(request.request().url().toString())
+                                       .type(FieldType.URL)
+                                       .build());
       final Response<NewRelicApplicationInstancesResponse> response = request.execute();
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       if (response.isSuccessful()) {
@@ -195,16 +193,15 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
     for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                         .name(URL_STRING)
-                                         .value(newRelicConfig.getNewRelicUrl() + "/v2/applications/" + newRelicAppId
-                                             + "/metrics.json?name=WebTransaction")
-                                         .type(FieldType.URL)
-                                         .build());
         apiCallLog.setTitle("Fetching web transactions names from " + newRelicConfig.getNewRelicUrl());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         final Call<NewRelicMetricResponse> request =
             getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId);
+        apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                         .name(URL_STRING)
+                                         .value(request.request().url().toString())
+                                         .type(FieldType.URL)
+                                         .build());
         final Response<NewRelicMetricResponse> response = request.execute();
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         if (response.isSuccessful()) {
@@ -339,16 +336,6 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         : "/v2/applications/" + applicationId + "/metrics/data.json";
     apiCallLog.setTitle("Fetching " + (instanceId > 0 ? "instance" : "application") + " metric data for "
         + metricNames.size() + " transactions from " + newRelicConfig.getNewRelicUrl() + urlToCall);
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name(URL_STRING)
-                                     .value(newRelicConfig.getNewRelicUrl() + urlToCall)
-                                     .type(FieldType.URL)
-                                     .build());
-    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                     .name("Metric Names")
-                                     .value(metricNames.toString())
-                                     .type(FieldType.URL)
-                                     .build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
     final Call<NewRelicMetricDataResponse> request = instanceId > 0
@@ -358,6 +345,11 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         : getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
               .getApplicationMetricData(applicationId, dateFormatter.format(new Date(fromTime)),
                   dateFormatter.format(new Date(toTime)), metricNames);
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name(URL_STRING)
+                                     .value(request.request().url().toString())
+                                     .type(FieldType.URL)
+                                     .build());
     final Response<NewRelicMetricDataResponse> response = request.execute();
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
