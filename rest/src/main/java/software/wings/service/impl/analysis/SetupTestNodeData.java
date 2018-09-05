@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
 
 import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by rsingh on 8/3/18.
@@ -14,12 +15,12 @@ import java.util.concurrent.TimeUnit;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 public class SetupTestNodeData {
-  private String appId;
-  private String settingId;
-  private String instanceName;
+  @NotNull private String appId;
+  @NotNull private String settingId;
+  @NotNull private String instanceName;
   private InstanceElement instanceElement;
   private String hostExpression;
-  private String workflowId;
+  @NotNull private String workflowId;
   private long toTime = System.currentTimeMillis();
   private long fromTime = toTime - TimeUnit.MINUTES.toMillis(15);
 

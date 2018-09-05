@@ -64,9 +64,10 @@ public interface AnalysisService {
    * @param analysisServerConfigId
    * @param index
    * @param stateType
+   * @param duration
    * @return
    */
-  Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType);
+  Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType, int duration);
 
   boolean purgeLogs();
 

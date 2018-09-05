@@ -4,6 +4,7 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 
 import java.util.List;
@@ -29,10 +30,12 @@ public interface SumoDelegateService {
    * @param value
    * @param index
    * @param encryptedDataDetails
+   * @param duration
    * @return
    */
   @DelegateTaskType(TaskType.SUMO_GET_HOST_RECORDS)
-  Object getLogSample(SumoConfig value, String index, List<EncryptedDataDetail> encryptedDataDetails);
+  List<LogElement> getLogSample(
+      SumoConfig value, String index, List<EncryptedDataDetail> encryptedDataDetails, int duration);
 
   /**
    * Method to fetch log test data by host.

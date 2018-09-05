@@ -67,12 +67,13 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
   }
 
   @Override
-  public Object getLogSample(SumoConfig config, String index, List<EncryptedDataDetail> encryptedDataDetails) {
+  public List<LogElement> getLogSample(
+      SumoConfig config, String index, List<EncryptedDataDetail> encryptedDataDetails, int duration) {
     logger.info("Starting to fetch sample log data for Sumo with config : " + config);
-    long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(1);
+    long startTime = Timestamp.currentMinuteBoundary() - TimeUnit.MINUTES.toMillis(duration);
     long endTime = Timestamp.currentMinuteBoundary();
     String query = "*exception*";
-    return getResponse(config, query, "1m", encryptedDataDetails, null, null, startTime, endTime,
+    return getResponse(config, query, "5m", encryptedDataDetails, null, null, startTime, endTime,
         SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, null);
   }
 

@@ -954,7 +954,8 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public Object getLogSample(String accountId, String analysisServerConfigId, String index, StateType stateType) {
+  public Object getLogSample(
+      String accountId, String analysisServerConfigId, String index, StateType stateType, int duration) {
     final SettingAttribute settingAttribute = settingsService.get(analysisServerConfigId);
     if (settingAttribute == null) {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
@@ -979,7 +980,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           errorCode = ErrorCode.SUMO_CONFIGURATION_ERROR;
           SyncTaskContext sumoTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
           return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
-              .getLogSample((SumoConfig) settingAttribute.getValue(), index, encryptedDataDetails);
+              .getLogSample((SumoConfig) settingAttribute.getValue(), index, encryptedDataDetails, duration);
         default:
           errorCode = ErrorCode.DEFAULT_ERROR_CODE;
           throw new IllegalStateException("Invalid state type: " + stateType);

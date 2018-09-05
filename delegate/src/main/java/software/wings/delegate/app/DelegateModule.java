@@ -280,6 +280,7 @@ public class DelegateModule extends AbstractModule {
     bind(ElkDelegateService.class).to(ElkDelegateServiceImpl.class);
     bind(LogzDelegateService.class).to(LogzDelegateServiceImpl.class);
     bind(SumoDelegateService.class).to(SumoDelegateServiceImpl.class);
+    bind(SplunkDelegateService.class).to(SplunkDelegateServiceImpl.class);
     bind(ArtifactoryBuildService.class).to(ArtifactoryBuildServiceImpl.class);
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
     bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
