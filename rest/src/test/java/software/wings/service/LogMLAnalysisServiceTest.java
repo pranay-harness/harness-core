@@ -693,19 +693,20 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     record.setTest_clusters(testClusters);
     record.setIgnore_clusters(ignoreClusters);
 
-    analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty());
+    assertTrue(analysisService.saveLogAnalysisRecords(record, StateType.SPLUNKV2, Optional.empty()));
 
     LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                                   .filter("appId", appId)
                                                   .filter("stateExecutionId", stateExecutionId)
                                                   .get();
-    assertNull(logMLAnalysisRecord.getUnknown_events());
-    assertNull(logMLAnalysisRecord.getTest_events());
-    assertNull(logMLAnalysisRecord.getControl_events());
-    assertNull(logMLAnalysisRecord.getControl_clusters());
-    assertNull(logMLAnalysisRecord.getUnknown_clusters());
-    assertNull(logMLAnalysisRecord.getTest_clusters());
-    assertNull(logMLAnalysisRecord.getIgnore_clusters());
+    assertNotNull(logMLAnalysisRecord);
+    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getUnknown_events());
+    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getTest_events());
+    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getControl_events());
+    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getControl_clusters());
+    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getUnknown_clusters());
+    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getTest_clusters());
+    assertNull(logMLAnalysisRecord.toString(), logMLAnalysisRecord.getIgnore_clusters());
     assertTrue(isNotEmpty(logMLAnalysisRecord.getAnalysisDetailsCompressedJson()));
 
     LogMLAnalysisRecord logAnalysisRecord = analysisService.getLogAnalysisRecords(
