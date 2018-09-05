@@ -48,9 +48,9 @@ public class DataCollectionExecutorService {
           throw new TimeoutException("Timeout. Execution took longer than 3 minutes ");
         }
       } catch (ExecutionException ee) {
-        throw new WingsException("Error executing task " + ee.getMessage());
+        throw new WingsException("Error executing task " + ee.getMessage(), ee);
       } catch (Exception e) {
-        throw new WingsException("Error executing task " + e.getMessage());
+        throw new WingsException("Error executing task " + e.getMessage(), e);
       }
     }
     logger.info("Done parallelizing callables {} ", callables.size());
