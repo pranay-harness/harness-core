@@ -87,7 +87,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).validateCollector(config);
     } catch (Exception e) {
       String errorMsg = e.getCause() != null ? Misc.getMessage(e.getCause()) : Misc.getMessage(e);
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR).addParam("reason", errorMsg);
+      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
     }
   }
 
@@ -109,7 +109,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       return delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
     } catch (Exception e) {
       String errorMsg = e.getCause() != null ? Misc.getMessage(e.getCause()) : Misc.getMessage(e);
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR).addParam("reason", errorMsg);
+      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
     }
   }
 
@@ -144,7 +144,7 @@ public class NewRelicServiceImpl implements NewRelicService {
           throw new IllegalStateException("Invalid state" + stateType);
       }
     } catch (Exception e) {
-      throw new WingsException(errorCode).addParam("reason", Misc.getMessage(e));
+      throw new WingsException(errorCode, USER).addParam("reason", Misc.getMessage(e));
     }
   }
 
@@ -188,8 +188,8 @@ public class NewRelicServiceImpl implements NewRelicService {
       }
 
     } catch (Exception e) {
-      throw new WingsException(errorCode).addParam(
-          "message", "Error in getting new relic applications. " + Misc.getMessage(e));
+      throw new WingsException(errorCode, USER)
+          .addParam("message", "Error in getting new relic applications. " + Misc.getMessage(e));
     }
   }
 
@@ -217,8 +217,8 @@ public class NewRelicServiceImpl implements NewRelicService {
       }
 
     } catch (Exception e) {
-      throw new WingsException(errorCode).addParam(
-          "message", "Error in getting new relic applications. " + e.getMessage());
+      throw new WingsException(errorCode, USER)
+          .addParam("message", "Error in getting new relic applications. " + e.getMessage());
     }
   }
 
@@ -236,7 +236,7 @@ public class NewRelicServiceImpl implements NewRelicService {
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
           .getTxnsWithData((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, applicationId, null);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.NEWRELIC_ERROR)
+      throw new WingsException(ErrorCode.NEWRELIC_ERROR, USER)
           .addParam("message", "Error in getting txns with data. " + e.getMessage());
     }
   }
@@ -259,7 +259,7 @@ public class NewRelicServiceImpl implements NewRelicService {
               apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
-      throw new WingsException(ErrorCode.NEWRELIC_ERROR)
+      throw new WingsException(ErrorCode.NEWRELIC_ERROR, USER)
           .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
     }
   }
