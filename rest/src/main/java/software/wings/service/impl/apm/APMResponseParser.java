@@ -143,6 +143,12 @@ public class APMResponseParser {
         return ((Double) val).longValue();
       } else if (val instanceof Integer) {
         return ((Integer) val).longValue();
+      } else if (val instanceof String) {
+        try {
+          return Long.parseLong((String) val);
+        } catch (Exception ex) {
+          throw new WingsException("Exception while casting the String to a Long : " + val);
+        }
       } else {
         return val;
       }
@@ -154,6 +160,12 @@ public class APMResponseParser {
         return ((Integer) val).doubleValue();
       } else if (val instanceof Long) {
         return ((Long) val).doubleValue();
+      } else if (val instanceof String) {
+        try {
+          return Double.parseDouble((String) val);
+        } catch (Exception ex) {
+          throw new WingsException("Exception while casting the String to a Double : " + val);
+        }
       } else {
         return val;
       }

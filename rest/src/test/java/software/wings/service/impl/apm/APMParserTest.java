@@ -56,6 +56,36 @@ public class APMParserTest extends WingsBaseTest {
   }
 
   @Test
+  public void testJsonParserStringValue() throws IOException {
+    String textLoad =
+        Resources.toString(APMParserTest.class.getResource("/apm/sample_response_string_value.json"), Charsets.UTF_8);
+    String textMem =
+        Resources.toString(APMParserTest.class.getResource("/apm/datadog_sample_response_mem.json"), Charsets.UTF_8);
+
+    Map<String, List<APMMetricInfo>> metricEndpointsInfo =
+        DatadogState.metricEndpointsInfo("todolist", Lists.newArrayList("system.load.1", "system.mem.used"));
+
+    Iterator<List<APMMetricInfo>> metricInfoIterator = metricEndpointsInfo.values().iterator();
+    Collection<NewRelicMetricDataRecord> records =
+        APMResponseParser.extract(Lists.newArrayList(APMResponseParser.APMResponseData.builder()
+                                                         .text(textLoad)
+                                                         .groupName(DEFAULT_GROUP_NAME)
+                                                         .metricInfos(metricInfoIterator.next())
+                                                         .build(),
+            APMResponseParser.APMResponseData.builder()
+                .text(textMem)
+                .groupName(DEFAULT_GROUP_NAME)
+                .metricInfos(metricInfoIterator.next())
+                .build()));
+
+    assertEquals(80, records.size());
+    String output = Resources.toString(
+        APMParserTest.class.getResource("/apm/datadog_sample_collected_response.json"), Charsets.UTF_8);
+
+    assertEquals(output, JsonUtils.asJson(records));
+  }
+
+  @Test
   public void testJsonParserGraphana() throws IOException {
     String text500 =
         Resources.toString(APMParserTest.class.getResource("/apm/graphana_sample_response_500.json"), Charsets.UTF_8);
