@@ -76,7 +76,7 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
       if (isBlank(elkConfig.getUsername()) && isNotEmpty(elkConfig.getPassword())) {
         throw new WingsException("User name is empty but password is given");
       }
-      getLogSample(elkConfig, "*", encryptedDataDetails);
+      getLogSample(elkConfig, "*", false, encryptedDataDetails);
       return true;
     } catch (Exception exception) {
       throw new WingsException(Misc.getMessage(exception), exception);
@@ -190,14 +190,14 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
   }
 
   @Override
-  public Object getLogSample(ElkConfig elkConfig, String index, List<EncryptedDataDetail> encryptedDataDetails)
-      throws IOException {
+  public Object getLogSample(ElkConfig elkConfig, String index, boolean shouldSort,
+      List<EncryptedDataDetail> encryptedDataDetails) throws IOException {
     final Call<Object> request = elkConfig.getElkConnector() == ElkConnector.KIBANA_SERVER
         ? getKibanaRestClient(elkConfig, encryptedDataDetails)
               .getLogSample(format(KibanaRestClient.searchPathPattern, index, 1), KibanaRestClient.searchMethod,
-                  ElkLogFetchRequest.lastInsertedRecordObject())
+                  ElkLogFetchRequest.lastInsertedRecordObject(shouldSort))
         : getElkRestClient(elkConfig, encryptedDataDetails)
-              .getLogSample(index, ElkLogFetchRequest.lastInsertedRecordObject());
+              .getLogSample(index, ElkLogFetchRequest.lastInsertedRecordObject(shouldSort));
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();
