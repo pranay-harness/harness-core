@@ -748,7 +748,7 @@ public class AuthServiceImpl implements AuthService {
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken validation failed");
     } catch (JWTDecodeException | SignatureVerificationException | InvalidClaimException e) {
-      throw new WingsException(INVALID_CREDENTIAL, e)
+      throw new WingsException(INVALID_CREDENTIAL, USER, e)
           .addParam("message", "Invalid JWTToken received, failed to decode the token");
     }
   }
