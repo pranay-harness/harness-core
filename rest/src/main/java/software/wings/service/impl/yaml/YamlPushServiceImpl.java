@@ -74,11 +74,11 @@ public class YamlPushServiceImpl implements YamlPushService {
 
         switch (type) {
           case CREATE:
-            yamlChangeSetHelper.entitySpecYamlChangeSet(accountId, service, entity, ChangeType.ADD);
+            yamlChangeSetHelper.entityYamlChangeSet(accountId, service, entity, ChangeType.ADD);
             break;
 
           case UPDATE:
-            yamlChangeSetHelper.entitySpecYamlChangeSet(accountId, service, entity, ChangeType.MODIFY);
+            yamlChangeSetHelper.entityYamlChangeSet(accountId, service, entity, ChangeType.MODIFY);
             break;
 
           default:
@@ -115,5 +115,15 @@ public class YamlPushServiceImpl implements YamlPushService {
 
   private <T> void pushYamlChangeSetOnDelete(String accountId, T entity) {
     yamlChangeSetHelper.entityYamlChangeSet(accountId, entity, ChangeType.DELETE);
+  }
+
+  public void pushYamlChangeSet(String accountId, String appId, ChangeType changeType) {
+    executorService.submit(() -> {
+      try {
+        yamlChangeSetHelper.defaultVariableChangeSet(accountId, appId, changeType);
+      } catch (Exception e) {
+        logger.error("Exception in pushing yaml changeset " + Misc.getMessage(e));
+      }
+    });
   }
 }

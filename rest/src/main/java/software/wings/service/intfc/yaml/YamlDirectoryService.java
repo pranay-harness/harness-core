@@ -77,7 +77,7 @@ public interface YamlDirectoryService {
 
   String getRootPathByUserDataSpec(Service service, UserDataSpecification userDataSpecification);
 
-  String getRootPathByConfigFile(Service service);
+  <T> String getRootPathByConfigFile(T entity);
 
   String getRootPathByConfigFileOverride(Environment environment);
 
@@ -107,5 +107,5 @@ public interface YamlDirectoryService {
       List<GitFileChange> gitFileChanges, boolean failFast, Optional<List<String>> listOfYamlErrors,
       boolean gitSyncPath);
 
-  <T> String obtainEntityRootPath(Service service, T entity);
+  <R, T> String obtainEntityRootPath(R helperEntity, T entity);
 }

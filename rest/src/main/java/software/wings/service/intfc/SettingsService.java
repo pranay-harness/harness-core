@@ -48,7 +48,7 @@ public interface SettingsService extends OwnedByAccount {
 
   void delete(String appId, String varId);
 
-  void delete(String appId, String varId, boolean pushToGit);
+  void delete(String appId, String varId, boolean pushToGit, boolean syncFromGit);
 
   SettingAttribute getByName(String accountId, String appId, String attributeName);
 
@@ -87,4 +87,6 @@ public interface SettingsService extends OwnedByAccount {
   ValidationResult validate(String varId);
 
   List<SettingAttribute> listApplicationDefaults(String accountId, String appId);
+
+  void deleteByYamlGit(String appId, String settingAttributeId, boolean syncFromGit);
 }

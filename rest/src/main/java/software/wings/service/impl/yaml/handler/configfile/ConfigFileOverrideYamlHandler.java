@@ -197,6 +197,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
     configFile.setEncrypted(yaml.isEncrypted());
     configFile.setRelativeFilePath(yaml.getTargetFilePath());
     configFile.setTargetToAllEnv(false);
+    configFile.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
     if (previous != null) {
       configFile.setUuid(previous.getUuid());

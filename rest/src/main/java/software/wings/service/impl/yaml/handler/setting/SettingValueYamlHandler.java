@@ -39,6 +39,7 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
       throws HarnessException {
     SettingAttribute previous = get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     SettingAttribute settingAttribute = toBean(previous, changeContext, changeSetContext);
+    settingAttribute.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
     if (previous != null) {
       settingAttribute.setUuid(previous.getUuid());
@@ -67,7 +68,8 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
     SettingAttribute settingAttribute =
         get(changeContext.getChange().getAccountId(), changeContext.getChange().getFilePath());
     if (settingAttribute != null) {
-      settingsService.delete(GLOBAL_APP_ID, settingAttribute.getUuid());
+      settingsService.deleteByYamlGit(
+          GLOBAL_APP_ID, settingAttribute.getUuid(), changeContext.getChange().isSyncFromGit());
     }
   }
 

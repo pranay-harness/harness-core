@@ -15,8 +15,8 @@ import software.wings.beans.defaults.Defaults.Yaml;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsException;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  */
 public class DefaultVariablesHelper {
   @Inject SettingsService settingsService;
-  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private YamlPushService yamlPushService;
 
   public List<NameValuePair.Yaml> convertToNameValuePairYamlList(List<SettingAttribute> settingAttributes) {
     if (CollectionUtils.isEmpty(settingAttributes)) {
@@ -107,7 +107,7 @@ public class DefaultVariablesHelper {
     // do deletions
     varsToDelete.forEach(defaultVar -> {
       if (defaultVarMap.containsKey(defaultVar.getName())) {
-        settingsService.delete(appId, defaultVarMap.get(defaultVar.getName()).getUuid(), false);
+        settingsService.delete(appId, defaultVarMap.get(defaultVar.getName()).getUuid(), false, false);
       }
     });
 
@@ -132,7 +132,7 @@ public class DefaultVariablesHelper {
       throw new HarnessException(ex);
     }
 
-    yamlChangeSetHelper.queueDefaultVariableChangeAsync(accountId, appId, ChangeType.MODIFY);
+    yamlPushService.pushYamlChangeSet(accountId, appId, ChangeType.MODIFY);
   }
 
   private SettingAttribute createNewSettingAttribute(String accountId, String appId, NameValuePair.Yaml defaultVar) {

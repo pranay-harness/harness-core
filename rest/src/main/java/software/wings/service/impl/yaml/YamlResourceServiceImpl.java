@@ -459,6 +459,13 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Override
   public RestResponse<YamlPayload> getConfigFileYaml(String accountId, String appId, String configFileUuid) {
     ConfigFile configFile = configService.get(appId, configFileUuid);
+
+    return getConfigFileYaml(accountId, configFile);
+  }
+
+  private RestResponse<YamlPayload> getConfigFileYaml(String accountId, ConfigFile configFile) {
+    String appId = configFile.getAppId();
+
     if (configFile.getConfigOverrideType() != null) {
       return getConfigFileOverrideYaml(accountId, appId, configFile);
     } else {
@@ -474,8 +481,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         yamlGitSyncService, configFile.getUuid(), accountId, yaml, yaml.getFileName() + YAML_EXTENSION);
   }
 
-  @Override
-  public RestResponse<YamlPayload> getConfigFileOverrideYaml(String accountId, String appId, ConfigFile configFile) {
+  private RestResponse<YamlPayload> getConfigFileOverrideYaml(String accountId, String appId, ConfigFile configFile) {
     ConfigFile.OverrideYaml yaml =
         (ConfigFile.OverrideYaml) yamlHandlerFactory.getYamlHandler(YamlType.CONFIG_FILE_OVERRIDE)
             .toYaml(configFile, appId);
@@ -488,6 +494,10 @@ public class YamlResourceServiceImpl implements YamlResourceService {
     if (entity instanceof ArtifactStream) {
       ArtifactStream artifactStream = (ArtifactStream) entity;
       return getTrigger(artifactStream.getAppId(), artifactStream.getUuid());
+    } else if (entity instanceof ConfigFile) {
+      return getConfigFileYaml(accountId, (ConfigFile) entity);
+    } else if (entity instanceof SettingAttribute) {
+      return getSettingAttribute(accountId, ((SettingAttribute) entity).getUuid());
     }
 
     if (entity instanceof Base) {

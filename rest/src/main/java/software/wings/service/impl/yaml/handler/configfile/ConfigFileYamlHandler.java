@@ -201,6 +201,7 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
 
     configFile.setTemplateId(ServiceVariable.DEFAULT_TEMPLATE_ID);
     configFile.setTargetToAllEnv(yaml.isTargetToAllEnv());
+    configFile.setSyncFromGit(changeContext.getChange().isSyncFromGit());
 
     if (previous != null) {
       configFile.setUuid(previous.getUuid());

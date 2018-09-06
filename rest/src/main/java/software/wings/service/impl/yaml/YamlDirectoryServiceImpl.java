@@ -1136,8 +1136,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public String getRootPathByConfigFile(Service service) {
-    return getRootPathByService(service) + PATH_DELIMITER + CONFIG_FILES_FOLDER;
+  public <T> String getRootPathByConfigFile(T entity) {
+    if (entity instanceof Service) {
+      return getRootPathByService((Service) entity) + PATH_DELIMITER + CONFIG_FILES_FOLDER;
+    } else if (entity instanceof Environment) {
+      return getRootPathByEnvironment((Environment) entity) + PATH_DELIMITER + CONFIG_FILES_FOLDER;
+    }
+
+    throw new InvalidRequestException(
+        "Unhandled case while getting yaml config file root path for entity type " + entity.getClass().getSimpleName());
   }
 
   @Override
@@ -1286,9 +1293,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public <T> String obtainEntityRootPath(Service service, T entity) {
-    if (service != null) {
-      return getEntitySpecPathByService(service);
+  public <R, T> String obtainEntityRootPath(R helperEntity, T entity) {
+    // Special handling for few entities
+    if (entity instanceof ConfigFile) {
+      return getRootPathByConfigFile(helperEntity);
+    } else if (helperEntity instanceof Service) {
+      return getEntitySpecPathByService((Service) helperEntity);
     }
 
     if (entity instanceof Environment) {
@@ -1309,6 +1319,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathByInfraProvisioner((InfrastructureProvisioner) entity);
     } else if (entity instanceof Service) {
       return getRootPathByService((Service) entity);
+    } else if (entity instanceof SettingAttribute) {
+      return getRootPathBySettingAttribute((SettingAttribute) entity);
     }
 
     throw new InvalidRequestException(

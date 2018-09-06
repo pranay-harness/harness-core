@@ -52,12 +52,12 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Application;
 import software.wings.beans.ErrorCode;
+import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -65,7 +65,6 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -74,6 +73,7 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -100,10 +100,11 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private AppService appService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Transient @Inject private SecretManager secretManager;
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
+  @Inject private YamlPushService yamlPushService;
+
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheHelper cacheHelper;
 
@@ -240,7 +241,8 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute newSettingAttribute = forceSave(settingAttribute);
 
     if (shouldBeSynced(newSettingAttribute, pushToGit)) {
-      yamlChangeSetHelper.queueSettingYamlChangeAsync(newSettingAttribute, ChangeType.ADD);
+      yamlPushService.pushYamlChangeSet(settingAttribute.getAccountId(), null, newSettingAttribute, Type.CREATE,
+          settingAttribute.isSyncFromGit(), false);
     }
 
     return newSettingAttribute;
@@ -346,7 +348,9 @@ public class SettingsServiceImpl implements SettingsService {
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
 
     if (shouldBeSynced(updatedSettingAttribute, pushToGit)) {
-      yamlChangeSetHelper.queueSettingUpdateYamlChangeAsync(savedSettingAttributes, updatedSettingAttribute);
+      boolean isRename = !savedSettingAttributes.getName().equals(updatedSettingAttribute.getName());
+      yamlPushService.pushYamlChangeSet(settingAttribute.getAccountId(), savedSettingAttributes,
+          updatedSettingAttribute, Type.UPDATE, settingAttribute.isSyncFromGit(), isRename);
     }
     cacheHelper.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
     return updatedSettingAttribute;
@@ -366,14 +370,14 @@ public class SettingsServiceImpl implements SettingsService {
    */
   @Override
   public void delete(String appId, String varId) {
-    this.delete(appId, varId, true);
+    this.delete(appId, varId, true, false);
   }
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#delete(java.lang.String, java.lang.String)
    */
   @Override
-  public void delete(String appId, String varId, boolean pushToGit) {
+  public void delete(String appId, String varId, boolean pushToGit, boolean syncFromGit) {
     SettingAttribute settingAttribute = get(varId);
     notNullCheck("Setting Value", settingAttribute, USER);
     String accountId = settingAttribute.getAccountId();
@@ -387,9 +391,14 @@ public class SettingsServiceImpl implements SettingsService {
 
     boolean deleted = wingsPersistence.delete(settingAttribute);
     if (deleted && shouldBeSynced(settingAttribute, pushToGit)) {
-      yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, ChangeType.DELETE);
+      yamlPushService.pushYamlChangeSet(accountId, settingAttribute, null, Type.DELETE, syncFromGit, false);
       cacheHelper.getNewRelicApplicationCache().remove(settingAttribute.getUuid());
     }
+  }
+
+  @Override
+  public void deleteByYamlGit(String appId, String settingAttributeId, boolean syncFromGit) {
+    delete(appId, settingAttributeId, true, syncFromGit);
   }
 
   private void ensureSettingAttributeSafeToDelete(SettingAttribute settingAttribute) {
@@ -551,7 +560,8 @@ public class SettingsServiceImpl implements SettingsService {
     wingsPersistence.save(settingAttribute);
 
     // We only need to queue one of them since it will fetch all the setting attributes and pushes them
-    yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, ChangeType.ADD);
+    yamlPushService.pushYamlChangeSet(
+        settingAttribute.getAccountId(), null, settingAttribute, Type.CREATE, false, false);
   }
 
   @Override
@@ -593,7 +603,8 @@ public class SettingsServiceImpl implements SettingsService {
     wingsPersistence.save(settingAttribute);
 
     // We only need to queue one of them since it will fetch all the setting attributes and pushes them
-    yamlChangeSetHelper.queueSettingYamlChangeAsync(settingAttribute, ChangeType.ADD);
+    yamlPushService.pushYamlChangeSet(
+        settingAttribute.getAccountId(), null, settingAttribute, Type.CREATE, false, false);
   }
 
   /* (non-Javadoc)
