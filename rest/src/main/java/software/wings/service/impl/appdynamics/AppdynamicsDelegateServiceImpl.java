@@ -3,6 +3,7 @@ package software.wings.service.impl.appdynamics;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Http.validUrl;
 import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.DURATION_TO_ASK_MINUTES;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
 import com.google.common.base.Preconditions;
@@ -95,7 +96,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       return response.body().stream().sorted(Comparator.comparing(tier -> tier.getName())).collect(Collectors.toSet());
     } else {
       logger.info("Request not successful. Reason: {}", response);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR).addParam("reason", "could not fetch Appdynamics tiers");
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR, USER)
+          .addParam("reason", "could not fetch Appdynamics tiers " + response.errorBody().string());
     }
   }
 
