@@ -27,6 +27,7 @@ import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
@@ -41,6 +42,7 @@ public class YamlChangeSetHelperTest {
   @Mock private EntityUpdateService entityUpdateService;
   @Mock private YamlHandlerFactory yamlHandlerFactory;
   @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private YamlGitService yamlGitService;
   @InjectMocks @Inject private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Before

@@ -9,7 +9,6 @@ import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
@@ -28,6 +27,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
+import software.wings.beans.Event.Type;
 import software.wings.beans.SearchFilter;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.dl.PageRequest;
@@ -39,7 +39,6 @@ import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretUsageLog;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
@@ -50,6 +49,7 @@ import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
 
@@ -87,7 +87,7 @@ public class ConfigServiceImpl implements ConfigService {
   @Inject private EnvironmentService environmentService;
   @Inject private SecretManager secretManager;
   @Inject private ActivityService activityService;
-  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
+  @Inject private YamlPushService yamlPushService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ConfigService#list(software.wings.dl.PageRequest)
@@ -142,7 +142,9 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     ConfigFile configFileFromDB = get(configFile.getAppId(), id);
-    yamlChangeSetHelper.configFileYamlChangeAsync(configFileFromDB, ADD);
+    yamlPushService.pushYamlChangeSet(
+        configFile.getAccountId(), null, configFileFromDB, Type.CREATE, configFile.isSyncFromGit(), false);
+
     return id;
   }
 

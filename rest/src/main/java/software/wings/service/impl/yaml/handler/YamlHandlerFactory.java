@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
@@ -15,6 +16,7 @@ import software.wings.beans.LambdaSpecification;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.container.EcsContainerTask;
@@ -306,6 +308,10 @@ public class YamlHandlerFactory {
       return YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME;
     } else if (entity instanceof KubernetesContainerTask) {
       return YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME;
+    } else if (entity instanceof ConfigFile) {
+      return ((ConfigFile) entity).getRelativeFilePath();
+    } else if (entity instanceof SettingAttribute) {
+      return ((SettingAttribute) entity).getName();
     }
 
     throw new InvalidRequestException(
@@ -376,6 +382,6 @@ public class YamlHandlerFactory {
         "NexusArtifactStream", "GcsArtifactStream", "GcrArtifactStream", "EcrArtifactStream", "DockerArtifactStream",
         "BambooArtifactStream", "ArtifactoryArtifactStream", "AmiArtifactStream", "AmazonS3ArtifactStream",
         "AcrArtifactStream", "HelmChartSpecification", "PcfServiceSpecification", "LambdaSpecification",
-        "UserDataSpecification", "EcsContainerTask", "KubernetesContainerTask");
+        "UserDataSpecification", "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute");
   }
 }
