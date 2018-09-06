@@ -317,6 +317,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       executionLogCallback.saveExecutionLog(format("Resizing controller [%s] in cluster [%s] from %s to %s instances",
           controllerName, clusterName, previousCount, desiredCount));
       HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+
+      if (controller == null) {
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+            .addParam("args", "Could not find a controller named " + controllerName);
+      }
       if (controller instanceof ReplicationController) {
         rcOperations(kubernetesConfig, encryptedDataDetails).withName(controllerName).scale(desiredCount);
       } else if (controller instanceof Deployment) {
@@ -337,25 +342,32 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           format("Controller [%s] in cluster [%s] stays at %s instances", controllerName, clusterName, previousCount));
     }
     return getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
-        serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime);
+        desiredCount, serviceSteadyStateTimeout, originalPods, false, executionLogCallback, sizeChanged, startTime);
   }
 
   @Override
   public List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
       int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned,
       ExecutionLogCallback executionLogCallback, boolean wait, long startTime) {
     List<Pod> pods = wait
-        ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount,
+        ? waitForPodsToBeRunning(kubernetesConfig, encryptedDataDetails, controllerName, previousCount, desiredCount,
               serviceSteadyStateTimeout, originalPods, isNotVersioned, startTime, executionLogCallback)
         : originalPods;
-    int desiredCount = getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
+    int controllerDesiredCount =
+        getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
     Set<String> originalPodNames = originalPods.stream().map(pod -> pod.getMetadata().getName()).collect(toSet());
     List<ContainerInfo> containerInfos = new ArrayList<>();
     boolean hasErrors = false;
-    if (wait && pods.size() != desiredCount) {
+    if (wait && (pods.size() != desiredCount || controllerDesiredCount != desiredCount)) {
       hasErrors = true;
-      String msg = format("Pod count did not reach desired count (%d/%d)", pods.size(), desiredCount);
+      String msg = "";
+      if (controllerDesiredCount != desiredCount) {
+        msg = format("Controller replica count is set to %d instead of %d. ", controllerDesiredCount, desiredCount);
+      }
+      if (pods.size() != desiredCount) {
+        msg += format("Pod count did not reach desired count (%d/%d)", pods.size(), desiredCount);
+      }
       logger.error(msg);
       executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
     }
@@ -936,7 +948,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           executionLogCallback.saveExecutionLog(waitingMsg);
           List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
           int size = pods.size();
-          showEvents(kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
+          showPodEvents(
+              kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
           if (size <= 0) {
             return true;
           }
@@ -955,7 +968,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   private List<Pod> waitForPodsToBeRunning(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
       int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned, long startTime,
       ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
@@ -985,8 +998,24 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
         while (true) {
           try {
-            int desiredCount =
-                getControllerPodCount(getController(kubernetesConfig, encryptedDataDetails, controllerName));
+            HasMetadata currentController = getController(kubernetesConfig, encryptedDataDetails, controllerName);
+            if (currentController != null) {
+              int controllerDesiredCount = getControllerPodCount(currentController);
+              if (controllerDesiredCount != desiredCount) {
+                String msg = format(
+                    "Controller replica count is set to %d instead of %d. ", controllerDesiredCount, desiredCount);
+                logger.error(msg);
+                executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+              }
+            } else {
+              String msg = "Couldn't find controller " + controllerName;
+              logger.error(msg);
+              executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
+            }
+
+            showControllerEvents(
+                kubernetesClient, namespace, controllerName, seenEvents, startTime, executionLogCallback);
+
             List<Pod> pods = kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
 
             // Delete failed pods
@@ -995,8 +1024,8 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                 .forEach(pod
                     -> kubernetesClient.pods().inNamespace(namespace).withName(pod.getMetadata().getName()).delete());
 
-            // Show events
-            showEvents(
+            // Show pod events
+            showPodEvents(
                 kubernetesClient, namespace, pods, originalPodNames, seenEvents, startTime, executionLogCallback);
 
             // Check current state
@@ -1074,7 +1103,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return kubernetesClient.pods().inNamespace(namespace).withLabels(labels).list().getItems();
   }
 
-  private void showEvents(KubernetesClient kubernetesClient, String namespace, List<Pod> currentPods,
+  private void showPodEvents(KubernetesClient kubernetesClient, String namespace, List<Pod> currentPods,
       List<String> originalPodNames, Set<String> seenEvents, long startTime,
       ExecutionLogCallback executionLogCallback) {
     try {
@@ -1092,7 +1121,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                   .collect(toList());
 
       if (isNotEmpty(newEvents)) {
-        executionLogCallback.saveExecutionLog("\n****  Kubernetes Events  ****");
+        executionLogCallback.saveExecutionLog("\n****  Kubernetes Pod Events  ****");
         podNames.forEach(podName -> {
           List<Event> podEvents =
               newEvents.stream().filter(evt -> evt.getInvolvedObject().getName().equals(podName)).collect(toList());
@@ -1106,7 +1135,33 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       }
     } catch (Exception e) {
       Misc.logAllMessages(e, executionLogCallback);
-      logger.error("Failed to process kubernetes events", e);
+      logger.error("Failed to process kubernetes pod events", e);
+    }
+  }
+
+  private void showControllerEvents(KubernetesClient kubernetesClient, String namespace, String controllerName,
+      Set<String> seenEvents, long startTime, ExecutionLogCallback executionLogCallback) {
+    try {
+      List<Event> newEvents = kubernetesClient.events()
+                                  .inNamespace(namespace)
+                                  .list()
+                                  .getItems()
+                                  .stream()
+                                  .filter(evt -> !seenEvents.contains(evt.getMetadata().getName()))
+                                  .filter(evt -> controllerName.equals(evt.getInvolvedObject().getName()))
+                                  .filter(evt -> DateTime.parse(evt.getLastTimestamp()).getMillis() > startTime)
+                                  .collect(toList());
+
+      if (isNotEmpty(newEvents)) {
+        executionLogCallback.saveExecutionLog("\n****  Kubernetes Controller Events  ****");
+        executionLogCallback.saveExecutionLog("  Controller: " + controllerName);
+        newEvents.forEach(evt -> executionLogCallback.saveExecutionLog("   - " + evt.getMessage()));
+        executionLogCallback.saveExecutionLog("");
+        seenEvents.addAll(newEvents.stream().map(evt -> evt.getMetadata().getName()).collect(toList()));
+      }
+    } catch (Exception e) {
+      Misc.logAllMessages(e, executionLogCallback);
+      logger.error("Failed to process kubernetes controller events", e);
     }
   }
 
