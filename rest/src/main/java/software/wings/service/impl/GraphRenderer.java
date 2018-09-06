@@ -351,6 +351,10 @@ public class GraphRenderer {
     }
 
     GraphNode generateHierarchyNode() {
+      if (isEmpty(instanceIdMap)) {
+        return null;
+      }
+
       StateExecutionInstance origin = null;
 
       if (logger.isDebugEnabled()) {
