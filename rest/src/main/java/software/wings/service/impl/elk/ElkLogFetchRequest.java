@@ -65,12 +65,14 @@ public class ElkLogFetchRequest {
     return JsonUtils.asObject(jsonOut, Object.class);
   }
 
-  public static Object lastInsertedRecordObject() {
+  public static Object lastInsertedRecordObject(boolean shouldSort) {
     JSONObject jsonObject = new JSONObject();
     jsonObject.put("size", 1);
 
     jsonObject.put("query", new JSONObject().put("match_all", new HashMap<>()));
-    jsonObject.put("sort", new JSONObject().put("@timestamp", "desc"));
+    if (shouldSort) {
+      jsonObject.put("sort", new JSONObject().put("@timestamp", "desc"));
+    }
 
     return JsonUtils.asObject(jsonObject.toString(), Object.class);
   }

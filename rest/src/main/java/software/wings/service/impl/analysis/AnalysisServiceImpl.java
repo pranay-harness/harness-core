@@ -9,6 +9,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -925,8 +926,11 @@ public class AnalysisServiceImpl implements AnalysisService {
           break;
         case ELK:
           errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
-          SyncTaskContext elkTaskContext =
-              aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+          SyncTaskContext elkTaskContext = aContext()
+                                               .withAccountId(settingAttribute.getAccountId())
+                                               .withAppId(Base.GLOBAL_APP_ID)
+                                               .withTimeout(DEFAULT_SYNC_CALL_TIMEOUT * 2)
+                                               .build();
           delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
               .validateConfig((ElkConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
@@ -969,7 +973,7 @@ public class AnalysisServiceImpl implements AnalysisService {
           errorCode = ErrorCode.ELK_CONFIGURATION_ERROR;
           SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
           return delegateProxyFactory.get(ElkDelegateService.class, elkTaskContext)
-              .getLogSample((ElkConfig) settingAttribute.getValue(), index, encryptedDataDetails);
+              .getLogSample((ElkConfig) settingAttribute.getValue(), index, true, encryptedDataDetails);
         case LOGZ:
           errorCode = ErrorCode.LOGZ_CONFIGURATION_ERROR;
           SyncTaskContext logzTaskContext =

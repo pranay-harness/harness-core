@@ -89,8 +89,8 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
 
   @Override
   public Object getLogSample(LogzConfig logzConfig, List<EncryptedDataDetail> encryptedDataDetails) throws IOException {
-    final Call<Object> request =
-        getLogzRestClient(logzConfig, encryptedDataDetails).getLogSample(ElkLogFetchRequest.lastInsertedRecordObject());
+    final Call<Object> request = getLogzRestClient(logzConfig, encryptedDataDetails)
+                                     .getLogSample(ElkLogFetchRequest.lastInsertedRecordObject(true));
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return response.body();

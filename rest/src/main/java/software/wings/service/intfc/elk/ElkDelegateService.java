@@ -29,8 +29,8 @@ public interface ElkDelegateService {
       ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   @DelegateTaskType(TaskType.ELK_GET_LOG_SAMPLE)
-  Object getLogSample(ElkConfig elkConfig, String index, List<EncryptedDataDetail> encryptedDataDetails)
-      throws IOException;
+  Object getLogSample(ElkConfig elkConfig, String index, boolean shouldSort,
+      List<EncryptedDataDetail> encryptedDataDetails) throws IOException;
 
   @DelegateTaskType(TaskType.KIBANA_GET_VERSION)
   String getVersion(ElkConfig elkConfig, List<EncryptedDataDetail> encryptedDataDetails) throws IOException;
