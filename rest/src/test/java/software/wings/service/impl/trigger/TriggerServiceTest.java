@@ -12,6 +12,8 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.EntityType.ENVIRONMENT;
+import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
@@ -47,6 +49,7 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_SOURCE_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
+import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.FILE_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -68,9 +71,11 @@ import org.mockito.Mock;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.Artifact;
@@ -83,7 +88,9 @@ import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebHookTriggerCondition;
+import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
+import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -93,6 +100,7 @@ import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -104,6 +112,7 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -120,6 +129,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private MongoIdempotentRegistry<String> idempotentRegistry;
+  @Mock private EnvironmentService environmentService;
 
   @Inject @InjectMocks private TriggerService triggerService;
 
@@ -1315,5 +1325,95 @@ public class TriggerServiceTest extends WingsBaseTest {
     triggerService.save(artifactConditionTrigger);
     List<String> triggerNames = triggerService.isEnvironmentReferenced(APP_ID, ENV_ID);
     assertThat(triggerNames).isNotEmpty();
+  }
+
+  @Test
+  public void shouldTriggerWorkflowExecutionByBitBucketWebhook() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    when(workflowService.readWorkflowWithoutOrchestration(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) workflowWebhookConditionTrigger.getCondition();
+
+    webHookTriggerCondition.setWebhookSource(WebhookSource.BITBUCKET);
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+
+    Trigger savedTrigger = triggerService.save(workflowWebhookConditionTrigger);
+    assertThat(savedTrigger).isNotNull();
+    assertThat(savedTrigger.getWorkflowVariables()).isNotEmpty().containsKey("MyVar");
+
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put("MyVar", "MyValue");
+    executionArgs.setWorkflowVariables(parameters);
+
+    triggerService.triggerExecutionByWebHook(workflowWebhookConditionTrigger, parameters);
+
+    verify(workflowExecutionService).triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class));
+  }
+
+  @Test
+  public void shouldTriggerTemplatedWorkflowExecutionByBitBucketWebhook() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+
+    workflow.setTemplateExpressions(asList(TemplateExpression.builder()
+                                               .fieldName("envId")
+                                               .expression("${Environment}")
+                                               .metadata(ImmutableMap.of("entityType", "ENVIRONMENT"))
+                                               .build(),
+        TemplateExpression.builder()
+            .fieldName("infraMappingId")
+            .expression("${ServiceInfra_SSH}")
+            .metadata(ImmutableMap.of("entityType", "INFRASTRUCTURE_MAPPING"))
+            .build(),
+        TemplateExpression.builder()
+            .fieldName("serviceId")
+            .expression("${Service}")
+            .metadata(ImmutableMap.of("entityType", "SERVICE"))
+            .build()));
+
+    workflow.getOrchestrationWorkflow().getUserVariables().add(
+        aVariable().withEntityType(ENVIRONMENT).withName("Environment").build());
+    workflow.getOrchestrationWorkflow().getUserVariables().add(
+        aVariable().withEntityType(SERVICE).withName("Service").build());
+    workflow.getOrchestrationWorkflow().getUserVariables().add(
+        aVariable().withEntityType(INFRASTRUCTURE_MAPPING).withName("ServiceInfra_Ssh").build());
+
+    when(workflowService.readWorkflowWithoutOrchestration(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME, false))
+        .thenReturn(Environment.Builder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType("AWS")
+                        .build());
+
+    Map<String, String> workflowVariables = new HashMap<>();
+    workflowVariables.put("Environment", ENV_NAME);
+    workflowVariables.put("Service", SERVICE_ID);
+    workflowVariables.put("ServiceInfra_Ssh", INFRA_MAPPING_ID);
+
+    workflowWebhookConditionTrigger.setWorkflowVariables(workflowVariables);
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) workflowWebhookConditionTrigger.getCondition();
+
+    webHookTriggerCondition.setWebhookSource(WebhookSource.BITBUCKET);
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+
+    triggerService.save(workflowWebhookConditionTrigger);
+
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put("MyVar", "MyValue");
+    executionArgs.setWorkflowVariables(parameters);
+
+    triggerService.triggerExecutionByWebHook(workflowWebhookConditionTrigger, parameters);
+
+    verify(workflowExecutionService).triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class));
+    verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
+    verify(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
+    verify(serviceResourceService).get(APP_ID, SERVICE_ID, false);
   }
 }

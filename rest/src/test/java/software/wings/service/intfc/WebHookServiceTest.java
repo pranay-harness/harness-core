@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +45,9 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.WingsPersistence;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.utils.CryptoUtil;
+import software.wings.utils.JsonUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,6 +62,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
   @Mock HttpHeaders httpHeaders;
+  @Inject ExpressionEvaluator expressionEvaluator;
 
   @Inject @InjectMocks private WebHookService webHookService;
   @Inject WingsPersistence wingsPersistence;
@@ -144,6 +148,43 @@ public class WebHookServiceTest extends WingsBaseTest {
     WebHookResponse response = webHookService.executeByEvent(token, payLoad, null);
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
+  }
+
+  @Test
+  public void shouldTestJsonParsing() throws IOException {
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_pull_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    // convert JSON string to Map
+    Map<String, Object> map = JsonUtils.asObject(payLoad, new TypeReference<Map<String, Object>>() {});
+
+    final String value = expressionEvaluator.substitute("${pullrequest.id} - MyVal", map);
+    assertThat(value).isNotEmpty().isEqualTo("23 - MyVal");
+    assertThat(expressionEvaluator.substitute("${pullrequest.id} - MyVal - ${pullrequest.id}", map))
+        .isNotEmpty()
+        .isEqualTo("23 - MyVal - 23");
+    assertThat(expressionEvaluator.substitute("${pullrequest.id} - MyVal - ${app.name}", map))
+        .isNotEmpty()
+        .isEqualTo("23 - MyVal - ${app.name}");
+  }
+  @Test
+  public void shouldTestJsonGitHubPushParsing() throws IOException {
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/github_push_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    // convert JSON string to Map
+    Map<String, Object> map = JsonUtils.asObject(payLoad, new TypeReference<Map<String, Object>>() {
+    }); // mapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
+    final String value = expressionEvaluator.substitute("${commits[0].id}", map);
+    assertThat(value).isNotEmpty().isEqualTo("4ebc6e9e489979a29ca17b8da0c29d9f6803a5b9");
   }
 
   @Test
@@ -254,6 +295,35 @@ public class WebHookServiceTest extends WingsBaseTest {
     ClassLoader classLoader = getClass().getClassLoader();
     File file =
         new File(classLoader.getResource("software/wings/service/impl/webhook/github_pull_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
+
+    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
+    assertThat(response).isNotNull();
+    assertThat(response.getError()).isNotEmpty();
+  }
+
+  @Test
+  public void shouldTriggerGitHubPushRequest() throws IOException {
+    Trigger webhookTrigger = Trigger.builder()
+                                 .workflowId(PIPELINE_ID)
+                                 .uuid(TRIGGER_ID)
+                                 .appId(APP_ID)
+                                 .name(TRIGGER_NAME)
+                                 .webHookToken(token)
+                                 .condition(WebHookTriggerCondition.builder()
+                                                .webhookSource(WebhookSource.GITHUB)
+                                                .eventTypes(Collections.singletonList(WebhookEventType.PUSH))
+                                                .webHookToken(WebHookToken.builder().webHookToken(token).build())
+                                                .build())
+                                 .build();
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(webhookTrigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/github_push_request.json").getFile());
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);

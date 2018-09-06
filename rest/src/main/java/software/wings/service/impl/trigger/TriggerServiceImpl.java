@@ -27,6 +27,7 @@ import static software.wings.service.impl.trigger.TriggerServiceHelper.addParame
 import static software.wings.service.impl.trigger.TriggerServiceHelper.constructWebhookToken;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.notNullCheckWorkflow;
 import static software.wings.service.impl.trigger.TriggerServiceHelper.validateAndSetCronExpression;
+import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getServiceWorkflowVariables;
 import static software.wings.service.impl.workflow.WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.duplicateCheck;
@@ -44,6 +45,7 @@ import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
+import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Pipeline;
@@ -78,9 +80,11 @@ import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
+import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -93,6 +97,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -120,6 +125,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private MongoIdempotentRegistry<String> idempotentRegistry;
   @Inject private TriggerServiceHelper triggerServiceHelper;
+  @Inject private EnvironmentService environmentService;
 
   @Override
   public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest) {
@@ -257,11 +263,21 @@ public class TriggerServiceImpl implements TriggerService {
 
     List<String> parameters = new ArrayList<>();
     if (PIPELINE.equals(workflowType)) {
-      addPipelineParameters(appId, workflowId, parameters);
+      Pipeline pipeline = validatePipeline(appId, workflowId, true);
+      pipeline.getPipelineStages()
+          .stream()
+          .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
+          .filter(pipelineStageElement -> ENV_STATE.name().equals(pipelineStageElement.getType()))
+          .forEach((PipelineStageElement pipelineStageElement) -> {
+            Workflow workflow = workflowService.readWorkflow(
+                pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
+            notNullCheckWorkflow(workflow);
+            addParameter(parameters, workflow, false);
+          });
     } else if (ORCHESTRATION.equals(workflowType)) {
       Workflow workflow = workflowService.readWorkflow(appId, workflowId);
       notNullCheckWorkflow(workflow);
-      addParameter(parameters, workflow);
+      addParameter(parameters, workflow, true);
     }
     WebhookParameters webhookParameters = WebhookParameters.builder().params(parameters).build();
     webhookParameters.setExpressions(webhookParameters.suggestExpressions(webhookSource, eventType));
@@ -571,60 +587,90 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private WorkflowExecution triggerOrchestrationExecution(Trigger trigger, ExecutionArgs executionArgs) {
-    WorkflowExecution workflowExecution;
     logger.info("Triggering  workflow execution of appId {} with with workflow id {}", trigger.getAppId(),
         trigger.getWorkflowId());
 
     Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
     notNullCheck("Workflow was deleted", workflow, USER_ADMIN);
+    notNullCheck("Orchestration Workflow not present", workflow.getOrchestrationWorkflow(), USER_ADMIN);
 
-    String envId = workflow.getEnvId();
-    Map<String, String> workflowVariables = executionArgs.getWorkflowVariables();
-    Map<String, String> triggerWorkflowVariables = trigger.getWorkflowVariables();
-    if (triggerWorkflowVariables != null) {
-      String templatizedEnvName = getTemplatizedEnvVariableName(workflow.getOrchestrationWorkflow());
-      if (templatizedEnvName != null) {
-        envId = triggerWorkflowVariables.get(templatizedEnvName);
-        if (envId == null) {
-          String msg = "Environment name [" + templatizedEnvName + "] not present in the trigger variables";
-          logger.warn(msg, templatizedEnvName);
-          throw new WingsException(msg);
-        }
-      }
-      if (workflowVariables != null) {
-        for (Entry<String, String> triggerVariableEntry : triggerWorkflowVariables.entrySet()) {
-          if (!workflowVariables.containsKey(triggerVariableEntry.getKey())) {
-            workflowVariables.put(triggerVariableEntry.getKey(), triggerVariableEntry.getValue());
-          }
-        }
-      } else {
-        workflowVariables = triggerWorkflowVariables;
+    // Workflow variables come from Webhook
+    Map<String, String> webhookVariableValues =
+        executionArgs.getWorkflowVariables() == null ? new HashMap<>() : executionArgs.getWorkflowVariables();
+
+    // Workflow variables associated with the trigger
+    Map<String, String> triggerWorkflowVariableValues =
+        trigger.getWorkflowVariables() == null ? new HashMap<>() : trigger.getWorkflowVariables();
+
+    for (Entry<String, String> entry : webhookVariableValues.entrySet()) {
+      if (isNotEmpty(entry.getValue())) {
+        triggerWorkflowVariableValues.put(entry.getKey(), entry.getValue());
       }
     }
 
-    executionArgs.setWorkflowVariables(workflowVariables);
-    workflowExecution = workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs);
-    logger.info("Trigger workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
-        trigger.getWorkflowId());
-    return workflowExecution;
-  }
+    String envId;
+    if (workflow.checkEnvironmentTemplatized()) {
+      String templatizedEnvName = getTemplatizedEnvVariableName(workflow.getOrchestrationWorkflow());
+      notNullCheck("There is no corresponding Workflow Variable associated to environment", templatizedEnvName);
+      String envNameOrId = triggerWorkflowVariableValues.get(templatizedEnvName);
+      if (envNameOrId != null) {
+        logger.info("Checking  environment {} can be found by id first.", envNameOrId);
+        Environment environment = environmentService.get(trigger.getAppId(), envNameOrId);
+        if (environment == null) {
+          logger.info(
+              "Environment does not exist by Id, checking if environment {} can be found by name.", envNameOrId);
+          environment = environmentService.getEnvironmentByName(trigger.getAppId(), envNameOrId, false);
+        }
+        notNullCheck("Environment [" + envNameOrId + "] does not exist", environment);
+        envId = environment.getUuid();
+        triggerWorkflowVariableValues.put(templatizedEnvName, envId);
+      } else {
+        String msg = "Environment name [" + templatizedEnvName + "] not present in the trigger variables";
+        logger.warn(msg, templatizedEnvName);
+        throw new WingsException(msg);
+      }
+    } else {
+      envId = workflow.getEnvId();
+    }
+    notNullCheck("Environment  [" + envId + "] might have been deleted", envId, USER_ADMIN);
 
-  private void addPipelineParameters(String appId, String workflowId, List<String> parameters) {
-    Pipeline pipeline = validatePipeline(appId, workflowId, true);
-    pipeline.getPipelineStages()
-        .stream()
-        .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
-        .filter(pipelineStageElement -> ENV_STATE.name().equals(pipelineStageElement.getType()))
-        .forEach((PipelineStageElement pipelineStageElement) -> {
-          try {
-            Workflow workflow = workflowService.readWorkflow(
-                pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
-            notNullCheckWorkflow(workflow);
-            addParameter(parameters, workflow);
-          } catch (Exception ex) {
-            logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
-          }
-        });
+    List<String> serviceWorkflowVariables = getServiceWorkflowVariables(workflow.getOrchestrationWorkflow());
+    for (String serviceVarName : serviceWorkflowVariables) {
+      String serviceIdOrName = triggerWorkflowVariableValues.get(serviceVarName);
+      notNullCheck("There is no corresponding Workflow Variable associated to service", serviceIdOrName);
+      logger.info("Checking  service {} can be found by id first.", serviceIdOrName);
+      Service service = serviceResourceService.get(trigger.getAppId(), serviceIdOrName, false);
+      if (service == null) {
+        logger.info("Service does not exist by Id, checking if environment {} can be found by name.", serviceIdOrName);
+        service = serviceResourceService.getServiceByName(trigger.getAppId(), serviceIdOrName, false);
+      }
+      notNullCheck("Service [" + serviceIdOrName + "] does not exist", service, USER);
+      triggerWorkflowVariableValues.put(serviceVarName, service.getUuid());
+    }
+
+    List<String> serviceInfraWorkflowVariables =
+        WorkflowServiceTemplateHelper.getServiceInfrastructureWorkflwVariables(workflow.getOrchestrationWorkflow());
+    for (String serviceInfraVarName : serviceInfraWorkflowVariables) {
+      String serviceInfraIdOrName = triggerWorkflowVariableValues.get(serviceInfraVarName);
+      notNullCheck(
+          "There is no corresponding Workflow Variable associated to Service Infrastructure", serviceInfraIdOrName);
+      logger.info("Checking  Service Infrastructure {} can be found by id first.", serviceInfraIdOrName);
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(trigger.getAppId(), serviceInfraIdOrName);
+      if (infrastructureMapping == null) {
+        logger.info(
+            "Service does not exist by Id, checking if environment {} can be found by name.", serviceInfraIdOrName);
+        infrastructureMapping =
+            infrastructureMappingService.getInfraMappingByName(trigger.getAppId(), envId, serviceInfraIdOrName);
+      }
+      notNullCheck("Service Infrastructure [" + serviceInfraIdOrName + "] does not exist", infrastructureMapping, USER);
+      triggerWorkflowVariableValues.put(serviceInfraVarName, infrastructureMapping.getUuid());
+    }
+
+    executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
+    logger.info("Triggering workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
+        trigger.getWorkflowId());
+    return workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs);
   }
 
   @Override
@@ -822,7 +868,7 @@ public class TriggerServiceImpl implements TriggerService {
       services = executePipeline.getServices();
       validateAndSetArtifactSelections(trigger, services);
     } else if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
-      Workflow workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
+      Workflow workflow = validateAndGetWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       if (workflow.isTemplatized()) {
         trigger.setWorkflowName(workflow.getName() + " (TEMPLATE)");
       } else {
@@ -841,7 +887,7 @@ public class TriggerServiceImpl implements TriggerService {
     return pipeline;
   }
 
-  private Workflow validateWorkflow(String appId, String workflowId) {
+  private Workflow validateAndGetWorkflow(String appId, String workflowId) {
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
     notNullCheck("Workflow", workflow, USER);
     return workflow;
@@ -850,7 +896,7 @@ public class TriggerServiceImpl implements TriggerService {
   private WebHookToken generateWebHookToken(Trigger trigger, WebHookToken existingToken) {
     List<Service> services = null;
     boolean artifactNeeded = true;
-    Map<String, String> parameters = new HashMap<>();
+    Map<String, String> parameters = new LinkedHashMap<>();
     if (PIPELINE.equals(trigger.getWorkflowType())) {
       Pipeline pipeline = validatePipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
       services = pipeline.getServices();
@@ -871,7 +917,7 @@ public class TriggerServiceImpl implements TriggerService {
         }
       }
     } else if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
-      Workflow workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
+      Workflow workflow = validateAndGetWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       services = workflow.getServices();
       Map<String, String> workflowVariables = trigger.getWorkflowVariables();
       if (isNotEmpty(workflowVariables)) {
@@ -973,9 +1019,9 @@ public class TriggerServiceImpl implements TriggerService {
   private Map<String, String> resolveWorkflowServices(Trigger trigger) {
     Map<String, String> services = new HashMap<>();
     List<Service> workflowServices = null;
-    Workflow workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
+    Workflow workflow = validateAndGetWorkflow(trigger.getAppId(), trigger.getWorkflowId());
     try {
-      workflow = validateWorkflow(trigger.getAppId(), trigger.getWorkflowId());
+      workflow = validateAndGetWorkflow(trigger.getAppId(), trigger.getWorkflowId());
       workflowServices = workflow.getServices();
     } catch (Exception e) {
       logger.warn("Error occurred while retrieving Pipeline {} ", trigger.getWorkflowId());
@@ -1010,4 +1056,11 @@ public class TriggerServiceImpl implements TriggerService {
           buildNumber, artifactSelection.getArtifactStreamId());
     }
   }
+
+  /**
+   * It resolves the Entity variable names to Ids
+   * @param variables
+   * @param workflowVariables
+   */
+  public void resolveWorkflowVariables(List<Variable> variables, Map<String, String> workflowVariables) {}
 }
