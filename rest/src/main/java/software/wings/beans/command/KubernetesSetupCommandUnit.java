@@ -1230,8 +1230,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         ? desiredCount
         : 0;
     List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
-        encryptedDataDetails, containerServiceName, previousCount, serviceSteadyStateTimeout, originalPods, true,
-        executionLogCallback, true, startTime);
+        encryptedDataDetails, containerServiceName, previousCount, desiredCount, serviceSteadyStateTimeout,
+        originalPods, true, executionLogCallback, true, startTime);
 
     boolean allContainersSuccess =
         containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
@@ -1774,8 +1774,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         List<Pod> pods =
             kubernetesContainerService.getRunningPods(kubernetesConfig, encryptedDataDetails, activeControllerName);
         // Pass previous count of zero so that steady state check is performed
-        List<ContainerInfo> containerInfos = kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig,
-            encryptedDataDetails, activeControllerName, 0, 1, pods, false, executionLogCallback, false, clock.millis());
+        List<ContainerInfo> containerInfos =
+            kubernetesContainerService.getContainerInfosWhenReady(kubernetesConfig, encryptedDataDetails,
+                activeControllerName, 0, pods.size(), 1, pods, false, executionLogCallback, false, clock.millis());
         boolean allContainersSuccess =
             containerInfos.stream().allMatch(info -> info.getStatus() == ContainerInfo.Status.SUCCESS);
         if (!allContainersSuccess) {

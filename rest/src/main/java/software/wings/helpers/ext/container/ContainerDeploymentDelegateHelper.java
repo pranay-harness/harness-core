@@ -190,8 +190,10 @@ public class ContainerDeploymentDelegateHelper {
                     controller.getKind().equals("DaemonSet") || controller.getKind().equals("StatefulSet");
                 return kubernetesContainerService
                     .getContainerInfosWhenReady(kubernetesConfig, containerServiceParams.getEncryptionDetails(),
-                        controller.getMetadata().getName(), 0, (int) TimeUnit.MINUTES.toMinutes(30), new ArrayList<>(),
-                        isNotVersioned, executionLogCallback, true, 0)
+                        controller.getMetadata().getName(), 0,
+                        kubernetesContainerService.getControllerPodCount(controller),
+                        (int) TimeUnit.MINUTES.toMinutes(30), new ArrayList<>(), isNotVersioned, executionLogCallback,
+                        true, 0)
                     .stream();
               })
               .collect(Collectors.toList());

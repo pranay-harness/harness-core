@@ -54,7 +54,7 @@ public interface KubernetesContainerService {
       int count, int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 
   List<ContainerInfo> getContainerInfosWhenReady(KubernetesConfig kubernetesConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount,
+      List<EncryptedDataDetail> encryptedDataDetails, String controllerName, int previousCount, int desiredCount,
       int serviceSteadyStateTimeout, List<Pod> originalPods, boolean isNotVersioned,
       ExecutionLogCallback executionLogCallback, boolean wait, long startTime);
 
