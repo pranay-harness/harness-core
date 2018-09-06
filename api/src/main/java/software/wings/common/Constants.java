@@ -827,7 +827,7 @@ public interface Constants {
 
   String PCF_APP_NAME = "pcfAppName";
   String PCF_OLD_APP_NAME = "pcfOldAppName";
-  String USERNAME_PASSWORD_FIELD = "Username/ Password";
+  String USERNAME_PASSWORD_FIELD = "UserName/Password";
   String TOKEN_FIELD = "Bearer Token(HTTP Header)";
 
   String WINDOWS_HOME_DIR = "%USERPROFILE%";
