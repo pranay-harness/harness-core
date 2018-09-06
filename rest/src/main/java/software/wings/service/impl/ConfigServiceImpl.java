@@ -61,6 +61,7 @@ import java.io.OutputStream;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -490,6 +491,8 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   public List<ConfigFile> getConfigFileOverridesForEnv(String appId, String envId) {
     // All service overrides
+    List<ConfigFile> configFiles = new ArrayList<>();
+
     List allServiceOverrideList = list(aPageRequest()
                                            .addFilter("appId", Operator.EQ, appId)
                                            .addFilter("entityType", Operator.EQ, EntityType.ENVIRONMENT)
@@ -507,8 +510,10 @@ public class ConfigServiceImpl implements ConfigService {
                                  .build())
                             .getResponse();
 
-    overrideList.addAll(allServiceOverrideList);
-    return overrideList;
+    configFiles.addAll(allServiceOverrideList);
+    configFiles.addAll(overrideList);
+
+    return configFiles;
   }
 
   @Override
