@@ -41,4 +41,8 @@ public interface AwsAsgHelperServiceDelegate {
   void setAutoScalingGroupCapacityAndWaitForInstancesReadyState(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
       ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout);
+  void setAutoScalingGroupLimits(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String autoScalingGroupName, Integer desiredCapacity, ExecutionLogCallback logCallback);
+  void setMinInstancesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String autoScalingGroupName, int minCapacity, ExecutionLogCallback logCallback);
 }

@@ -36,6 +36,7 @@ import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
+import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 import software.wings.utils.AsgConvention;
@@ -43,6 +44,7 @@ import software.wings.utils.AsgConvention;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 
@@ -76,6 +78,11 @@ public class AwsAmiHelperServiceDelegateImpl
           request.getOldAsgFinalDesiredCount(), logCallback, request.isResizeNewFirst(),
           request.getAutoScalingSteadyStateTimeout());
 
+      if (request.isLastDeployStep()) {
+        awsAsgHelperServiceDelegate.setMinInstancesForAsg(awsConfig, encryptionDetails, request.getRegion(),
+            request.getNewAutoScalingGroupName(), request.getMinInstances(), logCallback);
+      }
+
       List<Instance> allInstancesOfNewAsg = awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
           awsConfig, encryptionDetails, request.getRegion(), request.getNewAutoScalingGroupName());
       List<Instance> instancesAdded = allInstancesOfNewAsg.stream()
@@ -83,7 +90,7 @@ public class AwsAmiHelperServiceDelegateImpl
                                           .collect(toList());
       return AwsAmiServiceDeployResponse.builder().instancesAdded(instancesAdded).executionStatus(SUCCESS).build();
     } catch (Exception ex) {
-      logCallback.saveExecutionLog(format("Exception: [%s].", ex.getMessage()), ERROR);
+      logCallback.saveExecutionLog(format("Exception: [%s].", getMessage(ex)), ERROR);
       logger.error(ex.getMessage(), ex);
       return AwsAmiServiceDeployResponse.builder().errorMessage(getMessage(ex)).executionStatus(FAILED).build();
     }
@@ -99,12 +106,16 @@ public class AwsAmiHelperServiceDelegateImpl
     if (resizeNewFirst) {
       if (isNotBlank(newAutoScalingGroupName)) {
         executionLogCallback.saveExecutionLog(format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(awsConfig, encryptionDetails, region,
+            newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
             encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback,
             autoScalingSteadyStateTimeout);
       }
       if (isNotBlank(oldAutoScalingGroupName)) {
         executionLogCallback.saveExecutionLog(format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(awsConfig, encryptionDetails, region,
+            oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
             encryptionDetails, region, oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback,
             autoScalingSteadyStateTimeout);
@@ -112,13 +123,16 @@ public class AwsAmiHelperServiceDelegateImpl
     } else {
       if (isNotBlank(oldAutoScalingGroupName)) {
         executionLogCallback.saveExecutionLog(format("Downscale AutoScaling Group [%s]", oldAutoScalingGroupName));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(awsConfig, encryptionDetails, region,
+            oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
             encryptionDetails, region, oldAutoScalingGroupName, oldAsgFinalDesiredCount, executionLogCallback,
             autoScalingSteadyStateTimeout);
       }
-
       if (isNotBlank(newAutoScalingGroupName)) {
         executionLogCallback.saveExecutionLog(format("Upscale AutoScaling Group [%s]", newAutoScalingGroupName));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(awsConfig, encryptionDetails, region,
+            newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
             encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback,
             autoScalingSteadyStateTimeout);
@@ -181,22 +195,44 @@ public class AwsAmiHelperServiceDelegateImpl
               maxInstances),
           logCallback);
 
+      AwsAmiServiceSetupResponseBuilder builder = AwsAmiServiceSetupResponse.builder()
+                                                      .executionStatus(SUCCESS)
+                                                      .lastDeployedAsgName(lastDeployedAsgName)
+                                                      .newAsgName(newAutoScalingGroupName)
+                                                      .harnessRevision(harnessRevision);
+      populateLastDeployedAsgData(builder, lastDeployedAsgName, harnessManagedAutoScalingGroups);
+
       logCallback.saveExecutionLog("Sending request to delete old auto scaling groups to executor");
       deleteOldHarnessManagedAutoScalingGroups(
           encryptionDetails, region, awsConfig, harnessManagedAutoScalingGroups, lastDeployedAsgName, logCallback);
+
       logCallback.saveExecutionLog(
           format("Completed AWS AMI Setup with new autoScalingGroupName [%s]", newAutoScalingGroupName));
-      return AwsAmiServiceSetupResponse.builder()
-          .executionStatus(SUCCESS)
-          .lastDeployedAsgName(lastDeployedAsgName)
-          .newAsgName(newAutoScalingGroupName)
-          .harnessRevision(harnessRevision)
-          .build();
+      return builder.build();
+
     } catch (Exception exception) {
       logCallback.saveExecutionLog(format("Exception: [%s].", exception.getMessage()), ERROR);
       logger.error(exception.getMessage(), exception);
       return AwsAmiServiceSetupResponse.builder().errorMessage(getMessage(exception)).executionStatus(FAILED).build();
     }
+  }
+
+  private void populateLastDeployedAsgData(AwsAmiServiceSetupResponseBuilder builder, String lastDeployedAsgName,
+      List<AutoScalingGroup> harnessManagedAutoScalingGroups) {
+    int desiredCapacity = 0;
+    int minSize = 0;
+    if (isNotEmpty(harnessManagedAutoScalingGroups) && (isNotEmpty(lastDeployedAsgName))) {
+      Optional<AutoScalingGroup> autoScalingGroup =
+          harnessManagedAutoScalingGroups.stream()
+              .filter(group -> group.getAutoScalingGroupName().equals(lastDeployedAsgName))
+              .findFirst();
+      if (autoScalingGroup.isPresent()) {
+        desiredCapacity = autoScalingGroup.get().getDesiredCapacity();
+        minSize = autoScalingGroup.get().getMinSize();
+      }
+    }
+    builder.lastDeployedAsgMinSize(minSize);
+    builder.lastDeployedAsgDesiredCapacity(desiredCapacity);
   }
 
   private void deleteOldHarnessManagedAutoScalingGroups(List<EncryptedDataDetail> encryptionDetails, String region,
@@ -229,7 +265,6 @@ public class AwsAmiHelperServiceDelegateImpl
   private CreateAutoScalingGroupRequest createNewAutoScalingGroupRequest(String infraMappingId,
       List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, String newAutoScalingGroupName,
       AutoScalingGroup baseAutoScalingGroup, Integer harnessRevision, Integer maxInstances) {
-    // /*
     List<Tag> tags =
         baseAutoScalingGroup.getTags()
             .stream()
@@ -242,9 +277,6 @@ public class AwsAmiHelperServiceDelegateImpl
                        .withPropagateAtLaunch(tagDescription.getPropagateAtLaunch())
                        .withResourceType(tagDescription.getResourceType()))
             .collect(toList());
-    // */
-
-    // List<Tag> tags = new ArrayList<>();
     tags.add(new Tag()
                  .withKey(HARNESS_AUTOSCALING_GROUP_TAG)
                  .withValue(AsgConvention.getRevisionTagValue(infraMappingId, harnessRevision))

@@ -29,6 +29,9 @@ public class AmiServiceSetupElement implements ContextElement {
   private String oldAutoScalingGroupName;
   private Integer autoScalingSteadyStateTimeout;
   private Integer maxInstances;
+  private int minInstances;
+  private int oldAsgMinSize;
+  private int oldAsgDesiredCapacity;
   private ResizeStrategy resizeStrategy;
 
   @Override

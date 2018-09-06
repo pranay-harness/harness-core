@@ -2,7 +2,8 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
@@ -18,6 +19,7 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.mongodb.morphia.Key;
@@ -240,18 +242,18 @@ public class AwsAmiServiceDeployState extends State {
 
     Integer totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
     Integer newAsgFinalDesiredCount = newAutoScalingGroupDesiredCapacity + totalNewInstancesToBeAdded;
-    List<ContainerServiceData> newInstanceData = asList(ContainerServiceData.builder()
-                                                            .name(newAutoScalingGroupName)
-                                                            .desiredCount(newAsgFinalDesiredCount)
-                                                            .previousCount(newAutoScalingGroupDesiredCapacity)
-                                                            .build());
+    List<ContainerServiceData> newInstanceData = singletonList(ContainerServiceData.builder()
+                                                                   .name(newAutoScalingGroupName)
+                                                                   .desiredCount(newAsgFinalDesiredCount)
+                                                                   .previousCount(newAutoScalingGroupDesiredCapacity)
+                                                                   .build());
 
     Integer oldAsgFinalDesiredCount = Math.max(0, oldAutoScalingGroupDesiredCapacity - totalNewInstancesToBeAdded);
-    List<ContainerServiceData> oldInstanceData = asList(ContainerServiceData.builder()
-                                                            .name(oldAutoScalingGroupName)
-                                                            .desiredCount(oldAsgFinalDesiredCount)
-                                                            .previousCount(oldAutoScalingGroupDesiredCapacity)
-                                                            .build());
+    List<ContainerServiceData> oldInstanceData = singletonList(ContainerServiceData.builder()
+                                                                   .name(oldAutoScalingGroupName)
+                                                                   .desiredCount(oldAsgFinalDesiredCount)
+                                                                   .previousCount(oldAutoScalingGroupDesiredCapacity)
+                                                                   .build());
 
     awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(), serviceSetupElement,
         getInstanceCount(), getInstanceUnitType(), newInstanceData, oldInstanceData);
@@ -260,14 +262,16 @@ public class AwsAmiServiceDeployState extends State {
     createAndQueueResizeTask(awsConfig, encryptionDetails, region, infrastructureMapping.getAccountId(),
         infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, newAutoScalingGroupName,
         newAsgFinalDesiredCount, oldAutoScalingGroupName, oldAsgFinalDesiredCount,
-        serviceSetupElement.getAutoScalingSteadyStateTimeout(), infrastructureMapping.getEnvId());
+        serviceSetupElement.getAutoScalingSteadyStateTimeout(), infrastructureMapping.getEnvId(),
+        serviceSetupElement.getMaxInstances().equals(newAsgFinalDesiredCount), serviceSetupElement.getMinInstances());
     return awsAmiDeployStateExecutionData;
   }
 
   protected void createAndQueueResizeTask(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String accountId, String appId, String activityId, String commandName, boolean resizeNewFirst,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
-      Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, String envId) {
+      Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, String envId, boolean lastDeployStep,
+      int minInstaces) {
     AwsAmiServiceDeployRequest request = AwsAmiServiceDeployRequest.builder()
                                              .awsConfig(awsConfig)
                                              .encryptionDetails(encryptionDetails)
@@ -282,6 +286,8 @@ public class AwsAmiServiceDeployState extends State {
                                              .oldAutoScalingGroupName(oldAutoScalingGroupName)
                                              .oldAsgFinalDesiredCount(oldAsgFinalDesiredCount)
                                              .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
+                                             .lastDeployStep(lastDeployStep)
+                                             .minInstances(minInstaces)
                                              .build();
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(accountId)
@@ -425,33 +431,36 @@ public class AwsAmiServiceDeployState extends State {
 
     ContainerServiceData newContainerServiceData = awsAmiDeployStateExecutionData.getNewInstanceData().get(0);
 
-    List<InstanceElement> instanceElements =
-        amiServiceDeployResponse.getInstancesAdded()
-            .stream()
-            .map(instance -> {
-              HostElement hostElement = aHostElement()
-                                            .withPublicDns(instance.getPublicDnsName())
-                                            .withIp(instance.getPrivateIpAddress())
-                                            .withEc2Instance(instance)
-                                            .withInstanceId(instance.getInstanceId())
-                                            .build();
+    List<Instance> ec2InstancesAdded = amiServiceDeployResponse.getInstancesAdded();
+    List<InstanceElement> instanceElements = emptyList();
+    if (isNotEmpty(ec2InstancesAdded)) {
+      instanceElements = amiServiceDeployResponse.getInstancesAdded()
+                             .stream()
+                             .map(instance -> {
+                               HostElement hostElement = aHostElement()
+                                                             .withPublicDns(instance.getPublicDnsName())
+                                                             .withIp(instance.getPrivateIpAddress())
+                                                             .withEc2Instance(instance)
+                                                             .withInstanceId(instance.getInstanceId())
+                                                             .build();
 
-              final Map<String, Object> contextMap = context.asMap();
-              contextMap.put("host", hostElement);
-              String hostName = awsHelperService.getHostnameFromConvention(contextMap, "");
-              hostElement.setHostName(hostName);
-              return anInstanceElement()
-                  .withUuid(instance.getInstanceId())
-                  .withHostName(hostName)
-                  .withDisplayName(instance.getPublicDnsName())
-                  .withHost(hostElement)
-                  .withServiceTemplateElement(aServiceTemplateElement()
-                                                  .withUuid(serviceTemplateKey.getId().toString())
-                                                  .withServiceElement(phaseElement.getServiceElement())
-                                                  .build())
-                  .build();
-            })
-            .collect(toList());
+                               final Map<String, Object> contextMap = context.asMap();
+                               contextMap.put("host", hostElement);
+                               String hostName = awsHelperService.getHostnameFromConvention(contextMap, "");
+                               hostElement.setHostName(hostName);
+                               return anInstanceElement()
+                                   .withUuid(instance.getInstanceId())
+                                   .withHostName(hostName)
+                                   .withDisplayName(instance.getPublicDnsName())
+                                   .withHost(hostElement)
+                                   .withServiceTemplateElement(aServiceTemplateElement()
+                                                                   .withUuid(serviceTemplateKey.getId().toString())
+                                                                   .withServiceElement(phaseElement.getServiceElement())
+                                                                   .build())
+                                   .build();
+                             })
+                             .collect(toList());
+    }
 
     int instancesAdded = newContainerServiceData.getDesiredCount() - newContainerServiceData.getPreviousCount();
     if (instancesAdded > 0 && instancesAdded < instanceElements.size()) {

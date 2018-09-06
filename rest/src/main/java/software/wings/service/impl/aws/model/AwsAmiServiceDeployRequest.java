@@ -23,12 +23,15 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
   private String oldAutoScalingGroupName;
   private Integer oldAsgFinalDesiredCount;
   private Integer autoScalingSteadyStateTimeout;
+  private boolean lastDeployStep;
+  private int minInstances;
 
   @Builder
   public AwsAmiServiceDeployRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String accountId, String appId, String activityId, String commandName, boolean resizeNewFirst,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
-      Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout) {
+      Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, boolean lastDeployStep,
+      int minInstances) {
     super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_DEPLOY, region);
     this.accountId = accountId;
     this.appId = appId;
@@ -40,5 +43,7 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
     this.oldAutoScalingGroupName = oldAutoScalingGroupName;
     this.oldAsgFinalDesiredCount = oldAsgFinalDesiredCount;
     this.autoScalingSteadyStateTimeout = autoScalingSteadyStateTimeout;
+    this.lastDeployStep = lastDeployStep;
+    this.minInstances = minInstances;
   }
 }

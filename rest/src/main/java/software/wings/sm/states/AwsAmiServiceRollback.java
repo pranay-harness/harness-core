@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiDeployStateExecutionData;
@@ -41,7 +43,12 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     AmiServiceDeployElement amiServiceDeployElement = context.getContextElement(ContextElementType.AMI_SERVICE_DEPLOY);
 
     ContainerServiceData oldContainerServiceData = amiServiceDeployElement.getOldInstanceData().get(0);
+    String oldAgName = oldContainerServiceData.getName();
+    int oldAsgFinalDesiredCount = oldContainerServiceData.getPreviousCount();
+
     ContainerServiceData newContainerServiceData = amiServiceDeployElement.getNewInstanceData().get(0);
+    String newAgName = newContainerServiceData.getName();
+    int newAsgFinalDesiredCount = newContainerServiceData.getPreviousCount();
 
     AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
         activity.getAppId(), phaseElement.getInfraMappingId());
@@ -54,10 +61,11 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     boolean resizeNewFirst = serviceSetupElement.getResizeStrategy().equals(ResizeStrategy.RESIZE_NEW_FIRST);
 
     createAndQueueResizeTask(awsConfig, encryptionDetails, region, infrastructureMapping.getAccountId(),
-        infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst,
-        oldContainerServiceData.getName(), oldContainerServiceData.getPreviousCount(),
-        newContainerServiceData.getName(), newContainerServiceData.getPreviousCount(),
-        serviceSetupElement.getAutoScalingSteadyStateTimeout(), infrastructureMapping.getEnvId());
+        infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, oldAgName,
+        oldAsgFinalDesiredCount, newAgName, newAsgFinalDesiredCount,
+        serviceSetupElement.getAutoScalingSteadyStateTimeout(), infrastructureMapping.getEnvId(),
+        !isEmpty(oldAgName) && serviceSetupElement.getOldAsgDesiredCapacity() == oldAsgFinalDesiredCount,
+        serviceSetupElement.getOldAsgMinSize());
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(),
         serviceSetupElement, amiServiceDeployElement.getInstanceCount(), amiServiceDeployElement.getInstanceUnitType(),
