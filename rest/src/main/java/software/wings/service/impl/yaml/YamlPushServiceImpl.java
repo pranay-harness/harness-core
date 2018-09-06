@@ -12,7 +12,6 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.Service;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 
 import java.util.concurrent.ExecutorService;
@@ -55,7 +54,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml changeset " + Misc.getMessage(e));
+        logger.error("Exception in pushing yaml change set {}", e);
       }
     });
   }
@@ -85,7 +84,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml changeset " + Misc.getMessage(e));
+        logger.error("Exception in pushing yaml change set {}", e);
       }
     });
   }
@@ -122,7 +121,7 @@ public class YamlPushServiceImpl implements YamlPushService {
       try {
         yamlChangeSetHelper.defaultVariableChangeSet(accountId, appId, changeType);
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml changeset " + Misc.getMessage(e));
+        logger.error("Exception in pushing yaml change set {}", e);
       }
     });
   }
