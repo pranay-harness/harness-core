@@ -209,7 +209,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           List<NewRelicMetric> metrics = response.body().getMetrics();
           if (isNotEmpty(metrics)) {
             metrics.forEach(metric -> {
-              if (metric.getName().startsWith("WebTransaction/") || metric.getName().equals("WebTransaction")) {
+              if (metric.getName().startsWith("WebTransaction")) {
                 newRelicMetrics.add(metric);
               }
             });
