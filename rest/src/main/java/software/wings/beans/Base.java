@@ -71,6 +71,8 @@ public class Base implements UuidAware {
   @Transient
   private transient String entityYamlPath; // TODO:: remove it with changeSet batching
 
+  @JsonIgnore
+  @SchemaIgnore
   public String getEntityYamlPath() {
     return entityYamlPath;
   }
