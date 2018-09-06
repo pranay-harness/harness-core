@@ -13,6 +13,7 @@ import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
@@ -1384,7 +1385,7 @@ public class AnalysisServiceImpl implements AnalysisService {
                                               .get();
 
     if (workflowExecution == null) {
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR)
+      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER)
           .addParam("reason", "No successful execution exists for the workflow.");
     }
 
@@ -1400,7 +1401,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     if (isEmpty(hosts)) {
       logger.info("No nodes found for successful execution for workflow {} with executionId {}", workflowId,
           workflowExecution.getUuid());
-      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR)
+      throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER)
           .addParam("reason", "No node information was captured in the last successful workflow execution");
     }
     return hosts;
