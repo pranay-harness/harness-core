@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 
@@ -10,6 +11,7 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
+import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.exception.WingsException;
@@ -53,7 +55,7 @@ public class EncryptionServiceImpl implements EncryptionService {
         encryptedRefField.setAccessible(true);
         encryptedRefField.set(object, null);
       } catch (Exception e) {
-        throw new WingsException(e);
+        throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER, e);
       }
     }
     object.setDecrypted(true);
