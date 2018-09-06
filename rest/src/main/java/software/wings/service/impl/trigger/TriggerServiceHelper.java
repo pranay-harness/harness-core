@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
 import static net.redhogs.cronparser.CronExpressionDescriptor.getDescription;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -28,6 +29,7 @@ import org.quartz.CronScheduleBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Service;
+import software.wings.beans.Variable;
 import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
@@ -238,12 +240,18 @@ public class TriggerServiceHelper {
     Validator.notNullCheck("Orchestration workflow was deleted", workflow.getOrchestrationWorkflow(), USER);
   }
 
-  public static void addParameter(List<String> parameters, Workflow workflow) {
-    workflow.getOrchestrationWorkflow().getUserVariables().forEach(uservariable -> {
-      if (!uservariable.getType().equals(VariableType.ENTITY)) {
-        if (!parameters.contains(uservariable.getName())) {
-          parameters.add(uservariable.getName());
-        }
+  public static void addParameter(List<String> parameters, Workflow workflow, boolean includeEntityType) {
+    List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+    if (isEmpty(userVariables)) {
+      return;
+    }
+    userVariables = includeEntityType
+        ? userVariables
+        : userVariables.stream().filter(variable -> !variable.getType().equals(VariableType.ENTITY)).collect(toList());
+
+    userVariables.forEach(userVariable -> {
+      if (!parameters.contains(userVariable.getName())) {
+        parameters.add(userVariable.getName());
       }
     });
   }

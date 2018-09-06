@@ -153,7 +153,10 @@ public class TriggerServiceTestHelper {
         .uuid(TRIGGER_ID)
         .appId(APP_ID)
         .name(TRIGGER_NAME)
-        .condition(WebHookTriggerCondition.builder().webHookToken(WebHookToken.builder().build()).build())
+        .condition(WebHookTriggerCondition.builder()
+                       .webHookToken(WebHookToken.builder().build())
+                       .parameters(ImmutableMap.of("MyVar", "MyVal"))
+                       .build())
         .build();
   }
 

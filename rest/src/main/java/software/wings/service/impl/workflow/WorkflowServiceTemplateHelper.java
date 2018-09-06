@@ -12,6 +12,7 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
+import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.OrchestrationWorkflowType.BASIC;
 import static software.wings.common.Constants.APPD_APP_VAR_DESC;
 import static software.wings.common.Constants.APPD_SERVER_VAR_DESC;
@@ -269,14 +270,7 @@ public class WorkflowServiceTemplateHelper {
     if (isEmpty(orchestrationWorkflow.getUserVariables())) {
       return;
     }
-    List<String> serviceInfraVariables =
-        orchestrationWorkflow.getUserVariables()
-            .stream()
-            .filter(
-                variable -> variable.getEntityType() != null && variable.getEntityType().equals(INFRASTRUCTURE_MAPPING))
-            .map(Variable::getName)
-            .distinct()
-            .collect(toList());
+    List<String> serviceInfraVariables = getServiceInfrastructureWorkflwVariables(orchestrationWorkflow);
 
     Map<String, Object> metaData = new HashMap<>();
     metaData.put(ENTITY_TYPE, INFRASTRUCTURE_MAPPING.name());
@@ -300,6 +294,30 @@ public class WorkflowServiceTemplateHelper {
         TemplateExpression.builder().fieldName("infraMappingId").metadata(metaData).expression(expression).build());
     orchestrationWorkflow.addToUserVariables(
         phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName(), null);
+  }
+
+  public static List<String> getServiceInfrastructureWorkflwVariables(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow.getUserVariables() == null) {
+      return new ArrayList<>();
+    }
+    return orchestrationWorkflow.getUserVariables()
+        .stream()
+        .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(INFRASTRUCTURE_MAPPING))
+        .map(Variable::getName)
+        .distinct()
+        .collect(toList());
+  }
+
+  public static List<String> getServiceWorkflowVariables(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow.getUserVariables() == null) {
+      return new ArrayList<>();
+    }
+    return orchestrationWorkflow.getUserVariables()
+        .stream()
+        .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(SERVICE))
+        .map(Variable::getName)
+        .distinct()
+        .collect(toList());
   }
 
   /***

@@ -1,6 +1,8 @@
 package software.wings.beans.trigger;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.WorkflowType.PIPELINE;
+import static software.wings.beans.trigger.TriggerConditionType.WEBHOOK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
@@ -19,6 +21,7 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.WorkflowType;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -104,5 +107,19 @@ public class Trigger extends Base {
       return pipelineName;
     }
     return workflowName;
+  }
+
+  public Map<String, String> getWorkflowVariables() {
+    // TODO: This is temporary code till we migrate all the triggers
+    if (condition != null && WEBHOOK.equals(condition.getConditionType())) {
+      WebHookTriggerCondition webHookTriggerCondition = (WebHookTriggerCondition) condition;
+      if (isNotEmpty(webHookTriggerCondition.getParameters())) {
+        if (workflowVariables == null) {
+          workflowVariables = new LinkedHashMap<>();
+        }
+        workflowVariables.putAll(webHookTriggerCondition.getParameters());
+      }
+    }
+    return workflowVariables;
   }
 }

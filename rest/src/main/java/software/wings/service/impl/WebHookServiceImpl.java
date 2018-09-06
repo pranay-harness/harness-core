@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
@@ -7,7 +8,7 @@ import static software.wings.beans.trigger.WebhookSource.GITHUB;
 
 import com.google.inject.Inject;
 
-import com.jayway.jsonpath.DocumentContext;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.mongodb.morphia.query.CountOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,6 @@ import software.wings.utils.Misc;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
 import javax.validation.executable.ValidateOnExecution;
 import javax.ws.rs.core.HttpHeaders;
 
@@ -45,6 +45,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private AppService appService;
   @Inject private MainConfiguration configuration;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private ExpressionEvaluator expressionEvaluator;
 
   private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
 
@@ -144,42 +145,48 @@ public class WebHookServiceImpl implements WebHookService {
   private Map<String, String> resolveWebhookParameters(
       String webhookEventPayload, HttpHeaders httpHeaders, Trigger trigger) {
     WebHookTriggerCondition webhookTriggerCondition = (WebHookTriggerCondition) trigger.getCondition();
-    Map<String, String> webhookParameters = webhookTriggerCondition.getParameters();
-    Map<String, String> resolvedParameters = new HashMap<>();
 
-    DocumentContext ctx = JsonUtils.parseJson(webhookEventPayload);
+    // Web hook parameters saved
+    Map<String, String> webhookParameters =
+        webhookTriggerCondition.getParameters() == null ? new HashMap<>() : webhookTriggerCondition.getParameters();
 
-    validateGitHubWebhook(trigger, webhookTriggerCondition, ctx, httpHeaders);
-
-    if (webhookParameters != null) {
-      for (Map.Entry<String, String> parameterEntry : webhookParameters.entrySet()) {
-        String param = parameterEntry.getValue();
-        Object paramValue = null;
-        try {
-          Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(param);
-          if (matcher.matches()) {
-            String paramVariable = matcher.group(0).substring(2, matcher.group(0).length() - 1);
-            logger.info("Param Variable {}", paramVariable);
-            paramValue = JsonUtils.jsonPath(ctx, paramVariable);
-          } else {
-            logger.info("Not variable {}", param);
-            paramValue = JsonUtils.jsonPath(ctx, param);
-          }
-        } catch (Exception e) {
-          logger.warn("Failed to resolve the param {} in Json {}", param, webhookEventPayload);
-        }
-        if (paramValue != null) {
-          resolvedParameters.put(parameterEntry.getKey(), String.valueOf(paramValue));
-        } else {
-          resolvedParameters.put(parameterEntry.getKey(), param);
-        }
+    // Add the workflow variables to evaluate from Payload
+    Map<String, String> workflowVariables =
+        trigger.getWorkflowVariables() == null ? new HashMap<>() : trigger.getWorkflowVariables();
+    for (Map.Entry<String, String> parameterEntry : workflowVariables.entrySet()) {
+      if (webhookParameters.containsKey(parameterEntry.getKey())) {
+        // Override it from parameters
+        workflowVariables.put(parameterEntry.getKey(), webhookParameters.get(parameterEntry.getKey()));
       }
     }
+
+    Map<String, String> resolvedParameters = new HashMap<>();
+
+    Map<String, Object> map = JsonUtils.asObject(webhookEventPayload, new TypeReference<Map<String, Object>>() {});
+    validateGitHubWebhook(trigger, webhookTriggerCondition, map, httpHeaders);
+
+    for (Map.Entry<String, String> parameterEntry : workflowVariables.entrySet()) {
+      String paramValue = parameterEntry.getValue();
+      String param = parameterEntry.getKey();
+      try {
+        if (isNotEmpty(parameterEntry.getValue())) {
+          Object evalutedValue = expressionEvaluator.substitute(paramValue, map);
+          if (evalutedValue != null) {
+            resolvedParameters.put(param, String.valueOf(evalutedValue));
+          } else {
+            resolvedParameters.put(param, paramValue);
+          }
+        }
+      } catch (Exception e) {
+        logger.warn("Failed to resolve the param {} in Json {}", param, webhookEventPayload);
+      }
+    }
+
     return resolvedParameters;
   }
 
   private void validateGitHubWebhook(
-      Trigger trigger, WebHookTriggerCondition triggerCondition, DocumentContext ctx, HttpHeaders headers) {
+      Trigger trigger, WebHookTriggerCondition triggerCondition, Map<String, Object> content, HttpHeaders headers) {
     WebhookSource webhookSource = triggerCondition.getWebhookSource();
     if (GITHUB.equals(webhookSource)) {
       logger.info("Trigger is set for GitHub. Checking the http headers for the request type");
@@ -196,11 +203,11 @@ public class WebHookServiceImpl implements WebHookService {
         throw new WingsException(msg);
       }
       if (PULL_REQUEST.equals(webhookEventType)) {
-        String prAction = JsonUtils.jsonPath(ctx, "action");
+        Object prAction = content.get("action");
         if (prAction != null && triggerCondition.getActions() != null
-            && !triggerCondition.getActions().contains(PrAction.find(prAction))) {
-          String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub event ["
-              + gitHubEvent + "]";
+            && !triggerCondition.getActions().contains(PrAction.find(prAction.toString()))) {
+          String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub action ["
+              + prAction + "]";
           logger.warn(msg);
           throw new WingsException(msg);
         }
