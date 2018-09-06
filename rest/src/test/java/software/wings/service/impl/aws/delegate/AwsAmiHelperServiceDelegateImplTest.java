@@ -33,6 +33,8 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.exception.InvalidRequestException;
+import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
+import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
 
 import java.lang.reflect.InvocationTargetException;
@@ -249,5 +251,22 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     } catch (Exception ex) {
       fail(format("Exception: [%s]", ex.getMessage()));
     }
+  }
+
+  @Test
+  public void testPopulateLastDeployedAsgData() {
+    List<AutoScalingGroup> scalingGroups =
+        asList(new AutoScalingGroup().withAutoScalingGroupName("name_1").withDesiredCapacity(3).withMinSize(2),
+            new AutoScalingGroup().withAutoScalingGroupName("name_2").withDesiredCapacity(5).withMinSize(4));
+    AwsAmiServiceSetupResponseBuilder builder = AwsAmiServiceSetupResponse.builder();
+    try {
+      invokeMethod(awsAmiHelperServiceDelegate, true, "populateLastDeployedAsgData",
+          new Object[] {builder, "name_2", scalingGroups});
+    } catch (Exception ex) {
+      fail(format("Exception: [%s]", ex.getMessage()));
+    }
+    AwsAmiServiceSetupResponse response = builder.build();
+    assertThat(response.getLastDeployedAsgMinSize()).isEqualTo(4);
+    assertThat(response.getLastDeployedAsgDesiredCapacity()).isEqualTo(5);
   }
 }

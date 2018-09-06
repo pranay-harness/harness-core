@@ -74,6 +74,7 @@ public class AwsAmiServiceSetup extends State {
   private String autoScalingGroupName;
   private int autoScalingSteadyStateTimeout;
   private int maxInstances;
+  private int minInstances;
   private ResizeStrategy resizeStrategy;
 
   @Inject @Transient protected transient SettingsService settingsService;
@@ -128,9 +129,12 @@ public class AwsAmiServiceSetup extends State {
             .newAutoScalingGroupName(amiServiceSetupResponse.getNewAsgName())
             .oldAutoScalingGroupName(amiServiceSetupResponse.getLastDeployedAsgName())
             .maxInstances(maxInstances)
+            .minInstances(minInstances)
             .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
             .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
             .commandName(commandName)
+            .oldAsgMinSize(amiServiceSetupResponse.getLastDeployedAsgMinSize())
+            .oldAsgDesiredCapacity(amiServiceSetupResponse.getLastDeployedAsgDesiredCapacity())
             .build();
 
     return ExecutionResponse.Builder.anExecutionResponse()
@@ -250,7 +254,6 @@ public class AwsAmiServiceSetup extends State {
        */
       autoScalingSteadyStateTimeout = getAutoScalingSteadyStateTimeout() == 0 ? (int) TimeUnit.MINUTES.toMinutes(10)
                                                                               : autoScalingSteadyStateTimeout;
-
       requestBuilder.maxInstances(maxInstances);
       requestBuilder.autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout);
 
@@ -347,6 +350,14 @@ public class AwsAmiServiceSetup extends State {
 
   public int getMaxInstances() {
     return maxInstances;
+  }
+
+  public int getMinInstances() {
+    return minInstances;
+  }
+
+  public void setMinInstances(int minInstances) {
+    this.minInstances = minInstances;
   }
 
   public void setMaxInstances(int maxInstances) {

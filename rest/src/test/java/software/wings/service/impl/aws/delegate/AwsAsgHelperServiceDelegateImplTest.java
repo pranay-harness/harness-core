@@ -192,6 +192,35 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  public void testSetAutoScalingGroupLimits() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), anyString(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(new DescribeAutoScalingGroupsResult().withAutoScalingGroups(new AutoScalingGroup().withMinSize(2)))
+        .when(mockClient)
+        .describeAutoScalingGroups(any());
+    awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "foo", 1, mockCallback);
+    verify(mockClient).updateAutoScalingGroup(any());
+  }
+
+  @Test
+  public void testSetMinInstancesForAsg() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), anyString(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(new DescribeAutoScalingGroupsResult().withAutoScalingGroups(
+                 new AutoScalingGroup().withAutoScalingGroupName("foo")))
+        .when(mockClient)
+        .describeAutoScalingGroups(any());
+    awsAsgHelperServiceDelegate.setMinInstancesForAsg(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "foo", 1, mockCallback);
+    verify(mockClient).updateAutoScalingGroup(any());
+  }
+
+  @Test
   public void testSetAutoScalingGroupCapacityAndWaitForInstancesReadyState() {
     AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
     doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), anyString(), any());

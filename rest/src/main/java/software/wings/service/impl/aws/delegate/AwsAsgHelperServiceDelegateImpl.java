@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -10,6 +11,7 @@ import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.ErrorCode.INIT_TIMEOUT;
 import static software.wings.beans.Log.LogLevel.ERROR;
+import static software.wings.utils.Misc.getMessage;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -40,6 +42,7 @@ import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesRequest
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
+import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
 import com.amazonaws.services.ec2.model.Instance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -312,6 +315,76 @@ public class AwsAsgHelperServiceDelegateImpl
     } catch (AmazonServiceException amazonServiceException) {
       describeAutoScalingGroupActivities(
           amazonAutoScalingClient, autoScalingGroupName, new HashSet<>(), logCallback, true);
+      handleAmazonServiceException(amazonServiceException);
+    }
+  }
+
+  @Override
+  public void setMinInstancesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String autoScalingGroupName, int minCapacity, ExecutionLogCallback logCallback) {
+    try {
+      if (isEmpty(autoScalingGroupName)) {
+        return;
+      }
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      DescribeAutoScalingGroupsRequest request =
+          new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
+      DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
+      List<AutoScalingGroup> autoScalingGroups = result.getAutoScalingGroups();
+      if (isEmpty(autoScalingGroups)) {
+        return;
+      }
+      logCallback.saveExecutionLog(
+          format("Setting min capacity of Asg[%s] to [%d]", autoScalingGroupName, minCapacity));
+      UpdateAutoScalingGroupRequest updateAutoScalingGroupRequest =
+          new UpdateAutoScalingGroupRequest().withAutoScalingGroupName(autoScalingGroupName).withMinSize(minCapacity);
+      amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
+    } catch (AmazonServiceException amazonServiceException) {
+      logCallback.saveExecutionLog(
+          format("Exception: [%s] while setting Asg limits", getMessage(amazonServiceException)));
+      handleAmazonServiceException(amazonServiceException);
+    }
+  }
+
+  @Override
+  public void setAutoScalingGroupLimits(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String autoScalingGroupName, Integer desiredCapacity, ExecutionLogCallback logCallback) {
+    try {
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      DescribeAutoScalingGroupsRequest request =
+          new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
+      DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
+      List<AutoScalingGroup> autoScalingGroups = result.getAutoScalingGroups();
+      if (isEmpty(autoScalingGroups)) {
+        return;
+      }
+      AutoScalingGroup autoScalingGroup = autoScalingGroups.get(0);
+      if (desiredCapacity < autoScalingGroup.getMinSize()) {
+        logCallback.saveExecutionLog(
+            format("Autoscaling group: [%s] has min Size: [%d] > desired capacity: [%d]. Updating",
+                autoScalingGroupName, autoScalingGroup.getMinSize(), desiredCapacity));
+        UpdateAutoScalingGroupRequest updateAutoScalingGroupRequest =
+            new UpdateAutoScalingGroupRequest()
+                .withAutoScalingGroupName(autoScalingGroupName)
+                .withMinSize(desiredCapacity);
+        amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
+      } else if (desiredCapacity > autoScalingGroup.getMaxSize()) {
+        logCallback.saveExecutionLog(
+            format("Autoscaling group: [%s] has max Size: [%d] < desired capacity: [%d]. Updating",
+                autoScalingGroupName, autoScalingGroup.getMaxSize(), desiredCapacity));
+        UpdateAutoScalingGroupRequest updateAutoScalingGroupRequest =
+            new UpdateAutoScalingGroupRequest()
+                .withAutoScalingGroupName(autoScalingGroupName)
+                .withMaxSize(desiredCapacity);
+        amazonAutoScalingClient.updateAutoScalingGroup(updateAutoScalingGroupRequest);
+      }
+    } catch (AmazonServiceException amazonServiceException) {
+      logCallback.saveExecutionLog(
+          format("Exception: [%s] while setting Asg limits", getMessage(amazonServiceException)));
       handleAmazonServiceException(amazonServiceException);
     }
   }
