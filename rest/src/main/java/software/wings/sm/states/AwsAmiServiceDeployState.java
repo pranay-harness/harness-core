@@ -362,7 +362,7 @@ public class AwsAmiServiceDeployState extends State {
     InstanceElementListParam instanceElementListParam = InstanceElementListParamBuilder.anInstanceElementListParam()
                                                             .withInstanceElements(Collections.emptyList())
                                                             .build();
-    ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
+    ExecutionStatus executionStatus = amiServiceDeployResponse.getExecutionStatus();
     String errorMessage = null;
     try {
       List<InstanceElement> instanceElements =
