@@ -664,10 +664,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     WorkflowExecution workflowExecution = getExecutionDetailsWithoutGraph(appId, workflowExecutionId);
 
     if (workflowExecution.getWorkflowType() == PIPELINE) {
-      return workflowExecution;
-    }
-
-    if (workflowExecution != null) {
+      populateNodeHierarchy(workflowExecution, false, true, upToDate, excludeFromAggregation);
+    } else {
       populateNodeHierarchy(workflowExecution, true, false, upToDate, excludeFromAggregation);
     }
     return workflowExecution;
