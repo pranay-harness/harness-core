@@ -24,10 +24,10 @@ import java.util.List;
 @Indexes({
   @Index(fields = { @Field("appId")
                     , @Field("serviceId"), @Field("envId"), @Field("infraMappingId") },
-      options = @IndexOptions(unique = true))
+      options = @IndexOptions(name = "compositeIdx1", unique = true))
   ,
       @Index(fields = { @Field("appId")
-                        , @Field("infraMappingId") })
+                        , @Field("infraMappingId") }, options = @IndexOptions(name = "compositeIdx2"))
 })
 public class SyncStatus extends Base {
   private String envId;
