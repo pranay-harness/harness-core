@@ -35,7 +35,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     try {
       return getGcsUtil().getSignedUrlForServiceAccount(
           "/harness-" + envString + "-delegates" + BUILDS_PATH + version + "/" + DELEGATE_JAR,
-          getServiceAccountJson(envString), 600L);
+          getServiceAccountJson(envString), 3600L);
     } catch (Exception e) {
       logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
     }
@@ -50,7 +50,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
     try {
       return getGcsUtil().getSignedUrlForServiceAccount(
           "/harness-" + envString + "-watchers" + BUILDS_PATH + version + "/" + WATCHER_JAR,
-          getServiceAccountJson(envString), 600L);
+          getServiceAccountJson(envString), 3600L);
 
     } catch (Exception e) {
       logger.warn("Failed to get downloadUrlForDelegate for version=" + version + ", env=" + envString, e);
