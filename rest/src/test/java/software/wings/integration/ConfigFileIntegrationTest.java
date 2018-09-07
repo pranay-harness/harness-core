@@ -82,16 +82,8 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void shouldSaveServiceConfigFile() throws IOException {
-    configFileBuilder = ConfigFile.builder()
-                            .accountId(app.getAccountId())
-                            .entityId(service.getUuid())
-                            .entityType(EntityType.SERVICE)
-                            .templateId(DEFAULT_TEMPLATE_ID)
-                            .envId(GLOBAL_ENV_ID)
-                            .relativeFilePath("tmp");
-
-    ConfigFile appConfigFile = configFileBuilder.build();
-
+    ConfigFile appConfigFile = getConfigFile();
+    appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);
     appConfigFile.setAppId(service.getAppId());
     appConfigFile.setName(fileName);
     appConfigFile.setFileName(fileName);
@@ -105,16 +97,8 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void shouldUpdateServiceConfigFile() throws IOException {
-    configFileBuilder = ConfigFile.builder()
-                            .accountId(app.getAccountId())
-                            .entityId(service.getUuid())
-                            .entityType(EntityType.SERVICE)
-                            .templateId(DEFAULT_TEMPLATE_ID)
-                            .envId(GLOBAL_ENV_ID)
-                            .relativeFilePath("tmp");
-
-    ConfigFile appConfigFile = configFileBuilder.build();
-
+    ConfigFile appConfigFile = getConfigFile();
+    appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);
     appConfigFile.setAppId(service.getAppId());
     appConfigFile.setName(fileName);
     appConfigFile.setFileName(fileName);
@@ -123,22 +107,15 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     String configId = configService.save(appConfigFile, new BoundedInputStream(fileInputStream));
     fileInputStream.close();
     ConfigFile originalConfigFile = configService.get(service.getAppId(), configId);
-    // update
 
-    configFileBuilder = ConfigFile.builder()
-                            .accountId(app.getAccountId())
-                            .entityId(service.getUuid())
-                            .entityType(EntityType.SERVICE)
-                            .templateId(DEFAULT_TEMPLATE_ID)
-                            .envId(GLOBAL_ENV_ID)
-                            .relativeFilePath("tmp");
-
-    ConfigFile configFile = configFileBuilder.build();
-
+    // Update config
+    ConfigFile configFile = getConfigFile();
+    configFile.setTemplateId(DEFAULT_TEMPLATE_ID);
     configFile.setAppId(service.getAppId());
     configFile.setName(fileName);
     configFile.setFileName(fileName);
     configFile.setUuid(configId);
+
     fileInputStream = new FileInputStream(createRandomFile(fileName + "_1"));
     configService.update(configFile, new BoundedInputStream(fileInputStream));
     ConfigFile updatedConfigFile = configService.get(service.getAppId(), configId);
@@ -147,22 +124,91 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  public void shouldSaveEncryptedServiceConfigFile() throws IOException {
-    configFileBuilder = ConfigFile.builder()
-                            .accountId(app.getAccountId())
-                            .entityId(service.getUuid())
-                            .encrypted(true)
-                            .entityType(EntityType.SERVICE)
-                            .templateId(DEFAULT_TEMPLATE_ID)
-                            .envId(GLOBAL_ENV_ID)
-                            .relativeFilePath("tmp");
+  public void shouldOverrideSimpleConfigFile() throws IOException {
+    ConfigFile configFile = getConfigFile();
+    configFile.setAppId(service.getAppId());
+    configFile.setName(fileName);
+    configFile.setFileName(fileName);
+
+    FileInputStream fileInputStream = new FileInputStream(createRandomFile(fileName));
+    String configId = configService.save(configFile, new BoundedInputStream(fileInputStream));
+    fileInputStream.close();
+    ConfigFile originalConfigFile = configService.get(service.getAppId(), configId);
+
+    // Update config file
+    ConfigFile newConfigFile = getConfigFile();
+    newConfigFile.setAppId(service.getAppId());
+    newConfigFile.setName(fileName);
+    newConfigFile.setFileName(fileName + "_1");
+    newConfigFile.setUuid(configId);
+
+    fileInputStream = new FileInputStream(createRandomFile(fileName + "_1"));
+    configService.update(newConfigFile, new BoundedInputStream(fileInputStream));
+    ConfigFile updatedConfigFile = configService.get(service.getAppId(), configId);
+
+    // Original config checks
+    assertThat(originalConfigFile.getDefaultVersion()).isEqualTo(1);
+    assertThat(originalConfigFile.getFileUuid()).isNotEmpty().isNotEqualTo(updatedConfigFile.getFileUuid());
+    assertThat(originalConfigFile.isEncrypted()).isFalse();
+
+    // Updated config checks
+    assertThat(updatedConfigFile.getDefaultVersion()).isEqualTo(2);
+    assertThat(updatedConfigFile).isNotNull().hasFieldOrPropertyWithValue("fileName", updatedConfigFile.getFileName());
+    assertThat(originalConfigFile.isEncrypted()).isFalse();
+  }
+
+  @Test
+  public void shouldOverrideEncryptedConfigFile() throws IOException {
+    ConfigFile configFile = getConfigFile();
+    configFile.setEncrypted(true);
+
     String secretName = UUID.randomUUID().toString();
     InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
     String secretFileId = secretManager.saveFile(
         accountId, secretName, null, new BoundedInputStream(new BoundedInputStream(inputStream)));
 
-    ConfigFile appConfigFile = configFileBuilder.build();
+    configFile.setAppId(service.getAppId());
+    configFile.setName(fileName);
+    configFile.setFileName(fileName);
+    configFile.setEncryptedFileId(secretFileId);
+    String configId = configService.save(configFile, null);
+    inputStream.close();
 
+    ConfigFile originalConfigFile = configService.get(service.getAppId(), configId);
+    assertThat(originalConfigFile).isNotNull().hasFieldOrPropertyWithValue("fileName", fileName);
+    assertThat(originalConfigFile.getDefaultVersion()).isEqualTo(1);
+    assertThat(originalConfigFile.isEncrypted()).isTrue();
+
+    // Updated config file
+    ConfigFile newConfigFile = getConfigFile();
+    newConfigFile.setEncrypted(true);
+    newConfigFile.setAppId(service.getAppId());
+    newConfigFile.setName(fileName);
+    newConfigFile.setFileName(fileName);
+    newConfigFile.setUuid(configId);
+    newConfigFile.setEncryptedFileId(secretFileId);
+
+    configService.update(newConfigFile, new BoundedInputStream(null));
+    ConfigFile updatedConfigFile = configService.get(service.getAppId(), configId);
+    assertThat(updatedConfigFile).isNotNull().hasFieldOrPropertyWithValue("fileName", newConfigFile.getFileName());
+    assertThat(updatedConfigFile.getDefaultVersion()).isEqualTo(2);
+    assertThat(updatedConfigFile.isEncrypted()).isTrue();
+
+    File decryptedFile = configService.download(configFile.getAppId(), configFile.getUuid());
+    String decryptedText = String.join("", Files.readAllLines(decryptedFile.toPath(), Charset.forName("ISO-8859-1")));
+    assertThat(decryptedText).isEqualTo(INPUT_TEXT);
+  }
+
+  @Test
+  public void shouldSaveEncryptedServiceConfigFile() throws IOException {
+    String secretName = UUID.randomUUID().toString();
+    InputStream inputStream = IOUtils.toInputStream(INPUT_TEXT, "ISO-8859-1");
+    String secretFileId = secretManager.saveFile(
+        accountId, secretName, null, new BoundedInputStream(new BoundedInputStream(inputStream)));
+
+    ConfigFile appConfigFile = getConfigFile();
+    appConfigFile.setTemplateId(DEFAULT_TEMPLATE_ID);
+    appConfigFile.setEncrypted(true);
     appConfigFile.setAppId(service.getAppId());
     appConfigFile.setName(fileName);
     appConfigFile.setFileName(fileName);
@@ -193,5 +239,15 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
       out.write("RandomText " + randomInt());
     }
     return file;
+  }
+
+  private ConfigFile getConfigFile() {
+    return ConfigFile.builder()
+        .accountId(app.getAccountId())
+        .entityId(service.getUuid())
+        .entityType(EntityType.SERVICE)
+        .envId(GLOBAL_ENV_ID)
+        .relativeFilePath("tmp")
+        .build();
   }
 }
