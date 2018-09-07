@@ -665,8 +665,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         List<String> envIdList = workflowExecution.getEnvIds();
         List<EntitySummary> envList = null;
         if (isNotEmpty(envIdList)) {
-          PageRequest<Environment> envPageRequest =
-              aPageRequest().addFilter("_id", IN, envIdList.toArray()).addFieldsIncluded("_id", "name").build();
+          PageRequest<Environment> envPageRequest = aPageRequest()
+                                                        .addFilter("_id", IN, envIdList.toArray())
+                                                        .addFilter("appId", EQ, appId)
+                                                        .addFieldsIncluded("_id", "name")
+                                                        .build();
 
           PageResponse<Environment> pageResponse = environmentService.list(envPageRequest, false);
 
@@ -689,6 +692,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
           PageRequest<InfrastructureMapping> envPageRequest = aPageRequest()
                                                                   .addFilter("_id", IN, infraMappingIdList.toArray())
                                                                   .addFilter("serviceId", EQ, serviceId)
+                                                                  .addFilter("appId", EQ, appId)
                                                                   .addFieldsIncluded("_id", "name")
                                                                   .build();
 
