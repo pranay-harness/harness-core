@@ -8,7 +8,6 @@ import static java.util.Arrays.asList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -32,13 +31,12 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.Event;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
-import software.wings.beans.yaml.Change.ChangeType;
-import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -49,13 +47,9 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
-import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
-import software.wings.service.intfc.yaml.EntityUpdateService;
-import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -75,14 +69,11 @@ import javax.validation.executable.ValidateOnExecution;
 public class ServiceVariableServiceImpl implements ServiceVariableService {
   private static final Logger logger = LoggerFactory.getLogger(ServiceVariableServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private EnvironmentService environmentService;
-  @Inject private EntityUpdateService entityUpdateService;
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private AppService appService;
-  @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private ExecutorService executorService;
+  @Inject private YamlPushService yamlPushService;
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
@@ -102,6 +93,12 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   @ValidationGroups(Create.class)
   public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
+    return save(serviceVariable, false);
+  }
+
+  @Override
+  @ValidationGroups(Create.class)
+  public ServiceVariable save(@Valid ServiceVariable serviceVariable, boolean syncFromGit) {
     if (!asList(SERVICE, EntityType.SERVICE_TEMPLATE, EntityType.ENVIRONMENT, EntityType.HOST)
              .contains(serviceVariable.getEntityType())) {
       throw new WingsException(INVALID_ARGUMENT)
@@ -116,7 +113,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
 
     executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
-    executorService.submit(() -> saveServiceVariableYamlChangeSet(serviceVariable));
+
+    // Type.UPDATE is intentionally passed. Don't change this.
+    yamlPushService.pushYamlChangeSet(
+        serviceVariable.getAccountId(), serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
+
     return newServiceVariable;
   }
 
@@ -137,6 +138,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public ServiceVariable update(@Valid ServiceVariable serviceVariable) {
+    return update(serviceVariable, false);
+  }
+
+  @Override
+  public ServiceVariable update(@Valid ServiceVariable serviceVariable, boolean syncFromGit) {
     ServiceVariable savedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
     executorService.submit(
         () -> removeSearchTagsIfNecessary(savedServiceVariable, String.valueOf(serviceVariable.getValue())));
@@ -160,7 +166,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
       if (updatedServiceVariable == null) {
         return null;
       }
-      executorService.submit(() -> saveServiceVariableYamlChangeSet(serviceVariable));
+
+      yamlPushService.pushYamlChangeSet(
+          serviceVariable.getAccountId(), serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
       serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
       executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
       return updatedServiceVariable;
@@ -170,6 +178,11 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public void delete(@NotEmpty String appId, @NotEmpty String settingId) {
+    delete(appId, settingId, false);
+  }
+
+  @Override
+  public void delete(@NotEmpty String appId, @NotEmpty String settingId, boolean syncFromGit) {
     ServiceVariable serviceVariable = get(appId, settingId);
     if (serviceVariable == null) {
       return;
@@ -187,40 +200,13 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     wingsPersistence.delete(
         wingsPersistence.createQuery(ServiceVariable.class).filter(APP_ID_KEY, appId).filter(ID_KEY, settingId));
 
-    executorService.submit(() -> {
-      saveServiceVariableYamlChangeSet(serviceVariable);
-      modified.forEach(this ::saveServiceVariableYamlChangeSet);
-    });
-  }
-
-  private void saveServiceVariableYamlChangeSet(ServiceVariable serviceVariable) {
-    String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
-    if (serviceVariable.getEntityType() == EntityType.SERVICE) {
-      Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet = new ArrayList<>();
-        changeSet.add(entityUpdateService.getServiceGitSyncFile(accountId, service, ChangeType.MODIFY));
-        yamlChangeSetService.saveChangeSet(ygs, changeSet);
-      }
-    } else {
-      String envId = null;
-      if (serviceVariable.getEntityType() == EntityType.SERVICE_TEMPLATE) {
-        ServiceTemplate serviceTemplate =
-            serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-        notNullCheck("Service template not found for id: " + serviceVariable.getEntityId(), serviceTemplate, USER);
-        envId = serviceTemplate.getEnvId();
-      } else if (serviceVariable.getEntityType() == ENVIRONMENT) {
-        envId = serviceVariable.getEntityId();
-      }
-      notNullCheck("Environment ID not found: " + envId, envId, USER);
-      Environment env = environmentService.get(serviceVariable.getAppId(), envId, false);
-      notNullCheck("No environment found for given id: " + envId, env, USER);
-      YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-      if (ygs != null) {
-        List<GitFileChange> changeSet =
-            entityUpdateService.getEnvironmentGitSyncFile(accountId, env, ChangeType.MODIFY);
-        yamlChangeSetService.saveChangeSet(ygs, changeSet);
+    // Type.UPDATE is intentionally passed. Don't change this.
+    yamlPushService.pushYamlChangeSet(
+        serviceVariable.getAccountId(), serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
+    if (isNotEmpty(modified)) {
+      for (ServiceVariable serviceVariable1 : modified) {
+        yamlPushService.pushYamlChangeSet(
+            serviceVariable1.getAccountId(), serviceVariable1, serviceVariable1, Event.Type.UPDATE, syncFromGit, false);
       }
     }
   }

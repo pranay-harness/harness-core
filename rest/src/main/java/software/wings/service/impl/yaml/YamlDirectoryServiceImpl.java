@@ -1295,9 +1295,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Override
   public <R, T> String obtainEntityRootPath(R helperEntity, T entity) {
     // Special handling for few entities
+    // Don't change the order
     if (entity instanceof ConfigFile) {
       return getRootPathByConfigFile(helperEntity);
     } else if (helperEntity instanceof Service) {
+      if (entity instanceof ServiceCommand) {
+        return getRootPathByServiceCommand((Service) helperEntity, (ServiceCommand) entity);
+      }
+
       return getEntitySpecPathByService((Service) helperEntity);
     }
 

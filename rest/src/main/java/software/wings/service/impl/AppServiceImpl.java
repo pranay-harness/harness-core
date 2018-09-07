@@ -119,7 +119,8 @@ public class AppServiceImpl implements AppService {
     Application application =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
     createDefaultRoles(app);
-    settingsService.createDefaultApplicationSettings(application.getUuid(), application.getAccountId());
+    settingsService.createDefaultApplicationSettings(
+        application.getUuid(), application.getAccountId(), app.isSyncFromGit());
     sendNotification(application, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
     InstanceSyncJob.add(jobScheduler, application.getUuid());
 

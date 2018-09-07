@@ -54,7 +54,7 @@ public interface SettingsService extends OwnedByAccount {
 
   SettingAttribute getByName(String accountId, String appId, String envId, String attributeName);
 
-  void createDefaultApplicationSettings(String appId, String accountId);
+  void createDefaultApplicationSettings(String appId, String accountId, boolean syncFromGit);
 
   void createDefaultAccountSettings(String accountId);
 

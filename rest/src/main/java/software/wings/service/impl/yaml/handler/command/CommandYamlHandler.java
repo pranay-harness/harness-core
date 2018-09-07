@@ -149,6 +149,7 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
                          .withSetAsDefault(true)
                          .build();
 
+    serviceCommand.setSyncFromGit(changeContext.getChange().isSyncFromGit());
     if (isCreate) {
       serviceResourceService.addCommand(appId, serviceId, serviceCommand, true);
     } else {
@@ -281,8 +282,8 @@ public class CommandYamlHandler extends BaseYamlHandler<CommandYaml, ServiceComm
     ServiceCommand serviceCommand =
         getServiceCommand(optionalApplication.get().getUuid(), serviceOptional.get().getUuid(), yamlFilePath);
     if (serviceCommand != null) {
-      serviceResourceService.deleteCommand(
-          serviceCommand.getAppId(), serviceCommand.getServiceId(), serviceCommand.getUuid());
+      serviceResourceService.deleteByYamlGit(serviceCommand.getAppId(), serviceCommand.getServiceId(),
+          serviceCommand.getUuid(), changeContext.getChange().isSyncFromGit());
     }
   }
 }

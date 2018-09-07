@@ -54,7 +54,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml change set {}", e);
+        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
       }
     });
   }
@@ -80,11 +80,15 @@ public class YamlPushServiceImpl implements YamlPushService {
             yamlChangeSetHelper.entityYamlChangeSet(accountId, service, entity, ChangeType.MODIFY);
             break;
 
+          case DELETE:
+            yamlChangeSetHelper.entityYamlChangeSet(accountId, service, entity, ChangeType.DELETE);
+            break;
+
           default:
             unhandled(type);
         }
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml change set {}", e);
+        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
       }
     });
   }
@@ -116,12 +120,16 @@ public class YamlPushServiceImpl implements YamlPushService {
     yamlChangeSetHelper.entityYamlChangeSet(accountId, entity, ChangeType.DELETE);
   }
 
-  public void pushYamlChangeSet(String accountId, String appId, ChangeType changeType) {
+  public void pushYamlChangeSet(String accountId, String appId, ChangeType changeType, boolean syncFromGit) {
+    if (syncFromGit) {
+      return;
+    }
+
     executorService.submit(() -> {
       try {
         yamlChangeSetHelper.defaultVariableChangeSet(accountId, appId, changeType);
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml change set {}", e);
+        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
       }
     });
   }

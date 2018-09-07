@@ -160,7 +160,7 @@ public class AppServiceTest extends WingsBaseTest {
         .isNotNull()
         .contains(app.getName().toLowerCase(), app.getDescription().toLowerCase());
 
-    verify(settingsService).createDefaultApplicationSettings(APP_ID, "ACCOUNT_ID");
+    verify(settingsService).createDefaultApplicationSettings(APP_ID, "ACCOUNT_ID", false);
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     ArgumentCaptor<JobDetail> jobDetailArgumentCaptor = ArgumentCaptor.forClass(JobDetail.class);
     ArgumentCaptor<Trigger> triggerArgumentCaptor = ArgumentCaptor.forClass(Trigger.class);

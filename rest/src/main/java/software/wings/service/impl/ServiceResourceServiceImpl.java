@@ -92,7 +92,6 @@ import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.command.SshCommandTemplate;
-import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
@@ -105,7 +104,6 @@ import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.command.CommandHelper;
-import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -173,7 +171,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
   @Inject private TriggerService triggerService;
   @Inject private WorkflowService workflowService;
-  @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceHelper serviceHelper;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
@@ -643,19 +640,25 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service deleteCommand(String appId, String serviceId, String commandId) {
+    return deleteCommand(appId, serviceId, commandId, false);
+  }
+
+  @Override
+  public Service deleteByYamlGit(String appId, String serviceId, String commandId, boolean syncFromGit) {
+    return deleteCommand(appId, serviceId, commandId, syncFromGit);
+  }
+
+  private Service deleteCommand(String appId, String serviceId, String commandId, boolean syncFromGit) {
     Service service = wingsPersistence.get(Service.class, appId, serviceId);
     notNullCheck("service", service);
     ServiceCommand serviceCommand = wingsPersistence.get(ServiceCommand.class, service.getAppId(), commandId);
-    deleteCommand(serviceCommand, service);
+
+    ensureServiceCommandSafeToDelete(service, serviceCommand);
+    deleteServiceCommand(service, serviceCommand, syncFromGit);
     return get(service.getAppId(), service.getUuid());
   }
 
-  private void deleteCommand(ServiceCommand serviceCommand, Service service) {
-    ensureServiceCommandSafeToDelete(service, serviceCommand);
-    deleteServiceCommand(service, serviceCommand);
-  }
-
-  private void deleteServiceCommand(Service service, ServiceCommand serviceCommand) {
+  private void deleteServiceCommand(Service service, ServiceCommand serviceCommand, boolean syncFromGit) {
     boolean serviceCommandDeleted = wingsPersistence.delete(serviceCommand);
     if (serviceCommandDeleted) {
       boolean deleted = wingsPersistence.delete(wingsPersistence.createQuery(Command.class)
@@ -663,7 +666,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                                                     .filter("originEntityId", serviceCommand.getUuid()));
       if (deleted) {
         String accountId = appService.getAccountIdByAppId(service.getAppId());
-        yamlChangeSetHelper.commandFileChange(accountId, service, serviceCommand, ChangeType.DELETE);
+        yamlPushService.pushYamlChangeSet(accountId, service, serviceCommand, Type.DELETE, syncFromGit);
       }
     }
   }
@@ -953,6 +956,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       }
     }
 
+    command.setSyncFromGit(serviceCommand.isSyncFromGit());
+
     serviceCommand = wingsPersistence.saveAndGet(ServiceCommand.class, serviceCommand);
     entityVersionService.newEntityVersion(appId, EntityType.COMMAND, serviceCommand.getUuid(), serviceId,
         serviceCommand.getName(), EntityVersion.ChangeType.CREATED, notes);
@@ -1015,8 +1020,10 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         wingsPersistence.createQuery(ServiceCommand.class).filter(ID_KEY, serviceCommand.getUuid()), updateOperation);
     // Fetching the service command from db just to make sure it has the latest info since multiple update operations
     // were performed.
+
+    boolean syncFromGit = serviceCommand.isSyncFromGit();
     serviceCommand = commandService.getServiceCommand(appId, serviceCommand.getUuid());
-    yamlChangeSetHelper.commandFileChangeAsync(accountId, service, serviceCommand, ChangeType.MODIFY);
+    yamlPushService.pushYamlChangeSet(accountId, service, serviceCommand, Type.UPDATE, syncFromGit);
 
     return get(appId, serviceId);
   }

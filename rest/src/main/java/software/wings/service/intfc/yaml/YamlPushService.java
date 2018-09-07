@@ -10,5 +10,5 @@ public interface YamlPushService {
 
   <T> void pushYamlChangeSet(String accountId, Service service, T entity, Type type, boolean syncFromGit);
 
-  void pushYamlChangeSet(String accountId, String appId, ChangeType changeType);
+  void pushYamlChangeSet(String accountId, String appId, ChangeType changeType, boolean syncFromGit);
 }

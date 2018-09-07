@@ -84,7 +84,8 @@ public class DefaultVariablesYamlHandler extends BaseYamlHandler<Yaml, List<Sett
         throw new WingsException(msg);
     }
 
-    defaultsHelper.saveOrUpdateDefaults(changeContext.getYaml(), appId, accountId);
+    defaultsHelper.saveOrUpdateDefaults(
+        changeContext.getYaml(), appId, accountId, changeContext.getChange().isSyncFromGit());
     return defaultsHelper.getCurrentDefaultVariables(appId, accountId);
   }
 
