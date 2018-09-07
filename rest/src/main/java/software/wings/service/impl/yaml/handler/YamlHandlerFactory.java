@@ -19,6 +19,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
@@ -312,6 +313,8 @@ public class YamlHandlerFactory {
       return ((ConfigFile) entity).getRelativeFilePath();
     } else if (entity instanceof SettingAttribute) {
       return ((SettingAttribute) entity).getName();
+    } else if (entity instanceof ServiceCommand) {
+      return ((ServiceCommand) entity).getName();
     }
 
     throw new InvalidRequestException(
@@ -382,6 +385,7 @@ public class YamlHandlerFactory {
         "NexusArtifactStream", "GcsArtifactStream", "GcrArtifactStream", "EcrArtifactStream", "DockerArtifactStream",
         "BambooArtifactStream", "ArtifactoryArtifactStream", "AmiArtifactStream", "AmazonS3ArtifactStream",
         "AcrArtifactStream", "HelmChartSpecification", "PcfServiceSpecification", "LambdaSpecification",
-        "UserDataSpecification", "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute");
+        "UserDataSpecification", "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute",
+        "ServiceCommand");
   }
 }

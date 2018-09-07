@@ -55,7 +55,8 @@ public class DefaultVariablesHelper {
   }
 
   @SuppressFBWarnings({"NP_NULL_ON_SOME_PATH", "UC_USELESS_OBJECT"}) // TODO
-  public void saveOrUpdateDefaults(Yaml updatedYaml, String appId, String accountId) throws HarnessException {
+  public void saveOrUpdateDefaults(Yaml updatedYaml, String appId, String accountId, boolean syncFromGit)
+      throws HarnessException {
     List<SettingAttribute> previousDefaultValues = getCurrentDefaultVariables(appId, accountId);
     List<NameValuePair.Yaml> previousDefaultYamls = convertToNameValuePairYamlList(previousDefaultValues);
 
@@ -107,7 +108,7 @@ public class DefaultVariablesHelper {
     // do deletions
     varsToDelete.forEach(defaultVar -> {
       if (defaultVarMap.containsKey(defaultVar.getName())) {
-        settingsService.delete(appId, defaultVarMap.get(defaultVar.getName()).getUuid(), false, false);
+        settingsService.delete(appId, defaultVarMap.get(defaultVar.getName()).getUuid(), false, syncFromGit);
       }
     });
 
@@ -132,7 +133,7 @@ public class DefaultVariablesHelper {
       throw new HarnessException(ex);
     }
 
-    yamlPushService.pushYamlChangeSet(accountId, appId, ChangeType.MODIFY);
+    yamlPushService.pushYamlChangeSet(accountId, appId, ChangeType.MODIFY, syncFromGit);
   }
 
   private SettingAttribute createNewSettingAttribute(String accountId, String appId, NameValuePair.Yaml defaultVar) {

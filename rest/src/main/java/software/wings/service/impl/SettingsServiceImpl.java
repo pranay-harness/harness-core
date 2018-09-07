@@ -527,7 +527,7 @@ public class SettingsServiceImpl implements SettingsService {
    * @see software.wings.service.intfc.SettingsService#createDefaultApplicationSettings(java.lang.String)
    */
   @Override
-  public void createDefaultApplicationSettings(String appId, String accountId) {
+  public void createDefaultApplicationSettings(String appId, String accountId, boolean syncFromGit) {
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
                               .withAccountId(accountId)
@@ -561,7 +561,7 @@ public class SettingsServiceImpl implements SettingsService {
 
     // We only need to queue one of them since it will fetch all the setting attributes and pushes them
     yamlPushService.pushYamlChangeSet(
-        settingAttribute.getAccountId(), null, settingAttribute, Type.CREATE, false, false);
+        settingAttribute.getAccountId(), null, settingAttribute, Type.CREATE, syncFromGit, false);
   }
 
   @Override

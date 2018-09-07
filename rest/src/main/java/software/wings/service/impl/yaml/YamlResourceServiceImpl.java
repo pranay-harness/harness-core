@@ -498,6 +498,9 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       return getConfigFileYaml(accountId, (ConfigFile) entity);
     } else if (entity instanceof SettingAttribute) {
       return getSettingAttribute(accountId, ((SettingAttribute) entity).getUuid());
+    } else if (entity instanceof ServiceCommand) {
+      ServiceCommand serviceCommand = (ServiceCommand) entity;
+      return getServiceCommand(serviceCommand.getAppId(), serviceCommand.getUuid());
     }
 
     if (entity instanceof Base) {

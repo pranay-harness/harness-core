@@ -145,6 +145,10 @@ public class YamlHelper {
     return extractParentEntityName(YamlType.ENVIRONMENT.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
   }
 
+  public String getArtifactStreamName(String yamlFilePath) {
+    return extractEntityNameFromYamlPath(YamlType.ARTIFACT_STREAM.getPathExpression(), yamlFilePath, PATH_DELIMITER);
+  }
+
   public ArtifactStream getArtifactStream(String accountId, String yamlFilePath) {
     String appId = getAppId(accountId, yamlFilePath);
     Validator.notNullCheck("App null in the given yaml file: " + yamlFilePath, appId);

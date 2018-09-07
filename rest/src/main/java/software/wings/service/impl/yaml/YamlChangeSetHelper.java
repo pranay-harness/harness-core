@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -20,7 +19,6 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Created by anubhaw on 12/3/17.
@@ -32,28 +30,12 @@ public class YamlChangeSetHelper {
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
   @Inject private EntityUpdateService entityUpdateService;
-  @Inject private ExecutorService executorService;
   @Inject private YamlGitService yamlGitService;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
 
   public List<GitFileChange> getConfigFileGitChangeSet(ConfigFile configFile, ChangeType changeType) {
     return entityUpdateService.obtainEntityGitSyncFileChangeSet(
         configFile.getAccountId(), null, configFile, changeType);
-  }
-
-  public void commandFileChangeAsync(
-      String accountId, Service service, ServiceCommand serviceCommand, ChangeType changeType) {
-    executorService.submit(() -> { commandFileChange(accountId, service, serviceCommand, changeType); });
-  }
-
-  public void commandFileChange(
-      String accountId, Service service, ServiceCommand serviceCommand, ChangeType changeType) {
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(entityUpdateService.getCommandGitSyncFile(accountId, service, serviceCommand, changeType));
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
-    }
   }
 
   public void defaultVariableChangeSet(String accountId, String appId, ChangeType changeType) {

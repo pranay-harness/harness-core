@@ -17,6 +17,7 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -81,16 +82,6 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   }
 
   @Override
-  public GitFileChange getServiceGitSyncFile(String accountId, Service service, ChangeType changeType) {
-    String yaml = null;
-    if (!changeType.equals(ChangeType.DELETE)) {
-      yaml = yamlResourceService.getService(service.getAppId(), service.getUuid()).getResource().getYaml();
-    }
-    return createGitFileChange(
-        accountId, yamlDirectoryService.getRootPathByService(service), YamlConstants.INDEX, yaml, changeType, true);
-  }
-
-  @Override
   public List<GitFileChange> getDefaultVarGitSyncFile(String accountId, String appId, ChangeType changeType) {
     // if (ChangeType.DELETE.equals(changeType)) {
     //   TODO: handle this
@@ -118,20 +109,6 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     }
     return createGitFileChange(accountId, yamlDirectoryService.getRootPathByServiceCommand(service, serviceCommand),
         serviceCommand.getName(), yaml, changeType, false);
-  }
-
-  public List<GitFileChange> getEnvironmentGitSyncFile(
-      String accountId, Environment environment, ChangeType changeType) {
-    List<GitFileChange> gitFileChanges = new ArrayList<>();
-
-    String yaml = null;
-    if (!changeType.equals(ChangeType.DELETE)) {
-      yaml = yamlResourceService.getEnvironment(environment.getAppId(), environment.getUuid()).getResource().getYaml();
-    }
-
-    gitFileChanges.add(createGitFileChange(accountId, yamlDirectoryService.getRootPathByEnvironment(environment),
-        YamlConstants.INDEX, yaml, changeType, true));
-    return gitFileChanges;
   }
 
   @Override
@@ -173,14 +150,25 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     return Lists.newArrayList(getDefaultVarGitSyncFile(accountId, appId, changeType));
   }
 
+  private List<GitFileChange> obtainServiceVariableChangeSet(
+      String accountId, ServiceVariable serviceVariable, ChangeType changeType) {
+    Object entity = obtainEntity(serviceVariable.getAppId(), serviceVariable.getEnvId(), serviceVariable.getEntityId(),
+        serviceVariable.getUuid(), serviceVariable.getEntityType());
+
+    return obtainEntityGitSyncFileChangeSet(accountId, null, entity, changeType);
+  }
+
   @Override
   public <R, T> List<GitFileChange> obtainEntityGitSyncFileChangeSet(
       String accountId, R helperEntity, T entity, ChangeType changeType) {
     List<GitFileChange> gitFileChanges = new ArrayList<>();
     String yaml = null;
 
+    // Does special handling for some cases
     if (isStringSettingAttributeType(entity)) {
       return obtainDefaultVariableChangeSet(accountId, ((SettingAttribute) entity).getAppId(), changeType);
+    } else if (entity instanceof ServiceVariable) {
+      return obtainServiceVariableChangeSet(accountId, (ServiceVariable) entity, changeType);
     }
 
     if (!changeType.equals(ChangeType.DELETE)) {
@@ -211,30 +199,33 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
   private <R, T> R obtainHelperEntity(R helperEntity, T entity) {
     if (entity instanceof ConfigFile) {
       ConfigFile configFile = (ConfigFile) entity;
-
-      if (configFile.getEntityType() == EntityType.SERVICE) {
-        return (R) serviceResourceService.get(configFile.getAppId(), configFile.getEntityId());
-      } else if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE
-          || configFile.getEntityType() == EntityType.ENVIRONMENT) {
-        String envId = null;
-        if (configFile.getEntityType() == EntityType.SERVICE_TEMPLATE) {
-          envId = configFile.getEnvId();
-        } else if (configFile.getEntityType() == EntityType.ENVIRONMENT) {
-          envId = configFile.getEntityId();
-        }
-
-        Environment environment = environmentService.get(configFile.getAppId(), envId, false);
-        Validator.notNullCheck("Environment not found for the given id:" + envId, environment);
-        return (R) environment;
-      } else {
-        String msg =
-            "Unsupported override type " + configFile.getEntityType() + " for config file " + configFile.getUuid();
-        logger.error(msg);
-        throw new WingsException(msg);
-      }
+      return obtainEntity(configFile.getAppId(), configFile.getEnvId(), configFile.getEntityId(), configFile.getUuid(),
+          configFile.getEntityType());
     }
 
     return helperEntity;
+  }
+
+  private <R> R obtainEntity(String appId, String envId, String entityId, String uuid, EntityType type) {
+    if (type == EntityType.SERVICE) {
+      return (R) serviceResourceService.get(appId, entityId);
+    } else if (type == EntityType.SERVICE_TEMPLATE || type == EntityType.ENVIRONMENT) {
+      String finalEnvId = null;
+
+      if (type == EntityType.SERVICE_TEMPLATE) {
+        finalEnvId = envId;
+      } else if (type == EntityType.ENVIRONMENT) {
+        finalEnvId = entityId;
+      }
+
+      Environment environment = environmentService.get(appId, finalEnvId, false);
+      Validator.notNullCheck("Environment not found for the given id:" + finalEnvId, environment);
+      return (R) environment;
+    } else {
+      String msg = "Unsupported type " + type + " for id " + uuid;
+      logger.error(msg);
+      throw new WingsException(msg);
+    }
   }
 
   private <R, T> List<GitFileChange> obtainAdditionalGitSyncFileChangeSet(

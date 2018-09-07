@@ -35,11 +35,16 @@ public class DockerArtifactStreamYamlHandler extends ArtifactStreamYamlHandler<Y
     String serviceId = yamlHelper.getServiceId(appId, changeContext.getChange().getFilePath());
     DockerArtifactStreamBuilder builder = DockerArtifactStream.builder().serviceId(serviceId).appId(appId);
     toBean(accountId, builder, changeContext.getYaml(), appId);
+
+    DockerArtifactStream dockerArtifactStream = builder.build();
+    dockerArtifactStream.setName(yamlHelper.getArtifactStreamName(yamlFilePath));
+    dockerArtifactStream.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+
     if (previous != null) {
-      builder.uuid(previous.getUuid());
-      return (DockerArtifactStream) artifactStreamService.update(builder.build());
+      dockerArtifactStream.setUuid(previous.getUuid());
+      return (DockerArtifactStream) artifactStreamService.update(dockerArtifactStream);
     } else {
-      return (DockerArtifactStream) artifactStreamService.create(builder.build());
+      return (DockerArtifactStream) artifactStreamService.create(dockerArtifactStream);
     }
   }
 

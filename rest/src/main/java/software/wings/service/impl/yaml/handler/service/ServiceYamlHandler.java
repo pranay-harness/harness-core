@@ -125,20 +125,23 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
       currentService.setAppContainer(appContainer);
     }
     Service previousService = get(accountId, yamlFilePath);
-    currentService.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+
+    boolean syncFromGit = changeContext.getChange().isSyncFromGit();
+    currentService.setSyncFromGit(syncFromGit);
 
     if (previousService != null) {
       currentService.setUuid(previousService.getUuid());
       currentService = serviceResourceService.update(currentService, true);
       Yaml previousYaml = toYaml(previousService, previousService.getAppId());
       saveOrUpdateServiceVariables(previousYaml, yaml, previousService.getServiceVariables(), currentService.getAppId(),
-          currentService.getUuid());
+          currentService.getUuid(), syncFromGit);
     } else {
       ArtifactType artifactType = Util.getEnumFromString(ArtifactType.class, yaml.getArtifactType());
       currentService.setArtifactType(artifactType);
       currentService =
           serviceResourceService.save(currentService, true, serviceResourceService.hasInternalCommands(currentService));
-      saveOrUpdateServiceVariables(null, yaml, emptyList(), currentService.getAppId(), currentService.getUuid());
+      saveOrUpdateServiceVariables(
+          null, yaml, emptyList(), currentService.getAppId(), currentService.getUuid(), syncFromGit);
     }
     return currentService;
   }
@@ -156,7 +159,8 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
 
   @SuppressFBWarnings({"UC_USELESS_OBJECT"})
   private void saveOrUpdateServiceVariables(Yaml previousYaml, Yaml updatedYaml,
-      List<ServiceVariable> previousServiceVariables, String appId, String serviceId) throws HarnessException {
+      List<ServiceVariable> previousServiceVariables, String appId, String serviceId, boolean syncFromGit)
+      throws HarnessException {
     // what are the config variable changes? Which are additions and which are deletions?
     List<NameValuePair.Yaml> configVarsToAdd = new ArrayList<>();
     List<NameValuePair.Yaml> configVarsToDelete = new ArrayList<>();
@@ -209,13 +213,13 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     // do deletions
     configVarsToDelete.forEach(configVar -> {
       if (serviceVariableMap.containsKey(configVar.getName())) {
-        serviceVariableService.delete(appId, serviceVariableMap.get(configVar.getName()).getUuid());
+        serviceVariableService.delete(appId, serviceVariableMap.get(configVar.getName()).getUuid(), syncFromGit);
       }
     });
 
     // save the new variables
     configVarsToAdd.forEach(
-        configVar -> serviceVariableService.save(createNewServiceVariable(appId, serviceId, configVar)));
+        configVar -> serviceVariableService.save(createNewServiceVariable(appId, serviceId, configVar), syncFromGit));
 
     try {
       // update the existing variables
@@ -233,7 +237,7 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
             return;
           }
 
-          serviceVariableService.update(serviceVar);
+          serviceVariableService.update(serviceVar, syncFromGit);
         }
       });
     } catch (WingsException ex) {

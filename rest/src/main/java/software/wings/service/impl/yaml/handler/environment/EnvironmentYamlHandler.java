@@ -170,7 +170,9 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
                               .withHelmValueYamlByServiceTemplateId(yaml.getHelmValueYamlByServiceTemplateId())
                               .withEnvironmentType(EnvironmentType.valueOf(yaml.getEnvironmentType()))
                               .build();
-    current.setSyncFromGit(changeContext.getChange().isSyncFromGit());
+
+    boolean syncFromGit = changeContext.getChange().isSyncFromGit();
+    current.setSyncFromGit(syncFromGit);
 
     Environment previous = yamlHelper.getEnvironment(appId, changeContext.getChange().getFilePath());
 
@@ -180,11 +182,11 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       Yaml previousYaml = toYaml(previous, previous.getAppId());
       List<ServiceVariable> currentVariableList = getAllVariableOverridesForEnv(previous);
       saveOrUpdateVariableOverrides(previousYaml.getVariableOverrides(), yaml.getVariableOverrides(),
-          currentVariableList, current.getAppId(), current.getUuid());
+          currentVariableList, current.getAppId(), current.getUuid(), syncFromGit);
     } else {
       current = environmentService.save(current);
       saveOrUpdateVariableOverrides(
-          null, yaml.getVariableOverrides(), emptyList(), current.getAppId(), current.getUuid());
+          null, yaml.getVariableOverrides(), emptyList(), current.getAppId(), current.getUuid(), syncFromGit);
     }
     return current;
   }
@@ -223,7 +225,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @SuppressFBWarnings({"UC_USELESS_OBJECT", "UC_USELESS_OBJECT"})
   private void saveOrUpdateVariableOverrides(List<VariableOverrideYaml> previousVariableOverrideList,
       List<VariableOverrideYaml> latestVariableOverrideList, List<ServiceVariable> currentVariables, String appId,
-      String envId) throws HarnessException {
+      String envId, boolean syncFromGit) throws HarnessException {
     // what are the config variable changes? Which are additions and which are deletions?
     List<VariableOverrideYaml> configVarsToAdd = new ArrayList<>();
     List<VariableOverrideYaml> configVarsToDelete = new ArrayList<>();
@@ -269,13 +271,13 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     // do deletions
     configVarsToDelete.forEach(configVar -> {
       if (variableMap.containsKey(configVar.getName())) {
-        serviceVariableService.delete(appId, variableMap.get(configVar.getName()).getUuid());
+        serviceVariableService.delete(appId, variableMap.get(configVar.getName()).getUuid(), syncFromGit);
       }
     });
 
     for (VariableOverrideYaml configVar : configVarsToAdd) {
       // save the new variables
-      serviceVariableService.save(createNewVariableOverride(appId, envId, configVar));
+      serviceVariableService.save(createNewVariableOverride(appId, envId, configVar), syncFromGit);
     }
 
     try {
@@ -294,7 +296,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             return;
           }
 
-          serviceVariableService.update(serviceVar);
+          serviceVariableService.update(serviceVar, syncFromGit);
         }
       });
     } catch (WingsException ex) {

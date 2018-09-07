@@ -111,4 +111,10 @@ public interface ServiceVariableService extends OwnedByService {
    * @param accountId
    */
   int updateSearchTagsForSecrets(String accountId);
+
+  @ValidationGroups(Update.class) ServiceVariable update(@Valid ServiceVariable serviceVariable, boolean syncFromGit);
+
+  @ValidationGroups(Create.class) ServiceVariable save(@Valid ServiceVariable serviceVariable, boolean syncFromGit);
+
+  void delete(@NotEmpty String appId, @NotEmpty String settingId, boolean syncFromGit);
 }
