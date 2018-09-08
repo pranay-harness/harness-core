@@ -63,6 +63,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
@@ -86,6 +87,7 @@ import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.impl.ExecutionLogContext;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationService;
@@ -129,6 +131,7 @@ public class StateMachineExecutor {
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
+  @Inject private AppService appService;
   @Inject private ExecutorService executorService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -1491,12 +1494,14 @@ public class StateMachineExecutor {
     return query.get();
   }
 
-  public static void addContext(ExecutionContextImpl context, WingsException exception) {
+  public void addContext(ExecutionContextImpl context, WingsException exception) {
     if (context == null) {
       return;
     }
 
     if (context.getAppId() != null) {
+      final String accountId = appService.getAccountIdByAppId(context.getAppId());
+      exception.addContext(Account.class, accountId);
       exception.addContext(Application.class, context.getAppId());
     }
     if (context.getEnv() != null) {
@@ -1532,7 +1537,7 @@ public class StateMachineExecutor {
       try (ExecutionLogContext ctx = new ExecutionLogContext(context.getWorkflowExecutionId())) {
         stateMachineExecutor.startExecution(context);
       } catch (WingsException exception) {
-        addContext(context, exception);
+        stateMachineExecutor.addContext(context, exception);
         WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
       } catch (Exception exception) {
         logger.error("Unhandled exception", exception);
