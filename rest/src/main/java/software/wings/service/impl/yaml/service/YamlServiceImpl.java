@@ -47,6 +47,7 @@ import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.Level;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -430,9 +431,25 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     checkFuturesAndEvictCache(futures, previousYamlType, accountId);
 
     if (failedYamlFileChangeMap.size() > 0) {
+      logAllErrorsWhileYamlInjestion(failedYamlFileChangeMap);
       throw new YamlProcessingException(
           "Error while processing some yaml files in the changeset", failedYamlFileChangeMap);
     }
+  }
+
+  private void logAllErrorsWhileYamlInjestion(Map<String, ChangeWithErrorMsg> failedYamlFileChangeMap) {
+    StringBuilder builder =
+        new StringBuilder(128).append(GIT_YAML_LOG_PREFIX).append("Found Following Errors in Yaml Injestion");
+    if (EmptyPredicate.isNotEmpty(failedYamlFileChangeMap)) {
+      for (Map.Entry<String, ChangeWithErrorMsg> entry : failedYamlFileChangeMap.entrySet()) {
+        builder.append("\nFileName: ")
+            .append(entry.getKey())
+            .append(", ErrorMsg: ")
+            .append(entry.getValue().getErrorMsg());
+      }
+    }
+
+    logger.warn(builder.toString());
   }
 
   private void checkFuturesAndEvictCache(Queue<Future> futures, YamlType yamlType, String accountId) {

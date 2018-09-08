@@ -894,9 +894,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     notNullCheck("service", service);
 
     validateCommandName(serviceCommand.getCommand());
-    addServiceCommand(appId, serviceId, serviceCommand, pushToYaml, service);
+    addServiceCommand(appId, serviceId, serviceCommand, pushToYaml);
 
-    wingsPersistence.save(service);
     return get(appId, serviceId);
   }
 
@@ -927,8 +926,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
   }
 
-  private void addServiceCommand(
-      String appId, String serviceId, ServiceCommand serviceCommand, boolean pushToYaml, Service service) {
+  private void addServiceCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean pushToYaml) {
     serviceCommand.setDefaultVersion(1);
     serviceCommand.setServiceId(serviceId);
     serviceCommand.setAppId(appId);
@@ -971,7 +969,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     // TODO: Set the graph to null after backward compatible change
     command.setGraph(null);
     commandService.save(command, pushToYaml);
-    service.getServiceCommands().add(serviceCommand);
   }
 
   private boolean isLinearCommandGraph(ServiceCommand serviceCommand) {
