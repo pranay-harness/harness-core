@@ -558,7 +558,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
 
-    verify(wingsPersistence).save(Mockito.any(Service.class));
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(wingsPersistence).saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class));
   }
@@ -596,7 +595,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         true);
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
-    verify(wingsPersistence).save(Mockito.any(Service.class));
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(wingsPersistence).saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class));
   }
@@ -1689,7 +1687,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         true);
 
     verify(wingsPersistence, times(2)).get(Service.class, APP_ID, SERVICE_ID);
-    verify(wingsPersistence).save(any(Service.class));
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(wingsPersistence).saveAndGet(eq(ServiceCommand.class), any(ServiceCommand.class));
     verify(templateService).constructEntityFromTemplate(TEMPLATE_ID, LATEST_TAG);
