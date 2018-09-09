@@ -46,6 +46,7 @@ public class WhitelistServiceTest extends WingsBaseTest {
   private String whitelistId = UUIDGenerator.generateUuid();
   private String description = "whitelist 1";
   private String cidrFilter = "10.17.12.1/24";
+  private String cidrFilter1 = "10.18.12.1/32";
   private String invalidCidrFilter1 = "127.0.0.1//8";
   private String invalidCidrFilter2 = "127.0.0.1/8/b";
   private String ipFilter = "192.168.0.1";
@@ -123,10 +124,21 @@ public class WhitelistServiceTest extends WingsBaseTest {
                                .build();
     whitelistService.save(whitelist2);
 
+    Whitelist whitelist3 = Whitelist.builder()
+                               .accountId(accountId)
+                               .description(description)
+                               .filter(cidrFilter1)
+                               .status(WhitelistStatus.ACTIVE)
+                               .build();
+    whitelistService.save(whitelist3);
+
     boolean valid = whitelistService.isValidIPAddress(accountId, "192.168.0.1");
     assertTrue(valid);
 
     valid = whitelistService.isValidIPAddress(accountId, "10.17.12.5");
+    assertTrue(valid);
+
+    valid = whitelistService.isValidIPAddress(accountId, "10.18.12.1");
     assertTrue(valid);
 
     valid = whitelistService.isValidIPAddress(accountId, "12.12.12.12");

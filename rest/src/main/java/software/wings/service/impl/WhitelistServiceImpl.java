@@ -156,12 +156,19 @@ public class WhitelistServiceImpl implements WhitelistService {
     return whitelistConfigList.stream().anyMatch(whitelist -> {
       String condition = whitelist.getFilter();
       if (condition.contains("/")) {
-        try {
-          SubnetUtils subnetUtils = new SubnetUtils(condition);
-          return subnetUtils.getInfo().isInRange(ipAddress);
-        } catch (Exception ex) {
-          logger.warn("Exception while checking if the ip {} is in range: {}", ipAddress, condition);
-          return false;
+        // Work around when /32 is mentioned in the CIDR.
+        // The SubnetUtils doesn't match the ip if /32 is provided.
+        if (condition.endsWith("/32")) {
+          String[] segments = condition.split("/32");
+          return segments[0].equals(ipAddress);
+        } else {
+          try {
+            SubnetUtils subnetUtils = new SubnetUtils(condition);
+            return subnetUtils.getInfo().isInRange(ipAddress);
+          } catch (Exception ex) {
+            logger.warn("Exception while checking if the ip {} is in range: {}", ipAddress, condition);
+            return false;
+          }
         }
       } else {
         return ipAddress.matches(condition);
