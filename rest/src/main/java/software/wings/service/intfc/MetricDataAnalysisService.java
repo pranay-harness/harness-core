@@ -30,7 +30,7 @@ public interface MetricDataAnalysisService {
   boolean saveMetricData(@NotNull String accountId, String appId, String stateExecutionId, String delegateTaskId,
       @Valid List<NewRelicMetricDataRecord> metricData) throws IOException;
 
-  @ValidationGroups(Create.class) boolean saveAnalysisRecords(@Valid NewRelicMetricAnalysisRecord metricAnalysisRecord);
+  @ValidationGroups(Create.class) void saveAnalysisRecords(@Valid NewRelicMetricAnalysisRecord metricAnalysisRecord);
 
   @ValidationGroups(Create.class)
   boolean saveAnalysisRecordsML(@NotNull StateType stateType, @NotNull String accountId, @NotNull String appId,

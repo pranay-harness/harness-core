@@ -32,7 +32,7 @@ import java.util.List;
 @Entity(value = "newRelicMetricAnalysisRecords", noClassnameStored = true)
 @Indexes({
   @Index(fields = {
-    @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("groupName")
+    @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("groupName"), @Field("analysisMinute")
   }, options = @IndexOptions(unique = true, name = "analysisUniqueIdx"))
 })
 @Data

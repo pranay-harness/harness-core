@@ -19,6 +19,7 @@ import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,6 +56,7 @@ import software.wings.sm.StateType;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -95,19 +97,11 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean saveAnalysisRecords(final NewRelicMetricAnalysisRecord metricAnalysisRecord) {
-    wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-                                .filter("workflowExecutionId", metricAnalysisRecord.getWorkflowExecutionId())
-                                .filter("stateExecutionId", metricAnalysisRecord.getStateExecutionId())
-                                .filter("groupName", metricAnalysisRecord.getGroupName()));
-
+  public void saveAnalysisRecords(final NewRelicMetricAnalysisRecord metricAnalysisRecord) {
     wingsPersistence.save(metricAnalysisRecord);
-    if (logger.isDebugEnabled()) {
-      logger.debug("inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: "
-          + metricAnalysisRecord.getWorkflowExecutionId()
-          + " StateExecutionInstanceId: " + metricAnalysisRecord.getStateExecutionId());
-    }
-    return true;
+    logger.info(
+        "inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: {} StateExecutionInstanceId: {}",
+        metricAnalysisRecord.getWorkflowExecutionId(), metricAnalysisRecord.getStateExecutionId());
   }
 
   /**
@@ -189,13 +183,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     bumpCollectionMinuteToProcess(
         stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName, analysisMinute);
     learningEngineService.markCompleted(taskId);
-
-    deleteExistingAnalysisRecord(mlAnalysisResponse, appId, workflowExecutionId, stateExecutionId, groupName);
-    wingsPersistence.delete(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-                                .filter("appId", appId)
-                                .filter("workflowExecutionId", workflowExecutionId)
-                                .filter("stateExecutionId", stateExecutionId)
-                                .filter("groupName", groupName));
 
     wingsPersistence.save(mlAnalysisResponse);
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
@@ -570,13 +557,20 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   public List<NewRelicMetricAnalysisRecord> getMetricsAnalysis(
       final String appId, final String stateExecutionId, final String workflowExecutionId) {
     List<NewRelicMetricAnalysisRecord> analysisRecords = new ArrayList<>();
-    List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
-        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-            .filter("appId", appId)
-            .filter("stateExecutionId", stateExecutionId)
-            .filter("workflowExecutionId", workflowExecutionId)
-            .asList();
+    List<TimeSeriesMLAnalysisRecord> allAnalysisRecords = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                                              .filter("appId", appId)
+                                                              .filter("stateExecutionId", stateExecutionId)
+                                                              .filter("workflowExecutionId", workflowExecutionId)
+                                                              .order(Sort.descending("createdAt"))
+                                                              .asList();
 
+    Map<String, TimeSeriesMLAnalysisRecord> groupVsAnalysisRecord = new HashMap<>();
+    allAnalysisRecords.forEach(analysisRecord -> {
+      if (!groupVsAnalysisRecord.containsKey(analysisRecord.getGroupName())) {
+        groupVsAnalysisRecord.put(analysisRecord.getGroupName(), analysisRecord);
+      }
+    });
+    Collection<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = groupVsAnalysisRecord.values();
     timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
       NewRelicMetricAnalysisRecord metricAnalysisRecord =
           NewRelicMetricAnalysisRecord.builder()
@@ -621,12 +615,21 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
         metricAnalysisRecord.setMetricAnalyses(metricAnalysisList);
       }
     });
+    List<NewRelicMetricAnalysisRecord> allMetricAnalyisRecords =
+        wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
+            .filter("appId", appId)
+            .filter("stateExecutionId", stateExecutionId)
+            .filter("workflowExecutionId", workflowExecutionId)
+            .order(Sort.descending("createdAt"))
+            .asList();
 
-    analysisRecords.addAll(wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class)
-                               .filter("appId", appId)
-                               .filter("stateExecutionId", stateExecutionId)
-                               .filter("workflowExecutionId", workflowExecutionId)
-                               .asList());
+    Map<String, NewRelicMetricAnalysisRecord> groupVsMetricAnalysisRecord = new HashMap<>();
+    allMetricAnalyisRecords.forEach(analysisRecord -> {
+      if (!groupVsMetricAnalysisRecord.containsKey(analysisRecord.getGroupName())) {
+        groupVsMetricAnalysisRecord.put(analysisRecord.getGroupName(), analysisRecord);
+      }
+    });
+    analysisRecords.addAll(groupVsMetricAnalysisRecord.values());
 
     if (isEmpty(analysisRecords)) {
       analysisRecords.add(NewRelicMetricAnalysisRecord.builder()
@@ -929,22 +932,5 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     // delete learning engine tasks
     wingsPersistence.delete(
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("state_execution_id", stateExecutionId));
-  }
-
-  private void deleteExistingAnalysisRecord(MetricAnalysisRecord mlAnalysisResponse, String appId,
-      String workflowExecutionId, String stateExecutionId, String groupName) {
-    if (mlAnalysisResponse instanceof ExperimentalMetricAnalysisRecord) {
-      wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class)
-                                  .filter("appId", appId)
-                                  .filter("workflowExecutionId", workflowExecutionId)
-                                  .filter("stateExecutionId", stateExecutionId)
-                                  .filter("groupName", groupName));
-    } else {
-      wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                  .filter("appId", appId)
-                                  .filter("workflowExecutionId", workflowExecutionId)
-                                  .filter("stateExecutionId", stateExecutionId)
-                                  .filter("groupName", groupName));
-    }
   }
 }
