@@ -106,6 +106,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
   @Test
   public void testSaveAnalysis() throws IOException {
     int numOfGrpups = 5;
+    int numOfMintues = 10;
     for (int i = 0; i < numOfGrpups; i++) {
       NewRelicMetricAnalysisValue metricAnalysisValue = NewRelicMetricAnalysisValue.builder()
                                                             .name("requestsPerMinute")
@@ -118,19 +119,22 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
                                                           .metricValues(Collections.singletonList(metricAnalysisValue))
                                                           .riskLevel(RiskLevel.MEDIUM)
                                                           .build();
-      NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
-          NewRelicMetricAnalysisRecord.builder()
-              .analysisMinute(0)
-              .metricAnalyses(Collections.singletonList(newRelicMetricAnalysis))
-              .appId(appId)
-              .stateExecutionId(stateExecutionId)
-              .workflowExecutionId(workflowExecutionId)
-              .message("1 high risk anomaly")
-              .stateType(StateType.NEW_RELIC)
-              .groupName(groupName + i)
-              .build();
+      for (int j = 1; j <= numOfMintues; j++) {
+        NewRelicMetricAnalysisRecord newRelicMetricAnalysisRecord =
+            NewRelicMetricAnalysisRecord.builder()
+                .analysisMinute(j)
+                .metricAnalyses(Collections.singletonList(newRelicMetricAnalysis))
+                .appId(appId)
+                .stateExecutionId(stateExecutionId)
+                .workflowExecutionId(workflowExecutionId)
+                .message("1 high risk anomaly")
+                .stateType(StateType.NEW_RELIC)
+                .groupName(groupName + i)
+                .createdAt(j)
+                .build();
 
-      metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
+        metricDataAnalysisService.saveAnalysisRecords(newRelicMetricAnalysisRecord);
+      }
     }
     List<NewRelicMetricAnalysisRecord> analysisRecords =
         timeSeriesResource.getMetricsAnalysisAppdynamics(stateExecutionId, workflowExecutionId, accountId, appId)
@@ -138,6 +142,7 @@ public class TimeSeriesMLAnalysisTest extends WingsBaseTest {
     assertEquals(numOfGrpups, analysisRecords.size());
     for (int i = 0; i < numOfGrpups; i++) {
       assertEquals(1, analysisRecords.get(i).getMetricAnalyses().size());
+      assertEquals(numOfMintues, analysisRecords.get(i).getCreatedAt());
       assertEquals("index.jsp", analysisRecords.get(i).getMetricAnalyses().get(0).getMetricName());
       assertEquals(1, analysisRecords.get(i).getMetricAnalyses().get(0).getMetricValues().size());
       assertEquals(
