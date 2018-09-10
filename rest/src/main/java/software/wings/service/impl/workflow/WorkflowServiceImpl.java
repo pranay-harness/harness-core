@@ -1978,7 +1978,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion(), false);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
-    if (orchestrationWorkflow == null || !(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
+    if (!(orchestrationWorkflow instanceof CanaryOrchestrationWorkflow)) {
       return null;
     }
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;

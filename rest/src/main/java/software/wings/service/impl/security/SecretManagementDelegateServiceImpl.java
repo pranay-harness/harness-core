@@ -63,11 +63,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        final AWSKMS kmsClient = AWSKMSClientBuilder.standard()
-                                     .withCredentials(new AWSStaticCredentialsProvider(
-                                         new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
-                                     .withRegion(Regions.US_EAST_1)
-                                     .build();
+        final AWSKMS kmsClient =
+            AWSKMSClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(
+                    new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
+                .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
+                .build();
         GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest();
         dataKeyRequest.setKeyId(kmsConfig.getKmsArn());
         dataKeyRequest.setKeySpec("AES_128");
@@ -114,11 +115,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        final AWSKMS kmsClient = AWSKMSClientBuilder.standard()
-                                     .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
-                                         new String(kmsConfig.getAccessKey()), new String(kmsConfig.getSecretKey()))))
-                                     .withRegion(Regions.US_EAST_1)
-                                     .build();
+        final AWSKMS kmsClient =
+            AWSKMSClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
+                    new String(kmsConfig.getAccessKey()), new String(kmsConfig.getSecretKey()))))
+                .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
+                .build();
 
         DecryptRequest decryptRequest =
             new DecryptRequest().withCiphertextBlob(StandardCharsets.ISO_8859_1.encode(data.getEncryptionKey()));
