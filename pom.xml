@@ -426,6 +426,12 @@
             </dependency>
 
             <dependency>
+                <groupId>org.zeroturnaround</groupId>
+                <artifactId>zt-exec</artifactId>
+                <version>1.9</version>
+            </dependency>
+
+            <dependency>
                 <groupId>io.dropwizard-bundles</groupId>
                 <artifactId>dropwizard-configurable-assets-bundle</artifactId>
                 <version>1.0.0-rc2</version>
