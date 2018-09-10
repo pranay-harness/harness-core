@@ -66,6 +66,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 
 public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
+  private static final Set<String> txnsToCollect = Sets.newHashSet("WebTransaction/", "WebTransactionTotalTime/");
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 30;
   private static final int MIN_RPM = 1;
   private static final String NEW_RELIC_DATE_FORMAT = "YYYY-MM-dd'T'HH:mm:ssZ";
@@ -193,31 +194,33 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     }
     for (int retry = 0; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        apiCallLog.setTitle("Fetching web transactions names from " + newRelicConfig.getNewRelicUrl());
-        apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        final Call<NewRelicMetricResponse> request =
-            getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId);
-        apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
-                                         .name(URL_STRING)
-                                         .value(request.request().url().toString())
-                                         .type(FieldType.URL)
-                                         .build());
-        final Response<NewRelicMetricResponse> response = request.execute();
-        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        if (response.isSuccessful()) {
-          apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
-          List<NewRelicMetric> metrics = response.body().getMetrics();
-          if (isNotEmpty(metrics)) {
-            metrics.forEach(metric -> {
-              if (metric.getName().startsWith("WebTransaction")) {
-                newRelicMetrics.add(metric);
-              }
-            });
+        for (String txnName : txnsToCollect) {
+          apiCallLog.setTitle("Fetching web transactions names from " + newRelicConfig.getNewRelicUrl());
+          apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+          final Call<NewRelicMetricResponse> request =
+              getNewRelicRestClient(newRelicConfig, encryptedDataDetails).listMetricNames(newRelicAppId, txnName);
+          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                           .name(URL_STRING)
+                                           .value(request.request().url().toString())
+                                           .type(FieldType.URL)
+                                           .build());
+          final Response<NewRelicMetricResponse> response = request.execute();
+          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+          if (response.isSuccessful()) {
+            apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+            List<NewRelicMetric> metrics = response.body().getMetrics();
+            if (isNotEmpty(metrics)) {
+              metrics.forEach(metric -> {
+                if (metric.getName().startsWith(txnName)) {
+                  newRelicMetrics.add(metric);
+                }
+              });
+            }
+          } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
+            apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
+            throw new WingsException(
+                ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
           }
-        } else if (response.code() != HttpServletResponse.SC_NOT_FOUND) {
-          apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
-          throw new WingsException(
-              ErrorCode.NEWRELIC_ERROR, response.errorBody().string(), EnumSet.of(ReportTarget.UNIVERSAL));
         }
         return newRelicMetrics;
       } catch (Exception e) {
@@ -502,7 +505,9 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   public static Set<String> getApdexMetricNames(Collection<String> metricNames) {
     final Set<String> rv = new HashSet<>();
     for (String metricName : metricNames) {
-      rv.add(metricName.replace("WebTransaction", "Apdex"));
+      if (metricName.startsWith("WebTransaction/")) {
+        rv.add(metricName.replace("WebTransaction", "Apdex"));
+      }
     }
 
     return rv;

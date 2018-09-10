@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.batchMetricsToCollect;
@@ -255,10 +256,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       int retry = 0;
       while (retry < RETRIES) {
         try {
+          Set<String> apdexMetricNames = getApdexMetricNames(metricNames);
+          if (isEmpty(apdexMetricNames)) {
+            return;
+          }
           NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
               dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
-              dataCollectionInfo.getNewRelicAppId(), node.getId(), getApdexMetricNames(metricNames),
-              windowStartTimeManager, endTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+              dataCollectionInfo.getNewRelicAppId(), node.getId(), apdexMetricNames, windowStartTimeManager, endTime,
+              createApiCallLog(dataCollectionInfo.getStateExecutionId()));
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
@@ -348,8 +353,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
               logger.info("Going to collect for host {} for stateExecutionId {}, for metrics {}", node.getHost(),
                   dataCollectionInfo.getStateExecutionId(), metricBatches);
-              callables.add(
-                  () -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager, dataCollectionMinuteEnd));
+              callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
             }
 
             logger.info("submitting parallel tasks {}", callables.size());
@@ -438,8 +442,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           dataCollectionInfo.getStateExecutionId(), metricRecords);
     }
 
-    private boolean fetchAndSaveMetricsForNode(NewRelicApplicationInstance node, List<Set<String>> metricBatches,
-        long endTime, int dataCollectionMinuteEnd) throws Exception {
+    private boolean fetchAndSaveMetricsForNode(
+        NewRelicApplicationInstance node, List<Set<String>> metricBatches, long endTime) throws Exception {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
       final long startTime = System.currentTimeMillis();
       for (Set<String> metricNames : metricBatches) {
