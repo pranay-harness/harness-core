@@ -257,7 +257,7 @@ function setUpLearningEngine(){
    echo "################################Setting up Learning Engine ################################"
    learningEngineVersion=$(getProperty "version.properties" "learning-engine")
    https_port=$(getProperty "config_template/learning_engine/learning_engine.properties" "https_port")
-   docker run -d --rm --name learningEngine -e learning_env=ONPREM_POV_$companyName -e https_port=$https_port -e server_url=$LOAD_BALANCER_URL -e service_secret=$learningengine_secret harness/learning-engine:$learningEngineVersion
+   docker run -d --rm --name learningEngine -e learning_env=on_prem -e https_port=$https_port -e server_url=$LOAD_BALANCER_URL -e service_secret=$learningengine_secret harness/learning-engine:$learningEngineVersion
 
     if [[ $(checkDockerImageRunning "learningEngine") -eq 1 ]]; then
         echo "LearningEngine is not running"
