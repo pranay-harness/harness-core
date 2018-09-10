@@ -180,7 +180,6 @@ public class TriggerServiceHelper {
           getDescription(DescriptionTypeEnum.FULL, cronExpression, new Options(), I18nMessages.DEFAULT_LOCALE);
       return StringUtils.lowerCase("" + description.charAt(0)) + description.substring(1);
     } catch (Exception e) {
-      logger.warn("Error parsing cron expression: {} ", cronExpression, e);
       throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid cron expression");
     }
   }

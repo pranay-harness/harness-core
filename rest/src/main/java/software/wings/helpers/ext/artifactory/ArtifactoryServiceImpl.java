@@ -393,7 +393,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.info("Artifact paths order from Artifactory Server" + artifactPaths);
       return artifactPaths;
     } catch (Exception e) {
-      logger.error("Error occurred while retrieving File Paths from Artifactory server {}", artifactory.getUri(), e);
+      logger.error(
+          format("Error occurred while retrieving File Paths from Artifactory server %s", artifactory.getUri()), e);
       prepareException(e, ADMIN);
     }
     return new ArrayList<>();
@@ -762,7 +763,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
 
       } catch (Exception e) {
-        logger.error("Failed to download the artifact from path {}", itemPath, e);
+        logger.error(format("Failed to download the artifact from path %s", itemPath), e);
       }
     }
   }

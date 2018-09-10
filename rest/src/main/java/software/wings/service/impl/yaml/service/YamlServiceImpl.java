@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.quietSleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
@@ -206,7 +207,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           metaDataMap.put("yamlFilesProcessed", changeSets.size());
           return Builder.aRestResponse().withMetaData(metaDataMap).build();
         } catch (YamlProcessingException ex) {
-          logger.warn("Unable to process zip upload for account {}. ", accountId, ex);
+          logger.warn(format("Unable to process zip upload for account %s. ", accountId), ex);
           // gitToHarness is false, as this is not initiated from git
           yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), false);
         }
@@ -419,7 +420,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
           logger.info("Processing done for file [{}]", changeContext.getChange().getFilePath());
         } catch (Exception ex) {
-          logger.warn("Exception while processing yaml file {}", yamlFilePath, ex);
+          logger.warn(format("Exception while processing yaml file %s", yamlFilePath), ex);
           ChangeWithErrorMsg changeWithErrorMsg =
               ChangeWithErrorMsg.builder().change(changeContext.getChange()).errorMsg(Misc.getMessage(ex)).build();
           // We continue processing the yaml files we understand, the failures are reported at the end

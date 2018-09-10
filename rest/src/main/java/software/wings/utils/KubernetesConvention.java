@@ -2,6 +2,7 @@ package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 
@@ -131,7 +132,7 @@ public class KubernetesConvention {
           // ToDo(anshul) needs better logic here rather than using MAX_REVISIONS
           return (revision.isPresent() && revision.get() < MAX_REVISIONS) ? revision : Optional.empty();
         } catch (NumberFormatException e) {
-          logger.error("Couldn't get version from controller name {}", name, e);
+          logger.error(format("Couldn't get version from controller name %s", name), e);
           logger.warn("Couldn't get version from controller name {}. {} is not a valid version", name, version, e);
         }
       }

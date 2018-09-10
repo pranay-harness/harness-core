@@ -226,7 +226,7 @@ public class WebHookServiceImpl implements WebHookService {
   }
 
   private WebHookResponse constructWebhookResponse(String token, Exception ex) {
-    logger.warn("Webhook Request call failed [{}]", token, ex);
+    logger.warn(format("Webhook Request call failed [%s]", token), ex);
     return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
   }
 }

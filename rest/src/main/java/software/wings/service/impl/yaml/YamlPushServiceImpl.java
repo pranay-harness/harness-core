@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -54,7 +55,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
+        logger.error(format("Exception in pushing yaml change set for account %d", accountId), e);
       }
     });
   }
@@ -88,7 +89,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
+        logger.error(format("Exception in pushing yaml change set for account %d", accountId), e);
       }
     });
   }
@@ -129,7 +130,7 @@ public class YamlPushServiceImpl implements YamlPushService {
       try {
         yamlChangeSetHelper.defaultVariableChangeSet(accountId, appId, changeType);
       } catch (Exception e) {
-        logger.error("Exception in pushing yaml change set for account {}", accountId, e);
+        logger.error(format("Exception in pushing yaml change set for account %d", accountId), e);
       }
     });
   }

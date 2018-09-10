@@ -126,7 +126,7 @@ public class BambooServiceImpl implements BambooService {
       if (response != null && !response.isSuccessful()) {
         IOUtils.closeQuietly(response.errorBody());
       }
-      logger.error("Failed to get the last successful build for plan key {}", planKey, e);
+      logger.error(format("Failed to get the last successful build for plan key %s", planKey), e);
       throw new WingsException(ARTIFACT_SERVER_ERROR, SRE).addParam("message", ExceptionUtils.getRootCauseMessage(e));
     }
     return null;
@@ -173,7 +173,7 @@ public class BambooServiceImpl implements BambooService {
           if (response != null && !response.isSuccessful()) {
             IOUtils.closeQuietly(response.errorBody());
           }
-          logger.error("Failed to fetch project plans from bamboo server {}", bambooConfig.getBambooUrl(), e);
+          logger.error(format("Failed to fetch project plans from bamboo server %s", bambooConfig.getBambooUrl()), e);
           throw new WingsException(ARTIFACT_SERVER_ERROR, USER)
               .addParam("message", "Failed to load plans:" + ExceptionUtils.getRootCauseMessage(e));
         }
@@ -460,7 +460,7 @@ public class BambooServiceImpl implements BambooService {
           }
           return ImmutablePair.of(artifactSourcePath, uc.getInputStream());
         } catch (IOException e) {
-          logger.error("Failed to download the artifact from url {}", artifactUrl, e);
+          logger.error(format("Failed to download the artifact from url %s", artifactUrl), e);
           throw new WingsException(ARTIFACT_SERVER_ERROR, e)
               .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
         }

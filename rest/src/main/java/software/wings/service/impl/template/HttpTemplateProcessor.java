@@ -1,6 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.Workflow.LINKED_TEMPLATE_UUIDS_KEY;
 import static software.wings.common.TemplateConstants.HTTP_HEALTH_CHECK;
@@ -83,7 +84,7 @@ public class HttpTemplateProcessor extends AbstractTemplateProcessor {
             }
           }
         } catch (Exception e) {
-          logger.warn("Error occurred while updating linked workflow {} ", workflow.getAppId(), e);
+          logger.warn(format("Error occurred while updating linked workflow %s", workflow.getUuid()), e);
         }
       }
     }

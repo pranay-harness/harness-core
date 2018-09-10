@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.exception.WingsException.USER;
@@ -89,10 +90,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             .build();
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
-          logger.warn("Encryption failed. trial num: {}", retry, e);
+          logger.warn(format("Encryption failed. trial num: %d", retry), e);
           sleep(ofMillis(100));
         } else {
-          logger.error("Encryption failed after {} retries ", retry, e);
+          logger.error(format("Encryption failed after %d retries ", retry), e);
           throw new WingsException(
               ErrorCode.KMS_OPERATION_ERROR, "Encryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
         }
@@ -126,10 +127,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         return decrypt(data.getEncryptedValue(), new SecretKeySpec(getByteArray(plainTextKey), "AES")).toCharArray();
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
-          logger.warn("Decryption failed. trial num: {}", retry, e);
+          logger.warn(format("Decryption failed. trial num: %d", retry), e);
           sleep(ofMillis(100));
         } else {
-          logger.error("Decryption failed after {} retries ", retry, e);
+          logger.error(format("Decryption failed after %d retries ", retry), e);
           throw new WingsException(
               ErrorCode.KMS_OPERATION_ERROR, "Decryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
         }
@@ -187,10 +188,10 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         }
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
-          logger.warn("encryption failed. trial num: {}", retry, e);
+          logger.warn(format("encryption failed. trial num: %d", retry), e);
           sleep(ofMillis(1000));
         } else {
-          logger.error("encryption failed after {} retries ", retry, e);
+          logger.error(format("encryption failed after %d retries ", retry), e);
           throw new WingsException(
               ErrorCode.VAULT_OPERATION_ERROR, "Decryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
         }
@@ -223,7 +224,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         }
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
-          logger.warn("decryption failed. trial num: {}", retry, e);
+          logger.warn(format("decryption failed. trial num: %d", retry), e);
           sleep(ofMillis(1000));
         } else {
           logger.error("decryption failed after {} retries for {}", retry, data, e);
@@ -261,7 +262,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         throw new IOException(errorMsg);
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
-          logger.warn("renewal failed. trial num: {}", retry, e);
+          logger.warn(format("renewal failed. trial num: %d", retry), e);
           sleep(ofMillis(1000));
         } else {
           logger.error("renewal failed after {} retries for {}", retry, vaultConfig, e);

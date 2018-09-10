@@ -1,5 +1,7 @@
 package software.wings.delegatetasks.collect.artifacts;
 
+import static java.lang.String.format;
+
 import com.google.inject.Inject;
 
 import org.slf4j.Logger;
@@ -49,7 +51,7 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
       amazonS3Service.downloadArtifacts(
           awsConfig, encryptionDetails, bucketName, artifactPaths, getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
-      logger.error("Exception occurred while collecting S3 artifacts {}", Misc.getMessage(e), e);
+      logger.error(format("Exception occurred while collecting S3 artifacts %s", Misc.getMessage(e)), e);
       // TODO: Change list
     }
     return res;

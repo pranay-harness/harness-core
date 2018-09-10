@@ -1,6 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.lang.String.format;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.utils.WingsReflectionUtils.getFieldByName;
@@ -49,7 +50,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
             try {
               f.set(object, decryptChars);
             } catch (IllegalAccessException e) {
-              logger.error("Decryption failed for {}", encryptedDataDetail, e);
+              logger.error(format("Decryption failed for %s", encryptedDataDetail.toString()), e);
             }
           }
         });

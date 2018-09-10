@@ -130,7 +130,7 @@ public class PipelineServiceImpl implements PipelineService {
                   .getResponse();
           pipeline.setWorkflowExecutions(workflowExecutions);
         } catch (Exception e) {
-          logger.error("Failed to fetch recent executions for pipeline {}", pipeline, e);
+          logger.error(format("Failed to fetch recent executions for pipeline %s", pipeline), e);
         }
       }
     }
@@ -384,7 +384,9 @@ public class PipelineServiceImpl implements PipelineService {
               }
               validatePipelineEnvState(workflow, pipelineStageElement, invalidStageWorkflows, pipelineVariables);
             } catch (Exception ex) {
-              logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline, ex);
+              logger.warn(format("Exception occurred while reading workflow associated to the pipeline %s",
+                              pipeline.toString()),
+                  ex);
             }
           }
         }

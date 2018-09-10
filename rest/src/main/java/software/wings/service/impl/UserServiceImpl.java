@@ -331,12 +331,10 @@ public class UserServiceImpl implements UserService {
     User existingUser = getUserByEmail(emailAddress);
 
     if (existingUser != null && existingUser.isEmailVerified()) {
-      logger.warn("USER_ALREADY_REGISTERED error for existingUser - {}", existingUser.toString());
       throw new WingsException(USER_ALREADY_REGISTERED, USER);
     }
 
     if (!domainAllowedToRegister(emailAddress)) {
-      logger.warn("USER_DOMAIN_NOT_ALLOWED error for emailAddress - {}", emailAddress);
       throw new WingsException(USER_DOMAIN_NOT_ALLOWED, USER);
     }
   }

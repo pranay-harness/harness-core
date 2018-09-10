@@ -194,7 +194,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         try {
           setLoadBalancerName(infrastructureMapping);
         } catch (Exception e) {
-          logger.error("Failed to set load balancer for InfrastructureMapping {} ", infrastructureMapping, e);
+          logger.error(
+              format("Failed to set load balancer for InfrastructureMapping %s", infrastructureMapping.toString()), e);
         }
       }
     }

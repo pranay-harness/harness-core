@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
@@ -579,7 +580,7 @@ public class InstanceHelper {
             infraMapping.getName(), System.currentTimeMillis());
         logger.info("Instance sync completed for infraMapping [{}]", infraMappingId);
       } catch (Exception ex) {
-        logger.warn("Instance sync failed for infraMappingId [{}]", infraMappingId, ex);
+        logger.warn(format("Instance sync failed for infraMappingId [%s]", infraMappingId), ex);
         String errorMsg;
         if (ex instanceof WingsException) {
           errorMsg = ((WingsException) ex).getResponseMessage().getMessage();

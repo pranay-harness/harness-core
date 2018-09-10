@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
@@ -110,7 +111,7 @@ public class WorkflowExecutionMonitorJob implements Job {
         } catch (WingsException exception) {
           WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
         } catch (Exception e) {
-          logger.error("Error in cleaning up the workflow execution {}", workflowExecution.getUuid(), e);
+          logger.error(format("Error in cleaning up the workflow execution %s", workflowExecution.getUuid()), e);
         }
 
         if (!hasActiveStates

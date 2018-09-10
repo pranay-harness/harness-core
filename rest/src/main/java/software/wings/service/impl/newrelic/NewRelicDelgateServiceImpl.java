@@ -3,6 +3,7 @@ package software.wings.service.impl.newrelic;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static software.wings.common.Constants.PAYLOAD;
 import static software.wings.common.Constants.URL_STRING;
@@ -225,10 +226,10 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         return newRelicMetrics;
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
-          logger.warn("txn name fetch failed. trial num: {}", retry, e);
+          logger.warn(format("txn name fetch failed. trial num: %d", retry), e);
           sleep(ofMillis(1000));
         } else {
-          logger.error("txn name fetch failed after {} retries ", retry, e);
+          logger.error(format("txn name fetch failed after %d retries ", retry), e);
           throw new IOException("txn name fetch failed after " + NUM_OF_RETRIES + " retries", e);
         }
       } finally {

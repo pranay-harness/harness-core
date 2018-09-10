@@ -1,6 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
@@ -75,7 +76,7 @@ public abstract class AbstractTemplateProcessor {
     try {
       return loadAndSaveTemplate(templatePath, accountId, accountName);
     } catch (IOException e) {
-      logger.warn("Failed to load Yaml from path {}", templatePath, e);
+      logger.warn(format("Failed to load Yaml from path %s", templatePath), e);
       throw new WingsException("Failed to load template from path " + templatePath, WingsException.SRE);
     }
   }

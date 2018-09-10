@@ -1,5 +1,6 @@
 package software.wings.service.impl.email;
 
+import static java.lang.String.format;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
@@ -37,7 +38,7 @@ public class EmailNotificationCallBack implements NotifyCallback {
         openEmailNotSentAlert(data, collaborationProviderResponse);
       }
     } catch (Exception e) {
-      logger.warn("Failed on notify for response=[{}]", response, e);
+      logger.warn(format("Failed on notify for response=[%s]", response.toString()), e);
     }
   }
 
@@ -52,7 +53,7 @@ public class EmailNotificationCallBack implements NotifyCallback {
         logger.warn("Failed to send Email, errorResponse=[{}] ", data);
       }
     } catch (Exception e) {
-      logger.warn("Failed on notifyError for response=[{}]", response, e);
+      logger.warn(format("Failed on notifyError for response=[%s]", response.toString()), e);
     }
   }
 

@@ -2,6 +2,7 @@ package software.wings.helpers.ext.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT;
 
@@ -126,7 +127,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Exception in deploying helm chart [{}]", commandRequest, e);
+      logger.error(format("Exception in deploying helm chart [%s]", commandRequest.toString()), e);
       return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
     } finally {
       if (checkDeleteReleaseNeeded(commandRequest)) {
@@ -166,7 +167,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      logger.error("Helm chart rollback failed [{}]", commandRequest, e);
+      logger.error(format("Helm chart rollback failed [%s]", commandRequest.toString()), e);
       return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
     }
   }

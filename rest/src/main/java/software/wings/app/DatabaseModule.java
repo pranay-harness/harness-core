@@ -305,7 +305,7 @@ public class DatabaseModule extends AbstractModule {
           try {
             collection.dropIndex(name);
           } catch (RuntimeException ex) {
-            logger.error("Failed to drop index {}", name, ex);
+            logger.error(format("Failed to drop index %s", name), ex);
           }
         });
       }

@@ -725,7 +725,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
             kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
           }
         } catch (Exception e) {
-          logger.error("Couldn't delete service {}", kubernetesServiceName, e);
+          logger.error(format("Couldn't delete service %s", kubernetesServiceName), e);
         }
       }
       return null;

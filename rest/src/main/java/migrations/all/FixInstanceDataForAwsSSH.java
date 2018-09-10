@@ -1,5 +1,6 @@
 package migrations.all;
 
+import static java.lang.String.format;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
@@ -94,7 +95,7 @@ public class FixInstanceDataForAwsSSH implements Migration {
 
                 logger.info("Instance fix completed for infraMapping [{}]", infraMappingId);
               } catch (Exception ex) {
-                logger.warn("Instance fix failed for infraMappingId [{}]", infraMappingId, ex);
+                logger.warn(format("Instance fix failed for infraMappingId [%s]", infraMappingId), ex);
               }
             } catch (Exception e) {
               logger.warn("Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);
@@ -105,7 +106,7 @@ public class FixInstanceDataForAwsSSH implements Migration {
         } catch (WingsException exception) {
           WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
         } catch (Exception ex) {
-          logger.warn("Error while syncing instances for app: {}", appId, ex);
+          logger.warn(format("Error while syncing instances for app: %s", appId), ex);
         }
       });
     });

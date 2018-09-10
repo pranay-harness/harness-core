@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -190,7 +191,7 @@ public class AuditServiceImpl implements AuditService {
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
             }
           } catch (Exception ex) {
-            logger.warn("Failed to delete {} audit audit records", auditHeaders.size(), ex);
+            logger.warn(format("Failed to delete %d audit audit records", auditHeaders.size()), ex);
           }
           logger.info("Successfully deleted {} audit records", auditHeaders.size());
           if (auditHeaders.size() < limit) {
@@ -200,7 +201,7 @@ public class AuditServiceImpl implements AuditService {
         }
       }, 10L, TimeUnit.MINUTES, true);
     } catch (Exception ex) {
-      logger.warn("Failed to delete audit records older than last {} days within 10 minutes.", days, ex);
+      logger.warn(format("Failed to delete audit records older than last %d days within 10 minutes.", days), ex);
     }
     logger.info("Deleted audit records older than {} days", days);
   }

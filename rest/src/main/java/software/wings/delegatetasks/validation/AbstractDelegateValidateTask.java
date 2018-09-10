@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import static io.harness.network.Http.connectableHttpUrl;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -58,7 +59,7 @@ public abstract class AbstractDelegateValidateTask implements DelegateValidateTa
         }
       }
     } catch (Exception e) {
-      logger.error("Unexpected error executing delegate task {}", delegateId, e);
+      logger.error(format("Unexpected error executing delegate task %s", delegateId), e);
     }
   }
 
