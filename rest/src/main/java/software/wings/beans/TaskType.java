@@ -214,6 +214,7 @@ public enum TaskType {
       TaskGroup.PROMETHEUS, ServiceImplDelegateTask.class, PrometheusValidation.class),
   PROMETHEUS_METRIC_DATA_COLLECTION_TASK(
       TaskGroup.PROMETHEUS, PrometheusDataCollectionTask.class, PrometheusValidation.class),
+  PROMETHEUS_METRIC_DATA_PER_HOST(TaskGroup.PROMETHEUS, ServiceImplDelegateTask.class, PrometheusValidation.class),
   CLOUD_WATCH_COLLECT_METRIC_DATA(
       TaskGroup.CLOUD_WATCH, CloudWatchDataCollectionTask.class, AwsConnectionValidation.class),
   APM_METRIC_DATA_COLLECTION_TASK(TaskGroup.APM, APMDataCollectionTask.class, APMValidation.class),
