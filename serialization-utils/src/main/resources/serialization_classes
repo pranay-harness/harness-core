@@ -523,3 +523,6 @@ software.wings.api.ResourceConstraintStepExecutionSummary, 5483
 software.wings.service.impl.appdynamics.AppdynamicsMetricData, 5484
 software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue, 5485
 software.wings.service.impl.analysis.LogElement, 5486
+software.wings.service.impl.prometheus.PrometheusMetricDataResponse$PrometheusMetricData, 5487
+software.wings.service.impl.prometheus.PrometheusMetricDataResponse$PrometheusMetricDataResult, 5488
+software.wings.service.impl.prometheus.PrometheusMetricDataResponse$PrometheusMetric, 5489

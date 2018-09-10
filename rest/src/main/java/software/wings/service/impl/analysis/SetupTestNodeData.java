@@ -21,8 +21,9 @@ public class SetupTestNodeData {
   private InstanceElement instanceElement;
   private String hostExpression;
   @NotNull private String workflowId;
-  private long toTime = System.currentTimeMillis();
-  private long fromTime = toTime - TimeUnit.MINUTES.toMillis(15);
+  private long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
+  ;
+  private long fromTime = toTime - TimeUnit.MINUTES.toMillis(15) / TimeUnit.SECONDS.toMillis(1);
 
   public SetupTestNodeData(String appId, String settingId, String instanceName, InstanceElement instanceElement,
       String hostExpression, String workflowId, long fromTime, long toTime) {
