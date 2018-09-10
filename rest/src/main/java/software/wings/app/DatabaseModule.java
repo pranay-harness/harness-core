@@ -317,7 +317,8 @@ public class DatabaseModule extends AbstractModule {
               creator.create();
               break;
             } catch (MongoCommandException mex) {
-              if (mex.getErrorCode() == 85) {
+              // 86 - Index must have unique name.
+              if (mex.getErrorCode() == 85 || mex.getErrorCode() == 86) {
                 try {
                   logger.warn("Drop index: {}.{}", collection.getName(), name);
                   collection.dropIndex(name);
