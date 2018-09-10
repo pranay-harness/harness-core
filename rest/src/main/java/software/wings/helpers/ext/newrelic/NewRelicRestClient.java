@@ -40,8 +40,9 @@ public interface NewRelicRestClient {
       @Path("instanceId") long instanceId, @Query("from") String fromTime, @Query("to") String toTime,
       @Query(NAMES_PARAM) Collection<String> metricNames);
 
-  @GET("v2/applications/{applicationId}/metrics.json?name=WebTransaction")
-  Call<NewRelicMetricResponse> listMetricNames(@Path("applicationId") long newRelicAppId);
+  @GET("v2/applications/{applicationId}/metrics.json")
+  Call<NewRelicMetricResponse> listMetricNames(
+      @Path("applicationId") long newRelicAppId, @Query("name") String txnName);
 
   @POST() Call<Object> postDeploymentMarker(@Url String url, @Body NewRelicDeploymentMarkerPayload body);
 }
