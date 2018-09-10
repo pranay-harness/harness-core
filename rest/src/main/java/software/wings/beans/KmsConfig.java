@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -31,6 +32,7 @@ import software.wings.service.intfc.security.EncryptionConfig;
   @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
 })
 @Entity(value = "kmsConfig", noClassnameStored = true)
+@ToString(exclude = {"secretKey", "kmsArn"})
 public class KmsConfig extends Base implements EncryptionConfig {
   @Attributes(title = "Name", required = true) private String name;
 
@@ -40,6 +42,8 @@ public class KmsConfig extends Base implements EncryptionConfig {
 
   @Attributes(title = "AWS key ARN", required = true) @Encrypted private String kmsArn;
 
+  @Attributes(title = "AWS Region", required = true) private String region;
+
   private boolean isDefault = true;
 
   @SchemaIgnore @NotEmpty private String accountId;
@@ -47,12 +51,4 @@ public class KmsConfig extends Base implements EncryptionConfig {
   @SchemaIgnore @Transient private int numOfEncryptedValue;
 
   @SchemaIgnore @Transient private EncryptionType encryptionType;
-
-  @Override
-  public String toString() {
-    return "KmsConfig{"
-        + "name='" + name + '\'' + ", accessKey='" + accessKey + '\'' + ", isDefault=" + isDefault + ", accountId='"
-        + accountId + '\'' + ", encryptionType=" + encryptionType + ", appId='" + appId + '\'' + ", entityYamlPath='"
-        + getEntityYamlPath() + '\'' + "} " + super.toString();
-  }
 }
