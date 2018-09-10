@@ -133,7 +133,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
         try {
           addServiceTemplates(environment);
         } catch (Exception e) {
-          logger.error("Failed to add service templates to environment {} ", environment, e);
+          logger.error(format("Failed to add service templates to environment %s", environment.toString()), e);
         }
       });
     }

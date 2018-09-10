@@ -2,6 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
 import static java.util.regex.Pattern.compile;
@@ -433,7 +434,7 @@ public class TriggerServiceImpl implements TriggerService {
       logger.info("Scheduled trigger for appId {} and Trigger Id {} complete", trigger.getAppId(), trigger.getUuid());
       idempotent.succeeded(trigger.getUuid());
     } catch (UnableToRegisterIdempotentOperationException e) {
-      logger.error("Failed to trigger scheduled trigger {}", trigger.getName(), e);
+      logger.error(format("Failed to trigger scheduled trigger %s", trigger.getName()), e);
     }
   }
 

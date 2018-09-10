@@ -166,9 +166,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       return timeLimiter.callWithTimeout(
           getControllerInternal(kubernetesConfig, encryptedDataDetails, name), 10, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.error("Timed out getting controller {}", name, e);
+      logger.error(format("Timed out getting controller %s", name), e);
     } catch (Exception e) {
-      logger.error("Error while getting controller {}", name, e);
+      logger.error(format("Error while getting controller %s", name), e);
       throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Error while getting controller");
     }
     return null;
@@ -880,7 +880,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                         .build());
       }
     } catch (Exception e) {
-      logger.error("Couldn't get or create namespace {}", kubernetesConfig.getNamespace(), e);
+      logger.error(format("Couldn't get or create namespace %s", kubernetesConfig.getNamespace()), e);
     }
   }
 

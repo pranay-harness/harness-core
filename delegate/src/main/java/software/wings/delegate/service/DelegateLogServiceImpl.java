@@ -1,6 +1,7 @@
 package software.wings.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
@@ -120,7 +121,7 @@ public class DelegateLogServiceImpl implements DelegateLogService {
       logger.info("{} log lines dispatched for accountId: {}",
           restResponse.getResource() != null ? commandLogs.size() : 0, accountId);
     } catch (Exception e) {
-      logger.error("Dispatch log failed. printing lost logs[{}]", commandLogs.size(), e);
+      logger.error(format("Dispatch log failed. printing lost logs[%d]", commandLogs.size()), e);
       commandLogs.forEach(log -> logger.error(log.toString()));
       logger.error("Finished printing lost logs");
     }

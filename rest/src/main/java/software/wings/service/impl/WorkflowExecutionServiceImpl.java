@@ -324,7 +324,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         try {
           refreshSummaries(workflowExecution);
         } catch (Exception e) {
-          logger.error("Failed to refresh service summaries for the workflow execution {} ", workflowExecution, e);
+          logger.error(
+              format("Failed to refresh service summaries for the workflow execution %s", workflowExecution.getUuid()),
+              e);
         }
       }
 
@@ -332,7 +334,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         try {
           populateNodeHierarchy(workflowExecution, includeGraph, includeStatus, false, emptySet());
         } catch (Exception e) {
-          logger.error("Failed to populate node hierarchy for the workflow execution {} ", res, e);
+          logger.error(format("Failed to populate node hierarchy for the workflow execution %s", res.toString()), e);
         }
       }
     }

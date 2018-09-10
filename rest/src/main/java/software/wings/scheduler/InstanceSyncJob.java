@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static java.lang.String.format;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
@@ -92,7 +93,7 @@ public class InstanceSyncJob implements Job {
     } catch (WingsException exception) {
       // do nothing. Only one manager should acquire the lock.
     } catch (Exception ex) {
-      logger.warn("Error while looking up appId instances for app: {}", appId, ex);
+      logger.warn(format("Error while looking up appId instances for app: %s", appId), ex);
     }
   }
 
@@ -110,7 +111,7 @@ public class InstanceSyncJob implements Job {
     } catch (WingsException exception) {
       WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception ex) {
-      logger.warn("Error while syncing instances for app: {}", appId, ex);
+      logger.warn(format("Error while syncing instances for app: %s", appId), ex);
     }
   }
 }

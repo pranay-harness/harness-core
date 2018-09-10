@@ -1,6 +1,7 @@
 package software.wings.delegatetasks.helm;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
@@ -82,7 +83,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
           throw new HarnessException("Operation not supported");
       }
     } catch (Exception ex) {
-      logger.error("Exception in processing helm task [{}]", helmCommandRequest, ex);
+      logger.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()), ex);
       return HelmCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage(Misc.getMessage(ex))

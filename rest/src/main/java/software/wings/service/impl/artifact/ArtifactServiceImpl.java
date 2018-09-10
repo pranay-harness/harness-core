@@ -2,6 +2,7 @@ package software.wings.service.impl.artifact;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.compile;
 import static java.util.stream.Collectors.toList;
@@ -130,7 +131,7 @@ public class ArtifactServiceImpl implements ArtifactService {
                                      .map(serviceId -> serviceResourceService.get(artifact.getAppId(), serviceId))
                                      .collect(toList()));
           } catch (Exception e) {
-            logger.error("Failed to set services for artifact {} ", artifact, e);
+            logger.error(format("Failed to set services for artifact %s", artifact), e);
           }
         }
       }

@@ -662,7 +662,7 @@ public class DelegateServiceImpl implements DelegateService {
       FileUtils.touch(file);
       FileUtils.write(file, JsonUtils.asPrettyJson(profile), UTF_8);
     } catch (IOException e) {
-      logger.error("Error writing profile [{}]", profile.getName(), e);
+      logger.error(format("Error writing profile [%s]", profile.getName()), e);
     }
   }
 
@@ -688,7 +688,7 @@ public class DelegateServiceImpl implements DelegateService {
         processExecutor.execute();
         saveProfile(profile);
       } catch (IOException e) {
-        logger.error("Error applying profile [{}]", profile.getName(), e);
+        logger.error(format("Error applying profile [%s]", profile.getName()), e);
       } catch (InterruptedException e) {
         logger.info("Interrupted", e);
       } catch (TimeoutException e) {
@@ -930,7 +930,7 @@ public class DelegateServiceImpl implements DelegateService {
             restartNeeded.set(true);
           }
         } catch (Exception e) {
-          logger.error("Error restarting watcher {}", watcherProcess, e);
+          logger.error(format("Error restarting watcher %s", watcherProcess), e);
         }
       });
     }
@@ -1120,12 +1120,12 @@ public class DelegateServiceImpl implements DelegateService {
               execute(
                   managerClient.failIfAllDelegatesFailed(delegateId, delegateTaskEvent.getDelegateTaskId(), accountId));
             } catch (IOException e) {
-              logger.error("Unable to tell manager to check whether to fail for task {}", taskId, e);
+              logger.error(format("Unable to tell manager to check whether to fail for task %s", taskId), e);
             }
           }
         }
       } catch (IOException e) {
-        logger.error("Unable to report validation results. Task {}", taskId, e);
+        logger.error(format("Unable to report validation results. Task %s", taskId), e);
       }
     };
   }
@@ -1235,7 +1235,7 @@ public class DelegateServiceImpl implements DelegateService {
       } catch (UncheckedTimeoutException e) {
         logger.error("Timed out getting task future");
       } catch (Exception e) {
-        logger.error("Error from task future {}", delegateTask.getUuid(), e);
+        logger.error(format("Error from task future %s", delegateTask.getUuid()), e);
       }
     }
     currentlyExecutingTasks.remove(delegateTask.getUuid());

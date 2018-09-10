@@ -1,6 +1,7 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -90,7 +91,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
             logger.info("The linked template is not the latest. So, not updating it");
           }
         } catch (Exception e) {
-          logger.warn("Failed to update the linked Service Command {} ", serviceCommand.getUuid(), e);
+          logger.warn(format("Failed to update the linked Service Command %s", serviceCommand.getUuid()), e);
         }
       }
     }

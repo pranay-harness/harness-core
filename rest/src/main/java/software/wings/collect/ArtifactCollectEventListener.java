@@ -1,6 +1,7 @@
 package software.wings.collect;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Event.Builder.anEvent;
 
@@ -89,7 +90,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
       delegateService.queueTask(delegateTask);
 
     } catch (Exception ex) {
-      logger.error("Failed to collect artifact. Reason {}", Misc.getMessage(ex), ex);
+      logger.error(format("Failed to collect artifact. Reason %s", Misc.getMessage(ex)), ex);
       artifactService.updateStatus(artifact.getUuid(), artifact.getAppId(), Status.FAILED, ContentStatus.FAILED);
       eventEmitter.send(Channel.ARTIFACTS,
           anEvent().withType(Type.UPDATE).withUuid(artifact.getUuid()).withAppId(artifact.getAppId()).build());

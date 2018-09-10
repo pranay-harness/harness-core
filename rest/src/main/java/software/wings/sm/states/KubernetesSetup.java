@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -313,7 +314,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
       try {
         maxVal = Integer.valueOf(context.renderExpression(getMaxInstances()));
       } catch (NumberFormatException e) {
-        logger.error("Invalid number format for max instances: {}", context.renderExpression(getMaxInstances()), e);
+        logger.error(
+            format("Invalid number format for max instances: %s", context.renderExpression(getMaxInstances())), e);
       }
     }
     int evaluatedMaxInstances = maxVal != null ? maxVal : DEFAULT_MAX;

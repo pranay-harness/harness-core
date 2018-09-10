@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
+import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -193,12 +194,12 @@ public class AppServiceImpl implements AppService {
         try {
           application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
         } catch (Exception e) {
-          logger.error("Failed to fetch environments for app {} ", application, e);
+          logger.error(format("Failed to fetch environments for app %s", application), e);
         }
         try {
           application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
         } catch (Exception e) {
-          logger.error("Failed to fetch services for app {} ", application, e);
+          logger.error(format("Failed to fetch services for app %s", application), e);
         }
       });
     }

@@ -2,6 +2,7 @@ package software.wings.core.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Morpheus.sleep;
+import static java.lang.String.format;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
@@ -75,7 +76,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
         logger.info("Thread interrupted, shutting down for queue {}", queue.name());
         return false;
       }
-      logger.error("Exception happened while fetching message from queue {}", queue.name(), exception);
+      logger.error(format("Exception happened while fetching message from queue %s", queue.name()), exception);
     }
 
     if (message == null) {

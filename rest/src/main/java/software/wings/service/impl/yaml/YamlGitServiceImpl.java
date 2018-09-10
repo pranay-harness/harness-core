@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -277,7 +278,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info("Performed full-sync dry-run for account {}", accountId);
       return gitFileChanges;
     } catch (Exception ex) {
-      logger.error("Failed to perform full-sync dry-run for account {}", accountId, ex);
+      logger.error(format("Failed to perform full-sync dry-run for account %s", accountId), ex);
     }
     return new ArrayList<>();
   }
@@ -293,7 +294,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       logger.info("Got all Yaml errors for account {}", accountId);
       return errorLog;
     } catch (Exception ex) {
-      logger.error("Failed to get all Yaml errors for account {}", accountId, ex);
+      logger.error(format("Failed to get all Yaml errors for account %s", accountId), ex);
     }
     return new ArrayList<>();
   }

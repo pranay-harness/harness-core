@@ -1,5 +1,6 @@
 package migrations.seedata;
 
+import static java.lang.String.format;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
@@ -68,7 +69,8 @@ public class TemplateGalleryDefaultTemplatesMigration implements SeedDataMigrati
           }
           logger.info("TemplateGalleryDefaultTemplatesMigration finished for account [{}]", account.getUuid());
         } catch (Exception ex) {
-          logger.error("TemplateGalleryDefaultTemplatesMigration failed for account [{}]", account.getUuid(), ex);
+          logger.error(
+              format("TemplateGalleryDefaultTemplatesMigration failed for account [%s]", account.getUuid()), ex);
         }
       }
     }

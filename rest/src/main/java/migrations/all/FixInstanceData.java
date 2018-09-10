@@ -1,5 +1,6 @@
 package migrations.all;
 
+import static java.lang.String.format;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.service.impl.instance.InstanceHandler.AUTO_SCALE;
@@ -152,7 +153,7 @@ public class FixInstanceData implements Migration {
                 });
                 logger.info("Instance fix completed for [{}]", infraMappingId);
               } catch (Exception ex) {
-                logger.warn("Instance fix failed for infraMappingId [{}]", infraMappingId, ex);
+                logger.warn(format("Instance fix failed for infraMappingId [%s]", infraMappingId), ex);
               }
             } catch (Exception e) {
               logger.warn("Failed to acquire lock for infraMappingId [{}] of appId [{}]", infraMappingId, appId);

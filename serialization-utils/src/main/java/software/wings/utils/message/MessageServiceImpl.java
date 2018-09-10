@@ -1,5 +1,6 @@
 package software.wings.utils.message;
 
+import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -297,7 +298,7 @@ public class MessageServiceImpl implements MessageService {
     try {
       FileUtils.forceMkdir(channelDirectory);
     } catch (Exception e) {
-      logger.error("Error creating channel directory: {}", channelDirectory.getAbsolutePath(), e);
+      logger.error(format("Error creating channel directory: %s", channelDirectory.getAbsolutePath()), e);
       return null;
     }
     return FileUtils.listFiles(channelDirectory, FILE, null).stream().map(File::getName).collect(toList());
@@ -401,7 +402,7 @@ public class MessageServiceImpl implements MessageService {
     try {
       FileUtils.forceMkdir(dataDirectory);
     } catch (Exception e) {
-      logger.error("Error creating data directory: {}", dataDirectory.getAbsolutePath(), e);
+      logger.error(format("Error creating data directory: %s", dataDirectory.getAbsolutePath()), e);
       return null;
     }
     return FileUtils
@@ -450,7 +451,7 @@ public class MessageServiceImpl implements MessageService {
         FileUtils.forceDelete(file);
       }
     } catch (Exception e) {
-      logger.error("Error closing data: {}", name, e);
+      logger.error(format("Error closing data: %s", name), e);
     }
   }
 
@@ -487,7 +488,7 @@ public class MessageServiceImpl implements MessageService {
       try {
         return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), HashMap.class);
       } catch (Exception e) {
-        logger.error("Couldn't read map from {}. Returning empty data map", file.getName(), e);
+        logger.error(format("Couldn't read map from %s. Returning empty data map", file.getName()), e);
       }
     }
     return new HashMap<>();

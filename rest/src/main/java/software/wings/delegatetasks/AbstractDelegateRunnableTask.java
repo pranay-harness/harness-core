@@ -1,6 +1,7 @@
 
 package software.wings.delegatetasks;
 
+import static java.lang.String.format;
 import static software.wings.exception.WingsException.ExecutionContext.DELEGATE;
 
 import com.google.inject.Inject;
@@ -70,7 +71,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
           WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
           result = ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build();
         } catch (Throwable exception) {
-          logger.error("Unexpected error executing delegate task {}", taskId, exception);
+          logger.error(format("Unexpected error executing delegate task %s", taskId), exception);
           result = ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build();
         } finally {
           if (consumer != null) {
@@ -86,7 +87,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         logger.info("Pre-execute returned false for task {}", taskId);
       }
     } catch (Throwable e) {
-      logger.error("Unexpected error executing delegate task {}", taskId, e);
+      logger.error(format("Unexpected error executing delegate task %s", taskId), e);
     }
   }
 

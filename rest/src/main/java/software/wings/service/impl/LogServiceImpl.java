@@ -117,7 +117,7 @@ public class LogServiceImpl implements LogService {
           DBObject dbObject = ((DatastoreImpl) wingsPersistence.getDatastore()).getMapper().toDBObject(log);
           dbObjects.add(dbObject);
         } catch (Exception e) {
-          logger.error("Exception in saving log [{}]", log, e);
+          logger.error(format("Exception in saving log [%s]", log), e);
         }
       }
       wingsPersistence.getCollection("commandLogs").insert(dbObjects);

@@ -65,7 +65,7 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
       pcfCommandResponse.setOutput(StringUtils.EMPTY);
       pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
     } catch (Exception e) {
-      logger.error("Exception in processing PCF Route Update task [{}]", e);
+      logger.error("Exception in processing PCF Route Update task", e);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Route Update failed to complete successfully");
       Misc.logAllMessages(e, executionLogCallback);
       pcfCommandResponse.setOutput(Misc.getMessage(e));
