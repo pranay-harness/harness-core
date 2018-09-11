@@ -212,15 +212,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           yamlGitService.processFailedChanges(accountId, ex.getFailedYamlFileChangeMap(), false);
         }
         return Builder.aRestResponse()
-            .withResponseMessages(asList(
-                new ResponseMessage[] {ResponseMessage.aResponseMessage().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
+            .withResponseMessages(
+                asList(new ResponseMessage[] {ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
             .build();
       });
       return future.get(30, TimeUnit.SECONDS);
     } catch (Exception e) {
       return Builder.aRestResponse()
-          .withResponseMessages(asList(
-              new ResponseMessage[] {ResponseMessage.aResponseMessage().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
+          .withResponseMessages(
+              asList(new ResponseMessage[] {ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
           .build();
     }
   }

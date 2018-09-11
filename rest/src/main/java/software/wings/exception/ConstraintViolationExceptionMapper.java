@@ -2,7 +2,6 @@ package software.wings.exception;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.google.common.base.Joiner;
@@ -183,7 +182,7 @@ public class ConstraintViolationExceptionMapper implements ExceptionMapper<Const
   }
 
   private ResponseMessage errorMessageToResponseMessage(String s) {
-    return aResponseMessage().code(INVALID_ARGUMENT).level(Level.ERROR).message(s).build();
+    return ResponseMessage.builder().code(INVALID_ARGUMENT).level(Level.ERROR).message(s).build();
   }
 
   @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")

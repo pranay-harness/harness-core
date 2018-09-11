@@ -6,7 +6,6 @@ import static io.harness.eraro.Level.ERROR;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.stream.Collectors.joining;
 import static javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
@@ -51,7 +50,7 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
           MessageManager.getInstance().prepareMessage(ErrorCodeName.builder().value(exception.getCode().name()).build(),
               exception.getMessage(), exception.getParams());
       ResponseMessage responseMessage =
-          aResponseMessage().code(exception.getCode()).message(message).level(exception.getLevel()).build();
+          ResponseMessage.builder().code(exception.getCode()).message(message).level(exception.getLevel()).build();
 
       ResponseMessage finalResponseMessage = responseMessage;
       if (list.stream().noneMatch(msg -> StringUtils.equals(finalResponseMessage.getMessage(), msg.getMessage()))) {
