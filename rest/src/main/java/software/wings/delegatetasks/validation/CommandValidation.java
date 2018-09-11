@@ -103,9 +103,13 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   private DelegateConnectionResult validateHostWinRm(CommandExecutionContext context) {
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria(context));
     WinRmSessionConfig config = context.winrmSessionConfig("HOST_CONNECTION_TEST", WINDOWS_HOME_DIR);
+    logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", config.getHostname(), config.getPort(),
+        config.isUseSSL());
+
     try (WinRmSession ignore = new WinRmSession(config)) {
       resultBuilder.validated(true);
     } catch (Exception e) {
+      logger.info("Exception in WinrmSession Validation: {}", e);
       resultBuilder.validated(false);
     }
     return resultBuilder.build();
