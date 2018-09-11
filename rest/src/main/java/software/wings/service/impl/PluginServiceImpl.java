@@ -25,6 +25,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
@@ -167,6 +168,15 @@ public class PluginServiceImpl implements PluginService {
             .withType(SettingVariableTypes.DATA_DOG.name())
             .withPluginCategories(asList(Verification))
             .withUiSchema(readUiSchema(SettingVariableTypes.DATA_DOG.name()))
+            .build(),
+        anAccountPlugin()
+            .withSettingClass(BugsnagConfig.class)
+            .withAccountId(accountId)
+            .withIsEnabled(true)
+            .withDisplayName(SettingVariableTypes.BUG_SNAG.getDisplayName())
+            .withType(SettingVariableTypes.BUG_SNAG.name())
+            .withPluginCategories(asList(Verification))
+            .withUiSchema(readUiSchema(SettingVariableTypes.BUG_SNAG.name()))
             .build(),
         //        anAccountPlugin()
         //            .withSettingClass(AwsConfig.class)

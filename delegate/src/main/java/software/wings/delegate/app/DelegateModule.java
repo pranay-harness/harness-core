@@ -112,6 +112,8 @@ import software.wings.service.impl.aws.delegate.AwsEcsHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsElbHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsIamHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsLambdaHelperServiceDelegateImpl;
+import software.wings.service.impl.bugsnag.BugsnagDelegateService;
+import software.wings.service.impl.bugsnag.BugsnagDelegateServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.logz.LogzDelegateServiceImpl;
@@ -274,6 +276,7 @@ public class DelegateModule extends AbstractModule {
     bind(AppdynamicsDelegateService.class).to(AppdynamicsDelegateServiceImpl.class);
     bind(APMDelegateService.class).to(APMDelegateServiceImpl.class);
     bind(NewRelicDelegateService.class).to(NewRelicDelgateServiceImpl.class);
+    bind(BugsnagDelegateService.class).to(BugsnagDelegateServiceImpl.class);
     bind(DynaTraceDelegateService.class).to(DynaTraceDelegateServiceImpl.class);
     bind(PrometheusDelegateService.class).to(PrometheusDelegateServiceImpl.class);
     bind(SplunkDelegateService.class).to(SplunkDelegateServiceImpl.class);

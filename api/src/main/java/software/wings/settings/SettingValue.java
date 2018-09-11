@@ -152,6 +152,15 @@ public abstract class SettingValue implements ExtensionPoint {
      * Generic APM setting variable types.
      */
     APM_VERIFICATION("APM Verification"),
+    /**
+     * Bugsnag setting variable type.
+     */
+    BUG_SNAG("Bugsnag"),
+
+    /**
+     * Generic Log setting variable types.
+     */
+    LOG_VERIFICATION("Log Verification"),
 
     /**
      * App dynamics setting variable types.

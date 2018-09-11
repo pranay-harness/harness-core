@@ -11,10 +11,12 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
+import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.apm.APMRestClient;
+import software.wings.service.impl.analysis.CustomLogDataCollectionInfo;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.intfc.security.EncryptionConfig;
 
@@ -37,16 +39,23 @@ public class APMValidation extends AbstractSecretManagerValidation {
     return singletonList(Arrays.stream(getParameters())
                              .filter(o
                                  -> o instanceof DatadogConfig || o instanceof APMVerificationConfig
-                                     || o instanceof APMValidateCollectorConfig || o instanceof APMDataCollectionInfo)
+                                     || o instanceof APMValidateCollectorConfig || o instanceof APMDataCollectionInfo
+                                     || o instanceof CustomLogDataCollectionInfo || o instanceof BugsnagConfig)
                              .map(obj -> {
                                if (obj instanceof DatadogConfig) {
                                  DatadogConfig config = (DatadogConfig) obj;
                                  return config.getUrl() + DatadogConfig.validationUrl;
+                               } else if (obj instanceof BugsnagConfig) {
+                                 BugsnagConfig config = (BugsnagConfig) obj;
+                                 return config.getUrl() + BugsnagConfig.validationUrl;
                                } else if (obj instanceof APMVerificationConfig) {
                                  APMVerificationConfig config = (APMVerificationConfig) obj;
                                  return config.getUrl() + config.getValidationUrl();
                                } else if (obj instanceof APMDataCollectionInfo) {
                                  APMDataCollectionInfo dInfo = (APMDataCollectionInfo) obj;
+                                 return dInfo.getBaseUrl() + dInfo.getValidationUrl();
+                               } else if (obj instanceof CustomLogDataCollectionInfo) {
+                                 CustomLogDataCollectionInfo dInfo = (CustomLogDataCollectionInfo) obj;
                                  return dInfo.getBaseUrl() + dInfo.getValidationUrl();
                                } else {
                                  APMValidateCollectorConfig config = (APMValidateCollectorConfig) obj;
@@ -64,6 +73,11 @@ public class APMValidation extends AbstractSecretManagerValidation {
         if (((APMDataCollectionInfo) parmeter).getEncryptedDataDetails() != null
             && ((APMDataCollectionInfo) parmeter).getEncryptedDataDetails().size() > 0) {
           return ((APMDataCollectionInfo) parmeter).getEncryptedDataDetails().get(0).getEncryptionConfig();
+        }
+      } else if (parmeter instanceof CustomLogDataCollectionInfo) {
+        if (((CustomLogDataCollectionInfo) parmeter).getEncryptedDataDetails() != null
+            && ((CustomLogDataCollectionInfo) parmeter).getEncryptedDataDetails().size() > 0) {
+          return ((CustomLogDataCollectionInfo) parmeter).getEncryptedDataDetails().get(0).getEncryptionConfig();
         }
       }
     }
@@ -85,6 +99,10 @@ public class APMValidation extends AbstractSecretManagerValidation {
         DatadogConfig datadogConfig = (DatadogConfig) config;
         validateCollectorConfig = datadogConfig.createAPMValidateCollectorConfig();
         break;
+      } else if (config instanceof BugsnagConfig) {
+        BugsnagConfig bugsnag = (BugsnagConfig) config;
+        validateCollectorConfig = bugsnag.createAPMValidateCollectorConfig();
+        break;
       } else if (config instanceof APMVerificationConfig) {
         APMVerificationConfig apmConfig = (APMVerificationConfig) config;
         validateCollectorConfig = APMValidateCollectorConfig.builder()
@@ -96,6 +114,15 @@ public class APMValidation extends AbstractSecretManagerValidation {
         break;
       } else if (config instanceof APMDataCollectionInfo) {
         APMDataCollectionInfo dInfo = (APMDataCollectionInfo) config;
+        validateCollectorConfig = APMValidateCollectorConfig.builder()
+                                      .baseUrl(dInfo.getBaseUrl())
+                                      .url(dInfo.getValidationUrl())
+                                      .options(dInfo.getOptions())
+                                      .headers(dInfo.getHeaders())
+                                      .build();
+        break;
+      } else if (config instanceof CustomLogDataCollectionInfo) {
+        CustomLogDataCollectionInfo dInfo = (CustomLogDataCollectionInfo) config;
         validateCollectorConfig = APMValidateCollectorConfig.builder()
                                       .baseUrl(dInfo.getBaseUrl())
                                       .url(dInfo.getValidationUrl())

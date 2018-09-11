@@ -156,6 +156,8 @@ public class LogClusterManagerJob implements Job {
           case SUMO:
           case ELK:
           case LOGZ:
+          case BUG_SNAG:
+          case LOG_VERIFICATION:
             cluster();
             break;
           case SPLUNKV2:

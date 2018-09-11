@@ -527,3 +527,8 @@ software.wings.service.impl.analysis.LogElement, 5486
 software.wings.service.impl.prometheus.PrometheusMetricDataResponse$PrometheusMetricData, 5487
 software.wings.service.impl.prometheus.PrometheusMetricDataResponse$PrometheusMetricDataResult, 5488
 software.wings.service.impl.prometheus.PrometheusMetricDataResponse$PrometheusMetric, 5489
+software.wings.beans.BugsnagConfig, 5490
+software.wings.service.impl.bugsnag.BugsnagApplication, 5491
+software.wings.service.impl.analysis.CustomLogDataCollectionInfo, 5492
+software.wings.sm.states.CustomLogVerificationState$ResponseMapper, 5493
+

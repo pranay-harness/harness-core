@@ -33,7 +33,6 @@ public interface NewRelicService {
       @NotNull String settingId, long newRelicApplicationId, long instanceId, long fromTime, long toTime);
   RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       NewRelicSetupTestNodeData newRelicSetupTestNodeData);
-
   Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<Metric> metrics);
   Map<String, Metric> getMetricsCorrespondingToMetricNames(List<String> metricNames);
   List<Metric> getListOfMetrics();

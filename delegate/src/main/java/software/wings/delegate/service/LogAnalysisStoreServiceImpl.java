@@ -30,16 +30,12 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
                            serviceId, ClusterLevel.L2, delegateTaskId, StateType.SPLUNKV2, logs))
             .getResource();
       case SUMO:
-        return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L0, delegateTaskId, StateType.SUMO, logs))
-            .getResource();
       case ELK:
-        return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L0, delegateTaskId, StateType.ELK, logs))
-            .getResource();
       case LOGZ:
+      case LOG_VERIFICATION:
+      case BUG_SNAG:
         return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L0, delegateTaskId, StateType.LOGZ, logs))
+                           serviceId, ClusterLevel.L0, delegateTaskId, StateType.BUG_SNAG, logs))
             .getResource();
       default:
         throw new IllegalStateException("Invalid state: " + stateType);

@@ -276,6 +276,8 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.APMVerificationService;
 import software.wings.service.intfc.analysis.AnalysisService;
+import software.wings.service.intfc.analysis.LogVerificationService;
+import software.wings.service.intfc.analysis.LogVerificationServiceImpl;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
@@ -524,6 +526,7 @@ public class WingsModule extends AbstractModule {
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);
 
     bind(APMVerificationService.class).to(APMVerificationServiceImpl.class);
+    bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
           this.getClass().getClassLoader().getResourceAsStream("versionInfo.yaml"), StandardCharsets.UTF_8));

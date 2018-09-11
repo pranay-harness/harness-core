@@ -37,6 +37,7 @@ public enum TaskGroup {
   COLLABORATION_PROVIDER,
   PCF,
   APM,
+  LOG,
   CLOUD_FORMATION,
   TERRAFORM,
   AWS

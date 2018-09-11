@@ -84,8 +84,10 @@ import software.wings.sm.states.AwsLambdaState;
 import software.wings.sm.states.AwsNodeSelectState;
 import software.wings.sm.states.BambooState;
 import software.wings.sm.states.BarrierState;
+import software.wings.sm.states.BugsnagState;
 import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.CommandState;
+import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.DynatraceState;
@@ -270,6 +272,18 @@ public enum StateType implements StateTypeDescriptor {
    * Generic APM verification state type.
    */
   APM_VERIFICATION(APMVerificationState.class, VERIFICATIONS, 15, "APM Verification", asList(), ORCHESTRATION_STENCILS),
+
+  /**
+
+   * Generic LOG verification state type.
+   */
+  LOG_VERIFICATION(
+      CustomLogVerificationState.class, VERIFICATIONS, 16, "Log Verification", asList(), ORCHESTRATION_STENCILS),
+
+  /**
+   * Bugsnag verification state type.
+   */
+  BUG_SNAG(BugsnagState.class, VERIFICATIONS, 17, "Bugsnag", asList(), ORCHESTRATION_STENCILS),
 
   /**
    * Env state state type.
