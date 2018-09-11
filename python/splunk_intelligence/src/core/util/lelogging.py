@@ -16,7 +16,10 @@ if os.environ.get('learning_env') and str(os.environ.get('learning_env')).lower(
     # clogHandler.setLevel(logging.INFO)
     log.addHandler(clog_handler)
 elif str(os.environ.get('learning_env')).lower() == 'on_prem':
-    handler = RotatingFileHandler("logs/le_log", maxBytes=8388608, backupCount=10)
+    folder_path ='logs'
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    handler = RotatingFileHandler(os.path.join(folder_path, 'le.log'), maxBytes=8388608, backupCount=10)
     handler.setFormatter(logging.Formatter(log_format))
     log.addHandler(handler)
 
