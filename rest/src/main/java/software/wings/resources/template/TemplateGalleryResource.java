@@ -6,12 +6,14 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.data.structure.EmptyPredicate;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
@@ -113,6 +115,9 @@ public class TemplateGalleryResource {
       @QueryParam("accountId") String accountId, TemplateFolder templateFolder) {
     templateFolder.setAppId(GLOBAL_APP_ID);
     templateFolder.setAccountId(accountId);
+    if (EmptyPredicate.isEmpty(templateFolder.getParentId())) {
+      throw new WingsException("Root folder can not be added. Only one root folder supported ", WingsException.USER);
+    }
     return new RestResponse<>(templateFolderService.save(templateFolder));
   }
 
