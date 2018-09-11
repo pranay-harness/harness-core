@@ -13,6 +13,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -22,7 +23,6 @@ import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.VaultConfig;

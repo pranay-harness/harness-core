@@ -1,10 +1,10 @@
 package software.wings;
 
 import io.harness.CategoryTest;
+import io.harness.eraro.ErrorCode;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.exception.WingsException;

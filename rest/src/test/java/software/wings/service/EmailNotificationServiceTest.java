@@ -12,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,7 +23,6 @@ import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.EmailSendingFailedAlert;
 import software.wings.core.queue.Queue;

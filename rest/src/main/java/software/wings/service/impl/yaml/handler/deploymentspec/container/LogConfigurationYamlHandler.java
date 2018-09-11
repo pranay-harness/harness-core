@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.container.LogConfiguration;
 import software.wings.beans.container.LogConfiguration.LogOption;

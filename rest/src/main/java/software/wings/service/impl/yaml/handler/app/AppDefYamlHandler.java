@@ -6,7 +6,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.TemplateExpression.Yaml;

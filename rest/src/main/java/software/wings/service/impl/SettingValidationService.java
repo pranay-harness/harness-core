@@ -8,6 +8,7 @@ import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
 import org.slf4j.Logger;
@@ -25,7 +26,6 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesClusterConfig;

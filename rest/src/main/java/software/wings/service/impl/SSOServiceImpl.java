@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.Account;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.exception.WingsException;

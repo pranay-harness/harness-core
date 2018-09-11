@@ -13,13 +13,13 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.bamboo.BambooService;

@@ -2,8 +2,8 @@ package software.wings.common;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Test;
-import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 
 import java.io.IOException;

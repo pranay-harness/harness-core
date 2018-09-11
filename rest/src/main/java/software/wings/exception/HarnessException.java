@@ -2,7 +2,7 @@ package software.wings.exception;
 
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.ResponseMessage;
 
 import java.util.ArrayList;

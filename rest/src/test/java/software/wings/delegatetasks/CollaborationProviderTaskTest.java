@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -14,7 +15,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.exception.WingsException;

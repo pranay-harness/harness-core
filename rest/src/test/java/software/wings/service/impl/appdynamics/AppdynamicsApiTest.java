@@ -23,6 +23,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import okhttp3.internal.http.RealResponseBody;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
@@ -34,7 +35,6 @@ import retrofit2.Response;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;

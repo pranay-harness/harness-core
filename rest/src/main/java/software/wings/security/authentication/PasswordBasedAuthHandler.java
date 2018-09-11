@@ -1,10 +1,10 @@
 package software.wings.security.authentication;
 
+import static io.harness.eraro.ErrorCode.EMAIL_NOT_VERIFIED;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
+import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static org.mindrot.jbcrypt.BCrypt.checkpw;
-import static software.wings.beans.ErrorCode.EMAIL_NOT_VERIFIED;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;

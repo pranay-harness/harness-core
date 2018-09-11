@@ -5,10 +5,10 @@ import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;

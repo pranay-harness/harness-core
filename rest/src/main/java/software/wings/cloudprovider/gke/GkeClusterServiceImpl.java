@@ -1,11 +1,11 @@
 package software.wings.cloudprovider.gke;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.service.impl.GcpHelperService.ALL_LOCATIONS;
 import static software.wings.service.impl.GcpHelperService.LOCATION_DELIMITER;
 

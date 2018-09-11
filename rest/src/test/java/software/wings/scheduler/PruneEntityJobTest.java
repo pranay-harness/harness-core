@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.matches;
@@ -10,7 +11,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;

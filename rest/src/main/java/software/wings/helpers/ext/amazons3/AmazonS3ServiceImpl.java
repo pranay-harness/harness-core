@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.amazons3;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_NO;

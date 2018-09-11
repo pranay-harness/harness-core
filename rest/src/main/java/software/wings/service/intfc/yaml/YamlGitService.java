@@ -1,10 +1,10 @@
 package software.wings.service.intfc.yaml;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GitCommit;
 import software.wings.beans.RestResponse;
 import software.wings.beans.alert.AlertData;

@@ -23,6 +23,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +45,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.EntityType;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;

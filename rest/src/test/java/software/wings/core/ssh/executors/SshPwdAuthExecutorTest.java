@@ -1,6 +1,11 @@
 package software.wings.core.ssh.executors;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
+import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_ERROR;
+import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
+import static io.harness.eraro.ErrorCode.SSH_SESSION_TIMEOUT;
+import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,11 +15,6 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_ERROR;
-import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
-import static software.wings.beans.ErrorCode.SSH_SESSION_TIMEOUT;
-import static software.wings.beans.ErrorCode.UNKNOWN_HOST;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;

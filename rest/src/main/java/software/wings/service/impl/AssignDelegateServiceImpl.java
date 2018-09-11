@@ -13,6 +13,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.eraro.ErrorCode;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -21,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateScope;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskGroup;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;

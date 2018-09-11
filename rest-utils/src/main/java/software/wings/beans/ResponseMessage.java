@@ -1,8 +1,9 @@
 package software.wings.beans;
 
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.Level.ERROR;
-import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;

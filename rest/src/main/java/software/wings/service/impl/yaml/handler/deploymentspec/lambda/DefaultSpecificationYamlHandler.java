@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.deploymentspec.lambda;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.LambdaSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification;
 import software.wings.beans.LambdaSpecification.DefaultSpecification.Yaml;

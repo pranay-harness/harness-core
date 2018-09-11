@@ -6,6 +6,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -15,7 +16,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;

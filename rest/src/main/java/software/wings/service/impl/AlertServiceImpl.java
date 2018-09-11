@@ -16,11 +16,11 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.eraro.ErrorCode;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;

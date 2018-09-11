@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.variable;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.Variable;
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.beans.Variable.Yaml;

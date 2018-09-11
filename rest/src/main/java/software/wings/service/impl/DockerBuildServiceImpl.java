@@ -9,8 +9,8 @@ import static software.wings.utils.Validator.equalCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;

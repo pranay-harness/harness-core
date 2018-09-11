@@ -6,8 +6,8 @@ import com.google.common.io.BaseEncoding;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 
 import java.nio.ByteBuffer;

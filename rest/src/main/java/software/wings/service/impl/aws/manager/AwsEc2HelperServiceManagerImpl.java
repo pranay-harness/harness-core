@@ -8,11 +8,11 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.TaskType;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;

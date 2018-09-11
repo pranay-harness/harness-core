@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.nexus;
 
+import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static java.lang.String.format;
-import static software.wings.beans.ErrorCode.ARTIFACT_SERVER_ERROR;
-import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.ArtifactType.DOCKER;

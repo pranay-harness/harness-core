@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static java.util.Arrays.asList;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -13,7 +14,6 @@ import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anAppl
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.EnvironmentRole.EnvironmentRoleBuilder.anEnvironmentRole;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.Permission.Builder.aPermission;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.User.Builder.anUser;
@@ -45,6 +45,7 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
+import io.harness.eraro.ErrorCode;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.jexl3.JxltEngine.Exception;
@@ -63,7 +64,6 @@ import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;

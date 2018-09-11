@@ -8,12 +8,12 @@ import static software.wings.beans.Event.Builder.anEvent;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;

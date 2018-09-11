@@ -5,7 +5,7 @@ import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import com.google.common.collect.Maps;
 
 import io.harness.data.structure.UUIDGenerator;
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.GraphNode;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.CommandUnit;

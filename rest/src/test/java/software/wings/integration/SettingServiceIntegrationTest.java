@@ -14,6 +14,7 @@ import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
@@ -21,7 +22,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;

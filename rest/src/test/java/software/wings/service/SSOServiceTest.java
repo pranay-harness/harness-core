@@ -8,13 +8,13 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import com.coveo.saml.SamlException;
+import io.harness.eraro.ErrorCode;
 import org.apache.commons.io.IOUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;

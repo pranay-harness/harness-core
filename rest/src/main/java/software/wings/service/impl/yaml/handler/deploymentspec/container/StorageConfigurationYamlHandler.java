@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler.deploymentspec.container;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.container.StorageConfiguration;
 import software.wings.beans.container.StorageConfiguration.Yaml;
 import software.wings.beans.yaml.ChangeContext;

@@ -1,8 +1,8 @@
 package software.wings.beans.yaml;
 
+import io.harness.eraro.ErrorCode;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.ErrorCode;
 import software.wings.waitnotify.NotifyResponseData;
 
 /**

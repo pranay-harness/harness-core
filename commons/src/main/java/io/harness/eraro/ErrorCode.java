@@ -1,4 +1,4 @@
-package software.wings.beans;
+package io.harness.eraro;
 
 import static java.util.stream.Collectors.joining;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;

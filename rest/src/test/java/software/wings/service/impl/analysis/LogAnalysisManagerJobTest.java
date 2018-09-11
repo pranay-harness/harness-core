@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -25,7 +26,6 @@ import org.quartz.JobDataMap;
 import org.quartz.JobExecutionContext;
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.WorkflowExecution;

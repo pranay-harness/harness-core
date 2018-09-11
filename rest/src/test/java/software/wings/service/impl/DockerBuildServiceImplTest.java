@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -11,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
 import software.wings.exception.WingsException;

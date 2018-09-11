@@ -8,6 +8,7 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -18,7 +19,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;

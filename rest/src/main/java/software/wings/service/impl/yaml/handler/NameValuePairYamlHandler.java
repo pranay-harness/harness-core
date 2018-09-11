@@ -2,7 +2,7 @@ package software.wings.service.impl.yaml.handler;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.NameValuePair.Yaml;
 import software.wings.beans.yaml.ChangeContext;

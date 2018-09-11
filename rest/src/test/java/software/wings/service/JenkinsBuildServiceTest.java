@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -32,7 +33,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.exception.WingsException;

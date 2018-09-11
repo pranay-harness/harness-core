@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,7 +18,6 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.EmailVerificationToken.Builder.anEmailVerificationToken;
-import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.beans.Role.Builder.aRole;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.User.Builder.anUser;

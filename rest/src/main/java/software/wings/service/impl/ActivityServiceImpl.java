@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.time.Duration.ofSeconds;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.exception.WingsException.ADMIN;
 

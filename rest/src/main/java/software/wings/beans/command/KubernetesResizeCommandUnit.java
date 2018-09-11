@@ -1,11 +1,11 @@
 package software.wings.beans.command;
 
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.atteo.evo.inflector.English.plural;
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.cloudprovider.ContainerInfo.Status.SUCCESS;
 import static software.wings.service.impl.KubernetesHelperService.printVirtualServiceRouteWeights;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.harness.eraro.ErrorCode;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,7 +33,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.ContainerServiceData;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;

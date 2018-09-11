@@ -1,15 +1,15 @@
 package software.wings.security.authentication;
 
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.User;
 import software.wings.exception.WingsException;
 import software.wings.security.SecretManager.JWT_CATEGORY;

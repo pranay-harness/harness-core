@@ -15,12 +15,12 @@ import static software.wings.exception.WingsException.ReportTarget.REST_API;
 import static software.wings.exception.WingsException.ReportTarget.UNIVERSAL;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.MessageManager;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.exception.WingsException.ExecutionContext;
 import software.wings.exception.WingsException.ReportTarget;

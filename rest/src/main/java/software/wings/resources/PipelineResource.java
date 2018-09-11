@@ -4,7 +4,7 @@
 
 package software.wings.resources;
 
-import static software.wings.beans.ErrorCode.DUPLICATE_STATE_NAMES;
+import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 

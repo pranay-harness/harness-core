@@ -270,7 +270,7 @@ software.wings.api.AwsLambdaContextElement$FunctionMeta, 5229
 software.wings.api.AwsLambdaFunctionElement, 5230
 software.wings.api.ServiceArtifactElement, 5231
 software.wings.service.impl.analysis.LogAnalysisExecutionData, 5232
-software.wings.beans.ErrorCode, 5233
+io.harness.eraro.ErrorCode, 5233
 software.wings.beans.command.JenkinsTaskParams, 5234
 software.wings.api.ScriptStateExecutionData, 5235
 software.wings.sm.ExecutionInterruptEffect, 5236

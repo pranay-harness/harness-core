@@ -5,10 +5,10 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.eraro.ErrorCode;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.RestResponse;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.ResourceType;

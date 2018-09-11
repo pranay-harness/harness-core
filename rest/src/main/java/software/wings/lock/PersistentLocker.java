@@ -1,9 +1,9 @@
 package software.wings.lock;
 
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.exception.WingsException.NOBODY;
 
 import com.google.common.util.concurrent.TimeLimiter;

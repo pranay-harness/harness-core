@@ -6,13 +6,13 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDum
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;

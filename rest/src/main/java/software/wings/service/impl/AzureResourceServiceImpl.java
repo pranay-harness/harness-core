@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
