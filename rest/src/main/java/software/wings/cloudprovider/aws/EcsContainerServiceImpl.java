@@ -939,7 +939,7 @@ public class EcsContainerServiceImpl implements EcsContainerService {
       waitForTasksToBeInRunningState(
           region, awsConfig, encryptedDataDetails, clusterName, serviceName, executionLogCallback, desiredCount);
     } catch (WingsException e) {
-      if (e.getResponseMessage().getCode() == INIT_TIMEOUT) {
+      if (e.getCode() == INIT_TIMEOUT) {
         throw e;
       }
     }

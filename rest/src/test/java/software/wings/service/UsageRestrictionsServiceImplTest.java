@@ -611,8 +611,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertTrue(ex.getResponseMessage() != null);
-        assertTrue(ex.getResponseMessage().getCode().equals(ErrorCode.INVALID_USAGE_RESTRICTION));
+        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
       }
 
       appFilter = GenericEntityFilter.builder().filterType(FilterType.SELECTED).build();
@@ -624,8 +623,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertTrue(ex.getResponseMessage() != null);
-        assertTrue(ex.getResponseMessage().getCode().equals(ErrorCode.INVALID_USAGE_RESTRICTION));
+        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
       }
 
       envFilters = newHashSet(PROD, NON_PROD);
@@ -636,8 +634,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertTrue(ex.getResponseMessage() != null);
-        assertTrue(ex.getResponseMessage().getCode().equals(ErrorCode.INVALID_USAGE_RESTRICTION));
+        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
       }
 
       appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
@@ -648,8 +645,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertTrue(ex.getResponseMessage() != null);
-        assertTrue(ex.getResponseMessage().getCode().equals(ErrorCode.INVALID_USAGE_RESTRICTION));
+        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
       }
 
       appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
@@ -659,8 +655,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertTrue(ex.getResponseMessage() != null);
-        assertTrue(ex.getResponseMessage().getCode().equals(ErrorCode.INVALID_USAGE_RESTRICTION));
+        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
       }
 
       appEnvRestriction = AppEnvRestriction.builder().build();
@@ -669,16 +664,14 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertTrue(ex.getResponseMessage() != null);
-        assertTrue(ex.getResponseMessage().getCode().equals(ErrorCode.INVALID_USAGE_RESTRICTION));
+        assertEquals(ex.getCode(), ErrorCode.INVALID_USAGE_RESTRICTION);
       }
 
       usageRestrictions = new UsageRestrictions();
       try {
         usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(ACCOUNT_ID, null, usageRestrictions);
       } catch (WingsException ex) {
-        assertTrue(ex.getResponseMessage() != null);
-        assertTrue(ex.getResponseMessage().getCode().equals(ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS));
+        assertEquals(ex.getCode(), ErrorCode.NOT_ACCOUNT_MGR_NOR_HAS_ALL_APP_ACCESS);
       }
     } finally {
       UserThreadLocal.unset();

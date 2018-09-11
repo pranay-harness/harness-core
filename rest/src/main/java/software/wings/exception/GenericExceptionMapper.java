@@ -38,7 +38,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
               .code(DEFAULT_ERROR_CODE)
               .level(Level.ERROR)
               .message(MessageManager.getInstance().prepareMessage(
-                  ErrorCodeName.builder().value(DEFAULT_ERROR_CODE.name()).build(), null))
+                  ErrorCodeName.builder().value(DEFAULT_ERROR_CODE.name()).build(), null, null))
               .build());
     }
 

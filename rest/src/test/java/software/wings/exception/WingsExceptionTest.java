@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
-import io.harness.eraro.ErrorCode;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ResponseMessage;
@@ -14,16 +13,6 @@ import software.wings.beans.ResponseMessage;
 import java.util.List;
 
 public class WingsExceptionTest extends WingsBaseTest {
-  @Test
-  public void constructionShouldCreateAtLeastOneResponseMessageTest() {
-    assertThat(new WingsException("message").getResponseMessage()).isNotNull();
-    assertThat(new WingsException("message", new Exception()).getResponseMessage()).isNotNull();
-    assertThat(new WingsException(new Exception()).getResponseMessage()).isNotNull();
-    assertThat(new WingsException(ErrorCode.UNKNOWN_ERROR, "message").getResponseMessage()).isNotNull();
-    assertThat(new WingsException(ErrorCode.UNKNOWN_ERROR, new Exception()).getResponseMessage()).isNotNull();
-    assertThat(new WingsException(ErrorCode.UNKNOWN_ERROR).getResponseMessage()).isNotNull();
-  }
-
   @Test
   public void testCollectResponseMessages() {
     final WingsException exception =

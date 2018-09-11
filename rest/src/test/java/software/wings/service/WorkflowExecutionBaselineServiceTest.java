@@ -80,9 +80,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
       fail("Did not fail for invalid workflow execution id");
     } catch (WingsException e) {
-      assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
-      assertEquals("No workflow execution found with id: " + workflowExecutionId + " appId: " + appId,
-          e.getResponseMessage().getMessage());
+      assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getCode());
+      assertEquals("No workflow execution found with id: " + workflowExecutionId + " appId: " + appId, e.getMessage());
     }
   }
 
@@ -95,8 +94,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     try {
       workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
     } catch (WingsException e) {
-      assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
-      assertEquals("Pipeline has not been executed.", e.getResponseMessage().getMessage());
+      assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getCode());
+      assertEquals("Pipeline has not been executed.", e.getMessage());
     }
   }
 
@@ -111,8 +110,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     try {
       workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
     } catch (WingsException e) {
-      assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
-      assertEquals("No workflows have been executed for this pipeline.", e.getResponseMessage().getMessage());
+      assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getCode());
+      assertEquals("No workflows have been executed for this pipeline.", e.getMessage());
     }
   }
 
@@ -130,10 +129,10 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     try {
       workflowExecutionService.markBaseline(appId, workflowExecutionId, true);
     } catch (WingsException e) {
-      assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
-      assertEquals(
-          "Either there is no workflow execution with verification steps or verification steps haven't been executed for the workflow.",
-          e.getResponseMessage().getMessage());
+      assertEquals(ErrorCode.BASELINE_CONFIGURATION_ERROR, e.getCode());
+      assertEquals("Either there is no workflow execution with verification steps "
+              + "or verification steps haven't been executed for the workflow.",
+          e.getMessage());
     }
   }
 

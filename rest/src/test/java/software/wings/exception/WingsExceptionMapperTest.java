@@ -9,7 +9,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.exception.WingsException.USER;
 
 import io.harness.MockableTest;
@@ -19,12 +18,11 @@ import org.mockito.InOrder;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ResponseMessage;
 
 public class WingsExceptionMapperTest extends WingsBaseTest {
   @Test
   public void sanity() {
-    final WingsException exception = new WingsException(DEFAULT_ERROR_CODE);
+    final WingsException exception = WingsException.builder().code(DEFAULT_ERROR_CODE).build();
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
@@ -54,9 +52,8 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
 
   @Test
   public void overrideMessage() throws IllegalAccessException {
-    final ResponseMessage message = aResponseMessage().code(DEFAULT_ERROR_CODE).message("Override message").build();
-
-    final WingsException exception = new WingsException(message);
+    final WingsException exception =
+        WingsException.builder().message("Override message").code(DEFAULT_ERROR_CODE).build();
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
@@ -67,7 +64,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
 
     InOrder inOrder = inOrder(mockLogger);
     inOrder.verify(mockLogger)
-        .error("Response message: Override message\n"
+        .error("Response message: An error has occurred. Please contact the Harness support team.\n"
                 + "Exception occurred: Override message",
             exception);
   }
