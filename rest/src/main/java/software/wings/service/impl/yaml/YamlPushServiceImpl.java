@@ -55,7 +55,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
-        logger.error(format("Exception in pushing yaml change set for account %d", accountId), e);
+        logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
       }
     });
   }
@@ -89,7 +89,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
-        logger.error(format("Exception in pushing yaml change set for account %d", accountId), e);
+        logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
       }
     });
   }
@@ -130,7 +130,7 @@ public class YamlPushServiceImpl implements YamlPushService {
       try {
         yamlChangeSetHelper.defaultVariableChangeSet(accountId, appId, changeType);
       } catch (Exception e) {
-        logger.error(format("Exception in pushing yaml change set for account %d", accountId), e);
+        logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
       }
     });
   }
