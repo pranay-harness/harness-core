@@ -79,6 +79,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       logger.warn("Returning empty results from getCVExecutionMetaData since user was null");
       return results;
     }
+    if (isEmpty(getAllowedApplicationsForUser(user, accountId))) {
+      logger.warn(
+          "Returning empty results from getCVExecutionMetaData since user does not have permissions for any applications");
+      return results;
+    }
     PageRequest<ContinuousVerificationExecutionMetaData> request = PageRequestBuilder.aPageRequest()
                                                                        .addFilter("accountId", Operator.EQ, accountId)
                                                                        .addOrder("workflowStartTs", OrderType.DESC)
