@@ -19,10 +19,7 @@ public class SeedData {
       + "remaining essentially unchanged. It was popularised in the 1960s with the release of "
       + "Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software "
       + "like Aldus PageMaker including versions of Lorem Ipsum";
-  /**
-   * The Env names. PROD, DEV, QA, UAT created by default
-   */
-  public static List<String> envNames = asList("STRESS", "INTEGRATION", "SECURITY", "CLOUD", "PRIVATE", "INTERNAL");
+
   /**
    * The constant containerNames.
    */

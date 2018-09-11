@@ -92,4 +92,13 @@ public class ApplicationGenerator {
 
     return applicationService.save(builder.build());
   }
+
+  public Application ensureApplication(Application application) {
+    Application existing = exists(application);
+    if (existing != null) {
+      return existing;
+    }
+
+    return applicationService.save(application);
+  }
 }

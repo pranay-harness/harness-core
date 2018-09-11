@@ -103,4 +103,12 @@ public class ServiceGenerator {
 
     return serviceResourceService.save(builder.build());
   }
+
+  public Service ensureService(Service service) {
+    Service existing = exists(service);
+    if (existing != null) {
+      return existing;
+    }
+    return serviceResourceService.save(service);
+  }
 }
