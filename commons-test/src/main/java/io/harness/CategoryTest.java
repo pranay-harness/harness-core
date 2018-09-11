@@ -1,10 +1,12 @@
 package io.harness;
 
+import static org.junit.rules.RuleChain.outerRule;
+
+import io.harness.rule.AuthorRule;
 import io.harness.rule.CategoryTimeoutRule;
 import io.harness.rule.RepeatRule;
 import org.junit.Before;
 import org.junit.Rule;
-import org.junit.rules.RuleChain;
 import org.junit.rules.TestName;
 import org.junit.rules.TestRule;
 import org.slf4j.Logger;
@@ -15,9 +17,11 @@ public class CategoryTest {
 
   @Rule public TestName testName = new TestName();
 
+  private AuthorRule authorRule = new AuthorRule();
+
   private RepeatRule repeatRule = new RepeatRule();
 
-  @Rule public TestRule chain = RuleChain.outerRule(repeatRule).around(new CategoryTimeoutRule());
+  @Rule public TestRule chain = outerRule(repeatRule).around(outerRule(authorRule).around(new CategoryTimeoutRule()));
 
   /**
    * Log test case name.
