@@ -54,18 +54,16 @@
             <artifactId>commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>com.coveo</groupId>
-            <artifactId>saml-client</artifactId>
-            <version>1.4.0</version>
+            <groupId>software.wings</groupId>
+            <artifactId>persistence</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>api</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
-
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>serialization-utils</artifactId>
@@ -76,6 +74,12 @@
             <groupId>software.wings</groupId>
             <artifactId>rest-utils</artifactId>
             <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.coveo</groupId>
+            <artifactId>saml-client</artifactId>
+            <version>1.4.0</version>
         </dependency>
 
         <dependency>

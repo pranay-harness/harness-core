@@ -13,6 +13,8 @@
         <module>commons</module>
         <module>commons-test</module>
 
+        <module>persistence</module>
+
         <module>rest</module>
         <module>tools</module>
         <module>api</module>
