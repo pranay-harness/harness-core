@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.rule.AuthorRule.Author;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.beans.InfrastructureMappingBlueprint;
@@ -24,6 +25,7 @@ public class InfrastructureProvisionerServiceIntegrationTest extends BaseIntegra
   @Inject InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
 
   @Test
+  @Author(name = "George Georgiev")
   public void listForTaskTest() {
     Randomizer.Seed seed = Randomizer.seed();
     final InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerGenerator.ensureRandom(seed);

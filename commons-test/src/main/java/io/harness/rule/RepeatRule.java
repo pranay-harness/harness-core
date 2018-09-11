@@ -74,6 +74,10 @@ public class RepeatRule implements TestRule {
 
   @Override
   public Statement apply(Statement statement, Description description) {
+    if (statement instanceof RepeatStatement) {
+      return statement;
+    }
+
     final RepeatStatementBuilder builder = RepeatStatement.builder().statement(statement).parentRule(this);
 
     Repeat repeat = description.getAnnotation(Repeat.class);
