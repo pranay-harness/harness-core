@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.ResponseMessage;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.delegatetasks.DelegateLogService;
@@ -113,6 +114,13 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
   }
 
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {
+    throw new NotImplementedException("Not implemented");
+  }
+
+  @Override
+  public CommandExecutionStatus copyFiles(String destinationDirectoryPath,
+      ArtifactStreamAttributes artifactStreamAttributes, String accountId, String appId, String activityId,
+      String commandUnitName, String hostName) {
     throw new NotImplementedException("Not implemented");
   }
 

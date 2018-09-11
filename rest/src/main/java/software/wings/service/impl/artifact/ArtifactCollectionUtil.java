@@ -8,6 +8,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
+import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_FULL_DISPLAY_NAME;
@@ -69,6 +70,7 @@ public class ArtifactCollectionUtil {
       metadata.put(BUCKET_NAME, buildParameters.get(BUCKET_NAME));
       metadata.put(KEY, buildParameters.get(KEY));
       metadata.put(URL, buildParameters.get(URL));
+      metadata.put(ARTIFACT_FILE_SIZE, buildParameters.get(ARTIFACT_FILE_SIZE));
       return metadata;
     } else if (artifactStreamType.equals(JENKINS.name()) || artifactStreamType.equals(BAMBOO.name())) {
       metadata = buildDetails.getBuildParameters();

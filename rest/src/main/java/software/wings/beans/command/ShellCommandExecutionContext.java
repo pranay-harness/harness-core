@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.tuple.Pair;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.core.BaseExecutor;
@@ -32,6 +33,13 @@ public class ShellCommandExecutionContext extends CommandExecutionContext {
 
   public CommandExecutionStatus copyFiles(String destinationDirectoryPath, List<String> files) {
     return executor.copyFiles(evaluateVariable(destinationDirectoryPath), files);
+  }
+
+  public CommandExecutionStatus copyFiles(String destinationDirectoryPath,
+      ArtifactStreamAttributes artifactStreamAttributes, String accountId, String appId, String activityId,
+      String commandUnitName, String hostName) {
+    return executor.copyFiles(evaluateVariable(destinationDirectoryPath), artifactStreamAttributes, accountId, appId,
+        activityId, commandUnitName, hostName);
   }
 
   public CommandExecutionStatus executeCommandString(String commandString) {

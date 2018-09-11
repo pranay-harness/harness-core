@@ -30,6 +30,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
@@ -52,10 +53,14 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.HOST_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.JENKINS_URL;
+import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -70,6 +75,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.SimpleWorkflowParam;
 import software.wings.beans.Activity;
 import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
@@ -77,7 +83,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
 import software.wings.beans.artifact.Artifact;
-import software.wings.beans.artifact.JenkinsArtifactStream;
+import software.wings.beans.artifact.ArtifactStream;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ScpCommandUnit;
@@ -184,7 +191,7 @@ public class CommandStateTest extends WingsBaseTest {
           .withTemplateVariables(asList(aVariable().withName("var1").withValue("var1Value").build(),
               aVariable().withName("var2").withValue("var2Value").build()))
           .build();
-
+  @Mock ArtifactStream artifactStream;
   @Inject private ExecutorService executorService;
 
   @Mock private AppService appService;
@@ -239,7 +246,6 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(SettingAttribute.Builder.aSettingAttribute()
                         .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes().build())
                         .build());
-
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(singletonList(SIMPLE_WORKFLOW_PARAM));
     when(context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(PHASE_ELEMENT);
@@ -263,8 +269,6 @@ public class CommandStateTest extends WingsBaseTest {
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(serviceTemplate);
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(HOST);
     commandState.setExecutorService(executorService);
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))
-        .thenReturn(JenkinsArtifactStream.builder().uuid(ARTIFACT_STREAM_ID).appId(APP_ID).build());
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(commandState, "secretManager", secretManager);
   }
@@ -401,6 +405,7 @@ public class CommandStateTest extends WingsBaseTest {
                             .withServiceIds(asList(SERVICE_ID))
                             .build();
 
+    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().withMetadataOnly(false).build();
     Command command =
         aCommand()
             .addCommandUnits(
@@ -419,6 +424,19 @@ public class CommandStateTest extends WingsBaseTest {
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
 
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(aSettingAttribute()
+                        .withValue(JenkinsConfig.builder()
+                                       .jenkinsUrl(JENKINS_URL)
+                                       .username(USER_NAME)
+                                       .password(PASSWORD)
+                                       .accountId(ACCOUNT_ID)
+                                       .build())
+                        .build());
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactStream.getArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
+    when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
     when(serviceCommandExecutorService.execute(command,
              aCommandExecutionContext()
                  .withAppId(APP_ID)
@@ -427,6 +445,8 @@ public class CommandStateTest extends WingsBaseTest {
                  .withStagingPath(STAGING_PATH)
                  .withExecutionCredential(null)
                  .withActivityId(ACTIVITY_ID)
+                 .withArtifactStreamAttributes(artifactStreamAttributes)
+                 .withArtifactServerEncryptedDataDetails(new ArrayList<>())
                  .build()))
         .thenReturn(SUCCESS);
 
@@ -477,6 +497,8 @@ public class CommandStateTest extends WingsBaseTest {
                                .withSafeDisplayServiceVariables(emptyMap())
                                .withDeploymentType("ECS")
                                .withAccountId(ACCOUNT_ID)
+                               .withArtifactStreamAttributes(artifactStreamAttributes)
+                               .withArtifactServerEncryptedDataDetails(new ArrayList<>())
                                .build()})
                        .withEnvId(ENV_ID)
                        .withInfrastructureMappingId(INFRA_MAPPING_ID)
@@ -486,7 +508,7 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getContextElement(ContextElementType.INSTANCE);
     verify(context, times(1)).getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     verify(context, times(2)).getContextElementList(ContextElementType.PARAM);
-    verify(context, times(5)).getWorkflowExecutionId();
+    verify(context, times(7)).getWorkflowExecutionId();
     verify(context, times(1)).getWorkflowType();
     verify(context, times(5)).renderExpression(anyString());
     verify(context, times(1)).getWorkflowExecutionName();
@@ -495,12 +517,12 @@ public class CommandStateTest extends WingsBaseTest {
     verify(context, times(1)).getServiceVariables();
     verify(context, times(1)).getSafeDisplayServiceVariables();
     verify(context, times(1)).getWorkflowId();
-    verify(context, times(2)).getAppId();
+    verify(context, times(4)).getAppId();
     verify(context).getStateExecutionData();
 
     verify(activityService).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.SUCCESS);
     verify(settingsService, times(4)).getByName(eq(ACCOUNT_ID), eq(APP_ID), eq(ENV_ID), anyString());
-    verify(settingsService, times(2)).get(anyString());
+    verify(settingsService, times(3)).get(anyString());
 
     verify(activityService).getCommandUnits(APP_ID, ACTIVITY_ID);
 

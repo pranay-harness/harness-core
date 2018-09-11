@@ -6,10 +6,6 @@ import static java.lang.String.format;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.artifact.ArtifactStreamType.ACR;
-import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
-import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
@@ -344,14 +340,24 @@ public class CommandState extends State {
               "Unable to find artifact stream for service %s, artifact %s", service.getName(), artifact.getUuid()));
         }
 
-        if (artifactStream.getArtifactStreamType().equals(DOCKER.name())
-            || artifactStream.getArtifactStreamType().equals(ECR.name())
-            || artifactStream.getArtifactStreamType().equals(GCR.name())
-            || artifactStream.getArtifactStreamType().equals(ACR.name())) {
-          ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
-          artifactStreamAttributes.setServerSetting(settingsService.get(artifactStream.getSettingId()));
-          commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
+        ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
+        artifactStreamAttributes.setArtifactStreamId(artifactStream.getUuid());
+        SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
+        if (settingAttribute == null) {
+          throw new StateExecutionException(
+              format("Unable to find setting attribute for artifact stream %s", artifactStream.getUuid()));
         }
+        artifactStreamAttributes.setServerSetting(settingAttribute);
+        artifactStreamAttributes.setMedatadataOnly(artifactStream.isMetadataOnly());
+        artifactStreamAttributes.setMetadata(artifact.getMetadata());
+        artifactStreamAttributes.setArtifactServerEncryptedDataDetails(
+            secretManager.getEncryptionDetails((Encryptable) artifactStreamAttributes.getServerSetting().getValue(),
+                context.getAppId(), context.getWorkflowExecutionId()));
+        commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
+        commandExecutionContextBuilder.withArtifactServerEncryptedDataDetails(
+            secretManager.getEncryptionDetails((Encryptable) artifactStreamAttributes.getServerSetting().getValue(),
+                context.getAppId(), context.getWorkflowExecutionId()));
+
         activityBuilder.artifactStreamId(artifactStream.getUuid())
             .artifactStreamName(artifactStream.getSourceName())
             .artifactName(artifact.getDisplayName())

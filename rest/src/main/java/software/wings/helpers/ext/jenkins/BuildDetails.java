@@ -163,6 +163,7 @@ public class BuildDetails {
     private String buildUrl;
     private String buildDisplayName;
     private String buildFullDisplayName;
+    private String artifactFileSize;
 
     private Builder() {}
 
@@ -242,6 +243,11 @@ public class BuildDetails {
       return this;
     }
 
+    public Builder withArtifactFileSize(String artifactFileSize) {
+      this.artifactFileSize = artifactFileSize;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -256,7 +262,8 @@ public class BuildDetails {
           .withBuildParameters(buildParameters)
           .withBuildUrl(buildUrl)
           .withBuildDisplayName(buildDisplayName)
-          .withBuildFullDisplayName(buildFullDisplayName);
+          .withBuildFullDisplayName(buildFullDisplayName)
+          .withArtifactFileSize(artifactFileSize);
     }
 
     /**

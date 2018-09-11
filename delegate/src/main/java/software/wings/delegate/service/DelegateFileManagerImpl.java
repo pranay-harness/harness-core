@@ -17,13 +17,17 @@ import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Response;
 import software.wings.beans.RestResponse;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.common.Constants;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
+import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.exception.InvalidRequestException;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -35,6 +39,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -56,6 +61,8 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   private static final String ARTIFACT_REPO_BASE_DIR = "./repository/artifacts/";
   private static final String ARTIFACT_REPO_TMP_DIR = "./repository/artifacts/tmp/";
   private static final Logger logger = LoggerFactory.getLogger(DelegateFileManagerImpl.class);
+
+  @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
   @Inject
   public DelegateFileManagerImpl(ManagerClient managerClient, DelegateConfiguration delegateConfiguration) {
@@ -100,6 +107,52 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       logger.error("fileId[{}] could not be found", fileId);
       throw new InvalidRequestException("File couldn't be downloaded");
     }
+  }
+
+  @Override
+  public InputStream downloadArtifactAtRuntime(ArtifactStreamAttributes artifactStreamAttributes, String accountId,
+      String appId, String activityId, String commandUnitName, String hostName) throws IOException, ExecutionException {
+    Map<String, String> metadata = artifactStreamAttributes.getMetadata();
+    String artifactFileSize = metadata.get(Constants.ARTIFACT_FILE_SIZE);
+    if (Long.parseLong(artifactFileSize) > Constants.ARTIFACT_FILE_SIZE_LIMIT) {
+      throw new InvalidRequestException("Artifact file size exceeds 4GB. Not downloading file.");
+    }
+    String buildNo = metadata.get(Constants.BUILD_NO);
+    String key = "_" + artifactStreamAttributes.getArtifactStreamId() + "-" + buildNo;
+    synchronized (fileIdLocks.get(key)) {
+      File file = new File(ARTIFACT_REPO_BASE_DIR, key);
+      logger.info("check if artifact:[{}] exists at location: [{}]", key, file.getAbsolutePath());
+      if (!file.isDirectory() && file.exists()) {
+        logger.info("artifact:[{}] found locally", key);
+        return new FileInputStream(file);
+      }
+      logger.info("file:[{}] doesn't exist locally. Download from manager", key);
+
+      Pair<String, InputStream> pair = artifactCollectionTaskHelper.downloadArtifactAtRuntime(
+          artifactStreamAttributes, accountId, appId, activityId, commandUnitName, hostName);
+      logger.info("Input stream acquired for file:[{}]. Saving locally", key);
+      File downloadedFile = new File(ARTIFACT_REPO_TMP_DIR, key);
+      FileUtils.copyInputStreamToFile(pair.getRight(), downloadedFile);
+      logger.info("file:[{}] saved in tmp location:[{}]", key, downloadedFile.getAbsolutePath());
+
+      FileUtils.moveFile(downloadedFile, file);
+      logger.info("file:[{}] moved to  final destination:[{}]", key, file.getAbsolutePath());
+
+      logger.info("file:[{}] is ready for read access", key);
+
+      logger.info("check if downloaded file [{}] exists locally", key);
+      if (!file.isDirectory() && file.exists()) {
+        logger.info("file[{}] found locally", key);
+        return new FileInputStream(file);
+      }
+
+      logger.error("file[{}] could not be found", key);
+      throw new InvalidRequestException("File couldn't be downloaded");
+    }
+  }
+
+  public Long getArtifactFileSize(ArtifactStreamAttributes artifactStreamAttributes) {
+    return artifactCollectionTaskHelper.getArtifactFileSize(artifactStreamAttributes);
   }
 
   @Override
