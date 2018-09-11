@@ -1420,7 +1420,13 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow originalWorkflow = readWorkflow(appId, originalWorkflowId);
     Workflow clonedWorkflow = cloneWorkflow(workflow, originalWorkflow);
 
-    Workflow savedWorkflow = createWorkflow(clonedWorkflow);
+    clonedWorkflow.setDefaultVersion(1);
+    String key = wingsPersistence.save(clonedWorkflow);
+    entityVersionService.newEntityVersion(
+        appId, WORKFLOW, key, clonedWorkflow.getName(), EntityVersion.ChangeType.CREATED, workflow.getNotes());
+
+    Workflow savedWorkflow = readWorkflow(appId, key, clonedWorkflow.getDefaultVersion());
+
     if (originalWorkflow.getOrchestrationWorkflow() != null) {
       savedWorkflow.setOrchestrationWorkflow(originalWorkflow.getOrchestrationWorkflow().cloneInternal());
     }
