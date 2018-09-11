@@ -76,6 +76,7 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
 
           resultBuilder.validated(true);
         } catch (Exception ex) {
+          logger.info("Exception in sshSession Validation: {}", ex);
           resultBuilder.validated(false);
         }
         break;
@@ -83,10 +84,14 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
       case WINRM:
         try {
           WinRmSessionConfig winrmConfig = parameters.winrmSessionConfig(encryptionService);
+          logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", winrmConfig.getHostname(),
+              winrmConfig.getPort(), winrmConfig.isUseSSL());
+
           try (WinRmSession ignore = new WinRmSession(winrmConfig)) {
             resultBuilder.validated(true);
           }
         } catch (Exception e) {
+          logger.info("Exception in WinrmSession Validation: {}", e);
           resultBuilder.validated(false);
         }
         break;
