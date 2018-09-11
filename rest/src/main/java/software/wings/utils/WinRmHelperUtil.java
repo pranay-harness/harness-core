@@ -17,7 +17,7 @@ import javax.xml.ws.soap.SOAPFaultException;
 public class WinRmHelperUtil {
   @SuppressFBWarnings("NM_METHOD_NAMING_CONVENTION")
   public static ResponseMessage GetErrorDetailsFromWinRmClientException(Throwable e) {
-    ResponseMessageBuilder builder = ResponseMessage.aResponseMessage().code(UNKNOWN_ERROR).message("Generic Error");
+    ResponseMessageBuilder builder = ResponseMessage.builder().code(UNKNOWN_ERROR).message("Generic Error");
     Throwable e1 = e;
 
     while (e1 != null) {

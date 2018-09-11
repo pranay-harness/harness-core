@@ -2,7 +2,6 @@ package software.wings.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.DumperOptions;
@@ -46,7 +45,7 @@ public class YamlHelper {
   public static final String ENCRYPTED_VALUE_STR = "<KMS URL>";
 
   public static void addResponseMessage(RestResponse rr, ErrorCode errorCode, Level level, String message) {
-    ResponseMessage rm = aResponseMessage().code(errorCode).level(level).message(message).build();
+    ResponseMessage rm = ResponseMessage.builder().code(errorCode).level(level).message(message).build();
 
     List<ResponseMessage> responseMessages = rr.getResponseMessages();
     responseMessages.add(rm);

@@ -185,7 +185,7 @@ public class UserResource {
     } else {
       return Builder.aRestResponse()
           .withResponseMessages(Lists.newArrayList(
-              ResponseMessage.aResponseMessage().message("User not allowed to add account").level(Level.ERROR).build()))
+              ResponseMessage.builder().message("User not allowed to add account").level(Level.ERROR).build()))
           .build();
     }
   }
@@ -250,7 +250,7 @@ public class UserResource {
       cacheHelper.resetAllCaches();
     } else {
       return Builder.aRestResponse()
-          .withResponseMessages(Lists.newArrayList(ResponseMessage.aResponseMessage()
+          .withResponseMessages(Lists.newArrayList(ResponseMessage.builder()
                                                        .message("User not allowed to perform the reset-cache operation")
                                                        .level(Level.ERROR)
                                                        .build()))
@@ -258,8 +258,8 @@ public class UserResource {
     }
 
     return Builder.aRestResponse()
-        .withResponseMessages(Lists.newArrayList(
-            ResponseMessage.aResponseMessage().message("Cache reset successful").level(Level.INFO).build()))
+        .withResponseMessages(
+            Lists.newArrayList(ResponseMessage.builder().message("Cache reset successful").level(Level.INFO).build()))
         .build();
   }
 
@@ -457,7 +457,7 @@ public class UserResource {
       } else {
         return Builder.aRestResponse()
             .withResponseMessages(
-                Lists.newArrayList(ResponseMessage.aResponseMessage()
+                Lists.newArrayList(ResponseMessage.builder()
                                        .message("Admin has 2FA disabled. Please enable to enforce 2FA on users.")
                                        .level(Level.ERROR)
                                        .build()))

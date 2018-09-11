@@ -71,8 +71,8 @@ public class YamlCloneServiceImpl implements YamlCloneService {
       }
     } catch (Exception e) {
       return Builder.aRestResponse()
-          .withResponseMessages(asList(
-              new ResponseMessage[] {ResponseMessage.aResponseMessage().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
+          .withResponseMessages(
+              asList(new ResponseMessage[] {ResponseMessage.builder().code(ErrorCode.DEFAULT_ERROR_CODE).build()}))
           .build();
     }
 
@@ -220,8 +220,7 @@ public class YamlCloneServiceImpl implements YamlCloneService {
 
   private RestResponse getRestResponseForFailure(String message) {
     return Builder.aRestResponse()
-        .withResponseMessages(
-            Lists.newArrayList(ResponseMessage.aResponseMessage().message(message).level(Level.ERROR).build()))
+        .withResponseMessages(Lists.newArrayList(ResponseMessage.builder().message(message).level(Level.ERROR).build()))
         .build();
   }
 }

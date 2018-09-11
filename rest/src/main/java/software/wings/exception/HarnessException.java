@@ -1,7 +1,5 @@
 package software.wings.exception;
 
-import static software.wings.beans.ResponseMessage.aResponseMessage;
-
 import io.harness.eraro.ErrorCode;
 import software.wings.beans.ResponseMessage;
 
@@ -110,7 +108,7 @@ public class HarnessException extends Exception {
    */
   public HarnessException(ErrorCode errorCode, String message, Throwable cause) {
     super(message, cause);
-    responseMessageList.add(aResponseMessage().code(errorCode).message(message).build());
+    responseMessageList.add(ResponseMessage.builder().code(errorCode).message(message).build());
   }
 
   /**

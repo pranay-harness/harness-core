@@ -5,7 +5,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.HARNESS_BAMBOO;
 import static software.wings.utils.WingsTestConstants.HARNESS_DOCKER_REGISTRY;
@@ -23,6 +22,7 @@ import org.junit.Test;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -107,7 +107,7 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
 
     assertThat(response.getStatus()).isEqualTo(400);
     assertThat(response.readEntity(RestResponse.class).getResponseMessages())
-        .containsExactly(aResponseMessage()
+        .containsExactly(ResponseMessage.builder()
                              .code(ErrorCode.INVALID_REQUEST)
                              .message("Invalid request: No delegates could reach the resource. [BAD_URL]")
                              .level(Level.ERROR)

@@ -1,13 +1,13 @@
 package software.wings.exception;
 
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
-import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.Level;
 import io.harness.eraro.MessageManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.utils.Misc;
 
@@ -34,7 +34,7 @@ public class GenericExceptionMapper<T> implements ExceptionMapper<Throwable> {
     // No known exception or error code
     if (restResponse.getResponseMessages().isEmpty()) {
       restResponse.getResponseMessages().add(
-          aResponseMessage()
+          ResponseMessage.builder()
               .code(DEFAULT_ERROR_CODE)
               .level(Level.ERROR)
               .message(MessageManager.getInstance().prepareMessage(
