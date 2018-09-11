@@ -60,6 +60,7 @@ public class CommandExecutionContext {
   private CommandExecutionData commandExecutionData;
   private Integer timeout;
   private String deploymentType;
+  private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
 
   public CommandExecutionContext() {}
 
@@ -101,6 +102,7 @@ public class CommandExecutionContext {
     this.commandExecutionData = other.commandExecutionData;
     this.timeout = other.timeout;
     this.deploymentType = other.deploymentType;
+    this.artifactServerEncryptedDataDetails = other.artifactServerEncryptedDataDetails;
   }
 
   /**
@@ -185,6 +187,7 @@ public class CommandExecutionContext {
     private CommandExecutionData commandExecutionData;
     private Integer timeout;
     private String deploymentType;
+    private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
 
     private Builder() {}
 
@@ -358,6 +361,12 @@ public class CommandExecutionContext {
       return this;
     }
 
+    public Builder withArtifactServerEncryptedDataDetails(
+        List<EncryptedDataDetail> artifactServerEncryptedDataDetails) {
+      this.artifactServerEncryptedDataDetails = artifactServerEncryptedDataDetails;
+      return this;
+    }
+
     public Builder but() {
       return aCommandExecutionContext()
           .withAccountId(accountId)
@@ -392,7 +401,8 @@ public class CommandExecutionContext {
           .withSafeDisplayServiceVariables(safeDisplayServiceVariables)
           .withServiceName(serviceName)
           .withTimeout(timeout)
-          .withDeploymentType(deploymentType);
+          .withDeploymentType(deploymentType)
+          .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
     }
 
     public CommandExecutionContext build() {
@@ -430,6 +440,7 @@ public class CommandExecutionContext {
       commandExecutionContext.setContainerResizeParams(containerResizeParams);
       commandExecutionContext.setTimeout(timeout);
       commandExecutionContext.setDeploymentType(deploymentType);
+      commandExecutionContext.setArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
       return commandExecutionContext;
     }
   }

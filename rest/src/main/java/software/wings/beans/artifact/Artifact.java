@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
+import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_FULL_DISPLAY_NAME;
@@ -141,6 +142,18 @@ public class Artifact extends Base {
   public String getBuildFullDisplayName() {
     if (getMetadata() != null) {
       return getMetadata().get(BUILD_FULL_DISPLAY_NAME);
+    }
+    return null;
+  }
+
+  /**
+   * Gets Artifact file size
+   *
+   * @return
+   */
+  public Long getArtifactFileSize() {
+    if (getMetadata() != null && getMetadata().get(ARTIFACT_FILE_SIZE) != null) {
+      return Long.valueOf(getMetadata().get(ARTIFACT_FILE_SIZE));
     }
     return null;
   }

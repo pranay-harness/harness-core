@@ -1,6 +1,9 @@
 package software.wings.beans.artifact;
 
+import com.google.common.collect.Maps;
+
 import software.wings.beans.SettingAttribute;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
 
 import java.util.List;
@@ -20,6 +23,7 @@ public class ArtifactStreamAttributes {
   private SettingAttribute serverSetting;
   // TODO : Refactoring has to be done
   private String groupId; // For nexus integration
+  private String artifactStreamId;
   private String artifactName;
   private ArtifactType artifactType;
   private String artifactPattern;
@@ -29,6 +33,8 @@ public class ArtifactStreamAttributes {
   private Map<String, List<String>> tags;
   private String platform;
   private Map<String, String> filters;
+  private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
+  private Map<String, String> metadata = Maps.newHashMap();
 
   /**
    * Gets job name.
@@ -154,6 +160,18 @@ public class ArtifactStreamAttributes {
   }
 
   /**
+   * Gets artifact id
+   * @return
+   */
+  public String getArtifactStreamId() {
+    return artifactStreamId;
+  }
+
+  public void setArtifactStreamId(String artifactStreamId) {
+    this.artifactStreamId = artifactStreamId;
+  }
+
+  /**
    * Get Artifact Name
    * @return
    */
@@ -249,6 +267,22 @@ public class ArtifactStreamAttributes {
     this.filters = filters;
   }
 
+  public List<EncryptedDataDetail> getArtifactServerEncryptedDataDetails() {
+    return artifactServerEncryptedDataDetails;
+  }
+
+  public void setArtifactServerEncryptedDataDetails(List<EncryptedDataDetail> artifactServerEncryptedDataDetails) {
+    this.artifactServerEncryptedDataDetails = artifactServerEncryptedDataDetails;
+  }
+
+  public Map<String, String> getMetadata() {
+    return metadata;
+  }
+
+  public void setMetadata(Map<String, String> metadata) {
+    this.metadata = metadata;
+  }
+
   /**
    * The type Builder.
    */
@@ -262,6 +296,7 @@ public class ArtifactStreamAttributes {
     private String artifactStreamType;
     private SettingAttribute serverSetting;
     private String groupId; // For nexus integration
+    private String artifactStreamId;
     private String artifactName;
     private ArtifactType artifactType;
     private String artifactPattern;
@@ -271,6 +306,8 @@ public class ArtifactStreamAttributes {
     private Map<String, List<String>> tags;
     private Map<String, String> filters;
     private String platform;
+    private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
+    private Map<String, String> metadata = Maps.newHashMap();
 
     private Builder() {}
 
@@ -363,6 +400,11 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
+    public Builder withArtifactStreamId(String artifactStreamId) {
+      this.artifactStreamId = artifactStreamId;
+      return this;
+    }
+
     /**
      * with artifactName
      * @param artifactName
@@ -418,6 +460,17 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
+    public Builder withArtifactServerEncryptedDataDetails(
+        List<EncryptedDataDetail> artifactServerEncryptedDataDetails) {
+      this.artifactServerEncryptedDataDetails = artifactServerEncryptedDataDetails;
+      return this;
+    }
+
+    public Builder withMetadata(Map<String, String> metadata) {
+      this.metadata = metadata;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -434,6 +487,7 @@ public class ArtifactStreamAttributes {
           .withArtifactStreamType(artifactStreamType)
           .withServerSetting(serverSetting)
           .withGroupId(groupId)
+          .withArtifactStreamId(artifactStreamId)
           .withArtifactName(artifactName)
           .withArtifactType(artifactType)
           .withArtifactPattern(artifactPattern)
@@ -442,7 +496,9 @@ public class ArtifactStreamAttributes {
           .withMetadataOnly(metadataOnly)
           .withTags(tags)
           .withPlatform(platform)
-          .withFilters(filters);
+          .withFilters(filters)
+          .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
+          .withMetadata(metadata);
     }
 
     /**
@@ -461,6 +517,7 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setArtifactStreamType(artifactStreamType);
       artifactStreamAttributes.setServerSetting(serverSetting);
       artifactStreamAttributes.setGroupId(groupId);
+      artifactStreamAttributes.setArtifactStreamId(artifactStreamId);
       artifactStreamAttributes.setArtifactName(artifactName);
       artifactStreamAttributes.setArtifactType(artifactType);
       artifactStreamAttributes.setArtifactPattern(artifactPattern);
@@ -470,6 +527,8 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setTags(tags);
       artifactStreamAttributes.setPlatform(platform);
       artifactStreamAttributes.setFilters(filters);
+      artifactStreamAttributes.setArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
+      artifactStreamAttributes.setMetadata(metadata);
       return artifactStreamAttributes;
     }
   }

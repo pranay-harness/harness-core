@@ -124,6 +124,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
     objectSummary.setKey("key1");
     objectSummary.setBucketName("bucket1");
     objectSummary.setLastModified(new Date());
+    objectSummary.setSize(4856L);
     listObjectsV2Result.getObjectSummaries().add(objectSummary);
     when(awsHelperService.listObjectsInS3(any(AwsConfig.class), any(), any())).thenReturn(listObjectsV2Result);
 
@@ -134,7 +135,7 @@ public class AmazonS3ServiceTest extends WingsBaseTest {
         .thenReturn(objectMetadata);
 
     BuildDetails artifactBuildDetails =
-        amazonS3Service.getArtifactBuildDetails(awsConfig, null, "bucket1", "key1", false);
+        amazonS3Service.getArtifactBuildDetails(awsConfig, null, "bucket1", "key1", false, 4856L);
     assertThat(artifactBuildDetails.getArtifactPath()).isEqualTo("key1");
   }
 

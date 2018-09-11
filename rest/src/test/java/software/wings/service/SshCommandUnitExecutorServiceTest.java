@@ -13,6 +13,7 @@ import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnect
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.ArtifactFile.Builder.anArtifactFile;
+import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
@@ -50,6 +51,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -255,8 +257,12 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                      .build();
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
+    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().withMetadataOnly(false).build();
     sshCommandUnitExecutorService.execute(host, commandUnit,
-        commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
+        commandExecutionContextBuider.but()
+            .withHostConnectionAttributes(HOST_CONN_ATTR_PWD)
+            .withArtifactStreamAttributes(artifactStreamAttributes)
+            .build());
     verify(sshPwdAuthExecutor)
         .copyGridFsFiles(commandUnit.getDestinationDirectoryPath(), ARTIFACTS,
             Lists.newArrayList(org.apache.commons.lang3.tuple.Pair.of(FILE_ID, null)));

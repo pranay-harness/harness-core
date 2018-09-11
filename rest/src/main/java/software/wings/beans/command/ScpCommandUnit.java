@@ -15,6 +15,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.AppContainer;
+import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.exception.InvalidRequestException;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -48,11 +49,20 @@ public class ScpCommandUnit extends SshCommandUnit {
   @Override
   protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
-    FileBucket fileBucket = null;
+    FileBucket fileBucket;
     switch (fileCategory) {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
-        context.getArtifactFiles().forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
+        // TODO: remove artifactStreamType check once code path added for all artifact stream types.
+        if (context.getArtifactStreamAttributes().isMetadataOnly()
+            && context.getArtifactStreamAttributes().getArtifactStreamType().equalsIgnoreCase(
+                   ArtifactStreamType.AMAZON_S3.name())) {
+          return context.copyFiles(destinationDirectoryPath, context.getArtifactStreamAttributes(),
+              context.getAccountId(), context.getAppId(), context.getActivityId(), getName(),
+              context.getHost() == null ? null : context.getHost().getPublicDns());
+        } else {
+          context.getArtifactFiles().forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
+        }
         break;
       case APPLICATION_STACK:
         fileBucket = FileBucket.PLATFORMS;

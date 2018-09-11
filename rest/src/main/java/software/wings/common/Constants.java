@@ -524,6 +524,8 @@ public interface Constants {
    */
   String ARTIFACT_FILE_NAME_VARIABLE = "ARTIFACT_FILE_NAME";
 
+  String ARTIFACT_FILE_SIZE = "artifactFileSize";
+
   /**
    * The constant DELEGATE_SYNC_CACHE.
    */
@@ -871,4 +873,5 @@ public interface Constants {
   String PRIMARY_SERVICE_NAME_EXPRESSION = "${PRIMARY_SERVICE_NAME}";
   String STAGE_SERVICE_NAME_EXPRESSION = "${STAGE_SERVICE_NAME}";
   String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
+  long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 }

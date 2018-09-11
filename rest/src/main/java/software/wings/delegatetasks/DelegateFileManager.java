@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.IOException;
@@ -23,5 +24,11 @@ public interface DelegateFileManager {
   // TODO: this method does not seem to belong here
   InputStream downloadArtifactByFileId(@NotNull FileBucket bucket, @NotEmpty String fileId, @NotEmpty String accountId,
       boolean encrypted) throws IOException, ExecutionException;
+
+  InputStream downloadArtifactAtRuntime(ArtifactStreamAttributes artifactStreamAttributes, String accountId,
+      String appId, String activityId, String commandUnitName, String hostName) throws IOException, ExecutionException;
+
+  Long getArtifactFileSize(ArtifactStreamAttributes artifactStreamAttributes);
+
   void deleteCachedArtifacts();
 }

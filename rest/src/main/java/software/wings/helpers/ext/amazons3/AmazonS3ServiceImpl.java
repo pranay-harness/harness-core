@@ -3,6 +3,7 @@ package software.wings.helpers.ext.amazons3;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
+import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_NO;
@@ -20,6 +21,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import io.harness.eraro.ErrorCode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,9 +117,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     if (isExpression) {
       ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName, artifactPath);
-      List<String> objectKeyList = Lists.newArrayList();
       ListObjectsV2Result result;
-
       Pattern pattern = Pattern.compile(artifactPath.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
 
       do {
@@ -125,20 +125,21 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         List<S3ObjectSummary> objectSummaryList = result.getObjectSummaries();
         sortDescending(objectSummaryList);
 
-        List<String> objectKeyListForCurrentBatch = getObjectSummaries(pattern, objectSummaryList);
-        objectKeyList.addAll(objectKeyListForCurrentBatch);
+        List<BuildDetails> pageBuildDetails =
+            getObjectSummaries(pattern, objectSummaryList, awsConfig, encryptionDetails, versioningEnabledForBucket);
+        buildDetailsList.addAll(pageBuildDetails);
         listObjectsV2Request.setContinuationToken(result.getNextContinuationToken());
       } while (result.isTruncated() == true);
-
-      for (String key : objectKeyList) {
-        BuildDetails artifactMetadata =
-            getArtifactBuildDetails(awsConfig, encryptionDetails, bucketName, key, versioningEnabledForBucket);
-        buildDetailsList.add(artifactMetadata);
+    } else {
+      long size = 0;
+      ObjectMetadata objectMetadata =
+          awsHelperService.getObjectMetadataFromS3(awsConfig, encryptionDetails, bucketName, artifactPath);
+      if (objectMetadata != null) {
+        size = objectMetadata.getContentLength();
       }
 
-    } else {
-      BuildDetails artifactMetadata =
-          getArtifactBuildDetails(awsConfig, encryptionDetails, bucketName, artifactPath, versioningEnabledForBucket);
+      BuildDetails artifactMetadata = getArtifactBuildDetails(
+          awsConfig, encryptionDetails, bucketName, artifactPath, versioningEnabledForBucket, size);
       buildDetailsList.add(artifactMetadata);
     }
 
@@ -155,6 +156,17 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         .filter(
             objectSummary -> !objectSummary.getKey().endsWith("/") && pattern.matcher(objectSummary.getKey()).find())
         .map(S3ObjectSummary::getKey)
+        .collect(toList());
+  }
+
+  private List<BuildDetails> getObjectSummaries(Pattern pattern, List<S3ObjectSummary> objectSummaryList,
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, boolean versioningEnabled) {
+    return objectSummaryList.stream()
+        .filter(
+            objectSummary -> !objectSummary.getKey().endsWith("/") && pattern.matcher(objectSummary.getKey()).find())
+        .map(objectSummary
+            -> getArtifactBuildDetails(awsConfig, encryptedDataDetails, objectSummary.getBucketName(),
+                objectSummary.getKey(), versioningEnabled, objectSummary.getSize()))
         .collect(toList());
   }
 
@@ -212,7 +224,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     return listObjectsV2Request;
   }
 
-  private Pair<String, InputStream> downloadArtifact(
+  public Pair<String, InputStream> downloadArtifact(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String key) {
     S3Object object = awsHelperService.getObjectFromS3(awsConfig, encryptionDetails, bucketName, key);
     if (object != null) {
@@ -223,12 +235,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
   @Override
   public BuildDetails getArtifactBuildDetails(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
-      String bucketName, String key, boolean versioningEnabledForBucket) {
+      String bucketName, String key, boolean versioningEnabledForBucket, Long artifactFileSize) {
     String versionId = null;
     if (versioningEnabledForBucket) {
       ObjectMetadata objectMetadata =
           awsHelperService.getObjectMetadataFromS3(awsConfig, encryptionDetails, bucketName, key);
-
       if (objectMetadata != null) {
         versionId = key + ":" + objectMetadata.getVersionId();
       }
@@ -242,12 +253,24 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     map.put(BUCKET_NAME, bucketName);
     map.put(ARTIFACT_PATH, key);
     map.put(KEY, key);
+    map.put(ARTIFACT_FILE_SIZE, String.valueOf(artifactFileSize));
 
     return aBuildDetails()
         .withNumber(versionId)
         .withRevision(versionId)
         .withArtifactPath(key)
+        .withArtifactFileSize(String.valueOf(artifactFileSize))
         .withBuildParameters(map)
         .build();
+  }
+
+  public Long getFileSize(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName, String key) {
+    ObjectMetadata objectMetadata =
+        awsHelperService.getObjectMetadataFromS3(awsConfig, encryptionDetails, bucketName, key);
+    if (objectMetadata == null) {
+      throw new WingsException(ErrorCode.ARTIFACT_SERVER_ERROR);
+    }
+    return objectMetadata.getContentLength();
   }
 }

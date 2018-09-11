@@ -15,6 +15,8 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
+import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
+import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
 import static software.wings.utils.Misc.getMessage;
 import static software.wings.utils.SshHelperUtil.normalizeError;
 
@@ -30,6 +32,7 @@ import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.delegatetasks.DelegateFile;
@@ -47,6 +50,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -287,7 +291,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     }
     return scpOneFile(configFileMetaData.getDestinationDirectoryPath(), new FileProvider() {
       @Override
-      public Pair<String, Long> getInfo() throws IOException {
+      public Pair<String, Long> getInfo() {
         return ImmutablePair.of(configFileMetaData.getFilename(), configFileMetaData.getLength());
       }
 
@@ -323,6 +327,31 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         .filter(commandExecutionStatus -> commandExecutionStatus == CommandExecutionStatus.FAILURE)
         .findFirst()
         .orElse(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Override
+  public CommandExecutionStatus copyFiles(String destinationDirectoryPath,
+      ArtifactStreamAttributes artifactStreamAttributes, String accountId, String appId, String activityId,
+      String commandUnitName, String hostName) {
+    Map<String, String> metadata = artifactStreamAttributes.getMetadata();
+    return scpOneFile(destinationDirectoryPath, new FileProvider() {
+      @Override
+      public Pair<String, Long> getInfo() {
+        if (!metadata.containsKey(ARTIFACT_FILE_SIZE)) {
+          Long artifactFileSize = delegateFileManager.getArtifactFileSize(artifactStreamAttributes);
+          metadata.put(ARTIFACT_FILE_SIZE, String.valueOf(artifactFileSize));
+        }
+        return ImmutablePair.of(metadata.get(ARTIFACT_FILE_NAME), Long.parseLong(metadata.get(ARTIFACT_FILE_SIZE)));
+      }
+
+      @Override
+      public void downloadToStream(OutputStream outputStream) throws IOException, ExecutionException {
+        try (InputStream inputStream = delegateFileManager.downloadArtifactAtRuntime(
+                 artifactStreamAttributes, accountId, appId, activityId, commandUnitName, hostName)) {
+          IOUtils.copy(inputStream, outputStream);
+        }
+      }
+    });
   }
 
   @SuppressFBWarnings("DMI_INVOKING_TOSTRING_ON_ARRAY") // TODO

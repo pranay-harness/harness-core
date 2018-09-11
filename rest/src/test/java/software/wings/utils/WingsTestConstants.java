@@ -223,4 +223,10 @@ public interface WingsTestConstants {
   String HARNESS_BAMBOO = "Harness Bamboo";
   String HARNESS_DOCKER_REGISTRY = "Harness Docker Registry";
   String HARNESS_GCP_EXPLORATION = "harness-exploration";
+
+  String BUCKET_NAME = "BUCKET_NAME";
+  String ARTIFACT_FILE_NAME = "ARTIFACT_FILE_NAME";
+  String S3_URL = "S3_URL";
+  String DESTINATION_DIR_PATH = "DESTINATION_DIR_PATH";
+  Long ARTIFACT_FILE_SIZE = Long.MAX_VALUE;
 }
