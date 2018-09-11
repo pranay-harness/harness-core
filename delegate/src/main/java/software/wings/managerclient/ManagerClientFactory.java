@@ -10,13 +10,13 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
+import io.harness.security.TokenGenerator;
 import io.harness.version.VersionInfoManager;
 import okhttp3.ConnectionPool;
 import okhttp3.OkHttpClient;
 import okhttp3.Request.Builder;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.security.TokenGenerator;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;

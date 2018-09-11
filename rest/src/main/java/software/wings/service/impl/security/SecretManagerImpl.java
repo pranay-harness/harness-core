@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -47,7 +48,6 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.UuidAware;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.AlertType;

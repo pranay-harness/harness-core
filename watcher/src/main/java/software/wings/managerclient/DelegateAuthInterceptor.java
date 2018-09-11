@@ -2,10 +2,10 @@ package software.wings.managerclient;
 
 import static io.harness.network.Localhost.getLocalHostName;
 
+import io.harness.security.TokenGenerator;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
-import software.wings.security.TokenGenerator;
 
 import java.io.IOException;
 

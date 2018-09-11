@@ -1,6 +1,6 @@
 package software.wings.service.intfc.security;
 
-import software.wings.beans.UuidAware;
+import io.harness.persistence.UuidAware;
 import software.wings.security.EncryptionType;
 
 /**

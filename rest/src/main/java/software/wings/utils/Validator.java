@@ -4,7 +4,7 @@ import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.exception.WingsException.USER;
 
 import com.mongodb.DuplicateKeyException;
-import software.wings.beans.UuidAware;
+import io.harness.persistence.UuidAware;
 import software.wings.exception.InvalidRequestException;
 import software.wings.exception.WingsException;
 import software.wings.exception.WingsException.ReportTarget;

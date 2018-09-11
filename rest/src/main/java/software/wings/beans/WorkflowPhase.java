@@ -11,6 +11,7 @@ import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowP
 import static software.wings.sm.StateType.PHASE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.persistence.UuidAware;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
