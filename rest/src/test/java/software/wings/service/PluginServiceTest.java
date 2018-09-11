@@ -21,6 +21,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
+import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
@@ -70,7 +71,7 @@ public class PluginServiceTest {
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(26)
+        .hasSize(27)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -157,6 +158,14 @@ public class PluginServiceTest {
                 .withIsEnabled(true)
                 .withDisplayName("Datadog")
                 .withType(StateType.DATA_DOG.name())
+                .withPluginCategories(asList(Verification))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(BugsnagConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("Bugsnag")
+                .withType("BUG_SNAG")
                 .withPluginCategories(asList(Verification))
                 .build(),
             anAccountPlugin()
@@ -284,9 +293,9 @@ public class PluginServiceTest {
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(26)
+        .hasSize(27)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
-            "JENKINS", "BAMBOO", "SMTP", "SLACK", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
+            "JENKINS", "BAMBOO", "SMTP", "SLACK", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
             "ARTIFACTORY", "PCF", "GIT");
   }

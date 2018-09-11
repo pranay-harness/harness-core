@@ -1,0 +1,46 @@
+{
+  "@timestamp": "2018-08-17T17:59:02.016Z",
+  "log": "2018-08-17 17:59:01,568 \u001b[32m[Artifact-Collection-9302]\u001b[0;39m \u001b[1;31mERROR\u001b[0;39m \u001b[34m\u001b[0;39m \u001b[36msoftware.wings.scheduler.ArtifactCollectionJob\u001b[0;39m - Response message: WingsException: ARTIFACT_SERVER_ERROR\nException occurred: ARTIFACT_SERVER_ERROR \nsoftware.wings.exception.WingsException: ARTIFACT_SERVER_ERROR\n\tat software.wings.helpers.ext.bamboo.BambooServiceImpl.getLastSuccessfulBuild(BambooServiceImpl.java:130)\n\tat software.wings.service.impl.BambooBuildServiceImpl.getLastSuccessfulBuild(BambooBuildServiceImpl.java:72)\n\tat software.wings.service.impl.BambooBuildServiceImpl.getLastSuccessfulBuild(BambooBuildServiceImpl.java:32)\n\tat sun.reflect.GeneratedMethodAccessor200.invoke(Unknown Source)\n\tat sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)\n\tat java.lang.reflect.Method.invoke(Method.java:498)\n\tat org.joor.Reflect.on(Reflect.java:677)\n\tat org.joor.Reflect.call(Reflect.java:387)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:53)\n\tat software.wings.delegatetasks.ServiceImplDelegateTask.run(ServiceImplDelegateTask.java:25)\n\tat software.wings.delegatetasks.AbstractDelegateRunnableTask.run(AbstractDelegateRunnableTask.java:65)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1142)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:617)\n\tat java.lang.Thread.run(Thread.java:748)",
+  "time": "2018-08-17T17:59:01.568698609Z",
+  "prospector": {
+    "type": "log"
+  },
+  "kubernetes": {
+    "pod": {
+      "name": "harness-manager-1.0.5909-192-7bd4987549-pfwgn"
+    },
+    "namespace": "harness",
+    "labels": {
+      "harness-revision": "192",
+      "harness-service": "manager",
+      "harness.io/revision": "192",
+      "harness.io/managed": "true",
+      "version": "1.0.5909",
+      "harness-app": "harness",
+      "harness-env": "quality-assurance",
+      "harness.io/service-infra-id": "ba653857-b760-3e20-8a4b-fb6ab1b00886",
+      "pod-template-hash": "3680543105"
+    },
+    "container": {
+      "name": "manager"
+    }
+  },
+  "offset": 894600,
+  "stream": "stdout",
+  "beat": {
+    "version": "6.0.1",
+    "name": "filebeat-d697z",
+    "hostname": "filebeat-d697z"
+  },
+  "meta": {
+    "cloud": {
+      "instance_id": "8939905481761992451",
+      "instance_name": "gke-qa-cluster-default-pool-eaf237d3-7368",
+      "machine_type": "projects/674494598921/machineTypes/custom-12-30720",
+      "availability_zone": "projects/674494598921/zones/us-west1-a",
+      "project_id": "qa-setup",
+      "provider": "gce"
+    }
+  },
+  "source": "/var/lib/docker/containers/6509eb88050c6c2087094b79053a3809188613b54a83840e379de88c360c0415/6509eb88050c6c2087094b79053a3809188613b54a83840e379de88c360c0415-json.log"
+}

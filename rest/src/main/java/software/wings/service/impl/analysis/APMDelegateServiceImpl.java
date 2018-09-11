@@ -35,6 +35,7 @@ public class APMDelegateServiceImpl implements APMDelegateService {
     config.getHeaders().put("Accept", "application/json");
     final Call<Object> request =
         getAPMRestClient(config).validate(config.getUrl(), config.getHeaders(), config.getOptions());
+
     final Response<Object> response;
     try {
       response = request.execute();

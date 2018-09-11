@@ -403,6 +403,8 @@ TASK_TYPES:
       value: PCF
     - name: APM
       value: APM
+    - name: LOG
+      value: LOG
     - name: Cloud Formation
       value: CLOUD_FORMATION
     - name: Terrafrom

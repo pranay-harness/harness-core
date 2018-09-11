@@ -100,6 +100,8 @@ public class LogAnalysisManagerJob implements Job {
         case SUMO:
         case ELK:
         case LOGZ:
+        case BUG_SNAG:
+        case LOG_VERIFICATION:
           new LogMLClusterGenerator(
               learningEngineService, context.getClusterContext(), ClusterLevel.L1, ClusterLevel.L2, logRequest)
               .run();

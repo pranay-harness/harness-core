@@ -19,6 +19,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
+import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
@@ -126,6 +127,9 @@ public class SettingValidationService {
     } else if (settingValue instanceof DatadogConfig) {
       newRelicService.validateAPMConfig(
           settingAttribute, ((DatadogConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
+    } else if (settingValue instanceof BugsnagConfig) {
+      newRelicService.validateAPMConfig(
+          settingAttribute, ((BugsnagConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
     } else if (settingValue instanceof APMVerificationConfig) {
       newRelicService.validateAPMConfig(settingAttribute,
           ((APMVerificationConfig) settingAttribute.getValue())
