@@ -188,7 +188,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                           .build()),
                                generateUuid()))
         .isInstanceOf(WingsException.class)
-        .matches(ex -> ((WingsException) ex).getResponseMessage().getCode() == BARRIERS_NOT_RUNNING_CONCURRENTLY);
+        .matches(ex -> ((WingsException) ex).getCode() == BARRIERS_NOT_RUNNING_CONCURRENTLY);
   }
 
   @Test
@@ -228,7 +228,7 @@ public class BarrierServiceTest extends WingsBaseTest {
                                           .build()),
                                generateUuid()))
         .isInstanceOf(WingsException.class)
-        .matches(ex -> ((WingsException) ex).getResponseMessage().getCode() == BARRIERS_NOT_RUNNING_CONCURRENTLY);
+        .matches(ex -> ((WingsException) ex).getCode() == BARRIERS_NOT_RUNNING_CONCURRENTLY);
   }
 
   @Test

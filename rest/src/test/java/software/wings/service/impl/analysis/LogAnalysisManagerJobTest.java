@@ -161,7 +161,7 @@ public class LogAnalysisManagerJobTest extends WingsBaseTest {
       logMLResource.getLastExecutionNodes(accountId, appId, workflowId);
       fail("Did not throw exception for non existent successful workflow");
     } catch (WingsException e) {
-      assertEquals(ErrorCode.APM_CONFIGURATION_ERROR, e.getResponseMessage().getCode());
+      assertEquals(ErrorCode.APM_CONFIGURATION_ERROR, e.getCode());
       assertEquals(1, e.getParams().size());
       assertEquals("No successful execution exists for the workflow.", e.getParams().get("reason"));
     }

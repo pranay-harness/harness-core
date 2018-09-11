@@ -47,16 +47,11 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
       if (reportTarget != UNIVERSAL && !exception.getReportTargets().contains(reportTarget)) {
         continue;
       }
-      ResponseMessage responseMessage = exception.getResponseMessage();
-      if (isEmpty(responseMessage.getMessage())) {
-        final String message = MessageManager.getInstance().prepareMessage(
-            ErrorCodeName.builder().value(responseMessage.getCode().name()).build(), wingsException.getParams());
-        responseMessage = aResponseMessage()
-                              .code(responseMessage.getCode())
-                              .message(message)
-                              .level(responseMessage.getLevel())
-                              .build();
-      }
+      final String message =
+          MessageManager.getInstance().prepareMessage(ErrorCodeName.builder().value(exception.getCode().name()).build(),
+              exception.getMessage(), exception.getParams());
+      ResponseMessage responseMessage =
+          aResponseMessage().code(exception.getCode()).message(message).level(exception.getLevel()).build();
 
       ResponseMessage finalResponseMessage = responseMessage;
       if (list.stream().noneMatch(msg -> StringUtils.equals(finalResponseMessage.getMessage(), msg.getMessage()))) {

@@ -1,19 +1,20 @@
 package software.wings.exception;
 
-import static software.wings.beans.ResponseMessage.aResponseMessage;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.RED_BELL_ALERT;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.eraro.Level;
+import lombok.Builder;
 import lombok.Getter;
-import software.wings.beans.ResponseMessage;
 
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
-import javax.validation.constraints.NotNull;
 
 /**
  * The generic exception class for the Wings Application.
@@ -22,8 +23,6 @@ import javax.validation.constraints.NotNull;
  */
 @Getter
 public class WingsException extends RuntimeException {
-  private static final long serialVersionUID = -3266129015976960503L;
-
   public enum ReportTarget {
     // Universal
     UNIVERSAL,
@@ -53,38 +52,46 @@ public class WingsException extends RuntimeException {
   public static final EnumSet<ReportTarget> SRE = EnumSet.<ReportTarget>of(LOG_SYSTEM, DELEGATE_LOG_SYSTEM);
   public static final EnumSet<ReportTarget> USER = EnumSet.<ReportTarget>of(REST_API);
   public static final EnumSet<ReportTarget> NOBODY = EnumSet.noneOf(ReportTarget.class);
-  private EnumSet<ReportTarget> reportTargets = USER_SRE;
 
   public enum ExecutionContext { MANAGER, DELEGATE }
 
-  /**
-   * The Response message list.
-   */
-  private ResponseMessage responseMessage;
+  private EnumSet<ReportTarget> reportTargets = USER_SRE;
+
+  private ErrorCode code = DEFAULT_ERROR_CODE;
+  private Level level = Level.ERROR;
 
   private Map<String, Object> params = new HashMap<>();
 
   private Map<Class, Object> contextObjects = new HashMap<>();
 
+  @Builder
+  public WingsException(
+      String message, Throwable cause, ErrorCode code, Level level, EnumSet<ReportTarget> reportTargets) {
+    super(message == null ? code.name() : message, cause);
+    this.code = code == null ? UNKNOWN_ERROR : code;
+    this.level = level == null ? Level.ERROR : level;
+    this.reportTargets = reportTargets == null ? USER_SRE : reportTargets;
+  }
+
   public WingsException(String message) {
-    this(ErrorCode.UNKNOWN_ERROR, message);
+    this(UNKNOWN_ERROR, message);
   }
 
   public WingsException(String message, EnumSet<ReportTarget> reportTargets) {
-    this(ErrorCode.UNKNOWN_ERROR, message);
+    this(UNKNOWN_ERROR, message);
     this.reportTargets = reportTargets.clone();
   }
   public WingsException(String message, Throwable cause, EnumSet<ReportTarget> reportTargets) {
-    this(ErrorCode.UNKNOWN_ERROR, message, cause);
+    this(UNKNOWN_ERROR, message, cause);
     this.reportTargets = reportTargets.clone();
   }
 
   public WingsException(String message, Throwable cause) {
-    this(ErrorCode.UNKNOWN_ERROR, message, cause);
+    this(UNKNOWN_ERROR, message, cause);
   }
 
   public WingsException(Throwable cause) {
-    this(ErrorCode.UNKNOWN_ERROR, cause);
+    this(UNKNOWN_ERROR, cause);
   }
 
   public WingsException(ErrorCode errorCode, String message) {
@@ -119,7 +126,7 @@ public class WingsException extends RuntimeException {
 
   public WingsException(ErrorCode errorCode, String message, Throwable cause) {
     super(message == null ? errorCode.name() : message, cause);
-    responseMessage = aResponseMessage().code(errorCode).message(message).build();
+    code = errorCode;
   }
 
   /**
@@ -133,16 +140,6 @@ public class WingsException extends RuntimeException {
     this.params = params;
   }
 
-  public WingsException(@NotNull ResponseMessage responseMessage) {
-    this(responseMessage, null);
-  }
-
-  public WingsException(@NotNull ResponseMessage responseMessage, Throwable cause) {
-    super(
-        responseMessage.getMessage() == null ? responseMessage.getCode().name() : responseMessage.getMessage(), cause);
-    this.responseMessage = responseMessage;
-  }
-
   public <T> WingsException addContext(Class<?> clz, T object) {
     contextObjects.put(clz, object);
     return this;
@@ -153,8 +150,8 @@ public class WingsException extends RuntimeException {
     return this;
   }
 
-  public void excludeReportTarget(ErrorCode code, ReportTarget target) {
-    if (responseMessage.getCode() == code) {
+  public void excludeReportTarget(ErrorCode errorCode, ReportTarget target) {
+    if (code == errorCode) {
       reportTargets.remove(target);
     }
 
@@ -162,7 +159,7 @@ public class WingsException extends RuntimeException {
 
     while (cause != null) {
       if (cause instanceof WingsException) {
-        ((WingsException) cause).excludeReportTarget(code, target);
+        ((WingsException) cause).excludeReportTarget(errorCode, target);
 
         // the cause exception will take care of its cause exception. There is no need for this function to keep going.
         break;

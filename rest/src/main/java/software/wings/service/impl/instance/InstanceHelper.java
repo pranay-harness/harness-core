@@ -583,7 +583,7 @@ public class InstanceHelper {
         logger.warn(format("Instance sync failed for infraMappingId [%s]", infraMappingId), ex);
         String errorMsg;
         if (ex instanceof WingsException) {
-          errorMsg = ((WingsException) ex).getResponseMessage().getMessage();
+          errorMsg = ex.getMessage();
         } else {
           errorMsg = ex.getMessage() != null ? ex.getMessage() : "Unknown error";
         }

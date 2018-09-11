@@ -83,7 +83,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
           }
         });
       } catch (WingsException e) {
-        sendError(resource, e.getResponseMessage().getCode());
+        sendError(resource, e.getCode());
         return;
       } catch (Exception e) {
         sendError(resource, UNKNOWN_ERROR);
@@ -160,7 +160,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
                                         .code(errorCode)
                                         .level(Level.ERROR)
                                         .message(MessageManager.getInstance().prepareMessage(
-                                            ErrorCodeName.builder().value(errorCode.name()).build(), null))
+                                            ErrorCodeName.builder().value(errorCode.name()).build(), null, null))
                                         .build()));
     resource.close();
   }

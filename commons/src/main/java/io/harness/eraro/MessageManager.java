@@ -1,5 +1,7 @@
 package io.harness.eraro;
 
+import com.google.common.collect.ImmutableMap;
+
 import org.apache.commons.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,17 +29,18 @@ public class MessageManager {
     return instance;
   }
 
-  public String prepareMessage(ErrorCodeName errorCodeName, Map<String, Object> params) {
+  public String prepareMessage(ErrorCodeName errorCodeName, String exceptionMessage, Map<String, Object> params) {
     String message = messages.getProperty(errorCodeName.getValue());
     if (message == null) {
       logger.error("Response message for error code {} is not provided!", errorCodeName.getValue());
       message = errorCodeName.getValue();
     }
-    return prepareMessage(message, params);
+    return prepareMessage(message, exceptionMessage, params);
   }
 
-  private String prepareMessage(String message, Map<String, Object> params) {
+  private String prepareMessage(String message, String exceptionMessage, Map<String, Object> params) {
     message = StrSubstitutor.replace(message, params);
+    message = StrSubstitutor.replace(message, ImmutableMap.of("exception_message", exceptionMessage));
     if (message.matches(".*(\\$\\$)*\\$\\{.*")) {
       logger.info(MessageFormat.format(
           "Insufficient parameter from [{0}] in message \"{1}\"", String.join(", ", params.keySet()), message));

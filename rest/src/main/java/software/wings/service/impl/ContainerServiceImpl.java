@@ -24,7 +24,6 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -171,8 +170,7 @@ public class ContainerServiceImpl implements ContainerService {
               containerServiceParams.getEncryptionDetails(), listTasksRequest);
         } catch (WingsException ex) {
           // if the cluster / service has been deleted, we need to continue and check the rest of the service names
-          ResponseMessage responseMessage = ex.getResponseMessage();
-          ErrorCode errorCode = responseMessage.getCode();
+          ErrorCode errorCode = ex.getCode();
           if (errorCode != null) {
             if (ErrorCode.AWS_CLUSTER_NOT_FOUND == errorCode) {
               logger.info("ECS Cluster not found for service name:" + containerServiceName);

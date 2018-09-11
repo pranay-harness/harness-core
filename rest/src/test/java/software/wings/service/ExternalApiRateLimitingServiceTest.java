@@ -31,6 +31,6 @@ public class ExternalApiRateLimitingServiceTest extends WingsBaseTest {
     }
 
     // We are running the test for 3 seconds. So max allowed requests = QPM / (60 / 3) -> QPM / 20
-    assertThat(numAllowed).isLessThan(service.getMaxQPMPerManager() / 20 + ERROR_THRESHOLD);
+    assertThat(numAllowed).isLessThanOrEqualTo(service.getMaxQPMPerManager() / 20 + ERROR_THRESHOLD);
   }
 }
