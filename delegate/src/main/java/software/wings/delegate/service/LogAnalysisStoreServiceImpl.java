@@ -35,7 +35,7 @@ public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
       case LOG_VERIFICATION:
       case BUG_SNAG:
         return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L0, delegateTaskId, StateType.BUG_SNAG, logs))
+                           serviceId, ClusterLevel.L0, delegateTaskId, stateType, logs))
             .getResource();
       default:
         throw new IllegalStateException("Invalid state: " + stateType);
