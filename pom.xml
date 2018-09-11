@@ -17,7 +17,6 @@
 
         <module>rest</module>
         <module>tools</module>
-        <module>api</module>
         <module>serialization-utils</module>
         <module>delegate</module>
         <module>watcher</module>
