@@ -3,8 +3,6 @@ package software.wings.integration;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
@@ -15,7 +13,6 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
@@ -40,13 +37,11 @@ import static software.wings.generator.SettingGenerator.Settings.HARNESS_NEXU3_C
 import static software.wings.generator.SettingGenerator.Settings.HARNESS_NEXUS_CONNECTOR;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
 import static software.wings.integration.SeedData.containerNames;
-import static software.wings.integration.SeedData.envNames;
 import static software.wings.integration.SeedData.seedNames;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.TERRAFORM_DESTROY;
 import static software.wings.sm.StateType.TERRAFORM_PROVISION;
-import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.ContainerFamily.TOMCAT;
 
 import com.google.common.collect.ImmutableMap;
@@ -55,8 +50,6 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
 import org.assertj.core.util.Lists;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
-import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -77,6 +70,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
+import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
@@ -89,7 +83,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.ResourceConstraint;
-import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
@@ -140,6 +133,7 @@ import software.wings.integration.setup.rest.WorkflowResourceRestClient;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppContainerService;
+import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -150,26 +144,23 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateGalleryService;
+import software.wings.utils.ArtifactType;
+import software.wings.utils.BoundedInputStream;
+import software.wings.utils.ContainerFamily;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
 
-/**
- * Created by anubhaw on 5/6/16.
- */
 @SetupScheduler
 public class DataGenUtil extends BaseIntegrationTest {
   private static final int NUM_APPS = 1; /* Max 1000 */
@@ -230,7 +221,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private AppContainerService appContainerService;
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private ExecutorService executorService;
-
+  @Inject private ConfigService configService;
   /**
    * Generated Data for across the API use.
    *
@@ -266,15 +257,10 @@ public class DataGenUtil extends BaseIntegrationTest {
     createGlobalSettings(account);
 
     List<Application> apps = createApplications();
-    Map<String, List<AppContainer>> containers = new HashMap<>();
-    Map<String, List<Service>> services = new HashMap<>();
-    Map<String, List<Environment>> appEnvs = new HashMap<>();
 
     for (Application application : apps) {
-      appEnvs.put(application.getUuid(), addEnvs(application.getUuid()));
-      containers.put(application.getUuid(), addAppContainers(application.getUuid()));
-      services.put(application.getUuid(),
-          addServices(application.getAccountId(), application.getUuid(), containers.get(GLOBAL_APP_ID)));
+      addAppContainers(application.getUuid());
+      addServices(application.getAppId());
     }
     featureFlagService.initializeFeatureFlags();
     enableRbac();
@@ -401,7 +387,7 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
 
-    loginAdminUser();
+    //    loginAdminUser();
 
     return account;
   }
@@ -664,46 +650,26 @@ public class DataGenUtil extends BaseIntegrationTest {
 
   private List<Application> createApplications() {
     List<Application> apps = new ArrayList<>();
-
-    WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
-
     for (int i = 0; i < NUM_APPS; i++) {
       String name = getName(appNames);
-      RestResponse<Application> response = getRequestBuilderWithAuthHeader(target).post(
-          entity(
-              anApplication().withName(name).withDescription(name).withAccountId(accountId).build(), APPLICATION_JSON),
-          new GenericType<RestResponse<Application>>() {});
-      assertThat(response.getResource()).isInstanceOf(Application.class);
-      apps.add(response.getResource());
+      Application application =
+          applicationGenerator.ensureApplication(anApplication().withAccountId(accountId).withName(name).build());
+      assertThat(application).isNotNull();
+      apps.add(application);
     }
     return apps;
   }
 
-  private List<Service> addServices(String accountId, String appId, List<AppContainer> appContainers)
-      throws IOException {
+  private List<Service> addServices(String appId) throws IOException {
     serviceNames = new ArrayList<>(seedNames);
-    WebTarget target = client.target(API_BASE + "/services/?appId=" + appId);
     List<Service> services = new ArrayList<>();
 
     for (int i = 0; i < NUM_SERVICES_PER_APP; i++) {
       String name = getName(serviceNames);
-      Map<String, Object> serviceMap = new HashMap<>();
-      serviceMap.put("name", name);
-      serviceMap.put("description", randomText(40));
-      serviceMap.put("appId", appId);
-      serviceMap.put("artifactType", WAR.name());
-      //      serviceMap.put("appContainer", appContainers.get(randomInt(0, appContainers.size()))); //TODO:: create
-      //      service with tomcat/jboss family container type
-      RestResponse<Service> response = getRequestBuilderWithAuthHeader(target).post(
-          entity(serviceMap, APPLICATION_JSON), new GenericType<RestResponse<Service>>() { // FIXME
-          });
-      assertThat(response.getResource()).isInstanceOf(Service.class);
-      String serviceId = response.getResource().getUuid();
-
-      Service service = wingsPersistence.get(Service.class, serviceId);
-
-      services.add(service);
+      Service service = serviceGenerator.ensureService(
+          Service.builder().name(name).description(randomText(40)).appId(appId).artifactType(ArtifactType.WAR).build());
       assertThat(service).isNotNull();
+      services.add(service);
 
       configFileNames = new ArrayList<>(seedNames);
       addConfigFilesToEntity(service, DEFAULT_TEMPLATE_ID, NUM_CONFIG_FILE_PER_SERVICE, SERVICE);
@@ -722,23 +688,29 @@ public class DataGenUtil extends BaseIntegrationTest {
 
   private boolean addOneConfigFileToEntity(String appId, String templateId, String entityId, EntityType entityType)
       throws IOException {
-    WebTarget target = client.target(format(API_BASE + "/configs/?appId=%s&entityId=%s&entityType=%s&templateId=%s",
-        appId, entityId, entityType, templateId));
     File file = getTestFile(getName(configFileNames) + ".properties");
-    FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-    FormDataMultiPart multiPart = new FormDataMultiPart()
-                                      .field("fileName", file.getName())
-                                      .field("name", file.getName())
-                                      .field("relativeFilePath", "configs/" + file.getName());
-    multiPart.bodyPart(filePart);
-    Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
-    return response.getStatus() == 200;
+    InputStream fileInputStream = new java.io.FileInputStream(file);
+    BoundedInputStream uploadedInputStream =
+        new BoundedInputStream(fileInputStream, configuration.getFileUploadLimits().getConfigFileLimit());
+
+    ConfigFile configFile = new ConfigFile();
+    configFile.setAccountId(accountId);
+    configFile.setAppId(appId);
+    configFile.setEntityId(entityId);
+    configFile.setEntityType(entityType);
+    configFile.setTemplateId(templateId);
+    configFile.setRelativeFilePath("configs/" + file.getName());
+    configFile.setFileName(file.getName());
+
+    String key = configService.save(configFile, uploadedInputStream);
+    return key != null;
   }
 
   private List<AppContainer> addAppContainers(String appId) {
     int containersToBeAdded = NUM_APP_CONTAINER_PER_APP;
+    List<String> seedContainerNames = new ArrayList<>(containerNames);
     while (containersToBeAdded > 0) {
-      if (addOneAppContainer(appId)) {
+      if (addOneAppContainer(appId, seedContainerNames)) {
         containersToBeAdded--;
       }
     }
@@ -746,50 +718,35 @@ public class DataGenUtil extends BaseIntegrationTest {
   }
 
   private List<AppContainer> getAppContainers(String appId) {
-    RestResponse<PageResponse<AppContainer>> response =
-        getRequestBuilderWithAuthHeader(
-            client.target(API_BASE + "/app-containers/?appId=" + appId + "&accountId=" + accountId))
-            .get(new GenericType<RestResponse<PageResponse<AppContainer>>>() {});
-    return response.getResource().getResponse();
+    return wingsPersistence.createQuery(AppContainer.class)
+        .filter(Base.APP_ID_KEY, appId)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .asList();
   }
 
-  private boolean addOneAppContainer(String appId) {
-    WebTarget target = client.target(API_BASE + "/app-containers/?appId=" + appId + "&accountId=" + accountId);
+  private boolean addOneAppContainer(String appId, List<String> containerNames) {
     String version = format("%s.%s.%s", randomInt(10), randomInt(100), randomInt(1000));
-    String name = containerNames.get(randomInt() % containerNames.size());
+    String name = getName(containerNames);
 
     try {
       File file = getTestFile(name);
-      FileDataBodyPart filePart = new FileDataBodyPart("file", file);
-      FormDataMultiPart multiPart = new FormDataMultiPart()
-                                        .field("name", name)
-                                        .field("version", version)
-                                        .field("description", randomText(20))
-                                        .field("sourceType", "FILE_UPLOAD")
-                                        .field("standard", "false");
-      multiPart.bodyPart(filePart);
-      Response response = getRequestBuilderWithAuthHeader(target).post(entity(multiPart, multiPart.getMediaType()));
-      return response.getStatus() == 200;
+      InputStream fileInputStream = new java.io.FileInputStream(file);
+      BoundedInputStream uploadedInputStream =
+          new BoundedInputStream(fileInputStream, configuration.getFileUploadLimits().getAppContainerLimit());
+      AppContainer appContainer = AppContainer.Builder.anAppContainer()
+                                      .withAppId(appId)
+                                      .withAccountId(accountId)
+                                      .withVersion(version)
+                                      .withName(name)
+                                      .withFileName(file.getName())
+                                      .withFamily(ContainerFamily.TOMCAT)
+                                      .build();
+      AppContainer savedAppContainer = appContainerService.save(appContainer, uploadedInputStream, PLATFORMS);
+      return savedAppContainer != null;
     } catch (IOException e) {
       log().info("Error occurred in uploading app container", e);
     }
     return false;
-  }
-
-  private List<Environment> addEnvs(String appId) throws IOException {
-    List<Environment> environments = wingsPersistence.createQuery(Environment.class).filter("appId", appId).asList();
-    WebTarget target = client.target(API_BASE + "/environments?appId=" + appId);
-
-    for (int i = 0; i < NUM_ENV_PER_APP; i++) {
-      RestResponse<Environment> response = getRequestBuilderWithAuthHeader(target).post(
-          entity(anEnvironment().withAppId(appId).withName(envNames.get(i)).withDescription(randomText(10)).build(),
-              APPLICATION_JSON),
-          new GenericType<RestResponse<Environment>>() {});
-      assertThat(response.getResource()).isInstanceOf(Environment.class);
-      environments.add(response.getResource());
-    }
-    // environments.forEach(this::addHostsToEnv);
-    return environments;
   }
 
   private File getTestFile(String name) throws IOException {
