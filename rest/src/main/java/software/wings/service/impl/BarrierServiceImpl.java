@@ -2,10 +2,10 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.distribution.barrier.Barrier.State.STANDING;
+import static io.harness.eraro.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.BARRIERS_NOT_RUNNING_CONCURRENTLY;
 import static software.wings.sm.StateType.BARRIER;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.sm.StateType.PHASE_STEP;

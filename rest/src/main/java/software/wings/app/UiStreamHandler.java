@@ -1,19 +1,20 @@
 package software.wings.app;
 
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
+import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.Level.ERROR;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
-import static software.wings.beans.ErrorCode.INVALID_TOKEN;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.MessageManager;
 import org.atmosphere.cache.UUIDBroadcasterCache;
@@ -28,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AuthToken;
 import software.wings.beans.Base;
-import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
 import software.wings.service.impl.EventEmitter.Channel;

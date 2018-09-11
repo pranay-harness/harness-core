@@ -49,6 +49,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.threading.Puller;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -66,7 +67,6 @@ import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;

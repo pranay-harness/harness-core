@@ -1,10 +1,10 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.HostElement.Builder.aHostElement;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.exception.WingsException.USER;
@@ -19,6 +19,7 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.AmazonECSException;
+import io.harness.eraro.ErrorCode;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,6 @@ import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;

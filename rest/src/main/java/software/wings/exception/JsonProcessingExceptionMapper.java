@@ -7,10 +7,10 @@ import static software.wings.beans.RestResponse.Builder.aRestResponse;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;

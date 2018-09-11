@@ -9,6 +9,7 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDum
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.network.Http;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.http.HttpStatus;
@@ -19,7 +20,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.AppDynamicsConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.delegatetasks.DataCollectionExecutorService;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.WingsException;

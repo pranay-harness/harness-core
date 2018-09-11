@@ -2,11 +2,11 @@ package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
+import static io.harness.eraro.ErrorCode.TEMPLATES_LINKED;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
-import static software.wings.beans.ErrorCode.TEMPLATES_LINKED;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
 import static software.wings.beans.template.Template.VERSION_KEY;
 import static software.wings.beans.template.TemplateHelper.addUserKeyWords;

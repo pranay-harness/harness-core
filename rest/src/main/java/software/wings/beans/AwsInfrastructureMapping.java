@@ -2,10 +2,10 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

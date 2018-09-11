@@ -1,6 +1,6 @@
 package software.wings.exception;
 
-import static software.wings.beans.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 
 import java.util.EnumSet;
 

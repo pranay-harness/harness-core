@@ -8,10 +8,10 @@ import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.exception.WingsException;

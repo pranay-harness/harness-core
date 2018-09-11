@@ -1,6 +1,6 @@
 package software.wings.licensing;
 
-import static software.wings.beans.ErrorCode.LICENSE_EXPIRED;
+import static io.harness.eraro.ErrorCode.LICENSE_EXPIRED;
 
 import com.google.inject.Inject;
 

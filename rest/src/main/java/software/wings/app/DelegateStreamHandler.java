@@ -1,13 +1,14 @@
 package software.wings.app;
 
+import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import com.google.common.base.Splitter;
 import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.Level;
 import io.harness.eraro.MessageManager;
@@ -26,7 +27,6 @@ import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.DelegateService;

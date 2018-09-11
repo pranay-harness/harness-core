@@ -11,13 +11,13 @@ import static org.mockito.MockitoAnnotations.initMocks;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;

@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.MorphiaIterator;
@@ -23,7 +24,6 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SortOrder.OrderType;

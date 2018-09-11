@@ -11,7 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;

@@ -1,8 +1,8 @@
 package software.wings.delegatetasks.validation;
 
+import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.startsWith;
-import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
 
 import com.google.inject.Inject;
 

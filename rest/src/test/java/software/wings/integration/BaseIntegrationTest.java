@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
@@ -14,7 +15,6 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.integration.IntegrationTestUtil.randomInt;

@@ -15,9 +15,9 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;

@@ -1,10 +1,10 @@
 package software.wings.utils;
 
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
+import static io.harness.eraro.ErrorCode.SSL_HANDSHAKE_FAILED;
+import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
+import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static java.lang.String.format;
-import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.SSL_HANDSHAKE_FAILED;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
-import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.ResponseMessage.ResponseMessageBuilder;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;

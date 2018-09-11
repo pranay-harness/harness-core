@@ -1,16 +1,16 @@
 package software.wings.utils;
 
-import static software.wings.beans.ErrorCode.CONNECTION_TIMEOUT;
-import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.INVALID_KEY;
-import static software.wings.beans.ErrorCode.INVALID_KEYPATH;
-import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_ERROR;
-import static software.wings.beans.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
-import static software.wings.beans.ErrorCode.SSH_CONNECTION_ERROR;
-import static software.wings.beans.ErrorCode.SSH_SESSION_TIMEOUT;
-import static software.wings.beans.ErrorCode.UNKNOWN_ERROR;
-import static software.wings.beans.ErrorCode.UNKNOWN_HOST;
-import static software.wings.beans.ErrorCode.UNREACHABLE_HOST;
+import static io.harness.eraro.ErrorCode.CONNECTION_TIMEOUT;
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
+import static io.harness.eraro.ErrorCode.INVALID_KEY;
+import static io.harness.eraro.ErrorCode.INVALID_KEYPATH;
+import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_ERROR;
+import static io.harness.eraro.ErrorCode.SOCKET_CONNECTION_TIMEOUT;
+import static io.harness.eraro.ErrorCode.SSH_CONNECTION_ERROR;
+import static io.harness.eraro.ErrorCode.SSH_SESSION_TIMEOUT;
+import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
+import static io.harness.eraro.ErrorCode.UNKNOWN_HOST;
+import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SUDO_APP_USER;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY_SU_APP_USER;
 import static software.wings.core.ssh.executors.SshExecutor.ExecutorType.BASTION_HOST;
@@ -20,9 +20,9 @@ import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSes
 
 import com.jcraft.jsch.JSchException;
 import com.sun.mail.iap.ConnectionException;
+import io.harness.eraro.ErrorCode;
 import io.netty.channel.ConnectTimeoutException;
 import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SSHExecutionCredential;

@@ -7,9 +7,9 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
+import io.harness.eraro.ErrorCode;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;

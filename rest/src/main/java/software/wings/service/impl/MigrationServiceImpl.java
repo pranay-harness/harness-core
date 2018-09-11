@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
 import migrations.Migration;
 import migrations.MigrationBackgroundList;
 import migrations.MigrationList;
@@ -26,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateConfiguration;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.Schema;
 import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;

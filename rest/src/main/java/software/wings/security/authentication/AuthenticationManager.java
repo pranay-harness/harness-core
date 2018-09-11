@@ -1,8 +1,8 @@
 package software.wings.security.authentication;
 
-import static software.wings.beans.ErrorCode.INVALID_CREDENTIAL;
-import static software.wings.beans.ErrorCode.INVALID_TOKEN;
-import static software.wings.beans.ErrorCode.USER_DOES_NOT_EXIST;
+import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
+import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;
 

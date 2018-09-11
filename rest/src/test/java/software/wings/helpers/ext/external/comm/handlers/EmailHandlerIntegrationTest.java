@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -16,7 +17,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;

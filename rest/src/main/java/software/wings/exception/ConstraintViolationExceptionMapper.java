@@ -1,7 +1,7 @@
 package software.wings.exception;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 import static software.wings.beans.RestResponse.Builder.aRestResponse;
 

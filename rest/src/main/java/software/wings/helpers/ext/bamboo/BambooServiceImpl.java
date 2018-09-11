@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.bamboo;
 
+import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.ARTIFACT_SERVER_ERROR;
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
-import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.exception.WingsException.SRE;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;

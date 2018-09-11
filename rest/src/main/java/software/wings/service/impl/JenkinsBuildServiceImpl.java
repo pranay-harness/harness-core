@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.exception.WingsException.SRE;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.exception.WingsException.USER_ADMIN;

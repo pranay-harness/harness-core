@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
 import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 import static software.wings.beans.artifact.ArtifactStreamType.AMI;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;

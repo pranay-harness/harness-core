@@ -7,7 +7,7 @@ import static software.wings.exception.WingsException.USER_ADMIN;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.exception.WingsException;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.utils.CacheHelper;

@@ -1,14 +1,14 @@
 package software.wings.exception;
 
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 
 import java.util.List;

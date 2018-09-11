@@ -1,8 +1,8 @@
 package software.wings.service.impl.yaml;
 
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
+import static io.harness.eraro.ErrorCode.GENERAL_YAML_ERROR;
 import static io.harness.govern.Switch.unhandled;
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
-import static software.wings.beans.ErrorCode.GENERAL_YAML_ERROR;
 import static software.wings.beans.yaml.Change.ChangeType.ADD;
 import static software.wings.beans.yaml.Change.ChangeType.DELETE;
 import static software.wings.beans.yaml.Change.ChangeType.MODIFY;
@@ -15,6 +15,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import groovy.lang.Singleton;
+import io.harness.eraro.ErrorCode;
 import io.harness.filesystem.FileIo;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -22,7 +23,6 @@ import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.errors.TransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.yaml.Change.ChangeType;

@@ -6,13 +6,13 @@ import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.json.JSONObject;
 import software.wings.APMFetchConfig;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;

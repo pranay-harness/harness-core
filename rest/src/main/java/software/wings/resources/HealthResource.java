@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static software.wings.beans.ErrorCode.RESOURCE_NOT_FOUND;
+import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.exception.WingsException.USER;
 

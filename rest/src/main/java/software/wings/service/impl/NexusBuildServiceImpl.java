@@ -9,7 +9,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.NexusConfig;

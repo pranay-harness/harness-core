@@ -15,12 +15,12 @@ import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.eraro.ErrorCode;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.Account;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;

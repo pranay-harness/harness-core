@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,7 +20,6 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.ErrorCode.INVALID_REQUEST;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
@@ -54,6 +54,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -67,7 +68,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BastionConnectionAttributes;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;

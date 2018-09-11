@@ -1,6 +1,6 @@
 package software.wings.exception;
 
-import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.beans.ResponseMessage.aResponseMessage;
 
 import io.harness.eraro.ErrorCodeName;

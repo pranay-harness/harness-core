@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -24,7 +25,6 @@ import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.delegatetasks.DataCollectionExecutorService;

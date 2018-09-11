@@ -2,8 +2,8 @@ package software.wings.helpers.ext.gcs;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_NO;
@@ -21,10 +21,10 @@ import com.google.api.services.storage.model.StorageObject;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.GcpConfig;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;

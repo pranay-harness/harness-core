@@ -14,11 +14,11 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.EntityType;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.SearchFilter.Operator;

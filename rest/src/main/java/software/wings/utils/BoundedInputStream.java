@@ -1,8 +1,8 @@
 package software.wings.utils;
 
+import static io.harness.eraro.ErrorCode.FILE_DOWNLOAD_FAILED;
+import static io.harness.eraro.ErrorCode.INVALID_URL;
 import static java.lang.String.format;
-import static software.wings.beans.ErrorCode.FILE_DOWNLOAD_FAILED;
-import static software.wings.beans.ErrorCode.INVALID_URL;
 
 import software.wings.exception.WingsException;
 

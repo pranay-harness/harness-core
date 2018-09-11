@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.security.AuthenticationFilter.EXTERNAL_FACING_API_HEADER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -23,7 +24,6 @@ import org.mockito.Mock;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.AuthToken;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;

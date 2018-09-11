@@ -5,8 +5,8 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.ErrorCode.DUPLICATE_STATE_NAMES;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;

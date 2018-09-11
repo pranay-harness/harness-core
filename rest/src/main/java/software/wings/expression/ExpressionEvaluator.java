@@ -1,7 +1,7 @@
 package software.wings.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Singleton;

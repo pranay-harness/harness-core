@@ -11,6 +11,7 @@ import static software.wings.exception.WingsException.USER;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import org.apache.commons.net.util.SubnetUtils;
 import org.apache.commons.validator.routines.InetAddressValidator;
 import org.mongodb.morphia.query.Query;
@@ -18,7 +19,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.FeatureName;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.beans.security.access.Whitelist;

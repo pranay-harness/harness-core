@@ -1,6 +1,6 @@
 package software.wings.core.ssh.executors;
 
-import static software.wings.beans.ErrorCode.UNKNOWN_EXECUTOR_TYPE_ERROR;
+import static io.harness.eraro.ErrorCode.UNKNOWN_EXECUTOR_TYPE_ERROR;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

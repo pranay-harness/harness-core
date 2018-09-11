@@ -1,6 +1,6 @@
 package software.wings.security.encryption;
 
-import static software.wings.beans.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 
 import com.google.common.io.ByteStreams;

@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static com.amazonaws.regions.Regions.GovCloud;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.util.stream.Collectors.toMap;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.User;
 import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;

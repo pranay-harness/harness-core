@@ -4,7 +4,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
-import software.wings.beans.ErrorCode;
+import io.harness.eraro.ErrorCode;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureStrategy.Yaml;

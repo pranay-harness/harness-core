@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.ecr;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.ErrorCode.GENERAL_ERROR;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 

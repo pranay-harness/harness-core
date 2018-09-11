@@ -11,6 +11,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.eraro.ErrorCode;
 import io.harness.serializer.YamlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +23,6 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DynaTraceConfig;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.RestResponse;

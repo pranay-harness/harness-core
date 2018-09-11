@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import io.harness.eraro.ErrorCode;
 import software.wings.sm.ExecutionInterruptType;
 import software.wings.sm.ExecutionStatus;
 

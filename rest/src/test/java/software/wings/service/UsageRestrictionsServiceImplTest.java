@@ -32,6 +32,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -45,7 +46,6 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.security.AppPermission;

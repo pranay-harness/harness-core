@@ -4,6 +4,7 @@
 
 package software.wings.service;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -17,7 +18,6 @@ import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotification;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.security.UserThreadLocal.userGuard;

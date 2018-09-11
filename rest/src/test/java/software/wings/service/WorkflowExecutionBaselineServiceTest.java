@@ -18,13 +18,13 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.eraro.ErrorCode;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.User;

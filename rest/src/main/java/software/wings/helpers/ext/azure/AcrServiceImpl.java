@@ -1,8 +1,8 @@
 package software.wings.helpers.ext.azure;
 
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static java.util.stream.Collectors.toList;
-import static software.wings.beans.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.beans.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;

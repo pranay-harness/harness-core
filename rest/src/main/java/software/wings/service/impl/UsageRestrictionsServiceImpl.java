@@ -12,13 +12,13 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.EntityReference;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
-import software.wings.beans.ErrorCode;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.security.AppPermission;
