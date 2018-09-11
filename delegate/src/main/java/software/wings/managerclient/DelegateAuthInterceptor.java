@@ -1,10 +1,10 @@
 package software.wings.managerclient;
 
+import io.harness.security.TokenGenerator;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 import software.wings.delegate.service.DelegateServiceImpl;
-import software.wings.security.TokenGenerator;
 
 import java.io.IOException;
 

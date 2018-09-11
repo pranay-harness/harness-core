@@ -1,6 +1,4 @@
-package software.wings.security;
-
-import com.google.inject.Singleton;
+package io.harness.security;
 
 import com.nimbusds.jose.EncryptionMethod;
 import com.nimbusds.jose.JOSEException;
@@ -20,7 +18,6 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.spec.SecretKeySpec;
 
-@Singleton
 public class TokenGenerator {
   private static final Logger logger = LoggerFactory.getLogger(TokenGenerator.class);
 

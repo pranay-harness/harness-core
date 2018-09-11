@@ -5,6 +5,7 @@ import static java.lang.System.currentTimeMillis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.AllArgsConstructor;
 import lombok.Data;

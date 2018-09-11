@@ -28,6 +28,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.UuidAware;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -62,7 +63,6 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
-import software.wings.beans.UuidAware;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.core.managerConfiguration.ConfigurationController;

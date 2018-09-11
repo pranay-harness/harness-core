@@ -1,6 +1,3 @@
-package software.wings.beans;
+package io.harness.persistence;
 
-/**
- * Created by rishi on 4/5/17.
- */
 public interface UuidAware { String getUuid(); }

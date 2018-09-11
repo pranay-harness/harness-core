@@ -27,6 +27,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_T
 import com.google.inject.Inject;
 
 import io.harness.data.structure.CollectionUtils;
+import io.harness.persistence.UuidAware;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,7 +54,6 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.User;
-import software.wings.beans.UuidAware;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.Constants;

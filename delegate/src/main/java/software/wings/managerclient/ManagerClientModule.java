@@ -2,7 +2,7 @@ package software.wings.managerclient;
 
 import com.google.inject.AbstractModule;
 
-import software.wings.security.TokenGenerator;
+import io.harness.security.TokenGenerator;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.
