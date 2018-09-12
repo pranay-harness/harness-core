@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.validation.Valid;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -101,11 +102,13 @@ public class ElkResource implements LogAnalysisResource {
   @Path(LogAnalysisResource.VALIDATE_QUERY)
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> validateQuery(
-      @QueryParam("accountId") String accountId, @QueryParam("query") String query) throws IOException {
+  public RestResponse<Boolean> validateQuery(@QueryParam("accountId") String accountId,
+      @QueryParam("query") String query, @DefaultValue("false") @QueryParam("formattedQuery") String formattedQuery)
+      throws IOException {
     try {
       ElkLogFetchRequest.builder()
           .query(query)
+          .formattedQuery(Boolean.valueOf(formattedQuery))
           .indices("logstash-*")
           .hostnameField("beat.hostname")
           .messageField("message")
