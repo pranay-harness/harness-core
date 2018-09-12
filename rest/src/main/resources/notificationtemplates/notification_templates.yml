@@ -89,3 +89,11 @@ RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION:
       email:
           subject: Resource constraint ${RESOURCE_CONSTRAINT_NAME} for ${WORKFLOW_NAME} in ${APP_NAME} is now unblocked
           body: <<top-div>><b><<a>>href="${WORKFLOW_URL}" target="_blank">${WORKFLOW_NAME}</a></b> is now unblocked.</span></div></div>
+
+
+SSO_PROVIDER_NOT_REACHABLE_NOTIFICATION:
+  web: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is not longer reachable. This will impact user's ability to login into Harness System. Please make sure atleast one delegate is up and running and reachable to the provider. ${DELEGATE_HOSTS}"
+  slack: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is not longer reachable. This will impact user's ability to login into Harness System. Please make sure atleast one delegate is up and running and reachable to the provider. ${DELEGATE_HOSTS}"
+  email:
+    subject: "URGENT Action Required: SSO Provider is not reachable"
+    body: "The default Single Sign-on Provider ${SSO_PROVIDER_NAME} (Type: ${SSO_PROVIDER_TYPE}, URL: ${SSO_PROVIDER_URL}) is not longer reachable. This will impact user's ability to login into Harness System. Please make sure atleast one delegate is up and running and reachable to the provider. ${DELEGATE_HOSTS_HTML}"

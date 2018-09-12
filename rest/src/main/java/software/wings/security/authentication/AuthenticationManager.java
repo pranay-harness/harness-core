@@ -35,6 +35,7 @@ import javax.ws.rs.core.Response;
 public class AuthenticationManager {
   @Inject private PasswordBasedAuthHandler passwordBasedAuthHandler;
   @Inject private SamlBasedAuthHandler samlBasedAuthHandler;
+  @Inject private LdapBasedAuthHandler ldapBasedAuthHandler;
   @Inject private AuthenticationUtil authenticationUtil;
   @Inject private SamlClientService samlClientService;
   @Inject private MainConfiguration configuration;
@@ -48,6 +49,8 @@ public class AuthenticationManager {
     switch (mechanism) {
       case SAML:
         return samlBasedAuthHandler;
+      case LDAP:
+        return ldapBasedAuthHandler;
       default:
         return passwordBasedAuthHandler;
     }
@@ -76,7 +79,6 @@ public class AuthenticationManager {
 
   public LoginTypeResponse getLoginTypeResponse(String userName) {
     User user = authenticationUtil.getUser(userName, USER);
-
     AuthenticationMechanism authenticationMechanism = getAuthenticationMechanism(user);
 
     LoginTypeResponseBuilder builder = LoginTypeResponse.builder();
@@ -85,6 +87,7 @@ public class AuthenticationManager {
         SamlRequest samlRequest = samlClientService.generateSamlRequest(user);
         builder.samlRequest(samlRequest);
         break;
+      case LDAP: // No need to build anything extra for the response.
       default:
         // Nothing to do by default
     }
@@ -102,6 +105,7 @@ public class AuthenticationManager {
         .withTwoFactorJwtToken(jwtToken)
         .build();
   }
+
   public User defaultLogin(String basicToken) {
     try {
       String[] decryptedData = new String(Base64.getDecoder().decode(basicToken), StandardCharsets.UTF_8).split(":");
@@ -110,7 +114,8 @@ public class AuthenticationManager {
       }
       String userName = decryptedData[0];
       String password = decryptedData[1];
-      User user = passwordBasedAuthHandler.authenticate(userName, password);
+      AuthHandler authHandler = getAuthHandler(getAuthenticationMechanism(userName));
+      User user = authHandler.authenticate(userName, password);
       if (user.isTwoFactorAuthenticationEnabled()) {
         return generate2faJWTToken(user);
       } else {

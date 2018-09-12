@@ -91,6 +91,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
+import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -433,7 +434,11 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+        .thenReturn(anAccount()
+                        .withCompanyName(COMPANY_NAME)
+                        .withUuid(ACCOUNT_ID)
+                        .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                        .build());
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class)))
         .thenReturn(userBuilder.withUuid(USER_ID).build());
@@ -477,7 +482,11 @@ public class UserServiceTest extends WingsBaseTest {
 
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
     when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+        .thenReturn(anAccount()
+                        .withCompanyName(COMPANY_NAME)
+                        .withUuid(ACCOUNT_ID)
+                        .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                        .build());
     when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
     when(wingsPersistence.saveAndGet(eq(User.class), any(User.class)))
         .thenReturn(userBuilder.withUuid(USER_ID).build());

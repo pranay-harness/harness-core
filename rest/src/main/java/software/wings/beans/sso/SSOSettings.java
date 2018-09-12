@@ -1,7 +1,6 @@
 package software.wings.beans.sso;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -10,7 +9,6 @@ import software.wings.beans.Base;
 
 import javax.validation.constraints.NotNull;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @Entity(value = "ssoSettings")
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -26,5 +24,6 @@ public abstract class SSOSettings extends Base {
     appId = GLOBAL_APP_ID;
   }
 
+  // TODO: Return list of all sso settings instead with the use of @JsonIgnore to trim the unnecessary elements
   @JsonIgnore public abstract SSOSettings getPublicSSOSettings();
 }

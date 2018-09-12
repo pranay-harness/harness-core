@@ -13,28 +13,40 @@ import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.SSOSettings;
+import software.wings.beans.sso.SSOType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.InvalidRequestException;
+import software.wings.scheduler.LdapGroupSyncJob;
+import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.Validator;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -47,6 +59,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private UserService userService;
   @Inject private AccountService accountService;
   @Inject private AuthService authService;
+  @Inject private SSOSettingService ssoSettingService;
+  @Inject private AlertService alertService;
+  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
   @Override
   public UserGroup save(UserGroup userGroup) {
@@ -89,7 +104,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     return get(accountId, userGroupId, true);
   }
 
-  private UserGroup get(String accountId, String userGroupId, boolean loadUsers) {
+  @Override
+  public UserGroup get(String accountId, String userGroupId, boolean loadUsers) {
     PageRequest<UserGroup> req = aPageRequest()
                                      .addFilter("accountId", Operator.EQ, accountId)
                                      .addFilter(ID_KEY, Operator.EQ, userGroupId)
@@ -111,6 +127,8 @@ public class UserGroupServiceImpl implements UserGroupService {
                                   .build();
       PageResponse<User> res = userService.list(req);
       userGroup.setMembers(res.getResponse());
+    } else {
+      userGroup.setMembers(new ArrayList<>());
     }
   }
 
@@ -127,7 +145,11 @@ public class UserGroupServiceImpl implements UserGroupService {
   public UserGroup updateMembers(UserGroup userGroup) {
     List<String> memberIds = new ArrayList<>();
     if (isNotEmpty(userGroup.getMembers())) {
-      memberIds = userGroup.getMembers().stream().map(User::getUuid).collect(toList());
+      memberIds = userGroup.getMembers()
+                      .stream()
+                      .filter(user -> StringUtils.isNotBlank(user.getUuid()))
+                      .map(User::getUuid)
+                      .collect(toList());
     }
     UserGroup existingUserGroup = get(userGroup.getAccountId(), userGroup.getUuid());
 
@@ -146,6 +168,21 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
+  public UserGroup removeMembers(UserGroup userGroup, Collection<User> members) {
+    if (isEmpty(members)) {
+      return userGroup;
+    }
+
+    List<User> groupMembers = userGroup.getMembers();
+    if (isEmpty(groupMembers)) {
+      return userGroup;
+    }
+
+    members.forEach(groupMembers::remove);
+    return updateMembers(userGroup);
+  }
+
+  @Override
   public UserGroup updatePermissions(UserGroup userGroup) {
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, "appPermissions", userGroup.getAppPermissions());
@@ -153,6 +190,13 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup updatedUserGroup = update(userGroup, operations);
     evictUserPermissionInfoCacheForUserGroup(updatedUserGroup);
     return updatedUserGroup;
+  }
+
+  @Override
+  public boolean existsLinkedUserGroup(String ssoId) {
+    return 0
+        != wingsPersistence.getCount(
+               UserGroup.class, aPageRequest().addFilter(UserGroup.LINKED_SSO_ID_KEY, Operator.EQ, ssoId).build());
   }
 
   private UserGroup update(UserGroup userGroup, UpdateOperations<UserGroup> operations) {
@@ -262,5 +306,71 @@ public class UserGroupServiceImpl implements UserGroupService {
     List<String> userGroupMembers = fetchUserGroupsMemberIds(accountId, userGroupIds);
 
     return user.isEmailVerified() && isNotEmpty(userGroupMembers) && userGroupMembers.contains(user.getUuid());
+  }
+
+  @Override
+  public UserGroup linkToSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, @NotNull SSOType ssoType,
+      @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName) {
+    UserGroup group = get(accountId, userGroupId, false);
+
+    if (null == group) {
+      throw new InvalidRequestException("Invalid UserGroup ID.");
+    }
+    if (group.isSsoLinked()) {
+      throw new InvalidRequestException("SSO Provider already linked to the group. Try unlinking first.");
+    }
+
+    SSOSettings ssoSettings = ssoSettingService.getSsoSettings(ssoId);
+
+    if (null == ssoSettings) {
+      throw new InvalidRequestException("Invalid ssoId");
+    }
+
+    group.setSsoLinked(true);
+    group.setLinkedSsoType(ssoType);
+    group.setLinkedSsoId(ssoId);
+    group.setLinkedSsoDisplayName(ssoSettings.getDisplayName());
+    group.setSsoGroupId(ssoGroupId);
+    group.setSsoGroupName(ssoGroupName);
+    UserGroup savedGroup = save(group);
+
+    LdapGroupSyncJob.add(jobScheduler, accountId, ssoId);
+
+    return savedGroup;
+  }
+
+  @Override
+  public UserGroup unlinkSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, boolean retainMembers) {
+    UserGroup group = get(accountId, userGroupId, false);
+
+    if (null == group) {
+      throw new InvalidRequestException("Invalid UserGroup ID.");
+    }
+    if (!group.isSsoLinked()) {
+      throw new InvalidRequestException("Group is not linked to any SSO group.");
+    }
+
+    if (!retainMembers) {
+      group.setMembers(Collections.emptyList());
+      group = updateMembers(group);
+    }
+
+    group.setSsoLinked(false);
+    group.setLinkedSsoType(null);
+    group.setLinkedSsoId(null);
+    group.setSsoGroupId(null);
+
+    return save(group);
+  }
+
+  @Override
+  public List<UserGroup> getUserGroupsBySsoId(String accountId, String ssoId) {
+    PageRequest<UserGroup> pageRequest = aPageRequest()
+                                             .addFilter("accountId", Operator.EQ, accountId)
+                                             .addFilter("isSsoLinked", Operator.EQ, true)
+                                             .addFilter("linkedSsoId", Operator.EQ, ssoId)
+                                             .build();
+    PageResponse<UserGroup> pageResponse = list(accountId, pageRequest, true);
+    return pageResponse.getResponse();
   }
 }

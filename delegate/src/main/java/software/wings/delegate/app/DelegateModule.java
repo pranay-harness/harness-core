@@ -117,6 +117,7 @@ import software.wings.service.impl.bugsnag.BugsnagDelegateServiceImpl;
 import software.wings.service.impl.cloudwatch.CloudWatchDelegateServiceImpl;
 import software.wings.service.impl.dynatrace.DynaTraceDelegateServiceImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
+import software.wings.service.impl.ldap.LdapDelegateServiceImpl;
 import software.wings.service.impl.logz.LogzDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
 import software.wings.service.impl.prometheus.PrometheusDelegateServiceImpl;
@@ -155,6 +156,7 @@ import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
+import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.service.intfc.prometheus.PrometheusDelegateService;
@@ -327,6 +329,7 @@ public class DelegateModule extends AbstractModule {
     bind(AwsLambdaHelperServiceDelegate.class).to(AwsLambdaHelperServiceDelegateImpl.class);
     bind(AwsAmiHelperServiceDelegate.class).to(AwsAmiHelperServiceDelegateImpl.class);
     bind(GitService.class).to(GitServiceImpl.class);
+    bind(LdapDelegateService.class).to(LdapDelegateServiceImpl.class);
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
 
     try {

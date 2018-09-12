@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,6 +21,7 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @Entity(value = "featureFlag", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("name") }, options = @IndexOptions(name = "featureFlagIdx", unique = true)))
+@JsonIgnoreProperties({"obsolete", "accountIds"})
 public class FeatureFlag extends Base {
   private String name;
   private boolean enabled;

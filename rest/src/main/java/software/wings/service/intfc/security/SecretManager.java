@@ -76,6 +76,8 @@ public interface SecretManager {
 
   boolean deleteSecret(String accountId, String uuId);
 
+  boolean deleteSecretUsingUuid(String uuId);
+
   String saveFile(String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream);
 
   File getFile(String accountId, String uuId, File readInto);

@@ -71,6 +71,7 @@ import software.wings.delegatetasks.validation.JenkinsValidation;
 import software.wings.delegatetasks.validation.KmsValidation;
 import software.wings.delegatetasks.validation.KubernetesSteadyStateCheckValidation;
 import software.wings.delegatetasks.validation.KubernetesSwapServiceSelectorsValidation;
+import software.wings.delegatetasks.validation.LDAPValidation;
 import software.wings.delegatetasks.validation.LogzValidation;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.delegatetasks.validation.NexusValidation;
@@ -142,6 +143,13 @@ public enum TaskType {
   AMAZON_S3_LAST_SUCCESSFUL_BUILD(TaskGroup.S3, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   AMAZON_S3_GET_BUILDS(TaskGroup.S3, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   AMAZON_S3_GET_PLANS(TaskGroup.S3, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
+  LDAP_TEST_CONN_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
+  LDAP_TEST_USER_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
+  LDAP_TEST_GROUP_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
+  LDAP_VALIDATE_SETTINGS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
+  LDAP_AUTHENTICATION(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
+  LDAP_SEARCH_GROUPS(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
+  LDAP_FETCH_GROUP(TaskGroup.LDAP, ServiceImplDelegateTask.class, LDAPValidation.class),
   APM_VALIDATE_CONNECTOR_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),
   CUSTOM_LOG_VALIDATE_CONNECTOR_TASK(TaskGroup.LOG, ServiceImplDelegateTask.class, APMValidation.class),
   APM_GET_TASK(TaskGroup.APM, ServiceImplDelegateTask.class, APMValidation.class),

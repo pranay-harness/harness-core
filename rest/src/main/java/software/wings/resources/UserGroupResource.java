@@ -9,15 +9,20 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.LdapLinkGroupRequest;
+import software.wings.beans.sso.SSOType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
+import software.wings.exception.InvalidRequestException;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UserGroupService;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -152,6 +157,14 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> updateMembers(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId, UserGroup userGroup) {
+    UserGroup existingGroup = userGroupService.get(accountId, userGroupId);
+    if (null == existingGroup) {
+      throw new InvalidRequestException("Invalid UserGroup ID.");
+    }
+    if (existingGroup.isSsoLinked()) {
+      throw new InvalidRequestException("Updating members of SSO linked user groups is not allowed.");
+    }
+
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
     return new RestResponse<>(userGroupService.updateMembers(userGroup));
@@ -210,5 +223,42 @@ public class UserGroupResource {
                                              .build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, false);
     return new RestResponse<>(pageResponse);
+  }
+
+  /**
+   * Link to LDAP group
+   *
+   * @param userGroupId user group id
+   * @param ldapId ldap provider id
+   * @param accountId the account id
+   * @param groupRequest group details
+   * @return the rest response
+   */
+  @PUT
+  @Path("{userGroupId}/link/ldap/{ldapId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserGroup> linkToLdapGroup(@PathParam("userGroupId") String userGroupId,
+      @PathParam("ldapId") String ldapId, @QueryParam("accountId") @NotEmpty String accountId,
+      @NotNull @Valid LdapLinkGroupRequest groupRequest) {
+    return new RestResponse<>(userGroupService.linkToSsoGroup(
+        accountId, userGroupId, SSOType.LDAP, ldapId, groupRequest.getLdapGroupDN(), groupRequest.getLdapGroupName()));
+  }
+
+  /**
+   * API to unlink the harness user group from SSO group
+   *
+   * @param userGroupId
+   * @param accountId
+   * @param retainMembers
+   * @return
+   */
+  @PUT
+  @Path("{userGroupId}/unlink")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserGroup> unlinkSsoGroup(@PathParam("userGroupId") String userGroupId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("retainMembers") boolean retainMembers) {
+    return new RestResponse<>(userGroupService.unlinkSsoGroup(accountId, userGroupId, retainMembers));
   }
 }

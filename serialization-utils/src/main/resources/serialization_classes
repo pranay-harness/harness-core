@@ -532,3 +532,17 @@ software.wings.beans.BugsnagConfig, 5491
 software.wings.service.impl.bugsnag.BugsnagApplication, 5492
 software.wings.service.impl.analysis.CustomLogDataCollectionInfo, 5493
 software.wings.sm.states.CustomLogVerificationState$ResponseMapper, 5494
+
+software.wings.beans.sso.LdapSettings, 5495
+software.wings.beans.sso.LdapConnectionSettings, 5496
+software.wings.beans.sso.LdapUserSettings, 5497
+software.wings.beans.sso.LdapGroupSettings, 5498
+software.wings.beans.sso.LdapTestResponse, 5499
+software.wings.beans.sso.LdapTestResponse$Status, 5500
+software.wings.beans.sso.LdapGroupResponse, 5501
+software.wings.beans.sso.LdapUserResponse, 5502
+software.wings.beans.sso.SSOType, 5503
+software.wings.helpers.ext.ldap.LdapResponse, 5504
+software.wings.helpers.ext.ldap.LdapResponse$Status, 5505
+software.wings.beans.UserInviteSource, 5506
+software.wings.beans.UserInviteSource$SourceType, 5507

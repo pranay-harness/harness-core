@@ -40,5 +40,6 @@ public enum TaskGroup {
   LOG,
   CLOUD_FORMATION,
   TERRAFORM,
-  AWS
+  AWS,
+  LDAP
 }
