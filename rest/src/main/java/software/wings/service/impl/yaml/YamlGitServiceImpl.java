@@ -197,7 +197,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
         raiseAlertForGitFailure(gitConfig.getAccountId(), GLOBAL_APP_ID, ErrorCode.GIT_CONNECTION_ERROR,
             gitCommandExecutionResponse.getErrorMessage());
-        throw new InvalidRequestException(gitCommandExecutionResponse.getErrorMessage());
+        throw new InvalidRequestException(gitCommandExecutionResponse.getErrorMessage(), WingsException.USER);
       } else {
         closeAlertForGitFailureIfOpen(gitConfig.getAccountId(), GLOBAL_APP_ID, AlertType.GitConnectionError,
             GitConnectionErrorAlert.builder().accountId(gitConfig.getAccountId()).build());
