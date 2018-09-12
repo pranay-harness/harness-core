@@ -64,6 +64,7 @@ import com.google.inject.Inject;
 
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -94,7 +95,6 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactCollectionService;

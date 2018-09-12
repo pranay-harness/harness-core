@@ -1,6 +1,6 @@
 package software.wings.beans.instance.dashboard;
 
-import software.wings.exception.WingsException;
+import io.harness.exception.WingsException;
 
 /**
  * @author rktummala on 08/13/17

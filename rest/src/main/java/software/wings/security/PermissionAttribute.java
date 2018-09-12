@@ -7,8 +7,8 @@ import static software.wings.security.PermissionAttribute.PermissionType.NONE;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.exception.WingsException;
 import lombok.Data;
-import software.wings.exception.WingsException;
 
 import java.util.Map;
 

@@ -24,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -54,7 +55,6 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.generator.SecretGenerator;
 import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.helpers.ext.jenkins.BuildDetails;

@@ -4,13 +4,13 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Base;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
 import software.wings.service.impl.bugsnag.BugsnagDelegateService;

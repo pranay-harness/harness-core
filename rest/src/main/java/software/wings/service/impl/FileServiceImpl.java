@@ -20,6 +20,7 @@ import com.mongodb.client.gridfs.GridFSFindIterable;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
+import io.harness.exception.WingsException;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -28,7 +29,6 @@ import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
 import software.wings.dl.FileBucketHelper;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.BoundedInputStream;
 

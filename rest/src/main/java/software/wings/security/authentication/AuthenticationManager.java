@@ -3,19 +3,19 @@ package software.wings.security.authentication;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
-import static software.wings.exception.WingsException.USER;
-import static software.wings.exception.WingsException.USER_ADMIN;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_ADMIN;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.LoginTypeResponse.LoginTypeResponseBuilder;
 import software.wings.security.saml.SamlClientService;

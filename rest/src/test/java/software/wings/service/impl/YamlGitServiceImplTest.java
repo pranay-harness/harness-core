@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
@@ -26,7 +27,6 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFileChange;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.YamlGitServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;

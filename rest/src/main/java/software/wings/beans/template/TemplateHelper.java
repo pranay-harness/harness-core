@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.ListUtils;
+import io.harness.exception.WingsException;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
@@ -30,7 +31,6 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.command.CommandHelper;
 
 import java.util.ArrayList;

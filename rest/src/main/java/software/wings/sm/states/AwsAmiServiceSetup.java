@@ -11,6 +11,7 @@ import static software.wings.utils.Misc.normalizeExpression;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,6 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.common.Constants;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest.AwsAmiServiceSetupRequestBuilder;

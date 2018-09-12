@@ -35,6 +35,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import de.danielbechler.util.Collections;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -65,7 +66,6 @@ import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;

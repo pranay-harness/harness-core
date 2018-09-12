@@ -1,11 +1,12 @@
 package software.wings.scheduler;
 
-import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCursor;
+import io.harness.exception.WingsException;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -16,7 +17,6 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;

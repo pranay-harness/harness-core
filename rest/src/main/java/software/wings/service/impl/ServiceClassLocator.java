@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactStreamType;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.AmiBuildService;
 import software.wings.service.intfc.BambooBuildService;

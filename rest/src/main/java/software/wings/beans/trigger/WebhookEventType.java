@@ -1,6 +1,6 @@
 package software.wings.beans.trigger;
 
-import software.wings.exception.WingsException;
+import io.harness.exception.WingsException;
 
 import java.util.HashMap;
 import java.util.Map;

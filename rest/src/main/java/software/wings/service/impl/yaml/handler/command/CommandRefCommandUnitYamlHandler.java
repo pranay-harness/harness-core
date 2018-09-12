@@ -1,7 +1,7 @@
 package software.wings.service.impl.yaml.handler.command;
 
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.yaml.YamlConstants.NODE_PROPERTY_REFERENCEID;
-import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;

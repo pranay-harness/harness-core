@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import software.wings.exception.WingsException;
+import io.harness.exception.WingsException;
 
 /**
  * Created by sriram_parthasarathy on 10/26/17.

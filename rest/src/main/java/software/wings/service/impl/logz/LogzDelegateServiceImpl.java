@@ -7,6 +7,7 @@ import static software.wings.common.Constants.URL_STRING;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import retrofit2.Call;
@@ -15,7 +16,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.logz.LogzRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;

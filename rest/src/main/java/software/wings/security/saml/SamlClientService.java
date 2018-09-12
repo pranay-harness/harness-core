@@ -1,6 +1,6 @@
 package software.wings.security.saml;
 
-import static software.wings.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -9,10 +9,10 @@ import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.exception.WingsException;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.AuthenticationUtil;
 import software.wings.service.intfc.SSOSettingService;

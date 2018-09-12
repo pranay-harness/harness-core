@@ -3,6 +3,7 @@ package software.wings.exception;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.util.stream.Collectors.joining;
 
+import io.harness.exception.WingsException;
 import software.wings.beans.NameValuePair;
 
 import java.util.stream.Stream;

@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.exception.WingsException.SRE;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.artifact.ArtifactStreamType.ECR;
-import static software.wings.exception.WingsException.SRE;
-import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.inject.Inject;

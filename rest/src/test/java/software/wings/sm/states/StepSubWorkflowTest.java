@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 
 import com.google.common.collect.Lists;
 
+import io.harness.exception.WingsException;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -32,7 +33,6 @@ import software.wings.api.ServiceInstanceIdsParam.ServiceInstanceIdsParamBuilder
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;

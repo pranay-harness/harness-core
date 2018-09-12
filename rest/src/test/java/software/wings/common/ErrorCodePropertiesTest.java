@@ -3,8 +3,8 @@ package software.wings.common;
 import static org.junit.Assert.assertEquals;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.junit.Test;
-import software.wings.exception.WingsException;
 
 import java.io.IOException;
 import java.io.InputStream;

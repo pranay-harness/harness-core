@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import okhttp3.internal.http.RealResponseBody;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
@@ -41,7 +42,6 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.appdynamics.AppdynamicsRestClient;
 import software.wings.resources.AppdynamicsResource;
 import software.wings.service.impl.ThirdPartyApiCallLog;

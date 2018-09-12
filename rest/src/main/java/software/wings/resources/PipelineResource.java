@@ -5,13 +5,14 @@
 package software.wings.resources;
 
 import static io.harness.eraro.ErrorCode.DUPLICATE_STATE_NAMES;
-import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
+import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
@@ -19,7 +20,6 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.RestResponse;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;

@@ -31,6 +31,7 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC_CHANGED;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.junit.Test;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.GraphNode;
@@ -43,7 +44,6 @@ import software.wings.beans.template.VersionedTemplate;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.PageRequest;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.template.TemplateVersionService;
 
 import java.util.List;

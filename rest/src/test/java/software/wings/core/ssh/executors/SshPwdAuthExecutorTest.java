@@ -25,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 
 import com.google.common.io.CharStreams;
 
+import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
@@ -39,7 +40,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsException;
 import software.wings.rules.SshRule;
 import software.wings.service.intfc.FileService.FileBucket;
 

@@ -1,5 +1,6 @@
 package software.wings.yaml.handler.inframappings;
 
+import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static java.util.Arrays.asList;
 import static junit.framework.TestCase.fail;
 import static org.junit.Assert.assertEquals;
@@ -11,7 +12,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.exception.WingsException.ReportTarget.REST_API;
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -26,6 +26,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.amazonaws.services.ecs.model.LaunchType;
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +50,6 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;

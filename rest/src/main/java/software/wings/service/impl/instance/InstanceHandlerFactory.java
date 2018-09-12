@@ -3,8 +3,8 @@ package software.wings.service.impl.instance;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.exception.WingsException;
 
 /**
  * @author rktummala on 02/04/18

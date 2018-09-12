@@ -1,7 +1,7 @@
 package software.wings.licensing;
 
+import io.harness.exception.WingsException;
 import software.wings.beans.Account;
-import software.wings.exception.WingsException;
 
 /**
  * Created by peeyushaggarwal on 3/22/17.

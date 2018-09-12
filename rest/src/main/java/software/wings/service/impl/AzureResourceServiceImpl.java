@@ -5,11 +5,11 @@ import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.SettingAttribute;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.SettingsService;

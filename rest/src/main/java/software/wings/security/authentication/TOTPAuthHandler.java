@@ -1,16 +1,16 @@
 package software.wings.security.authentication;
 
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import software.wings.beans.User;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.UserService;

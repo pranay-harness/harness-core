@@ -1,11 +1,12 @@
 package migrations.all;
 
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.lang.String.format;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -20,7 +21,6 @@ import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;

@@ -2,7 +2,9 @@ package software.wings.exception;
 
 import static io.harness.eraro.ErrorCode.EXPLANATION;
 import static io.harness.eraro.Level.INFO;
-import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
+import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
+
+import io.harness.exception.WingsException;
 
 public class ExplanationException extends WingsException {
   public ExplanationException(String message, Throwable cause) {

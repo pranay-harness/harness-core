@@ -1,9 +1,9 @@
 package software.wings.service.impl.yaml.handler.notification;
 
+import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ObjectType.NOTIFICATION_GROUP;
-import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;

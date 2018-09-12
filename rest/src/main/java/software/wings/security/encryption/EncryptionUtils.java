@@ -6,7 +6,7 @@ import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
-import software.wings.exception.WingsException;
+import io.harness.exception.WingsException;
 
 import java.io.File;
 import java.io.IOException;

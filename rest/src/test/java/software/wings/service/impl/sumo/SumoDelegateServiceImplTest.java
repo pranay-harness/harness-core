@@ -8,6 +8,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.sumologic.client.SumoClientException;
 import com.sumologic.client.SumoLogicClient;
 import com.sumologic.client.SumoServerException;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,7 +17,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SumoConfig;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.service.intfc.security.EncryptionService;
 

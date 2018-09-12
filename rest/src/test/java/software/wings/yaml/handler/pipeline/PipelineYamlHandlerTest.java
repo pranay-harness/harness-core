@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -50,7 +51,6 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.yaml.handler.workflow.PipelineStageYamlHandler;

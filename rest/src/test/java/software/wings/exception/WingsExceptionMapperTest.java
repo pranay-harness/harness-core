@@ -2,6 +2,7 @@ package software.wings.exception;
 
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SOURCE;
+import static io.harness.exception.WingsException.USER;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.inOrder;
@@ -9,10 +10,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static software.wings.exception.WingsException.USER;
 
 import io.harness.MockableTest;
 import io.harness.eraro.MessageManager;
+import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.internal.util.reflection.Whitebox;

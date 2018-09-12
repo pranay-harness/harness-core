@@ -2,11 +2,12 @@ package software.wings.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
-import static software.wings.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Singleton;
 
 import io.harness.data.algorithm.IdentifierName;
+import io.harness.exception.WingsException;
 import org.apache.commons.collections.map.SingletonMap;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
@@ -17,7 +18,6 @@ import org.apache.commons.logging.impl.NoOpLog;
 import org.apache.commons.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.exception.WingsException;
 
 import java.util.Map;
 import java.util.Map.Entry;

@@ -7,6 +7,7 @@ import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.Service;
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -16,7 +17,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.KubernetesSwapServiceSelectorsParams;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.ExecutionStatus;

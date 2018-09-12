@@ -1,6 +1,6 @@
 package software.wings.service.impl.yaml.handler.artifactstream;
 
-import static software.wings.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;

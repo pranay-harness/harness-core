@@ -1,10 +1,10 @@
 package software.wings.service.impl.security;
 
+import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.exception.WingsException.USER;
 
 import com.google.common.base.Preconditions;
 
@@ -18,6 +18,7 @@ import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.vault.VaultRestClient;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;

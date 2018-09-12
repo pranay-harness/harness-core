@@ -2,6 +2,7 @@ package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
+import static io.harness.exception.WingsException.USER;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static org.slf4j.LoggerFactory.getLogger;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
@@ -9,7 +10,6 @@ import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateGallery.NAME_KEY;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
-import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 

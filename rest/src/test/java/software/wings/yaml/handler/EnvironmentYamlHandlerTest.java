@@ -12,6 +12,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -23,7 +24,6 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.yaml.handler.environment.EnvironmentYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;

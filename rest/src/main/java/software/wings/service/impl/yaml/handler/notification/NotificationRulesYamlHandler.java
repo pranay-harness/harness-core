@@ -2,9 +2,9 @@ package software.wings.service.impl.yaml.handler.notification;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
-import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -19,7 +20,6 @@ import software.wings.beans.NotificationRule.NotificationRuleBuilder;
 import software.wings.beans.NotificationRule.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.sm.ExecutionStatus;

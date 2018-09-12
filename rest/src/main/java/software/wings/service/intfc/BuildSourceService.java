@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.exception.WingsException;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
@@ -126,7 +127,7 @@ public interface BuildSourceService {
    * @param settingId                the setting id
    * @param artifactStreamAttributes the artifact stream attributes
    * @return the boolean
-   * @throws software.wings.exception.WingsException if Artifact Stream not valid
+   * @throws WingsException if Artifact Stream not valid
    */
   boolean validateArtifactSource(
       @NotEmpty String appId, @NotEmpty String settingId, ArtifactStreamAttributes artifactStreamAttributes);

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.apache.commons.codec.binary.Base64;
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
@@ -21,7 +22,6 @@ import software.wings.app.PortalConfig;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlRequest;
 import software.wings.service.intfc.AccountService;

@@ -1,11 +1,12 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
-import static software.wings.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
@@ -13,7 +14,6 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 

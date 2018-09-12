@@ -10,12 +10,12 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.util.List;

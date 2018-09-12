@@ -24,6 +24,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_F
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -62,7 +63,6 @@ import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.rules.RealMongo;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;

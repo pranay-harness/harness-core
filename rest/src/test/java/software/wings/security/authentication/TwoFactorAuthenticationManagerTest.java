@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import com.j256.twofactorauth.TimeBasedOneTimePasswordUtil;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.rule.RepeatRule.Repeat;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -22,7 +23,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.User;
-import software.wings.exception.WingsException;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;

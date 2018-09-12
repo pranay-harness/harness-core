@@ -159,6 +159,7 @@ import com.google.inject.name.Named;
 
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -218,7 +219,6 @@ import software.wings.common.TemplateConstants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.StaticMap;

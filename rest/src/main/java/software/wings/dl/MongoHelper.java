@@ -15,6 +15,7 @@ import static software.wings.beans.SortOrder.OrderType.DESC;
 import com.google.common.base.Preconditions;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.Mapper;
@@ -29,7 +30,6 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 
 import java.util.ArrayList;
 import java.util.List;

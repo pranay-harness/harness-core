@@ -1,6 +1,6 @@
 package software.wings.sm;
 
-import software.wings.exception.WingsException;
+import io.harness.exception.WingsException;
 
 /**
  * Created by peeyushaggarwal on 6/17/16.

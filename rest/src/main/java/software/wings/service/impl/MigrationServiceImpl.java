@@ -15,6 +15,7 @@ import com.google.inject.Injector;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import migrations.Migration;
 import migrations.MigrationBackgroundList;
@@ -30,7 +31,6 @@ import software.wings.beans.Account;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.Schema;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.MigrationService;
