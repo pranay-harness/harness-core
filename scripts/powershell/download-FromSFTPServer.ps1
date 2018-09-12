@@ -3,7 +3,8 @@ if (Get-Module -ListAvailable -Name Posh-SSH) {
 
 } else {
     Write-Host "Module does not exist, Installing"
-    Install-Module -Name Posh-SSH -SkipPublisherCheck
+    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+    Install-Module -Name Posh-SSH -SkipPublisherCheck -Force
 }
 
 Import-Module Posh-SSH
