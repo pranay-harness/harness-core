@@ -12,6 +12,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_AMI_ASYNC_TASK;
+import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -55,14 +56,17 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnit;
+import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.AwsUtils;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -120,6 +124,8 @@ public class AwsAmiServiceDeployState extends State {
   @Inject @Transient protected transient ActivityService activityService;
   @Inject @Transient protected transient DelegateService delegateService;
   @Inject @Transient protected transient LogService logService;
+  @Inject @Transient private transient HostService hostService;
+  @Inject @Transient private transient AwsUtils awsUtils;
   @Inject @Transient private transient AwsAsgHelperServiceManager awsAsgHelperServiceManager;
   @Inject @Named("waitStateResumer") @Transient private ScheduledExecutorService executorService;
   @Transient @Inject private transient WaitNotifyEngine waitNotifyEngine;
@@ -418,6 +424,9 @@ public class AwsAmiServiceDeployState extends State {
     Activity activity = activityService.get(awsAmiDeployStateExecutionData.getActivityId(), app.getUuid());
     Validator.notNullCheck("Activity", activity);
 
+    AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
+        activity.getAppId(), phaseElement.getInfraMappingId());
+
     String serviceId = phaseElement.getServiceElement().getUuid();
     Environment env = workflowStandardParams.getEnv();
     Service service = serviceResourceService.get(app.getUuid(), serviceId);
@@ -434,32 +443,45 @@ public class AwsAmiServiceDeployState extends State {
     List<Instance> ec2InstancesAdded = amiServiceDeployResponse.getInstancesAdded();
     List<InstanceElement> instanceElements = emptyList();
     if (isNotEmpty(ec2InstancesAdded)) {
-      instanceElements = amiServiceDeployResponse.getInstancesAdded()
-                             .stream()
-                             .map(instance -> {
-                               HostElement hostElement = aHostElement()
-                                                             .withPublicDns(instance.getPublicDnsName())
-                                                             .withIp(instance.getPrivateIpAddress())
-                                                             .withEc2Instance(instance)
-                                                             .withInstanceId(instance.getInstanceId())
-                                                             .build();
+      instanceElements =
+          amiServiceDeployResponse.getInstancesAdded()
+              .stream()
+              .map(instance -> {
+                Host host = aHost()
+                                .withHostName(awsUtils.getHostnameFromPrivateDnsName(instance.getPrivateDnsName()))
+                                .withPublicDns(instance.getPublicDnsName())
+                                .withEc2Instance(instance)
+                                .withAppId(infrastructureMapping.getAppId())
+                                .withEnvId(infrastructureMapping.getEnvId())
+                                .withHostConnAttr(infrastructureMapping.getHostConnectionAttrs())
+                                .withInfraMappingId(infrastructureMapping.getUuid())
+                                .withServiceTemplateId(infrastructureMapping.getServiceTemplateId())
+                                .build();
+                Host savedHost = hostService.saveHost(host);
+                HostElement hostElement = aHostElement()
+                                              .withUuid(savedHost.getUuid())
+                                              .withPublicDns(instance.getPublicDnsName())
+                                              .withIp(instance.getPrivateIpAddress())
+                                              .withEc2Instance(instance)
+                                              .withInstanceId(instance.getInstanceId())
+                                              .build();
 
-                               final Map<String, Object> contextMap = context.asMap();
-                               contextMap.put("host", hostElement);
-                               String hostName = awsHelperService.getHostnameFromConvention(contextMap, "");
-                               hostElement.setHostName(hostName);
-                               return anInstanceElement()
-                                   .withUuid(instance.getInstanceId())
-                                   .withHostName(hostName)
-                                   .withDisplayName(instance.getPublicDnsName())
-                                   .withHost(hostElement)
-                                   .withServiceTemplateElement(aServiceTemplateElement()
-                                                                   .withUuid(serviceTemplateKey.getId().toString())
-                                                                   .withServiceElement(phaseElement.getServiceElement())
-                                                                   .build())
-                                   .build();
-                             })
-                             .collect(toList());
+                final Map<String, Object> contextMap = context.asMap();
+                contextMap.put("host", hostElement);
+                String hostName = awsHelperService.getHostnameFromConvention(contextMap, "");
+                hostElement.setHostName(hostName);
+                return anInstanceElement()
+                    .withUuid(instance.getInstanceId())
+                    .withHostName(hostName)
+                    .withDisplayName(instance.getPublicDnsName())
+                    .withHost(hostElement)
+                    .withServiceTemplateElement(aServiceTemplateElement()
+                                                    .withUuid(serviceTemplateKey.getId().toString())
+                                                    .withServiceElement(phaseElement.getServiceElement())
+                                                    .build())
+                    .build();
+              })
+              .collect(toList());
     }
 
     int instancesAdded = newContainerServiceData.getDesiredCount() - newContainerServiceData.getPreviousCount();
