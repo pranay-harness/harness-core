@@ -81,6 +81,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
+import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -128,7 +129,6 @@ import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.SshCommandTemplate;
-import software.wings.dl.HQuery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;

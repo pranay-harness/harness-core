@@ -1,9 +1,9 @@
 package software.wings.waitnotify;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.inject.Inject;

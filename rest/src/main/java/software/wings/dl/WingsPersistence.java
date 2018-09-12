@@ -2,6 +2,7 @@ package software.wings.dl;
 
 import com.mongodb.DBCollection;
 import com.mongodb.client.gridfs.GridFSBucket;
+import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -9,7 +10,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 import software.wings.beans.ReadPref;
-import software.wings.dl.HQuery.QueryChecks;
 
 import java.util.List;
 import java.util.Map;

@@ -2,7 +2,7 @@ package software.wings.service.impl;
 
 import static com.google.common.collect.Sets.symmetricDifference;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.dl.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 

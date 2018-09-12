@@ -1,9 +1,9 @@
-package software.wings.dl;
+package io.harness.persistence;
 
+import static io.harness.persistence.HQuery.QueryChecks.AUTHORITY;
+import static io.harness.persistence.HQuery.QueryChecks.COUNT;
+import static io.harness.persistence.HQuery.QueryChecks.VALIDATE;
 import static java.lang.String.format;
-import static software.wings.dl.HQuery.QueryChecks.AUTHORITY;
-import static software.wings.dl.HQuery.QueryChecks.COUNT;
-import static software.wings.dl.HQuery.QueryChecks.VALIDATE;
 
 import com.google.common.collect.Sets;
 

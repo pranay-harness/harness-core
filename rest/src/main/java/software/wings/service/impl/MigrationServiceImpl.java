@@ -1,12 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.Schema.SCHEMA_ID;
 import static software.wings.beans.Schema.SchemaBuilder.aSchema;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -15,6 +15,7 @@ import com.google.inject.Injector;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
+import io.harness.persistence.HIterator;
 import migrations.Migration;
 import migrations.MigrationBackgroundList;
 import migrations.MigrationList;
@@ -28,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.Schema;
-import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.lock.AcquiredLock;

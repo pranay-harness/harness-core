@@ -7,6 +7,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
 
+import io.harness.persistence.HQuery;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import org.junit.After;
@@ -21,7 +22,6 @@ import software.wings.beans.ManagerConfiguration;
 import software.wings.core.managerConfiguration.ConfigChangeEvent;
 import software.wings.core.managerConfiguration.ConfigChangeListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.dl.HQuery;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;

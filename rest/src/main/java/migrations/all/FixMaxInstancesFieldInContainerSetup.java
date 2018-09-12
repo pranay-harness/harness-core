@@ -7,6 +7,7 @@ import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.HIterator;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;

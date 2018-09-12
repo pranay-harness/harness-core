@@ -15,6 +15,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
@@ -23,7 +24,6 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.common.Constants;
-import software.wings.dl.HIterator;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;

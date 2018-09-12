@@ -62,6 +62,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.observer.Rejection;
+import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.apache.commons.collections.CollectionUtils;
@@ -120,7 +121,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
-import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;

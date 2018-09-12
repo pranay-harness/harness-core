@@ -14,6 +14,7 @@ import static org.powermock.reflect.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.HIterator;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -32,7 +33,6 @@ import software.wings.beans.KmsConfig;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.core.queue.Queue;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.rules.Integration;

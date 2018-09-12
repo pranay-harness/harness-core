@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
+import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
 import software.wings.beans.Base;
@@ -25,7 +26,6 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.common.Constants;
-import software.wings.dl.HIterator;
 import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;

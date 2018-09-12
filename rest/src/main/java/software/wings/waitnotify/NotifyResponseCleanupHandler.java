@@ -2,18 +2,18 @@ package software.wings.waitnotify;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.HIterator;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.sm.ExecutionStatus;
 

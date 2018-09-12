@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.persistence.HIterator;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalDetails;
@@ -17,7 +18,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
-import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.service.impl.WorkflowExecutionUpdate;

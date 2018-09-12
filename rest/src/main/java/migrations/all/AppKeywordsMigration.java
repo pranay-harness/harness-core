@@ -6,12 +6,12 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.data.structure.ListUtils;
+import io.harness.persistence.HIterator;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
-import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 
 import java.util.List;

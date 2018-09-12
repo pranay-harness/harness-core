@@ -1,7 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.dl.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 

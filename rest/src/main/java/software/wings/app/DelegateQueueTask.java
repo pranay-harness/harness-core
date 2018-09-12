@@ -1,6 +1,7 @@
 package software.wings.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.time.Duration.ofMinutes;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -9,7 +10,6 @@ import static software.wings.beans.DelegateTask.Status.ERROR;
 import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 import static software.wings.service.impl.DelegateServiceImpl.VALIDATION_TIMEOUT;
 
