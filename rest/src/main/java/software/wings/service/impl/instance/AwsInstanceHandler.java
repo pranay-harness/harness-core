@@ -35,6 +35,7 @@ import software.wings.exception.HarnessException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;
+import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.utils.Validator;
 
 import java.util.Collection;
@@ -51,6 +52,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class AwsInstanceHandler extends InstanceHandler {
   @Inject protected AwsHelperService awsHelperService;
+  @Inject private AwsAsgHelperServiceManager awsAsgHelperServiceManager;
   @Inject protected AwsInfrastructureProvider awsInfrastructureProvider;
 
   @Override
@@ -345,6 +347,7 @@ public class AwsInstanceHandler extends InstanceHandler {
 
   protected List<com.amazonaws.services.ec2.model.Instance> getEc2InstancesFromAutoScalingGroup(
       String region, String autoScalingGroupName, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return awsHelperService.listAutoScalingGroupInstances(awsConfig, encryptionDetails, region, autoScalingGroupName);
+    return awsAsgHelperServiceManager.listAutoScalingGroupInstances(
+        awsConfig, encryptionDetails, region, autoScalingGroupName);
   }
 }

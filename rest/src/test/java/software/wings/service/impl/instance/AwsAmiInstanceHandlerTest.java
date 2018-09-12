@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -81,6 +82,7 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -102,6 +104,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private AwsUtils mockAwsUtils;
   @Mock private AwsEc2HelperServiceManager mockAwsEc2HelperServiceManager;
+  @Mock private AwsAsgHelperServiceManager mockAwsAsgHelperServiceManager;
 
   @Mock EnvironmentService environmentService;
   @Mock ServiceResourceService serviceResourceService;
@@ -271,8 +274,8 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     ec2Instance2.setInstanceId(INSTANCE_2_ID);
 
     doReturn(asList(ec2Instance1, ec2Instance2))
-        .when(awsHelperService)
-        .listAutoScalingGroupInstances(any(), any(), any(), any());
+        .when(mockAwsAsgHelperServiceManager)
+        .listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString());
 
     awsAmiInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
 
@@ -396,8 +399,9 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
     ec2Instance2.setInstanceId(INSTANCE_2_ID);
 
     doReturn(asList(ec2Instance1, ec2Instance2))
-        .when(awsHelperService)
-        .listAutoScalingGroupInstances(any(), any(), any(), any());
+        .when(mockAwsAsgHelperServiceManager)
+        .listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString());
+
     awsAmiInstanceHandler.handleNewDeployment(
         Arrays.asList(
             DeploymentSummary.builder()
