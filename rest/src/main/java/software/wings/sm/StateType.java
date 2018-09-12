@@ -278,8 +278,7 @@ public enum StateType implements StateTypeDescriptor {
 
    * Generic LOG verification state type.
    */
-  LOG_VERIFICATION(
-      CustomLogVerificationState.class, VERIFICATIONS, 16, "Log Verification", asList(), ORCHESTRATION_STENCILS),
+  LOG_VERIFICATION(CustomLogVerificationState.class, VERIFICATIONS, -1, "Log Verification", asList(), NONE),
 
   /**
    * Bugsnag verification state type.
