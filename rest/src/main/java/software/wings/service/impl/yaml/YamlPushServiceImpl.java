@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Service;
 import software.wings.beans.yaml.Change.ChangeType;
@@ -22,6 +23,7 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class YamlPushServiceImpl implements YamlPushService {
   private static final Logger logger = LoggerFactory.getLogger(YamlPushServiceImpl.class);
+  private static final String YAML_PUSH_SERVICE_LOG = "YAML_PUSH_SERVICE_LOG";
 
   @Inject private YamlChangeSetHelper yamlChangeSetHelper;
   @Inject private ExecutorService executorService;
@@ -37,17 +39,17 @@ public class YamlPushServiceImpl implements YamlPushService {
       try {
         switch (type) {
           case CREATE:
-            validateCreate(oldEntity, newEntity);
+            validateCreate(accountId, oldEntity, newEntity);
             pushYamlChangeSetOnCreate(accountId, newEntity);
             break;
 
           case UPDATE:
-            validateUpdate(oldEntity, newEntity);
+            validateUpdate(accountId, oldEntity, newEntity);
             pushYamlChangeSetOnUpdate(accountId, oldEntity, newEntity, isRename);
             break;
 
           case DELETE:
-            validateDelete(oldEntity, newEntity);
+            validateDelete(accountId, oldEntity, newEntity);
             pushYamlChangeSetOnDelete(accountId, oldEntity);
             break;
 
@@ -72,6 +74,9 @@ public class YamlPushServiceImpl implements YamlPushService {
         notNullCheck("service", service);
         notNullCheck("accountId", accountId);
 
+        logger.info(format("%s accountId %s, entity %s, entityId %s, serviceId %s", YAML_PUSH_SERVICE_LOG, accountId,
+            entity.getClass().getSimpleName(), ((Base) entity).getUuid(), service.getUuid()));
+
         switch (type) {
           case CREATE:
             yamlChangeSetHelper.entityYamlChangeSet(accountId, service, entity, ChangeType.ADD);
@@ -94,19 +99,28 @@ public class YamlPushServiceImpl implements YamlPushService {
     });
   }
 
-  private <T> void validateCreate(T oldEntity, T newEntity) {
+  private <T> void validateCreate(String accountId, T oldEntity, T newEntity) {
     Validator.nullCheck("oldEntity", oldEntity);
     notNullCheck("newEntity", newEntity);
+
+    logger.info(format("%s Create - accountId %s, entity %s, entityId %s", YAML_PUSH_SERVICE_LOG, accountId,
+        newEntity.getClass().getSimpleName(), ((Base) newEntity).getUuid()));
   }
 
-  private <T> void validateUpdate(T oldEntity, T newEntity) {
+  private <T> void validateUpdate(String accountId, T oldEntity, T newEntity) {
     notNullCheck("oldEntity", oldEntity);
     notNullCheck("newEntity", newEntity);
+
+    logger.info(format("%s Update - accountId %s, entity %s, oldEntityId %s, newEntityId %s", YAML_PUSH_SERVICE_LOG,
+        accountId, newEntity.getClass().getSimpleName(), ((Base) oldEntity).getUuid(), ((Base) newEntity).getUuid()));
   }
 
-  private <T> void validateDelete(T oldEntity, T newEntity) {
+  private <T> void validateDelete(String accountId, T oldEntity, T newEntity) {
     notNullCheck("oldEntity", oldEntity);
     Validator.nullCheck("newEntity", newEntity);
+
+    logger.info(format("%s Delete - accountId %s, entity %s, entityId %s", YAML_PUSH_SERVICE_LOG, accountId,
+        oldEntity.getClass().getSimpleName(), ((Base) oldEntity).getUuid()));
   }
 
   private <T> void pushYamlChangeSetOnCreate(String accountId, T entity) {
