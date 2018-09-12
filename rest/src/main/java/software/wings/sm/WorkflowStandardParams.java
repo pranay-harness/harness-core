@@ -21,6 +21,7 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
@@ -30,6 +31,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.InstanceExpressionProcessor;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -52,6 +54,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   private static final String STANDARD_PARAMS = "STANDARD_PARAMS";
 
   @Inject private transient AppService appService;
+  @Inject private transient AccountService accountService;
 
   @Inject private transient ArtifactService artifactService;
 
@@ -74,6 +77,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @JsonIgnore @Transient private transient Application app;
   @JsonIgnore @Transient private transient Environment env;
   @JsonIgnore @Transient private transient List<Artifact> artifacts;
+  @JsonIgnore @Transient private transient Account account;
 
   private List<ServiceElement> services;
 
@@ -107,6 +111,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       map.put(WORKFLOW, workflowElement);
     }
     map.put(APP, getApp());
+    map.put(ACCOUNT, getAccount());
     map.put(ENV, getEnv());
     map.put(TIMESTAMP_ID, timestampId);
 
@@ -413,6 +418,14 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       app = appService.getApplicationWithDefaults(appId);
     }
     return app;
+  }
+
+  private Account getAccount() {
+    String accountId = getApp() == null ? null : getApp().getAccountId();
+    if (account == null && accountId != null) {
+      return accountService.getAccountWithDefaults(accountId);
+    }
+    return account;
   }
 
   /**

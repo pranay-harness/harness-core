@@ -26,7 +26,6 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
@@ -48,7 +47,9 @@ import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Notification;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
+import software.wings.beans.StringValue.Builder;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -72,6 +73,9 @@ import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * The type App service test.
@@ -211,35 +215,33 @@ public class AppServiceTest extends WingsBaseTest {
     assertThat(application).isNotNull();
   }
 
-  /**
-   * Should get application.
-   */
   @Test
   public void shouldGetApplicationWithDefaults() {
     when(wingsPersistence.get(Application.class, APP_ID))
-        .thenReturn(anApplication()
-                        .withUuid(APP_ID)
-                        .withAccountId(ACCOUNT_ID)
-                        .withDefaults(ImmutableMap.of("Param1", "Value1"))
-                        .build());
-    when(settingsService.listApplicationDefaults(ACCOUNT_ID, APP_ID))
-        .thenReturn(asList(aSettingAttribute()
-                               .withName("NAME")
-                               .withAccountId("ACCOUNT_ID")
-                               .withValue(StringValue.Builder.aStringValue().build())
-                               .build(),
-            aSettingAttribute()
-                .withName("NAME2")
-                .withAccountId("ACCOUNT_ID")
-                .withValue(StringValue.Builder.aStringValue().withValue("VALUE").build())
-                .build()));
+        .thenReturn(anApplication().withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
+    List<SettingAttribute> settingAttributes = asList(aSettingAttribute()
+                                                          .withName("NAME")
+                                                          .withAccountId("ACCOUNT_ID")
+                                                          .withValue(Builder.aStringValue().build())
+                                                          .build(),
+        aSettingAttribute()
+            .withName("NAME2")
+            .withAccountId("ACCOUNT_ID")
+            .withValue(Builder.aStringValue().withValue("VALUE").build())
+            .build());
+
+    when(settingsService.listAppDefaults(ACCOUNT_ID, APP_ID))
+        .thenReturn(settingAttributes.stream().collect(Collectors.toMap(SettingAttribute::getName,
+            settingAttribute
+            -> Optional.ofNullable(((StringValue) settingAttribute.getValue()).getValue()).orElse(""),
+            (a, b) -> b)));
 
     Application application = appService.getApplicationWithDefaults(APP_ID);
     assertThat(application).isNotNull();
     assertThat(application.getDefaults()).isNotEmpty().containsKeys("NAME", "NAME2");
     assertThat(application.getDefaults()).isNotEmpty().containsValues("", "VALUE");
     verify(wingsPersistence).get(Application.class, APP_ID);
-    verify(settingsService).listApplicationDefaults(ACCOUNT_ID, APP_ID);
+    verify(settingsService).listAppDefaults(ACCOUNT_ID, APP_ID);
   }
 
   @Test

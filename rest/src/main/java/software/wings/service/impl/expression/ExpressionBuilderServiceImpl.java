@@ -1,5 +1,6 @@
 package software.wings.service.impl.expression;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
@@ -10,8 +11,10 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.sm.StateType;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
+  @Inject private AccountService accountService;
   @Inject private AppService appService;
   @Inject private ServiceExpressionBuilder serviceExpressionsBuilder;
   @Inject private EnvironmentExpressionBuilder envExpressionBuilder;
@@ -53,6 +57,11 @@ public class ExpressionBuilderServiceImpl implements ExpressionBuilderService {
     Map<String, String> defaults = application.getDefaults();
     if (defaults != null) {
       expressions.addAll(defaults.keySet().stream().map(s -> "app.defaults." + s).collect(Collectors.toSet()));
+    }
+    Account account = accountService.getAccountWithDefaults(application.getAccountId());
+    if (account != null && isNotEmpty(account.getDefaults())) {
+      expressions.addAll(
+          account.getDefaults().keySet().stream().map(s -> "account.defaults." + s).collect(Collectors.toSet()));
     }
     if (entityType.equals(SERVICE)) {
       expressions.addAll(serviceExpressionsBuilder.getExpressions(appId, entityId, stateType));

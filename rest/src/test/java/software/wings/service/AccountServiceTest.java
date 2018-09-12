@@ -5,8 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.Constants.HARNESS_NAME;
 
 import com.google.inject.Inject;
@@ -17,6 +19,9 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateConfiguration;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.StringValue;
+import software.wings.beans.StringValue.Builder;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.JobScheduler;
@@ -24,6 +29,10 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateGalleryService;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Created by peeyushaggarwal on 10/11/16.
@@ -126,5 +135,34 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(accountService.get(account.getUuid())).isEqualTo(account);
     assertThat(accountService.listAllAccounts()).isNotEmpty();
     assertThat(accountService.listAllAccounts().get(0)).isNotNull();
+  }
+
+  @Test
+  public void shouldGetAccountWithDefaults() {
+    Account account = wingsPersistence.saveAndGet(Account.class, anAccount().withCompanyName(HARNESS_NAME).build());
+    assertThat(account).isNotNull();
+
+    List<SettingAttribute> settingAttributes = asList(aSettingAttribute()
+                                                          .withName("NAME")
+                                                          .withAccountId(account.getUuid())
+                                                          .withValue(Builder.aStringValue().build())
+                                                          .build(),
+        aSettingAttribute()
+            .withName("NAME2")
+            .withAccountId(account.getUuid())
+            .withValue(Builder.aStringValue().withValue("VALUE").build())
+            .build());
+
+    when(settingsService.listAccountDefaults(account.getUuid()))
+        .thenReturn(settingAttributes.stream().collect(Collectors.toMap(SettingAttribute::getName,
+            settingAttribute
+            -> Optional.ofNullable(((StringValue) settingAttribute.getValue()).getValue()).orElse(""),
+            (a, b) -> b)));
+
+    account = accountService.getAccountWithDefaults(account.getUuid());
+    assertThat(account).isNotNull();
+    assertThat(account.getDefaults()).isNotEmpty().containsKeys("NAME", "NAME2");
+    assertThat(account.getDefaults()).isNotEmpty().containsValues("", "VALUE");
+    verify(settingsService).listAccountDefaults(account.getUuid());
   }
 }

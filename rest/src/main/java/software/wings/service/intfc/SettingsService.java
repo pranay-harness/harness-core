@@ -11,11 +11,9 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 
-/**
- * Created by anubhaw on 5/17/16.
- */
 public interface SettingsService extends OwnedByAccount {
   /**
    * List.
@@ -70,9 +68,6 @@ public interface SettingsService extends OwnedByAccount {
 
   List<SettingAttribute> getSettingAttributesByType(String accountId, String appId, String envId, String type);
 
-  List<SettingAttribute> getFilteredSettingAttributesByType(
-      String accountId, String appId, String envId, String type, String currentAppId, String currentEnvId);
-
   List<SettingAttribute> getGlobalSettingAttributesByType(String accountId, String type);
 
   List<SettingAttribute> getFilteredGlobalSettingAttributesByType(
@@ -86,7 +81,8 @@ public interface SettingsService extends OwnedByAccount {
 
   ValidationResult validate(String varId);
 
-  List<SettingAttribute> listApplicationDefaults(String accountId, String appId);
-
   void deleteByYamlGit(String appId, String settingAttributeId, boolean syncFromGit);
+  Map<String, String> listAccountDefaults(String accountId);
+
+  Map<String, String> listAppDefaults(String accountId, String appId);
 }

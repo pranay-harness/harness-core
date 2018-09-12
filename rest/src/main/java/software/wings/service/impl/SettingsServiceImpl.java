@@ -47,8 +47,6 @@ import io.harness.observer.Subject;
 import io.harness.validation.Create;
 import lombok.Getter;
 import org.mongodb.morphia.annotations.Transient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.Application;
@@ -56,6 +54,7 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.StringValue;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
@@ -84,7 +83,9 @@ import software.wings.utils.Misc;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -93,8 +94,6 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 @Singleton
 public class SettingsServiceImpl implements SettingsService {
-  private static final Logger logger = LoggerFactory.getLogger(SettingsServiceImpl.class);
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private SettingValidationService settingValidationService;
   @Inject private AppService appService;
@@ -227,11 +226,27 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   @Override
-  public List<SettingAttribute> listApplicationDefaults(String accountId, String appId) {
-    return wingsPersistence.createQuery(SettingAttribute.class)
-        .filter(ACCOUNT_ID_KEY, accountId)
-        .filter(APP_ID_KEY, appId)
-        .asList();
+  public Map<String, String> listAccountDefaults(String accountId) {
+    return listAccountOrAppDefaults(accountId, GLOBAL_APP_ID);
+  }
+
+  @Override
+  public Map<String, String> listAppDefaults(String accountId, String appId) {
+    return listAccountOrAppDefaults(accountId, appId);
+  }
+
+  private Map<String, String> listAccountOrAppDefaults(String accountId, String appId) {
+    List<SettingAttribute> settingAttributes =
+        wingsPersistence.createQuery(SettingAttribute.class)
+            .filter(ACCOUNT_ID_KEY, accountId)
+            .filter(APP_ID_KEY, appId)
+            .filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())
+            .asList();
+
+    return settingAttributes.stream().collect(Collectors.toMap(SettingAttribute::getName,
+        settingAttribute
+        -> Optional.ofNullable(((StringValue) settingAttribute.getValue()).getValue()).orElse(""),
+        (a, b) -> b));
   }
 
   @Override
@@ -659,13 +674,6 @@ public class SettingsServiceImpl implements SettingsService {
                                                     .addFilter("value.type", EQ, type)
                                                     .build();
     return wingsPersistence.query(SettingAttribute.class, pageRequest).getResponse();
-  }
-
-  @Override
-  public List<SettingAttribute> getFilteredSettingAttributesByType(
-      String accountId, String appId, String envId, String type, String currentAppId, String currentEnvId) {
-    List<SettingAttribute> settingAttributeList = getSettingAttributesByType(accountId, appId, envId, type);
-    return getFilteredSettingAttributes(settingAttributeList, currentAppId, currentEnvId);
   }
 
   @Override

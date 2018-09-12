@@ -26,6 +26,7 @@ import software.wings.api.EmailStateExecutionData;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -51,6 +52,8 @@ public class PauseStateTest extends WingsBaseTest {
   @Inject private Injector injector;
 
   @Mock private EmailNotificationService emailNotificationService;
+  @Mock private AccountService accountService;
+
   @InjectMocks private PauseState pauseState = new PauseState(stateName);
 
   @Mock private MainConfiguration configuration;
@@ -71,6 +74,8 @@ public class PauseStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("app", anApplication().withAccountId(ACCOUNT_ID).withUuid(APP_ID).build());
     on(workflowStandardParams).set("env", anEnvironment().withUuid(ENV_ID).build());
     on(workflowStandardParams).set("configuration", configuration);
+    on(workflowStandardParams).set("accountService", accountService);
+
     context.pushContextElement(workflowStandardParams);
 
     pauseState.setToAddress("to1,to2");

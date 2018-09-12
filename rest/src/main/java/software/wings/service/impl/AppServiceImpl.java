@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static java.lang.String.format;
@@ -35,8 +34,6 @@ import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Role;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.StringValue;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -68,8 +65,6 @@ import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.yaml.YamlPushService;
 
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 /**
@@ -231,18 +226,8 @@ public class AppServiceImpl implements AppService {
   @Override
   public Application getApplicationWithDefaults(String uuid) {
     Application application = get(uuid);
+    application.setDefaults(settingsService.listAppDefaults(application.getAccountId(), uuid));
 
-    List<SettingAttribute> settingAttributes =
-        settingsService.listApplicationDefaults(application.getAccountId(), application.getUuid());
-
-    application.setDefaults(
-        settingAttributes.stream()
-            .filter(settingAttribute
-                -> settingAttribute.getValue() instanceof StringValue && isNotEmpty(settingAttribute.getName()))
-            .collect(Collectors.toMap(SettingAttribute::getName,
-                settingAttribute
-                -> Optional.ofNullable(((StringValue) settingAttribute.getValue()).getValue()).orElse(""),
-                (a, b) -> b)));
     return application;
   }
 

@@ -7,12 +7,18 @@ import static org.mockito.Mockito.when;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
+import static software.wings.common.Constants.ARTIFACT_SOURCE_USER_NAME_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
+import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.MembersInjector;
@@ -23,17 +29,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.ServiceElement;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.artifact.Artifact;
 import software.wings.scheduler.JobScheduler;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,6 +70,8 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Mock private JobScheduler jobScheduler;
   @Mock private ExecutionContext context;
   @Mock private ArtifactService artifactService;
+  @Mock private AccountService accountService;
+  @Mock private ArtifactStreamService artifactStreamService;
 
   @Before
   public void setup() {
@@ -122,8 +135,6 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
   @Test
   public void shouldGetArtifactWithSourceProperties() {
-    when(artifactService.get(APP_ID, ARTIFACT_ID))
-        .thenReturn(anArtifact().withUuid(ARTIFACT_ID).withAppId(APP_ID).build());
     Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
@@ -131,13 +142,63 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
     WorkflowStandardParams std = new WorkflowStandardParams();
     injector.injectMembers(std);
+    on(std).set("artifactService", artifactService);
+    on(std).set("artifactStreamService", artifactStreamService);
+
     std.setAppId(app.getUuid());
     std.setEnvId(env.getUuid());
+    List<String> artifactIds = new ArrayList<>();
+    artifactIds.add(ARTIFACT_ID);
+    std.setArtifactIds(artifactIds);
 
     ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
     when(context.getContextElement(ContextElementType.SERVICE)).thenReturn(serviceElement);
+    when(artifactService.get(app.getUuid(), ARTIFACT_ID))
+        .thenReturn(anArtifact()
+                        .withUuid(ARTIFACT_ID)
+                        .withAppId(app.getUuid())
+                        .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                        .withServiceIds(singletonList(SERVICE_ID))
+                        .build());
+    when(artifactStreamService.fetchArtifactSourceProperties(app.getAccountId(), app.getUuid(), ARTIFACT_STREAM_ID))
+        .thenReturn(ImmutableMap.of(
+            ARTIFACT_SOURCE_USER_NAME_KEY, "harness", ARTIFACT_SOURCE_REGISTRY_URL_KEY, "http://docker.registry.io"));
 
     Map<String, Object> map = std.paramMap(context);
-    assertThat(map).isNotNull().containsEntry(ContextElement.APP, app);
+    assertThat(map).isNotNull().containsKey(ContextElement.ARTIFACT);
+    Artifact artifact = (Artifact) map.get(ContextElement.ARTIFACT);
+    assertThat(artifact).isNotNull();
+    assertThat(artifact.getSource())
+        .isNotEmpty()
+        .containsKeys(ARTIFACT_SOURCE_USER_NAME_KEY, ARTIFACT_SOURCE_REGISTRY_URL_KEY);
+  }
+
+  @Test
+  public void shouldGetAccountDefaults() {
+    Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
+    app = appService.save(app);
+
+    Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
+    env = environmentService.save(env);
+
+    WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+    on(std).set("accountService", accountService);
+    std.setAppId(app.getUuid());
+    std.setEnvId(env.getUuid());
+
+    when(accountService.getAccountWithDefaults(ACCOUNT_ID))
+        .thenReturn(Account.Builder.anAccount()
+                        .withAccountKey(ACCOUNT_KEY)
+                        .withCompanyName(COMPANY_NAME)
+                        .withUuid(ACCOUNT_ID)
+                        .withDefaults(ImmutableMap.of("MyActDefaultVar", "MyDefaultValue"))
+                        .build());
+
+    Map<String, Object> map = std.paramMap(context);
+    assertThat(map).isNotNull().containsKey(ContextElement.ACCOUNT);
+    Account account = (Account) map.get(ContextElement.ACCOUNT);
+    assertThat(account).isNotNull();
+    assertThat(account.getDefaults()).isNotEmpty();
   }
 }

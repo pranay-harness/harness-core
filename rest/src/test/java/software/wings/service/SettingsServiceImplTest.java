@@ -12,13 +12,14 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.internal.verification.VerificationModeFactory.times;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -73,6 +74,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.StringValue;
+import software.wings.beans.StringValue.Builder;
 import software.wings.beans.User;
 import software.wings.beans.ValidationResult;
 import software.wings.beans.artifact.JenkinsArtifactStream;
@@ -671,9 +673,55 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(wingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
     when(spyQuery.filter(ACCOUNT_ID_KEY, ACCOUNT_ID)).thenReturn(spyQuery);
     when(spyQuery.filter(APP_ID_KEY, APP_ID)).thenReturn(spyQuery);
-    settingsService.listApplicationDefaults(ACCOUNT_ID, APP_ID);
+    when(spyQuery.filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())).thenReturn(spyQuery);
+
+    when(spyQuery.asList())
+        .thenReturn(asList(aSettingAttribute()
+                               .withName("NAME")
+                               .withAccountId("ACCOUNT_ID")
+                               .withAppId(APP_ID)
+                               .withValue(Builder.aStringValue().build())
+                               .build(),
+            aSettingAttribute()
+                .withName("NAME2")
+                .withAccountId("ACCOUNT_ID")
+                .withAppId(APP_ID)
+                .withValue(Builder.aStringValue().withValue("VALUE").build())
+                .build()));
+
+    Map<String, String> accountDefaults = settingsService.listAppDefaults(ACCOUNT_ID, APP_ID);
+    assertThat(accountDefaults).isNotEmpty().containsKeys("NAME", "NAME2");
+    assertThat(accountDefaults).isNotEmpty().containsValues("", "VALUE");
     verify(wingsPersistence).createQuery(SettingAttribute.class);
     verify(spyQuery, times(2)).filter(ACCOUNT_ID_KEY, ACCOUNT_ID);
     verify(spyQuery, times(2)).filter(APP_ID_KEY, APP_ID);
+    verify(spyQuery, times(2)).filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name());
+  }
+
+  @Test
+  public void shouldGetAccountDefaults() {
+    when(wingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
+    when(spyQuery.filter(ACCOUNT_ID_KEY, ACCOUNT_ID)).thenReturn(spyQuery);
+    when(spyQuery.filter(APP_ID_KEY, APP_ID)).thenReturn(spyQuery);
+    when(spyQuery.filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())).thenReturn(spyQuery);
+    when(spyQuery.asList())
+        .thenReturn(asList(aSettingAttribute()
+                               .withName("NAME")
+                               .withAccountId("ACCOUNT_ID")
+                               .withAppId(GLOBAL_APP_ID)
+                               .withValue(Builder.aStringValue().build())
+                               .build(),
+            aSettingAttribute()
+                .withName("NAME2")
+                .withAccountId("ACCOUNT_ID")
+                .withAppId(GLOBAL_APP_ID)
+                .withValue(Builder.aStringValue().withValue("VALUE").build())
+                .build()));
+    Map<String, String> accountDefaults = settingsService.listAccountDefaults(ACCOUNT_ID);
+    assertThat(accountDefaults).isNotEmpty().containsKeys("NAME", "NAME2");
+    assertThat(accountDefaults).isNotEmpty().containsValues("", "VALUE");
+    verify(wingsPersistence).createQuery(SettingAttribute.class);
+    verify(spyQuery, times(2)).filter(ACCOUNT_ID_KEY, ACCOUNT_ID);
+    verify(spyQuery, times(2)).filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name());
   }
 }
