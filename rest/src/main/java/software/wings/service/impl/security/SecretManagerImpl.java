@@ -742,6 +742,13 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
+  public boolean deleteSecretUsingUuid(String uuId) {
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
+    Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
+    return wingsPersistence.delete(EncryptedData.class, uuId);
+  }
+
+  @Override
   public String saveFile(
       String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
     usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);

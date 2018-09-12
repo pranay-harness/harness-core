@@ -2,12 +2,15 @@ package software.wings.service.intfc;
 
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import org.hibernate.validator.constraints.NotBlank;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateConfiguration;
+import software.wings.beans.FeatureFlag;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 
+import java.util.Collection;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -51,4 +54,12 @@ public interface AccountService {
   Account getByAccountName(String accountName);
 
   Account getAccountWithDefaults(String accountId);
+
+  /**
+   * List all feaature flags and their statuses
+   *
+   * @param accountId account id
+   * @return list of feature flags
+   */
+  Collection<FeatureFlag> getFeatureFlags(@NotBlank String accountId);
 }

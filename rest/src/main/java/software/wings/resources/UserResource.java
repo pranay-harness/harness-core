@@ -18,6 +18,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
+import software.wings.beans.FeatureFlag;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.RestResponse.Builder;
@@ -51,6 +52,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
@@ -366,6 +368,22 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<UserPermissionInfo> getUserPermissionInfo(@PathParam("accountId") String accountId) {
     return new RestResponse<>(authService.getUserPermissionInfo(accountId, UserThreadLocal.get().getPublicUser()));
+  }
+
+  /**
+   * Get list of features flags and their statuses
+   *
+   * @param accountId account id
+   * @return the rest response
+   */
+  @GET
+  @Path("feature-flags/{accountId}")
+  @Scope(value = ResourceType.USER)
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Collection<FeatureFlag>> getFeatureFlags(@PathParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.getFeatureFlags(accountId));
   }
 
   /**

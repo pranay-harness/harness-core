@@ -85,6 +85,7 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.SSOSettings;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -95,6 +96,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -104,6 +106,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.RoleService;
+import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
@@ -157,6 +160,7 @@ public class UserServiceImpl implements UserService {
   @Inject private AuthHandler authHandler;
   @Inject private SecretManager secretManager;
   @Inject TwoFactorAuthenticationManager twoFactorAuthenticationManager;
+  @Inject private SSOSettingService ssoSettingService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -384,7 +388,8 @@ public class UserServiceImpl implements UserService {
         .collect(toList());
   }
 
-  private UserInvite inviteUser(UserInvite userInvite) {
+  @Override
+  public UserInvite inviteUser(UserInvite userInvite) {
     String accountId = userInvite.getAccountId();
     Account account = accountService.get(accountId);
     String inviteId = wingsPersistence.save(userInvite);
@@ -403,13 +408,13 @@ public class UserServiceImpl implements UserService {
       user = anUser()
                  .withAccounts(Lists.newArrayList(account))
                  .withEmail(userInvite.getEmail().trim().toLowerCase())
-                 .withName(userInvite.getEmail().trim().toLowerCase())
+                 .withName(userInvite.getName().trim())
                  .withRoles(userInvite.getRoles())
                  .withAppId(Base.GLOBAL_APP_ID)
                  .withEmailVerified(false)
                  .build();
       user = save(user);
-      sendNewInvitationMail(userInvite, account);
+      sendNewInvitationMailIfRequired(userInvite, account);
     } else {
       boolean userAlreadyAddedToAccount = user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(accountId));
       if (userAlreadyAddedToAccount) {
@@ -418,9 +423,9 @@ public class UserServiceImpl implements UserService {
         addAccountRoles(user, account, userInvite.getRoles());
       }
       if (StringUtils.equals(user.getName(), user.getEmail())) {
-        sendNewInvitationMail(userInvite, account);
+        sendNewInvitationMailIfRequired(userInvite, account);
       } else {
-        sendAddedRoleEmail(user, account, userInvite.getRoles());
+        sendAddedRoleEmail(user, account, userInvite);
       }
     }
 
@@ -492,16 +497,26 @@ public class UserServiceImpl implements UserService {
     return pageResponse.getResponse();
   }
 
-  private void sendNewInvitationMail(UserInvite userInvite, Account account) {
-    try {
-      String inviteUrl =
-          buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
-              account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+  private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account)
+      throws URISyntaxException {
+    Map<String, String> model = new HashMap<>();
+    String inviteUrl =
+        buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
+            account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+    model.put("url", inviteUrl);
+    model.put("company", account.getCompanyName());
+    return model;
+  }
 
-      Map<String, String> templateModel = new HashMap<>();
-      templateModel.put("url", inviteUrl);
-      templateModel.put("company", account.getCompanyName());
-      List<String> toList = new ArrayList();
+  private void sendNewInvitationMailIfRequired(UserInvite userInvite, Account account) {
+    try {
+      // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
+      // we need user to set the password.
+      if (!account.getAuthenticationMechanism().equals(AuthenticationMechanism.USER_PASSWORD)) {
+        return;
+      }
+      Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account);
+      List<String> toList = new ArrayList<>();
       toList.add(userInvite.getEmail());
       EmailData emailData = EmailData.builder()
                                 .to(toList)
@@ -518,17 +533,41 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private void sendAddedRoleEmail(User user, Account account, List<Role> roles) {
-    try {
-      String loginUrl = buildAbsoluteUrl(format("/login?company=%s&account=%s&email=%s", account.getCompanyName(),
-          account.getCompanyName(), user.getEmail()));
+  private Map<String, Object> getAddedRoleTemplateModel(UserInvite userInvite, User user, Account account)
+      throws URISyntaxException {
+    String loginUrl = buildAbsoluteUrl(format(
+        "/login?company=%s&account=%s&email=%s", account.getCompanyName(), account.getAccountName(), user.getEmail()));
 
-      Map<String, Object> templateModel = new HashMap<>();
-      templateModel.put("name", user.getName());
-      templateModel.put("url", loginUrl);
-      templateModel.put("company", account.getCompanyName());
-      templateModel.put("roles", roles);
-      List<String> toList = new ArrayList();
+    Map<String, Object> model = new HashMap<>();
+    model.put("name", user.getName());
+    model.put("url", loginUrl);
+    model.put("company", account.getCompanyName());
+    model.put("roles", userInvite.getRoles());
+    model.put("email", user.getEmail());
+    model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
+
+    // In case of username-password authentication mechanism, we don't need to add the SSO details in the email.
+    if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.USER_PASSWORD)) {
+      return model;
+    }
+
+    SSOSettings ssoSettings;
+    if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.SAML)) {
+      ssoSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
+    } else if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.LDAP)) {
+      ssoSettings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
+    } else {
+      logger.warn("New authentication mechanism detected. Needs to handle the added role email template flow.");
+      throw new WingsException("New authentication mechanism detected.");
+    }
+    model.put("ssoUrl", ssoSettings.getUrl());
+    return model;
+  }
+
+  private void sendAddedRoleEmail(User user, Account account, UserInvite userInvite) {
+    try {
+      Map<String, Object> templateModel = getAddedRoleTemplateModel(userInvite, user, account);
+      List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
                                 .to(toList)

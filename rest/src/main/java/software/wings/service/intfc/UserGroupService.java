@@ -1,12 +1,16 @@
 package software.wings.service.intfc;
 
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
+import software.wings.beans.sso.SSOType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 
+import java.util.Collection;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 /**
  * Created by rishi
@@ -41,6 +45,16 @@ public interface UserGroupService {
   UserGroup get(@NotEmpty String accountId, @NotEmpty String uuid);
 
   /**
+   * Find by uuid with optional loadUsers flag.
+   *
+   * @param accountId the accountId
+   * @param uuid the uuid
+   * @param loadUsers populate users flag
+   * @return the userGroup
+   */
+  UserGroup get(@NotEmpty String accountId, @NotEmpty String uuid, boolean loadUsers);
+
+  /**
    * Update Overview.
    *
    * @param userGroup the userGroup
@@ -57,12 +71,27 @@ public interface UserGroupService {
   UserGroup updateMembers(UserGroup userGroup);
 
   /**
+   * Remove members from the userGroup
+   *
+   * @return the userGroup
+   */
+  UserGroup removeMembers(UserGroup userGroup, Collection<User> members);
+
+  /**
    * Update Overview.
    *
    * @param userGroup the userGroup
    * @return the userGroup
    */
   UserGroup updatePermissions(UserGroup userGroup);
+
+  /**
+   * Return if there exists any user group linked to given sso provider id
+   *
+   * @param ssoId SSO Provider ID
+   * @return
+   */
+  boolean existsLinkedUserGroup(@NotBlank String ssoId);
 
   boolean delete(String accountId, String userGroupId);
 
@@ -84,4 +113,18 @@ public interface UserGroupService {
   List<UserGroup> fetchUserGroupNamesFromIds(List<String> userGroupIds);
 
   boolean verifyUserAuthorizedToAcceptOrRejectApproval(String accountId, List<String> userGroupIds);
+
+  UserGroup linkToSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, @NotNull SSOType ssoType,
+      @NotBlank String ssoId, @NotBlank String ssoGroupId, @NotBlank String ssoGroupName);
+
+  UserGroup unlinkSsoGroup(@NotBlank String accountId, @NotBlank String userGroupId, boolean retainMembers);
+
+  /**
+   * Get list of user groups linked to given sso id
+   *
+   * @param accountId account id
+   * @param ssoId linked sso id
+   * @return list of user groups
+   */
+  List<UserGroup> getUserGroupsBySsoId(@NotBlank String accountId, @NotBlank String ssoId);
 }

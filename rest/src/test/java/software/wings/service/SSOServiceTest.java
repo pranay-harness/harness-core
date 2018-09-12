@@ -2,7 +2,11 @@ package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
@@ -10,31 +14,60 @@ import com.google.inject.Inject;
 import com.coveo.saml.SamlException;
 import io.harness.eraro.ErrorCode;
 import org.apache.commons.io.IOUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.sso.LdapConnectionSettings;
+import software.wings.beans.sso.LdapGroupResponse;
+import software.wings.beans.sso.LdapGroupSettings;
+import software.wings.beans.sso.LdapSettings;
+import software.wings.beans.sso.LdapTestResponse;
+import software.wings.beans.sso.LdapTestResponse.Status;
+import software.wings.beans.sso.LdapUserSettings;
 import software.wings.beans.sso.SamlSettings;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
+import software.wings.service.intfc.ldap.LdapDelegateService;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.Collections;
 
 public class SSOServiceTest extends WingsBaseTest {
   @Mock private WingsPersistence WINGS_PERSISTENCE;
   @Mock private AccountService ACCOUNT_SERVICE;
   @Mock private SSOSettingService SSO_SETTING_SERVICE;
   @Mock private SamlClientService SAML_CLIENT_SERVICE;
+  @Mock private DelegateProxyFactory DELEGATE_PROXY_FACTORY;
+  @Mock private LdapDelegateService LDAP_DELEGATE_SERVICE;
+
+  private LdapSettings ldapSettings;
 
   @Inject @InjectMocks SSOService ssoService;
+
+  @Before
+  public void setup() {
+    LdapConnectionSettings connectionSettings = new LdapConnectionSettings();
+    connectionSettings.setBindDN("testBindDN");
+    connectionSettings.setBindPassword("testBindPassword");
+    LdapUserSettings userSettings = new LdapUserSettings();
+    userSettings.setBaseDN("testBaseDN");
+    LdapGroupSettings groupSettings = new LdapGroupSettings();
+    groupSettings.setBaseDN("testBaseDN");
+    ldapSettings = new LdapSettings("testSettings", "testAccount", connectionSettings, userSettings, groupSettings);
+  }
 
   @Test
   public void uploadSamlConfiguration() throws IOException, SamlException {
@@ -77,5 +110,52 @@ public class SSOServiceTest extends WingsBaseTest {
 
     settings = ssoService.setAuthenticationMechanism("testAccount", AuthenticationMechanism.USER_PASSWORD);
     assertThat(settings.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.USER_PASSWORD);
+
+    settings = ssoService.setAuthenticationMechanism("testAccount", AuthenticationMechanism.LDAP);
+    assertThat(settings.getAuthenticationMechanism()).isEqualTo(AuthenticationMechanism.LDAP);
+  }
+
+  @Test
+  public void validateLdapConnectionSettings() {
+    when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
+    when(LDAP_DELEGATE_SERVICE.validateLdapConnectionSettings(any(), any()))
+        .thenReturn(LdapTestResponse.builder().status(Status.SUCCESS).build());
+    LdapTestResponse response = ssoService.validateLdapConnectionSettings(ldapSettings, "testAccount");
+    assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
+  }
+
+  @Test
+  public void validateLdapUserSettings() {
+    when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
+    when(LDAP_DELEGATE_SERVICE.validateLdapUserSettings(any(), any()))
+        .thenReturn(LdapTestResponse.builder().status(Status.SUCCESS).build());
+    LdapTestResponse response = ssoService.validateLdapUserSettings(ldapSettings, "testAccount");
+    assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
+  }
+
+  @Test
+  public void validateLdapGroupSettings() {
+    when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
+    when(LDAP_DELEGATE_SERVICE.validateLdapGroupSettings(any(), any()))
+        .thenReturn(LdapTestResponse.builder().status(Status.SUCCESS).build());
+    LdapTestResponse response = ssoService.validateLdapGroupSettings(ldapSettings, "testAccount");
+    assertThat(response.getStatus()).isEqualTo(Status.SUCCESS);
+  }
+
+  @Test
+  public void searchGroupsByName() {
+    EncryptedDataDetail encryptedDataDetail = mock(EncryptedDataDetail.class);
+    LdapSettings spyLdapSettings = spy(ldapSettings);
+    when(DELEGATE_PROXY_FACTORY.get(any(), any())).thenReturn(LDAP_DELEGATE_SERVICE);
+    when(LDAP_DELEGATE_SERVICE.searchGroupsByName(any(), any(), any()))
+        .thenReturn(Collections.singletonList(LdapGroupResponse.builder().name("testGroup").build()));
+    when(SSO_SETTING_SERVICE.getLdapSettingsByUuid(any())).thenReturn(spyLdapSettings);
+    doReturn(encryptedDataDetail).when(spyLdapSettings).getEncryptedDataDetails(any());
+
+    Collection<LdapGroupResponse> responses = ssoService.searchGroupsByName("testLdapId", "testQuery");
+    assertThat(responses.size()).isEqualTo(1);
+    for (LdapGroupResponse response : responses) {
+      assertThat(response.getName()).isEqualTo("testGroup");
+    }
   }
 }

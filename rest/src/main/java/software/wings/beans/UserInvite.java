@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
@@ -28,6 +29,7 @@ public class UserInvite extends Base {
   @Transient private List<UserGroup> userGroups = new ArrayList<>();
   private boolean completed;
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
+  private UserInviteSource source = UserInviteSource.builder().build();
 
   @Transient private String name;
 
@@ -122,7 +124,10 @@ public class UserInvite extends Base {
   }
 
   public String getName() {
-    return name;
+    if (EmptyPredicate.isNotEmpty(name)) {
+      return name;
+    }
+    return email.toLowerCase();
   }
 
   public void setName(String name) {
@@ -139,9 +144,18 @@ public class UserInvite extends Base {
     this.password = password;
   }
 
+  public UserInviteSource getSource() {
+    return source;
+  }
+
+  public void setSource(UserInviteSource source) {
+    this.source = source;
+  }
+
   public static final class UserInviteBuilder {
     private String accountId;
     private String email;
+    private String name;
     private List<Role> roles = new ArrayList<>();
     private List<UserGroup> userGroups = new ArrayList<>();
     private boolean completed;
@@ -152,6 +166,7 @@ public class UserInvite extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
+    private UserInviteSource source = UserInviteSource.builder().build();
 
     private UserInviteBuilder() {}
 
@@ -166,6 +181,11 @@ public class UserInvite extends Base {
 
     public UserInviteBuilder withEmail(String email) {
       this.email = email;
+      return this;
+    }
+
+    public UserInviteBuilder withName(String name) {
+      this.name = name;
       return this;
     }
 
@@ -219,10 +239,16 @@ public class UserInvite extends Base {
       return this;
     }
 
+    public UserInviteBuilder withSource(UserInviteSource userInviteSource) {
+      this.source = userInviteSource;
+      return this;
+    }
+
     public UserInvite build() {
       UserInvite userInvite = new UserInvite();
       userInvite.setAccountId(accountId);
       userInvite.setEmail(email);
+      userInvite.setName(name);
       userInvite.setRoles(roles);
       userInvite.setUserGroups(userGroups);
       userInvite.setCompleted(completed);
@@ -233,6 +259,7 @@ public class UserInvite extends Base {
       userInvite.setCreatedAt(createdAt);
       userInvite.setLastUpdatedBy(lastUpdatedBy);
       userInvite.setLastUpdatedAt(lastUpdatedAt);
+      userInvite.setSource(source);
       return userInvite;
     }
   }

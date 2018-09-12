@@ -186,6 +186,14 @@ public interface UserService {
   List<UserInvite> inviteUsers(UserInvite userInvite);
 
   /**
+   * Invite single user
+   *
+   * @param userInvite the user invite
+   * @return the user invite
+   */
+  UserInvite inviteUser(UserInvite userInvite);
+
+  /**
    * List invites page response.
    *
    * @param pageRequest the page request

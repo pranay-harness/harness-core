@@ -35,6 +35,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AppContainer;
 import software.wings.beans.DelegateConfiguration;
+import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
@@ -52,6 +54,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.SettingsService;
@@ -63,10 +66,13 @@ import software.wings.service.intfc.template.TemplateGalleryService;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 /**
@@ -92,6 +98,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private SystemCatalogService systemCatalogService;
   @Inject private AlertService alertService;
   @Inject private TemplateGalleryService templateGalleryService;
+  @Inject private FeatureFlagService featureFlagService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -282,6 +289,17 @@ public class AccountServiceImpl implements AccountService {
       account.setDefaults(settingsService.listAccountDefaults(accountId));
     }
     return account;
+  }
+
+  @Override
+  public Collection<FeatureFlag> getFeatureFlags(String accountId) {
+    return Arrays.stream(FeatureName.values())
+        .map(featureName
+            -> FeatureFlag.builder()
+                   .name(featureName.toString())
+                   .enabled(featureFlagService.isEnabled(featureName, accountId))
+                   .build())
+        .collect(Collectors.toList());
   }
 
   private void createDefaultNotificationGroup(Account account, Role role) {

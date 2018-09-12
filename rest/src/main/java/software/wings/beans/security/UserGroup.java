@@ -15,6 +15,7 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.User;
+import software.wings.beans.sso.SSOType;
 
 import java.util.List;
 import java.util.Set;
@@ -36,6 +37,15 @@ public class UserGroup extends Base {
   @Indexed @NotEmpty private String name;
   private String description;
 
+  // TODO: User composition with SSOInfo class to store this info
+  public static final String LINKED_SSO_ID_KEY = "linkedSsoId";
+  private boolean isSsoLinked;
+  private SSOType linkedSsoType;
+  private String linkedSsoId;
+  private String linkedSsoDisplayName;
+  private String ssoGroupId;
+  private String ssoGroupName;
+
   @Indexed private String accountId;
   @Indexed private List<String> memberIds;
   @Transient private List<User> members;
@@ -43,11 +53,13 @@ public class UserGroup extends Base {
   private Set<AppPermission> appPermissions;
   private AccountPermissions accountPermissions;
 
+  // TODO: Should use Builder at the class level itself.
   @Builder
   public UserGroup(String name, String description, String accountId, List<String> memberIds, List<User> members,
       Set<AppPermission> appPermissions, AccountPermissions accountPermissions, String uuid, String appId,
       EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords,
-      String entityYamlPath) {
+      String entityYamlPath, boolean isSsoLinked, SSOType linkedSsoType, String linkedSsoId,
+      String linkedSsoDisplayName, String ssoGroupId, String ssoGroupName) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.name = name;
     this.description = description;
@@ -56,6 +68,12 @@ public class UserGroup extends Base {
     this.members = members;
     this.appPermissions = appPermissions;
     this.accountPermissions = accountPermissions;
+    this.isSsoLinked = isSsoLinked;
+    this.linkedSsoType = linkedSsoType;
+    this.linkedSsoId = linkedSsoId;
+    this.linkedSsoDisplayName = linkedSsoDisplayName;
+    this.ssoGroupId = ssoGroupId;
+    this.ssoGroupName = ssoGroupName;
   }
 
   public UserGroup cloneWithNewName(final String newName, final String newDescription) {
@@ -75,6 +93,12 @@ public class UserGroup extends Base {
         .members(members)
         .appPermissions(appPermissions)
         .accountPermissions(accountPermissions)
+        .isSsoLinked(isSsoLinked)
+        .linkedSsoType(linkedSsoType)
+        .linkedSsoId(linkedSsoId)
+        .linkedSsoDisplayName(linkedSsoDisplayName)
+        .ssoGroupId(ssoGroupId)
+        .ssoGroupName(ssoGroupName)
         .build();
   }
 }

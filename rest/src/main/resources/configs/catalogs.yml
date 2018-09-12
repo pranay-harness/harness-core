@@ -409,6 +409,8 @@ TASK_TYPES:
       value: CLOUD_FORMATION
     - name: Terrafrom
       value: TERRAFORM
+    - name: Ldap
+      value: LDAP
 
 EXECUTION_STATUS:
     - name: Aborted
