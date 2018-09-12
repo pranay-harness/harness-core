@@ -31,6 +31,8 @@ import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.List;
 import javax.ws.rs.BadRequestException;
 import javax.ws.rs.client.WebTarget;
@@ -74,6 +76,19 @@ public class ElkResourceIntegrationTest extends BaseIntegrationTest {
   public void validateQuery() {
     WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL
         + LogAnalysisResource.VALIDATE_QUERY + "?accountId=" + accountId + "&query=(.*exception.*)");
+
+    RestResponse<Boolean> restResponse =
+        getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});
+    assertTrue(restResponse.getResource());
+  }
+
+  @Test
+  public void validateJSONQuery() throws UnsupportedEncodingException {
+    String query = "{\"regexp\":{\"log\":{\"value\":\"info\"}}}";
+    String encodeQuery = URLEncoder.encode(query, "utf-8");
+    WebTarget getTarget =
+        client.target(API_BASE + "/" + LogAnalysisResource.ELK_RESOURCE_BASE_URL + LogAnalysisResource.VALIDATE_QUERY
+            + "?accountId=" + accountId + "&query=" + encodeQuery + "&formattedQuery=true");
 
     RestResponse<Boolean> restResponse =
         getRequestBuilderWithAuthHeader(getTarget).get(new GenericType<RestResponse<Boolean>>() {});
