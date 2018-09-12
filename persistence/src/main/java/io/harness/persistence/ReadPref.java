@@ -1,9 +1,7 @@
-package software.wings.beans;
+package io.harness.persistence;
 
 /**
  * Defines readpref for mongo reads.
- *
- * @author Rishi
  */
 public enum ReadPref {
   /**
