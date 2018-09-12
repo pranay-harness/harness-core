@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
@@ -279,8 +280,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         getLogger().info("for {} No analysis summary.", context.getStateExecutionInstanceId());
         continuousVerificationService.setMetaDataExecutionStatus(
             context.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
-        return generateAnalysisResponse(
-            context, ExecutionStatus.SUCCESS, "No data found for comparison. Please check load. Skipping analysis.");
+        return isQAVerificationPath(this.appService.get(context.getAppId()).getAccountId(), context.getAppId())
+            ? generateAnalysisResponse(context, ExecutionStatus.FAILED, "No Analysis result found")
+            : generateAnalysisResponse(context, ExecutionStatus.SUCCESS,
+                  "No data found for comparison. Please check load. Skipping analysis.");
       }
 
       boolean analysisFound = false;
@@ -297,6 +300,22 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         sleep(ofMillis(5000));
         continue;
       }
+
+      if (isQAVerificationPath(appService.get(context.getAppId()).getAccountId(), context.getAppId())) {
+        boolean isResultPresent = false;
+        for (NewRelicMetricAnalysisRecord metricAnalysisRecord : metricAnalysisRecords) {
+          if (isNotEmpty(metricAnalysisRecord.getMetricAnalyses())) {
+            isResultPresent = true;
+            break;
+          }
+        }
+        if (!isResultPresent) {
+          return anExecutionResponse()
+              .withExecutionStatus(ExecutionStatus.FAILED)
+              .withStateExecutionData(executionResponse.getStateExecutionData())
+              .build();
+        }
+      }
       getLogger().info("for {} found analysisSummary with analysis records {}", context.getStateExecutionInstanceId(),
           metricAnalysisRecords.size());
       for (NewRelicMetricAnalysisRecord metricAnalysisRecord : metricAnalysisRecords) {
@@ -308,7 +327,10 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().info("State done with status {}, id: {}", executionStatus, context.getStateExecutionInstanceId());
       continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), executionStatus);
       return anExecutionResponse()
-          .withExecutionStatus(executionStatus)
+          .withExecutionStatus(
+              isQAVerificationPath(appService.get(context.getAppId()).getAccountId(), context.getAppId())
+                  ? ExecutionStatus.SUCCESS
+                  : executionStatus)
           .withStateExecutionData(executionResponse.getStateExecutionData())
           .build();
     }

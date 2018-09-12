@@ -1,5 +1,7 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import lombok.Data;
 import software.wings.metrics.RiskLevel;
 import software.wings.sm.StateType;
@@ -26,4 +28,8 @@ public class LogMLAnalysisSummary {
   private List<LogMLClusterSummary> ignoreClusters;
   private StateType stateType;
   private int analysisMinute;
+
+  public boolean isEmptyResult() {
+    return isEmpty(controlClusters) && isEmpty(testClusters) && isEmpty(unknownClusters);
+  }
 }

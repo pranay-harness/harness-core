@@ -233,13 +233,17 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       for (int i = 0; i < NUM_OF_RETRIES; i++) {
         final LogMLAnalysisSummary analysisSummary = analysisService.getAnalysisSummary(
             context.getStateExecutionId(), context.getAppId(), StateType.valueOf(getStateType()));
-        if (analysisSummary == null) {
+
+        if (analysisSummary == null
+            || (analysisSummary.isEmptyResult() && analysisSummary.getAnalysisMinute() >= analysisMinute)) {
           getLogger().info("for {} No analysis summary. This can happen if there is no data with the given queries",
               context.getStateExecutionId());
           continuousVerificationService.setMetaDataExecutionStatus(
               executionContext.getStateExecutionInstanceId(), ExecutionStatus.SUCCESS);
-          return generateAnalysisResponse(
-              context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
+          return isQAVerificationPath(context.getAccountId(), context.getAppId())
+              ? generateAnalysisResponse(context, ExecutionStatus.FAILED, "No Analysis result found")
+              : generateAnalysisResponse(
+                    context, ExecutionStatus.SUCCESS, "No data found with given queries. Skipped Analysis");
         }
 
         if (analysisSummary.getAnalysisMinute() < analysisMinute) {
@@ -270,7 +274,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         continuousVerificationService.setMetaDataExecutionStatus(
             executionContext.getStateExecutionInstanceId(), executionStatus);
         return anExecutionResponse()
-            .withExecutionStatus(executionStatus)
+            .withExecutionStatus(isQAVerificationPath(context.getAccountId(), context.getAppId())
+                    ? ExecutionStatus.SUCCESS
+                    : executionStatus)
             .withStateExecutionData(executionResponse.getLogAnalysisExecutionData())
             .build();
       }

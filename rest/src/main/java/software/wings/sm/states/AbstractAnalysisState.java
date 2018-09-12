@@ -7,6 +7,7 @@ import static java.util.Collections.emptySet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -556,6 +557,14 @@ public abstract class AbstractAnalysisState extends State {
 
   protected boolean isDemoPath(String accountId) {
     return featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId);
+  }
+
+  /**
+   *  for QA in harness verification app, fail if there is no data but don't fail for anomaly
+   */
+  protected boolean isQAVerificationPath(String accountId, String appId) {
+    return featureFlagService.isEnabled(CV_SUCCEED_FOR_ANOMALY, accountId)
+        && appService.get(appId).getName().equals("Harness Verification");
   }
 
   public String getHostnameTemplate() {
