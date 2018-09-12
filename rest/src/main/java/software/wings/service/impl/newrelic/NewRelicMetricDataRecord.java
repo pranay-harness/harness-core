@@ -47,13 +47,13 @@ public class NewRelicMetricDataRecord extends Base {
 
   @NotEmpty @Indexed private String name;
 
-  @NotEmpty @Indexed private String workflowId;
+  @Indexed private String workflowId;
 
-  @NotEmpty @Indexed private String workflowExecutionId;
+  @Indexed private String workflowExecutionId;
 
-  @NotEmpty @Indexed private String serviceId;
+  @Indexed private String serviceId;
 
-  @NotEmpty @Indexed private String stateExecutionId;
+  @Indexed private String stateExecutionId;
 
   @NotEmpty @Indexed private long timeStamp;
 

@@ -191,6 +191,8 @@ public enum ErrorCode {
 
   DYNA_TRACE_ERROR,
 
+  CLOUDWATCH_ERROR,
+
   PROMETHEUS_CONFIGURATION_ERROR,
 
   // Problem with encryption, most likely that the JCE Unlimited Strength jars aren't installed.
