@@ -15,7 +15,7 @@ public class UnmapRouteState extends MapRouteState {
   @Inject @Transient protected transient LogService logService;
 
   @DefaultValue("${" + Constants.PCF_APP_NAME + "}") @Attributes(title = "PCF App Name") private String pcfAppName;
-  @DefaultValue("${" + Constants.INFRA_ROUTE + "}") @Attributes(title = "Map Route") private String route;
+  @DefaultValue("${" + Constants.INFRA_ROUTE_PCF + "}") @Attributes(title = "Map Route") private String route;
 
   public String getPcfAppName() {
     return pcfAppName;

@@ -545,3 +545,6 @@ software.wings.helpers.ext.ldap.LdapResponse, 5504
 software.wings.helpers.ext.ldap.LdapResponse$Status, 5505
 software.wings.beans.UserInviteSource, 5506
 software.wings.beans.UserInviteSource$SourceType, 5507
+software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData, 5508
+software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails, 5509
+software.wings.api.pcf.PcfSwapRouteRollbackContextElement, 5510

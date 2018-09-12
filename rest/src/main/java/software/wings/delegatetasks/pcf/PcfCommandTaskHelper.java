@@ -10,6 +10,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.filesystem.FileIo;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
@@ -26,6 +27,7 @@ import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.BufferedWriter;
@@ -59,14 +61,14 @@ public class PcfCommandTaskHelper {
   /**
    * Returns Application names those will be downsized in deployment process
    */
-  public List<String> generateDownsizeDetails(PcfRequestConfig pcfRequestConfig, String releaseName, Integer maxCount)
-      throws PivotalClientApiException {
+  public List<PcfAppSetupTimeDetails> generateDownsizeDetails(
+      PcfRequestConfig pcfRequestConfig, String releaseName, Integer maxCount) throws PivotalClientApiException {
     String prefix = getAppPrefix(releaseName);
 
     List<ApplicationSummary> applicationSummaries =
         pcfDeploymentManager.getDeployedServicesWithNonZeroInstances(pcfRequestConfig, prefix);
 
-    List<String> downSizeUpdate = new ArrayList<>();
+    List<PcfAppSetupTimeDetails> downSizeUpdate = new ArrayList<>();
     int count = maxCount;
     int instanceCount;
     for (int index = applicationSummaries.size() - 1; index >= 0; index--) {
@@ -79,7 +81,12 @@ public class PcfCommandTaskHelper {
         continue;
       }
       instanceCount = applicationSummary.getInstances();
-      downSizeUpdate.add(applicationSummary.getName());
+      downSizeUpdate.add(PcfAppSetupTimeDetails.builder()
+                             .applicationGuid(applicationSummary.getId())
+                             .applicationName(applicationSummary.getName())
+                             .urls(applicationSummary.getUrls())
+                             .initialInstanceCount(applicationSummary.getInstances())
+                             .build());
       count = instanceCount >= count ? 0 : count - instanceCount;
     }
 
@@ -448,5 +455,48 @@ public class PcfCommandTaskHelper {
         new StringBuilder().append("\n# Application state details after upsize:  ").toString());
     printApplicationDetail(detailsAfterUpsize, executionLogCallback);
     printInstanceDetails(executionLogCallback, instances);
+  }
+
+  public void mapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    executionLogCallback.saveExecutionLog("\n# Adding Routs");
+    executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
+    executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(routes));
+    // map
+    pcfRequestConfig.setApplicationName(applicationName);
+    pcfDeploymentManager.mapRouteMapForApplication(pcfRequestConfig, routes);
+  }
+
+  public void unmapExistingRouteMaps(String applicationName, PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+    executionLogCallback.saveExecutionLog("\n# Unmapping routes");
+    executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
+    executionLogCallback.saveExecutionLog("ROUTE: \n[" + getRouteString(applicationDetail.getUrls()));
+    // map
+    pcfRequestConfig.setApplicationName(applicationName);
+    pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, applicationDetail.getUrls());
+  }
+
+  public void unmapRouteMaps(String applicationName, List<String> routes, PcfRequestConfig pcfRequestConfig,
+      ExecutionLogCallback executionLogCallback) throws PivotalClientApiException {
+    executionLogCallback.saveExecutionLog("\n# Unmapping Routes");
+    executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
+    executionLogCallback.saveExecutionLog("ROUTES: \n[" + getRouteString(routes));
+    // unmap
+    pcfRequestConfig.setApplicationName(applicationName);
+    pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, routes);
+    executionLogCallback.saveExecutionLog("# Unmapping Routes was successfully completed");
+  }
+
+  private String getRouteString(List<String> routeMaps) {
+    if (EmptyPredicate.isEmpty(routeMaps)) {
+      return StringUtils.EMPTY;
+    }
+
+    StringBuilder builder = new StringBuilder();
+    routeMaps.forEach(routeMap -> builder.append("\n").append(routeMap));
+    builder.append("\n]");
+    return builder.toString();
   }
 }

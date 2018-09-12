@@ -20,8 +20,8 @@ import static software.wings.common.Constants.HTTP_RESPONSE_BODY;
 import static software.wings.common.Constants.HTTP_RESPONSE_CODE;
 import static software.wings.common.Constants.HTTP_RESPONSE_METHOD;
 import static software.wings.common.Constants.HTTP_URL;
-import static software.wings.common.Constants.INFRA_ROUTE;
-import static software.wings.common.Constants.INFRA_TEMP_ROUTE;
+import static software.wings.common.Constants.INFRA_ROUTE_PCF;
+import static software.wings.common.Constants.INFRA_TEMP_ROUTE_PCF;
 import static software.wings.common.Constants.JSONPATH;
 import static software.wings.common.Constants.PCF_APP_NAME;
 import static software.wings.common.Constants.PCF_OLD_APP_NAME;
@@ -159,7 +159,7 @@ public abstract class ExpressionBuilder {
         HOST_INSTANCE_VPCID));
 
     expressions.add(INFRA_KUBERNETES_NAMESPACE);
-
+    expressions.addAll(asList(INFRA_ROUTE_PCF, INFRA_TEMP_ROUTE_PCF));
     expressions.add(DEPLOYMENT_TRIGGERED_BY);
 
     return expressions;
@@ -201,7 +201,7 @@ public abstract class ExpressionBuilder {
       case PCF_ROLLBACK:
       case PCF_MAP_ROUTE:
       case PCF_UNMAP_ROUTE:
-        expressions.addAll(asList(INFRA_ROUTE, INFRA_TEMP_ROUTE, PCF_APP_NAME, PCF_OLD_APP_NAME));
+        expressions.addAll(asList(INFRA_ROUTE_PCF, INFRA_TEMP_ROUTE_PCF, PCF_APP_NAME, PCF_OLD_APP_NAME));
         break;
       default:
         break;

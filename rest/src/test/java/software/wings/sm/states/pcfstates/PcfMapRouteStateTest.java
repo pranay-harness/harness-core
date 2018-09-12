@@ -1,6 +1,5 @@
-package software.wings.sm.states;
+package software.wings.sm.states.pcfstates;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -17,11 +16,8 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
@@ -30,32 +26,27 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.INFRA_ROUTE;
+import static software.wings.common.Constants.INFRA_ROUTE_PCF;
 import static software.wings.common.Constants.INFRA_TEMP_ROUTE;
 import static software.wings.common.Constants.PCF_APP_NAME;
 import static software.wings.common.Constants.PCF_OLD_APP_NAME;
 import static software.wings.common.Constants.URL;
-import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
-import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.sm.states.pcf.MapRouteState.PCF_MAP_ROUTE_COMMAND;
+import static software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes.PCF_BG_SWAP_ROUTE_COMMAND;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
-import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.PASSWORD;
-import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
-import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -64,21 +55,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
-import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
-import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
-import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfConfig;
-import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -93,7 +79,6 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.service.ServiceHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -115,6 +100,8 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.pcf.MapRouteState;
+import software.wings.sm.states.pcf.PcfStateHelper;
+import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -141,51 +128,24 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
+  private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
 
   @InjectMocks private MapRouteState pcfRouteSwapState = new MapRouteState("name");
+  @InjectMocks private PcfSwitchBlueGreenRoutes pcfSwitchBlueGreenRoutes = new PcfSwitchBlueGreenRoutes("name");
 
   @Mock private MainConfiguration configuration;
 
   private ExecutionContext context;
 
-  private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
-                                                              .withAppId(APP_ID)
-                                                              .withEnvId(ENV_ID)
-                                                              .withArtifactIds(Lists.newArrayList(ARTIFACT_ID))
-                                                              .build();
+  private WorkflowStandardParams workflowStandardParams = pcfStateTestHelper.getWorkflowStandardParams();
 
-  private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
+  private ServiceElement serviceElement = pcfStateTestHelper.getServiceElement();
 
-  @InjectMocks
-  private PhaseElement phaseElement = aPhaseElement()
-                                          .withUuid(generateUuid())
-                                          .withServiceElement(serviceElement)
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withAppId(APP_ID)
-                                          .withDeploymentType(DeploymentType.PCF.name())
-                                          .build();
+  @InjectMocks private PhaseElement phaseElement = pcfStateTestHelper.getPhaseElement(serviceElement);
 
   private StateExecutionInstance stateExecutionInstance =
-      aStateExecutionInstance()
-          .withDisplayName(STATE_NAME)
-          .addContextElement(workflowStandardParams)
-          .addContextElement(phaseElement)
-          .addContextElement(
-              PcfSetupContextElement.builder()
-                  .uuid(serviceElement.getUuid())
-                  .name(PCF_SERVICE_NAME)
-                  .maxInstanceCount(10)
-                  .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
-                  .newPcfApplicationName("APP_NAME_SERVICE_NAME_ENV_NAME__2")
-                  .newPcfApplicationId("1")
-                  .infraMappingId(INFRA_MAPPING_ID)
-                  .resizeStrategy(RESIZE_NEW_FIRST)
-                  .routeMaps(Arrays.asList("R1", "R2"))
-                  .tempRouteMap(Arrays.asList("R3"))
-                  .appsToBeDownsized(Arrays.asList("APP_NAME_SERVICE_NAME_ENV_NAME__1"))
-                  .build())
-          .addStateExecutionData(new PhaseStepExecutionData())
-          .build();
+      pcfStateTestHelper.getStateExecutionInstanceForRouteUpdateState(
+          workflowStandardParams, phaseElement, serviceElement);
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
@@ -234,15 +194,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
 
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
-
-    InfrastructureMapping infrastructureMapping = PcfInfrastructureMapping.builder()
-                                                      .organization(ORG)
-                                                      .space(SPACE)
-                                                      .routeMaps(Arrays.asList("R1", "R2"))
-                                                      .tempRouteMap(Arrays.asList("R3"))
-                                                      .computeProviderSettingId(COMPUTE_PROVIDER_ID)
-                                                      .build();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(pcfStateTestHelper.getPcfInfrastructureMapping(Arrays.asList("R1", "R2"), Arrays.asList("R3")));
 
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);
@@ -260,6 +213,8 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
         .thenReturn(safeDisplayServiceVariableList);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(pcfRouteSwapState, "secretManager", secretManager);
+    setInternalState(pcfRouteSwapState, "pcfStateHelper", new PcfStateHelper());
+    setInternalState(pcfSwitchBlueGreenRoutes, "pcfStateHelper", new PcfStateHelper());
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(aWorkflowExecution().build());
     context = new ExecutionContextImpl(stateExecutionInstance);
@@ -287,10 +242,20 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
   }
 
   @Test
-  public void testExecute_pcfAPP_infra_route() {
+  public void testExecute_pcfAPP_Switch_Infra_routes() {
     pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
     pcfRouteSwapState.setRoute("${" + INFRA_ROUTE + "}");
+    test_pcfAPP_Switch_Infra_routes();
+  }
 
+  @Test
+  public void testExecute_pcfAPP_Switch_Infra_routes_New_Route_Name() {
+    pcfRouteSwapState.setPcfAppName("${" + PCF_APP_NAME + "}");
+    pcfRouteSwapState.setRoute("${" + INFRA_ROUTE_PCF + "}");
+    test_pcfAPP_Switch_Infra_routes();
+  }
+
+  private void test_pcfAPP_Switch_Infra_routes() {
     on(context).set("serviceTemplateService", serviceTemplateService);
     ExecutionResponse executionResponse = pcfRouteSwapState.execute(context);
 
@@ -301,28 +266,34 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
         (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getAppsToBeUpdated());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getAppsToBeUpdated().size());
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", pcfCommandRouteUpdateRequest.getAppsToBeUpdated().get(0));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", appNames.get(0));
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertEquals(2, pcfCommandRouteUpdateRequest.getRouteMaps().size());
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R1"));
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R2"));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(2, routes.size());
+    assertTrue(routes.contains("R1"));
+    assertTrue(routes.contains("R2"));
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
     pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getParameters()[0];
-    assertNotNull(pcfCommandRouteUpdateRequest.getAppsToBeUpdated());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getAppsToBeUpdated().size());
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", pcfCommandRouteUpdateRequest.getAppsToBeUpdated().get(0));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", appNames.get(0));
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertEquals(2, pcfCommandRouteUpdateRequest.getRouteMaps().size());
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R1"));
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R2"));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(2, routes.size());
+    assertTrue(routes.contains("R1"));
+    assertTrue(routes.contains("R2"));
   }
 
   @Test
@@ -340,27 +311,31 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
         (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getAppsToBeUpdated());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getAppsToBeUpdated().size());
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", pcfCommandRouteUpdateRequest.getAppsToBeUpdated().get(0));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", appNames.get(0));
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getRouteMaps().size());
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R3"));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(1, routes.size());
+    assertTrue(routes.contains("R3"));
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getParameters()[0];
-    assertNotNull(pcfCommandRouteUpdateRequest.getAppsToBeUpdated());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getAppsToBeUpdated().size());
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", pcfCommandRouteUpdateRequest.getAppsToBeUpdated().get(0));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", appNames.get(0));
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getRouteMaps().size());
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R3"));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(1, routes.size());
+    assertTrue(routes.contains("R3"));
   }
 
   @Test
@@ -378,28 +353,33 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
         (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getAppsToBeUpdated());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getAppsToBeUpdated().size());
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", pcfCommandRouteUpdateRequest.getAppsToBeUpdated().get(0));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", appNames.get(0));
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertEquals(2, pcfCommandRouteUpdateRequest.getRouteMaps().size());
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R1"));
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R2"));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(2, routes.size());
+    assertTrue(routes.contains("R1"));
+    assertTrue(routes.contains("R2"));
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
-    pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getParameters()[0];
-    assertNotNull(pcfCommandRouteUpdateRequest.getAppsToBeUpdated());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getAppsToBeUpdated().size());
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", pcfCommandRouteUpdateRequest.getAppsToBeUpdated().get(0));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", appNames.get(0));
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertEquals(2, pcfCommandRouteUpdateRequest.getRouteMaps().size());
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R1"));
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R2"));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(2, routes.size());
+    assertTrue(routes.contains("R1"));
+    assertTrue(routes.contains("R2"));
   }
 
   @Test
@@ -417,26 +397,90 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
     PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
         (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getAppsToBeUpdated());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getAppsToBeUpdated().size());
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", pcfCommandRouteUpdateRequest.getAppsToBeUpdated().get(0));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", appNames.get(0));
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getRouteMaps().size());
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R3"));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(1, routes.size());
+    assertTrue(routes.contains("R3"));
+
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", appNames.get(0));
+
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(1, routes.size());
+    assertTrue(routes.contains("R3"));
+  }
+
+  @Test
+  public void testExecute_pcfAPP_Switch_BG_routes() {
+    on(context).set("serviceTemplateService", serviceTemplateService);
+    ExecutionResponse executionResponse = pcfSwitchBlueGreenRoutes.execute(context);
+
+    assertEquals(ExecutionStatus.SUCCESS, executionResponse.getExecutionStatus());
+    PcfRouteUpdateStateExecutionData stateExecutionData =
+        (PcfRouteUpdateStateExecutionData) executionResponse.getStateExecutionData();
+    assertEquals(PCF_BG_SWAP_ROUTE_COMMAND, stateExecutionData.getCommandName());
+    PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest =
+        (PcfCommandRouteUpdateRequest) stateExecutionData.getPcfCommandRequest();
+
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName());
+    String appName = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName();
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", appName);
+
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    List<String> routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(2, routes.size());
+    assertTrue(routes.contains("R1"));
+    assertTrue(routes.contains("R2"));
+
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    List<String> appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertTrue(appNames.contains("APP_NAME_SERVICE_NAME_ENV_NAME__1"));
+
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes());
+    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes();
+    assertEquals(1, routes.size());
+    assertTrue(routes.contains("R3"));
 
     ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService).queueTask(captor.capture());
     DelegateTask delegateTask = captor.getValue();
 
     pcfCommandRouteUpdateRequest = (PcfCommandRouteUpdateRequest) delegateTask.getParameters()[0];
-    assertNotNull(pcfCommandRouteUpdateRequest.getAppsToBeUpdated());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getAppsToBeUpdated().size());
-    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__1", pcfCommandRouteUpdateRequest.getAppsToBeUpdated().get(0));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData());
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName());
+    appName = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getNewApplicatiaonName();
+    assertEquals("APP_NAME_SERVICE_NAME_ENV_NAME__2", appName);
 
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertNotNull(pcfCommandRouteUpdateRequest.getRouteMaps());
-    assertEquals(1, pcfCommandRouteUpdateRequest.getRouteMaps().size());
-    assertTrue(pcfCommandRouteUpdateRequest.getRouteMaps().contains("R3"));
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes());
+    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getFinalRoutes();
+    assertEquals(2, routes.size());
+    assertTrue(routes.contains("R1"));
+    assertTrue(routes.contains("R2"));
+
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames());
+    appNames = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getExistingApplicationNames();
+    assertEquals(1, appNames.size());
+    assertTrue(appNames.contains("APP_NAME_SERVICE_NAME_ENV_NAME__1"));
+
+    assertNotNull(pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes());
+    routes = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().getTempRoutes();
+    assertEquals(1, routes.size());
+    assertTrue(routes.contains("R3"));
   }
 }

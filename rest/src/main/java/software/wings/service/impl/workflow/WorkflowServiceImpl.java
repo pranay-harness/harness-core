@@ -677,7 +677,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (canaryOrchestrationWorkflow.getWorkflowPhases() == null) {
       return false;
     }
-    if (workflowServiceHelper.workflowHasSshInfraMapping(appId, canaryOrchestrationWorkflow)) {
+    if (workflowServiceHelper.needArtifactCheckStep(appId, canaryOrchestrationWorkflow)) {
       return workflowServiceHelper.ensureArtifactCheckInPreDeployment(canaryOrchestrationWorkflow);
     }
     return false;
@@ -1685,8 +1685,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == AMI) {
       workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmi(appId, workflowPhase, !serviceRepeat);
     } else if (deploymentType == PCF) {
-      workflowServiceHelper.generateNewWorkflowPhaseStepsForPCF(
-          appId, envId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        workflowServiceHelper.generateNewWorkflowPhaseStepsForPCFBlueGreen(appId, workflowPhase, !serviceRepeat);
+      } else {
+        workflowServiceHelper.generateNewWorkflowPhaseStepsForPCF(
+            appId, envId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
+      }
     } else {
       workflowServiceHelper.generateNewWorkflowPhaseStepsForSSH(appId, workflowPhase, orchestrationWorkflowType);
     }
@@ -1713,7 +1717,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == HELM) {
       return workflowServiceHelper.generateRollbackWorkflowPhaseForHelm(workflowPhase);
     } else if (deploymentType == PCF) {
-      return workflowServiceHelper.generateRollbackWorkflowPhaseForPCF(workflowPhase);
+      if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
+        return workflowServiceHelper.generateRollbackWorkflowPhaseForPCFBlueGreen(workflowPhase, serviceSetupRequired);
+      } else {
+        return workflowServiceHelper.generateRollbackWorkflowPhaseForPCF(workflowPhase);
+      }
     } else {
       return workflowServiceHelper.generateRollbackWorkflowPhaseForSSH(appId, workflowPhase);
     }
@@ -1816,8 +1824,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       } else if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BLUE_GREEN)) {
         if (!(InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
                 || InfrastructureMappingType.GCP_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
-                || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(
-                       infrastructureMapping.getInfraMappingType()))) {
+                || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
+                || InfrastructureMappingType.PCF_PCF.name().equals(infrastructureMapping.getInfraMappingType()))) {
           throw new InvalidRequestException(
               "Requested Infrastructure Type is not supported using Blue/Green Deployment", USER);
         }

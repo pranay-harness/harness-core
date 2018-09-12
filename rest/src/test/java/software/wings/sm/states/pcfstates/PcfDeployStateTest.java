@@ -1,6 +1,5 @@
-package software.wings.sm.states;
+package software.wings.sm.states.pcfstates;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
@@ -15,37 +14,27 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
-import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
-import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.common.Constants.URL;
-import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
-import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
-import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.COMMAND_NAME;
 import static software.wings.utils.WingsTestConstants.COMPUTE_PROVIDER_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
-import static software.wings.utils.WingsTestConstants.PCF_SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
-import static software.wings.utils.WingsTestConstants.STATE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
-
-import com.google.common.collect.Lists;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
@@ -55,9 +44,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
-import software.wings.api.DeploymentType;
 import software.wings.api.PhaseElement;
-import software.wings.api.PhaseStepExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.app.MainConfiguration;
@@ -66,10 +53,8 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PcfConfig;
-import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -78,7 +63,6 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
-import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -96,13 +80,11 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.pcf.PcfDeployState;
+import software.wings.sm.states.pcf.PcfStateHelper;
 
 import java.util.Arrays;
 import java.util.Collections;
 
-/**
- * Created by rishi on 2/27/17.
- */
 public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private DelegateService delegateService;
@@ -119,43 +101,18 @@ public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ExpressionEvaluator evaluator;
   @Mock private EncryptionService encryptionService;
+  private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";
 
   @InjectMocks private PcfDeployState pcfDeployState;
-  @InjectMocks
-  private WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams()
-                                                              .withAppId(APP_ID)
-                                                              .withEnvId(ENV_ID)
-                                                              .withArtifactIds(Lists.newArrayList(ARTIFACT_ID))
-                                                              .build();
-  private ServiceElement serviceElement = aServiceElement().withUuid(SERVICE_ID).withName(SERVICE_NAME).build();
-  @InjectMocks
-  private PhaseElement phaseElement = aPhaseElement()
-                                          .withUuid(generateUuid())
-                                          .withServiceElement(serviceElement)
-                                          .withInfraMappingId(INFRA_MAPPING_ID)
-                                          .withDeploymentType(DeploymentType.PCF.name())
-                                          .build();
+  @InjectMocks private WorkflowStandardParams workflowStandardParams = pcfStateTestHelper.getWorkflowStandardParams();
+
+  private ServiceElement serviceElement = pcfStateTestHelper.getServiceElement();
+  @InjectMocks private PhaseElement phaseElement = pcfStateTestHelper.getPhaseElement(serviceElement);
+
   private StateExecutionInstance stateExecutionInstance =
-      aStateExecutionInstance()
-          .withDisplayName(STATE_NAME)
-          .addContextElement(workflowStandardParams)
-          .addContextElement(phaseElement)
-          .addContextElement(
-              PcfSetupContextElement.builder()
-                  .uuid(serviceElement.getUuid())
-                  .name(PCF_SERVICE_NAME)
-                  .maxInstanceCount(10)
-                  .pcfCommandRequest(PcfCommandSetupRequest.builder().space(SPACE).organization(ORG).build())
-                  .newPcfApplicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
-                  .newPcfApplicationId("1")
-                  .infraMappingId(INFRA_MAPPING_ID)
-                  .resizeStrategy(RESIZE_NEW_FIRST)
-                  .routeMaps(Arrays.asList("R1", "R2"))
-                  .build())
-          .addStateExecutionData(new PhaseStepExecutionData())
-          .build();
+      pcfStateTestHelper.getStateExecutionInstanceForDeployState(workflowStandardParams, phaseElement, serviceElement);
 
   private Application app = anApplication().withUuid(APP_ID).withName(APP_NAME).build();
   private Environment env = anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build();
@@ -173,6 +130,8 @@ public class PcfDeployStateTest extends WingsBaseTest {
   public void setup() {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(pcfDeployState, "secretManager", secretManager);
+    setInternalState(pcfDeployState, "pcfStateHelper", new PcfStateHelper());
+
     context = new ExecutionContextImpl(stateExecutionInstance);
 
     when(appService.get(APP_ID)).thenReturn(app);
@@ -188,14 +147,8 @@ public class PcfDeployStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
 
-    InfrastructureMapping infrastructureMapping = PcfInfrastructureMapping.builder()
-                                                      .organization(ORG)
-                                                      .space(SPACE)
-                                                      .routeMaps(Arrays.asList("R1"))
-                                                      .tempRouteMap(Arrays.asList("R2"))
-                                                      .computeProviderSettingId(COMPUTE_PROVIDER_ID)
-                                                      .build();
-    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(infrastructureMapping);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(pcfStateTestHelper.getPcfInfrastructureMapping(Arrays.asList("R1"), Arrays.asList("R2")));
 
     Activity activity = Activity.builder().build();
     activity.setUuid(ACTIVITY_ID);

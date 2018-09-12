@@ -131,6 +131,7 @@ import software.wings.sm.states.pcf.MapRouteState;
 import software.wings.sm.states.pcf.PcfDeployState;
 import software.wings.sm.states.pcf.PcfRollbackState;
 import software.wings.sm.states.pcf.PcfSetupState;
+import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
 import software.wings.sm.states.pcf.UnmapRouteState;
 import software.wings.sm.states.provision.ApplyTerraformProvisionState;
 import software.wings.sm.states.provision.CloudFormationCreateStackState;
@@ -436,6 +437,8 @@ public enum StateType implements StateTypeDescriptor {
   PCF_MAP_ROUTE(MapRouteState.class, FLOW_CONTROLS, Constants.PCF_MAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
   PCF_UNMAP_ROUTE(UnmapRouteState.class, FLOW_CONTROLS, PCF_UNMAP_ROUT,
+      Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
+  PCF_BG_MAP_ROUTE(PcfSwitchBlueGreenRoutes.class, FLOW_CONTROLS, Constants.PCF_BG_MAP_ROUTE,
       Lists.newArrayList(InfrastructureMappingType.PCF_PCF), asList(PhaseStepType.PCF_RESIZE), ORCHESTRATION_STENCILS),
 
   TERRAFORM_PROVISION(ApplyTerraformProvisionState.class, PROVISIONERS, 0, "Terraform Provision",

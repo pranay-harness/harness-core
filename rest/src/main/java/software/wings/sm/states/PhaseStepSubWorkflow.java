@@ -41,6 +41,7 @@ import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
+import software.wings.api.pcf.PcfRouteSwapExecutionSummary;
 import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.beans.Activity;
 import software.wings.beans.FailureStrategy;
@@ -277,6 +278,18 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         PcfDeployExecutionSummary pcfDeployExecutionSummary = (PcfDeployExecutionSummary) first.get();
         return asList(pcfDeployExecutionSummary.getPcfDeployContextForRollback());
       }
+      case PCF_SWICH_ROUTES:
+      case PCF_ROUTE_UPDATE: {
+        Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                   .stream()
+                                                   .filter(s -> s instanceof PcfRouteSwapExecutionSummary)
+                                                   .findFirst();
+        if (!first.isPresent()) {
+          return null;
+        }
+        PcfRouteSwapExecutionSummary pcfRouteSwapExecutionSummary = (PcfRouteSwapExecutionSummary) first.get();
+        return asList(pcfRouteSwapExecutionSummary.getPcfRouteSwapContextForRollback());
+      }
       default:
         unhandled(phaseStepType);
     }
@@ -354,6 +367,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case PCF_SETUP:
       case PCF_RESIZE:
       case PCF_ROUTE_UPDATE:
+      case PCF_SWICH_ROUTES:
       case ROUTE_UPDATE:
         noop();
         break;

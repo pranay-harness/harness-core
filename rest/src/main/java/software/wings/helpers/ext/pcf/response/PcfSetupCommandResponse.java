@@ -14,16 +14,15 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 public class PcfSetupCommandResponse extends PcfCommandResponse {
-  private String newApplicationId;
-  private String newApplicationName;
+  private PcfAppSetupTimeDetails newApplicationDetails;
   private Integer totalPreviousInstanceCount;
-  private List<String> downsizeDetails;
+  private List<PcfAppSetupTimeDetails> downsizeDetails;
   @Builder
-  public PcfSetupCommandResponse(CommandExecutionStatus commandExecutionStatus, String output, String newApplicationId,
-      String newApplicationName, Integer totalPreviousInstanceCount, List<String> downsizeDetails) {
+  public PcfSetupCommandResponse(CommandExecutionStatus commandExecutionStatus, String output,
+      PcfAppSetupTimeDetails newApplicationDetails, Integer totalPreviousInstanceCount,
+      List<PcfAppSetupTimeDetails> downsizeDetails) {
     super(commandExecutionStatus, output);
-    this.newApplicationId = newApplicationId;
-    this.newApplicationName = newApplicationName;
+    this.newApplicationDetails = newApplicationDetails;
     this.totalPreviousInstanceCount = totalPreviousInstanceCount;
     this.downsizeDetails = downsizeDetails;
   }

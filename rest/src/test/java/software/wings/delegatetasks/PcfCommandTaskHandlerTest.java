@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -40,6 +41,7 @@ import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.request.PcfInfraMappingDataRequest;
 import software.wings.helpers.ext.pcf.request.PcfInstanceSyncRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.helpers.ext.pcf.response.PcfInfraMappingDataResponse;
@@ -180,13 +182,16 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
         (PcfSetupCommandResponse) pcfCommandExecutionResponse.getPcfCommandResponse();
 
     assertEquals(pcfCommandExecutionResponse.getCommandExecutionStatus(), CommandExecutionStatus.SUCCESS);
-    assertEquals(pcfSetupCommandResponse.getNewApplicationName(), "a_s_e__6");
-    assertEquals(pcfSetupCommandResponse.getNewApplicationId(), "10");
+    assertNotNull(pcfSetupCommandResponse.getNewApplicationDetails());
+    assertEquals(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationName(), "a_s_e__6");
+    assertEquals(pcfSetupCommandResponse.getNewApplicationDetails().getApplicationGuid(), "10");
 
     assertNotNull(pcfSetupCommandResponse.getDownsizeDetails());
     assertEquals(2, pcfSetupCommandResponse.getDownsizeDetails().size());
-    assertTrue(pcfSetupCommandResponse.getDownsizeDetails().contains("a_s_e__3"));
-    assertTrue(pcfSetupCommandResponse.getDownsizeDetails().contains("a_s_e__4"));
+    Set<String> appsToBeDownsized = new HashSet<>(
+        pcfSetupCommandResponse.getDownsizeDetails().stream().map(app -> app.getApplicationName()).collect(toList()));
+    assertTrue(appsToBeDownsized.contains("a_s_e__3"));
+    assertTrue(appsToBeDownsized.contains("a_s_e__4"));
   }
 
   private PcfConfig getPcfConfig() {
@@ -330,6 +335,8 @@ public class PcfCommandTaskHandlerTest extends WingsBaseTest {
             .organization(ORG)
             .space(SPACE)
             .timeoutIntervalInMin(5)
+            .newApplicationDetails(
+                PcfAppSetupTimeDetails.builder().applicationName("a_s_e__6").urls(Collections.EMPTY_LIST).build())
             .build();
 
     doReturn(ApplicationDetail.builder()

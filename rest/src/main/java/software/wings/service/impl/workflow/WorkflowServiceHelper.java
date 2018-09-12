@@ -34,6 +34,7 @@ import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PCF_RESIZE;
 import static software.wings.beans.PhaseStepType.PCF_SETUP;
+import static software.wings.beans.PhaseStepType.PCF_SWICH_ROUTES;
 import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
@@ -67,6 +68,7 @@ import static software.wings.sm.StateType.KUBERNETES_DEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 import static software.wings.sm.StateType.KUBERNETES_SWAP_SERVICE_SELECTORS;
+import static software.wings.sm.StateType.PCF_BG_MAP_ROUTE;
 import static software.wings.sm.StateType.PCF_ROLLBACK;
 import static software.wings.sm.StateType.ROLLING_NODE_SELECT;
 import static software.wings.sm.states.ElasticLoadBalancerState.Operation.Disable;
@@ -174,6 +176,22 @@ public class WorkflowServiceHelper {
   }
 
   public boolean workflowHasSshInfraMapping(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+    List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
+    if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
+      List<String> infraMappingIds = workflowPhases.stream()
+                                         .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
+                                         .map(WorkflowPhase::getInfraMappingId)
+                                         .collect(toList());
+      return infrastructureMappingService.getInfraStructureMappingsByUuids(appId, infraMappingIds)
+          .stream()
+          .anyMatch((InfrastructureMapping infra)
+                        -> AWS_SSH.name().equals(infra.getInfraMappingType())
+                  || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType()));
+    }
+    return false;
+  }
+
+  public boolean needArtifactCheckStep(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
     List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
     if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
       List<String> infraMappingIds = workflowPhases.stream()
@@ -436,17 +454,143 @@ public class WorkflowServiceHelper {
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
+  public WorkflowPhase generateRollbackWorkflowPhaseForPCFBlueGreen(
+      WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    if (workflowPhase.isDaemonSet() || workflowPhase.isStatefulSet()) {
+      throw new InvalidRequestException("DaemonSet and StatefulSet are not supported with Blue/Green Deployment", USER);
+    }
+
+    Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
+    defaultRouteUpdateProperties.put("service1", PRIMARY_SERVICE_NAME_EXPRESSION);
+    defaultRouteUpdateProperties.put("service2", STAGE_SERVICE_NAME_EXPRESSION);
+
+    WorkflowPhaseBuilder workflowPhaseBuilder =
+        aWorkflowPhase()
+            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+            .withRollback(true)
+            .withServiceId(workflowPhase.getServiceId())
+            .withComputeProviderId(workflowPhase.getComputeProviderId())
+            .withInfraMappingName(workflowPhase.getInfraMappingName())
+            .withPhaseNameForRollback(workflowPhase.getName())
+            .withDeploymentType(workflowPhase.getDeploymentType())
+            .withInfraMappingId(workflowPhase.getInfraMappingId())
+            .addPhaseStep(aPhaseStep(PCF_SWICH_ROUTES, Constants.PCF_BG_MAP_ROUTE)
+                              .addStep(aGraphNode()
+                                           .withId(generateUuid())
+                                           .withType(PCF_BG_MAP_ROUTE.name())
+                                           .withName(Constants.PCF_BG_SWAP_ROUTE)
+                                           .withProperties(defaultRouteUpdateProperties)
+                                           .withRollback(true)
+                                           .build())
+                              .withPhaseStepNameForRollback(Constants.PCF_BG_MAP_ROUTE)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
+                              .build())
+            .addPhaseStep(aPhaseStep(PhaseStepType.PCF_RESIZE, Constants.DEPLOY)
+                              .addStep(aGraphNode()
+                                           .withId(generateUuid())
+                                           .withType(PCF_ROLLBACK.name())
+                                           .withName(Constants.PCF_ROLLBACK)
+                                           .withRollback(true)
+                                           .build())
+                              .withPhaseStepNameForRollback(Constants.DEPLOY)
+                              .withStatusForRollback(ExecutionStatus.SUCCESS)
+                              .withRollback(true)
+                              .build());
+
+    // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
+    workflowPhaseBuilder
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withPhaseStepNameForRollback(Constants.PCF_RESIZE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
+    return workflowPhaseBuilder.build();
+  }
+
+  public void generateNewWorkflowPhaseStepsForPCFBlueGreen(
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    if (workflowPhase.isDaemonSet() || workflowPhase.isStatefulSet()) {
+      throw new InvalidRequestException("DaemonSet and StatefulSet are not supported with Blue/Green Deployment", USER);
+    }
+
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    // SETUP
+    if (serviceSetupRequired) {
+      Map<String, Object> defaultSetupProperties = new HashMap<>();
+      defaultSetupProperties.put("blueGreen", true);
+      defaultSetupProperties.put("resizeStrategy", "RESIZE_NEW_FIRST");
+      defaultSetupProperties.put("route", "${" + Constants.INFRA_TEMP_ROUTE_PCF + "}");
+
+      workflowPhase.addPhaseStep(aPhaseStep(PCF_SETUP, Constants.SETUP)
+                                     .addStep(aGraphNode()
+                                                  .withId(generateUuid())
+                                                  .withType(PCF_SETUP.name())
+                                                  .withName(Constants.PCF_SETUP)
+                                                  .withProperties(defaultSetupProperties)
+                                                  .build())
+                                     .build());
+    }
+
+    // RESIZE
+    Map<String, Object> defaultUpgradeStageContainerProperties = new HashMap<>();
+    defaultUpgradeStageContainerProperties.put("instanceUnitType", "PERCENTAGE");
+    defaultUpgradeStageContainerProperties.put("instanceCount", 100);
+    defaultUpgradeStageContainerProperties.put("downsizeInstanceUnitType", "PERCENTAGE");
+    defaultUpgradeStageContainerProperties.put("downsizeInstanceCount", 100);
+
+    workflowPhase.addPhaseStep(aPhaseStep(PCF_RESIZE, Constants.DEPLOY)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(PCF_RESIZE.name())
+                                                .withName(Constants.PCF_RESIZE)
+                                                .withProperties(defaultUpgradeStageContainerProperties)
+                                                .build())
+                                   .build());
+
+    // Verify
+    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_STAGING)
+                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
+                                   .build());
+
+    // Swap Routes
+    Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
+    defaultRouteUpdateProperties.put("downsizeOldApps", false);
+    workflowPhase.addPhaseStep(aPhaseStep(PCF_SWICH_ROUTES, Constants.PCF_BG_MAP_ROUTE)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(PCF_BG_MAP_ROUTE.name())
+                                                .withName(Constants.PCF_BG_SWAP_ROUTE)
+                                                .withProperties(defaultRouteUpdateProperties)
+                                                .build())
+                                   .build());
+
+    // Wrap up
+    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+  }
+
   public void generateNewWorkflowPhaseStepsForPCF(String appId, String envId, WorkflowPhase workflowPhase,
       boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
     if (serviceSetupRequired) {
-      workflowPhase.addPhaseStep(
-          aPhaseStep(PCF_SETUP, Constants.SETUP)
-              .addStep(
-                  aGraphNode().withId(generateUuid()).withType(PCF_SETUP.name()).withName(Constants.PCF_SETUP).build())
-              .build());
+      Map<String, Object> defaultProperties = new HashMap<>();
+      defaultProperties.put("blueGreen", false);
+      defaultProperties.put("resizeStrategy", "DOWNSIZE_OLD_FIRST");
+      defaultProperties.put("route", "${" + Constants.INFRA_ROUTE_PCF + "}");
+
+      workflowPhase.addPhaseStep(aPhaseStep(PCF_SETUP, Constants.SETUP)
+                                     .addStep(aGraphNode()
+                                                  .withId(generateUuid())
+                                                  .withType(PCF_SETUP.name())
+                                                  .withName(Constants.PCF_SETUP)
+                                                  .withProperties(defaultProperties)
+                                                  .build())
+                                     .build());
     }
 
     workflowPhase.addPhaseStep(

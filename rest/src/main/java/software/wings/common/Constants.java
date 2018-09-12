@@ -186,6 +186,7 @@ public interface Constants {
    */
   String VERIFY_SERVICE = "Verify Service";
 
+  String VERIFY_STAGING = "Verify Staging";
   /**
    * The constant DEPLOY_CONTAINERS.
    */
@@ -216,6 +217,10 @@ public interface Constants {
   String PCF_ROLLBACK = "App Rollback";
 
   String PCF_MAP_ROUTE = "Map Route";
+
+  String PCF_BG_MAP_ROUTE = "Update Route";
+
+  String PCF_BG_SWAP_ROUTE = "Swap Routes";
 
   String PCF_UNMAP_ROUT = "Unmap Route";
   /**
@@ -826,6 +831,8 @@ public interface Constants {
   String WORKFLOW_NAME_DATE_FORMAT = "MM/dd/yyyy hh:mm a";
   String INFRA_ROUTE = "infra.route";
   String INFRA_TEMP_ROUTE = "infra.tempRoute";
+  String INFRA_ROUTE_PCF = "infra.pcf.route";
+  String INFRA_TEMP_ROUTE_PCF = "infra.pcf.tempRoute";
 
   String PCF_APP_NAME = "pcfAppName";
   String PCF_OLD_APP_NAME = "pcfOldAppName";
