@@ -245,8 +245,10 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       String fileContent = loadFileContentIntoString(configFile);
       String fileName = Util.normalize(configFile.getRelativeFilePath());
 
-      gitFileChanges.add(createConfigFileChange(
-          accountId, yamlDirectoryService.getRootPathByConfigFile(helperEntity), fileName, fileContent, changeType));
+      if (fileContent != null) {
+        gitFileChanges.add(createConfigFileChange(
+            accountId, yamlDirectoryService.getRootPathByConfigFile(helperEntity), fileName, fileContent, changeType));
+      }
     }
 
     return gitFileChanges;
