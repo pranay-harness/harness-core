@@ -5,10 +5,10 @@ import com.google.inject.Inject;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
+import io.harness.persistence.HIterator;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.waitnotify.WaitInstance;
 

@@ -1,6 +1,6 @@
 package software.wings.licensing;
 
-import static software.wings.dl.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 

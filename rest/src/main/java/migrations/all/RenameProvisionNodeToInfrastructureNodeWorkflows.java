@@ -1,11 +1,11 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
 import static software.wings.beans.PhaseStepType.PROVISION_NODE;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 

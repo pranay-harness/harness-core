@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import static software.wings.dl.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TIME_SERIES_ANALYSIS_TASK_TIME_OUT;
 import static software.wings.utils.Misc.generateSecretKey;
 

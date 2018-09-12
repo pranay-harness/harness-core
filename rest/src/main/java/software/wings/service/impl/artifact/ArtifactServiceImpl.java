@@ -45,6 +45,7 @@ import com.google.inject.name.Named;
 
 import com.mongodb.BasicDBObject;
 import io.harness.eraro.ErrorCode;
+import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.bson.types.ObjectId;
@@ -64,7 +65,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.Queue;
-import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;

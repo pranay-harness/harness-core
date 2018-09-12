@@ -10,6 +10,7 @@ import static software.wings.sm.StateType.HTTP;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.persistence.HIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -22,7 +23,6 @@ import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.common.TemplateConstants;
-import software.wings.dl.HIterator;
 import software.wings.service.intfc.WorkflowService;
 
 import java.util.Arrays;

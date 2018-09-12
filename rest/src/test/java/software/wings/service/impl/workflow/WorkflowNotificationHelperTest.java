@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Answers;
@@ -57,7 +58,6 @@ import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Service;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.dl.HQuery;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.ServiceResourceService;

@@ -5,9 +5,9 @@
 package software.wings.waitnotify;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.inject.Inject;

@@ -1,10 +1,10 @@
 package migrations.all;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.dl.PageRequest.UNLIMITED;
 

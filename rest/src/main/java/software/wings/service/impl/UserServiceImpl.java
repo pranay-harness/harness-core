@@ -15,6 +15,7 @@ import static io.harness.eraro.ErrorCode.USER_ALREADY_REGISTERED;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
 import static io.harness.eraro.ErrorCode.USER_DOMAIN_NOT_ALLOWED;
 import static io.harness.eraro.ErrorCode.USER_INVITATION_DOES_NOT_EXIST;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.net.URLEncoder.encode;
 import static java.util.Arrays.asList;
@@ -28,7 +29,6 @@ import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anAppl
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;

@@ -2,12 +2,12 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.app.DeployMode.ONPREM;
-import static software.wings.dl.HQuery.excludeAuthority;
 
 import com.google.api.client.repackaged.com.google.common.base.Splitter;
 import com.google.inject.Inject;

@@ -21,6 +21,7 @@ import static software.wings.common.TemplateConstants.TOMCAT_WAR_STOP_PATH;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +33,6 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.beans.yaml.YamlType;
-import software.wings.dl.HIterator;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
 import software.wings.service.intfc.ServiceResourceService;

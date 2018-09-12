@@ -1,12 +1,12 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.service.intfc.FileService.FileBucket;
 
 import com.google.common.util.concurrent.TimeLimiter;

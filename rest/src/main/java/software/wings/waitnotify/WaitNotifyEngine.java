@@ -1,9 +1,9 @@
 package software.wings.waitnotify;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.HQuery.excludeAuthority;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 

@@ -31,6 +31,7 @@ import com.google.inject.name.Named;
 
 import de.danielbechler.util.Collections;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -53,7 +54,6 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.Trigger;
-import software.wings.dl.HIterator;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;

@@ -6,12 +6,12 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.HIterator;
 import migrations.SeedDataMigration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.template.TemplateGallery;
-import software.wings.dl.HIterator;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateGalleryService;
 

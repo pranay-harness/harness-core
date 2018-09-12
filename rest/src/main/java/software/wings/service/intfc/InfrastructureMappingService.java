@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -11,7 +12,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.HQuery.QueryChecks;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.exception.WingsException;

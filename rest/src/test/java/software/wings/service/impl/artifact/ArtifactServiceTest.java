@@ -35,6 +35,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import de.danielbechler.util.Collections;
+import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -62,7 +63,6 @@ import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.collect.CollectEvent;
 import software.wings.common.Constants;
 import software.wings.core.queue.Queue;
-import software.wings.dl.HQuery;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsException;

@@ -1,7 +1,7 @@
 package software.wings.integration;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.awaitility.Awaitility.await;
-import static software.wings.dl.HQuery.excludeAuthority;
 
 import org.awaitility.Duration;
 import org.hamcrest.CoreMatchers;
