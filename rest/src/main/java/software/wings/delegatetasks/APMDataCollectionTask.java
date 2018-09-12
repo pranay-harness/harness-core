@@ -70,6 +70,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final int CANARY_DAYS_TO_COLLECT = 7;
 
   private static final String BATCH_REGEX = "\\$harness_batch\\{([^,]*),([^}]*)\\}";
+  private static final String DATADOG_API_MASK = "api_key=([^&]*)&application_key=([^&]*)&";
   private static final String BATCH_TEXT = "$harness_batch";
   private static final int MAX_HOSTS_PER_BATCH = 15;
   private static Pattern pattern = Pattern.compile("\\$\\{(.*?)\\}");
@@ -245,9 +246,19 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return output;
     }
 
-    private String collect(Call<Object> request, final String urlToLog) {
+    private String collect(Call<Object> request, String urlToLog) {
       final Response<Object> response;
       try {
+        if (urlToLog.contains("api_key")) {
+          Pattern batchPattern = Pattern.compile(DATADOG_API_MASK);
+          Matcher matcher = batchPattern.matcher(urlToLog);
+          while (matcher.find()) {
+            final String apiKey = matcher.group(1);
+            final String appKey = matcher.group(2);
+            urlToLog = urlToLog.replace(apiKey, "<apiKey>");
+            urlToLog = urlToLog.replace(appKey, "<appKey>");
+          }
+        }
         ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
         apiCallLog.setTitle("Fetch request to " + urlToLog);
         apiCallLog.addFieldToRequest(
@@ -261,11 +272,11 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           return JsonUtils.asJson(response.body());
         } else {
           logger.error(dataCollectionInfo.getStateType() + ": Request not successful. Reason: {}, {}", response.code(),
-              response.message());
-          apiCallLog.addFieldToResponse(response.code(), response.errorBody(), FieldType.TEXT);
+              response.errorBody().string());
+          apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
           delegateLogService.save(getAccountId(), apiCallLog);
           throw new WingsException("Unsuccessful response while fetching data from APM Provider. Error code: "
-              + response.code() + ". Error: " + response.errorBody());
+              + response.code() + ". Error: " + response.errorBody().string());
         }
       } catch (Exception e) {
         throw new WingsException("Error while fetching data. " + Misc.getMessage(e), e);
