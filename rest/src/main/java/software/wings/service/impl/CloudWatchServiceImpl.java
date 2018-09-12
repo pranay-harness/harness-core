@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
+
 import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
@@ -10,15 +13,27 @@ import com.amazonaws.services.cloudwatch.model.DimensionFilter;
 import com.amazonaws.services.cloudwatch.model.ListMetricsRequest;
 import com.amazonaws.services.cloudwatch.model.Metric;
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.eraro.ErrorCode;
 import io.harness.serializer.YamlUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.annotation.Encryptable;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.Base;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsException;
+import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
+import software.wings.service.impl.apm.MLServiceUtil;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.service.impl.cloudwatch.CloudWatchSetupTestNodeData;
 import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateExecutionException;
 
@@ -35,10 +50,13 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class CloudWatchServiceImpl implements CloudWatchService {
+  private static final Logger logger = LoggerFactory.getLogger(CloudWatchServiceImpl.class);
   @Inject private SettingsService settingsService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private SecretManager secretManager;
   @Inject private AwsInfrastructureProvider awsInfrastructureProvider;
+  @Inject private MLServiceUtil mlServiceUtil;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
 
   private final Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics;
 
@@ -104,6 +122,28 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     loadBalancers.addAll(awsInfrastructureProvider.listClassicLoadBalancers(settingAttribute, region));
     loadBalancers.addAll(awsInfrastructureProvider.listLoadBalancers(settingAttribute, region));
     return loadBalancers;
+  }
+
+  @Override
+  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(CloudWatchSetupTestNodeData setupTestNodeData) {
+    String hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+    try {
+      final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+      SyncTaskContext syncTaskContext = aContext()
+                                            .withAccountId(settingAttribute.getAccountId())
+                                            .withAppId(Base.GLOBAL_APP_ID)
+                                            .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
+                                            .build();
+      return delegateProxyFactory.get(CloudWatchDelegateService.class, syncTaskContext)
+          .getMetricsWithDataForNode((AwsConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
+              apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()), hostName);
+    } catch (Exception e) {
+      logger.info("error getting metric data for node", e);
+      throw new WingsException(ErrorCode.CLOUDWATCH_ERROR)
+          .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
+    }
   }
 
   private AwsConfig getAwsConfig(String settingId) {

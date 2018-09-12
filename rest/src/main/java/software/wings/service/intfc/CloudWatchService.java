@@ -1,7 +1,9 @@
 package software.wings.service.intfc;
 
+import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
+import software.wings.service.impl.cloudwatch.CloudWatchSetupTestNodeData;
 
 import java.util.List;
 import java.util.Map;
@@ -44,4 +46,11 @@ public interface CloudWatchService {
   Map<AwsNameSpace, List<CloudWatchMetric>> getCloudWatchMetrics();
 
   Set<String> getLoadBalancerNames(String settingId, String region);
+
+  /**
+   * Api to fetch metric data for given node.
+   * @param setupTestNodeData
+   * @return
+   */
+  VerificationNodeDataSetupResponse getMetricsWithDataForNode(CloudWatchSetupTestNodeData setupTestNodeData);
 }
