@@ -8,6 +8,7 @@ import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES
 import static software.wings.sm.states.pcf.MapRouteState.PCF_MAP_ROUTE_COMMAND;
 import static software.wings.sm.states.pcf.PcfDeployState.PCF_RESIZE_COMMAND;
 import static software.wings.sm.states.pcf.PcfSetupState.PCF_SETUP_COMMAND;
+import static software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes.PCF_BG_SWAP_ROUTE_COMMAND;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,6 +37,7 @@ public class CommandUnitDetails {
     PCF_SETUP(PCF_SETUP_COMMAND),
     PCF_RESIZE(PCF_RESIZE_COMMAND),
     PCF_MAP_ROUTE(PCF_MAP_ROUTE_COMMAND),
+    PCF_BG_SWAP_ROUTE(PCF_BG_SWAP_ROUTE_COMMAND),
     KUBERNETES_SWAP_SERVICE_SELECTORS(KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME);
     private String name;
 

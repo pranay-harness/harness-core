@@ -134,20 +134,9 @@ public class ActivityServiceImpl implements ActivityService {
                      .build());
           break;
         case PCF_SETUP:
-          rv.add(CommandUnitDetails.builder()
-                     .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
-                     .name(activity.getCommandUnitType().getName())
-                     .commandUnitType(activity.getCommandUnitType())
-                     .build());
-          break;
         case PCF_RESIZE:
-          rv.add(CommandUnitDetails.builder()
-                     .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
-                     .name(activity.getCommandUnitType().getName())
-                     .commandUnitType(activity.getCommandUnitType())
-                     .build());
-          break;
         case PCF_MAP_ROUTE:
+        case PCF_BG_SWAP_ROUTE:
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())

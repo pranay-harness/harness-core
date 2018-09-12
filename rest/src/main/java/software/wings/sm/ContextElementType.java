@@ -11,6 +11,7 @@ public enum ContextElementType {
    */
   SERVICE,
 
+  INFRAMAPPING,
   /**
    * Service context element type.
    */
@@ -83,6 +84,8 @@ public enum ContextElementType {
   PCF_SERVICE_SETUP,
 
   PCF_SERVICE_DEPLOY,
+
+  PCF_ROUTE_SWAP_ROLLBACK,
 
   PCF_INSTANCE,
 

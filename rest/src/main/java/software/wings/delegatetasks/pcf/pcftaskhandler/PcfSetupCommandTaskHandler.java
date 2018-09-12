@@ -18,6 +18,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfSetupCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -140,16 +141,21 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
       executionLogCallback.saveExecutionLog("# App Details: ");
       pcfCommandTaskHelper.printApplicationDetail(newApplication, executionLogCallback);
 
-      List<String> downsizeAppNames = pcfCommandTaskHelper.generateDownsizeDetails(
+      List<PcfAppSetupTimeDetails> downsizeAppDetails = pcfCommandTaskHelper.generateDownsizeDetails(
           pcfRequestConfig, newReleaseName, pcfCommandSetupRequest.getMaxCount());
-      PcfSetupCommandResponse pcfSetupCommandResponse = PcfSetupCommandResponse.builder()
-                                                            .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-                                                            .output(StringUtils.EMPTY)
-                                                            .newApplicationId(newApplication.getId())
-                                                            .newApplicationName(newApplication.getName())
-                                                            .totalPreviousInstanceCount(totalPreviousInstanceCount)
-                                                            .downsizeDetails(downsizeAppNames)
-                                                            .build();
+      PcfSetupCommandResponse pcfSetupCommandResponse =
+          PcfSetupCommandResponse.builder()
+              .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+              .output(StringUtils.EMPTY)
+              .newApplicationDetails(PcfAppSetupTimeDetails.builder()
+                                         .applicationGuid(newApplication.getId())
+                                         .applicationName(newApplication.getName())
+                                         .urls(newApplication.getUrls())
+                                         .initialInstanceCount(0)
+                                         .build())
+              .totalPreviousInstanceCount(totalPreviousInstanceCount)
+              .downsizeDetails(downsizeAppDetails)
+              .build();
 
       // Delete downloaded artifact and generated manifest.yaml file
       executionLogCallback.saveExecutionLog("# Deleting any temporary files created");

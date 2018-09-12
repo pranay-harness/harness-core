@@ -12,9 +12,13 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.DeploymentType;
+import software.wings.api.InfraMappingElement;
+import software.wings.api.InfraMappingElement.Pcf;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
@@ -27,15 +31,18 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.artifact.Artifact;
+import software.wings.common.Constants;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
 
 import java.net.URISyntaxException;
@@ -66,10 +73,13 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   @Inject private transient ArtifactStreamService artifactStreamService;
 
+  @Inject private transient InfrastructureMappingService infrastructureMappingService;
+
   private String appId;
   private String envId;
   private List<String> artifactIds;
   private WorkflowElement workflowElement;
+  private transient InfraMappingElement infraMappingElement;
 
   // TODO: centralized in-memory executionCredential and special encrypted mapping
   private ExecutionCredential executionCredential;
@@ -121,6 +131,11 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
             context.getWorkflowExecutionId())));
     if (currentUser != null) {
       map.put(DEPLOYMENT_TRIGGERED_BY, currentUser.getName());
+    }
+
+    infraMappingElement = fetchInfraMappinglement(context);
+    if (infraMappingElement != null) {
+      map.put(INFRA, infraMappingElement);
     }
 
     ServiceElement serviceElement = fetchServiceElement(context);
@@ -177,6 +192,28 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     } catch (URISyntaxException e) {
       return baseUrl;
     }
+  }
+
+  public InfraMappingElement fetchInfraMappinglement(ExecutionContext context) {
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+
+    if (phaseElement != null && DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
+      PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
+          context.getAppId(), phaseElement.getInfraMappingId());
+
+      if (pcfInfrastructureMapping != null) {
+        String route = isNotEmpty(pcfInfrastructureMapping.getRouteMaps())
+            ? pcfInfrastructureMapping.getRouteMaps().get(0)
+            : StringUtils.EMPTY;
+        String tempRoute = isNotEmpty(pcfInfrastructureMapping.getTempRouteMap())
+            ? pcfInfrastructureMapping.getTempRouteMap().get(0)
+            : StringUtils.EMPTY;
+
+        return InfraMappingElement.builder().pcf(Pcf.builder().route(route).tempRoute(tempRoute).build()).build();
+      }
+    }
+
+    return null;
   }
 
   private ServiceElement fetchServiceElement(ExecutionContext context) {
@@ -383,6 +420,12 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     return workflowElement;
   }
 
+  public InfraMappingElement getInfraMappingElement(ExecutionContext context) {
+    if (infraMappingElement == null) {
+      fetchInfraMappinglement(context);
+    }
+    return infraMappingElement;
+  }
   /**
    * Sets workflow element.
    *
@@ -390,6 +433,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
    */
   public void setWorkflowElement(WorkflowElement workflowElement) {
     this.workflowElement = workflowElement;
+  }
+
+  public void setInfraMappingElementElement(InfraMappingElement infraMappingElementElement) {
+    this.infraMappingElement = infraMappingElementElement;
   }
 
   public Map<String, String> getWorkflowVariables() {
@@ -522,6 +569,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     private EmbeddedUser currentUser;
     private boolean excludeHostsWithSameArtifact;
     private WorkflowElement workflowElement;
+    private InfraMappingElement infraMappingElement;
 
     private Builder() {}
 
@@ -638,6 +686,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       workflowStandardParams.setCurrentUser(currentUser);
       workflowStandardParams.setExcludeHostsWithSameArtifact(excludeHostsWithSameArtifact);
       workflowStandardParams.setWorkflowElement(workflowElement);
+      workflowStandardParams.setInfraMappingElementElement(infraMappingElement);
       return workflowStandardParams;
     }
   }

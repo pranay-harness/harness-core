@@ -2,6 +2,7 @@ package software.wings.api.pcf;
 
 import com.google.common.collect.Maps;
 
+import io.harness.data.structure.EmptyPredicate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
+import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -26,9 +28,7 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
   private String appId;
   private PcfCommandRequest pcfCommandRequest;
   private String commandName;
-  private List<String> routeMaps;
-  private List<String> appnames;
-  private String operation;
+  private PcfRouteUpdateRequestConfigData pcfRouteUpdateRequestConfigData;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -41,23 +41,50 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
   }
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
-    putNotNull(executionDetails, "organization",
+    Map<String, ExecutionDataValue> execDetails = Maps.newLinkedHashMap();
+    putNotNull(execDetails, "organization",
         ExecutionDataValue.builder().value(pcfCommandRequest.getOrganization()).displayName("Organization").build());
-    putNotNull(executionDetails, "space",
+    putNotNull(execDetails, "space",
         ExecutionDataValue.builder().value(pcfCommandRequest.getSpace()).displayName("Space").build());
-    putNotNull(executionDetails, "commandName",
+    putNotNull(execDetails, "commandName",
         ExecutionDataValue.builder().value(commandName).displayName("Command Name").build());
-    putNotNull(executionDetails, "routeMaps",
-        ExecutionDataValue.builder().value(getDisplayString(routeMaps)).displayName("Final Route Maps").build());
-    putNotNull(executionDetails, "appnames",
-        ExecutionDataValue.builder().value(getDisplayString(appnames)).displayName("Applications").build());
+    putNotNull(execDetails, "updateConfig",
+        ExecutionDataValue.builder().value(getDisplayStringForUpdateConfig()).displayName("Update Config").build());
     // putting activityId is very important, as without it UI wont make call to fetch commandLogs that are shown
     // in activity window
-    putNotNull(executionDetails, "activityId",
-        ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
+    putNotNull(
+        execDetails, "activityId", ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
 
-    return executionDetails;
+    return execDetails;
+  }
+
+  private String getDisplayStringForUpdateConfig() {
+    StringBuilder stringBuilder = new StringBuilder(128);
+
+    if (pcfRouteUpdateRequestConfigData.isStandardBlueGreen()) {
+      stringBuilder.append('{')
+          .append(pcfRouteUpdateRequestConfigData.getNewApplicatiaonName())
+          .append(" : ")
+          .append(pcfRouteUpdateRequestConfigData.getFinalRoutes())
+          .append('}');
+
+      pcfRouteUpdateRequestConfigData.getExistingApplicationNames().forEach(appName
+          -> stringBuilder.append(", {")
+                 .append(appName)
+                 .append(" : ")
+                 .append(pcfRouteUpdateRequestConfigData.getTempRoutes())
+                 .append('}'));
+    } else {
+      if (EmptyPredicate.isNotEmpty(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
+        pcfRouteUpdateRequestConfigData.getExistingApplicationNames().forEach(appName
+            -> stringBuilder.append(appName)
+                   .append("[")
+                   .append(pcfRouteUpdateRequestConfigData.getFinalRoutes())
+                   .append("]"));
+      }
+    }
+
+    return stringBuilder.toString();
   }
 
   private String getDisplayString(List<String> inputs) {
@@ -71,8 +98,7 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
     return PcfRouteSwapExecutionSummary.builder()
         .organization(pcfCommandRequest.getOrganization())
         .space(pcfCommandRequest.getSpace())
-        .routeMaps(routeMaps)
-        // .tempRouteMaps(tempRouteMap)
+        .pcfRouteUpdateRequestConfigData(pcfRouteUpdateRequestConfigData)
         .build();
   }
 }

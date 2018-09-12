@@ -31,7 +31,10 @@ public class PcfSetupStateExecutionData extends StateExecutionData implements No
   private String commandName;
   private Integer maxInstanceCount;
   private List<String> routeMaps;
+  private List<String> tempRouteMaps;
   private boolean rollback;
+  private boolean isStandardBlueGreen;
+  private boolean useTempRoutes;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {

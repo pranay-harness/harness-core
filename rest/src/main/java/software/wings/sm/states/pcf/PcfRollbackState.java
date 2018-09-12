@@ -6,6 +6,7 @@ import software.wings.api.pcf.PcfSetupContextElement;
 import software.wings.beans.Application;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.PcfConfig;
+import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
@@ -28,7 +29,8 @@ public class PcfRollbackState extends PcfDeployState {
   @Override
   public PcfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
       PcfSetupContextElement pcfSetupContextElement, PcfConfig pcfConfig, Integer updateCount,
-      Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData) {
+      Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
+      PcfInfrastructureMapping infrastructureMapping) {
     PcfDeployContextElement pcfDeployContextElement = context.getContextElement(ContextElementType.PCF_SERVICE_DEPLOY);
 
     // Just revert previousCount and desiredCount values for Rollback
@@ -62,7 +64,8 @@ public class PcfRollbackState extends PcfDeployState {
         .organization(pcfSetupContextElement.getPcfCommandRequest().getOrganization())
         .space(pcfSetupContextElement.getPcfCommandRequest().getSpace())
         .resizeStrategy(pcfSetupContextElement.getResizeStrategy())
-        .routeMaps(pcfSetupContextElement.getRouteMaps())
+        .routeMaps(infrastructureMapping.getRouteMaps())
+        .tempRouteMaps(infrastructureMapping.getTempRouteMap())
         .pcfConfig(pcfConfig)
         .pcfCommandType(PcfCommandType.ROLLBACK)
         .instanceData(pcfDeployContextElement.getInstanceData())
@@ -70,6 +73,8 @@ public class PcfRollbackState extends PcfDeployState {
         .accountId(application.getAccountId())
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
         .appsToBeDownSized(pcfSetupContextElement.getAppsToBeDownsized())
+        .newApplicationDetails(pcfSetupContextElement.getNewPcfApplicationDetails())
+        .isStandardBlueGreenWorkflow(pcfSetupContextElement.isStandardBlueGreenWorkflow())
         .build();
   }
 

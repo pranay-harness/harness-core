@@ -6,9 +6,11 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PcfInstanceElement;
@@ -17,15 +19,19 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
+import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfDeployCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @NoArgsConstructor
 @Singleton
@@ -91,6 +97,27 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
             pcfRequestConfig, downSizeList, commandRollbackRequest.getRouteMaps());
       }
 
+      // This steps is only required for Simulated BG workflow
+      if (isRollbackRoutesRequired(pcfRequestConfig, commandRollbackRequest)) {
+        // Remove any routes attached during routemap phase
+        pcfCommandTaskHelper.unmapExistingRouteMaps(
+            commandRollbackRequest.getNewApplicationDetails().getApplicationName(), pcfRequestConfig,
+            executionLogCallback);
+        // Associate original routes attached during app create.
+        pcfCommandTaskHelper.mapRouteMaps(commandRollbackRequest.getNewApplicationDetails().getApplicationName(),
+            commandRollbackRequest.getNewApplicationDetails().getUrls(), pcfRequestConfig, executionLogCallback);
+
+        // Perform same activity for existing apps, those were updated with route maps.
+        if (EmptyPredicate.isNotEmpty(commandRollbackRequest.getAppsToBeDownSized())) {
+          for (PcfAppSetupTimeDetails appDetails : commandRollbackRequest.getAppsToBeDownSized()) {
+            pcfCommandTaskHelper.unmapExistingRouteMaps(
+                appDetails.getApplicationName(), pcfRequestConfig, executionLogCallback);
+            pcfCommandTaskHelper.mapRouteMaps(
+                appDetails.getApplicationName(), appDetails.getUrls(), pcfRequestConfig, executionLogCallback);
+          }
+        }
+      }
+
       pcfDeployCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
       pcfDeployCommandResponse.setOutput(StringUtils.EMPTY);
       pcfDeployCommandResponse.setInstanceDataUpdated(pcfServiceDataUpdated);
@@ -111,5 +138,22 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
         .errorMessage(pcfDeployCommandResponse.getOutput())
         .pcfCommandResponse(pcfDeployCommandResponse)
         .build();
+  }
+
+  private boolean isRollbackRoutesRequired(PcfRequestConfig pcfRequestConfig,
+      PcfCommandRollbackRequest pcfCommandRollbackRequest) throws PivotalClientApiException {
+    if (pcfCommandRollbackRequest.isStandardBlueGreenWorkflow()) {
+      return false;
+    }
+
+    pcfRequestConfig.setApplicationName(pcfCommandRollbackRequest.getNewApplicationDetails().getApplicationName());
+    ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(pcfRequestConfig);
+    Set<String> urls = new HashSet<>(applicationDetail.getUrls());
+
+    if (urls.containsAll(pcfCommandRollbackRequest.getNewApplicationDetails().getUrls())) {
+      return false;
+    }
+
+    return true;
   }
 }

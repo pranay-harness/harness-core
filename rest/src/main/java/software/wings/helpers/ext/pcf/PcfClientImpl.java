@@ -355,6 +355,10 @@ public class PcfClientImpl implements PcfClient {
     } else {
       // In case no routeMap is given (Blue green deployment, let PCF create a route map)
       builder.randomRoute(true);
+      String appName = pcfRequestConfig.getApplicationName();
+      String appPrefix = appName.substring(0, appName.lastIndexOf("__"));
+      appPrefix = appPrefix.replaceAll("__", "-");
+      builder.host(appPrefix);
     }
   }
 
@@ -425,6 +429,10 @@ public class PcfClientImpl implements PcfClient {
 
   public List<Route> getRouteMapsByNames(List<String> paths, PcfRequestConfig pcfRequestConfig)
       throws PivotalClientApiException, InterruptedException {
+    if (EmptyPredicate.isEmpty(paths)) {
+      return Collections.EMPTY_LIST;
+    }
+
     List<Route> routes = getAllRoutesForSpace(pcfRequestConfig);
     paths = paths.stream().map(path -> path.toLowerCase()).collect(toList());
     Set<String> routeSet = new HashSet<>(paths);

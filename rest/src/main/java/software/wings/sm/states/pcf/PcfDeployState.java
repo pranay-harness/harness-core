@@ -1,9 +1,7 @@
 package software.wings.sm.states.pcf;
 
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -62,7 +60,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 public class PcfDeployState extends State {
   @Inject private transient AppService appService;
@@ -73,6 +70,7 @@ public class PcfDeployState extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
+  @Inject private transient PcfStateHelper pcfStateHelper;
 
   @Attributes(title = "Desired Instances(cumulative)", required = true) private Integer instanceCount;
   @Attributes(title = "Instance Unit Type", required = true)
@@ -168,20 +166,13 @@ public class PcfDeployState extends State {
         getPcfDeployStateExecutionData(pcfSetupContextElement, activity, upsizeUpdateCount, downsizeUpdateCount);
 
     PcfCommandRequest commandRequest = getPcfCommandRequest(context, app, activity.getUuid(), pcfSetupContextElement,
-        pcfConfig, upsizeUpdateCount, downsizeUpdateCount, stateExecutionData);
+        pcfConfig, upsizeUpdateCount, downsizeUpdateCount, stateExecutionData, pcfInfrastructureMapping);
 
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(app.getAccountId())
-                                    .withAppId(app.getUuid())
-                                    .withTaskType(TaskType.PCF_COMMAND_TASK)
-                                    .withWaitId(activity.getUuid())
-                                    .withParameters(new Object[] {commandRequest, encryptedDataDetails})
-                                    .withEnvId(env.getUuid())
-                                    .withTimeout(TimeUnit.HOURS.toMillis(1))
-                                    .withInfrastructureMappingId(pcfInfrastructureMapping.getUuid())
-                                    .build();
+    DelegateTask task =
+        pcfStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.PCF_COMMAND_TASK, activity.getUuid(),
+            env.getUuid(), pcfInfrastructureMapping.getUuid(), new Object[] {commandRequest, encryptedDataDetails}, 5);
 
-    String delegateTaskId = delegateService.queueTask(delegateTask);
+    delegateService.queueTask(task);
 
     return ExecutionResponse.Builder.anExecutionResponse()
         .withCorrelationIds(Arrays.asList(activity.getUuid()))
@@ -195,11 +186,11 @@ public class PcfDeployState extends State {
     return PcfDeployStateExecutionData.builder()
         .activityId(activity.getUuid())
         .commandName(PCF_RESIZE_COMMAND)
-        .releaseName(pcfSetupContextElement.getNewPcfApplicationName())
+        .releaseName(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName())
         .updateCount(upsizeUpdateCount)
         .updateDetails(new StringBuilder()
                            .append("{Name: ")
-                           .append(pcfSetupContextElement.getNewPcfApplicationName())
+                           .append(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName())
                            .append(", DesiredCount: ")
                            .append(upsizeUpdateCount)
                            .append("}")
@@ -256,7 +247,8 @@ public class PcfDeployState extends State {
   @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   protected PcfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
       PcfSetupContextElement pcfSetupContextElement, PcfConfig pcfConfig, Integer updateCount,
-      Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData) {
+      Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
+      PcfInfrastructureMapping infrastructureMapping) {
     return PcfCommandDeployRequest.builder()
         .activityId(activityId)
         .commandName(PCF_RESIZE_COMMAND)
@@ -275,7 +267,7 @@ public class PcfDeployState extends State {
         .routeMaps(pcfSetupContextElement.getRouteMaps())
         .appId(application.getUuid())
         .accountId(application.getAccountId())
-        .newReleaseName(pcfSetupContextElement.getNewPcfApplicationName())
+        .newReleaseName(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName())
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
         .build();
   }
@@ -328,31 +320,13 @@ public class PcfDeployState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
-  // is right ?
   private Activity createActivity(ExecutionContext executionContext) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
 
-    ActivityBuilder activityBuilder = Activity.builder()
-                                          .applicationName(app.getName())
-                                          .appId(app.getUuid())
-                                          .commandName(PCF_RESIZE_COMMAND)
-                                          .type(Type.Command)
-                                          .workflowType(executionContext.getWorkflowType())
-                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
-                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-                                          .commandType(getStateType())
-                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
-                                          .workflowId(executionContext.getWorkflowId())
-                                          .commandUnits(Collections.emptyList())
-                                          .serviceVariables(Maps.newHashMap())
-                                          .status(ExecutionStatus.RUNNING)
-                                          .commandUnitType(CommandUnitType.PCF_RESIZE);
+    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(),
+        PCF_RESIZE_COMMAND, Type.Command, executionContext, getStateType(), CommandUnitType.PCF_RESIZE, env);
 
-    activityBuilder.environmentId(env.getUuid())
-        .environmentName(env.getName())
-        .environmentType(env.getEnvironmentType());
     return activityService.save(activityBuilder.build());
   }
 }

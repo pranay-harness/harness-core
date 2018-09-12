@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.ResizeStrategy;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -33,13 +34,14 @@ public class PcfSetupContextElement implements ContextElement {
   private ResizeStrategy resizeStrategy;
   private PcfCommandRequest pcfCommandRequest;
   private String ManifestYaml;
-  private String newPcfApplicationId;
-  private String newPcfApplicationName;
+  private PcfAppSetupTimeDetails newPcfApplicationDetails;
   private Integer totalPreviousInstanceCount;
   private List<String> tempRouteMap;
   private List<String> routeMaps;
   private Integer timeoutIntervalInMinutes;
-  private List<String> appsToBeDownsized;
+  private List<PcfAppSetupTimeDetails> appsToBeDownsized;
+  private boolean isStandardBlueGreenWorkflow;
+  private boolean isDownsizeOldApps;
 
   @Override
   public ContextElementType getElementType() {

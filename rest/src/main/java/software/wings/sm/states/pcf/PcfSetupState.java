@@ -2,15 +2,14 @@ package software.wings.sm.states.pcf;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.exception.WingsException.USER;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -77,7 +76,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 public class PcfSetupState extends State {
   @Inject private transient AppService appService;
@@ -89,6 +87,7 @@ public class PcfSetupState extends State {
   @Inject private transient ServiceTemplateService serviceTemplateService;
   @Inject private transient ActivityService activityService;
   @Inject private transient ArtifactStreamService artifactStreamService;
+  @Inject private transient PcfStateHelper pcfStateHelper;
   @Inject private ServiceHelper serviceHelper;
 
   @Inject @Transient protected transient LogService logService;
@@ -98,13 +97,14 @@ public class PcfSetupState extends State {
 
   @Attributes(title = "Total Number of Instances", required = true) private Integer maxInstances;
 
-  @Attributes(title = "Resize Strategy", required = true)
-  private ResizeStrategy resizeStrategy = ResizeStrategy.DOWNSIZE_OLD_FIRST;
+  @Attributes(title = "Resize Strategy", required = true) private ResizeStrategy resizeStrategy;
 
-  @DefaultValue("${" + Constants.INFRA_ROUTE + "}") @Attributes(title = "Map Route") private String route;
+  @Attributes(title = "Map Route") private String route;
 
   @Attributes(title = "API Timeout Interval (Minutes)") private Integer timeoutIntervalInMinutes = 5;
   public static final String PCF_SETUP_COMMAND = "PCF Setup";
+
+  private boolean blueGreen;
 
   private static final Logger logger = LoggerFactory.getLogger(PcfSetupState.class);
 
@@ -207,8 +207,13 @@ public class PcfSetupState extends State {
     // inframapping.routemaps to use or inframapping.temproutemaps to use.
     // so it automatically, attaches B-G deployment capability to deployment
     // if user selected tempRoutes
-    String infraRouteConst = "${" + Constants.INFRA_ROUTE + "}";
-    boolean isOriginalRoute = route == null || infraRouteConst.equalsIgnoreCase(route.trim());
+    boolean isOriginalRoute = false;
+    String infraRouteConstLegacy = "${" + Constants.INFRA_ROUTE + "}";
+    String infraRouteConst = "${" + Constants.INFRA_ROUTE_PCF + "}";
+    if (route == null || infraRouteConstLegacy.equalsIgnoreCase(route.trim())
+        || infraRouteConst.equalsIgnoreCase(route.trim())) {
+      isOriginalRoute = true;
+    }
 
     List<String> tempRouteMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getTempRouteMap())
         ? Collections.EMPTY_LIST
@@ -248,32 +253,27 @@ public class PcfSetupState extends State {
             .maxCount(maxInstances)
             .build();
 
-    PcfSetupStateExecutionData stateExecutionData =
-        PcfSetupStateExecutionData.builder()
-            .activityId(activity.getUuid())
-            .accountId(app.getAccountId())
-            .appId(app.getUuid())
-            .envId(env.getUuid())
-            .infraMappingId(pcfInfrastructureMapping.getUuid())
-            .pcfCommandRequest(commandRequest)
-            .commandName(PCF_SETUP_COMMAND)
-            .maxInstanceCount(maxInstances)
-            .accountId(app.getAccountId())
-            .appId(app.getUuid())
-            .serviceId(serviceElement.getUuid())
-            .routeMaps(((PcfCommandSetupRequest) commandRequest).getRouteMaps())
-            .build();
+    PcfSetupStateExecutionData stateExecutionData = PcfSetupStateExecutionData.builder()
+                                                        .activityId(activity.getUuid())
+                                                        .accountId(app.getAccountId())
+                                                        .appId(app.getUuid())
+                                                        .envId(env.getUuid())
+                                                        .infraMappingId(pcfInfrastructureMapping.getUuid())
+                                                        .pcfCommandRequest(commandRequest)
+                                                        .commandName(PCF_SETUP_COMMAND)
+                                                        .maxInstanceCount(maxInstances)
+                                                        .accountId(app.getAccountId())
+                                                        .appId(app.getUuid())
+                                                        .serviceId(serviceElement.getUuid())
+                                                        .routeMaps(routeMaps)
+                                                        .tempRouteMaps(tempRouteMaps)
+                                                        .isStandardBlueGreen(blueGreen)
+                                                        .useTempRoutes(!isOriginalRoute)
+                                                        .build();
 
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(app.getAccountId())
-                                    .withAppId(app.getUuid())
-                                    .withTaskType(TaskType.PCF_COMMAND_TASK)
-                                    .withWaitId(activity.getUuid())
-                                    .withParameters(new Object[] {commandRequest, encryptedDataDetails})
-                                    .withEnvId(env.getUuid())
-                                    .withTimeout(TimeUnit.HOURS.toMillis(1))
-                                    .withInfrastructureMappingId(pcfInfrastructureMapping.getUuid())
-                                    .build();
+    DelegateTask delegateTask =
+        pcfStateHelper.getDelegateTask(app.getAccountId(), app.getUuid(), TaskType.PCF_COMMAND_TASK, activity.getUuid(),
+            env.getUuid(), pcfInfrastructureMapping.getUuid(), new Object[] {commandRequest, encryptedDataDetails}, 5);
 
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
@@ -337,7 +337,7 @@ public class PcfSetupState extends State {
             .resizeStrategy(resizeStrategy)
             .infraMappingId(stateExecutionData.getInfraMappingId())
             .pcfCommandRequest(stateExecutionData.getPcfCommandRequest())
-            .routeMaps(stateExecutionData.getRouteMaps());
+            .isStandardBlueGreenWorkflow(stateExecutionData.isStandardBlueGreen());
 
     if (pcfSetupCommandResponse != null) {
       pcfSetupContextElementBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
@@ -345,8 +345,9 @@ public class PcfSetupState extends State {
               Optional.ofNullable(pcfSetupCommandResponse.getTotalPreviousInstanceCount()).orElse(0))
           .appsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails());
       if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
-        pcfSetupContextElementBuilder.newPcfApplicationId(pcfSetupCommandResponse.getNewApplicationId())
-            .newPcfApplicationName(pcfSetupCommandResponse.getNewApplicationName());
+        pcfSetupContextElementBuilder.newPcfApplicationDetails(pcfSetupCommandResponse.getNewApplicationDetails());
+        addNewlyCreateRouteMapIfRequired(
+            context, stateExecutionData, pcfSetupCommandResponse, pcfSetupContextElementBuilder);
       }
     }
 
@@ -361,6 +362,38 @@ public class PcfSetupState extends State {
         .build();
   }
 
+  private void addNewlyCreateRouteMapIfRequired(ExecutionContext context, PcfSetupStateExecutionData stateExecutionData,
+      PcfSetupCommandResponse pcfSetupCommandResponse, PcfSetupContextElementBuilder pcfSetupContextElementBuilder) {
+    PcfInfrastructureMapping infrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
+        stateExecutionData.getAppId(), stateExecutionData.getInfraMappingId());
+    boolean isInfraUpdated = false;
+    if (stateExecutionData.isUseTempRoutes()) {
+      List<String> routes = infrastructureMapping.getTempRouteMap();
+      if (EmptyPredicate.isEmpty(routes)) {
+        routes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
+        isInfraUpdated = true;
+        infrastructureMapping.setTempRouteMap(routes);
+      }
+      pcfSetupContextElementBuilder.tempRouteMap(routes);
+      stateExecutionData.setTempRouteMaps(routes);
+      pcfSetupContextElementBuilder.routeMaps(infrastructureMapping.getRouteMaps());
+    } else {
+      List<String> routes = infrastructureMapping.getRouteMaps();
+      if (EmptyPredicate.isEmpty(routes)) {
+        routes = pcfSetupCommandResponse.getNewApplicationDetails().getUrls();
+        isInfraUpdated = true;
+        infrastructureMapping.setRouteMaps(routes);
+      }
+      pcfSetupContextElementBuilder.routeMaps(routes);
+      stateExecutionData.setRouteMaps(routes);
+      pcfSetupContextElementBuilder.tempRouteMap(infrastructureMapping.getTempRouteMap());
+    }
+
+    if (isInfraUpdated) {
+      infrastructureMappingService.update(infrastructureMapping);
+    }
+  }
+
   @Override
   public void handleAbortEvent(ExecutionContext context) {}
 
@@ -368,30 +401,13 @@ public class PcfSetupState extends State {
       ExecutionContext executionContext, Artifact artifact, ArtifactStream artifactStream) {
     Application app = ((ExecutionContextImpl) executionContext).getApp();
     Environment env = ((ExecutionContextImpl) executionContext).getEnv();
-    ActivityBuilder activityBuilder = Activity.builder()
-                                          .applicationName(app.getName())
-                                          .appId(app.getUuid())
-                                          .commandName(PCF_SETUP_COMMAND)
-                                          .type(Type.Command)
-                                          .workflowType(executionContext.getWorkflowType())
-                                          .workflowExecutionName(executionContext.getWorkflowExecutionName())
-                                          .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
-                                          .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
-                                          .commandType(getStateType())
-                                          .workflowExecutionId(executionContext.getWorkflowExecutionId())
-                                          .workflowId(executionContext.getWorkflowId())
-                                          .commandUnits(Collections.emptyList())
-                                          .serviceVariables(Maps.newHashMap())
-                                          .status(ExecutionStatus.RUNNING)
-                                          .artifactStreamId(artifactStream.getUuid())
-                                          .artifactStreamName(artifactStream.getSourceName())
-                                          .artifactName(artifact.getDisplayName())
-                                          .artifactId(artifact.getUuid())
-                                          .commandUnitType(CommandUnitType.PCF_SETUP); // @Todo what should be used here
+    ActivityBuilder activityBuilder = pcfStateHelper.getActivityBuilder(app.getName(), app.getUuid(), PCF_SETUP_COMMAND,
+        Type.Command, executionContext, getStateType(), CommandUnitType.PCF_SETUP, env);
 
-    activityBuilder.environmentId(env.getUuid())
-        .environmentName(env.getName())
-        .environmentType(env.getEnvironmentType());
+    activityBuilder.artifactStreamId(artifactStream.getUuid())
+        .artifactStreamName(artifactStream.getSourceName())
+        .artifactName(artifact.getDisplayName())
+        .artifactId(artifact.getUuid());
 
     return activityService.save(activityBuilder.build());
   }

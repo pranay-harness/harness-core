@@ -5,20 +5,21 @@ import com.google.inject.Singleton;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
 import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRouteUpdateRequest;
+import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
+import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.helpers.ext.pcf.response.PcfCommandResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.utils.Misc;
 
 import java.util.List;
 
@@ -56,19 +57,21 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
               .timeOutIntervalInMins(pcfCommandRouteUpdateRequest.getTimeoutIntervalInMin())
               .build();
 
-      if (pcfCommandRouteUpdateRequest.isMapRoutesOperation()) {
-        mapRouteMaps(pcfCommandRouteUpdateRequest, pcfRequestConfig);
+      if (pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData().isStandardBlueGreen()) {
+        performRouteUpdateForStandardBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig);
+        resizeOldApplicationsIfRequired(pcfCommandRouteUpdateRequest, pcfRequestConfig, executionLogCallback);
       } else {
-        unmapRouteMaps(pcfCommandRouteUpdateRequest, pcfRequestConfig);
+        performRouteUpdateForSimulatedBlueGreen(pcfCommandRouteUpdateRequest, pcfRequestConfig);
       }
+
       executionLogCallback.saveExecutionLog("\n--------- PCF Route Update completed successfully");
       pcfCommandResponse.setOutput(StringUtils.EMPTY);
       pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
     } catch (Exception e) {
       logger.error("Exception in processing PCF Route Update task", e);
       executionLogCallback.saveExecutionLog("\n\n--------- PCF Route Update failed to complete successfully");
-      Misc.logAllMessages(e, executionLogCallback);
-      pcfCommandResponse.setOutput(Misc.getMessage(e));
+      executionLogCallback.saveExecutionLog("# Error: " + e.getMessage());
+      pcfCommandResponse.setOutput(e.getMessage());
       pcfCommandResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
     }
 
@@ -77,45 +80,77 @@ public class PcfRouteUpdateCommandTaskHandler extends PcfCommandTaskHandler {
     return pcfCommandExecutionResponse;
   }
 
-  private void mapRouteMaps(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
-      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
-    if (CollectionUtils.isNotEmpty(pcfCommandRouteUpdateRequest.getAppsToBeUpdated())) {
-      for (String applicationName : pcfCommandRouteUpdateRequest.getAppsToBeUpdated()) {
-        executionLogCallback.saveExecutionLog("\n# Adding Routs");
-        executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
-        executionLogCallback.saveExecutionLog(
-            "ROUTES: \n[" + getRouteString(pcfCommandRouteUpdateRequest.getRouteMaps()));
-        // map
-        pcfRequestConfig.setApplicationName(applicationName);
-        pcfDeploymentManager.mapRouteMapForApplication(pcfRequestConfig, pcfCommandRouteUpdateRequest.getRouteMaps());
+  private void resizeOldApplicationsIfRequired(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
+      PcfRequestConfig pcfRequestConfig, ExecutionLogCallback executionLogCallback) {
+    PcfRouteUpdateRequestConfigData pcfRouteUpdateConfigData =
+        pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
+
+    if (!pcfRouteUpdateConfigData.isDownsizeOldApplication()
+        || EmptyPredicate.isEmpty(pcfRouteUpdateConfigData.getExistingApplicationNames())) {
+      return;
+    }
+
+    if (pcfRouteUpdateConfigData.isRollback()) {
+      executionLogCallback.saveExecutionLog("\n# Resizing Old Apps to original count as a part of Rollback");
+    } else {
+      executionLogCallback.saveExecutionLog("\n# Resizing Old Apps to 0 count as configured");
+    }
+
+    String appNameBeingDownsized = null;
+    for (PcfAppSetupTimeDetails appDetail : pcfRouteUpdateConfigData.getExistingApplicationDetails()) {
+      try {
+        appNameBeingDownsized = appDetail.getApplicationName();
+        int count = pcfRouteUpdateConfigData.isRollback() ? appDetail.getInitialInstanceCount() : 0;
+
+        pcfRequestConfig.setApplicationName(appNameBeingDownsized);
+        pcfRequestConfig.setDesiredCount(count);
+        executionLogCallback.saveExecutionLog(new StringBuilder()
+                                                  .append("Resizing Application: {")
+                                                  .append(appNameBeingDownsized)
+                                                  .append("} to count: ")
+                                                  .append(count)
+                                                  .toString());
+        pcfDeploymentManager.resizeApplication(pcfRequestConfig);
+      } catch (Exception e) {
+        logger.error("Failed to downsize PCF application: " + appNameBeingDownsized);
+        executionLogCallback.saveExecutionLog("Failed while downsizing old application: " + appNameBeingDownsized);
       }
     }
   }
 
-  private void unmapRouteMaps(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
+  private void performRouteUpdateForSimulatedBlueGreen(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
       PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
-    if (CollectionUtils.isNotEmpty(pcfCommandRouteUpdateRequest.getAppsToBeUpdated())) {
-      for (String applicationName : pcfCommandRouteUpdateRequest.getAppsToBeUpdated()) {
-        executionLogCallback.saveExecutionLog("\n# Unmapping Routes");
-        executionLogCallback.saveExecutionLog("APPLICATION: " + applicationName);
-        executionLogCallback.saveExecutionLog(
-            "ROUTES: \n[" + getRouteString(pcfCommandRouteUpdateRequest.getRouteMaps()));
-        // unmap
-        pcfRequestConfig.setApplicationName(applicationName);
-        pcfDeploymentManager.unmapRouteMapForApplication(pcfRequestConfig, pcfCommandRouteUpdateRequest.getRouteMaps());
+    PcfRouteUpdateRequestConfigData data = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
+
+    for (String appName : data.getExistingApplicationNames()) {
+      if (data.isMapRoutesOperation()) {
+        pcfCommandTaskHelper.mapRouteMaps(appName, data.getFinalRoutes(), pcfRequestConfig, executionLogCallback);
+      } else {
+        pcfCommandTaskHelper.unmapRouteMaps(appName, data.getFinalRoutes(), pcfRequestConfig, executionLogCallback);
       }
-      executionLogCallback.saveExecutionLog("# Unmapping Routes was successfully completed");
     }
   }
 
-  private String getRouteString(List<String> routeMaps) {
-    if (EmptyPredicate.isEmpty(routeMaps)) {
-      return StringUtils.EMPTY;
-    }
+  private void performRouteUpdateForStandardBlueGreen(PcfCommandRouteUpdateRequest pcfCommandRouteUpdateRequest,
+      PcfRequestConfig pcfRequestConfig) throws PivotalClientApiException {
+    PcfRouteUpdateRequestConfigData data = pcfCommandRouteUpdateRequest.getPcfRouteUpdateConfigData();
 
-    StringBuilder builder = new StringBuilder();
-    routeMaps.forEach(routeMap -> builder.append("\n").append(routeMap));
-    builder.append("\n]");
-    return builder.toString();
+    List<String> mapRouteForNewApp = data.isRollback() ? data.getTempRoutes() : data.getFinalRoutes();
+    List<String> unmapRouteForNewApp = data.isRollback() ? data.getFinalRoutes() : data.getTempRoutes();
+    pcfCommandTaskHelper.mapRouteMaps(
+        data.getNewApplicatiaonName(), mapRouteForNewApp, pcfRequestConfig, executionLogCallback);
+    pcfCommandTaskHelper.unmapRouteMaps(
+        data.getNewApplicatiaonName(), unmapRouteForNewApp, pcfRequestConfig, executionLogCallback);
+
+    if (EmptyPredicate.isNotEmpty(data.getExistingApplicationNames())) {
+      List<String> mapRouteForExistingApp = data.isRollback() ? data.getFinalRoutes() : data.getTempRoutes();
+      List<String> unmapRouteForExistingApp = data.isRollback() ? data.getTempRoutes() : data.getFinalRoutes();
+      for (String existingAppName : data.getExistingApplicationNames()) {
+        pcfCommandTaskHelper.mapRouteMaps(
+            existingAppName, mapRouteForExistingApp, pcfRequestConfig, executionLogCallback);
+        pcfCommandTaskHelper.unmapRouteMaps(
+            existingAppName, unmapRouteForExistingApp, pcfRequestConfig, executionLogCallback);
+      }
+    }
   }
 }
