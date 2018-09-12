@@ -12,6 +12,7 @@ import static software.wings.beans.AppContainer.Builder.anAppContainer;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,7 +27,6 @@ import software.wings.beans.AppContainer;
 import software.wings.beans.Base;
 import software.wings.beans.artifact.Artifact;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 

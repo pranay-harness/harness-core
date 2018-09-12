@@ -5,10 +5,10 @@ import static io.harness.eraro.ErrorCode.UNKNOWN_EXECUTOR_TYPE_ERROR;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsException;
 
 /**
  * A factory for creating SshExecutor objects.

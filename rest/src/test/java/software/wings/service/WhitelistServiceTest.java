@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.google.inject.Inject;
 
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -24,7 +25,6 @@ import software.wings.beans.security.access.Whitelist;
 import software.wings.beans.security.access.WhitelistStatus;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.WhitelistService;
 

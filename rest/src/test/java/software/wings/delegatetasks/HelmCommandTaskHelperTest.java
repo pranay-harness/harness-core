@@ -7,12 +7,12 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.delegatetasks.helm.HarnessHelmDeployConfig;
 import software.wings.delegatetasks.helm.HelmCommandHelper;
 import software.wings.delegatetasks.helm.HelmDeployChartSpec;
-import software.wings.exception.WingsException;
 
 import java.util.Optional;
 

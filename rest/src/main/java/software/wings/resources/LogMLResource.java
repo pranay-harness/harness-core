@@ -6,11 +6,11 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import software.wings.api.InstanceElement;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
-import software.wings.exception.WingsException;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;

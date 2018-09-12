@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.ExecutionStrategy;
 import software.wings.common.InstanceExpressionProcessor;
 import software.wings.common.thread.ThreadPool;
-import software.wings.exception.WingsException;
 import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.sm.states.ForkState;

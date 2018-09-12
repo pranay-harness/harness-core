@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.Builder;
 import lombok.Data;
@@ -23,7 +24,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.TemplateExpression;
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
-import software.wings.exception.WingsException;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;

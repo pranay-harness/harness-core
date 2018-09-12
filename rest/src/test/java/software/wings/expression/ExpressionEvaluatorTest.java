@@ -13,13 +13,13 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Tag;
+import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
 import software.wings.beans.infrastructure.Host;
-import software.wings.exception.WingsException;
 
 import java.util.HashMap;
 import java.util.Map;

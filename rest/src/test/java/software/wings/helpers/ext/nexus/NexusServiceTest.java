@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -19,7 +20,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.config.NexusConfig;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 
 import java.io.InputStream;

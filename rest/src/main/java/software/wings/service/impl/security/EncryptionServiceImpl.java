@@ -1,7 +1,7 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 
@@ -9,12 +9,12 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;

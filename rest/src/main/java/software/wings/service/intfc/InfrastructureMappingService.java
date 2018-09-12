@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -14,7 +15,6 @@ import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureProvisioner;
 import software.wings.settings.SettingValue.SettingVariableTypes;

@@ -7,6 +7,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
@@ -15,7 +16,6 @@ import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.EmailSendingFailedAlert;
 import software.wings.core.queue.Queue;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.external.comm.EmailRequest;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;

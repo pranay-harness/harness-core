@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 
 import com.coveo.saml.SamlException;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import software.wings.beans.sso.LdapUserSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.encryption.EncryptedDataDetail;

@@ -12,13 +12,13 @@ import com.google.inject.Inject;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import io.harness.exception.WingsException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 
 import java.time.Duration;
 

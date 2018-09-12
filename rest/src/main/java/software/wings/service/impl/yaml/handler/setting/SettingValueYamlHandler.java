@@ -5,6 +5,7 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -12,7 +13,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.SettingsService;

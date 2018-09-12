@@ -1,16 +1,16 @@
 
 package software.wings.delegatetasks;
 
+import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 import static java.lang.String.format;
-import static software.wings.exception.WingsException.ExecutionContext.DELEGATE;
 
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.utils.Misc;

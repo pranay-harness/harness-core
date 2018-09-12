@@ -7,7 +7,7 @@ import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import software.wings.exception.WingsException;
+import io.harness.exception.WingsException;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.utils.JsonUtils;

@@ -1,6 +1,6 @@
 package software.wings.service.impl;
 
-import static software.wings.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.utils.Validator.equalCheck;
 
 import com.google.common.collect.Lists;

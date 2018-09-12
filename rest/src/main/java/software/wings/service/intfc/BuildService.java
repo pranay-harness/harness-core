@@ -2,6 +2,7 @@ package software.wings.service.intfc;
 
 import com.google.common.collect.Lists;
 
+import io.harness.exception.WingsException;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
@@ -115,7 +116,7 @@ public interface BuildService<T> {
    * Validates Artifact Server
    *
    * @param config
-   * @throws software.wings.exception.WingsException if not valid
+   * @throws WingsException if not valid
    */
   boolean validateArtifactServer(T config);
 
@@ -131,7 +132,7 @@ public interface BuildService<T> {
    * Validates Artifact Stream
    *
    * @param artifactStreamAttributes
-   * @throws software.wings.exception.WingsException if not valid
+   * @throws WingsException if not valid
    */
   boolean validateArtifactSource(
       T config, List<EncryptedDataDetail> encryptionDetails, ArtifactStreamAttributes artifactStreamAttributes);

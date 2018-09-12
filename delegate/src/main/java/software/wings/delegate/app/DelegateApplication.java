@@ -19,6 +19,7 @@ import com.google.inject.name.Names;
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.MessageManager;
+import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
@@ -27,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 import software.wings.app.WingsModule;
 import software.wings.delegate.service.DelegateService;
-import software.wings.exception.WingsException;
 import software.wings.managerclient.ManagerClientModule;
 import software.wings.utils.message.MessageService;
 

@@ -4,6 +4,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.LdapException;
@@ -16,7 +17,6 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapTestResponse.Status;
 import software.wings.beans.sso.LdapUserResponse;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.encryption.EncryptedDataDetail;

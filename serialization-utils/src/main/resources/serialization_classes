@@ -212,7 +212,7 @@ software.wings.service.impl.logz.LogzDataCollectionInfo, 5170
 software.wings.service.impl.newrelic.NewRelicDataCollectionInfo, 5171
 software.wings.service.impl.splunk.SplunkDataCollectionInfo, 5172
 software.wings.service.impl.sumo.SumoDataCollectionInfo, 5173
-software.wings.exception.WingsException, 5174
+io.harness.exception.WingsException, 5174
 software.wings.beans.NewRelicConfig, 5175
 software.wings.beans.config.LogzConfig, 5176
 software.wings.beans.SplunkConfig, 5177
@@ -385,7 +385,7 @@ software.wings.beans.command.KubernetesYamlConfig, 5344
 software.wings.beans.container.Label, 5345
 software.wings.api.ScriptStateExecutionSummary, 5346
 software.wings.service.impl.analysis.TimeSeriesMlAnalysisType, 5347
-software.wings.exception.WingsException$ReportTarget, 5348
+io.harness.exception.WingsException$ReportTarget, 5348
 software.wings.beans.security.UserGroup, 5349
 software.wings.beans.security.AccountPermissions, 5350
 software.wings.beans.security.AppPermission, 5351

@@ -12,6 +12,7 @@ import com.amazonaws.services.codedeploy.model.RevisionLocation;
 import com.amazonaws.services.codedeploy.model.S3Location;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,7 +26,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsException;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;

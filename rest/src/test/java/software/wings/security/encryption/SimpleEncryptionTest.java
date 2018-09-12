@@ -2,12 +2,12 @@ package software.wings.security.encryption;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.exception.WingsException;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.exception.WingsException;
 import software.wings.utils.Util;
 
 import java.nio.charset.StandardCharsets;

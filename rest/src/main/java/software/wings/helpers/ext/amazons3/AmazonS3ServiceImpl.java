@@ -1,6 +1,7 @@
 package software.wings.helpers.ext.amazons3;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static io.harness.exception.WingsException.ADMIN;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
@@ -9,7 +10,6 @@ import static software.wings.common.Constants.BUCKET_NAME;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.KEY;
 import static software.wings.common.Constants.URL;
-import static software.wings.exception.WingsException.ADMIN;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.collect.Lists;
@@ -22,12 +22,12 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;

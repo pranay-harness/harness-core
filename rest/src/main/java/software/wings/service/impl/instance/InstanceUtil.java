@@ -2,12 +2,12 @@ package software.wings.service.impl.instance;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.infrastructure.instance.Instance.InstanceBuilder;
 import software.wings.beans.infrastructure.instance.InstanceType;
-import software.wings.exception.WingsException;
 
 /**
  * Common methods needed by both instance and container instance.

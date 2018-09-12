@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static java.lang.String.format;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -7,7 +8,6 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
-import static software.wings.exception.WingsException.ReportTarget.REST_API;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -16,6 +16,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.Builder;
@@ -30,7 +31,6 @@ import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.Misc;

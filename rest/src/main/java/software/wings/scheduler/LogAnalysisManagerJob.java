@@ -5,6 +5,7 @@ import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.a
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.DisallowConcurrentExecution;
@@ -14,7 +15,6 @@ import org.quartz.JobExecutionException;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;

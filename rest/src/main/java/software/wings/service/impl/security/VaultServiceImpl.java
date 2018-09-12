@@ -2,11 +2,11 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_SRE;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.Constants.SECRET_MASK;
-import static software.wings.exception.WingsException.USER;
-import static software.wings.exception.WingsException.USER_SRE;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 
 import com.google.common.base.Preconditions;
@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
@@ -26,7 +27,6 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AlertService;

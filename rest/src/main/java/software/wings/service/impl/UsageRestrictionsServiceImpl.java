@@ -2,10 +2,10 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.exception.WingsException.USER;
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -27,7 +28,6 @@ import software.wings.beans.security.restrictions.AppRestrictionsSummary;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
-import software.wings.exception.WingsException;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;

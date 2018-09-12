@@ -1,11 +1,11 @@
-package software.wings.exception;
+package io.harness.exception;
 
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
-import static software.wings.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
-import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
-import static software.wings.exception.WingsException.ReportTarget.RED_BELL_ALERT;
-import static software.wings.exception.WingsException.ReportTarget.REST_API;
+import static io.harness.exception.WingsException.ReportTarget.DELEGATE_LOG_SYSTEM;
+import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
+import static io.harness.exception.WingsException.ReportTarget.RED_BELL_ALERT;
+import static io.harness.exception.WingsException.ReportTarget.REST_API;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;

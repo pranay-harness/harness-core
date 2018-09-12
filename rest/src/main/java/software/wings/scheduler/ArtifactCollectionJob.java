@@ -1,11 +1,12 @@
 package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.exception.WingsException;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -17,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;

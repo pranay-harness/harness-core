@@ -19,13 +19,13 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BarrierInstance;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.PhaseStepType;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 

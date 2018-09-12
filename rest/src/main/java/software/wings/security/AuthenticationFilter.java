@@ -3,25 +3,25 @@ package software.wings.security;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
+import static io.harness.exception.WingsException.USER;
+import static io.harness.exception.WingsException.USER_ADMIN;
 import static javax.ws.rs.HttpMethod.OPTIONS;
 import static javax.ws.rs.Priorities.AUTHENTICATION;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.startsWith;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
-import static software.wings.exception.WingsException.USER;
-import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;

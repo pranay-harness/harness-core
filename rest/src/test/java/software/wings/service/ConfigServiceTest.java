@@ -21,6 +21,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -38,7 +39,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;

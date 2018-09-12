@@ -4,11 +4,11 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.Sets;
 
+import io.harness.exception.WingsException;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-import software.wings.exception.WingsException;
 import software.wings.utils.JsonUtils;
 
 import java.util.concurrent.TimeUnit;

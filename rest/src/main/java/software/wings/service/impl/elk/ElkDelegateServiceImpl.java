@@ -12,6 +12,7 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDum
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -25,7 +26,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.ElkConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.elk.ElkRestClient;
 import software.wings.helpers.ext.elk.KibanaRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;

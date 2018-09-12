@@ -1,8 +1,8 @@
 package software.wings.beans;
 
+import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.sm.states.APMVerificationState.Method;
 

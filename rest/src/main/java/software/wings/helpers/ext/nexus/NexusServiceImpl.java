@@ -2,9 +2,9 @@ package software.wings.helpers.ext.nexus;
 
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static io.harness.exception.WingsException.ADMIN;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
-import static software.wings.exception.WingsException.ADMIN;
-import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.WAR;
 
@@ -13,6 +13,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -21,7 +22,6 @@ import retrofit2.Converter;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import software.wings.beans.config.NexusConfig;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;

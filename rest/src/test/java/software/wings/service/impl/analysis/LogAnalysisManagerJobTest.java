@@ -18,6 +18,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -30,7 +31,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.resources.LogMLResource;
 import software.wings.scheduler.LogAnalysisManagerJob;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;

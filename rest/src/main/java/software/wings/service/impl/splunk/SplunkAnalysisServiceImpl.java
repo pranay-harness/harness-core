@@ -6,6 +6,7 @@ import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDum
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -13,7 +14,6 @@ import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
-import software.wings.exception.WingsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;

@@ -2,12 +2,12 @@ package software.wings;
 
 import io.harness.CategoryTest;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.exception.WingsException;
 import software.wings.rules.WingsRule;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;

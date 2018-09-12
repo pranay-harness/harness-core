@@ -7,12 +7,12 @@ import static org.mockito.Mockito.when;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.utils.CacheHelper;
 

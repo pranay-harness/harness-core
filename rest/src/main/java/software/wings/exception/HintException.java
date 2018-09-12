@@ -3,7 +3,9 @@ package software.wings.exception;
 import static io.harness.eraro.ErrorCode.EXPLANATION;
 import static io.harness.eraro.ErrorCode.HINT;
 import static io.harness.eraro.Level.INFO;
-import static software.wings.exception.WingsException.ReportTarget.LOG_SYSTEM;
+import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
+
+import io.harness.exception.WingsException;
 
 public class HintException extends WingsException {
   public static final HintException MOVE_TO_THE_PARENT_OBJECT =

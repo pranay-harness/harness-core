@@ -3,20 +3,20 @@ package software.wings.security.authentication;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.exception.WingsException.USER;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.WingsException;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.User;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.helpers.ext.ldap.LdapResponse.Status;
 import software.wings.security.encryption.EncryptedDataDetail;

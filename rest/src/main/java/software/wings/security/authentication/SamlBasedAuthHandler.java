@@ -7,10 +7,10 @@ import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.User;
-import software.wings.exception.WingsException;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.AccountService;
 

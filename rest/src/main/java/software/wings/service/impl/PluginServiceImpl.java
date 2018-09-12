@@ -18,6 +18,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AccountPlugin;
@@ -46,7 +47,6 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.PluginService;

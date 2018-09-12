@@ -4,8 +4,8 @@ import static junit.framework.TestCase.fail;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.junit.Test;
-import software.wings.exception.WingsException;
 import software.wings.sm.states.APMStateVerificationTestBase;
 
 import java.io.IOException;

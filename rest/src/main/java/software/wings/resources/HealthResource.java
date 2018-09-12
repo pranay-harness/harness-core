@@ -1,16 +1,16 @@
 package software.wings.resources;
 
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-import static software.wings.exception.WingsException.USER;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
-import software.wings.exception.WingsException;
 import software.wings.security.annotations.PublicApi;
 
 import javax.ws.rs.Consumes;

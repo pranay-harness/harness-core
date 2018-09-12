@@ -3,6 +3,7 @@ package software.wings.service.impl.dynatrace;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +13,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.dynatrace.DynaTraceRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;

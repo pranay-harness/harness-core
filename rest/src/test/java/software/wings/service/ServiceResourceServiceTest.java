@@ -81,6 +81,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Rule;
@@ -132,7 +133,6 @@ import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.ServiceResourceServiceImpl;

@@ -27,6 +27,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.SECRET_T
 import com.google.inject.Inject;
 
 import io.harness.data.structure.CollectionUtils;
+import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAware;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -61,7 +62,6 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.resources.SecretManagementResource;
 import software.wings.resources.ServiceVariableResource;
 import software.wings.rules.RealMongo;

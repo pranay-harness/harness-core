@@ -1,5 +1,6 @@
 package software.wings.lock;
 
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -9,7 +10,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.exception.WingsException.ExecutionContext.MANAGER;
 
 import com.google.inject.Inject;
 
@@ -18,6 +18,7 @@ import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.harness.MockableTest;
 import io.harness.eraro.MessageManager;
+import io.harness.exception.WingsException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -25,7 +26,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
-import software.wings.exception.WingsException;
 import software.wings.exception.WingsExceptionMapper;
 
 import java.time.Duration;

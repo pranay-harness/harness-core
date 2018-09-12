@@ -4,9 +4,9 @@ import static io.harness.eraro.ErrorCode.LICENSE_EXPIRED;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import software.wings.beans.Account;
 import software.wings.beans.License;
-import software.wings.exception.WingsException;
 import software.wings.service.intfc.AccountService;
 
 import java.util.List;

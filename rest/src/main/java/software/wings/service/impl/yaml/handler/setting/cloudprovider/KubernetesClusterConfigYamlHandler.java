@@ -2,6 +2,7 @@ package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesClusterConfig;
@@ -9,7 +10,6 @@ import software.wings.beans.KubernetesClusterConfig.Yaml;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.yaml.handler.inframapping.DirectKubernetesInfraMappingYamlHandler;
 
 import java.util.List;

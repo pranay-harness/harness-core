@@ -16,6 +16,7 @@ import static software.wings.utils.ArtifactType.WAR;
 import com.google.common.collect.ImmutableMap;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -23,7 +24,6 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.waitnotify.ListNotifyResponseData;

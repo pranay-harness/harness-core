@@ -1,23 +1,23 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.exception.WingsException.USER;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping.Yaml;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 
 import java.util.Collections;
 import java.util.List;

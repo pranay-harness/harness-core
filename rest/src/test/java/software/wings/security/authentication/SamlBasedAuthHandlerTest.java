@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
+import io.harness.exception.WingsException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +24,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
-import software.wings.exception.WingsException;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.intfc.SSOSettingService;
 

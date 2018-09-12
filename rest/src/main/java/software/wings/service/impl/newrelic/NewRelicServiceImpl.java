@@ -1,8 +1,8 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.exception.WingsException.USER;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
 import com.google.common.base.Charsets;
@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,6 @@ import software.wings.common.Constants;
 import software.wings.common.VerificationConstants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.APMDelegateService;

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -14,7 +15,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
-import software.wings.exception.WingsException;
 import software.wings.generator.SecretGenerator;
 import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.helpers.ext.docker.DockerRegistryService;

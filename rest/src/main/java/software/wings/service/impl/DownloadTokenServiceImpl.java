@@ -1,14 +1,14 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.exception.WingsException.USER_ADMIN;
 import static org.apache.commons.lang3.StringUtils.equalsIgnoreCase;
-import static software.wings.exception.WingsException.USER_ADMIN;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
-import software.wings.exception.WingsException;
+import io.harness.exception.WingsException;
 import software.wings.service.intfc.DownloadTokenService;
 import software.wings.utils.CacheHelper;
 

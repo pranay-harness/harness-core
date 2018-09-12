@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import io.harness.exception.WingsException;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsException;
 
 /**
  * Created by anubhaw on 2/8/16.

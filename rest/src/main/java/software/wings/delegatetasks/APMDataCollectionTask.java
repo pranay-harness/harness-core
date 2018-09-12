@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
@@ -24,7 +25,6 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DelegateTask;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;

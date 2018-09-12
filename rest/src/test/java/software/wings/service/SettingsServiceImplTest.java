@@ -56,6 +56,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -83,7 +84,6 @@ import software.wings.beans.security.UserGroup;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;

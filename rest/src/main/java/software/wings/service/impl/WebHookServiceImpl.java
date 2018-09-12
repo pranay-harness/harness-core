@@ -9,6 +9,7 @@ import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.CountOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.TriggerService;

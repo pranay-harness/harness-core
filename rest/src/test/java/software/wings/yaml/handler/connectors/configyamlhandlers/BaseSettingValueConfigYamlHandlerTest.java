@@ -10,6 +10,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -18,7 +19,6 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;

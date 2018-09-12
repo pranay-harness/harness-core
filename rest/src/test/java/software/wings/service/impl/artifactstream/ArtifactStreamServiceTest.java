@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -57,7 +58,6 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
 import software.wings.dl.PageRequest;
-import software.wings.exception.WingsException;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;

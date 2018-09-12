@@ -3,13 +3,13 @@ package software.wings.service.impl.elk;
 import static java.util.Arrays.asList;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.exception.WingsException;
 import software.wings.utils.JsonUtils;
 
 import java.util.ArrayList;

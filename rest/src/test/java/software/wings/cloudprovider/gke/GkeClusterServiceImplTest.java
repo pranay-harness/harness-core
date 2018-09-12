@@ -31,6 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -40,7 +41,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.GcpHelperService;
 
 import java.io.IOException;

@@ -5,6 +5,7 @@ import static software.wings.common.Constants.URL_STRING;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,6 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.PrometheusConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsException;
 import software.wings.helpers.ext.prometheus.PrometheusRestClient;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;

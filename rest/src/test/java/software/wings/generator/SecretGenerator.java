@@ -3,13 +3,13 @@ package software.wings.generator;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
 import org.apache.commons.codec.binary.Hex;
 import software.wings.beans.Account;
-import software.wings.exception.WingsException;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.SecretManager;

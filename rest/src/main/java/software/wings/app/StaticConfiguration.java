@@ -7,9 +7,9 @@ package software.wings.app;
 import com.google.common.io.Resources;
 import com.google.inject.Singleton;
 
+import io.harness.exception.WingsException;
 import software.wings.beans.Graph;
 import software.wings.common.Constants;
-import software.wings.exception.WingsException;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;

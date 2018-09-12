@@ -5,12 +5,12 @@ import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.InvalidRequestException;
-import software.wings.exception.WingsException;
 import software.wings.service.impl.aws.model.AwsAmiRequest;
 import software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
