@@ -39,17 +39,20 @@ public class YamlPushServiceImpl implements YamlPushService {
       try {
         switch (type) {
           case CREATE:
-            validateCreate(accountId, oldEntity, newEntity);
+            validateCreate(oldEntity, newEntity);
+            logYamlPushRequestInfo(accountId, oldEntity, newEntity, type);
             pushYamlChangeSetOnCreate(accountId, newEntity);
             break;
 
           case UPDATE:
-            validateUpdate(accountId, oldEntity, newEntity);
+            validateUpdate(oldEntity, newEntity);
+            logYamlPushRequestInfo(accountId, oldEntity, newEntity, type);
             pushYamlChangeSetOnUpdate(accountId, oldEntity, newEntity, isRename);
             break;
 
           case DELETE:
-            validateDelete(accountId, oldEntity, newEntity);
+            validateDelete(oldEntity, newEntity);
+            logYamlPushRequestInfo(accountId, oldEntity, newEntity, type);
             pushYamlChangeSetOnDelete(accountId, oldEntity);
             break;
 
@@ -57,6 +60,7 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
+        logYamlPushRequestInfo(accountId, oldEntity, newEntity, type);
         logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
       }
     });
@@ -74,8 +78,7 @@ public class YamlPushServiceImpl implements YamlPushService {
         notNullCheck("service", service);
         notNullCheck("accountId", accountId);
 
-        logger.info(format("%s accountId %s, entity %s, entityId %s, serviceId %s", YAML_PUSH_SERVICE_LOG, accountId,
-            entity.getClass().getSimpleName(), ((Base) entity).getUuid(), service.getUuid()));
+        logYamlPushRequestInfo(accountId, service, entity);
 
         switch (type) {
           case CREATE:
@@ -94,33 +97,25 @@ public class YamlPushServiceImpl implements YamlPushService {
             unhandled(type);
         }
       } catch (Exception e) {
+        logYamlPushRequestInfo(accountId, service, entity);
         logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
       }
     });
   }
 
-  private <T> void validateCreate(String accountId, T oldEntity, T newEntity) {
+  private <T> void validateCreate(T oldEntity, T newEntity) {
     Validator.nullCheck("oldEntity", oldEntity);
     notNullCheck("newEntity", newEntity);
-
-    logger.info(format("%s Create - accountId %s, entity %s, entityId %s", YAML_PUSH_SERVICE_LOG, accountId,
-        newEntity.getClass().getSimpleName(), ((Base) newEntity).getUuid()));
   }
 
-  private <T> void validateUpdate(String accountId, T oldEntity, T newEntity) {
+  private <T> void validateUpdate(T oldEntity, T newEntity) {
     notNullCheck("oldEntity", oldEntity);
     notNullCheck("newEntity", newEntity);
-
-    logger.info(format("%s Update - accountId %s, entity %s, oldEntityId %s, newEntityId %s", YAML_PUSH_SERVICE_LOG,
-        accountId, newEntity.getClass().getSimpleName(), ((Base) oldEntity).getUuid(), ((Base) newEntity).getUuid()));
   }
 
-  private <T> void validateDelete(String accountId, T oldEntity, T newEntity) {
+  private <T> void validateDelete(T oldEntity, T newEntity) {
     notNullCheck("oldEntity", oldEntity);
     Validator.nullCheck("newEntity", newEntity);
-
-    logger.info(format("%s Delete - accountId %s, entity %s, entityId %s", YAML_PUSH_SERVICE_LOG, accountId,
-        oldEntity.getClass().getSimpleName(), ((Base) oldEntity).getUuid()));
   }
 
   private <T> void pushYamlChangeSetOnCreate(String accountId, T entity) {
@@ -147,5 +142,52 @@ public class YamlPushServiceImpl implements YamlPushService {
         logger.error(format("Exception in pushing yaml change set for account %s", accountId), e);
       }
     });
+  }
+
+  private <T> void logYamlPushRequestInfo(String accountId, Service service, T entity) {
+    logger.info(format("%s accountId %s, entity %s, entityId %s, serviceId %s", YAML_PUSH_SERVICE_LOG, accountId,
+        entity.getClass().getSimpleName(), ((Base) entity).getUuid(), service.getUuid()));
+  }
+
+  private <T> void logYamlPushRequestInfo(String accountId, T oldEntity, T newEntity, Type type) {
+    StringBuilder builder = new StringBuilder(50);
+    builder.append(YAML_PUSH_SERVICE_LOG + " accountId " + accountId);
+
+    switch (type) {
+      case CREATE:
+        builder.append(", ")
+            .append(type.name())
+            .append(", entity ")
+            .append(newEntity.getClass().getSimpleName())
+            .append(", entityId ")
+            .append(((Base) newEntity).getUuid());
+        break;
+
+      case UPDATE:
+        builder.append(", ")
+            .append(type.name())
+            .append(", entity ")
+            .append(oldEntity.getClass().getSimpleName())
+            .append(", oldEntityId ")
+            .append(((Base) oldEntity).getUuid())
+            .append(", newEntityId ")
+            .append(((Base) newEntity).getUuid());
+        break;
+
+      case DELETE:
+        builder.append(", ")
+            .append(type.name())
+            .append(", entity ")
+            .append(oldEntity.getClass().getSimpleName())
+            .append(", entityId ")
+            .append(((Base) oldEntity).getUuid());
+
+        break;
+
+      default:
+        unhandled(type);
+    }
+
+    logger.info(builder.toString());
   }
 }
