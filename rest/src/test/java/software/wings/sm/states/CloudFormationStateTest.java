@@ -83,6 +83,7 @@ import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRe
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
 import software.wings.service.ServiceHelper;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -130,6 +131,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private ExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Mock private AccountService accountService;
 
   @InjectMocks
   private CloudFormationCreateStackState cloudFormationCreateStackState = new CloudFormationCreateStackState("name");
@@ -232,6 +234,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
     on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
+    on(workflowStandardParams).set("accountService", accountService);
 
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);

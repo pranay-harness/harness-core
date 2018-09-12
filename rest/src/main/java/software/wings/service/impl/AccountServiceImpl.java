@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Account.ACCOUNT_NAME_KEY;
+import static software.wings.beans.Account.COMPANY_NAME_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
@@ -268,6 +269,19 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Account getByAccountName(String accountName) {
     return wingsPersistence.createQuery(Account.class).filter(ACCOUNT_NAME_KEY, accountName).get();
+  }
+
+  @Override
+  public Account getAccountWithDefaults(String accountId) {
+    Account account = wingsPersistence.createQuery(Account.class)
+                          .project(ACCOUNT_NAME_KEY, true)
+                          .project(COMPANY_NAME_KEY, true)
+                          .filter(ID_KEY, accountId)
+                          .get();
+    if (account != null) {
+      account.setDefaults(settingsService.listAccountDefaults(accountId));
+    }
+    return account;
   }
 
   private void createDefaultNotificationGroup(Account account, Role role) {

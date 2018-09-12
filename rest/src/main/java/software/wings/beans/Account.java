@@ -15,7 +15,9 @@ import software.wings.security.encryption.SimpleEncryption;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -24,6 +26,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "accounts", noClassnameStored = true)
 public class Account extends Base {
   public static final String ACCOUNT_NAME_KEY = "accountName";
+  public static final String COMPANY_NAME_KEY = "companyName";
 
   @Indexed @NotNull private String companyName;
 
@@ -39,6 +42,16 @@ public class Account extends Base {
   private boolean twoFactorAdminEnforced;
 
   private DelegateConfiguration delegateConfiguration;
+
+  private transient Map<String, String> defaults = new HashMap<>();
+
+  public Map<String, String> getDefaults() {
+    return defaults;
+  }
+
+  public void setDefaults(Map<String, String> defaults) {
+    this.defaults = defaults;
+  }
 
   public void setTwoFactorAdminEnforced(boolean twoFactorAdminEnforced) {
     this.twoFactorAdminEnforced = twoFactorAdminEnforced;
@@ -199,6 +212,7 @@ public class Account extends Base {
     private long lastUpdatedAt;
     private AuthenticationMechanism authenticationMechanism;
     private DelegateConfiguration delegateConfiguration;
+    private Map<String, String> defaults = new HashMap<>();
 
     private Builder() {}
 
@@ -266,6 +280,11 @@ public class Account extends Base {
       return this;
     }
 
+    public Builder withDefaults(Map<String, String> defaults) {
+      this.defaults = defaults;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -279,7 +298,8 @@ public class Account extends Base {
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
           .withAuthenticationMechanism(authenticationMechanism)
-          .withDelegateConfiguration(delegateConfiguration);
+          .withDelegateConfiguration(delegateConfiguration)
+          .withDefaults(defaults);
     }
 
     public Account build() {
@@ -296,6 +316,7 @@ public class Account extends Base {
       account.setLastUpdatedAt(lastUpdatedAt);
       account.setAuthenticationMechanism(authenticationMechanism);
       account.setDelegateConfiguration(delegateConfiguration);
+      account.setDefaults(defaults);
       return account;
     }
   }

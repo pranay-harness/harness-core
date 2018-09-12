@@ -49,4 +49,6 @@ public interface AccountService {
   List<Account> listAllAccounts();
 
   Account getByAccountName(String accountName);
+
+  Account getAccountWithDefaults(String accountId);
 }

@@ -11,6 +11,7 @@ public interface ContextElement {
   String WORKFLOW = "workflow";
   String DEPLOYMENT_URL = "deploymentUrl";
   String APP = "app";
+  String ACCOUNT = "account";
   String SERVICE = "service";
   String SERVICE_TEMPLATE = "serviceTemplate";
   String ENV = "env";

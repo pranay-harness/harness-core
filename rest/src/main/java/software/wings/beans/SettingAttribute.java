@@ -74,6 +74,7 @@ public class SettingAttribute extends Base {
   public static final String CATEGORY_KEY = "category";
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
+  public static final String VALUE_TYPE_KEY = "value.type";
 
   @NotEmpty private String envId = GLOBAL_ENV_ID;
   @NotEmpty private String accountId;

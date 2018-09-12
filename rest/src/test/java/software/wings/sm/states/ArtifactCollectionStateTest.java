@@ -42,6 +42,7 @@ import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.DelayEventHelper;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -55,9 +56,6 @@ import software.wings.sm.WorkflowStandardParams.Builder;
 
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by sgurubelli on 11/28/17.
- */
 public class ArtifactCollectionStateTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private ArtifactStreamService artifactStreamService;
@@ -69,6 +67,7 @@ public class ArtifactCollectionStateTest {
   @Mock PortalConfig portalConfig;
   @Mock VariableProcessor variableProcessor;
   @Mock DelayEventHelper delayEventHelper;
+  @Mock AccountService accountService;
 
   private ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
 
@@ -107,6 +106,8 @@ public class ArtifactCollectionStateTest {
     setInternalState(executionContext, "evaluator", expressionEvaluator);
     setInternalState(workflowStandardParams, "appService", appService);
     setInternalState(workflowStandardParams, "configuration", configuration);
+    setInternalState(workflowStandardParams, "accountService", accountService);
+
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(portalConfig.getUrl()).thenReturn("http://portalUrl");
     when(appService.get(APP_ID))
