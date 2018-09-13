@@ -72,7 +72,7 @@ public class PcfRollbackState extends PcfDeployState {
         .appId(application.getUuid())
         .accountId(application.getAccountId())
         .timeoutIntervalInMin(pcfSetupContextElement.getTimeoutIntervalInMinutes())
-        .appsToBeDownSized(pcfSetupContextElement.getAppsToBeDownsized())
+        .appsToBeDownSized(pcfSetupContextElement.getAppDetailsToBeDownsized())
         .newApplicationDetails(pcfSetupContextElement.getNewPcfApplicationDetails())
         .isStandardBlueGreenWorkflow(pcfSetupContextElement.isStandardBlueGreenWorkflow())
         .build();

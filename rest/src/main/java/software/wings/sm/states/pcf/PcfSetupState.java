@@ -343,7 +343,7 @@ public class PcfSetupState extends State {
       pcfSetupContextElementBuilder.timeoutIntervalInMinutes(timeoutIntervalInMinutes)
           .totalPreviousInstanceCount(
               Optional.ofNullable(pcfSetupCommandResponse.getTotalPreviousInstanceCount()).orElse(0))
-          .appsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails());
+          .appDetailsToBeDownsized(pcfSetupCommandResponse.getDownsizeDetails());
       if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
         pcfSetupContextElementBuilder.newPcfApplicationDetails(pcfSetupCommandResponse.getNewApplicationDetails());
         addNewlyCreateRouteMapIfRequired(

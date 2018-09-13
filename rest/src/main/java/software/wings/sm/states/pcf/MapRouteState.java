@@ -188,9 +188,9 @@ public class MapRouteState extends State {
     if (isNewApplication) {
       appNames.add(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName());
     } else {
-      appNames.addAll(pcfSetupContextElement.getAppsToBeDownsized() == null
+      appNames.addAll(pcfSetupContextElement.getAppDetailsToBeDownsized() == null
               ? Collections.EMPTY_LIST
-              : pcfSetupContextElement.getAppsToBeDownsized()
+              : pcfSetupContextElement.getAppDetailsToBeDownsized()
                     .stream()
                     .map(app -> app.getApplicationName())
                     .collect(toList()));
