@@ -37,7 +37,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
-import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
@@ -646,7 +646,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       String stateExecutionId = wingsPersistence.save(stateExecutionInstance);
       stateExecutionIds.add(stateExecutionId);
 
-      ExecutionContext executionContext = Mockito.mock(ExecutionContext.class);
+      ExecutionContextImpl executionContext = Mockito.mock(ExecutionContextImpl.class);
       WorkflowStandardParams workflowStandardParams = Mockito.mock(WorkflowStandardParams.class);
       when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().withUuid(envId).build());
       when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);

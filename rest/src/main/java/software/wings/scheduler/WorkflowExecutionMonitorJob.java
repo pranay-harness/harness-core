@@ -3,6 +3,7 @@ package software.wings.scheduler;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.MARK_EXPIRED;
@@ -12,12 +13,12 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.ExecutionStatus.STARTING;
 import static software.wings.sm.ExecutionStatus.WAITING;
 
-import com.google.common.util.concurrent.RateLimiter;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import org.mongodb.morphia.query.Sort;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -30,9 +31,11 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
 import software.wings.sm.StateExecutionInstance;
+import software.wings.sm.StateMachineExecutor;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
@@ -47,6 +50,7 @@ public class WorkflowExecutionMonitorJob implements Job {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutionInterruptManager executionInterruptManager;
   @Inject private ExecutorService executorService;
+  @Inject private StateMachineExecutor stateMachineExecutor;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -64,17 +68,12 @@ public class WorkflowExecutionMonitorJob implements Job {
     jobScheduler.scheduleJob(job, trigger);
   }
 
-  // Our current workflow execution has a flow and we get WorkflowExecution is in non final state, but there is no
-  // active state execution for it during the normal operations. It is added here to catch a case where we get stuck
-  // in such situation. This rate limit will eliminate the noise and still will let us know if there is a real issue.
-  static RateLimiter noStateRateLimiter = RateLimiter.create(5.0 / Duration.ofHours(1).getSeconds());
-
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    executorService.submit(() -> asyncExecute());
+    executorService.submit(() -> checkForExpiryWorkflow());
   }
 
-  public void asyncExecute() {
+  public void checkForExpiryWorkflow() {
     try (HIterator<WorkflowExecution> workflowExecutions =
              new HIterator<>(wingsPersistence.createQuery(WorkflowExecution.class, excludeAuthority)
                                  .field(WorkflowExecution.STATUS_KEY)
@@ -116,21 +115,39 @@ public class WorkflowExecutionMonitorJob implements Job {
 
         if (!hasActiveStates
             && workflowExecution.getCreatedAt() < System.currentTimeMillis() + WorkflowExecution.EXPIRY.toMillis()) {
-          if (!noStateRateLimiter.tryAcquire()) {
-            logger.error("WorkflowExecution {} is in non final state, but there is no active state execution for it.",
-                workflowExecution.getUuid());
+          logger.warn("WorkflowExecution {} is in non final state, but there is no active state execution for it.",
+              workflowExecution.getUuid());
+
+          final StateExecutionInstance stateExecutionInstance =
+              wingsPersistence.createQuery(StateExecutionInstance.class)
+                  .filter(StateExecutionInstance.APP_ID_KEY, workflowExecution.getAppId())
+                  .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
+                  .field(StateExecutionInstance.NOTIFY_ID_KEY)
+                  .doesNotExist()
+                  .field(StateExecutionInstance.CALLBACK_KEY)
+                  .exists()
+                  .order(Sort.descending(StateExecutionInstance.LAST_UPDATED_AT_KEY))
+                  .get();
+
+          if (stateExecutionInstance == null) {
+            logger.error("Workflow execution stuck, but we cannot find good state to callback from. This is so wrong!");
+            continue;
           }
-          // TODO: enable this force fix of workflow execution if needed
-          //          Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-          //                                               .filter(WorkflowExecution.APP_ID_KEY,
-          //                                               workflowExecution.getAppId())
-          //                                               .filter(WorkflowExecution.ID_KEY,
-          //                                               workflowExecution.getUuid());
-          //          UpdateOperations<WorkflowExecution> updateOps =
-          //              wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-          //                  .set("status", ExecutionStatus.ABORTED)
-          //                  .set("endTs", System.currentTimeMillis());
-          //          wingsPersistence.update(query, updateOps);
+
+          if (stateExecutionInstance.getLastUpdatedAt() > System.currentTimeMillis() - ofSeconds(10).toMillis()) {
+            logger.warn("WorkflowExecution {} last callbackable state {} is very recent."
+                    + "Lets give more time to the system it might be just in the middle of things.",
+                workflowExecution.getUuid(), stateExecutionInstance.getUuid());
+            continue;
+          }
+
+          final ExecutionContextImpl executionContext =
+              stateMachineExecutor.getExecutionContext(stateExecutionInstance.getAppId(),
+                  stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
+
+          // We lost the eventual exception, but its better than doing nothing
+          stateMachineExecutor.executeCallback(
+              executionContext, stateExecutionInstance, stateExecutionInstance.getStatus(), null);
         }
       }
     } catch (WingsException exception) {
