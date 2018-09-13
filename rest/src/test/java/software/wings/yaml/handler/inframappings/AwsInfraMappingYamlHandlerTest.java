@@ -105,6 +105,6 @@ public class AwsInfraMappingYamlHandlerTest extends BaseInfraMappingYamlHandlerT
 
   @Test
   public void testCRUDAndGet2() throws HarnessException, IOException {
-    testCRUDAndGet(validYamlContent1);
+    testCRUDAndGet(validYamlContent2);
   }
 }

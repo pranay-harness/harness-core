@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler.inframapping;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
 import static software.wings.utils.Validator.notNullCheck;
@@ -45,12 +47,15 @@ public class AwsInfraMappingYamlHandler
     super.toYaml(yaml, bean);
 
     String hostConnectionAttrsSettingId = bean.getHostConnectionAttrs();
+    // For dynamic provisioning, hostConnectionAttrs can be null.
+    // There you just need hostNames as provisioning step will give asg
+    if (!avoidSettingHostConnAttributesToYaml(bean)) {
+      SettingAttribute settingAttribute = settingsService.get(hostConnectionAttrsSettingId);
 
-    SettingAttribute settingAttribute = settingsService.get(hostConnectionAttrsSettingId);
-    notNullCheck(
-        "Host connection attributes null for the given id: " + hostConnectionAttrsSettingId, settingAttribute, USER);
-    yaml.setConnectionType(settingAttribute.getName());
-
+      notNullCheck(
+          "Host connection attributes null for the given id: " + hostConnectionAttrsSettingId, settingAttribute, USER);
+      yaml.setConnectionType(settingAttribute.getName());
+    }
     yaml.setType(InfrastructureMappingType.AWS_SSH.name());
     yaml.setRestrictions(bean.getRestrictionType());
     yaml.setExpression(bean.getRestrictionExpression());
@@ -133,11 +138,13 @@ public class AwsInfraMappingYamlHandler
 
     super.toBean(changeContext, bean, appId, envId, computeProviderId, serviceId, provisionerId);
 
-    String hostConnAttrsName = yaml.getConnectionType();
-    SettingAttribute hostConnAttributes =
-        settingsService.getSettingAttributeByName(changeContext.getChange().getAccountId(), hostConnAttrsName);
-    notNullCheck("HostConnectionAttrs is null for name:" + hostConnAttrsName, hostConnAttributes, USER);
-    bean.setHostConnectionAttrs(hostConnAttributes.getUuid());
+    if (!avoidSettingHostConnAttributesFromYaml(yaml)) {
+      String hostConnAttrsName = yaml.getConnectionType();
+      SettingAttribute hostConnAttributes =
+          settingsService.getSettingAttributeByName(changeContext.getChange().getAccountId(), hostConnAttrsName);
+      notNullCheck("HostConnectionAttrs is null for name:" + hostConnAttrsName, hostConnAttributes, USER);
+      bean.setHostConnectionAttrs(hostConnAttributes.getUuid());
+    }
 
     bean.setRestrictionType(yaml.getRestrictions());
     bean.setRestrictionExpression(yaml.getExpression());
@@ -160,5 +167,20 @@ public class AwsInfraMappingYamlHandler
   @Override
   public Class getYamlClass() {
     return Yaml.class;
+  }
+
+  private boolean avoidSettingHostConnAttributesToYaml(AwsInfrastructureMapping bean) {
+    if (isNotEmpty(bean.getProvisionerId()) && isEmpty(bean.getHostConnectionAttrs())) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  private boolean avoidSettingHostConnAttributesFromYaml(Yaml yaml) {
+    if (isEmpty(yaml.getConnectionType()) && isNotEmpty(yaml.getProvisionerName())) {
+      return true;
+    }
+    return false;
   }
 }
