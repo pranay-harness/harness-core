@@ -93,7 +93,6 @@ public class MetricAnalysisJob implements Job {
 
   public static class MetricAnalysisGenerator implements Runnable {
     public static final int COMPARATIVE_ANALYSIS_DURATION = 30;
-    private static final int APM_BUFFER_MINUTES = 2;
     private AnalysisContext context;
     private final JobExecutionContext jobExecutionContext;
     private final String delegateTaskId;
@@ -120,7 +119,7 @@ public class MetricAnalysisJob implements Job {
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         this.testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
       }
-      this.analysisDuration = context.getTimeDuration() - APM_BUFFER_MINUTES - 1;
+      this.analysisDuration = context.getTimeDuration() - 1;
     }
 
     private Map<String, MetricType> getMetricTypeMap(Map<String, TimeSeriesMetricDefinition> stateValuesToAnalyze) {

@@ -374,6 +374,13 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             windowStartTimeManager = windowEndTimeManager;
 
             dataCollectionMinute = dataCollectionMinuteEnd + 1;
+
+            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+              // We are done with all data collection, so setting task status to success and quitting.
+              logger.info("Completed NewRelic collection task. So setting task status to success and quitting");
+              completed.set(true);
+              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+            }
             logger.info("Time take for data collection: " + (System.currentTimeMillis() - startTime));
             break;
           } catch (Exception ex) {
