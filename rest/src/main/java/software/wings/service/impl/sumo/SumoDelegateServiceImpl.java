@@ -128,11 +128,12 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
   public List<LogElement> getResponse(SumoConfig config, String query, String timeSlice,
       List<EncryptedDataDetail> encryptedDataDetails, String hostNameField, String hostName, long startTime,
       long endTime, String timeZone, int maxMessageCount, ThirdPartyApiCallLog apiCallLog) {
+    String searchQuery = query;
     if (!isEmpty(hostNameField)) {
-      query = query + "| where " + hostNameField + " = \"" + hostName + "\" ";
+      searchQuery = query + "| where " + hostNameField + " = \"" + hostName + "\" ";
     }
     if (!isEmpty(timeSlice)) {
-      query = query + " | timeslice " + timeSlice;
+      searchQuery = query + " | timeslice " + timeSlice;
     }
     try {
       // Gets a sumologic client
@@ -142,7 +143,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
 
       // Creates a search job based on given query
       String searchJobId =
-          sumoClient.createSearchJob(query, String.valueOf(startTime), String.valueOf(endTime), timeZone);
+          sumoClient.createSearchJob(searchQuery, String.valueOf(startTime), String.valueOf(endTime), timeZone);
       GetSearchJobStatusResponse searchJobStatusResponse = getSearchJobStatusResponse(sumoClient, searchJobId);
 
       Long responseTimeStamp = OffsetDateTime.now().toInstant().toEpochMilli();
@@ -158,7 +159,8 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           : searchJobStatusResponse.getMessageCount();
       logger.info("Search job Status Response received from SumoLogic with message Count : "
           + searchJobStatusResponse.getMessageCount());
-      return getMessagesForSearchJob(query, messageCount, sumoClient, searchJobId, 0, 0, Math.min(messageCount, 5));
+      return getMessagesForSearchJob(
+          query, hostName, messageCount, sumoClient, searchJobId, 0, 0, Math.min(messageCount, 5));
     } catch (InterruptedException e) {
       throw new WingsException("Unable to get client for given config");
     }
@@ -194,16 +196,16 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
   /**
    * Method gets the actual messages for given query and returns List of LogElements.
    * @param query
-   * @param messageCount
+   * @param hostName
+   *@param messageCount
    * @param sumoClient
    * @param searchJobId
    * @param clusterLabel
    * @param messageOffset
-   * @param messageLength
-   * @return
+   * @param messageLength       @return
    */
-  private List<LogElement> getMessagesForSearchJob(String query, int messageCount, SumoLogicClient sumoClient,
-      String searchJobId, int clusterLabel, int messageOffset, int messageLength) {
+  private List<LogElement> getMessagesForSearchJob(String query, String hostName, int messageCount,
+      SumoLogicClient sumoClient, String searchJobId, int clusterLabel, int messageOffset, int messageLength) {
     List<LogElement> logElements = new ArrayList<>();
     if (messageCount > 0) {
       do {
@@ -212,6 +214,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
         for (LogMessage logMessage : getMessagesForSearchJobResponse.getMessages()) {
           final LogElement sumoLogElement = new LogElement();
           sumoLogElement.setQuery(query);
+          sumoLogElement.setHost(hostName);
           sumoLogElement.setClusterLabel(String.valueOf(clusterLabel++));
           sumoLogElement.setCount(1);
           sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
