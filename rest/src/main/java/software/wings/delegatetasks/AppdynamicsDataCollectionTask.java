@@ -286,6 +286,12 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
             dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
+            if (dataCollectionInfo.getCollectionTime() <= 0) {
+              // We are done with all data collection, so setting task status to success and quitting.
+              logger.info("Completed AppDynamics collection task. So setting task status to success and quitting");
+              completed.set(true);
+              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+            }
             break;
 
           } catch (Exception ex) {
