@@ -145,6 +145,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Before
   public void setup() throws IOException {
     initMocks(this);
+    accountId = generateUuid();
     appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     workflowName = generateUuid();
     envId = generateUuid();
@@ -191,7 +192,6 @@ public class SecretTextTest extends WingsBaseTest {
     wingsPersistence.save(user);
     UserThreadLocal.set(user);
 
-    accountId = generateUuid();
     switch (encryptionType) {
       case LOCAL:
         kmsId = null;
@@ -493,7 +493,9 @@ public class SecretTextTest extends WingsBaseTest {
                                                 .value(secretId1.toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
-    serviceVariable.setAppId(generateUuid());
+
+    serviceVariable.setAppId(
+        wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build()));
     String savedAttributeId = wingsPersistence.save(serviceVariable);
 
     ServiceVariable savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
@@ -547,7 +549,8 @@ public class SecretTextTest extends WingsBaseTest {
     assertNull(encryptedData.getParentIds());
 
     String updatedName = "updatedName" + getRandomServiceVariableName();
-    String updatedAppId = generateUuid();
+    String updatedAppId =
+        wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
     keyValuePairs.put("appId", updatedAppId);

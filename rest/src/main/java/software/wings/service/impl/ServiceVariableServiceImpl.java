@@ -115,8 +115,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
 
     // Type.UPDATE is intentionally passed. Don't change this.
+    String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     yamlPushService.pushYamlChangeSet(
-        serviceVariable.getAccountId(), serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
+        accountId, serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
 
     return newServiceVariable;
   }
@@ -167,8 +168,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         return null;
       }
 
+      String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
       yamlPushService.pushYamlChangeSet(
-          serviceVariable.getAccountId(), serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
+          accountId, serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
       serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
       executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
       return updatedServiceVariable;
@@ -201,12 +203,14 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         wingsPersistence.createQuery(ServiceVariable.class).filter(APP_ID_KEY, appId).filter(ID_KEY, settingId));
 
     // Type.UPDATE is intentionally passed. Don't change this.
+    String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     yamlPushService.pushYamlChangeSet(
-        serviceVariable.getAccountId(), serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
+        accountId, serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
     if (isNotEmpty(modified)) {
       for (ServiceVariable serviceVariable1 : modified) {
+        accountId = appService.getAccountIdByAppId(serviceVariable1.getAppId());
         yamlPushService.pushYamlChangeSet(
-            serviceVariable1.getAccountId(), serviceVariable1, serviceVariable1, Event.Type.UPDATE, syncFromGit, false);
+            accountId, serviceVariable1, serviceVariable1, Event.Type.UPDATE, syncFromGit, false);
       }
     }
   }
