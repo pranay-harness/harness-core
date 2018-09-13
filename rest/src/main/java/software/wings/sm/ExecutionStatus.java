@@ -40,6 +40,10 @@ public enum ExecutionStatus {
 
   ExecutionStatus() {}
 
+  public static Set<ExecutionStatus> finalStatuses() {
+    return finalStatuses;
+  }
+
   public static boolean isFinalStatus(ExecutionStatus status) {
     return status != null && finalStatuses.contains(status);
   }

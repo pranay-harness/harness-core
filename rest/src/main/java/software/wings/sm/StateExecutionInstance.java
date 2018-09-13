@@ -38,7 +38,7 @@ import java.util.Map;
     fields = { @Field("appId")
                , @Field("executionUuid"), @Field("stateType") }))
 public class StateExecutionInstance extends Base {
-  public static final String CALLBACK = "callback";
+  public static final String CALLBACK_KEY = "callback";
   public static final String CONTEXT_ELEMENT_KEY = "contextElement";
   public static final String CONTEXT_ELEMENTS_KEY = "contextElements";
   public static final String CONTEXT_TRANSITION_KEY = "contextTransition";
@@ -48,6 +48,7 @@ public class StateExecutionInstance extends Base {
   public static final String EXECUTION_TYPE_KEY = "executionType";
   public static final String EXPIRY_TS_KEY = "expiryTs";
   public static final String INTERRUPT_HISTORY_KEY = "interruptHistory";
+  public static final String NOTIFY_ID_KEY = "notifyId";
   public static final String PARENT_INSTANCE_ID_KEY = "parentInstanceId";
   public static final String PHASE_SUBWORKFLOW_ID_KEY = "phaseSubWorkflowId";
   public static final String PIPELINE_STATE_ELEMENT_ID_KEY = "pipelineStateElementId";

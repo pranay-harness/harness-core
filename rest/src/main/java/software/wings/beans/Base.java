@@ -63,7 +63,7 @@ public class Base implements UuidAware {
   @SchemaIgnore @Indexed private long createdAt;
 
   @SchemaIgnore private EmbeddedUser lastUpdatedBy;
-  @SchemaIgnore private long lastUpdatedAt;
+  @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   @SchemaIgnore @Indexed private List<String> keywords;
 

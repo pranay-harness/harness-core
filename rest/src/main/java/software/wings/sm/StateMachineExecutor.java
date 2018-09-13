@@ -803,18 +803,22 @@ public class StateMachineExecutor {
 
   private void endTransition(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance,
       ExecutionStatus status, Exception exception) {
-    StateMachineExecutionCallback callback = stateExecutionInstance.getCallback();
-    if (stateExecutionInstance.getNotifyId() == null) {
-      if (stateExecutionInstance.getCallback() != null) {
-        injector.injectMembers(callback);
-        callback.callback(context, status, exception);
-      } else {
-        logger.info("No callback for the stateMachine: {}, executionUuid: {}", context.getStateMachine().getName(),
-            stateExecutionInstance.getExecutionUuid());
-      }
-    } else {
+    if (stateExecutionInstance.getNotifyId() != null) {
       notify(stateExecutionInstance, status);
+    } else {
+      executeCallback(context, stateExecutionInstance, status, exception);
     }
+  }
+
+  public void executeCallback(ExecutionContextImpl context, StateExecutionInstance stateExecutionInstance,
+      ExecutionStatus status, Exception exception) {
+    StateMachineExecutionCallback callback = stateExecutionInstance.getCallback();
+    if (callback == null) {
+      return;
+    }
+
+    injector.injectMembers(callback);
+    callback.callback(context, status, exception);
   }
 
   private void discontinueExecution(ExecutionContextImpl context, ExecutionInterruptType interruptType) {
@@ -1193,18 +1197,7 @@ public class StateMachineExecutor {
 
       case RESUME:
       case MARK_SUCCESS: {
-        StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(workflowExecutionInterrupt.getAppId(),
-            workflowExecutionInterrupt.getExecutionUuid(), workflowExecutionInterrupt.getStateExecutionInstanceId());
-
-        StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
-            stateExecutionInstance.getStateMachineId(), CRITICAL);
-
-        State currentState =
-            sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-        injector.injectMembers(currentState);
-
-        ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
-        injector.injectMembers(context);
+        ExecutionContextImpl context = getExecutionContext(workflowExecutionInterrupt);
         executorService.execute(new SmExecutionResumer(context, this, SUCCESS));
         break;
       }
@@ -1219,13 +1212,7 @@ public class StateMachineExecutor {
 
       case MARK_EXPIRED:
       case ABORT: {
-        StateExecutionInstance stateExecutionInstance = getStateExecutionInstance(workflowExecutionInterrupt.getAppId(),
-            workflowExecutionInterrupt.getExecutionUuid(), workflowExecutionInterrupt.getStateExecutionInstanceId());
-
-        StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
-            stateExecutionInstance.getStateMachineId(), CRITICAL);
-        ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
-        injector.injectMembers(context);
+        ExecutionContextImpl context = getExecutionContext(workflowExecutionInterrupt);
         discontinueExecution(context, type);
         break;
       }
@@ -1250,7 +1237,12 @@ public class StateMachineExecutor {
     }
   }
 
-  public ExecutionContext getExecutionContext(String appId, String executionUuid, String stateExecutionInstanceId) {
+  private ExecutionContextImpl getExecutionContext(ExecutionInterrupt workflowExecutionInterrupt) {
+    return getExecutionContext(workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid(),
+        workflowExecutionInterrupt.getStateExecutionInstanceId());
+  }
+
+  public ExecutionContextImpl getExecutionContext(String appId, String executionUuid, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     if (stateExecutionInstance == null) {
@@ -1260,6 +1252,7 @@ public class StateMachineExecutor {
     }
     StateMachine sm =
         wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), NORMAL);
+
     return new ExecutionContextImpl(stateExecutionInstance, sm, injector);
   }
 
