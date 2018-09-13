@@ -185,7 +185,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                     -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient,
                         cloudWatchMetric, loadBalancerName, DEFAULT_GROUP_NAME, dataCollectionInfo, getAppId(),
                         System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                        System.currentTimeMillis()));
+                        System.currentTimeMillis(), createApiCallLog(dataCollectionInfo.getStateExecutionId())));
           }));
 
       dataCollectionInfo.getHosts().forEach(
@@ -196,7 +196,8 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
                           -> cloudWatchDelegateService.getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient,
                               cloudWatchMetric, host, groupName, dataCollectionInfo, getAppId(),
                               System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
-                              System.currentTimeMillis()))));
+                              System.currentTimeMillis(),
+                              createApiCallLog(dataCollectionInfo.getStateExecutionId())))));
 
       logger.info("fetching cloud watch metrics for {} strategy {} for min {}",
           dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),

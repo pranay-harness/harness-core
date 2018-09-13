@@ -1,6 +1,7 @@
 package software.wings.service.impl.cloudwatch;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
 import static software.wings.sm.states.DynatraceState.TEST_HOST_NAME;
@@ -21,8 +22,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.delegatetasks.DataCollectionExecutorService;
+import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
+import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
+import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
@@ -30,8 +34,10 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
+import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -45,11 +51,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(CloudWatchDelegateServiceImpl.class);
-  private static final int DURATION_TO_ASK_MINUTES = 2;
   private static final int CANARY_DAYS_TO_COLLECT = 7;
 
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private EncryptionService encryptionService;
+  @Inject private DelegateLogService delegateLogService;
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(final AwsConfig config,
@@ -76,9 +82,11 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
                     -> getMetricDataRecords(AwsNameSpace.ELB, cloudWatchClient, cloudWatchMetric, loadBalancerName,
                         DEFAULT_GROUP_NAME,
                         CloudWatchDataCollectionInfo.builder()
+                            .awsConfig(config)
                             .analysisComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
                             .build(),
-                        setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(), setupTestNodeData.getToTime()));
+                        setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(),
+                        apiCallLogWithDummyStateExecution(config.getAccountId())));
           }));
     }
 
@@ -99,9 +107,11 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
                   -> getMetricDataRecords(AwsNameSpace.EC2, cloudWatchClient, cloudWatchMetric, hostName,
                       NewRelicMetricDataRecord.DEFAULT_GROUP_NAME,
                       CloudWatchDataCollectionInfo.builder()
+                          .awsConfig(config)
                           .analysisComparisonStrategy(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS)
                           .build(),
-                      setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(), setupTestNodeData.getToTime())));
+                      setupTestNodeData.getAppId(), setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(),
+                      apiCallLogWithDummyStateExecution(config.getAccountId()))));
     }
 
     List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> hostMetricsResults =
@@ -125,21 +135,20 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
 
   public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricDataRecords(AwsNameSpace awsNameSpace,
       AmazonCloudWatchClient cloudWatchClient, CloudWatchMetric cloudWatchMetric, String dimensionValue,
-      String groupName, CloudWatchDataCollectionInfo dataCollectionInfo, String appId, long startTime, long endTime) {
+      String groupName, CloudWatchDataCollectionInfo dataCollectionInfo, String appId, long startTime, long endTime,
+      ThirdPartyApiCallLog apiCallLog) {
     TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
     switch (dataCollectionInfo.getAnalysisComparisonStrategy()) {
       case COMPARE_WITH_PREVIOUS:
         fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
-            startTime, endTime, appId, dataCollectionInfo.getDataCollectionMinute(), rv, null, null, null, null);
+            startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog);
         break;
 
       case COMPARE_WITH_CURRENT:
         switch (awsNameSpace) {
           case EC2:
             fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, dimensionValue, groupName,
-                startTime, endTime, appId, dataCollectionInfo.getDataCollectionMinute(), rv,
-                dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-                dataCollectionInfo.getServiceId(), dataCollectionInfo.getStateExecutionId());
+                startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog);
             break;
           case ELB:
             for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
@@ -147,9 +156,7 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
               endTime = endTime - TimeUnit.DAYS.toMillis(i);
               startTime = startTime - TimeUnit.DAYS.toMillis(i);
               fetchMetrics(awsNameSpace, cloudWatchClient, cloudWatchMetric, dimensionValue, hostName, groupName,
-                  startTime, endTime, appId, dataCollectionInfo.getDataCollectionMinute(), rv,
-                  dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-                  dataCollectionInfo.getServiceId(), dataCollectionInfo.getStateExecutionId());
+                  startTime, endTime, appId, dataCollectionInfo, rv, apiCallLog);
             }
             break;
           default:
@@ -164,8 +171,12 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
 
   private void fetchMetrics(AwsNameSpace awsNameSpace, AmazonCloudWatchClient cloudWatchClient,
       CloudWatchMetric cloudWatchMetric, String dimensionValue, String host, String groupName, long startTime,
-      long endTime, String appId, int dataCollectionMinute, TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv,
-      String workflowId, String workflowExecutionId, String serviceId, String stateExecutionId) {
+      long endTime, String appId, CloudWatchDataCollectionInfo dataCollectionInfo,
+      TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv,
+
+      ThirdPartyApiCallLog apiCallLog) {
+    apiCallLog.setTitle("Fetching metric data from " + cloudWatchClient.getServiceName());
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     GetMetricStatisticsRequest metricStatisticsRequest = new GetMetricStatisticsRequest();
     metricStatisticsRequest.withNamespace(awsNameSpace.getNameSpace())
         .withMetricName(cloudWatchMetric.getMetricName())
@@ -174,25 +185,34 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
         .withEndTime(new Date(endTime))
         .withPeriod(60)
         .withStatistics("Average");
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("body")
+                                     .value(JsonUtils.asJson(metricStatisticsRequest))
+                                     .type(FieldType.JSON)
+                                     .build());
     GetMetricStatisticsResult metricStatistics = cloudWatchClient.getMetricStatistics(metricStatisticsRequest);
+    apiCallLog.addFieldToResponse(
+        metricStatistics.getSdkHttpMetadata().getHttpStatusCode(), metricStatistics, FieldType.JSON);
+    delegateLogService.save(dataCollectionInfo.getAwsConfig().getAccountId(), apiCallLog);
     List<Datapoint> datapoints = metricStatistics.getDatapoints();
     String metricName = awsNameSpace == AwsNameSpace.EC2 ? "EC2 Metrics" : dimensionValue;
     datapoints.forEach(datapoint -> {
-      NewRelicMetricDataRecord newRelicMetricDataRecord = NewRelicMetricDataRecord.builder()
-                                                              .stateType(StateType.CLOUD_WATCH)
-                                                              .appId(appId)
-                                                              .name(metricName)
-                                                              .workflowId(workflowId)
-                                                              .workflowExecutionId(workflowExecutionId)
-                                                              .serviceId(serviceId)
-                                                              .stateExecutionId(stateExecutionId)
-                                                              .timeStamp(datapoint.getTimestamp().getTime())
-                                                              .dataCollectionMinute(dataCollectionMinute)
-                                                              .host(host)
-                                                              .groupName(groupName)
-                                                              .tag(awsNameSpace.name())
-                                                              .values(new HashMap<>())
-                                                              .build();
+      NewRelicMetricDataRecord newRelicMetricDataRecord =
+          NewRelicMetricDataRecord.builder()
+              .stateType(StateType.CLOUD_WATCH)
+              .appId(appId)
+              .name(metricName)
+              .workflowId(dataCollectionInfo.getWorkflowId())
+              .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
+              .serviceId(dataCollectionInfo.getServiceId())
+              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
+              .timeStamp(datapoint.getTimestamp().getTime())
+              .dataCollectionMinute(dataCollectionInfo.getDataCollectionMinute())
+              .host(host)
+              .groupName(groupName)
+              .tag(awsNameSpace.name())
+              .values(new HashMap<>())
+              .build();
       newRelicMetricDataRecord.getValues().put(cloudWatchMetric.getMetricName(), datapoint.getAverage());
 
       rv.put(dimensionValue, datapoint.getTimestamp().getTime(), newRelicMetricDataRecord);
