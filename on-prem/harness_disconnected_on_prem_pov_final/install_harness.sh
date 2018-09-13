@@ -275,6 +275,7 @@ function setupDelegateJars(){
     mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/jre/${jre_version}/
     cp images/*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/${jre_version}/
 
+    rm -rf ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/*
     mkdir -p  ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/${DELEGATE_VERSION}
     cp images/delegate.jar ${STORAGE_DIR_LOCATION}/wingsdelegates/jobs/deploy-prod-delegate/${DELEGATE_VERSION}/
 
@@ -282,6 +283,7 @@ function setupDelegateJars(){
 
     mv delegateprod.txt ${STORAGE_DIR_LOCATION}/wingsdelegates
 
+    rm -rf ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/*
     mkdir -p  ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}
     cp images/watcher.jar ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}/
     echo "1.0.${WATCHER_VERSION} jobs/deploy-prod-watcher/${WATCHER_VERSION}/watcher.jar" > watcherprod.txt
