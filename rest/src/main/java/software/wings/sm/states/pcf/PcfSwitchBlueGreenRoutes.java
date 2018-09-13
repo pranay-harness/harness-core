@@ -139,16 +139,18 @@ public class PcfSwitchBlueGreenRoutes extends State {
       PcfSetupContextElement pcfSetupContextElement) {
     List<String> existingAppNames;
 
-    if (EmptyPredicate.isNotEmpty(pcfSetupContextElement.getAppsToBeDownsized())) {
-      existingAppNames =
-          pcfSetupContextElement.getAppsToBeDownsized().stream().map(app -> app.getApplicationName()).collect(toList());
+    if (EmptyPredicate.isNotEmpty(pcfSetupContextElement.getAppDetailsToBeDownsized())) {
+      existingAppNames = pcfSetupContextElement.getAppDetailsToBeDownsized()
+                             .stream()
+                             .map(app -> app.getApplicationName())
+                             .collect(toList());
     } else {
       existingAppNames = Collections.EMPTY_LIST;
     }
 
     return PcfRouteUpdateRequestConfigData.builder()
         .newApplicatiaonName(pcfSetupContextElement.getNewPcfApplicationDetails().getApplicationName())
-        .existingApplicationDetails(pcfSetupContextElement.getAppsToBeDownsized())
+        .existingApplicationDetails(pcfSetupContextElement.getAppDetailsToBeDownsized())
         .existingApplicationNames(existingAppNames)
         .tempRoutes(pcfSetupContextElement.getTempRouteMap())
         .finalRoutes(pcfSetupContextElement.getRouteMaps())

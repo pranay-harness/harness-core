@@ -39,7 +39,7 @@ public class PcfSetupContextElement implements ContextElement {
   private List<String> tempRouteMap;
   private List<String> routeMaps;
   private Integer timeoutIntervalInMinutes;
-  private List<PcfAppSetupTimeDetails> appsToBeDownsized;
+  private List<PcfAppSetupTimeDetails> appDetailsToBeDownsized;
   private boolean isStandardBlueGreenWorkflow;
   private boolean isDownsizeOldApps;
 

@@ -128,10 +128,10 @@ public class PcfStateTestHelper {
                 .resizeStrategy(RESIZE_NEW_FIRST)
                 .routeMaps(Arrays.asList("R1", "R2"))
                 .tempRouteMap(Arrays.asList("R3"))
-                .appsToBeDownsized(Arrays.asList(PcfAppSetupTimeDetails.builder()
-                                                     .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
-                                                     .urls(Arrays.asList("R3"))
-                                                     .build()))
+                .appDetailsToBeDownsized(Arrays.asList(PcfAppSetupTimeDetails.builder()
+                                                           .applicationName("APP_NAME_SERVICE_NAME_ENV_NAME__1")
+                                                           .urls(Arrays.asList("R3"))
+                                                           .build()))
                 .build())
         .build();
   }
