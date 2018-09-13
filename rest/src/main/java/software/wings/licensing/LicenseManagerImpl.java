@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import software.wings.beans.Account;
 import software.wings.beans.License;
+import software.wings.beans.LicenseInfo;
 import software.wings.service.intfc.AccountService;
 
 import java.util.List;
@@ -22,7 +23,12 @@ public class LicenseManagerImpl implements LicenseManager {
   @Override
   public void validateLicense(String accountId, String operation) throws WingsException {
     Account account = accountService.get(accountId);
-    if (account.getLicenseExpiryTime() > 0 && System.currentTimeMillis() > account.getLicenseExpiryTime()) {
+    LicenseInfo licenseInfo = account.getLicenseInfo();
+    if (licenseInfo == null) {
+      throw new WingsException(LICENSE_EXPIRED);
+    }
+
+    if (licenseInfo.getExpiryTime() > 0 && System.currentTimeMillis() > licenseInfo.getExpiryTime()) {
       licenseProvider.get(account.getLicenseId());
       // throw new WingsException(LICENSE_NOT_ALLOWED);
     } else {
@@ -34,6 +40,10 @@ public class LicenseManagerImpl implements LicenseManager {
   public void setLicense(Account account) {
     List<License> licenseList = licenseProvider.getActiveLicenses();
     account.setLicenseId(licenseList.get(0).getUuid());
-    account.setLicenseExpiryTime(System.currentTimeMillis() + licenseList.get(0).getExpiryDuration());
+    if (account.getLicenseInfo() == null) {
+      account.setLicenseInfo(new LicenseInfo());
+    }
+
+    account.getLicenseInfo().setExpiryTime(System.currentTimeMillis() + licenseList.get(0).getExpiryDuration());
   }
 }

@@ -25,6 +25,7 @@ import software.wings.api.PhaseElement;
 import software.wings.api.SelectedNodeExecutionData;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.InfrastructureMapping;
@@ -257,7 +258,9 @@ public abstract class NodeSelectState extends State {
           "Too many nodes selected. Did you change service infrastructure without updating Select Nodes in the workflow?";
     } else if (serviceInstances.size() > Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {
       Account account = accountService.get(((ExecutionContextImpl) context).getApp().getAccountId());
-      if (account == null || account.getLicenseExpiryTime() == 0) {
+      if (account == null
+          || (account.getLicenseInfo() != null && isNotEmpty(account.getLicenseInfo().getAccountType())
+                 && AccountType.LITE.equals(account.getLicenseInfo().getAccountType()))) {
         errorMessage = "The license for this account does not allow more than "
             + Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
             + " concurrent instance deployments. Please contact Harness Support.";

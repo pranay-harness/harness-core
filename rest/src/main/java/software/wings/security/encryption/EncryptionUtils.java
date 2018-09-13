@@ -1,5 +1,6 @@
 package software.wings.security.encryption;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 
@@ -56,6 +57,26 @@ public class EncryptionUtils {
       byte[] encryptedBytes = encryption.encrypt(ByteStreams.toByteArray(content));
       return CHARSET.decode(ByteBuffer.wrap(encryptedBytes)).array();
     } catch (IOException ioe) {
+      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
+  }
+
+  public static byte[] encrypt(byte[] content, String containerId) {
+    try {
+      SimpleEncryption encryption =
+          isNotEmpty(containerId) ? new SimpleEncryption(containerId) : new SimpleEncryption();
+      return encryption.encrypt(content);
+    } catch (Exception ioe) {
+      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
+    }
+  }
+
+  public static byte[] decrypt(byte[] encryptedText, String containerId) {
+    try {
+      SimpleEncryption encryption =
+          isNotEmpty(containerId) ? new SimpleEncryption(containerId) : new SimpleEncryption();
+      return encryption.decrypt(encryptedText);
+    } catch (Exception ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
     }
   }

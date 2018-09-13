@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.eraro.ErrorCode;
-import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -20,6 +19,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.FeatureFlag;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.RestResponse.Builder;
@@ -175,7 +175,6 @@ public class UserResource {
   @Path("account")
   @Timed
   @ExceptionMetered
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   public RestResponse<Account> addAccount(Account account) {
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {
@@ -186,8 +185,54 @@ public class UserResource {
       return new RestResponse<>(userService.addAccount(account, existingUser));
     } else {
       return Builder.aRestResponse()
+          .withResponseMessages(
+              Lists.newArrayList(ResponseMessage.builder().message("User not allowed to add account").build()))
+          .build();
+    }
+  }
+
+  @PUT
+  @Path("account/license/{accountId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Account> updateAccountLicense(
+      @PathParam("accountId") @NotEmpty String accountId, Account account) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      if (account != null && isEmpty(account.getUuid())) {
+        account.setUuid(accountId);
+      }
+
+      return new RestResponse<>(accountService.updateAccountLicense(account, true));
+    } else {
+      return Builder.aRestResponse()
           .withResponseMessages(Lists.newArrayList(
-              ResponseMessage.builder().message("User not allowed to add account").level(Level.ERROR).build()))
+              ResponseMessage.builder().message("User not allowed to update account license").build()))
+          .build();
+    }
+  }
+
+  @GET
+  @Path("account/license")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> generateLicense(
+      @PathParam("accountId") @NotEmpty String accountId, LicenseInfo licenseInfo) {
+    User existingUser = UserThreadLocal.get();
+    if (existingUser == null) {
+      throw new InvalidRequestException("Invalid User");
+    }
+
+    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
+      return new RestResponse<>(accountService.generateLicense(licenseInfo));
+    } else {
+      return Builder.aRestResponse()
+          .withResponseMessages(Lists.newArrayList(
+              ResponseMessage.builder().message("User not allowed to generate a new license").build()))
           .build();
     }
   }
@@ -252,16 +297,13 @@ public class UserResource {
       cacheHelper.resetAllCaches();
     } else {
       return Builder.aRestResponse()
-          .withResponseMessages(Lists.newArrayList(ResponseMessage.builder()
-                                                       .message("User not allowed to perform the reset-cache operation")
-                                                       .level(Level.ERROR)
-                                                       .build()))
+          .withResponseMessages(Lists.newArrayList(
+              ResponseMessage.builder().message("User not allowed to perform the reset-cache operation").build()))
           .build();
     }
 
     return Builder.aRestResponse()
-        .withResponseMessages(
-            Lists.newArrayList(ResponseMessage.builder().message("Cache reset successful").level(Level.INFO).build()))
+        .withResponseMessages(Lists.newArrayList(ResponseMessage.builder().message("Cache reset successful").build()))
         .build();
   }
 
@@ -477,7 +519,6 @@ public class UserResource {
             .withResponseMessages(
                 Lists.newArrayList(ResponseMessage.builder()
                                        .message("Admin has 2FA disabled. Please enable to enforce 2FA on users.")
-                                       .level(Level.ERROR)
                                        .build()))
             .build();
       }

@@ -45,6 +45,7 @@ import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 import static software.wings.utils.ContainerFamily.TOMCAT;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -65,6 +66,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.app.DatabaseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Application;
@@ -78,6 +81,7 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.License;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -94,6 +98,7 @@ import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
@@ -131,11 +136,13 @@ import software.wings.integration.setup.rest.ServiceResourceRestClient;
 import software.wings.integration.setup.rest.SettingsResourceRestClient;
 import software.wings.integration.setup.rest.WorkflowResourceRestClient;
 import software.wings.rules.SetupScheduler;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SystemCatalogService;
@@ -222,6 +229,8 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private ExecutorService executorService;
   @Inject private ConfigService configService;
+  @Inject private HarnessUserGroupService harnessUserGroupService;
+
   /**
    * Generated Data for across the API use.
    *
@@ -352,7 +361,11 @@ public class DataGenUtil extends BaseIntegrationTest {
     //    String oldAccountId = account.getUuid();
     String accountKey = delegateAccountSecret;
     account.setAccountKey(accountKey);
-    account.setLicenseExpiryTime(-1);
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.PAID);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setExpiryTime(-1);
+    account.setLicenseInfo(licenseInfo);
 
     account.setUuid(defaultAccountId);
     accountId = defaultAccountId;
@@ -387,6 +400,8 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     addUserToUserGroup(readOnlyUser, readOnlyUserGroup);
 
+    addUserToHarnessUserGroup(adminUser);
+
     //    loginAdminUser();
 
     return account;
@@ -404,6 +419,16 @@ public class DataGenUtil extends BaseIntegrationTest {
   private void addUserToUserGroup(User user, UserGroup userGroup) {
     userGroup.setMembers(asList(user));
     userGroupService.updateMembers(userGroup);
+  }
+
+  private void addUserToHarnessUserGroup(User user) {
+    HarnessUserGroup harnessUserGroup = HarnessUserGroup.builder()
+                                            .actions(Sets.newHashSet(Action.READ))
+                                            .applyToAllAccounts(true)
+                                            .memberIds(Sets.newHashSet(user.getUuid()))
+                                            .name("harnessUserGroup")
+                                            .build();
+    harnessUserGroupService.save(harnessUserGroup);
   }
 
   private User addUser(String userName, String email, char[] password, Account account) {

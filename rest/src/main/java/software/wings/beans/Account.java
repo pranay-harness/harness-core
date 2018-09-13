@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.Encrypted;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.encryption.EncryptionInterface;
@@ -15,6 +16,7 @@ import software.wings.security.encryption.SimpleEncryption;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +38,11 @@ public class Account extends Base {
 
   private String licenseId;
 
-  private long licenseExpiryTime;
+  private List<String> salesContacts;
+
+  @Transient private LicenseInfo licenseInfo;
+
+  @JsonIgnore private byte[] encryptedLicenseInfo;
 
   @JsonIgnore private EncryptionInterface encryption;
   private boolean twoFactorAdminEnforced;
@@ -127,22 +133,28 @@ public class Account extends Base {
     this.licenseId = licenseId;
   }
 
-  /**
-   * Getter for property 'licenseExpiryTime'.
-   *
-   * @return Value for property 'licenseExpiryTime'.
-   */
-  public long getLicenseExpiryTime() {
-    return licenseExpiryTime;
+  public LicenseInfo getLicenseInfo() {
+    return licenseInfo;
   }
 
-  /**
-   * Setter for property 'licenseExpiryTime'.
-   *
-   * @param licenseExpiryTime Value to set for property 'licenseExpiryTime'.
-   */
-  public void setLicenseExpiryTime(long licenseExpiryTime) {
-    this.licenseExpiryTime = licenseExpiryTime;
+  public void setLicenseInfo(LicenseInfo licenseInfo) {
+    this.licenseInfo = licenseInfo;
+  }
+
+  @JsonIgnore
+  public byte[] getEncryptedLicenseInfo() {
+    if (encryptedLicenseInfo != null) {
+      return Arrays.copyOf(encryptedLicenseInfo, encryptedLicenseInfo.length);
+    }
+
+    return null;
+  }
+
+  @JsonIgnore
+  public void setEncryptedLicenseInfo(byte[] encryptedLicenseInfo) {
+    if (encryptedLicenseInfo != null) {
+      this.encryptedLicenseInfo = Arrays.copyOf(encryptedLicenseInfo, encryptedLicenseInfo.length);
+    }
   }
 
   public EncryptionInterface getEncryption() {
@@ -167,6 +179,14 @@ public class Account extends Base {
 
   public DelegateConfiguration getDelegateConfiguration() {
     return delegateConfiguration;
+  }
+
+  public List<String> getSalesContacts() {
+    return salesContacts;
+  }
+
+  public void setSalesContacts(List<String> salesContacts) {
+    this.salesContacts = salesContacts;
   }
 
   @Override
@@ -213,6 +233,7 @@ public class Account extends Base {
     private AuthenticationMechanism authenticationMechanism;
     private DelegateConfiguration delegateConfiguration;
     private Map<String, String> defaults = new HashMap<>();
+    private LicenseInfo licenseInfo;
 
     private Builder() {}
 
@@ -285,6 +306,11 @@ public class Account extends Base {
       return this;
     }
 
+    public Builder withLicenseInfo(LicenseInfo licenseInfo) {
+      this.licenseInfo = licenseInfo;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -299,7 +325,8 @@ public class Account extends Base {
           .withLastUpdatedAt(lastUpdatedAt)
           .withAuthenticationMechanism(authenticationMechanism)
           .withDelegateConfiguration(delegateConfiguration)
-          .withDefaults(defaults);
+          .withDefaults(defaults)
+          .withLicenseInfo(licenseInfo);
     }
 
     public Account build() {
@@ -317,6 +344,7 @@ public class Account extends Base {
       account.setAuthenticationMechanism(authenticationMechanism);
       account.setDelegateConfiguration(delegateConfiguration);
       account.setDefaults(defaults);
+      account.setLicenseInfo(licenseInfo);
       return account;
     }
   }

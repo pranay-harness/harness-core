@@ -8,6 +8,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
+import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -54,7 +55,9 @@ import io.harness.exception.WingsException;
 import io.harness.threading.Puller;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.slf4j.Logger;
@@ -64,6 +67,8 @@ import software.wings.api.PhaseElement;
 import software.wings.api.WorkflowElement;
 import software.wings.app.StaticConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.Environment;
@@ -71,10 +76,12 @@ import software.wings.beans.Environment.Builder;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.PhaseStep;
@@ -104,6 +111,7 @@ import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -139,6 +147,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
   @Mock private JobScheduler jobScheduler;
+  @Mock private FeatureFlagService featureFlagService;
   @Inject @InjectMocks private AccountService accountService;
   @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
@@ -153,6 +162,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
   @InjectMocks @Inject private Injector injector;
+  @Rule public ExpectedException thrown = ExpectedException.none();
 
   private Account account;
   private Application app;
@@ -616,11 +626,18 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Test
   @Ignore
   public void triggerPipeline() throws InterruptedException {
+    Service service = wingsPersistence.saveAndGet(
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
+
+    Pipeline pipeline = constructPipeline(service);
+
+    triggerPipeline(app.getUuid(), pipeline, service);
+  }
+
+  private Pipeline constructPipeline(Service service) {
     Host host = wingsPersistence.saveAndGet(
         Host.class, aHost().withAppId(app.getUuid()).withEnvId(env.getUuid()).withHostName("host").build());
 
-    Service service = wingsPersistence.saveAndGet(
-        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
     ServiceTemplate serviceTemplate = wingsPersistence.saveAndGet(ServiceTemplate.class,
         aServiceTemplate()
             .withAppId(app.getUuid())
@@ -728,7 +745,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     assertThat(res).isNotNull().hasSize(1).doesNotContainNull();
     assertThat(res.get(0).getTransitions()).hasSize(0);
+    return pipeline;
+  }
 
+  private WorkflowExecution triggerPipeline(String appId, Pipeline pipeline, Service service)
+      throws InterruptedException {
     Artifact artifact = wingsPersistence.saveAndGet(Artifact.class,
         anArtifact()
             .withAppId(app.getUuid())
@@ -738,11 +759,6 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     ExecutionArgs executionArgs = new ExecutionArgs();
     executionArgs.setArtifacts(asList(artifact));
 
-    triggerPipeline(app.getUuid(), pipeline, executionArgs);
-  }
-
-  private WorkflowExecution triggerPipeline(String appId, Pipeline pipeline, ExecutionArgs executionArgs)
-      throws InterruptedException {
     WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
     WorkflowExecution execution = ((WorkflowExecutionServiceImpl) workflowExecutionService)
                                       .triggerPipelineExecution(appId, pipeline.getUuid(), executionArgs, callback);
@@ -897,6 +913,71 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         .extracting(WorkflowExecution::getUuid, WorkflowExecution::getStatus)
         .containsExactly(executionId, ExecutionStatus.SUCCESS);
     return execution;
+  }
+
+  @Test
+  public void shouldTriggerWorkflowFailForExpiredTrialLicense() throws InterruptedException {
+    when(featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, account.getUuid())).thenReturn(true);
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
+    licenseInfo.setExpiryTime(System.currentTimeMillis() + 5000);
+    account.setLicenseInfo(licenseInfo);
+    accountService.updateAccountLicense(account, true);
+
+    Thread.sleep(10000);
+    Workflow workflow = createExecutableWorkflow(app.getUuid(), env);
+    String appId = workflow.getAppId();
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
+
+    WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
+    thrown.expect(WingsException.class);
+    workflowExecutionService.triggerOrchestrationWorkflowExecution(
+        appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
+
+    // Scenario 2, update the license to be valid and test again.
+
+    licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setExpiryTime(System.currentTimeMillis() + 1000000);
+    account.setLicenseInfo(licenseInfo);
+    accountService.updateAccountLicense(account, true);
+
+    WorkflowExecution workflowExecution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
+        appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
+    assertNotNull(workflowExecution);
+  }
+
+  @Test
+  public void shouldTriggerPipelineFailForExpiredTrialLicense() throws InterruptedException {
+    when(featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, account.getUuid())).thenReturn(true);
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
+    licenseInfo.setExpiryTime(System.currentTimeMillis() + 5000);
+    account.setLicenseInfo(licenseInfo);
+    accountService.updateAccountLicense(account, true);
+
+    Thread.sleep(10000);
+    Service service = wingsPersistence.saveAndGet(
+        Service.class, Service.builder().uuid(generateUuid()).name("svc1").appId(app.getUuid()).build());
+
+    Pipeline pipeline = constructPipeline(service);
+    thrown.expect(WingsException.class);
+    triggerPipeline(app.getUuid(), pipeline, service);
+
+    // Scenario 2, update the license to be valid and test again.
+    licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setExpiryTime(System.currentTimeMillis() + 1000000);
+    account.setLicenseInfo(licenseInfo);
+    accountService.updateAccountLicense(account, true);
+
+    WorkflowExecution workflowExecution = triggerPipeline(app.getUuid(), pipeline, service);
+    assertNotNull(workflowExecution);
   }
 
   /**

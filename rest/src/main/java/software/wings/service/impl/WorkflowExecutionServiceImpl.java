@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
@@ -158,6 +159,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.WorkflowExecutionServiceImpl.Tree.TreeBuilder;
 import software.wings.service.impl.security.auth.AuthHandler;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.BarrierService;
@@ -245,6 +247,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private StateMachineExecutionSimulator stateMachineExecutionSimulator;
   @Inject private GraphRenderer graphRenderer;
   @Inject private AppService appService;
+  @Inject private AccountService accountService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private PersistentLocker persistentLocker;
@@ -280,6 +283,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   void trigger(String appId, String stateMachineId, String executionUuid, String executionName,
       StateMachineExecutionCallback callback) {
+    checkIfAccountExpired(appId);
     stateMachineExecutor.execute(appId, stateMachineId, executionUuid, executionName, null, callback);
   }
 
@@ -891,6 +895,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   public WorkflowExecution triggerPipelineExecution(
       String appId, String pipelineId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
+    checkIfAccountExpired(appId);
     Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true, true);
     if (pipeline == null) {
       throw new WingsException(ErrorCode.NON_EXISTING_PIPELINE);
@@ -964,6 +969,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
   }
 
+  private void checkIfAccountExpired(String appId) throws WingsException {
+    Application application = appService.get(appId, false);
+    Validator.notNullCheck("Invalid app with id: " + appId, application);
+
+    boolean isAccountExpired = accountService.isAccountExpired(application.getAccountId());
+    if (isAccountExpired) {
+      throw new WingsException(GENERAL_ERROR, USER)
+          .addParam("message", "Trial license expired!!! Please contact Harness Support.");
+    }
+  }
+
   /**
    * {@inheritDoc}
    */
@@ -986,6 +1002,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate) {
+    checkIfAccountExpired(appId);
+
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
@@ -1412,6 +1430,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   private WorkflowExecution triggerSimpleExecution(
       String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
+    checkIfAccountExpired(appId);
     Workflow workflow = workflowService.readLatestSimpleWorkflow(appId, envId);
     String workflowId = workflow.getUuid();
 
