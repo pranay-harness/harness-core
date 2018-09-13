@@ -40,7 +40,9 @@ public class MessageManager {
 
   private String prepareMessage(String message, String exceptionMessage, Map<String, Object> params) {
     message = StrSubstitutor.replace(message, params);
-    message = StrSubstitutor.replace(message, ImmutableMap.of("exception_message", exceptionMessage));
+    if (exceptionMessage != null) {
+      message = StrSubstitutor.replace(message, ImmutableMap.of("exception_message", exceptionMessage));
+    }
     if (message.matches(".*(\\$\\$)*\\$\\{.*")) {
       logger.info(MessageFormat.format(
           "Insufficient parameter from [{0}] in message \"{1}\"", String.join(", ", params.keySet()), message));
