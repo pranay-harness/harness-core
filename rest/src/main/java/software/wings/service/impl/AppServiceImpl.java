@@ -36,6 +36,7 @@ import software.wings.beans.Base;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Role;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
+import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
@@ -93,6 +94,7 @@ public class AppServiceImpl implements AppService {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private WorkflowService workflowService;
   @Inject private YamlPushService yamlPushService;
+  @Inject private GenericDbCache dbCache;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -252,6 +254,7 @@ public class AppServiceImpl implements AppService {
     setUnset(operations, "description", app.getDescription());
 
     wingsPersistence.update(query, operations);
+    dbCache.invalidate(Application.class, app.getUuid());
     Application updatedApp = get(app.getUuid());
 
     boolean isRename = !savedApp.getName().equals(app.getName());
@@ -267,6 +270,8 @@ public class AppServiceImpl implements AppService {
     if (application == null) {
       return;
     }
+
+    dbCache.invalidate(Application.class, appId);
 
     yamlPushService.pushYamlChangeSet(application.getAccountId(), application, null, Type.DELETE, syncFromGit, false);
 
@@ -344,14 +349,14 @@ public class AppServiceImpl implements AppService {
   public Application get(String appId, boolean details) {
     Application application = get(appId);
 
-    List<String> appIdAsList = asList(appId);
-    PermissionAttribute svcPermissionAttribute = new PermissionAttribute(PermissionType.SERVICE, Action.READ);
-    authHandler.setEntityIdFilterIfUserAction(asList(svcPermissionAttribute), appIdAsList);
-
-    PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
-    authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdAsList);
-
     if (details) {
+      List<String> appIdAsList = asList(appId);
+      PermissionAttribute svcPermissionAttribute = new PermissionAttribute(PermissionType.SERVICE, Action.READ);
+      authHandler.setEntityIdFilterIfUserAction(asList(svcPermissionAttribute), appIdAsList);
+
+      PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
+      authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdAsList);
+
       application.setEnvironments(environmentService.getEnvByApp(application.getUuid()));
       application.setServices(serviceResourceService.findServicesByApp(application.getUuid()));
     }

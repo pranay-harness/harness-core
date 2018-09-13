@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.time.Duration.ofSeconds;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.beans.FeatureName.MONGO_QUEUE_VERSIONING;
@@ -32,6 +33,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
@@ -46,6 +48,7 @@ import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
 import software.wings.beans.User;
+import software.wings.common.Constants;
 import software.wings.core.maintenance.MaintenanceController;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.core.queue.AbstractQueueListener;
@@ -78,6 +81,7 @@ import software.wings.security.AuthenticationFilter;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
+import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
@@ -279,6 +283,22 @@ public class WingsApplication extends Application<MainConfiguration> {
     cacheHelper.getUserPermissionInfoCache();
     cacheHelper.getNewRelicApplicationCache();
     cacheHelper.getWhitelistConfigCache();
+
+    String deployMode = System.getenv("DEPLOY_MODE");
+
+    if (DeployMode.isOnPrem(deployMode)) {
+      AccountService accountService = injector.getInstance(AccountService.class);
+      String encryptedLicenseInfoBase64String = System.getenv(Constants.LICENSE_INFO);
+      if (isEmpty(encryptedLicenseInfoBase64String)) {
+        logger.error("No license info is provided");
+      } else {
+        try {
+          accountService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
+        } catch (WingsException ex) {
+          logger.error("Error while updating license info", ex);
+        }
+      }
+    }
 
     logger.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();

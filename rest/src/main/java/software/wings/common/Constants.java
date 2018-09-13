@@ -881,4 +881,11 @@ public interface Constants {
   String STAGE_SERVICE_NAME_EXPRESSION = "${STAGE_SERVICE_NAME}";
   String DEPLOYMENT_TRIGGERED_BY = "deploymentTriggeredBy";
   long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
+
+  String SUPPORT_EMAIL = "support@harness.io";
+  /**
+   * Trial expires end of day - 14 days from the date of creation.
+   */
+  int TRIAL_PERIOD = 14;
+  String LICENSE_INFO = "LICENSE_INFO";
 }

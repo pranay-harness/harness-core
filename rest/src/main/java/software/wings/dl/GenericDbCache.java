@@ -10,6 +10,8 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Account;
+import software.wings.service.intfc.AccountService;
 
 import java.util.concurrent.TimeUnit;
 
@@ -20,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 public class GenericDbCache {
   private static final Logger logger = LoggerFactory.getLogger(GenericDbCache.class);
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private AccountService accountService;
   private LoadingCache<String, Object> cache =
       CacheBuilder.newBuilder()
           .maximumSize(10000)
@@ -30,6 +33,14 @@ public class GenericDbCache {
               int idx = key.lastIndexOf('~');
               String className = key.substring(0, idx);
               String uuid = key.substring(idx + 1);
+
+              // TODO We need to define a generic way of calling the service.get(),
+              // for that we need a locator class that maps entityClassName and service class.
+              // This special handling is needed since the accountService.get() also decrypts the license info.
+              if (Account.class.getCanonicalName().equals(className)) {
+                return accountService.get(uuid);
+              }
+
               return wingsPersistence.getDatastore().get(Class.forName(className), uuid);
             }
           });

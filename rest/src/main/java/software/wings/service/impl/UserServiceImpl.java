@@ -204,7 +204,7 @@ public class UserServiceImpl implements UserService {
       account.setCompanyName(account.getCompanyName().trim());
     }
 
-    account = setupAccount(account.getAccountName(), account.getCompanyName());
+    account = setupAccount(account);
     addAccountAdminRole(user, account);
     authHandler.addUserToDefaultAccountAdminUserGroup(user, account);
     sendSuccessfullyAddedToNewAccountEmail(user, account);
@@ -936,6 +936,11 @@ public class UserServiceImpl implements UserService {
     }
 
     loadSupportAccounts(user);
+    List<Account> accounts = user.getAccounts();
+    if (isNotEmpty(accounts)) {
+      accounts.forEach(account -> accountService.decryptLicenseInfo(account, false));
+    }
+
     return user;
   }
 
@@ -1171,20 +1176,24 @@ public class UserServiceImpl implements UserService {
   }
 
   private Account setupAccount(String accountName, String companyName) {
-    if (isBlank(companyName)) {
+    Account account = Account.Builder.anAccount().withAccountName(accountName).withCompanyName(companyName).build();
+    return setupAccount(account);
+  }
+
+  private Account setupAccount(Account account) {
+    if (isBlank(account.getCompanyName())) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "Company Name Can't be empty");
     }
 
-    if (isBlank(accountName)) {
+    if (isBlank(account.getAccountName())) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "Account Name Can't be empty");
     }
 
-    if (accountService.exists(accountName)) {
+    if (accountService.exists(account.getAccountName())) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "Account Name should be unique");
     }
 
-    Account account = Account.Builder.anAccount().withAccountName(accountName).withCompanyName(companyName).build();
-
+    account.setAppId(Base.GLOBAL_APP_ID);
     return accountService.save(account);
   }
 

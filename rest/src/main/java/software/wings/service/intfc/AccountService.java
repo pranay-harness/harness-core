@@ -7,6 +7,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.FeatureFlag;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 import software.wings.dl.PageRequest;
 
@@ -23,9 +24,17 @@ public interface AccountService {
 
   @ValidationGroups(Update.class) Account update(@Valid Account account);
 
+  Account updateAccountLicense(@NotNull Account account, boolean setExpiry);
+
+  String generateLicense(@NotNull LicenseInfo licenseInfo);
+
   Account getByName(String companyName);
 
+  long getDefaultTrialExpiryTime();
+
   Account get(String accountId);
+
+  Account decryptLicenseInfo(Account account, boolean setExpiryTime);
 
   void delete(String accountId);
 
@@ -38,6 +47,10 @@ public interface AccountService {
   String suggestAccountName(@NotNull String accountName);
 
   boolean exists(String accountName);
+
+  boolean isAccountExpired(String accountId);
+
+  void updateAccountLicenseForOnPrem(String encryptedLicenseInfoBase64String);
 
   /**
    * List.
