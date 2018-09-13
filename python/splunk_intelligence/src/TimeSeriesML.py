@@ -186,7 +186,10 @@ class TSAnomlyDetector(object):
             for (host_name, host_data) in txn_data_dict[metric_name].items():
                 host_names.append(host_name)
                 data.append(host_data['data'])
-                weights.append(txn_data_dict[throughput_metric_name][host_name]['data'])
+                if txn_data_dict.get(throughput_metric_name) is not None and txn_data_dict[throughput_metric_name].get(host_name) is not None:
+                    weights.append(txn_data_dict[throughput_metric_name][host_name]['data'])
+                else:
+                    weights.append(1.0)
             return dict(host_names=host_names,
                         data=np.array(data, dtype=np.float64),
                         weights=np.array(weights, dtype=np.float64),
@@ -388,6 +391,7 @@ class TSAnomlyDetector(object):
 
                 throughput_metric_name = self.metric_template.get_metric_name(MetricType.THROUGHPUT)
                 if throughput_metric_name is not None and throughput_metric_name in txn_data_dict \
+                        and host_name in txn_data_dict[throughput_metric_name] \
                         and txn_data_dict[throughput_metric_name][host_name]['skip']:
                     final_risk = RiskLevel.NA.value
                 else:
@@ -529,6 +533,7 @@ class TSAnomlyDetector(object):
                     response['results'][host]['control_index'] = analysis_output['nn'][index]
                 throughput_metric_name = self.metric_template.get_metric_name(MetricType.THROUGHPUT)
                 if throughput_metric_name is not None and throughput_metric_name in test_txn_data_dict \
+                        and host in test_txn_data_dict[throughput_metric_name] \
                         and test_txn_data_dict[throughput_metric_name][host]['skip']:
                     response['results'][host]['risk'] = RiskLevel.NA.value
                 else:
