@@ -21,6 +21,7 @@ import static software.wings.generator.InfrastructureProvisionerGenerator.Infras
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
@@ -37,7 +38,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.dl.PageResponse;
-import software.wings.exception.InvalidRequestException;
 import software.wings.generator.ApplicationGenerator;
 import software.wings.generator.InfrastructureMappingGenerator;
 import software.wings.generator.InfrastructureProvisionerGenerator;

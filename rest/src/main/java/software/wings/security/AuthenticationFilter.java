@@ -15,13 +15,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.AuthToken;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.InvalidRequestException;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;

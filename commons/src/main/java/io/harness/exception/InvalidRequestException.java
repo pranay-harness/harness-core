@@ -1,8 +1,6 @@
-package software.wings.exception;
+package io.harness.exception;
 
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
-
-import io.harness.exception.WingsException;
 
 import java.util.EnumSet;
 

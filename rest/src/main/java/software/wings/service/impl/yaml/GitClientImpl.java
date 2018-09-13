@@ -22,6 +22,7 @@ import groovy.lang.Singleton;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -82,7 +83,6 @@ import software.wings.beans.yaml.GitFile;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
-import software.wings.exception.InvalidRequestException;
 import software.wings.service.intfc.yaml.GitClient;
 import software.wings.utils.Misc;
 

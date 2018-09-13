@@ -364,7 +364,7 @@ software.wings.beans.APMValidateCollectorConfig, 5323
 software.wings.exception.ExplanationException, 5324
 software.wings.exception.HintException, 5325
 software.wings.exception.InvalidArgumentsException, 5326
-software.wings.exception.InvalidRequestException, 5327
+io.harness.exception.InvalidRequestException, 5327
 software.wings.sm.StateExecutionException, 5328
 software.wings.exception.UnauthorizedException, 5329
 software.wings.exception.UnexpectedException, 5330

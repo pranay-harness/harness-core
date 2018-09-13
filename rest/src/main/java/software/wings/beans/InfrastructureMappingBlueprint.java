@@ -6,6 +6,7 @@ import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderT
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.exception.InvalidRequestException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Value;
@@ -13,7 +14,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.DeploymentType;
-import software.wings.exception.InvalidRequestException;
 
 import java.util.List;
 import java.util.Map;

@@ -21,6 +21,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -34,7 +35,6 @@ import software.wings.beans.FeatureName;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.User;
 import software.wings.common.AuditHelper;
-import software.wings.exception.InvalidRequestException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;

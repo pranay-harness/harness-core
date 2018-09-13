@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.Query;
@@ -28,7 +29,6 @@ import software.wings.beans.sso.SSOType;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.InvalidRequestException;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.UserThreadLocal;

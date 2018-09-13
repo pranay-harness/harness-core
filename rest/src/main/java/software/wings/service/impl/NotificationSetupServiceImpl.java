@@ -16,6 +16,7 @@ import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import software.wings.beans.Application;
 import software.wings.beans.Event;
@@ -30,7 +31,6 @@ import software.wings.beans.Workflow;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.InvalidRequestException;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UserService;

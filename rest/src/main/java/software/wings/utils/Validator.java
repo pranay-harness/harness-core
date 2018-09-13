@@ -4,10 +4,10 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ReportTarget;
 import io.harness.persistence.UuidAware;
-import software.wings.exception.InvalidRequestException;
 
 import java.util.EnumSet;
 import java.util.Objects;
