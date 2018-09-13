@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.data.structure.ListUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -40,7 +41,6 @@ import software.wings.beans.template.TemplateHelper;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.InvalidRequestException;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;

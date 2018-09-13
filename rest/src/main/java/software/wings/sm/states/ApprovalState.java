@@ -21,6 +21,7 @@ import static software.wings.sm.ExecutionStatus.SKIPPED;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ApprovalStateExecutionData;
@@ -33,7 +34,6 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AlertService;

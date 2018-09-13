@@ -42,6 +42,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Rejection;
 import io.harness.observer.Subject;
@@ -61,7 +62,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.InvalidRequestException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;

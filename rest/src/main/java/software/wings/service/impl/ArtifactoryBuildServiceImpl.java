@@ -13,13 +13,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.config.ArtifactoryConfig;
-import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;

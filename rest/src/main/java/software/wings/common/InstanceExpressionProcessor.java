@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.ReadPref;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
@@ -31,7 +32,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
-import software.wings.exception.InvalidRequestException;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;

@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,7 +26,6 @@ import software.wings.beans.AwsInstanceFilter.AwsInstanceFilterBuilder;
 import software.wings.beans.AwsInstanceFilter.Tag;
 import software.wings.beans.AwsInstanceFilter.Tag.TagBuilder;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
-import software.wings.exception.InvalidRequestException;
 import software.wings.stencils.DataProvider;
 import software.wings.utils.Util;
 

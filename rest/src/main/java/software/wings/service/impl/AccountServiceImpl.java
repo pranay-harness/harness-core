@@ -31,6 +31,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.mapping.Mapper;
@@ -57,7 +58,6 @@ import software.wings.common.Constants;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.InvalidRequestException;
 import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.QuartzScheduler;

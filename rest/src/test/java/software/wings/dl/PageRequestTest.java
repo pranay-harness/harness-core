@@ -7,10 +7,10 @@ import static software.wings.beans.SearchFilter.Operator.ELEMENT_MATCH;
 import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
+import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.SearchFilter;
-import software.wings.exception.InvalidRequestException;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 

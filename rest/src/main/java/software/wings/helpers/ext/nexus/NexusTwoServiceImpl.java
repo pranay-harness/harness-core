@@ -16,6 +16,7 @@ import static software.wings.helpers.ext.nexus.NexusServiceImpl.isSuccessful;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.InvalidRequestException;
 import okhttp3.Credentials;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -29,7 +30,6 @@ import retrofit2.Response;
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.AlphanumComparator;
-import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.artifactory.FolderPath;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.nexus.model.IndexBrowserTreeNode;

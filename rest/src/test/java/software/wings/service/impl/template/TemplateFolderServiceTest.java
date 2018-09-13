@@ -17,10 +17,10 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
+import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
-import software.wings.exception.InvalidRequestException;
 
 import java.util.Arrays;
 

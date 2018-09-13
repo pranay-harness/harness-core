@@ -17,6 +17,7 @@ import com.google.inject.Singleton;
 
 import com.offbytwo.jenkins.model.Artifact;
 import com.offbytwo.jenkins.model.JobWithDetails;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,6 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.common.Constants;
-import software.wings.exception.InvalidRequestException;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JobDetails;

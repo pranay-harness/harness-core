@@ -31,6 +31,7 @@ import io.fabric8.kubernetes.api.model.ReplicationControllerBuilder;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretBuilder;
 import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +50,6 @@ import software.wings.beans.container.KubernetesServiceSpecification;
 import software.wings.beans.container.KubernetesServiceType;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.exception.InvalidRequestException;
 import software.wings.utils.KubernetesConvention;
 
 import java.lang.reflect.InvocationTargetException;

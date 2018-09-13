@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.InvalidRequestException;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
 import okhttp3.RequestBody;
@@ -28,7 +29,6 @@ import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
-import software.wings.exception.InvalidRequestException;
 import software.wings.managerclient.ManagerClient;
 import software.wings.service.intfc.FileService.FileBucket;
 

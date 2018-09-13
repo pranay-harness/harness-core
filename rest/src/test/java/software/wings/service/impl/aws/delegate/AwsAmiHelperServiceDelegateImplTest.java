@@ -26,13 +26,13 @@ import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest
 import com.amazonaws.services.autoscaling.model.InstanceMonitoring;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.TagDescription;
+import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.exception.InvalidRequestException;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
