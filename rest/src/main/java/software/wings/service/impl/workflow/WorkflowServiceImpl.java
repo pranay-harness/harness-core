@@ -327,13 +327,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     if (filterForWorkflow) {
       if (filterForPhase) {
         if (workflowPhase != null) {
-          // For workflow having Service templatized, do not show commands section
-          // if service is templatized, infra will always be templatized
-          if (workflowPhase.checkServiceTemplatized()) {
-            predicate = stencil -> stencil.getStencilCategory() != StencilCategory.COMMANDS;
-          } else if (workflowPhase.getInfraMappingId() != null) {
-            InfrastructureMapping infrastructureMapping =
-                infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+          String infraMappingId = workflowPhase.getInfraMappingId();
+          if (workflowPhase.checkInfraTemplatized()) {
+            DeploymentType workflowPhaseDeploymentType = workflowPhase.getDeploymentType();
+            if (workflowPhaseDeploymentType != null) {
+              predicate = stencil -> stencil.matches(workflowPhaseDeploymentType);
+            }
+          } else if (infraMappingId != null) {
+            // TODO: This check can be removed once refacotor the code to have single class for AWS_NODE_SELECT,
+            // DC_NODE_SELECT and ROLLING_SELECT_NODE
+            InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
             if (infrastructureMapping != null) {
               predicate = stencil -> stencil.matches(infrastructureMapping);
             }

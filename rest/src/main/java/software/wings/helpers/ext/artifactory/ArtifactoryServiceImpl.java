@@ -574,7 +574,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     try {
       String msg = "latest version for artifactory server [" + artifactoryConfig.getArtifactoryUrl() + "] repoId ["
           + repoId + "] groupId [" + groupId + "] artifactId [" + artifactId + "]";
-      logger.info("Fetching the {}", msg);
+      logger.info("Fetching the  {}", msg);
       String latestVersion = artifactory.searches()
                                  .artifactsLatestVersion()
                                  .groupId(groupId)

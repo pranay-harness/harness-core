@@ -4,17 +4,20 @@ import static org.joor.Reflect.on;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.MoreObjects;
+import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.exception.WingsException;
+import software.wings.api.DeploymentType;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.utils.JsonUtils;
 
 import java.net.URL;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * The enum Infra mapping type.
@@ -23,45 +26,49 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
   /**
    * Physical data center ssh infra mapping type.
    */
-  PHYSICAL_DATA_CENTER_SSH(PhysicalInfrastructureMapping.class, "PHYSICAL_DATA_CENTER_SSH", StencilCategory.OTHERS,
-      1), /**
-           * Aws ssh infra mapping type.
-           */
-  AWS_SSH(AwsInfrastructureMapping.class, "AWS_SSH", StencilCategory.OTHERS, 2),
+  PHYSICAL_DATA_CENTER_SSH(PhysicalInfrastructureMapping.class, "PHYSICAL_DATA_CENTER_SSH", StencilCategory.OTHERS, 1,
+      Lists.newArrayList(DeploymentType.SSH)), /**
+                                                * Aws ssh infra mapping type.
+                                                */
+  AWS_SSH(AwsInfrastructureMapping.class, "AWS_SSH", StencilCategory.OTHERS, 2, Lists.newArrayList(DeploymentType.SSH)),
 
   /**
    * Aws ami infrastructure mapping type.
    */
-  AWS_AMI(
-      AwsAmiInfrastructureMapping.class, "AWS_AMI", StencilCategory.OTHERS, 2), /**
-                                                                                 * Aws CodeDeploy infra mapping type.
-                                                                                 */
-  AWS_AWS_CODEDEPLOY(CodeDeployInfrastructureMapping.class, "AWS_AWS_CODEDEPLOY", StencilCategory.OTHERS,
-      3), /**
-           * Aws ecs infra mapping type.
-           */
-  AWS_ECS(EcsInfrastructureMapping.class, "AWS_ECS", StencilCategory.OTHERS,
-      4), /**
-           * Direct connection to kubernetes infra mapping type.
-           */
-  DIRECT_KUBERNETES(DirectKubernetesInfrastructureMapping.class, "DIRECT_KUBERNETES", StencilCategory.OTHERS,
-      5), /**
-           * Gcp kubernetes infra mapping type.
-           */
-  GCP_KUBERNETES(GcpKubernetesInfrastructureMapping.class, "GCP_KUBERNETES", StencilCategory.OTHERS,
-      6), /**
-           * Aws aws lambda infrastructure mapping type.
-           */
-  AWS_AWS_LAMBDA(AwsLambdaInfraStructureMapping.class, "AWS_AWS_LAMBDA", StencilCategory.OTHERS, 7),
+  AWS_AMI(AwsAmiInfrastructureMapping.class, "AWS_AMI", StencilCategory.OTHERS, 2,
+      Lists.newArrayList(DeploymentType.AMI)), /**
+                                                * Aws CodeDeploy infra mapping type.
+                                                */
+  AWS_AWS_CODEDEPLOY(CodeDeployInfrastructureMapping.class, "AWS_AWS_CODEDEPLOY", StencilCategory.OTHERS, 3,
+      Lists.newArrayList(DeploymentType.AWS_CODEDEPLOY)), /**
+                                                           * Aws ecs infra mapping type.
+                                                           */
+  AWS_ECS(EcsInfrastructureMapping.class, "AWS_ECS", StencilCategory.OTHERS, 4,
+      Lists.newArrayList(DeploymentType.ECS)), /**
+                                                * Direct connection to kubernetes infra mapping type.
+                                                */
+  DIRECT_KUBERNETES(DirectKubernetesInfrastructureMapping.class, "DIRECT_KUBERNETES", StencilCategory.OTHERS, 5,
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)), /**
+                                                                            * Gcp kubernetes infra mapping type.
+                                                                            */
+  GCP_KUBERNETES(GcpKubernetesInfrastructureMapping.class, "GCP_KUBERNETES", StencilCategory.OTHERS, 6,
+      Lists.newArrayList(
+          DeploymentType.KUBERNETES, DeploymentType.HELM)), /**
+                                                             * Aws aws lambda infrastructure mapping type.
+                                                             */
+  AWS_AWS_LAMBDA(AwsLambdaInfraStructureMapping.class, "AWS_AWS_LAMBDA", StencilCategory.OTHERS, 7,
+      Lists.newArrayList(DeploymentType.AWS_LAMBDA)),
   /**
    * Azure kubernetes [AKS] infra mapping type.
    */
-  AZURE_KUBERNETES(AzureKubernetesInfrastructureMapping.class, "AZURE_KUBERNETES", StencilCategory.OTHERS, 8),
+  AZURE_KUBERNETES(AzureKubernetesInfrastructureMapping.class, "AZURE_KUBERNETES", StencilCategory.OTHERS, 8,
+      Lists.newArrayList(DeploymentType.KUBERNETES, DeploymentType.HELM)),
 
-  PHYSICAL_DATA_CENTER_WINRM(
-      PhysicalInfrastructureMappingWinRm.class, "PHYSICAL_DATA_CENTER_WINRM", StencilCategory.OTHERS, 9),
+  PHYSICAL_DATA_CENTER_WINRM(PhysicalInfrastructureMappingWinRm.class, "PHYSICAL_DATA_CENTER_WINRM",
+      StencilCategory.OTHERS, 9, Lists.newArrayList(DeploymentType.WINRM)),
 
-  PCF_PCF(PcfInfrastructureMapping.class, "PCF_PCF", StencilCategory.OTHERS, 10);
+  PCF_PCF(
+      PcfInfrastructureMapping.class, "PCF_PCF", StencilCategory.OTHERS, 10, Lists.newArrayList(DeploymentType.PCF));
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";
@@ -74,13 +81,15 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
 
   private StencilCategory stencilCategory;
   private Integer displayOrder;
+  private List<DeploymentType> deploymentTypes;
 
   InfrastructureMappingType(Class<? extends InfrastructureMapping> infrastructureMappingClass, String name,
-      StencilCategory stencilCategory, Integer displayOrder) {
+      StencilCategory stencilCategory, Integer displayOrder, List<DeploymentType> deploymentTypes) {
     this.infrastructureMappingClass = infrastructureMappingClass;
     this.name = name;
     this.stencilCategory = stencilCategory;
     this.displayOrder = displayOrder;
+    this.deploymentTypes = deploymentTypes;
     try {
       uiSchema = readResource(stencilsPath + name() + uiSchemaSuffix);
     } catch (Exception e) {
@@ -127,6 +136,10 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
   @Override
   public Integer getDisplayOrder() {
     return displayOrder;
+  }
+
+  public List<DeploymentType> getDeploymentTypes() {
+    return deploymentTypes;
   }
 
   @Override
