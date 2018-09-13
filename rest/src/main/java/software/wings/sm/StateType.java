@@ -65,6 +65,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
@@ -617,11 +618,21 @@ public enum StateType implements StateTypeDescriptor {
 
   @Override
   public boolean matches(Object context) {
-    InfrastructureMapping infrastructureMapping = (InfrastructureMapping) context;
-    InfrastructureMappingType infrastructureMappingType =
-        InfrastructureMappingType.valueOf(infrastructureMapping.getInfraMappingType());
+    if (context instanceof InfrastructureMapping) {
+      InfrastructureMapping infrastructureMapping = (InfrastructureMapping) context;
+      InfrastructureMappingType infrastructureMappingType =
+          InfrastructureMappingType.valueOf(infrastructureMapping.getInfraMappingType());
+      return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
+          || supportedInfrastructureMappingTypes.contains(infrastructureMappingType);
+    }
+    DeploymentType deploymentType = (DeploymentType) context;
+    List<DeploymentType> supportedDeploymentTypes = new ArrayList<>();
+    // TODO: SSH deployment referenced by more than one SelectNode states
+    for (InfrastructureMappingType supportedInfrastructureMappingType : supportedInfrastructureMappingTypes) {
+      supportedDeploymentTypes.addAll(supportedInfrastructureMappingType.getDeploymentTypes());
+    }
     return (stencilCategory != COMMANDS && stencilCategory != CLOUD)
-        || supportedInfrastructureMappingTypes.contains(infrastructureMappingType);
+        || supportedDeploymentTypes.contains(deploymentType);
   }
 
   @Override

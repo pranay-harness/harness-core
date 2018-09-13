@@ -1379,7 +1379,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Override
   public List<String> listHostDisplayNames(String appId, String infraMappingId, String workflowExecutionId) {
     InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
-    notNullCheck("Infra Mapping", infrastructureMapping);
+    notNullCheck("Infra Mapping was deleted", infrastructureMapping, USER);
     return getInfrastructureMappingHostDisplayNames(infrastructureMapping, appId, workflowExecutionId);
   }
 

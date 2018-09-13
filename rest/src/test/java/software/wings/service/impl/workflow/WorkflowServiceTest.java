@@ -173,6 +173,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AwsInfrastructureMapping;
@@ -681,7 +682,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
         .thenReturn(Service.builder().uuid(SERVICE_ID).serviceCommands(ImmutableList.of(serviceCommand)).build());
 
-    Workflow workflow2 = workflowService.createWorkflow(constructBasicWorkflowWithPhase());
+    Workflow workflow2 = workflowService.createWorkflow(constructBasicWorkflow());
     assertThat(workflow2).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
 
     BasicOrchestrationWorkflow basicOrchestrationWorkflow =
@@ -696,7 +697,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .thenReturn(aGcpKubernetesInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
                         .withServiceId(SERVICE_ID)
-                        .withDeploymentType(SSH.name())
+                        .withDeploymentType(DeploymentType.KUBERNETES.name())
                         .withInfraMappingType(InfrastructureMappingType.GCP_KUBERNETES.name())
                         .withComputeProviderType(SettingVariableTypes.GCP.name())
                         .build());
