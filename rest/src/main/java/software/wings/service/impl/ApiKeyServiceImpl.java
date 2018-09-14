@@ -11,6 +11,7 @@ import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.exception.UnauthorizedException;
 import org.mindrot.jbcrypt.BCrypt;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
@@ -18,7 +19,6 @@ import software.wings.beans.Base;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.UnauthorizedException;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApiKeyService;

@@ -15,8 +15,10 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +35,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.ResizeStrategy;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -47,7 +48,6 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
-import software.wings.exception.InvalidArgumentsException;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
@@ -158,8 +158,7 @@ public abstract class ContainerServiceSetup extends State {
           : settingsService.get(infrastructureMapping.getComputeProviderSettingId());
 
       if (settingAttribute == null) {
-        throw new InvalidArgumentsException(
-            NameValuePair.builder().name("Cloud Provider").value("Missing, check service infrastructure").build());
+        throw new InvalidArgumentsException(Pair.of("Cloud Provider", "Missing, check service infrastructure"));
       }
 
       List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(

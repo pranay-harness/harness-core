@@ -69,6 +69,7 @@ import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.RollableScalableResource;
 import io.fabric8.kubernetes.client.dsl.ScalableResource;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import me.snowdrop.istio.api.internal.IstioSpecRegistry;
 import me.snowdrop.istio.api.model.DoneableIstioResource;
@@ -78,17 +79,16 @@ import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
 import me.snowdrop.istio.api.model.v1.networking.VirtualService;
 import me.snowdrop.istio.client.IstioClient;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.ContainerInfo.ContainerInfoBuilder;
 import software.wings.cloudprovider.ContainerInfo.Status;
-import software.wings.exception.InvalidArgumentsException;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.KubernetesHelperService;
 import software.wings.utils.Misc;
@@ -973,12 +973,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       ExecutionLogCallback executionLogCallback) {
     HasMetadata controller = getController(kubernetesConfig, encryptedDataDetails, controllerName);
     if (controller == null) {
-      throw new InvalidArgumentsException(NameValuePair.builder().name(controllerName).value("is null").build());
+      throw new InvalidArgumentsException(Pair.of(controllerName, "is null"));
     }
     PodTemplateSpec podTemplateSpec = getPodTemplateSpec(controller);
     if (podTemplateSpec == null) {
-      throw new InvalidArgumentsException(
-          NameValuePair.builder().name(controllerName + " pod spec").value("is null").build());
+      throw new InvalidArgumentsException(Pair.of(controllerName + " pod spec", "is null"));
     }
     Set<String> images = getControllerImages(podTemplateSpec);
     Map<String, String> labels = podTemplateSpec.getMetadata().getLabels();

@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.UnauthorizedException;
 import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
 import org.mockito.InjectMocks;
@@ -32,7 +33,6 @@ import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.dl.PageResponse;
 import software.wings.dl.PageResponse.PageResponseBuilder;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.UnauthorizedException;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.Validator;
 

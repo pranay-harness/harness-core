@@ -92,6 +92,7 @@ import io.fabric8.kubernetes.api.model.extensions.ReplicaSetSpec;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSetSpec;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Builder;
@@ -105,6 +106,7 @@ import me.snowdrop.istio.api.model.v1.networking.Destination;
 import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
 import me.snowdrop.istio.api.model.v1.networking.VirtualServiceFluent.HttpNested;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,7 +115,6 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
@@ -127,7 +128,6 @@ import software.wings.beans.container.Label;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.exception.InvalidArgumentsException;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.KubernetesConvention;
@@ -1083,10 +1083,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           KubernetesHelper.loadYaml(setupParams.getCustomMetricYamlConfig(), HorizontalPodAutoscaler.class);
 
       if (horizontalPodAutoscaler == null) {
-        throw new InvalidArgumentsException(NameValuePair.builder()
-                                                .name("Horizontal Pod Autoscaler YAML")
-                                                .value(setupParams.getCustomMetricYamlConfig())
-                                                .build());
+        throw new InvalidArgumentsException(
+            Pair.of("Horizontal Pod Autoscaler YAML", setupParams.getCustomMetricYamlConfig()));
       }
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setName(name);
       horizontalPodAutoscaler.getSpec().getScaleTargetRef().setKind(kind);

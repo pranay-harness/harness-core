@@ -35,7 +35,6 @@ import software.wings.service.intfc.CloudWatchService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.StateExecutionException;
 
 import java.net.URL;
 import java.util.HashSet;
@@ -117,7 +116,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     final Set<String> loadBalancers = new HashSet<>();
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
-      throw new StateExecutionException("AWS account setting not found " + settingId);
+      throw new WingsException("AWS account setting not found " + settingId);
     }
     loadBalancers.addAll(awsInfrastructureProvider.listClassicLoadBalancers(settingAttribute, region));
     loadBalancers.addAll(awsInfrastructureProvider.listLoadBalancers(settingAttribute, region));
@@ -149,7 +148,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   private AwsConfig getAwsConfig(String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     if (settingAttribute == null || !(settingAttribute.getValue() instanceof AwsConfig)) {
-      throw new StateExecutionException("AWS account setting not found");
+      throw new WingsException("AWS account setting not found");
     }
     return (AwsConfig) settingAttribute.getValue();
   }
