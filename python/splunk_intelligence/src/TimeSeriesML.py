@@ -189,7 +189,7 @@ class TSAnomlyDetector(object):
                 if txn_data_dict.get(throughput_metric_name) is not None and txn_data_dict[throughput_metric_name].get(host_name) is not None:
                     weights.append(txn_data_dict[throughput_metric_name][host_name]['data'])
                 else:
-                    weights.append(1.0)
+                    weights.append([1] * len(host_data['data']))
             return dict(host_names=host_names,
                         data=np.array(data, dtype=np.float64),
                         weights=np.array(weights, dtype=np.float64),
