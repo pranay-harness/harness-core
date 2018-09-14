@@ -12,6 +12,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
+import static software.wings.beans.Log.LogLevel.WARN;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -341,7 +342,17 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           Long artifactFileSize = delegateFileManager.getArtifactFileSize(artifactStreamAttributes);
           metadata.put(ARTIFACT_FILE_SIZE, String.valueOf(artifactFileSize));
         }
-        return ImmutablePair.of(metadata.get(ARTIFACT_FILE_NAME), Long.parseLong(metadata.get(ARTIFACT_FILE_SIZE)));
+        String fileName = metadata.get(ARTIFACT_FILE_NAME);
+        int lastIndexOfSlash = fileName.lastIndexOf('/');
+        if (lastIndexOfSlash > 0) {
+          saveExecutionLogWarn("Filename contains slashes. Stripping off the portion before last slash.");
+          logger.warn("Filename contains slashes. Stripping off the portion before last slash.");
+          fileName = fileName.substring(lastIndexOfSlash + 1);
+          saveExecutionLogWarn("Got filename: " + fileName);
+          logger.warn("Got filename: " + fileName);
+        }
+
+        return ImmutablePair.of(fileName, Long.parseLong(metadata.get(ARTIFACT_FILE_SIZE)));
       }
 
       @Override
@@ -413,6 +424,19 @@ public abstract class AbstractSshExecutor implements SshExecutor {
             .withAppId(config.getAppId())
             .withActivityId(config.getExecutionId())
             .withLogLevel(ERROR)
+            .withCommandUnitName(config.getCommandUnitName())
+            .withHostName(config.getHost())
+            .withLogLine(line)
+            .withExecutionResult(RUNNING)
+            .build());
+  }
+
+  private void saveExecutionLogWarn(String line) {
+    logService.save(config.getAccountId(),
+        aLog()
+            .withAppId(config.getAppId())
+            .withActivityId(config.getExecutionId())
+            .withLogLevel(WARN)
             .withCommandUnitName(config.getCommandUnitName())
             .withHostName(config.getHost())
             .withLogLine(line)
