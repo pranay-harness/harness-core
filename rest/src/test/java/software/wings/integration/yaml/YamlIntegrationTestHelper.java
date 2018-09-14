@@ -1,10 +1,13 @@
 package software.wings.integration.yaml;
 
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.integration.yaml.YamlIntegrationTestConstants.RANDOM_TEXT;
 
 import com.google.inject.Singleton;
 
@@ -13,19 +16,28 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.CloudFormationInfrastructureProvisioner;
 import software.wings.beans.GitConfig;
+import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.InfrastructureProvisionerType;
+import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretName;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.settings.SettingValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.ArtifactType;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
@@ -109,5 +121,95 @@ public class YamlIntegrationTestHelper {
       throw new WingsException("Decryption of git config failed: " + ex.getMessage(), USER_ADMIN)
           .addParam(ErrorCode.GIT_CONNECTION_ERROR.name(), ErrorCode.GIT_CONNECTION_ERROR);
     }
+  }
+
+  public SettingAttribute createSettingAttribute(String name, String appId, String accountId,
+      SettingVariableTypes settingVariableTypes, SettingsService settingsService) {
+    SettingAttribute.Builder builder = aSettingAttribute().withAppId(appId).withAccountId(accountId).withName(name);
+
+    SettingValue settingValue = null;
+    switch (settingVariableTypes) {
+      case PHYSICAL_DATA_CENTER:
+        settingValue =
+            PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig().withType(settingVariableTypes.name()).build();
+        break;
+      default:
+        unhandled(settingVariableTypes);
+    }
+    builder.withValue(settingValue);
+
+    return settingsService.save(builder.build());
+  }
+
+  public void deleteSettingAttribute(SettingAttribute settingAttribute, SettingsService settingsService) {
+    settingsService.delete(settingAttribute.getAppId(), settingAttribute.getUuid());
+  }
+
+  public InfrastructureProvisioner createInfraProvisioner(String name, String appId,
+      InfrastructureProvisionerType provisionerType,
+      InfrastructureProvisionerService infrastructureProvisionerService) {
+    InfrastructureProvisioner infrastructureProvisioner = null;
+
+    switch (provisionerType) {
+      case CLOUD_FORMATION:
+        infrastructureProvisioner = CloudFormationInfrastructureProvisioner.builder()
+                                        .name(name)
+                                        .appId(appId)
+                                        .sourceType(TEMPLATE_BODY.name())
+                                        .description(RANDOM_TEXT)
+                                        .build();
+        break;
+
+      default:
+        unhandled(provisionerType);
+    }
+
+    return infrastructureProvisionerService.save(infrastructureProvisioner);
+  }
+
+  public void deleteInfraProvisioner(InfrastructureProvisioner infrastructureProvisioner,
+      InfrastructureProvisionerService infrastructureProvisionerService) {
+    infrastructureProvisionerService.delete(infrastructureProvisioner.getAppId(), infrastructureProvisioner.getUuid());
+  }
+
+  public void deleteApplication(Application application, AppService appService) {
+    appService.delete(application.getAppId());
+  }
+
+  public String getCloudProviderYamlPath(String cloudProviderName) {
+    return new StringBuilder()
+        .append(YamlConstants.SETUP_FOLDER)
+        .append("/")
+        .append(YamlConstants.CLOUD_PROVIDERS_FOLDER)
+        .append("/")
+        .append(cloudProviderName)
+        .append(YamlConstants.YAML_EXTENSION)
+        .toString();
+  }
+
+  public String getInfraProvisionerYamlPath(
+      Application application, InfrastructureProvisioner infrastructureProvisioner) {
+    return new StringBuilder()
+        .append(YamlConstants.SETUP_FOLDER)
+        .append("/")
+        .append(YamlConstants.APPLICATIONS_FOLDER)
+        .append("/")
+        .append(application.getName())
+        .append("/")
+        .append(YamlConstants.PROVISIONERS_FOLDER)
+        .append("/")
+        .append(infrastructureProvisioner.getName())
+        .append(YamlConstants.YAML_EXTENSION)
+        .toString();
+  }
+
+  public String getApplicationYamlPath(Application application) {
+    return new StringBuilder()
+        .append(YamlConstants.SETUP_FOLDER)
+        .append("/")
+        .append(YamlConstants.APPLICATIONS_FOLDER)
+        .append("/")
+        .append(application.getName())
+        .toString();
   }
 }

@@ -12,28 +12,32 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Application;
 import software.wings.beans.GitConfig;
-import software.wings.beans.Service;
+import software.wings.beans.InfrastructureProvisioner;
+import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.YamlConstants;
 import software.wings.generator.ScmSecret;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.impl.yaml.GitClientImpl;
-import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.Arrays;
 
 // This is to be removed no later than Friday, 9/21/2018
 @Ignore
+@SetupScheduler
 public class YamlIntegrationTest extends BaseIntegrationTest {
   private Application application;
-  private Service service;
   private YamlGitConfig yamlGitConfig;
   private SettingAttribute gitConnector;
   @Inject private YamlIntegrationTestHelper yamlIntegrationTestHelper;
@@ -41,9 +45,9 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private YamlGitService yamlGitService;
   @Inject private EncryptionService encryptionService;
-  @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private GitIntegrationTestUtil gitIntegrationTestUtil;
   @Inject private ScmSecret scmSecret;
+  @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Before
   public void setUp() throws Exception {
@@ -106,6 +110,10 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     getGitFetchFilesResult(yamlPath, false);
   }
 
+  private GitFetchFilesResult getGitFetchFilesResult(String yamlPath) throws Exception {
+    return getGitFetchFilesResult(yamlPath, false);
+  }
+
   private GitFetchFilesResult getGitFetchFilesResult(String yamlPath, boolean isFailureExpected) throws Exception {
     GitFetchFilesResult gitFetchFilesResult = null;
     for (int count = 0; count < 18; count++) {
@@ -136,5 +144,56 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     } catch (Exception e) {
       assertTrue(true);
     }
+  }
+
+  @Test
+  public void testGitSyncCloudProviderCreatedOnHarness() throws Exception {
+    if (application == null) {
+      application = yamlIntegrationTestHelper.createApplication(
+          YamlIntegrationTestConstants.APP + System.currentTimeMillis(), accountId, appService);
+    }
+
+    String cloudProviderName = YamlIntegrationTestConstants.PHYSICAL_CLOUD_PROVIDER + System.currentTimeMillis();
+    SettingAttribute settingAttribute = yamlIntegrationTestHelper.createSettingAttribute(cloudProviderName,
+        application.getAppId(), accountId, SettingVariableTypes.PHYSICAL_DATA_CENTER, settingsService);
+
+    String yamlPath = yamlIntegrationTestHelper.getCloudProviderYamlPath(cloudProviderName);
+
+    GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
+    assertEquals(1, gitFetchFilesResult.getFiles().size());
+    assertEquals(cloudProviderName + YamlConstants.YAML_EXTENSION, gitFetchFilesResult.getFiles().get(0).getFilePath());
+
+    yamlIntegrationTestHelper.deleteSettingAttribute(settingAttribute, settingsService);
+    makeSureFileDoesntExistInRepo(yamlPath);
+
+    yamlPath = yamlIntegrationTestHelper.getApplicationYamlPath(application);
+    yamlIntegrationTestHelper.deleteApplication(application, appService);
+    makeSureFileDoesntExistInRepo(yamlPath);
+  }
+
+  @Test
+  public void testGitSyncInfraProvisionerCreatedOnHarness() throws Exception {
+    if (application == null) {
+      application = yamlIntegrationTestHelper.createApplication(
+          YamlIntegrationTestConstants.APP + System.currentTimeMillis(), accountId, appService);
+    }
+
+    String infraProvisionerName = YamlIntegrationTestConstants.INFRA_PROVISIONER + System.currentTimeMillis();
+    InfrastructureProvisioner infraProvisioner = yamlIntegrationTestHelper.createInfraProvisioner(infraProvisionerName,
+        application.getAppId(), InfrastructureProvisionerType.CLOUD_FORMATION, infrastructureProvisionerService);
+
+    String yamlPath = yamlIntegrationTestHelper.getInfraProvisionerYamlPath(application, infraProvisioner);
+
+    GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
+    assertEquals(1, gitFetchFilesResult.getFiles().size());
+    assertEquals(
+        infraProvisionerName + YamlConstants.YAML_EXTENSION, gitFetchFilesResult.getFiles().get(0).getFilePath());
+
+    yamlIntegrationTestHelper.deleteInfraProvisioner(infraProvisioner, infrastructureProvisionerService);
+    makeSureFileDoesntExistInRepo(yamlPath);
+
+    yamlPath = yamlIntegrationTestHelper.getApplicationYamlPath(application);
+    yamlIntegrationTestHelper.deleteApplication(application, appService);
+    makeSureFileDoesntExistInRepo(yamlPath);
   }
 }
