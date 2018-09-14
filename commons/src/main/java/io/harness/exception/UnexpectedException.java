@@ -1,8 +1,12 @@
 package io.harness.exception;
 
-public class UnexpectedException extends RuntimeException {
-  public UnexpectedException() {}
+import static io.harness.eraro.ErrorCode.UNEXPECTED;
+
+public class UnexpectedException extends WingsException {
+  public UnexpectedException() {
+    super(UNEXPECTED, "This should not be happening");
+  }
   public UnexpectedException(String message) {
-    super(message);
+    super(UNEXPECTED, message);
   }
 }

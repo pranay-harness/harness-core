@@ -23,6 +23,7 @@ import com.google.inject.name.Named;
 import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.WingsException;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -81,7 +82,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionException;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
@@ -167,7 +167,7 @@ public class AwsAmiServiceDeployState extends State {
 
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
     if (artifact == null) {
-      throw new StateExecutionException(format("Unable to find artifact for service %s", service.getName()));
+      throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 
@@ -435,7 +435,7 @@ public class AwsAmiServiceDeployState extends State {
 
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
     if (artifact == null) {
-      throw new StateExecutionException(format("Unable to find artifact for service %s", service.getName()));
+      throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }
 
     ContainerServiceData newContainerServiceData = awsAmiDeployStateExecutionData.getNewInstanceData().get(0);

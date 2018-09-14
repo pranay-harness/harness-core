@@ -69,7 +69,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionException;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
@@ -249,7 +248,7 @@ public class AwsLambdaState extends State {
     Artifact artifact =
         getArtifact(app.getUuid(), serviceId, context.getWorkflowExecutionId(), (DeploymentExecutionContext) context);
     if (artifact == null) {
-      throw new StateExecutionException(format("Unable to find artifact for service %s", service.getName()));
+      throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
     }
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
 

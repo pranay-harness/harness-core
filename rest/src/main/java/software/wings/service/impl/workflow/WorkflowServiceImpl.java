@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.WORKFLOW_EXECUTION_IN_PROGRESS;
+import static io.harness.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.govern.Switch.noop;
@@ -46,7 +47,6 @@ import static software.wings.common.Constants.ROLLBACK_PROVISIONERS;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.exception.HintException.MOVE_TO_THE_PARENT_OBJECT;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
@@ -61,6 +61,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.exception.ExplanationException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Rejection;
@@ -68,6 +70,7 @@ import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Sort;
@@ -97,7 +100,6 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.OrchestrationWorkflow;
@@ -126,8 +128,6 @@ import software.wings.common.Constants;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.ExplanationException;
-import software.wings.exception.InvalidArgumentsException;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
@@ -1227,8 +1227,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
     Workflow workflow = readWorkflow(appId, workflowId);
     if (workflow == null) {
-      throw new InvalidArgumentsException(NameValuePair.builder().name("application").value(appId).build(),
-          NameValuePair.builder().name("workflow").value(workflowId).build(),
+      throw new InvalidArgumentsException(Pair.of("application", appId), Pair.of("workflow", workflowId),
           new ExplanationException("This might be caused from someone else deleted "
                   + "the application and/or the workflow while you worked on it.",
               MOVE_TO_THE_PARENT_OBJECT));
@@ -1238,8 +1237,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
 
     if (orchestrationWorkflow.getWorkflowPhaseIdMap().get(workflowPhase.getUuid()) == null) {
-      throw new InvalidArgumentsException(NameValuePair.builder().name("workflow").value(workflowId).build(),
-          NameValuePair.builder().name("workflowPhase").value(appId).build(),
+      throw new InvalidArgumentsException(Pair.of("workflow", workflowId), Pair.of("workflowPhase", appId),
           new ExplanationException("This might be caused from someone else modified "
                   + "the workflow resulting in removing the phase that you worked on.",
               MOVE_TO_THE_PARENT_OBJECT));

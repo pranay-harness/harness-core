@@ -63,7 +63,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
-import software.wings.sm.StateExecutionException;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
@@ -183,7 +182,7 @@ public class PcfSetupState extends State {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     // Observed NPE in alerts
     if (artifactStream == null) {
-      throw new StateExecutionException(format(
+      throw new WingsException(format(
           "Unable to find artifact stream for service %s, artifact %s", serviceElement.getName(), artifact.getUuid()));
     }
     PcfInfrastructureMapping pcfInfrastructureMapping =
