@@ -910,7 +910,7 @@ public class DelegateServiceImpl implements DelegateService {
     try {
       timeLimiter.callWithTimeout(() -> {
         while (delegateTaskRef.get() == null || !isTaskComplete(delegateTaskRef.get().getStatus())) {
-          sleep(ofMillis(500));
+          sleep(ofMillis(2000));
           delegateTaskRef.set(wingsPersistence.get(DelegateTask.class, task.getUuid()));
           if (delegateTaskRef.get() != null) {
             logger.info(
