@@ -121,8 +121,9 @@ import software.wings.generator.PipelineGenerator.Pipelines;
 import software.wings.generator.Randomizer.Seed;
 import software.wings.generator.ResourceConstraintGenerator;
 import software.wings.generator.ResourceConstraintGenerator.ResourceConstraints;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.generator.ServiceGenerator;
 import software.wings.generator.ServiceGenerator.Services;
 import software.wings.generator.ServiceTemplateGenerator;
@@ -217,6 +218,7 @@ public class DataGenUtil extends BaseIntegrationTest {
   @Inject private ServiceTemplateGenerator serviceTemplateGenerator;
   @Inject private WorkflowGenerator workflowGenerator;
   @Inject private SettingGenerator settingGenerator;
+  @Inject private ScmSecret scmSecret;
 
   @Inject private AppResourceRestClient appResourceRestClient;
   @Inject private ServiceResourceRestClient serviceResourceRestClient;
@@ -488,7 +490,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .fromAddress("support@harness.io")
                            .username("support@harness.io")
                            .host("smtp.gmail.com")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("smtp_config_password")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("smtp_config_password")))
                            .port(465)
                            .useSSL(true)
                            .build())
@@ -503,7 +505,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withValue(SplunkConfig.builder()
                            .accountId(accountId)
                            .splunkUrl("https://ec2-52-54-103-49.compute-1.amazonaws.com:8089")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("splunk_config_password")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("splunk_config_password")))
                            .username("admin")
                            .build())
             .build();
@@ -519,7 +521,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .controllerUrl("https://harness-test.saas.appdynamics.com/controller")
                            .username("raghu@harness.io")
                            .accountname("harness-test")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("appd_config_password")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("appd_config_password")))
                            .build())
             .build();
     wingsPersistence.save(appdSettingAttribute);
@@ -546,8 +548,8 @@ public class DataGenUtil extends BaseIntegrationTest {
             .withEnvId(GLOBAL_ENV_ID)
             .withAccountId(accountId)
             .withValue(AwsConfig.builder()
-                           .accessKey(secretGenerator.decryptToString(new SecretName("aws_playground_access_key")))
-                           .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_playground_secret_key")))
+                           .accessKey(scmSecret.decryptToString(new SecretName("aws_playground_access_key")))
+                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")))
                            .accountId(accountId)
                            .build())
             .build();
@@ -564,7 +566,7 @@ public class DataGenUtil extends BaseIntegrationTest {
                            .withAccessType(KEY)
                            .withAccountId(accountId)
                            .withUserName("ubuntu")
-                           .withKey(secretGenerator.decryptToCharArray(new SecretName("ubuntu_ssh_key")))
+                           .withKey(scmSecret.decryptToCharArray(new SecretName("ubuntu_ssh_key")))
                            .build())
             .build();
     wingsPersistence.save(hostConnection);
@@ -632,7 +634,7 @@ public class DataGenUtil extends BaseIntegrationTest {
         seed, terraformOwners, InfrastructureMappings.TERRAFORM_AWS_SSH_TEST);
 
     final SecretName awsPlaygroundAccessKeyName = SecretName.builder().value("aws_playground_access_key").build();
-    final String awsPlaygroundAccessKey = secretGenerator.decryptToString(awsPlaygroundAccessKeyName);
+    final String awsPlaygroundAccessKey = scmSecret.decryptToString(awsPlaygroundAccessKeyName);
     final SecretName awsPlaygroundSecretKeyName = SecretName.builder().value("aws_playground_secret_key").build();
     final String awsPlaygroundSecretKeyId = secretGenerator.ensureStored(terraformOwners, awsPlaygroundSecretKeyName);
 

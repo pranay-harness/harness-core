@@ -34,8 +34,9 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.metrics.RiskLevel;
 import software.wings.rules.RealMongo;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -107,6 +108,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Inject private ElkDelegateService elkDelegateService;
   @Inject private SumoDelegateService sumoDelegateService;
   @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
 
   @Before
   public void setup() {
@@ -134,7 +136,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
             .accountId(accountId)
             .splunkUrl("https://ec2-52-54-103-49.compute-1.amazonaws.com:8089")
             .username("admin")
-            .password(secretGenerator.decryptToCharArray(new SecretName("splunk_config_password")))
+            .password(scmSecret.decryptToCharArray(new SecretName("splunk_config_password")))
             .build();
 
     final SettingAttribute settingAttribute =
@@ -165,7 +167,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     sumoConfig.setAccountId(accountId);
     sumoConfig.setSumoUrl("https://api.us2.sumologic.com:443/api/v1/");
     sumoConfig.setAccessId("su6JaFdOBOOsnM".toCharArray());
-    sumoConfig.setAccessKey(secretGenerator.decryptToCharArray(new SecretName("sumo_config_access_key")));
+    sumoConfig.setAccessKey(scmSecret.decryptToCharArray(new SecretName("sumo_config_access_key")));
 
     final SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(sumoConfig).build();

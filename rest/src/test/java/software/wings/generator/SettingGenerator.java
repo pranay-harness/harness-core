@@ -40,7 +40,6 @@ import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.AccountGenerator.Accounts;
 import software.wings.generator.OwnerManager.Owners;
-import software.wings.generator.SecretGenerator.SecretName;
 import software.wings.service.intfc.SettingsService;
 import software.wings.utils.WingsTestConstants;
 
@@ -48,6 +47,7 @@ import software.wings.utils.WingsTestConstants;
 public class SettingGenerator {
   @Inject AccountGenerator accountGenerator;
   @Inject SecretGenerator secretGenerator;
+  @Inject ScmSecret scmSecret;
 
   @Inject SettingsService settingsService;
   @Inject WingsPersistence wingsPersistence;
@@ -107,8 +107,8 @@ public class SettingGenerator {
             .withEnvId(GLOBAL_ENV_ID)
             .withAccountId(account.getUuid())
             .withValue(AwsConfig.builder()
-                           .accessKey(secretGenerator.decryptToString(new SecretName("aws_playground_access_key")))
-                           .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_playground_secret_key")))
+                           .accessKey(scmSecret.decryptToString(new SecretName("aws_playground_access_key")))
+                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")))
                            .accountId(account.getUuid())
                            .build())
             .build();
@@ -130,7 +130,7 @@ public class SettingGenerator {
                            .withAccessType(KEY)
                            .withAccountId(account.getUuid())
                            .withUserName("ubuntu")
-                           .withKey(secretGenerator.decryptToCharArray(new SecretName("ubuntu_private_key")))
+                           .withKey(scmSecret.decryptToCharArray(new SecretName("ubuntu_private_key")))
                            .build())
             .build();
     return ensureSettingAttribute(seed, settingAttribute);
@@ -151,7 +151,7 @@ public class SettingGenerator {
                            .withAccessType(KEY)
                            .withAccountId(account.getUuid())
                            .withUserName("test-harness")
-                           .withKey(secretGenerator.decryptToCharArray(new SecretName("playground_private_key")))
+                           .withKey(scmSecret.decryptToCharArray(new SecretName("playground_private_key")))
                            .build())
             .build();
     return ensureSettingAttribute(seed, settingAttribute);
@@ -170,7 +170,7 @@ public class SettingGenerator {
             .withValue(GitConfig.builder()
                            .repoUrl("https://github.com/wings-software/terraform-test.git")
                            .username("test-harness")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("terraform_password")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("terraform_password")))
                            .branch("master")
                            .accountId(githubKey.getAccountId())
                            .build())
@@ -190,7 +190,7 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .jenkinsUrl("https://jenkins.wings.software")
                            .username("wingsbuild")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_jenkins")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
                            .build())
             .build();
@@ -208,7 +208,7 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .bambooUrl("http://ec2-18-208-86-222.compute-1.amazonaws.com:8085/")
                            .username("wingsbuild")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_bamboo")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_bamboo")))
                            .build())
             .build();
     return ensureSettingAttribute(seed, bambooSettingAttribute);
@@ -225,7 +225,7 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .nexusUrl("https://nexus2.harness.io")
                            .username("admin")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_nexus")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
                            .build())
             .build();
     return ensureSettingAttribute(seed, nexusSettingAttribute);
@@ -242,7 +242,7 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .nexusUrl("https://nexus3.harness.io")
                            .username("admin")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_nexus")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
                            .build())
             .build();
     return ensureSettingAttribute(seed, nexus3SettingAttribute);
@@ -259,7 +259,7 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .artifactoryUrl("https://harness.jfrog.io/harness")
                            .username("admin")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_artifactory")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_artifactory")))
                            .build())
             .build();
     return ensureSettingAttribute(seed, artifactorySettingAttribute);
@@ -276,7 +276,7 @@ public class SettingGenerator {
                            .accountId(account.getUuid())
                            .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
                            .username("wingsplugins")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("harness_docker_hub")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("harness_docker_hub")))
                            .build())
             .build();
     return ensureSettingAttribute(seed, dockerSettingAttribute);
@@ -291,7 +291,7 @@ public class SettingGenerator {
             .withAccountId(account.getUuid())
             .withValue(GcpConfig.builder()
                            .serviceAccountKeyFileContent(
-                               secretGenerator.decryptToCharArray(new SecretName("harness_gcp_exploration")))
+                               scmSecret.decryptToCharArray(new SecretName("harness_gcp_exploration")))
                            .accountId(account.getUuid())
                            .build())
             .build();

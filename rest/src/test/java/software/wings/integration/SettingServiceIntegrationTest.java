@@ -28,15 +28,18 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.Constants;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 public class SettingServiceIntegrationTest extends BaseIntegrationTest {
-  @Inject SecretGenerator secretGenerator;
+  @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
+
   String JENKINS_URL = "https://jenkins.wings.software";
   String JENKINS_USERNAME = "wingsbuild";
 
@@ -67,14 +70,13 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
                              .withName(HARNESS_JENKINS + System.currentTimeMillis())
                              .withCategory(Category.CONNECTOR)
                              .withAccountId(accountId)
-                             .withValue(
-                                 JenkinsConfig.builder()
-                                     .accountId(accountId)
-                                     .jenkinsUrl(JENKINS_URL)
-                                     .username(JENKINS_USERNAME)
-                                     .password(secretGenerator.decryptToCharArray(new SecretName("harness_jenkins")))
-                                     .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
-                                     .build())
+                             .withValue(JenkinsConfig.builder()
+                                            .accountId(accountId)
+                                            .jenkinsUrl(JENKINS_URL)
+                                            .username(JENKINS_USERNAME)
+                                            .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
+                                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                                            .build())
                              .build(),
                       APPLICATION_JSON),
                 new GenericType<RestResponse<SettingAttribute>>() {});
@@ -90,19 +92,18 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   public void shouldThrowExceptionForUnreachableJenkinsUrl() {
     Response response =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
-            .post(entity(
-                aSettingAttribute()
-                    .withName(HARNESS_JENKINS + System.currentTimeMillis())
-                    .withCategory(Category.CONNECTOR)
-                    .withAccountId(accountId)
-                    .withValue(JenkinsConfig.builder()
-                                   .accountId(accountId)
-                                   .jenkinsUrl("BAD_URL")
-                                   .username(JENKINS_USERNAME)
-                                   .password(secretGenerator.decryptToCharArray(new SecretName("harness_jenkins")))
-                                   .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
-                                   .build())
-                    .build(),
+            .post(entity(aSettingAttribute()
+                             .withName(HARNESS_JENKINS + System.currentTimeMillis())
+                             .withCategory(Category.CONNECTOR)
+                             .withAccountId(accountId)
+                             .withValue(JenkinsConfig.builder()
+                                            .accountId(accountId)
+                                            .jenkinsUrl("BAD_URL")
+                                            .username(JENKINS_USERNAME)
+                                            .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
+                                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
+                                            .build())
+                             .build(),
                 APPLICATION_JSON));
 
     assertThat(response.getStatus()).isEqualTo(400);
@@ -118,19 +119,18 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   public void shouldSaveNexusConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
-            .post(
-                entity(aSettingAttribute()
-                           .withName(HARNESS_NEXUS + System.currentTimeMillis())
-                           .withCategory(Category.CONNECTOR)
-                           .withAccountId(accountId)
-                           .withValue(NexusConfig.builder()
-                                          .nexusUrl(NEXUS_URL)
-                                          .username(NEXUS_USERNAME)
-                                          .password(secretGenerator.decryptToCharArray(new SecretName("harness_nexus")))
-                                          .accountId(accountId)
-                                          .build())
-                           .build(),
-                    APPLICATION_JSON),
+            .post(entity(aSettingAttribute()
+                             .withName(HARNESS_NEXUS + System.currentTimeMillis())
+                             .withCategory(Category.CONNECTOR)
+                             .withAccountId(accountId)
+                             .withValue(NexusConfig.builder()
+                                            .nexusUrl(NEXUS_URL)
+                                            .username(NEXUS_USERNAME)
+                                            .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
+                                            .accountId(accountId)
+                                            .build())
+                             .build(),
+                      APPLICATION_JSON),
                 new GenericType<RestResponse<SettingAttribute>>() {});
     assertThat(restResponse.getResource())
         .isInstanceOf(SettingAttribute.class)
@@ -143,18 +143,17 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   public void shouldSaveBambooConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
-            .post(entity(
-                      aSettingAttribute()
-                          .withName(HARNESS_BAMBOO + System.currentTimeMillis())
-                          .withCategory(Category.CONNECTOR)
-                          .withAccountId(accountId)
-                          .withValue(BambooConfig.builder()
-                                         .accountId(accountId)
-                                         .bambooUrl(BAMBOO_URL)
-                                         .username(BAMBOO_USERNAME)
-                                         .password(secretGenerator.decryptToCharArray(new SecretName("harness_bamboo")))
-                                         .build())
-                          .build(),
+            .post(entity(aSettingAttribute()
+                             .withName(HARNESS_BAMBOO + System.currentTimeMillis())
+                             .withCategory(Category.CONNECTOR)
+                             .withAccountId(accountId)
+                             .withValue(BambooConfig.builder()
+                                            .accountId(accountId)
+                                            .bambooUrl(BAMBOO_URL)
+                                            .username(BAMBOO_USERNAME)
+                                            .password(scmSecret.decryptToCharArray(new SecretName("harness_bamboo")))
+                                            .build())
+                             .build(),
                       APPLICATION_JSON),
                 new GenericType<RestResponse<SettingAttribute>>() {});
     assertThat(restResponse.getResource())
@@ -169,19 +168,19 @@ public class SettingServiceIntegrationTest extends BaseIntegrationTest {
   public void shouldSaveDockerConfig() {
     RestResponse<SettingAttribute> restResponse =
         getRequestBuilderWithAuthHeader(getListWebTarget(accountId))
-            .post(entity(aSettingAttribute()
-                             .withName(HARNESS_DOCKER_REGISTRY + System.currentTimeMillis())
-                             .withCategory(Category.CONNECTOR)
-                             .withAccountId(accountId)
-                             .withValue(
-                                 DockerConfig.builder()
-                                     .accountId(accountId)
-                                     .dockerRegistryUrl(DOCKER_REGISTRY_URL)
-                                     .username(DOCKER_USERNAME)
-                                     .password(secretGenerator.decryptToCharArray(new SecretName("harness_docker_hub")))
-                                     .build())
-                             .build(),
-                      APPLICATION_JSON),
+            .post(
+                entity(aSettingAttribute()
+                           .withName(HARNESS_DOCKER_REGISTRY + System.currentTimeMillis())
+                           .withCategory(Category.CONNECTOR)
+                           .withAccountId(accountId)
+                           .withValue(DockerConfig.builder()
+                                          .accountId(accountId)
+                                          .dockerRegistryUrl(DOCKER_REGISTRY_URL)
+                                          .username(DOCKER_USERNAME)
+                                          .password(scmSecret.decryptToCharArray(new SecretName("harness_docker_hub")))
+                                          .build())
+                           .build(),
+                    APPLICATION_JSON),
                 new GenericType<RestResponse<SettingAttribute>>() {});
     assertThat(restResponse.getResource())
         .isInstanceOf(SettingAttribute.class)

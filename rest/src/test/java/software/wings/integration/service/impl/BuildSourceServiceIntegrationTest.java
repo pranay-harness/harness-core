@@ -55,8 +55,9 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.UserThreadLocal;
@@ -109,6 +110,8 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   @Inject private EcrBuildService ecrBuildService;
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
   @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
+
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -169,13 +172,12 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
                 .withName(HARNESS_BAMBOO)
                 .withCategory(CONNECTOR)
                 .withAccountId(accountId)
-                .withValue(
-                    BambooConfig.builder()
-                        .accountId(accountId)
-                        .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
-                        .username("wingsbuild")
-                        .password(secretGenerator.decryptToCharArray(new SecretName("bamboo_connector_password")))
-                        .build())
+                .withValue(BambooConfig.builder()
+                               .accountId(accountId)
+                               .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
+                               .username("wingsbuild")
+                               .password(scmSecret.decryptToCharArray(new SecretName("bamboo_connector_password")))
+                               .build())
                 .build();
         artifactStream = new BambooArtifactStream();
         ((BambooArtifactStream) artifactStream).setJobname(jobName);
@@ -195,7 +197,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
                                .accountId(accountId)
                                .nexusUrl("https://nexus.wings.software")
                                .username("admin")
-                               .password(secretGenerator.decryptToCharArray(new SecretName("nexus_connector_password")))
+                               .password(scmSecret.decryptToCharArray(new SecretName("nexus_connector_password")))
                                .build())
                 .build();
         artifactStream = new NexusArtifactStream();
@@ -213,13 +215,12 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
                 .withName(HARNESS_DOCKER_REGISTRY)
                 .withCategory(CONNECTOR)
                 .withAccountId(accountId)
-                .withValue(
-                    DockerConfig.builder()
-                        .accountId(accountId)
-                        .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
-                        .username("wingsplugins")
-                        .password(secretGenerator.decryptToCharArray(new SecretName("docker_connector_password")))
-                        .build())
+                .withValue(DockerConfig.builder()
+                               .accountId(accountId)
+                               .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
+                               .username("wingsplugins")
+                               .password(scmSecret.decryptToCharArray(new SecretName("docker_connector_password")))
+                               .build())
                 .build();
         artifactStream = new DockerArtifactStream();
         ((DockerArtifactStream) artifactStream).setImageName(artifactPath);
@@ -233,13 +234,12 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
                 .withName(HARNESS_ARTIFACTORY)
                 .withCategory(CONNECTOR)
                 .withAccountId(accountId)
-                .withValue(
-                    ArtifactoryConfig.builder()
-                        .accountId(accountId)
-                        .artifactoryUrl("https://harness.jfrog.io/harness")
-                        .username("admin")
-                        .password(secretGenerator.decryptToCharArray(new SecretName("artifactory_connector_password")))
-                        .build())
+                .withValue(ArtifactoryConfig.builder()
+                               .accountId(accountId)
+                               .artifactoryUrl("https://harness.jfrog.io/harness")
+                               .username("admin")
+                               .password(scmSecret.decryptToCharArray(new SecretName("artifactory_connector_password")))
+                               .build())
                 .build();
         artifactStream = new ArtifactoryArtifactStream();
         ((ArtifactoryArtifactStream) artifactStream).setJobname(jobName);
@@ -256,12 +256,11 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
                 .withName("AWS")
                 .withCategory(CLOUD_PROVIDER)
                 .withAccountId(accountId)
-                .withValue(
-                    AwsConfig.builder()
-                        .accountId(accountId)
-                        .accessKey(secretGenerator.decryptToString(new SecretName("ecr_connector_access_key")))
-                        .secretKey(secretGenerator.decryptToCharArray(new SecretName("ecr_connector_secret_key")))
-                        .build())
+                .withValue(AwsConfig.builder()
+                               .accountId(accountId)
+                               .accessKey(scmSecret.decryptToString(new SecretName("ecr_connector_access_key")))
+                               .secretKey(scmSecret.decryptToCharArray(new SecretName("ecr_connector_secret_key")))
+                               .build())
                 .build();
         artifactStream = new EcrArtifactStream();
         ((EcrArtifactStream) artifactStream).setRegion(Regions.US_EAST_1.getName());

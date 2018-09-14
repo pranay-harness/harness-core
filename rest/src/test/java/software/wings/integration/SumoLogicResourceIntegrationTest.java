@@ -23,8 +23,9 @@ import org.junit.Test;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SumoConfig;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.sumo.SumoLogicSetupTestNodedata;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
@@ -46,6 +47,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   private String workflowId;
   private String workflowExecutionId;
   @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
 
   @Before
   public void setUp() throws Exception {
@@ -59,8 +61,8 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
             .withAccountId(accountId)
             .withValue(SumoConfig.builder()
                            .sumoUrl("https://api.us2.sumologic.com/api/v1/")
-                           .accessId(secretGenerator.decryptToCharArray(new SecretName("sumo_config_access_id")))
-                           .accessKey(secretGenerator.decryptToCharArray(new SecretName("sumo_config_access_key")))
+                           .accessId(scmSecret.decryptToCharArray(new SecretName("sumo_config_access_id")))
+                           .accessKey(scmSecret.decryptToCharArray(new SecretName("sumo_config_access_key")))
                            .accountId(accountId)
                            .build())
             .build());

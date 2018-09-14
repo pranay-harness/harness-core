@@ -13,8 +13,9 @@ import software.wings.beans.SettingAttribute;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.Randomizer;
 import software.wings.generator.Randomizer.Seed;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.generator.SettingGenerator;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.JenkinsBuildService;
@@ -29,6 +30,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   @Inject private JenkinsBuildService jenkinsBuildService;
   @Inject SettingGenerator settingGenerator;
   @Inject SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
 
   private JenkinsConfig obtainJenkinsConfig() {
     final Seed seed = Randomizer.seed();
@@ -56,7 +58,7 @@ public class JenkinsIntegrationTest extends BaseIntegrationTest {
   public void testGetJobs() {
     JenkinsConfig jenkinsConfig = obtainJenkinsConfig();
 
-    jenkinsConfig.setPassword(secretGenerator.decryptToCharArray(new SecretName("harness_jenkins")));
+    jenkinsConfig.setPassword(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")));
 
     List<JobDetails> jobs = jenkinsBuildService.getJobs(jenkinsConfig, null, Optional.empty());
     assertFalse(jobs.isEmpty());

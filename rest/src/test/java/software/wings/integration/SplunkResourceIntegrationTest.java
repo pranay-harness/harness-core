@@ -21,8 +21,9 @@ import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SplunkConfig;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.service.impl.splunk.SplunkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
@@ -40,7 +41,9 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
   private String appId;
   private String workflowId;
   private String workflowExecutionId;
+
   @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
 
   @Before
   public void setUp() throws Exception {
@@ -54,7 +57,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
             .withValue(SplunkConfig.builder()
                            .splunkUrl("https://ec2-52-204-66-40.compute-1.amazonaws.com:8089")
                            .username("admin")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("splunk_config_password")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("splunk_config_password")))
                            .accountId(accountId)
                            .build())
             .build());

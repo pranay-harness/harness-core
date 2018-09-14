@@ -13,8 +13,9 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.service.intfc.SettingsService;
 
@@ -30,6 +31,7 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
   @Inject BambooService bambooService;
   @Inject SettingsService settingsService;
   @Inject SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
   private BambooConfig bambooConfig;
 
   @Before
@@ -37,7 +39,7 @@ public class BambooServiceBuildServiceTest extends WingsBaseTest {
     bambooConfig = BambooConfig.builder()
                        .bambooUrl("http://ec2-54-144-126-230.compute-1.amazonaws.com:8085/rest/api/latest/")
                        .username("wingsbuild")
-                       .password(secretGenerator.decryptToCharArray(new SecretName("bamboo_config_password")))
+                       .password(scmSecret.decryptToCharArray(new SecretName("bamboo_config_password")))
                        .build();
   }
 

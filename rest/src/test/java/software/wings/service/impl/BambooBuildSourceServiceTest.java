@@ -25,8 +25,9 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.BambooBuildService;
@@ -52,7 +53,8 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Inject private BuildSourceService buildSourceService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private BambooBuildService bambooBuildService;
-  @Inject SecretGenerator secretGenerator;
+  @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
 
   @Before
   public void setup() {
@@ -71,7 +73,7 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
                            .accountId(accountId)
                            .bambooUrl("http://ec2-34-205-16-35.compute-1.amazonaws.com:8085/")
                            .username("wingsbuild")
-                           .password(secretGenerator.decryptToCharArray(new SecretName("bamboo_config_password")))
+                           .password(scmSecret.decryptToCharArray(new SecretName("bamboo_config_password")))
                            .build())
             .build();
     wingsPersistence.save(settingAttribute);

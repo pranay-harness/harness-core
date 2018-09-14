@@ -36,8 +36,9 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -62,6 +63,7 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
 
   private Application app;
   private Service service;
@@ -185,11 +187,10 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
     SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute()
             .withAppId(app.getUuid())
-            .withValue(
-                AwsConfig.builder()
-                    .accessKey(secretGenerator.decryptToString(new SecretName("aws_config_access_key")))
-                    .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
-                    .build())
+            .withValue(AwsConfig.builder()
+                           .accessKey(scmSecret.decryptToString(new SecretName("aws_config_access_key")))
+                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
+                           .build())
             .build());
 
     AwsInfrastructureMapping awsInfrastructureMapping =
@@ -217,17 +218,16 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
             .withValue(HostConnectionAttributes.Builder.aHostConnectionAttributes()
                            .withAccessType(AccessType.KEY)
                            .withConnectionType(ConnectionType.SSH)
-                           .withKey(secretGenerator.decryptToCharArray(new SecretName("generic_ssh_key")))
+                           .withKey(scmSecret.decryptToCharArray(new SecretName("generic_ssh_key")))
                            .build())
             .build());
     SettingAttribute computeProviderSetting = wingsPersistence.saveAndGet(SettingAttribute.class,
         aSettingAttribute()
             .withAppId(app.getUuid())
-            .withValue(
-                AwsConfig.builder()
-                    .accessKey(secretGenerator.decryptToString(new SecretName("aws_config_access_key")))
-                    .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
-                    .build())
+            .withValue(AwsConfig.builder()
+                           .accessKey(scmSecret.decryptToString(new SecretName("aws_config_access_key")))
+                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
+                           .build())
             .build());
 
     // TODO(brett): Create aws autoscaling group and reference in inframapping

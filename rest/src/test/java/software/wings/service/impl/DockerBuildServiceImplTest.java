@@ -15,8 +15,9 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.rules.Integration;
@@ -37,6 +38,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
   @Inject private DockerRegistryService dockerRegistryService;
   @Inject private ArtifactStreamService artifactStreamService;
   @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
 
   @Inject @InjectMocks private DockerBuildService dockerBuildService;
 
@@ -60,7 +62,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
         DockerConfig.builder()
             .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
             .username("anubhaw")
-            .password(secretGenerator.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
             .build();
     List<BuildDetails> builds = dockerRegistryService.getBuilds(dockerConfig, null, "library/mysql", 5);
     logger.info(builds.toString());
@@ -72,7 +74,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
         DockerConfig.builder()
             .dockerRegistryUrl("invalid_url")
             .username("anubhaw")
-            .password(secretGenerator.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
             .build();
     try {
       dockerBuildService.validateArtifactServer(dockerConfig);
@@ -89,7 +91,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
         DockerConfig.builder()
             .dockerRegistryUrl("https://registry.hub.docker.com/v2/")
             .username("invalid")
-            .password(secretGenerator.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
+            .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
             .build();
     try {
       dockerRegistryService.validateCredentials(dockerConfig, null);
