@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.util.stream.Collectors.joining;
 import static software.wings.common.Constants.SECRET_MASK;
@@ -727,7 +726,7 @@ public class SecretManagerImpl implements SecretManager {
                                                  .filter("encryptedValue", uuId)
                                                  .asList();
     if (!serviceVariables.isEmpty()) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER_SRE)
+      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER)
           .addParam("reason",
               "Being used by " + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", ")));
     }
