@@ -20,8 +20,9 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -40,6 +41,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   @Inject private ElkDelegateService elkDelegateService;
   @Inject private EncryptionService encryptionService;
   @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
 
   @Before
   public void setup() {
@@ -107,7 +109,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
     elkConfig.setAccountId(accountId);
     elkConfig.setElkUrl("https://ec2-34-207-78-53.compute-1.amazonaws.com:9200");
     elkConfig.setUsername("elastic");
-    elkConfig.setPassword(secretGenerator.decryptToCharArray(new SecretName("elk_config_elastic_user_password")));
+    elkConfig.setPassword(scmSecret.decryptToCharArray(new SecretName("elk_config_elastic_user_password")));
 
     final SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(elkConfig).build();

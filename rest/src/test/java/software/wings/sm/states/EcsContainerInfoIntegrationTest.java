@@ -39,8 +39,9 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.AppService;
@@ -72,6 +73,7 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
   @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
   @Inject private AwsHelperService awsHelperService;
   @Inject private ContainerService containerService;
   @Mock private ContainerInstanceHandler containerInstanceHandler;
@@ -97,8 +99,8 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   @Ignore
   public void testGetLastExecutionNodesECS() throws NoSuchAlgorithmException, KeyManagementException {
     AwsConfig awsConfig = AwsConfig.builder()
-                              .accessKey(secretGenerator.decryptToString(new SecretName("aws_config_access_key_1")))
-                              .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_config_secret_key_1")))
+                              .accessKey(scmSecret.decryptToString(new SecretName("aws_config_access_key_1")))
+                              .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_config_secret_key_1")))
                               .accountId(accountId)
                               .build();
     SettingAttribute settingAttribute =

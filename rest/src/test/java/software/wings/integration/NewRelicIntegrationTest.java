@@ -53,8 +53,9 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.WorkflowExecution;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -117,6 +118,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
 
   private String newRelicConfigId;
 
@@ -137,7 +139,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
             .withValue(NewRelicConfig.builder()
                            .accountId(accountId)
                            .newRelicUrl("https://api.newrelic.com")
-                           .apiKey(secretGenerator.decryptToCharArray(new SecretName("new_relic_api_key")))
+                           .apiKey(scmSecret.decryptToCharArray(new SecretName("new_relic_api_key")))
                            .build())
             .build();
     newRelicConfigId = wingsPersistence.saveAndGet(SettingAttribute.class, newRelicSettingAttribute).getUuid();
@@ -544,12 +546,12 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
     List<APMVerificationConfig.KeyValues> optionsList = new ArrayList<>();
     optionsList.add(APMVerificationConfig.KeyValues.builder()
                         .key("api_key")
-                        .value(secretGenerator.decryptToString(new SecretName("apm_verfication_config_api_key")))
+                        .value(scmSecret.decryptToString(new SecretName("apm_verfication_config_api_key")))
                         .encrypted(false)
                         .build());
     optionsList.add(APMVerificationConfig.KeyValues.builder()
                         .key("application_key")
-                        .value(secretGenerator.decryptToString(new SecretName("apm_verfication_config_app_key")))
+                        .value(scmSecret.decryptToString(new SecretName("apm_verfication_config_app_key")))
                         .encrypted(false)
                         .build());
     config.setOptionsList(optionsList);

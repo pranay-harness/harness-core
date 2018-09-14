@@ -30,8 +30,9 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Collections;
@@ -44,7 +45,8 @@ import java.util.List;
 public class AwsCodeDeployServiceTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployServiceTest.class);
   @InjectMocks @Inject private AwsCodeDeployService awsCodeDeployService;
-  @Inject SecretGenerator secretGenerator;
+  @Inject private SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
   @Mock private AwsHelperService awsHelperService;
 
   String PUBLIC_DNS_NAME = "publicDnsName";
@@ -56,8 +58,8 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
     cloudProvider =
         SettingAttribute.Builder.aSettingAttribute()
             .withValue(AwsConfig.builder()
-                           .accessKey(secretGenerator.decrypt(new SecretName("aws_playground_access_key")).toString())
-                           .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_playground_secret_key")))
+                           .accessKey(scmSecret.decrypt(new SecretName("aws_playground_access_key")).toString())
+                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")))
                            .build())
             .build();
   }

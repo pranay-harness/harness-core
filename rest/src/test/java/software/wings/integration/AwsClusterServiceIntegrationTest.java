@@ -17,8 +17,9 @@ import software.wings.cloudprovider.aws.AwsClusterConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
+import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretGenerator.SecretName;
+import software.wings.generator.SecretName;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Collections;
@@ -34,6 +35,7 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   @Inject private EcsContainerService ecsContainerService;
   @Inject private AwsHelperService awsHelperService;
   @Inject SecretGenerator secretGenerator;
+  @Inject private ScmSecret scmSecret;
   private SettingAttribute awsConnectorSetting;
 
   private String serviceJson =
@@ -43,12 +45,11 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   public void setUp() {
     awsConnectorSetting =
         aSettingAttribute()
-            .withValue(
-                AwsConfig.builder()
-                    .accessKey(secretGenerator.decrypt(new SecretName("aws_config_access_key")).toString())
-                    .secretKey(secretGenerator.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
+            .withValue(AwsConfig.builder()
+                           .accessKey(scmSecret.decrypt(new SecretName("aws_config_access_key")).toString())
+                           .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_setting_attribute_secret_key")))
 
-                    .build())
+                           .build())
             .build();
   }
 
