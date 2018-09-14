@@ -172,7 +172,7 @@ public class LogMLAnalysisGenerator implements Runnable {
         }
       }
 
-      String featureName = featureFlagService.isEnabled(LOGML_NEURAL_NET, accountId) ? "NEURAL_NET" : null;
+      String featureName = featureFlagService.isEnabled(LOGML_NEURAL_NET, accountId) ? null : "NEURAL_NET";
 
       LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
           LearningEngineAnalysisTask.builder()
