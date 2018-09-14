@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -16,6 +17,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Delegate;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
+import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.sso.LdapSettings;
@@ -191,7 +193,8 @@ public class SSOSettingServiceImpl implements SSOSettingService {
 
   @Override
   public void sendSSONotReachableNotification(String accountId, SSOSettings settings) {
-    List<Delegate> delegates = delegateService.list(PageRequestBuilder.aPageRequest().build());
+    List<Delegate> delegates = delegateService.list(
+        PageRequestBuilder.aPageRequest().addFilter(ACCOUNT_ID_KEY, Operator.EQ, accountId).build());
     String hostNamesForDelegates = "\n" + delegates.stream().map(Delegate::getHostName).collect(joining("\n"));
 
     String hostNamesForDelegatesHtml =
