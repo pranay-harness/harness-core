@@ -30,6 +30,6 @@ public class LogMLAnalysisSummary {
   private int analysisMinute;
 
   public boolean isEmptyResult() {
-    return isEmpty(controlClusters) && isEmpty(testClusters) && isEmpty(unknownClusters);
+    return isEmpty(testClusters) && isEmpty(unknownClusters);
   }
 }
