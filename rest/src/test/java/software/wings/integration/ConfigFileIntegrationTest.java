@@ -322,10 +322,20 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
 
   @After
   public void tearDown() {
-    configService.deleteByEntityId(app.getAppId(), configFile.getEntityId());
-    configService.deleteByEntityId(app.getAppId(), newConfigFile.getEntityId());
-    serviceTemplateService.delete(app.getAppId(), serviceTemplate.getUuid());
-    serviceResourceService.delete(app.getAppId(), service.getUuid());
-    appService.delete(app.getAppId());
+    if (configFile != null) {
+      configService.deleteByEntityId(app.getAppId(), configFile.getEntityId());
+    }
+    if (newConfigFile != null) {
+      configService.deleteByEntityId(app.getAppId(), newConfigFile.getEntityId());
+    }
+    if (serviceTemplate != null) {
+      serviceTemplateService.delete(app.getAppId(), serviceTemplate.getUuid());
+    }
+    if (service != null) {
+      serviceResourceService.delete(app.getAppId(), service.getUuid());
+    }
+    if (app != null) {
+      appService.delete(app.getAppId());
+    }
   }
 }
