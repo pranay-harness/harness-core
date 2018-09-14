@@ -59,7 +59,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
             .withAccountId(accountId)
             .withValue(SumoConfig.builder()
                            .sumoUrl("https://api.us2.sumologic.com/api/v1/")
-                           .accessId(secretGenerator.decryptToCharArray(new SecretName("sumo_config_acces_id")))
+                           .accessId(secretGenerator.decryptToCharArray(new SecretName("sumo_config_access_id")))
                            .accessKey(secretGenerator.decryptToCharArray(new SecretName("sumo_config_access_key")))
                            .accountId(accountId)
                            .build())
