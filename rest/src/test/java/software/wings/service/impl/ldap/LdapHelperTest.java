@@ -4,17 +4,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.doThrow;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.whenNew;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ldaptive.Connection;
-import org.ldaptive.ConnectionFactory;
 import org.ldaptive.DefaultConnectionFactory;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.LdapException;
@@ -22,6 +20,7 @@ import org.ldaptive.ResultCode;
 import org.ldaptive.SearchResult;
 import org.ldaptive.auth.AuthenticationResponse;
 import org.ldaptive.auth.Authenticator;
+import org.ldaptive.auth.SearchDnResolver;
 import org.mockito.Matchers;
 import org.mockito.MockitoAnnotations;
 import org.powermock.api.mockito.PowerMockito;
@@ -74,11 +73,11 @@ public class LdapHelperTest extends WingsBaseTest {
     groupSettings.setBaseDN("testBaseDN");
     ldapSettings = new LdapSettings("testSettings", "testAccount", connectionSettings, userSettings, groupSettings);
 
-    ConnectionFactory cf = mock(DefaultConnectionFactory.class);
+    DefaultConnectionFactory cf = mock(DefaultConnectionFactory.class);
     Connection c = mock(Connection.class);
     when(cf.getConnection()).thenReturn(c);
-    helper = spy(new LdapHelper(ldapSettings.getConnectionSettings()));
-    doReturn(cf).when(helper).getConnectionFactory();
+    whenNew(DefaultConnectionFactory.class).withAnyArguments().thenReturn(cf);
+    helper = new LdapHelper(ldapSettings.getConnectionSettings());
 
     searchResult = mock(SearchResult.class);
     searchBuilder = mock(LdapSearch.Builder.class);
@@ -119,7 +118,7 @@ public class LdapHelperTest extends WingsBaseTest {
 
     LdapException ldapException = mock(LdapException.class);
     when(ldapException.getResultCode()).thenReturn(ResultCode.OPERATIONS_ERROR);
-    doThrow(ldapException).when(helper).listGroups(any(), any(), anyInt());
+    when(search.execute(Matchers.anyVararg())).thenThrow(ldapException);
     assertThat(helper.validateGroupConfig(ldapSettings.getGroupSettings()).getStatus()).isEqualTo(Status.FAILURE);
   }
 
@@ -152,14 +151,16 @@ public class LdapHelperTest extends WingsBaseTest {
     when(search.execute(any())).thenReturn(searchResult);
     when(search.execute()).thenReturn(searchResult);
     when(searchResult.size()).thenReturn(1);
-    doReturn(false).when(helper).userExists(any(), any());
+    SearchDnResolver searchDnResolver = mock(SearchDnResolver.class);
+    when(search.getSearchDnResolver(anyString())).thenReturn(searchDnResolver);
+    when(searchDnResolver.resolve(any())).thenReturn("");
 
     LdapResponse response = helper.authenticate(ldapSettings.getUserSettings(), "myemail@mycompany.com", "mypassword");
     assertThat(response.getStatus()).isEqualTo(Status.FAILURE);
 
     Authenticator authenticator = mock(Authenticator.class);
-    PowerMockito.whenNew(Authenticator.class).withAnyArguments().thenReturn(authenticator);
-    doReturn(true).when(helper).userExists(any(), any());
+    whenNew(Authenticator.class).withAnyArguments().thenReturn(authenticator);
+    when(searchDnResolver.resolve(any())).thenReturn("userDN");
     AuthenticationResponse authenticationResponse = mock(AuthenticationResponse.class);
     when(authenticationResponse.getResult()).thenReturn(true);
     when(authenticator.authenticate(any())).thenReturn(authenticationResponse);
