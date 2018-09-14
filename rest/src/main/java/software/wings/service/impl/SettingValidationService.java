@@ -144,8 +144,7 @@ public class SettingValidationService {
               .setKibanaVersion(elkAnalysisService.getVersion(
                   settingAttribute.getAccountId(), (ElkConfig) settingValue, Collections.emptyList()));
         } catch (Exception ex) {
-          logger.warn("Unable to validate ELK via Kibana", ex);
-          return false;
+          throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, USER, ex).addParam("reason", Misc.getMessage(ex));
         }
       }
       analysisService.validateConfig(settingAttribute, StateType.ELK);
