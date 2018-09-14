@@ -7,9 +7,8 @@ import static io.harness.eraro.ErrorCode.UNAVAILABLE_DELEGATES;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static io.harness.threading.Morpheus.sleep;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.time.Duration.ofMillis;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Comparator.naturalOrder;
@@ -51,9 +50,8 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.util.concurrent.TimeLimiter;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.UncheckedExecutionException;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -137,10 +135,11 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 import javax.validation.executable.ValidateOnExecution;
@@ -148,13 +147,14 @@ import javax.ws.rs.NotFoundException;
 
 @Singleton
 @ValidateOnExecution
-public class DelegateServiceImpl implements DelegateService {
+public class DelegateServiceImpl implements DelegateService, Runnable {
   private static final Logger logger = LoggerFactory.getLogger(DelegateServiceImpl.class);
 
   private static final String ACCOUNT_ID = "accountId";
   private static final Configuration cfg = new Configuration(VERSION_2_3_23);
   private static final int MAX_DELEGATE_META_INFO_ENTRIES = 10000;
   private static final int DELEGATE_METADATA_HTTP_CALL_TIMEOUT = (int) TimeUnit.SECONDS.toMillis(10);
+  private static final Set<DelegateTask.Status> TASK_COMPLETED_STATUSES = ImmutableSet.of(FINISHED, ABORTED, ERROR);
 
   static {
     cfg.setTemplateLoader(new ClassTemplateLoader(DelegateServiceImpl.class, "/delegatetemplates"));
@@ -172,13 +172,14 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private AlertService alertService;
   @Inject private NotificationService notificationService;
   @Inject private NotificationSetupService notificationSetupService;
-  @Inject private TimeLimiter timeLimiter;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private Injector injector;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private InfraDownloadService infraDownloadService;
   @Inject private DelegateProfileService delegateProfileService;
+
+  private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
   private LoadingCache<String, String> delegateVersionCache =
       CacheBuilder.newBuilder()
@@ -213,6 +214,32 @@ public class DelegateServiceImpl implements DelegateService {
               }
             }
           });
+
+  /* (non-Javadoc)
+   * @see java.lang.Runnable#run()
+   */
+  @Override
+  public void run() {
+    if (isNotEmpty(syncTaskWaitMap)) {
+      List<String> completedSyncTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                            .filter("async", false)
+                                            .field("status")
+                                            .in(TASK_COMPLETED_STATUSES)
+                                            .field(ID_KEY)
+                                            .in(syncTaskWaitMap.keySet())
+                                            .asKeyList()
+                                            .stream()
+                                            .map(key -> key.getId().toString())
+                                            .collect(toList());
+      for (String taskId : completedSyncTasks) {
+        if (syncTaskWaitMap.get(taskId) != null) {
+          synchronized (syncTaskWaitMap.get(taskId)) {
+            syncTaskWaitMap.get(taskId).notifyAll();
+          }
+        }
+      }
+    }
+  }
 
   @Override
   public PageResponse<Delegate> list(PageRequest<Delegate> pageRequest) {
@@ -906,47 +933,37 @@ public class DelegateServiceImpl implements DelegateService {
             .set("broadcastCount", 1));
 
     // Wait for task to complete
-    AtomicReference<DelegateTask> delegateTaskRef = new AtomicReference<>(delegateTask);
+    DelegateTask completedTask;
     try {
-      timeLimiter.callWithTimeout(() -> {
-        while (delegateTaskRef.get() == null || !isTaskComplete(delegateTaskRef.get().getStatus())) {
-          sleep(ofMillis(2000));
-          delegateTaskRef.set(wingsPersistence.get(DelegateTask.class, task.getUuid()));
-          if (delegateTaskRef.get() != null) {
-            logger.info(
-                "Delegate task [{}] - status [{}]", delegateTaskRef.get().getUuid(), delegateTaskRef.get().getStatus());
-          }
-        }
-        return true;
-      }, task.getTimeout(), TimeUnit.MILLISECONDS, true);
-    } catch (UncheckedTimeoutException e) {
-      logger.info("Timed out waiting for sync task {}", delegateTask.getUuid());
+      syncTaskWaitMap.put(delegateTask.getUuid(), new Object());
+      synchronized (syncTaskWaitMap.get(delegateTask.getUuid())) {
+        syncTaskWaitMap.get(delegateTask.getUuid()).wait(task.getTimeout());
+      }
+      completedTask = wingsPersistence.get(DelegateTask.class, task.getUuid());
     } catch (Exception e) {
       logger.error("Exception", e);
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", "Error while waiting for completion");
+    } finally {
+      syncTaskWaitMap.remove(delegateTask.getUuid());
+      wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
+                                  .filter("accountId", delegateTask.getAccountId())
+                                  .filter(ID_KEY, delegateTask.getUuid()));
     }
 
-    if (delegateTaskRef.get() == null) {
+    if (completedTask == null) {
       logger.info("Task {} was deleted while waiting for completion", delegateTask.getUuid());
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "Task was deleted while waiting for completion");
     }
 
-    wingsPersistence.delete(wingsPersistence.createQuery(DelegateTask.class)
-                                .filter("accountId", delegateTask.getAccountId())
-                                .filter(ID_KEY, delegateTask.getUuid()));
-
-    NotifyResponseData responseData = delegateTaskRef.get().getNotifyResponse();
-    if (responseData == null) {
+    NotifyResponseData responseData = completedTask.getNotifyResponse();
+    if (responseData == null || !TASK_COMPLETED_STATUSES.contains(completedTask.getStatus())) {
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, WingsException.USER_ADMIN)
           .addParam("name", "Harness delegate");
     }
 
     logger.info("Returned response to calling function for delegate task [{}] ", delegateTask.getUuid());
     return (T) responseData;
-  }
-
-  private boolean isTaskComplete(DelegateTask.Status status) {
-    return status != null && (status.equals(FINISHED) || status.equals(ABORTED) || status.equals(ERROR));
   }
 
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {

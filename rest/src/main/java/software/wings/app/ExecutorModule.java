@@ -60,6 +60,9 @@ public class ExecutorModule extends AbstractModule {
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("gitChangeSet"))
         .toInstance(new ManagedScheduledExecutorService("GitChangeSet"));
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("taskPollExecutor"))
+        .toInstance(new ManagedScheduledExecutorService("TaskPoll-Thread"));
     bind(ExecutorService.class)
         .annotatedWith(Names.named("artifactCollectionExecutor"))
         .toInstance(ThreadPool.create(10, 100, 500L, TimeUnit.MILLISECONDS,
