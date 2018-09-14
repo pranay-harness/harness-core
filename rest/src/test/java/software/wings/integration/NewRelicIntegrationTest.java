@@ -32,6 +32,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
+import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Before;
@@ -205,6 +206,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Repeat(times = 5, successes = 1)
   public void getNewRelicDataForNode() throws Exception {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
