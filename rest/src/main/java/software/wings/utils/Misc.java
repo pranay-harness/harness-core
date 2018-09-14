@@ -63,31 +63,6 @@ public class Misc {
   }
 
   /**
-   * As int.
-   *
-   * @param value the value
-   * @return the int
-   */
-  public static int asInt(String value) {
-    return asInt(value, 0);
-  }
-
-  /**
-   * Converts a string to integer and in case of exception returns a default value.
-   *
-   * @param value        String to convert to int.
-   * @param defaultValue defaultValue to return in case of exceptions.
-   * @return converted int value or default.
-   */
-  public static int asInt(String value, int defaultValue) {
-    try {
-      return Integer.parseInt(value);
-    } catch (Exception exception) {
-      return defaultValue;
-    }
-  }
-
-  /**
    * Ignore exception.
    *
    * @param callable the callable

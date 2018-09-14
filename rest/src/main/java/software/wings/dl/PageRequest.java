@@ -9,6 +9,7 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.data.parser.Parser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.Key;
@@ -21,7 +22,6 @@ import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SearchFilter.SearchFilterBuilder;
 import software.wings.beans.SortOrder;
 import software.wings.beans.SortOrder.OrderType;
-import software.wings.utils.Misc;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -151,7 +151,7 @@ public class PageRequest<T> {
    * @return the page size
    */
   public int getPageSize() {
-    return Misc.asInt(limit, DEFAULT_UNLIMITED);
+    return Parser.asInt(limit, DEFAULT_UNLIMITED);
   }
 
   public void setPageSize(int pageSize) {
@@ -164,7 +164,7 @@ public class PageRequest<T> {
    * @return the start
    */
   public int getStart() {
-    return Misc.asInt(offset);
+    return Parser.asInt(offset);
   }
 
   /**
