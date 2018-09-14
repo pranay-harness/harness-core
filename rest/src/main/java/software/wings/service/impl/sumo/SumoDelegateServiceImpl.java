@@ -130,11 +130,13 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       long endTime, String timeZone, int maxMessageCount, ThirdPartyApiCallLog apiCallLog) {
     String searchQuery = query;
     if (!isEmpty(hostNameField)) {
-      searchQuery = query + "| where " + hostNameField + " = \"" + hostName + "\" ";
+      searchQuery = searchQuery + "| where " + hostNameField + " = \"" + hostName + "\" ";
     }
     if (!isEmpty(timeSlice)) {
-      searchQuery = query + " | timeslice " + timeSlice;
+      searchQuery = searchQuery + " | timeslice " + timeSlice;
     }
+
+    logger.info("Search query to be used in sumoLogic : " + searchQuery);
     try {
       // Gets a sumologic client
       SumoLogicClient sumoClient = getSumoClient(config, encryptedDataDetails, encryptionService);
