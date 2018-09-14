@@ -285,11 +285,7 @@ public class InfrastructureMappingGenerator {
           builder.withDeploymentType(random.nextObject(DeploymentType.class).name());
         }
 
-        if (infrastructureMapping != null && infrastructureMapping.getComputeProviderType() != null) {
-          builder.withComputeProviderType(infrastructureMapping.getComputeProviderType());
-        } else {
-          builder.withComputeProviderType(random.nextObject(SettingVariableTypes.class).name());
-        }
+        builder.withComputeProviderType(SettingVariableTypes.AWS.name());
 
         if (infrastructureMapping != null && infrastructureMapping.getComputeProviderSettingId() != null) {
           builder.withComputeProviderSettingId(infrastructureMapping.getComputeProviderSettingId());
