@@ -25,6 +25,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
+import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
@@ -725,7 +726,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 
   @Override
   public List<LogMLExpAnalysisInfo> getExpAnalysisInfoList() {
-    final Query<ExperimentalLogMLAnalysisRecord> analysisRecords =
+    // return max 1000 records.
+    final int limit = 1000;
+    final List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords =
         wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class, excludeAuthority)
             .project("stateExecutionId", true)
             .project("appId", true)
@@ -733,9 +736,8 @@ public class AnalysisServiceImpl implements AnalysisService {
             .project("experiment_name", true)
             .project("createdAt", true)
             .project("envId", true)
-            .project("workflowExecutionId", true);
-
-    List<ExperimentalLogMLAnalysisRecord> experimentalLogMLAnalysisRecords = analysisRecords.asList();
+            .project("workflowExecutionId", true)
+            .asList(new FindOptions().limit(limit));
 
     List<LogMLExpAnalysisInfo> result = new ArrayList<>();
     experimentalLogMLAnalysisRecords.forEach(record -> {
