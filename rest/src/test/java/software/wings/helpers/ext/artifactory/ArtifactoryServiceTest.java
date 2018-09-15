@@ -63,6 +63,14 @@ public class ArtifactoryServiceTest {
   }
 
   @Test
+  public void shouldGetIvyRepositories() {
+    Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null, WAR);
+    assertThat(repositories).isNotNull();
+    assertThat(repositories).containsKeys("harness-ivy");
+    assertThat(repositories).doesNotContainKeys("docker");
+  }
+
+  @Test
   public void shouldGetDockerRepositories() {
     Map<String, String> repositories = artifactoryService.getRepositories(artifactoryConfig, null);
     assertThat(repositories).isNotNull();
