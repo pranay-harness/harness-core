@@ -159,6 +159,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     if (ygs != null && ygs.isEnabled() && ygs.getSyncMode() != SyncMode.GIT_TO_HARNESS) {
       return ygs;
     }
+
     return null;
   }
 
