@@ -38,6 +38,7 @@ import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.security.SecretManager;
 
+import java.util.Iterator;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
@@ -94,6 +95,11 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Override
   public SamlSettings getSamlSettingsByOrigin(String origin) {
     return wingsPersistence.createQuery(SamlSettings.class).field("origin").equal(origin).get();
+  }
+
+  @Override
+  public Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin) {
+    return wingsPersistence.createQuery(SamlSettings.class).field("origin").equal(origin).iterator();
   }
 
   @Override

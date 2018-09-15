@@ -7,6 +7,7 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
 
+import java.util.Iterator;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -21,6 +22,8 @@ public interface SSOSettingService {
   boolean deleteSamlSettings(@NotNull String accountId);
 
   SamlSettings getSamlSettingsByOrigin(@NotNull String origin);
+
+  Iterator<SamlSettings> getSamlSettingsIteratorByOrigin(@NotNull String origin);
 
   LdapSettings createLdapSettings(@NotNull LdapSettings settings);
 
