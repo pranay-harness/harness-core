@@ -11,6 +11,8 @@ import io.github.benas.randombeans.api.EnhancedRandom;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.artifact.AmazonS3ArtifactStream;
+import software.wings.beans.artifact.AmazonS3ArtifactStream.AmazonS3ArtifactStreamBuilder;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
@@ -144,6 +146,60 @@ public class ArtifactStreamGenerator {
         }
 
         newArtifactStream = builder.build();
+        break;
+
+      case AMAZON_S3:
+        AmazonS3ArtifactStream amazonS3ArtifactStream = (AmazonS3ArtifactStream) artifactStream;
+        final AmazonS3ArtifactStreamBuilder s3ArtifactStreamBuilder = AmazonS3ArtifactStream.builder();
+
+        if (artifactStream != null && artifactStream.getAppId() != null) {
+          s3ArtifactStreamBuilder.appId(artifactStream.getAppId());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactStream != null && artifactStream.getServiceId() != null) {
+          s3ArtifactStreamBuilder.serviceId(artifactStream.getServiceId());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactStream != null && artifactStream.getName() != null) {
+          s3ArtifactStreamBuilder.name(artifactStream.getName());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        ArtifactStream existingArtifactStream = exists(s3ArtifactStreamBuilder.build());
+        if (existingArtifactStream != null) {
+          return existingArtifactStream;
+        }
+
+        if (amazonS3ArtifactStream != null && amazonS3ArtifactStream.getJobname() != null) {
+          s3ArtifactStreamBuilder.jobname(amazonS3ArtifactStream.getJobname());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (amazonS3ArtifactStream != null && amazonS3ArtifactStream.getArtifactPaths() != null) {
+          s3ArtifactStreamBuilder.artifactPaths(amazonS3ArtifactStream.getArtifactPaths());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactStream != null && artifactStream.getSourceName() != null) {
+          s3ArtifactStreamBuilder.sourceName(artifactStream.getSourceName());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactStream != null && artifactStream.getSettingId() != null) {
+          s3ArtifactStreamBuilder.settingId(artifactStream.getSettingId());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        newArtifactStream = s3ArtifactStreamBuilder.build();
         break;
       default:
         throw new UnsupportedOperationException();

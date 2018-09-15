@@ -35,6 +35,7 @@ import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -43,6 +44,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
+import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.ArtifactoryArtifactStream;
@@ -55,12 +57,20 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.ApplicationGenerator;
+import software.wings.generator.ApplicationGenerator.Applications;
+import software.wings.generator.ArtifactStreamGenerator;
+import software.wings.generator.OwnerManager;
+import software.wings.generator.OwnerManager.Owners;
+import software.wings.generator.Randomizer;
 import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
 import software.wings.generator.SecretName;
+import software.wings.generator.SettingGenerator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.service.intfc.BuildSourceService;
@@ -99,6 +109,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   private String appId;
   private SettingAttribute settingAttribute;
   private ArtifactStream artifactStream;
+  private Application application;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private BuildSourceService buildSourceService;
   @Inject private WingsPersistence wingsPersistence;
@@ -108,10 +119,14 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   @Inject private DockerBuildService dockerBuildService;
   @Inject private ArtifactoryBuildService artifactoryBuildService;
   @Inject private EcrBuildService ecrBuildService;
+  @Inject private AmazonS3BuildService amazonS3BuildService;
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
   @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
-
+  @Inject private OwnerManager ownerManager;
+  @Inject private SettingGenerator settingGenerator;
+  @Inject private ArtifactStreamGenerator artifactStreamGenerator;
+  @Inject private ApplicationGenerator applicationGenerator;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -133,7 +148,10 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         {SettingVariableTypes.ARTIFACTORY, ArtifactStreamType.ARTIFACTORY, "docker", "docker", "wingsplugins/todolist",
             "", DOCKER},
         {SettingVariableTypes.ECR, ArtifactStreamType.ECR, "docker", Regions.US_EAST_1.getName(), "todolist",
-            "todolist", DOCKER}});
+            "todolist", DOCKER},
+        {SettingVariableTypes.AMAZON_S3, ArtifactStreamType.AMAZON_S3, "", "harness-example", "",
+            "harness-example/todolist.war", WAR},
+    });
   }
 
   @Before
@@ -267,6 +285,26 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         ((EcrArtifactStream) artifactStream).setImageName(groupId);
         artifactStream.setServiceId(service.getUuid());
         artifactStream.setAppId(appId);
+        break;
+      case AMAZON_S3:
+        when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(amazonS3BuildService);
+        Randomizer.Seed seed = Randomizer.seed();
+        Owners owners = ownerManager.create();
+        application = owners.obtainApplication(
+            () -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+        settingAttribute = settingGenerator.ensureAwsTest(seed, owners);
+        artifactStream = artifactStreamGenerator.ensureArtifactStream(seed,
+            AmazonS3ArtifactStream.builder()
+                .appId(application.getAppId())
+                .serviceId(service.getUuid())
+                .name("harness-example_todolist-war")
+                .sourceName(settingAttribute.getName())
+                .jobname("harness-example")
+                .artifactPaths(asList("todolist.war"))
+                .settingId(settingAttribute.getUuid())
+                .build());
+        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setAppId(application.getAppId());
         break;
       default:
         throw new IllegalArgumentException("Invalid type: " + type);
@@ -443,6 +481,27 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         break;
       case ECR:
         return;
+      default:
+        throw new IllegalArgumentException("invalid type: " + type);
+    }
+  }
+
+  @Test
+  @Repeat(times = 5, successes = 1)
+  public void getBuckets() {
+    switch (type) {
+      case JENKINS:
+      case BAMBOO:
+      case NEXUS:
+      case DOCKER:
+      case ECR:
+      case ARTIFACTORY:
+        return;
+      case AMAZON_S3:
+        Map<String, String> buckets = buildSourceService.getPlans(
+            application.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamType());
+        assertFalse(buckets.isEmpty());
+        break;
       default:
         throw new IllegalArgumentException("invalid type: " + type);
     }
