@@ -15,8 +15,13 @@
     "url": "https://harness.jfrog.io/harness/docker"
   },
   {
-    "key": "harness-maven-snapshots",
+  "key": "harness-maven-snapshots",
+  "type": "LOCAL",
+  "url": "http://harness.jfrog.io/harness/harness-maven-snapshots"
+  },
+  {
+    "key": "harness-ivy",
     "type": "LOCAL",
-    "url": "http://harness.jfrog.io/harness/harness-maven-snapshots"
+    "url": "http://harness.jfrog.io/harness/harness-ivy"
   }
 ]

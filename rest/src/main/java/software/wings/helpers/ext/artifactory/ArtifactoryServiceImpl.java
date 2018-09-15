@@ -18,10 +18,7 @@ import static org.jfrog.artifactory.client.ArtifactoryRequest.ContentType.TEXT;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.Method.GET;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.Method.POST;
 import static org.jfrog.artifactory.client.model.PackageType.docker;
-import static org.jfrog.artifactory.client.model.PackageType.generic;
 import static org.jfrog.artifactory.client.model.PackageType.maven;
-import static org.jfrog.artifactory.client.model.PackageType.rpm;
-import static org.jfrog.artifactory.client.model.PackageType.yum;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.common.Constants.BUILD_NO;
@@ -97,7 +94,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   @Override
   public Map<String, String> getRepositories(
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
-    return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(docker));
+    return getRepositories(artifactoryConfig, encryptionDetails, Arrays.asList(PackageType.docker));
   }
 
   @Override
@@ -106,10 +103,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     switch (artifactType) {
       case DOCKER:
         return getRepositories(artifactoryConfig, encryptionDetails);
-      case RPM:
-        return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(rpm, yum, maven, generic));
       default:
-        return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(maven, generic));
+        return getRepositories(artifactoryConfig, encryptionDetails, "");
     }
   }
 
@@ -118,14 +113,15 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, String packageType) {
     switch (packageType) {
       case "maven":
-        return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(maven));
+        return getRepositories(artifactoryConfig, encryptionDetails, Arrays.asList(PackageType.maven));
       default:
-        return getRepositories(artifactoryConfig, encryptionDetails, EnumSet.of(generic, rpm, maven, yum));
+        return getRepositories(artifactoryConfig, encryptionDetails,
+            Arrays.asList(PackageType.values()).stream().filter(type -> !docker.equals(type)).collect(toList()));
     }
   }
 
   private Map<String, String> getRepositories(ArtifactoryConfig artifactoryConfig,
-      List<EncryptedDataDetail> encryptionDetails, EnumSet<PackageType> packageTypes) {
+      List<EncryptedDataDetail> encryptionDetails, List<PackageType> packageTypes) {
     logger.info("Retrieving repositories for packages {}", packageTypes.toArray());
     Map<String, String> repositories = new HashMap<>();
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
