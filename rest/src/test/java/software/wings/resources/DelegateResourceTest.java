@@ -225,13 +225,13 @@ public class DelegateResourceTest {
   public void shouldGet() throws Exception {
     Delegate delegate = aDelegate().withUuid(ID_KEY).build();
 
-    when(DELEGATE_SERVICE.get(ACCOUNT_ID, ID_KEY)).thenReturn(delegate);
+    when(DELEGATE_SERVICE.get(ACCOUNT_ID, ID_KEY, true)).thenReturn(delegate);
     RestResponse<Delegate> restResponse = RESOURCES.client()
                                               .target("/delegates/" + ID_KEY + "?accountId=" + ACCOUNT_ID)
                                               .request()
                                               .get(new GenericType<RestResponse<Delegate>>() {});
 
-    verify(DELEGATE_SERVICE, atLeastOnce()).get(ACCOUNT_ID, ID_KEY);
+    verify(DELEGATE_SERVICE, atLeastOnce()).get(ACCOUNT_ID, ID_KEY, true);
     assertThat(restResponse.getResource()).isEqualTo(delegate);
   }
 

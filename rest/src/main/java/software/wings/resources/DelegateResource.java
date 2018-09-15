@@ -137,7 +137,7 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Delegate> get(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(delegateService.get(accountId, delegateId));
+    return new RestResponse<>(delegateService.get(accountId, delegateId, true));
   }
 
   @GET
@@ -187,7 +187,7 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Delegate> updateScopes(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateScopes delegateScopes) {
-    Delegate delegate = delegateService.get(accountId, delegateId);
+    Delegate delegate = delegateService.get(accountId, delegateId, true);
     if (delegateScopes == null) {
       delegate.setIncludeScopes(null);
       delegate.setExcludeScopes(null);
@@ -240,7 +240,7 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<Delegate> updateTags(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTags delegateTags) {
-    Delegate delegate = delegateService.get(accountId, delegateId);
+    Delegate delegate = delegateService.get(accountId, delegateId, true);
     delegate.setTags(delegateTags.getTags());
     return new RestResponse<>(delegateService.updateTags(delegate));
   }
