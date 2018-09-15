@@ -27,7 +27,6 @@ import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusDat
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
-import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.io.CharStreams;
@@ -151,7 +150,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldGet() {
     Delegate delegate = wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().build());
-    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
+    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid(), true)).isEqualTo(delegate);
   }
 
   @Test
@@ -202,14 +201,14 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldRegister() {
     Delegate delegate = delegateService.register(BUILDER.but().build());
-    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
+    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid(), true)).isEqualTo(delegate);
   }
 
   @Test
   public void shouldRegisterExistingDelegate() {
     Delegate delegate = delegateService.add(BUILDER.but().build());
     delegateService.register(delegate);
-    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid())).isEqualTo(delegate);
+    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid(), true)).isEqualTo(delegate);
   }
 
   @Test
@@ -494,24 +493,6 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldFilterTaskWhenDelegateIsDisabled() {
-    wingsPersistence.saveAndGet(
-        Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).withStatus(Status.DISABLED).build());
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withWaitId(generateUuid())
-                                    .withTaskType(TaskType.HTTP)
-                                    .withAppId(APP_ID)
-                                    .withParameters(new Object[] {})
-                                    .withTags(new ArrayList<>())
-                                    .withDelegateId(DELEGATE_ID)
-                                    .withStatus(DelegateTask.Status.STARTED)
-                                    .build();
-    wingsPersistence.save(delegateTask);
-    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
-  }
-
-  @Test
   public void shouldNotFilterTaskWhenItMatchesDelegateCriteria() {
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
     DelegateTask delegateTask = aDelegateTask()
@@ -527,31 +508,13 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldFilterTaskWhenDelegateIsNotCapable() {
-    wingsPersistence.saveAndGet(
-        Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).withStatus(Status.DISABLED).build());
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withWaitId(generateUuid())
-                                    .withTaskType(TaskType.COMMAND)
-                                    .withAppId(APP_ID)
-                                    .withParameters(new Object[] {})
-                                    .withTags(new ArrayList<>())
-                                    .withDelegateId(DELEGATE_ID)
-                                    .withStatus(DelegateTask.Status.STARTED)
-                                    .build();
-    wingsPersistence.save(delegateTask);
-    assertThat(delegateService.filter(DELEGATE_ID, delegateTask)).isFalse();
-  }
-
-  @Test
   public void shouldGetLatestVersion() {
     assertThat(delegateService.getLatestDelegateVersion(ACCOUNT_ID)).isEqualTo("9.9.9");
   }
 
   @Test
   public void testProcessDelegateTaskResponseWithDelegateMetaInfo() {
-    Delegate delegate = aDelegate().withUuid(DELEGATE_ID).withHostName(USER_NAME).withVersion(USER_ID).build();
+    Delegate delegate = aDelegate().withUuid(DELEGATE_ID).withHostName(USER_NAME).build();
 
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
@@ -578,7 +541,6 @@ public class DelegateServiceTest extends WingsBaseTest {
     DelegateTaskNotifyResponseData delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(USER_NAME);
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getVersion()).isEqualTo(USER_ID);
 
     // Delete the delegate from the persistence store. If the cached entry is not there in
     // delegateMetaInfoCache then the test would fail.
@@ -590,7 +552,6 @@ public class DelegateServiceTest extends WingsBaseTest {
         aDelegateTaskResponse().withAccountId(ACCOUNT_ID).withResponse(jenkinsExecutionResponse).build());
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(USER_NAME);
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getVersion()).isEqualTo(USER_ID);
   }
 
   @Test

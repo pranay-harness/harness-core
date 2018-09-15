@@ -72,7 +72,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atteo.evo.inflector.English;
-import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -82,7 +81,6 @@ import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Delegate;
-import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnectionHeartbeat;
@@ -191,24 +189,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             }
           });
 
-  private LoadingCache<String, DelegateMetaInfo> delegateMetaInfoCache =
+  private LoadingCache<String, Delegate> delegateCache =
       CacheBuilder.newBuilder()
           .maximumSize(MAX_DELEGATE_META_INFO_ENTRIES)
-          .build(new CacheLoader<String, DelegateMetaInfo>() {
-            public DelegateMetaInfo load(String delegateId) throws NotFoundException {
-              Delegate delegate = wingsPersistence.createQuery(Delegate.class)
-                                      .filter(ID_KEY, delegateId)
-                                      .project(ID_KEY, true)
-                                      .project(Delegate.VERSION_KEY, true)
-                                      .project(HOST_NAME_KEY, true)
-                                      .get();
-
+          .expireAfterWrite(1, TimeUnit.MINUTES)
+          .build(new CacheLoader<String, Delegate>() {
+            public Delegate load(String delegateId) throws NotFoundException {
+              Delegate delegate = wingsPersistence.createQuery(Delegate.class).filter(ID_KEY, delegateId).get();
               if (delegate != null) {
-                return DelegateMetaInfo.builder()
-                    .id(delegate.getUuid())
-                    .hostName(delegate.getHostName())
-                    .version(delegate.getVersion())
-                    .build();
+                return delegate;
               } else {
                 throw new NotFoundException("Delegate with id " + delegateId + " not found");
               }
@@ -305,11 +294,18 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public Delegate get(String accountId, String delegateId) {
-    return wingsPersistence.createQuery(Delegate.class)
-        .filter("accountId", accountId)
-        .filter(Mapper.ID_KEY, delegateId)
-        .get();
+  public Delegate get(String accountId, String delegateId, boolean forceRefresh) {
+    try {
+      if (forceRefresh) {
+        delegateCache.refresh(delegateId);
+      }
+      return delegateCache.get(delegateId);
+    } catch (ExecutionException e) {
+      logger.error("Execution exception", e);
+    } catch (UncheckedExecutionException e) {
+      logger.error("Delegate not found exception", e);
+    }
+    return null;
   }
 
   @Override
@@ -334,7 +330,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createQuery(Delegate.class).filter(ACCOUNT_ID, accountId).filter(ID_KEY, delegateId),
         wingsPersistence.createUpdateOperations(Delegate.class).set("description", newDescription));
 
-    return get(accountId, delegateId);
+    return get(accountId, delegateId, true);
   }
 
   @Override
@@ -344,7 +340,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createUpdateOperations(Delegate.class)
             .set("lastHeartBeat", System.currentTimeMillis())
             .set("connected", true));
-    return get(accountId, delegateId);
+    return get(accountId, delegateId, false);
   }
 
   @Override
@@ -399,7 +395,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.UPDATE).build());
-    return get(delegate.getAccountId(), delegate.getUuid());
+    return get(delegate.getAccountId(), delegate.getUuid(), true);
   }
 
   @Override
@@ -848,7 +844,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       String accountId, String delegateId, String profileId, long lastUpdatedAt) {
     logger.info("Checking delegate profile for account {}, delegate [{}]. Previous profile [{}] updated at {}",
         accountId, delegateId, profileId, lastUpdatedAt);
-    Delegate delegate = get(accountId, delegateId);
+    Delegate delegate = get(accountId, delegateId, true);
     if (isNotBlank(delegate.getDelegateProfileId())) {
       DelegateProfile profile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
       if (profile != null && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt)) {
@@ -1249,12 +1245,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public boolean filter(String delegateId, DelegateTask task) {
-    return wingsPersistence.createQuery(Delegate.class)
-               .filter("accountId", task.getAccountId())
-               .filter(ID_KEY, delegateId)
-               .filter("status", Status.ENABLED)
-               .getKey()
-        != null;
+    Delegate delegate = get(task.getAccountId(), delegateId, false);
+    if (delegate != null) {
+      if (StringUtils.equals(delegate.getAccountId(), task.getAccountId())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   @Override
@@ -1461,7 +1458,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       try {
         DelegateTaskNotifyResponseData delegateTaskNotifyResponseData =
             (DelegateTaskNotifyResponseData) response.getResponse();
-        delegateTaskNotifyResponseData.setDelegateMetaInfo(delegateMetaInfoCache.get(delegateId));
+        delegateTaskNotifyResponseData.setDelegateMetaInfo(
+            DelegateMetaInfo.builder().id(delegateId).hostName(delegateCache.get(delegateId).getHostName()).build());
       } catch (ExecutionException e) {
         logger.error("Execution exception", e);
       } catch (UncheckedExecutionException e) {

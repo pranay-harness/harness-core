@@ -62,7 +62,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         String delegateConnectionId = req.getParameter("delegateConnectionId");
         String delegateVersion = req.getHeader("Version");
 
-        Delegate delegate = delegateService.get(accountId, delegateId);
+        Delegate delegate = delegateService.get(accountId, delegateId, true);
         delegate.setStatus(Status.ENABLED);
         delegate.setConnected(true);
         delegateService.register(delegate);
@@ -76,7 +76,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         resource.addEventListener(new AtmosphereResourceEventListenerAdapter() {
           @Override
           public void onDisconnect(AtmosphereResourceEvent event) {
-            Delegate delegate = delegateService.get(accountId, delegateId);
+            Delegate delegate = delegateService.get(accountId, delegateId, true);
             delegate.setConnected(false);
             delegateService.register(delegate);
             delegateService.removeDelegateConnection(accountId, delegateConnectionId);

@@ -63,7 +63,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Override
   public boolean canAssign(String delegateId, String accountId, String appId, String envId, String infraMappingId,
       TaskGroup taskGroup, List<String> tags) {
-    Delegate delegate = delegateService.get(accountId, delegateId);
+    Delegate delegate = delegateService.get(accountId, delegateId, false);
     if (delegate == null) {
       return false;
     }
@@ -297,7 +297,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       errorMessage =
           "None of the active delegates were eligible to complete the task." + taskTagsMsg + "\n\n" + msg.toString();
     } else if (delegateTask.getDelegateId() != null) {
-      Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateTask.getDelegateId());
+      Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateTask.getDelegateId(), false);
       errorMessage = "Delegate task timed out. Delegate: "
           + (delegate != null ? delegate.getHostName() : "not found: " + delegateTask.getDelegateId());
     } else {

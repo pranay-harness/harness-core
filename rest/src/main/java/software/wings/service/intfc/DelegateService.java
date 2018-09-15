@@ -32,7 +32,7 @@ public interface DelegateService {
 
   DelegateStatus getDelegateStatus(String accountId);
 
-  Delegate get(String accountId, String delegateId);
+  Delegate get(String accountId, String delegateId, boolean forceRefresh);
 
   Delegate update(@Valid Delegate delegate);
 

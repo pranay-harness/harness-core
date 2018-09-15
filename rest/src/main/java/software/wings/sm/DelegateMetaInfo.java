@@ -8,5 +8,4 @@ import lombok.Data;
 public class DelegateMetaInfo {
   private String id;
   private String hostName;
-  private String version;
 }

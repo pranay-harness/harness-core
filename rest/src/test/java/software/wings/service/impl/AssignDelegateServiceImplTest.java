@@ -66,7 +66,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withIncludeScopes(emptyList())
                             .withExcludeScopes(emptyList())
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
 
@@ -80,7 +80,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                 DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
                             .withExcludeScopes(emptyList())
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
 
@@ -94,7 +94,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                 DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
                             .withExcludeScopes(emptyList())
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
   }
 
@@ -108,7 +108,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(ImmutableList.of(
                                 DelegateScope.builder().environmentTypes(ImmutableList.of(NON_PROD)).build()))
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
 
@@ -122,7 +122,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(ImmutableList.of(
                                 DelegateScope.builder().environmentTypes(ImmutableList.of(PROD)).build()))
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
   }
 
@@ -141,7 +141,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(emptyList())
                             .withTags(ImmutableList.of("a", "b", "c"))
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
 
@@ -160,7 +160,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(emptyList())
                             .withTags(ImmutableList.of("b", "c"))
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
   }
 
@@ -179,7 +179,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(emptyList())
                             .withTags(ImmutableList.of("c", "d"))
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
   }
 
@@ -198,7 +198,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(emptyList())
                             .withTags(ImmutableList.of("a", "b", "c"))
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isTrue();
   }
 
@@ -217,7 +217,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .withExcludeScopes(emptyList())
                             .withTags(null)
                             .build();
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
     assertThat(assignDelegateService.canAssign(DELEGATE_ID, delegateTask)).isFalse();
   }
 
@@ -328,7 +328,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .criteria("criteria")
                               .validated(true)
                               .build());
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {"", "criteria"};
     DelegateTask delegateTask =
@@ -356,7 +356,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .criteria("criteria")
                               .validated(false)
                               .build());
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {"", "criteria"};
     DelegateTask delegateTask =
@@ -383,7 +383,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .criteria("criteria")
                               .validated(true)
                               .build());
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {"", "criteria"};
     DelegateTask delegateTask =
@@ -410,7 +410,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                               .criteria("criteria")
                               .validated(true)
                               .build());
-    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID)).thenReturn(delegate);
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
 
     Object[] params = {"", "criteria-other"};
     DelegateTask delegateTask =
