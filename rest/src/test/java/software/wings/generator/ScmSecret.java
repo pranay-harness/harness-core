@@ -39,7 +39,8 @@ public class ScmSecret {
 
   public byte[] decrypt(String cipheredSecretHex) {
     if (!isInitialized()) {
-      return "You can't decrypt in this environment".getBytes();
+      return "You can't decrypt in this environment. You need to set HARNESS_GENERATION_PASSPHRASE in your environment!"
+          .getBytes();
     }
 
     try {

@@ -97,7 +97,7 @@ public class SettingGenerator {
     return null;
   }
 
-  private SettingAttribute ensureAwsTest(Randomizer.Seed seed, Owners owners) {
+  public SettingAttribute ensureAwsTest(Randomizer.Seed seed, Owners owners) {
     final Account account = accountGenerator.ensurePredefined(seed, owners, Accounts.GENERIC_TEST);
     SettingAttribute settingAttribute =
         aSettingAttribute()
