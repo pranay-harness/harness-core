@@ -78,6 +78,7 @@ public class YamlIntegrationTestHelper {
                           .username("yaml-test-harness")
                           .password(scmSecret.decryptToCharArray(new SecretName("yaml_integration_git_connector_pwd")))
                           .branchName("test")
+                          .enabled(true)
                           .build();
       yamlGitConfig.setAppId(Base.GLOBAL_APP_ID);
     } else {
@@ -85,6 +86,7 @@ public class YamlIntegrationTestHelper {
       yamlGitConfig.setUrl(URL_FOR_GIT_SYNC);
       yamlGitConfig.setUsername("yaml-test-harness");
       yamlGitConfig.setBranchName("test");
+      yamlGitConfig.setEnabled(true);
       yamlGitConfig.setPassword(scmSecret.decryptToCharArray(new SecretName("yaml_integration_git_connector_pwd")));
     }
 

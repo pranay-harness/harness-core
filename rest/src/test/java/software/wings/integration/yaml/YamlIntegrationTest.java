@@ -8,18 +8,17 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.inject.Inject;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Application;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerType;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.generator.ScmSecret;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.rules.SetupScheduler;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.impl.yaml.GitClientImpl;
 import software.wings.service.intfc.InfrastructureProvisionerService;
@@ -33,11 +32,9 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.Arrays;
 
-// This is to be removed no later than Friday, 9/21/2018
-@Ignore
-@SetupScheduler
 public class YamlIntegrationTest extends BaseIntegrationTest {
   private Application application;
+  private Service service;
   private YamlGitConfig yamlGitConfig;
   private SettingAttribute gitConnector;
   @Inject private YamlIntegrationTestHelper yamlIntegrationTestHelper;
@@ -83,7 +80,8 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
 
     makeSureFileDoesntExistInRepo(yamlPath);
 
-    yamlIntegrationTestHelper.createApplication(appName, accountId, appService);
+    Application application = yamlIntegrationTestHelper.createApplication(appName, accountId, appService);
+    logger.info("Created Application : " + application.getName());
 
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath, false);
     assertEquals(1, gitFetchFilesResult.getFiles().size());
@@ -95,6 +93,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     if (application == null) {
       application =
           yamlIntegrationTestHelper.createApplication("App" + System.currentTimeMillis(), accountId, appService);
+      logger.info("Created Application : " + application.getName());
     }
     String serviceName = "Service" + System.currentTimeMillis();
     String yamlPath = new StringBuilder()
@@ -105,7 +104,8 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
                           .toString();
 
     makeSureFileDoesntExistInRepo(yamlPath);
-    yamlIntegrationTestHelper.createService(serviceName, application, serviceResourceService);
+    Service service = yamlIntegrationTestHelper.createService(serviceName, application, serviceResourceService);
+    logger.info("Created Service : " + service.getName());
 
     getGitFetchFilesResult(yamlPath, false);
   }
@@ -115,6 +115,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   private GitFetchFilesResult getGitFetchFilesResult(String yamlPath, boolean isFailureExpected) throws Exception {
+    logger.info("Executing  YamlIntegrationTest.getGitFetchFilesResult()");
     GitFetchFilesResult gitFetchFilesResult = null;
     for (int count = 0; count < 18; count++) {
       if (count > 0 && isFailureExpected) {
@@ -126,9 +127,14 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
         gitFetchFilesResult =
             gitIntegrationTestUtil.fetchFromGitUsingUsingBranch(gitConnector, "test", logger, Arrays.asList(yamlPath));
         // No exception means we got files from git
+        logger.info("Retrieved files from git successfully");
         break;
       } catch (Exception e) {
-        logger.info("Not able to fetch file: " + e.getMessage());
+        if (!isFailureExpected) {
+          logger.warn("Failed to retrieve files those were expected to be in Git repo");
+        } else {
+          logger.info("Not able to fetch file: " + e.getMessage());
+        }
       }
     }
 
@@ -162,13 +168,6 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
     assertEquals(1, gitFetchFilesResult.getFiles().size());
     assertEquals(cloudProviderName + YamlConstants.YAML_EXTENSION, gitFetchFilesResult.getFiles().get(0).getFilePath());
-
-    yamlIntegrationTestHelper.deleteSettingAttribute(settingAttribute, settingsService);
-    makeSureFileDoesntExistInRepo(yamlPath);
-
-    yamlPath = yamlIntegrationTestHelper.getApplicationYamlPath(application);
-    yamlIntegrationTestHelper.deleteApplication(application, appService);
-    makeSureFileDoesntExistInRepo(yamlPath);
   }
 
   @Test
@@ -188,12 +187,5 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     assertEquals(1, gitFetchFilesResult.getFiles().size());
     assertEquals(
         infraProvisionerName + YamlConstants.YAML_EXTENSION, gitFetchFilesResult.getFiles().get(0).getFilePath());
-
-    yamlIntegrationTestHelper.deleteInfraProvisioner(infraProvisioner, infrastructureProvisionerService);
-    makeSureFileDoesntExistInRepo(yamlPath);
-
-    yamlPath = yamlIntegrationTestHelper.getApplicationYamlPath(application);
-    yamlIntegrationTestHelper.deleteApplication(application, appService);
-    makeSureFileDoesntExistInRepo(yamlPath);
   }
 }

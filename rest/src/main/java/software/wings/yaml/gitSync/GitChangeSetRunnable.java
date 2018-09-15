@@ -41,6 +41,7 @@ public class GitChangeSetRunnable implements Runnable {
   public void run() {
     try {
       if (isMaintenance() || configurationController.isNotPrimary()) {
+        logger.info("Not continuing with GitChangeSetRunnable job");
         return;
       }
 
@@ -59,6 +60,7 @@ public class GitChangeSetRunnable implements Runnable {
           queuedAccountIdList.stream().filter(accountId -> !runningAccountIdList.contains(accountId)).collect(toList());
 
       if (waitingAccountIdList.isEmpty()) {
+        logger.info("No Accounts have YamlChangeSets that need processing");
         return;
       }
 

@@ -1,6 +1,7 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static io.harness.exception.WingsException.USER;
@@ -491,6 +492,10 @@ public class GitClientImpl implements GitClient {
         });
 
         resetWorkingDir(gitRequest.getFilePaths(), gitConfig, gitRequest.getGitConnectorId());
+
+        if (isNotEmpty(gitFiles)) {
+          gitFiles.forEach(gitFile -> logger.info("File fetched : " + gitFile.getFilePath()));
+        }
         return GitFetchFilesResult.builder()
             .files(gitFiles)
             .gitCommitResult(GitCommitResult.builder()
