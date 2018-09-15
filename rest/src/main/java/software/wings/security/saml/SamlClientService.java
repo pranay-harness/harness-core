@@ -19,6 +19,7 @@ import software.wings.service.intfc.SSOSettingService;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStreamReader;
+import java.util.Iterator;
 
 @Singleton
 public class SamlClientService {
@@ -68,5 +69,9 @@ public class SamlClientService {
   public SamlClient getSamlClientFromOrigin(String origin) throws SamlException {
     SamlSettings samlSettings = ssoSettingService.getSamlSettingsByOrigin(origin);
     return getSamlClient(samlSettings);
+  }
+
+  public Iterator<SamlSettings> getSamlSettingsFromOrigin(String origin) {
+    return ssoSettingService.getSamlSettingsIteratorByOrigin(origin);
   }
 }
