@@ -19,43 +19,45 @@ import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute.Builder;
-import software.wings.beans.SplunkConfig;
 import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretName;
-import software.wings.service.impl.splunk.SplunkSetupTestNodeData;
+import software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 /**
- * Created by Pranjal on 09/01/2018
+ * Created by Pranjal on 09/13/2018
  */
-public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
-  private String elkSettingId;
+public class DynaTraceResourceIntegrationTest extends BaseIntegrationTest {
+  public static final String url = "https://bdv73347.live.dynatrace.com";
+  @Inject private ScmSecret scmSecret;
+
+  private String settingId;
   private String appId;
   private String workflowId;
   private String workflowExecutionId;
-
-  @Inject private ScmSecret scmSecret;
-
   @Before
   public void setUp() throws Exception {
     super.setUp();
     loginAdminUser();
     appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
-    elkSettingId = wingsPersistence.save(
+    settingId = wingsPersistence.save(
         Builder.aSettingAttribute()
             .withName(generateUuid())
             .withAccountId(accountId)
-            .withValue(SplunkConfig.builder()
-                           .splunkUrl("https://ec2-52-204-66-40.compute-1.amazonaws.com:8089")
-                           .username("admin")
-                           .password(scmSecret.decryptToCharArray(new SecretName("splunk_config_password")))
+            .withValue(DynaTraceConfig.builder()
+                           .dynaTraceUrl(url)
+                           .apiToken(scmSecret.decryptToCharArray(new SecretName("dyna_trace_api_key")))
                            .accountId(accountId)
                            .build())
             .build());
@@ -71,17 +73,14 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
                               .build());
   }
 
-  /**
-   * Test to verify fetch Log Records based.
-   */
   @Test
-  @Repeat(times = 3, successes = 1)
-  public void testGetLogRecordsWithQuery() {
-    SplunkSetupTestNodeData setupTestNodeData = getSplunkSetupTestNodedata("*exception*");
-    WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL
-        + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId);
+  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  public void testGetLogRecords() {
+    DynaTraceSetupTestNodeData testNodedata = getSampledata();
+    WebTarget target = client.target(API_BASE + "/"
+        + "dynatrace" + LogAnalysisResource.TEST_NODE_DATA + "?accountId=" + accountId);
     Response restResponse =
-        getRequestBuilderWithAuthHeader(target).post(entity(setupTestNodeData, MediaType.APPLICATION_JSON));
+        getRequestBuilderWithAuthHeader(target).post(entity(testNodedata, MediaType.APPLICATION_JSON));
     String responseString = restResponse.readEntity(String.class);
     JSONObject jsonResponseObject = new JSONObject(responseString);
 
@@ -90,12 +89,20 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
     assertTrue("provider is not reachable", Boolean.valueOf(response.get("providerReachable").toString()));
   }
 
-  private SplunkSetupTestNodeData getSplunkSetupTestNodedata(String query) {
-    return SplunkSetupTestNodeData.builder()
-        .query(query)
-        .hostNameField("host")
+  private DynaTraceSetupTestNodeData getSampledata() {
+    long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
+    long fromTime = toTime - TimeUnit.MINUTES.toMillis(15) / TimeUnit.SECONDS.toMillis(1);
+    Set<String> serviceMethods = new HashSet<>();
+    serviceMethods.add("SERVICE_METHOD-991CE862F114C79F");
+    serviceMethods.add("SERVICE_METHOD-65C2EED098275731");
+    serviceMethods.add("SERVICE_METHOD-9D3499F155C8070D");
+    serviceMethods.add("SERVICE_METHOD-AECEC4A5C7E348EC");
+    serviceMethods.add("SERVICE_METHOD-9ACB771237BE05C6");
+    serviceMethods.add("SERVICE_METHOD-DA487A489220E53D");
+    return DynaTraceSetupTestNodeData.builder()
+        .serviceMethods(serviceMethods)
         .appId(appId)
-        .settingId(elkSettingId)
+        .settingId(settingId)
         .instanceName("testHost")
         .instanceElement(
             anInstanceElement()
@@ -105,7 +112,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
                 .withDockerId("8cec1e1b0d16")
                 .withHost(aHostElement()
                               .withUuid("8cec1e1b0d16")
-                              .withHostName("testHost")
+                              .withHostName("ip-172-31-28-247")
                               .withIp("1.1.1.1")
                               .withInstanceId(null)
                               .withPublicDns(null)
@@ -115,8 +122,9 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
                 .withPodName("testHost")
                 .withWorkloadName("testHost")
                 .build())
-        .hostExpression("${host.hostName}")
         .workflowId(workflowId)
+        .fromTime(fromTime)
+        .toTime(toTime)
         .build();
   }
 }
