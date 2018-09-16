@@ -181,7 +181,7 @@ public class WingsRule implements MethodRule {
     initializeLogging();
     forceMaintenance(false);
     MongoClient mongoClient;
-    String dbName = "harness";
+    String dbName = System.getProperty("dbName", "harness");
     if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
       mongoClient = getRandomPortMongoClient();
     } else if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {

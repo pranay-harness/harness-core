@@ -3,13 +3,19 @@ package software.wings.generator;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.Account.ACCOUNT_NAME_KEY;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.utils.WingsIntegrationTestConstants.defaultAccountId;
+import static software.wings.utils.WingsIntegrationTestConstants.delegateAccountSecret;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.api.EnhancedRandom;
 import lombok.Setter;
+import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
+import software.wings.beans.LicenseInfo;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.service.intfc.AccountService;
@@ -29,7 +35,7 @@ public class AccountGenerator {
   public Account ensurePredefined(Randomizer.Seed seed, Owners owners, Accounts predefined) {
     switch (predefined) {
       case GENERIC_TEST:
-        return ensureGenericTest(seed, owners);
+        return ensureGenericTest();
       default:
         unhandled(predefined);
     }
@@ -41,17 +47,35 @@ public class AccountGenerator {
     return wingsPersistence.createQuery(Account.class).filter(ACCOUNT_NAME_KEY, account.getAccountName()).get();
   }
 
-  private Account ensureGenericTest(Randomizer.Seed seed, Owners owners) {
+  public Account ensureGenericTest() {
     if (this.account != null) {
       return this.account;
     }
 
-    final Account accountObj = anAccount().withAccountName("Harness").withCompanyName("Harness").build();
+    Account accountObj = anAccount().withAccountName("Harness").withCompanyName("Harness").build();
     this.account = exists(accountObj);
-
-    if (this.account == null) {
-      this.account = accountService.save(accountObj);
+    if (this.account != null) {
+      return account;
     }
+    accountObj = Account.Builder.anAccount()
+                     .withUuid(defaultAccountId)
+                     .withAccountName("Harness")
+                     .withCompanyName("Harness")
+                     .withLicenseInfo(LicenseInfo.builder()
+                                          .accountType(AccountType.PAID)
+                                          .accountStatus(AccountStatus.ACTIVE)
+                                          .expiryTime(-1)
+                                          .build())
+                     .build();
+
+    accountService.save(accountObj);
+
+    // Update account key to make it work with delegate
+    UpdateOperations<Account> accountUpdateOperations = wingsPersistence.createUpdateOperations(Account.class);
+    accountUpdateOperations.set("accountKey", delegateAccountSecret);
+    wingsPersistence.update(wingsPersistence.createQuery(Account.class), accountUpdateOperations);
+
+    this.account = accountService.get(defaultAccountId);
     return this.account;
   }
 
