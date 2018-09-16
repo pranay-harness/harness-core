@@ -548,3 +548,6 @@ software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData, 5508
 software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails, 5509
 software.wings.api.pcf.PcfSwapRouteRollbackContextElement, 5510
 software.wings.beans.LicenseInfo, 5511
+software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData, 5512
+software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse, 5513
+software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse$DynaTraceMetricDataResult, 5514
