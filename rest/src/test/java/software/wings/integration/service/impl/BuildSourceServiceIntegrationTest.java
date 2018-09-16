@@ -10,9 +10,11 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.Service.builder;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.Category.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
+import static software.wings.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
@@ -20,6 +22,7 @@ import static software.wings.utils.WingsTestConstants.HARNESS_ARTIFACTORY;
 import static software.wings.utils.WingsTestConstants.HARNESS_BAMBOO;
 import static software.wings.utils.WingsTestConstants.HARNESS_DOCKER_REGISTRY;
 import static software.wings.utils.WingsTestConstants.HARNESS_NEXUS;
+import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.inject.Inject;
 
@@ -34,13 +37,12 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
-import software.wings.WingsBaseTest;
+import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
-import software.wings.beans.JenkinsConfig;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -57,19 +59,22 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.AccountGenerator;
 import software.wings.generator.ApplicationGenerator;
 import software.wings.generator.ApplicationGenerator.Applications;
 import software.wings.generator.ArtifactStreamGenerator;
 import software.wings.generator.OwnerManager;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.Randomizer;
+import software.wings.generator.Randomizer.Seed;
 import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
 import software.wings.generator.SecretName;
+import software.wings.generator.ServiceGenerator;
 import software.wings.generator.SettingGenerator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
-import software.wings.security.UserThreadLocal;
+import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.intfc.AmazonS3BuildService;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.BambooBuildService;
@@ -87,16 +92,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
-/**
- * Created by rsingh on 10/9/17.
- * Integration test that goes against a test instance of Jenkins (among other things) and verifies behaviours.
- */
 @RunWith(Parameterized.class)
-@Ignore // TODO: fix this test to use setting from settings generator
-public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
-  public static final String TEST_JENKINS_URL = "http://ec2-34-207-79-21.compute-1.amazonaws.com:8080/";
+public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Parameter(0) public SettingVariableTypes type;
   @Parameter(1) public ArtifactStreamType streamType;
   @Parameter(2) public String repositoryType;
@@ -127,6 +125,8 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   @Inject private SettingGenerator settingGenerator;
   @Inject private ArtifactStreamGenerator artifactStreamGenerator;
   @Inject private ApplicationGenerator applicationGenerator;
+  @Inject private ServiceGenerator serviceGenerator;
+  @Inject private AccountGenerator accountGenerator;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -157,30 +157,32 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
   @Before
   public void setUp() {
     initMocks(this);
-    accountId = UUID.randomUUID().toString();
-    appId = UUID.randomUUID().toString();
-    wingsPersistence.save(user);
-    UserThreadLocal.set(user);
-    Service service = Service.builder().appId(appId).artifactType(artifactType).name("Some service").build();
-    wingsPersistence.save(service);
+    //    accountId = UUID.randomUUID().toString();
+    //    appId = UUID.randomUUID().toString();
+    //    wingsPersistence.save(user);
+    //    UserThreadLocal.set(user);
+    //    Service service = Service.builder().appId(appId).artifactType(artifactType).name("Some service").build();
+    //    wingsPersistence.save(service);
+    //    Owners owners = new Owners();
+    //    owners.add(account);
+
+    Seed seed = new Seed(0);
+    Account account = accountGenerator.ensureGenericTest();
+    seed = Randomizer.seed();
+    Owners owners = ownerManager.create();
+    application = owners.obtainApplication(()
+                                               -> applicationGenerator.ensurePredefined(Randomizer.seed(),
+                                                   ownerManager.create(), Applications.GENERIC_TEST));
     switch (type) {
       case JENKINS:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(jenkinsBuildService);
-        settingAttribute = aSettingAttribute()
-                               .withName("harness")
-                               .withCategory(CONNECTOR)
-                               .withAccountId(accountId)
-                               .withValue(JenkinsConfig.builder()
-                                              .accountId(accountId)
-                                              .jenkinsUrl(TEST_JENKINS_URL)
-                                              .username("admin")
-                                              .password("admin".toCharArray())
-                                              .build())
-                               .build();
+        owners = new Owners();
+        owners.add(account);
+        settingAttribute = settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_CONNECTOR);
         artifactStream = new JenkinsArtifactStream();
         ((JenkinsArtifactStream) artifactStream).setJobname(jobName);
         ((JenkinsArtifactStream) artifactStream).setArtifactPaths(Collections.singletonList(artifactPath));
-        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setServiceId(SERVICE_ID);
         artifactStream.setAppId(appId);
         break;
       case BAMBOO:
@@ -200,7 +202,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         artifactStream = new BambooArtifactStream();
         ((BambooArtifactStream) artifactStream).setJobname(jobName);
         ((BambooArtifactStream) artifactStream).setArtifactPaths(Collections.singletonList(artifactPath));
-        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setServiceId(SERVICE_ID);
         artifactStream.setAppId(appId);
         break;
 
@@ -222,7 +224,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         ((NexusArtifactStream) artifactStream).setJobname(jobName);
         ((NexusArtifactStream) artifactStream).setArtifactPaths(Collections.singletonList(artifactPath));
         ((NexusArtifactStream) artifactStream).setGroupId(groupId);
-        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setServiceId(SERVICE_ID);
         artifactStream.setAppId(appId);
         break;
 
@@ -242,7 +244,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
                 .build();
         artifactStream = new DockerArtifactStream();
         ((DockerArtifactStream) artifactStream).setImageName(artifactPath);
-        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setServiceId(SERVICE_ID);
         artifactStream.setAppId(appId);
         break;
       case ARTIFACTORY:
@@ -264,7 +266,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         ((ArtifactoryArtifactStream) artifactStream).setArtifactPattern(groupId);
         ((ArtifactoryArtifactStream) artifactStream).setRepositoryType(repositoryType);
         ((ArtifactoryArtifactStream) artifactStream).setImageName(groupId);
-        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setServiceId(SERVICE_ID);
         artifactStream.setAppId(appId);
         break;
       case ECR:
@@ -283,65 +285,68 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         artifactStream = new EcrArtifactStream();
         ((EcrArtifactStream) artifactStream).setRegion(Regions.US_EAST_1.getName());
         ((EcrArtifactStream) artifactStream).setImageName(groupId);
-        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setServiceId(SERVICE_ID);
         artifactStream.setAppId(appId);
         break;
       case AMAZON_S3:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(amazonS3BuildService);
-        Randomizer.Seed seed = Randomizer.seed();
-        Owners owners = ownerManager.create();
-        application = owners.obtainApplication(
-            () -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
+
         settingAttribute = settingGenerator.ensureAwsTest(seed, owners);
+        final Service s3Service = serviceGenerator.ensureService(
+            seed, owners, builder().name("S3 Service").artifactType(ArtifactType.WAR).build());
         artifactStream = artifactStreamGenerator.ensureArtifactStream(seed,
             AmazonS3ArtifactStream.builder()
                 .appId(application.getAppId())
-                .serviceId(service.getUuid())
+                .serviceId(s3Service.getUuid())
                 .name("harness-example_todolist-war")
                 .sourceName(settingAttribute.getName())
                 .jobname("harness-example")
                 .artifactPaths(asList("todolist.war"))
                 .settingId(settingAttribute.getUuid())
                 .build());
-        artifactStream.setServiceId(service.getUuid());
+        artifactStream.setServiceId(s3Service.getUuid());
         artifactStream.setAppId(application.getAppId());
         break;
       default:
         throw new IllegalArgumentException("Invalid type: " + type);
     }
-    wingsPersistence.save(artifactStream);
-    wingsPersistence.save(settingAttribute);
+    //    wingsPersistence.save(artifactStream);
+    //    wingsPersistence.save(settingAttribute);
     setInternalState(buildSourceService, "delegateProxyFactory", delegateProxyFactory);
   }
 
   @Test
+  @Ignore
   @Repeat(times = 5, successes = 1)
   public void getJobs() {
     switch (type) {
-      case DOCKER:
+      case JENKINS:
+        Set<JobDetails> jobs = buildSourceService.getJobs(application.getUuid(), settingAttribute.getUuid(), null);
+        assertFalse(jobs.isEmpty());
+        return;
       case ARTIFACTORY:
       case ECR:
         return;
-
       default:
-        Set<JobDetails> jobs = buildSourceService.getJobs(appId, settingAttribute.getUuid(), null);
-        assertFalse(jobs.isEmpty());
     }
   }
 
   @Test
+  @Ignore
   @Repeat(times = 5, successes = 1)
   public void getPlans() {
     switch (type) {
-      case DOCKER:
-      case ECR:
+      case AMAZON_S3:
+        Map<String, String> plans =
+            buildSourceService.getPlans(application.getUuid(), settingAttribute.getUuid(), streamType.name());
+        assertFalse(plans.isEmpty());
         return;
       default:
-        Map<String, String> plans = buildSourceService.getPlans(appId, settingAttribute.getUuid(), streamType.name());
-        assertFalse(plans.isEmpty());
+        return;
     }
   }
 
+  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
   public void getPlansWithService() {
@@ -349,7 +354,6 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
       case DOCKER:
       case ECR:
         return;
-
       default:
         Service service = Service.builder().appId(appId).artifactType(WAR).name("Some service").build();
         wingsPersistence.save(service);
@@ -359,6 +363,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
     }
   }
 
+  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
   public void getArtifactPaths() {
@@ -366,7 +371,6 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
       case DOCKER:
       case ARTIFACTORY:
         return;
-
       default:
         Set<String> artifactPaths =
             buildSourceService.getArtifactPaths(appId, jobName, settingAttribute.getUuid(), groupId, streamType.name());
@@ -375,6 +379,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
     }
   }
 
+  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
   public void getBuilds() {
@@ -382,7 +387,6 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
       case DOCKER:
       case ECR:
         return;
-
       default:
         List<BuildDetails> builds =
             buildSourceService.getBuilds(appId, artifactStream.getUuid(), settingAttribute.getUuid());
@@ -390,6 +394,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
     }
   }
 
+  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
   public void getLastSuccessfulBuild() {
@@ -423,6 +428,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
     }
   }
 
+  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
   public void getGroupIds() {
@@ -461,6 +467,7 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
     assertFalse(groupIds.isEmpty());
   }
 
+  @Ignore
   @Test
   @Repeat(times = 5, successes = 1)
   public void validateArtifactSource() {
@@ -481,27 +488,6 @@ public class BuildSourceServiceIntegrationTest extends WingsBaseTest {
         break;
       case ECR:
         return;
-      default:
-        throw new IllegalArgumentException("invalid type: " + type);
-    }
-  }
-
-  @Test
-  @Repeat(times = 5, successes = 1)
-  public void getBuckets() {
-    switch (type) {
-      case JENKINS:
-      case BAMBOO:
-      case NEXUS:
-      case DOCKER:
-      case ECR:
-      case ARTIFACTORY:
-        return;
-      case AMAZON_S3:
-        Map<String, String> buckets = buildSourceService.getPlans(
-            application.getAppId(), artifactStream.getSettingId(), artifactStream.getArtifactStreamType());
-        assertFalse(buckets.isEmpty());
-        break;
       default:
         throw new IllegalArgumentException("invalid type: " + type);
     }
