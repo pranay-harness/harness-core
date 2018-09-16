@@ -727,7 +727,7 @@
             <dependency>
                 <groupId>me.snowdrop</groupId>
                 <artifactId>istio-client-uberjar</artifactId>
-                <version>0.11</version>
+                <version>0.12</version>
             </dependency>
 
             <dependency>
