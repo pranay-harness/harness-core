@@ -4,6 +4,7 @@ import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.common.collect.Lists;
@@ -271,7 +272,7 @@ public class UserResource {
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId, @NotNull User user) {
     User authUser = UserThreadLocal.get();
     if (!authUser.getUuid().equals(userId)) {
-      throw new WingsException(ErrorCode.ACCESS_DENIED);
+      throw new WingsException(ErrorCode.ACCESS_DENIED, USER);
     }
     user.setUuid(userId);
     if (isEmpty(user.getAppId())) {
