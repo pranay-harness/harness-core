@@ -67,7 +67,7 @@ public class HostServiceImpl implements HostService {
                     .filter("envId", envId)
                     .filter("appId", appId)
                     .get();
-    notNullCheck("Host", host);
+    notNullCheck("Host is null for hostId: " + hostId + " appId: " + appId + " envId: " + envId, host);
     return host;
   }
 
