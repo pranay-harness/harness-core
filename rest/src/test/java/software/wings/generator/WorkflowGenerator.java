@@ -15,9 +15,11 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
+import static software.wings.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.sm.StateType.JENKINS;
 import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
+import static software.wings.utils.WingsIntegrationTestConstants.SEED_BUILD_WORKFLOW_NAME;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -33,6 +35,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
@@ -57,6 +60,7 @@ public class WorkflowGenerator {
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
   @Inject private ArtifactStreamGenerator artifactStreamGenerator;
   @Inject private ServiceGenerator serviceGenerator;
+  @Inject private SettingGenerator settingGenerator;
 
   public enum Workflows { BASIC_SIMPLE, BASIC_10_NODES, PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT, BUILD }
 
@@ -156,23 +160,27 @@ public class WorkflowGenerator {
     WorkflowPhaseBuilder workflowPhaseBuilder = WorkflowPhaseBuilder.aWorkflowPhase();
     workflowPhaseBuilder.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
 
+    // TODO: Change it to Docker ArtifactStream
     JenkinsArtifactStream jenkinsArtifactStream = (JenkinsArtifactStream) artifactStreamGenerator.ensurePredefined(
         seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
+
+    SettingAttribute jenkinsConfig = settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_CONNECTOR);
 
     workflowPhaseBuilder.addPhaseStep(
         aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
             .addStep(aGraphNode()
                          .withId(generateUuid())
                          .withType(JENKINS.name())
-                         .withName(JENKINS.name())
-                         .addProperty(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsArtifactStream.getSettingId())
-                         .addProperty(JenkinsState.JOB_NAME_KEY, jenkinsArtifactStream.getJobname())
+                         .withName("Jenkins")
+                         .addProperty(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsConfig.getUuid())
+                         .addProperty(JenkinsState.JOB_NAME_KEY, "build-description-setter")
                          .build())
             .addStep(aGraphNode()
                          .withId(generateUuid())
                          .withType(ARTIFACT_COLLECTION.name())
                          .addProperty(ArtifactCollectionState.ARTIFACT_STREAM_ID_KEY, jenkinsArtifactStream.getUuid())
-                         .addProperty(ArtifactCollectionState.BUILD_NO_KEY, "Jenkins.buildNumber")
+                         .addProperty(ArtifactCollectionState.BUILD_NO_KEY,
+                             "${regex.replace('tag: ([\\w-]+)', '$1', ${Jenkins.description}}")
                          .withName(Constants.ARTIFACT_COLLECTION)
                          .build())
             .build());
@@ -180,7 +188,7 @@ public class WorkflowGenerator {
 
     return ensureWorkflow(seed, owners,
         aWorkflow()
-            .withName("Build Workflow")
+            .withName(SEED_BUILD_WORKFLOW_NAME)
             .withWorkflowType(WorkflowType.ORCHESTRATION)
             .withOrchestrationWorkflow(
                 aBuildOrchestrationWorkflow()

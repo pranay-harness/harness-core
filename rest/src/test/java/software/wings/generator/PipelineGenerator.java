@@ -13,6 +13,7 @@ import static software.wings.beans.Pipeline.builder;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static software.wings.generator.PipelineGenerator.Pipelines.BARRIER;
+import static software.wings.generator.PipelineGenerator.Pipelines.BUILD;
 import static software.wings.generator.PipelineGenerator.Pipelines.RESOURCE_CONSTRAINT_WORKFLOW;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
@@ -40,6 +41,7 @@ import software.wings.generator.NotificationGroupGenerator.NotificationGroups;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.ServiceGenerator.Services;
 import software.wings.generator.WorkflowGenerator.PostProcessInfo;
+import software.wings.generator.WorkflowGenerator.Workflows;
 import software.wings.service.intfc.PipelineService;
 import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 
@@ -53,7 +55,7 @@ public class PipelineGenerator {
   @Inject private ServiceGenerator serviceGenerator;
   @Inject private NotificationGroupGenerator notificationGroupGenerator;
 
-  public enum Pipelines { BARRIER, RESOURCE_CONSTRAINT_WORKFLOW }
+  public enum Pipelines { BARRIER, RESOURCE_CONSTRAINT_WORKFLOW, BUILD }
 
   public Pipeline ensurePredefined(Randomizer.Seed seed, Owners owners, Pipelines predefined) {
     switch (predefined) {
@@ -61,6 +63,8 @@ public class PipelineGenerator {
         return ensureBarrier(seed, owners);
       case RESOURCE_CONSTRAINT_WORKFLOW:
         return ensureResourceConstraintWorkflow(seed, owners);
+      case BUILD:
+        return ensureBuildPipeline(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -211,6 +215,22 @@ public class PipelineGenerator {
                                                           "workflowId", workflows[2].getUuid()))
                                                       .build()))
                     .build()))
+            .build());
+  }
+  public Pipeline ensureBuildPipeline(Randomizer.Seed seed, Owners owners) {
+    Workflow buildWorkflow = workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD);
+
+    return ensurePipeline(seed, owners,
+        Pipeline.builder()
+            .name(BUILD.name())
+            .pipelineStages(asList(PipelineStage.builder()
+                                       .pipelineStageElements(asList(
+                                           PipelineStageElement.builder()
+                                               .name("Build")
+                                               .type(ENV_STATE.name())
+                                               .properties(ImmutableMap.of("workflowId", buildWorkflow.getUuid()))
+                                               .build()))
+                                       .build()))
             .build());
   }
 

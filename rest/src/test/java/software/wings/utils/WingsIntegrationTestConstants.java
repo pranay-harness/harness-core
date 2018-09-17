@@ -82,6 +82,7 @@ public interface WingsIntegrationTestConstants {
   String SEED_BASIC_WORKFLOW_NAME = "Seed Basic Workflow";
   String SEED_CANARY_WORKFLOW_NAME = "Seed Canary Workflow";
   String SEED_ROLLING_WORKFLOW_NAME = "Seed Rolling Workflow";
+  String SEED_BUILD_WORKFLOW_NAME = "Seed Build Workflow";
 
   String HARNESS_KMS = "Harness KMS";
 
