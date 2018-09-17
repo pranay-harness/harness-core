@@ -90,6 +90,8 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
   @Test
   public void testCreateGroup() {
     // setup
+    Map<String, String> hosts = new HashMap<>();
+    hosts.put("dummy", DEFAULT_GROUP_NAME);
     Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
     TimeSeriesMlAnalysisGroupInfo analysisGroupInfo = TimeSeriesMlAnalysisGroupInfo.builder()
                                                           .groupName(DEFAULT_GROUP_NAME)
@@ -103,7 +105,7 @@ public class NewRelicStateTest extends APMStateVerificationTestBase {
     // execute
 
     nrState.setComparisonStrategy("COMPARE_WITH_CURRENT");
-    nrState.createAndSaveGroup(executionContext);
+    nrState.createAndSaveMetricGroups(executionContext, hosts);
 
     // verify
     verify(metricAnalysisService).saveMetricGroups(appId, StateType.NEW_RELIC, stateExecutionId, metricGroups);
