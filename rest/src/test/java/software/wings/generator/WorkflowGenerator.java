@@ -174,6 +174,7 @@ public class WorkflowGenerator {
                          .withName("Jenkins")
                          .addProperty(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsConfig.getUuid())
                          .addProperty(JenkinsState.JOB_NAME_KEY, "build-description-setter")
+                         .addProperty(JenkinsState.SWEEPING_OUTPUT_NAME_KEY, "jenkins")
                          .build())
             .addStep(aGraphNode()
                          .withId(generateUuid())

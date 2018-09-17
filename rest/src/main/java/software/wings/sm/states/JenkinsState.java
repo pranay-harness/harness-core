@@ -15,13 +15,16 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,12 +38,14 @@ import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SweepingOutput;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.common.Constants;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -62,13 +67,12 @@ import java.util.Map;
  * Created by peeyushaggarwal on 10/21/16.
  */
 public class JenkinsState extends State {
+  private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
+
   public static final String COMMAND_UNIT_NAME = "Console Output";
   public static final String JENKINS_CONFIG_ID_KEY = "jenkinsConfigId";
   public static final String JOB_NAME_KEY = "jobName";
-
-  @Transient private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
-
-  @Inject private DelegateService delegateService;
+  public static final String SWEEPING_OUTPUT_NAME_KEY = "sweepingOutputName";
 
   private String jenkinsConfigId;
 
@@ -81,8 +85,12 @@ public class JenkinsState extends State {
   @Attributes(title = "Artifacts/Files Paths")
   private List<FilePathAssertionEntry> filePathsForAssertion = Lists.newArrayList();
 
+  @Attributes(title = "Sweeping output name") @Getter @Setter private String sweepingOutputName;
+
+  @Transient @Inject private DelegateService delegateService;
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private SecretManager secretManager;
+  @Transient @Inject private SweepingOutputService sweepingOutputService;
 
   public JenkinsState(String name) {
     super(name, StateType.JENKINS.name());
@@ -289,6 +297,23 @@ public class JenkinsState extends State {
     jenkinsExecutionData.setDescription(jenkinsExecutionResponse.getDescription());
     jenkinsExecutionData.setMetadata(jenkinsExecutionResponse.getMetadata());
     jenkinsExecutionData.setDelegateMetaInfo(jenkinsExecutionResponse.getDelegateMetaInfo());
+
+    if (isNotEmpty(sweepingOutputName)) {
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+      ObjectMapper mapper = new ObjectMapper();
+
+      Map<String, Object> variables = mapper.convertValue(jenkinsExecutionData, Map.class);
+
+      SweepingOutput sweepingOutput = sweepingOutputService.save(
+          SweepingOutput.builder()
+              .name(sweepingOutputName)
+              .appId(context.getAppId())
+              .pipelineExecutionId(workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid())
+              .workflowExecutionId(context.getWorkflowExecutionId())
+              .variables(variables)
+              .build());
+    }
 
     return anExecutionResponse()
         .withExecutionStatus(jenkinsExecutionResponse.getExecutionStatus())
