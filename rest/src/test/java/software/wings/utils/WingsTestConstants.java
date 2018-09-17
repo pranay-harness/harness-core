@@ -216,6 +216,8 @@ public interface WingsTestConstants {
 
   double DOUBLE_DEFAULT_VALUE = Double.MAX_VALUE;
 
+  String INVALID_NAME = "aba$$%55";
+
   String HARNESS_NEXUS = "Harness Nexus";
   String HARNESS_JENKINS = "Harness Jenkins";
   String HARNESS_NEXUS_THREE = "Harness Nexus 3";

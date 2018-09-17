@@ -15,6 +15,7 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC_CHANGED;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
+import static software.wings.utils.WingsTestConstants.INVALID_NAME;
 
 import com.google.inject.Inject;
 
@@ -36,6 +37,7 @@ import software.wings.service.intfc.template.TemplateService;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.ConstraintViolationException;
 
 public class TemplateGalleryServiceTest extends WingsBaseTest {
   @Inject @InjectMocks protected TemplateGalleryService templateGalleryService;
@@ -47,6 +49,13 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
   public void shouldSaveTemplateGallery() {
     TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
     assertTemplateGallery(savedTemplateGallery);
+  }
+
+  @Test(expected = ConstraintViolationException.class)
+  public void shouldNotSaveInvalidNameTemplateGallery() {
+    TemplateGallery templateGallery = prepareTemplateGallery();
+    templateGallery.setName(INVALID_NAME);
+    templateGalleryService.save(templateGallery);
   }
 
   @Test
@@ -84,6 +93,17 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
     assertTemplateGallery(savedTemplateGallery);
 
     templateGalleryService.delete(savedTemplateGallery.getUuid());
+
+    templateGalleryService.update(savedTemplateGallery);
+  }
+
+  @Test(expected = ConstraintViolationException.class)
+  public void shouldNotUpdateInvalidTemplateGallery() {
+    TemplateGallery savedTemplateGallery = templateGalleryService.save(prepareTemplateGallery());
+
+    assertTemplateGallery(savedTemplateGallery);
+
+    savedTemplateGallery.setName(INVALID_NAME);
 
     templateGalleryService.update(savedTemplateGallery);
   }

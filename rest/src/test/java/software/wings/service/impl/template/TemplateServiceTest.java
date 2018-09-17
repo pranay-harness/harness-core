@@ -45,8 +45,10 @@ import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.PageRequest;
 import software.wings.service.intfc.template.TemplateVersionService;
+import software.wings.utils.WingsTestConstants;
 
 import java.util.List;
+import javax.validation.ConstraintViolationException;
 
 public class TemplateServiceTest extends TemplateBaseTest {
   @Inject private TemplateVersionService templateVersionService;
@@ -70,6 +72,13 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(savedSshCommandTemplate.getCommandType()).isEqualTo(START);
     assertThat(savedSshCommandTemplate.getCommandUnits()).isNotEmpty();
     assertThat(savedSshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Start");
+  }
+
+  @Test(expected = ConstraintViolationException.class)
+  public void shouldNotSaveInvalidNameTemplate() {
+    Template template = getSshCommandTemplate();
+    template.setName(WingsTestConstants.INVALID_NAME);
+    templateService.save(template);
   }
 
   @Test
@@ -183,6 +192,19 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(SshCommandTemplate.getCommandType()).isEqualTo(START);
     assertThat(SshCommandTemplate.getCommandUnits()).isNotEmpty();
     assertThat(SshCommandTemplate.getCommandUnits()).extracting(CommandUnit::getName).contains("Start");
+  }
+
+  @Test(expected = ConstraintViolationException.class)
+  public void shouldNotUpdateInvalidNameTemplate() {
+    Template template = getSshCommandTemplate();
+
+    Template savedTemplate = templateService.save(template);
+
+    assertThat(savedTemplate).isNotNull();
+
+    savedTemplate.setDescription(TEMPLATE_DESC_CHANGED);
+    savedTemplate.setName(WingsTestConstants.INVALID_NAME);
+    templateService.update(savedTemplate);
   }
 
   @Test

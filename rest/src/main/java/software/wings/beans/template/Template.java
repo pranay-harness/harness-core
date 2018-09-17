@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
+import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,7 +43,7 @@ public class Template extends Base {
   public static final String FOLDER_ID_KEY = "folderId";
   public static final String GALLERY_ID_KEY = "galleryId";
 
-  @Indexed @NotNull @EntityName(groups = Create.class) private String name;
+  @Indexed @NotNull @EntityName(groups = {Create.class, Update.class}) private String name;
   @Indexed @NotEmpty private String accountId;
   @Indexed private String type;
   @Indexed private String folderId;

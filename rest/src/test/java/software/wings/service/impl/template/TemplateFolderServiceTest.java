@@ -16,13 +16,16 @@ import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_NAME;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.INVALID_NAME;
 
 import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.utils.WingsTestConstants;
 
 import java.util.Arrays;
+import javax.validation.ConstraintViolationException;
 
 public class TemplateFolderServiceTest extends TemplateBaseTest {
   @Test(expected = InvalidRequestException.class)
@@ -42,6 +45,15 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     assertThat(myTemplateFolder.getKeywords()).contains(TEMPLATE_FOLDER_DEC.toLowerCase());
     assertThat(myTemplateFolder.getPathId()).isNotEmpty();
     assertThat(myTemplateFolder.getPathId().split("/")[0]).isEqualTo(parentFolder.getUuid());
+  }
+
+  @Test(expected = ConstraintViolationException.class)
+  public void shouldNotSaveInvalidNameTemplateFolder() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateFolder templateFolder = constructTemplateBuilder(parentFolder.getUuid());
+    templateFolder.setName(WingsTestConstants.INVALID_NAME);
+
+    TemplateFolder myTemplateFolder = templateFolderService.save(templateFolder);
   }
 
   @Test
@@ -99,6 +111,20 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     assertThat(updatedTemplateFolder.getKeywords()).contains(TEMPLATE_DESC_CHANGED.toLowerCase());
     assertThat(updatedTemplateFolder.getPathId()).isNotEmpty();
     assertThat(updatedTemplateFolder.getPathId().split("/")[0]).isEqualTo(parentFolder.getUuid());
+  }
+
+  @Test(expected = ConstraintViolationException.class)
+  public void shouldNotUpdateWithInvalidNameTemplateFolder() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateFolder myTemplateFolder = templateFolderService.save(constructTemplateBuilder(parentFolder.getUuid()));
+
+    assertThat(myTemplateFolder).isNotNull();
+    assertThat(myTemplateFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
+
+    myTemplateFolder.setDescription(TEMPLATE_DESC_CHANGED);
+    myTemplateFolder.setName(INVALID_NAME);
+
+    templateFolderService.update(myTemplateFolder);
   }
 
   @Test

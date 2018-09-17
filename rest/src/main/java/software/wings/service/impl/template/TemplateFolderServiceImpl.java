@@ -29,10 +29,13 @@ import com.google.inject.Singleton;
 import io.harness.data.structure.ListUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.validation.Create;
+import io.harness.validation.Update;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Base;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -69,8 +72,9 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public TemplateFolder save(TemplateFolder templateFolder) {
-    TemplateGallery templateGallery = null;
+    TemplateGallery templateGallery;
     String galleryId = templateFolder.getGalleryId();
     if (isEmpty(galleryId)) {
       templateGallery = templateGalleryService.getByAccount(templateFolder.getAccountId());
@@ -98,6 +102,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   @Override
+  @ValidationGroups(Update.class)
   public TemplateFolder update(TemplateFolder templateFolder) {
     TemplateFolder savedTemplateFolder = get(templateFolder.getUuid());
     if (savedTemplateFolder == null) {
