@@ -30,10 +30,13 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.SweepingOutputFunctor;
+import software.wings.expression.SweepingOutputFunctor.SweepingOutputFunctorBuilder;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.settings.SettingValue;
 
 import java.util.ArrayList;
@@ -57,6 +60,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   private static final Pattern wildCharPattern = Pattern.compile("[+|*|/|\\\\| |&|$|\"|'|.|\\|]");
   private static final Pattern argsCharPattern = Pattern.compile("[(|)|\"|\']");
   private static final Logger logger = LoggerFactory.getLogger(ExecutionContextImpl.class);
+
   @Inject @Transient private ExpressionEvaluator evaluator;
   @Inject @Transient private ExpressionProcessorFactory expressionProcessorFactory;
   @Inject @Transient private VariableProcessor variableProcessor;
@@ -64,6 +68,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject @Transient private ServiceTemplateService serviceTemplateService;
   @Inject @Transient private ArtifactService artifactService;
   @Inject private transient ArtifactStreamService artifactStreamService;
+  @Inject private transient SweepingOutputService sweepingOutputService;
+
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
   @Transient private transient Map<String, Object> contextMap;
@@ -468,6 +474,20 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     context.putAll(
         variableProcessor.getVariables(stateExecutionInstance.getContextElements(), getWorkflowExecutionId()));
+
+    final SweepingOutputFunctorBuilder sweepingOutputFunctorBuilder =
+        SweepingOutputFunctor.builder()
+            .sweepingOutputService(sweepingOutputService)
+            .appId(getAppId())
+            .workflowExecutionId(getWorkflowExecutionId());
+
+    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
+    if (workflowStandardParams != null && workflowStandardParams.getWorkflowElement() != null) {
+      sweepingOutputFunctorBuilder.pipelineExecutionId(
+          workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid());
+    }
+
+    context.put("ec", sweepingOutputFunctorBuilder.build());
 
     return context;
   }

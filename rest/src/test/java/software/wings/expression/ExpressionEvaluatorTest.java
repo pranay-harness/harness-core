@@ -4,6 +4,7 @@
 
 package software.wings.expression;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -19,7 +20,9 @@ import lombok.Value;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.api.HostElement;
+import software.wings.beans.SweepingOutput;
 import software.wings.beans.infrastructure.Host;
+import software.wings.service.intfc.SweepingOutputService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,6 +34,7 @@ import java.util.Map;
  */
 public class ExpressionEvaluatorTest extends WingsBaseTest {
   @Inject private ExpressionEvaluator expressionEvaluator;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   @Builder
   @Value
@@ -294,5 +298,33 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
             .put("A", "${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B} ${B}")
             .build();
     assertThatThrownBy(() -> expressionEvaluator.substitute("${A}", context)).isInstanceOf(WingsException.class);
+  }
+
+  @Test
+  public void shouldRenderSweepingOutput() {
+    String appId = generateUuid();
+    String pipelineExecutionId = generateUuid();
+    String workflowExecutionId = generateUuid();
+    String followingWorkflowExecutionId = generateUuid();
+
+    SweepingOutput sweepingOutput = sweepingOutputService.save(SweepingOutput.builder()
+                                                                   .name("jenkins")
+                                                                   .appId(appId)
+                                                                   .pipelineExecutionId(pipelineExecutionId)
+                                                                   .workflowExecutionId(workflowExecutionId)
+                                                                   .variables(ImmutableMap.of("foo", "bar"))
+                                                                   .build());
+
+    Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                      .put("sweeping",
+                                          SweepingOutputFunctor.builder()
+                                              .sweepingOutputService(sweepingOutputService)
+                                              .appId(appId)
+                                              .pipelineExecutionId(pipelineExecutionId)
+                                              .workflowExecutionId(followingWorkflowExecutionId)
+                                              .build())
+                                      .build();
+
+    assertThat(expressionEvaluator.substitute("${sweeping.output(\"jenkins\").foo}", context)).isEqualTo("bar");
   }
 }
