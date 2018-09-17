@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonValue;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
+import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,7 +34,7 @@ public class TemplateFolder extends Base {
   public static final String GALLERY_ID_KEY = "galleryId";
 
   @Indexed @NotEmpty private String accountId;
-  @NotEmpty @EntityName(groups = Create.class) String name;
+  @NotEmpty @EntityName(groups = {Create.class, Update.class}) String name;
   private String description;
   private String parentId;
   private transient String nodeType = NodeType.FILE.name();

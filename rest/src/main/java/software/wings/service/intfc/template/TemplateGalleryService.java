@@ -1,9 +1,6 @@
 package software.wings.service.intfc.template;
 
-import io.harness.validation.Create;
-import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.dl.PageRequest;
 import software.wings.dl.PageResponse;
@@ -19,9 +16,9 @@ public interface TemplateGalleryService extends OwnedByAccount {
    */
   PageResponse<TemplateGallery> list(PageRequest<TemplateGallery> pageRequest);
 
-  @ValidationGroups(Create.class) TemplateGallery save(@Valid TemplateGallery templateGallery);
+  TemplateGallery save(@Valid TemplateGallery templateGallery);
 
-  @ValidationGroups(Update.class) TemplateGallery update(@Valid TemplateGallery templateGallery);
+  TemplateGallery update(@Valid TemplateGallery templateGallery);
 
   void delete(String galleryUuid);
 

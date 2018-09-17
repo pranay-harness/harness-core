@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
+import io.harness.validation.Update;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,7 +31,7 @@ import java.util.List;
 public class TemplateGallery extends Base {
   public static final String ACCOUNT_NAME_KEY = "accountName";
   public static final String NAME_KEY = "name";
-  @NotEmpty @EntityName(groups = Create.class) private String name;
+  @NotEmpty @EntityName(groups = {Create.class, Update.class}) private String name;
   @NotEmpty private String accountId;
   private String description;
   private String referencedGalleryId;

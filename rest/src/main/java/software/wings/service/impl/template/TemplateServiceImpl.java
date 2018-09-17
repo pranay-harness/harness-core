@@ -28,10 +28,13 @@ import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.validation.Create;
+import io.harness.validation.Update;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.CommandCategory;
 import software.wings.beans.EntityType;
 import software.wings.beans.template.BaseTemplate;
@@ -84,6 +87,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public Template save(Template template) {
     saveOrUpdate(template);
     // create initial version
@@ -137,6 +141,7 @@ public class TemplateServiceImpl implements TemplateService {
   }
 
   @Override
+  @ValidationGroups(Update.class)
   public Template update(Template template) {
     saveOrUpdate(template);
     Template oldTemplate;

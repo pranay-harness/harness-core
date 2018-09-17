@@ -18,9 +18,12 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.data.structure.ListUtils;
+import io.harness.validation.Create;
+import io.harness.validation.Update;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
+import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
@@ -58,6 +61,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   }
 
   @Override
+  @ValidationGroups(Create.class)
   public TemplateGallery save(TemplateGallery templateGallery) {
     templateGallery.setKeywords(getKeywords(templateGallery));
     TemplateGallery finalTemplateGallery = templateGallery;
@@ -90,6 +94,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   }
 
   @Override
+  @ValidationGroups(Update.class)
   public TemplateGallery update(TemplateGallery templateGallery) {
     TemplateGallery savedGallery = get(templateGallery.getUuid());
     notNullCheck("Template Gallery [" + templateGallery.getName() + "] was deleted", savedGallery, USER);
