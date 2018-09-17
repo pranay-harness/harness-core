@@ -31,7 +31,7 @@ public class ArtifactStreamGenerator {
 
   @Inject WingsPersistence wingsPersistence;
 
-  public enum ArtifactStreams { HARNESS_SAMPLE_ECHO_WAR, BUILD_DESCRIPTOR }
+  public enum ArtifactStreams { HARNESS_SAMPLE_ECHO_WAR }
 
   public ArtifactStream ensurePredefined(Randomizer.Seed seed, Owners owners, ArtifactStreams predefined) {
     switch (predefined) {

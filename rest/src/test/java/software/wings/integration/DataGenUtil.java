@@ -676,6 +676,8 @@ public class DataGenUtil extends BaseIntegrationTest {
 
     // Build Workflow
     workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD);
+    // Build Pipeline
+    pipelineGenerator.ensurePredefined(seed, owners, Pipelines.BUILD);
   }
 
   private List<Application> createApplications() {
