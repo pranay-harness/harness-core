@@ -13,6 +13,6 @@ fi
 echo "Saving mongo to a tar"
 docker save mongo:MONGO_VERSION > harness_disconnected_on_prem_pov_final/images/mongo.tar
 
-zip -r -X harness_disconnected_on_prem_pov_final.zip harness_disconnected_on_prem_pov_final
+tar -cvzf harness_disconnected_on_prem_pov_final.tar.gz harness_disconnected_on_prem_pov_final
 
-echo "Final zip file has been created for the first time install, scp the zip file to the remote machine"
+echo "Final tar.gz file has been created for the first time install, scp the tar.gz file to the remote machine"

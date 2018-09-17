@@ -62,5 +62,5 @@ mv jre-8u131-solaris-x64.tar.gz harness_installer/harness_disconnected_on_prem_p
 mv jre-8u131-macosx-x64.tar.gz harness_installer/harness_disconnected_on_prem_pov_final/images/
 mv jre-8u131-linux-x64.tar.gz harness_installer/harness_disconnected_on_prem_pov_final/images/
 
-zip -r -X harness_installer.zip harness_installer
+tar -cvzf harness_disconnected_on_prem_pov_final.tar.gz harness_disconnected_on_prem_pov_final
 rm -rf harness_installer

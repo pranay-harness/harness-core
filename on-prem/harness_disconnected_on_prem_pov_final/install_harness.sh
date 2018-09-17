@@ -7,6 +7,22 @@ VERSION_PROPERTY_FILE=version.properties
 
 source ./utils.sh
 
+docker_status=$(service docker status | grep -i running )
+
+if [[ $? -eq 1 ]]; then
+        echo "Docker daemon is not running, please check using service docker status"
+        exit 1
+fi
+
+if [[ -z $1 ]]; then
+   runtime_dir=$(getProperty "$CONFIG_PROPERTY_FILE" "runtime_dir")
+   echo "No runtime directory supplied in argument, will default to using the value in config.properties, value=$runtime_dir"
+else
+  runtime_dir=$1
+  echo "Using runtime directory $runtime_dir"
+fi
+
+
 echo "# Reading account details from $ACCOUNT_PROPERTY_FILE"
 accountName=$(getProperty "$ACCOUNT_PROPERTY_FILE" "AccountName")
 companyName=$(getProperty $ACCOUNT_PROPERTY_FILE "CompanyName")
@@ -20,7 +36,6 @@ echo "Reading config mapping from $CONFIG_PROPERTY_FILE"
 mongodbUserName=$(getProperty "$CONFIG_PROPERTY_FILE" "mongodbUserName" | base64 --decode)
 mongodbPassword=$(getProperty "$CONFIG_PROPERTY_FILE" "mongodbPassword" | base64 --decode)
 newreliclicensekey=$(getProperty "$CONFIG_PROPERTY_FILE" "newreliclicensekey" | base64 --decode)
-runtime_dir=$(getProperty "$CONFIG_PROPERTY_FILE" "runtime_dir")
 
 echo "#######Account details start #############"
 echo "AccountName="$accountName
