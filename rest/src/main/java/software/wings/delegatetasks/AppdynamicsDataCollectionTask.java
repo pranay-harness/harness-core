@@ -50,7 +50,6 @@ import java.util.regex.Pattern;
 public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDataCollectionTask.class);
   public static final int DURATION_TO_ASK_MINUTES = 5;
-  public static final int PREDECTIVE_HISTORY_MINUTES = 120;
   private AppdynamicsDataCollectionInfo dataCollectionInfo;
 
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;

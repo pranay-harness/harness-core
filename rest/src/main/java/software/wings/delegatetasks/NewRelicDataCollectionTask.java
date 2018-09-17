@@ -6,6 +6,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.batchMetricsToCollect;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.getApdexMetricNames;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.getErrorMetricNames;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.CALL_COUNT;
@@ -25,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicApdex;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
@@ -118,6 +120,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private DataCollectionTaskResult taskResult;
     private final Set<NewRelicMetric> allTxns;
     private long managerAnalysisStartTime;
+    private TimeSeriesMlAnalysisType analysisType;
 
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult)
         throws IOException {
@@ -129,6 +132,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       this.allTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
           createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+      this.analysisType = dataCollectionInfo.getTimeSeriesMlAnalysisType();
 
       logger.info("NewRelic collector initialized : managerAnalysisStartTime - {}, windowStartTimeManager {}",
           managerAnalysisStartTime, windowStartTimeManager);
@@ -138,18 +142,47 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         NewRelicApplicationInstance node, Set<String> metricNames, long endTime) throws Exception {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
-      logger.info("Fetching for host {} for stateExecutionId {} for metrics {}", node.getHost(),
+      logger.info("Fetching for host {} for stateExecutionId {} for metrics {}", node,
           dataCollectionInfo.getStateExecutionId(), metricNames);
       getWebTransactionMetrics(node, metricNames, endTime, records);
       getErrorMetrics(node, metricNames, endTime, records);
       getApdexMetrics(node, metricNames, endTime, records);
-      logger.info("Fetching done for host {} for stateExecutionId {} for metrics {}", node.getHost(),
+      logger.info("Fetching done for host {} for stateExecutionId {} for metrics {}", node,
           dataCollectionInfo.getStateExecutionId(), metricNames);
 
       logger.debug(records.toString());
       return records;
     }
 
+    private int getCollectionMinute(long timeStamp) {
+      long analysisStartTime = isPredictiveAnalysis()
+          ? managerAnalysisStartTime - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES)
+          : managerAnalysisStartTime;
+      return (int) ((timeStamp - analysisStartTime) / TimeUnit.MINUTES.toMillis(1));
+    }
+
+    private long getStartTime() {
+      long startTime = windowStartTimeManager;
+      if (isPredictiveAnalysis() && dataCollectionMinute == 0) {
+        startTime = windowStartTimeManager - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
+      }
+      return startTime;
+    }
+
+    private NewRelicMetricData getPredictiveOrComparativeMetricData(
+        final Set<String> metricNames, long endTime, NewRelicApplicationInstance node) throws IOException {
+      NewRelicMetricData metricData = null;
+      if (isPredictiveAnalysis()) {
+        metricData = newRelicDelegateService.getMetricDataApplication(dataCollectionInfo.getNewRelicConfig(),
+            dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), metricNames,
+            getStartTime(), endTime, true, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+      } else {
+        metricData = newRelicDelegateService.getMetricDataApplicationInstance(dataCollectionInfo.getNewRelicConfig(),
+            dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
+            metricNames, getStartTime(), endTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+      }
+      return metricData;
+    }
     private void getWebTransactionMetrics(NewRelicApplicationInstance node, Set<String> metricNames, long endTime,
         TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
       int retry = 0;
@@ -157,20 +190,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         try {
           logger.info("For datacollectionMinute {}, start and end times are {} and {}", dataCollectionMinute,
               windowStartTimeManager, endTime);
-          NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
-              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
-              dataCollectionInfo.getNewRelicAppId(), node.getId(), metricNames, windowStartTimeManager, endTime,
-              createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+          NewRelicMetricData metricData = getPredictiveOrComparativeMetricData(metricNames, endTime, node);
 
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeSlice : metric.getTimeslices()) {
               // set from time to the timestamp
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
-              if (timeStamp < managerAnalysisStartTime) {
-                logger.debug("New relic sending us data in the past. request start time {}, received time {}",
-                    managerAnalysisStartTime, timeStamp);
-                continue;
-              }
+
+              String hostname = isPredictiveAnalysis() ? DEFAULT_GROUP_NAME : node.getHost();
               final NewRelicMetricDataRecord metricDataRecord =
                   NewRelicMetricDataRecord.builder()
                       .name(metric.getName())
@@ -181,13 +208,18 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                       .stateExecutionId(dataCollectionInfo.getStateExecutionId())
                       .stateType(getStateType())
                       .timeStamp(timeStamp)
-                      .host(node.getHost())
+                      .host(hostname)
                       .values(new HashMap<>())
                       .groupName(dataCollectionInfo.getHosts().get(node.getHost()))
                       .build();
 
-              metricDataRecord.setDataCollectionMinute(
-                  (int) ((timeStamp - managerAnalysisStartTime) / TimeUnit.MINUTES.toMillis(1)));
+              metricDataRecord.setDataCollectionMinute(getCollectionMinute(timeStamp));
+
+              if (metricDataRecord.getDataCollectionMinute() < 0) {
+                logger.info("New relic sending us data in the past. request start time {}, received time {}",
+                    managerAnalysisStartTime, timeStamp);
+                continue;
+              }
 
               final String webTxnJson = JsonUtils.asJson(timeSlice.getValues());
               NewRelicWebTransactions webTransactions = JsonUtils.asObject(webTxnJson, NewRelicWebTransactions.class);
@@ -218,10 +250,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       int retry = 0;
       while (retry < RETRIES) {
         try {
-          NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
-              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
-              dataCollectionInfo.getNewRelicAppId(), node.getId(), getErrorMetricNames(metricNames),
-              windowStartTimeManager, endTime, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+          NewRelicMetricData metricData =
+              getPredictiveOrComparativeMetricData(getErrorMetricNames(metricNames), endTime, node);
+
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
@@ -260,10 +291,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           if (isEmpty(apdexMetricNames)) {
             return;
           }
-          NewRelicMetricData metricData = newRelicDelegateService.getMetricDataApplicationInstance(
-              dataCollectionInfo.getNewRelicConfig(), dataCollectionInfo.getEncryptedDataDetails(),
-              dataCollectionInfo.getNewRelicAppId(), node.getId(), apdexMetricNames, windowStartTimeManager, endTime,
-              createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+          NewRelicMetricData metricData =
+              getPredictiveOrComparativeMetricData(getApdexMetricNames(metricNames), endTime, node);
           for (NewRelicMetricSlice metric : metricData.getMetrics()) {
             for (NewRelicMetricTimeSlice timeslice : metric.getTimeslices()) {
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeslice.getFrom()).toEpochSecond());
@@ -343,19 +372,23 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             logger.info("Found total new relic metric batches " + metricBatches.size());
 
             List<Callable<Boolean>> callables = new ArrayList<>();
-            for (NewRelicApplicationInstance node : instances) {
-              // TODO what if there are no hosts that match
-              if (!dataCollectionInfo.getHosts().keySet().contains(node.getHost())) {
-                logger.info("Skipping host {} for stateExecutionId {} ", node.getHost(),
-                    dataCollectionInfo.getStateExecutionId());
-                continue;
+            if (isPredictiveAnalysis()) {
+              logger.info(
+                  "AnalysisType is Predictive. So we're collecting metrics by application instead of host/node");
+              callables.add(() -> fetchAndSaveMetricsForNode(instances.get(0), metricBatches, windowEndTimeManager));
+            } else {
+              for (NewRelicApplicationInstance node : instances) {
+                if (!dataCollectionInfo.getHosts().keySet().contains(node.getHost())) {
+                  logger.info("Skipping host {} for stateExecutionId {} ", node.getHost(),
+                      dataCollectionInfo.getStateExecutionId());
+                  continue;
+                }
+
+                logger.info("Going to collect for host {} for stateExecutionId {}, for metrics {}", node.getHost(),
+                    dataCollectionInfo.getStateExecutionId(), metricBatches);
+                callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
               }
-
-              logger.info("Going to collect for host {} for stateExecutionId {}, for metrics {}", node.getHost(),
-                  dataCollectionInfo.getStateExecutionId(), metricBatches);
-              callables.add(() -> fetchAndSaveMetricsForNode(node, metricBatches, windowEndTimeManager));
             }
-
             logger.info("submitting parallel tasks {}", callables.size());
             List<Optional<Boolean>> results = executeParrallel(callables);
             for (Optional<Boolean> result : results) {
@@ -459,7 +492,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
       List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
       logger.info("Sending {} new relic metric records for node {} for minute {}. Time taken: {}",
-          records.cellSet().size(), node.getHost(), dataCollectionMinute, System.currentTimeMillis() - startTime);
+          records.cellSet().size(), node, dataCollectionMinute, System.currentTimeMillis() - startTime);
       return saveMetrics(dataCollectionInfo.getNewRelicConfig().getAccountId(), dataCollectionInfo.getApplicationId(),
           dataCollectionInfo.getStateExecutionId(), metricRecords);
     }
@@ -475,6 +508,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
 
       return rv;
+    }
+    private boolean isPredictiveAnalysis() {
+      return analysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE);
     }
   }
 }

@@ -2,6 +2,10 @@ package software.wings.sm.states;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -9,11 +13,16 @@ import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import software.wings.WingsBaseTest;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
+import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
+import software.wings.sm.StateType;
 import software.wings.sm.states.NewRelicState.Metric;
 
 import java.util.ArrayList;
@@ -22,14 +31,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class NewRelicStateTest extends WingsBaseTest {
-  private NewRelicState.Metric requestsPerMinuteMetric, averageResponseTimeMetric, errorMetric, apdexScoreMetric;
-  private List<NewRelicState.Metric> expectedMetrics;
+/**
+ * author: Praveen
+ */
 
+public class NewRelicStateTest extends APMStateVerificationTestBase {
+  private NewRelicState nrState;
+
+  private NewRelicState.Metric requestsPerMinuteMetric, averageResponseTimeMetric, errorMetric, apdexScoreMetric;
+  private List<Metric> expectedMetrics;
+
+  @Mock private MetricDataAnalysisService metricAnalysisService;
   @Inject @InjectMocks private NewRelicService newRelicService;
 
   @Before
-  public void setUp() throws Exception {
+  public void setup() throws Exception {
+    nrState = new NewRelicState("nrStateName");
+    setupCommon();
+    MockitoAnnotations.initMocks(this);
+    setInternalState(nrState, "metricAnalysisService", metricAnalysisService);
     requestsPerMinuteMetric = NewRelicState.Metric.builder()
                                   .metricName(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE)
                                   .mlMetricType(MetricType.THROUGHPUT)
@@ -52,6 +72,41 @@ public class NewRelicStateTest extends WingsBaseTest {
                            .build();
 
     expectedMetrics = Arrays.asList(requestsPerMinuteMetric, averageResponseTimeMetric, errorMetric, apdexScoreMetric);
+    setupCommonMocks();
+  }
+
+  @Test
+  public void testAnalysisType() {
+    nrState.setComparisonStrategy("COMPARE_WITH_CURRENT");
+    assertEquals(TimeSeriesMlAnalysisType.COMPARATIVE, nrState.getAnalysisType());
+  }
+
+  @Test
+  public void testGetAnalysisTypePredictive() {
+    nrState.setComparisonStrategy("PREDICTIVE");
+    assertEquals(TimeSeriesMlAnalysisType.PREDICTIVE, nrState.getAnalysisType());
+  }
+
+  @Test
+  public void testCreateGroup() {
+    // setup
+    Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
+    TimeSeriesMlAnalysisGroupInfo analysisGroupInfo = TimeSeriesMlAnalysisGroupInfo.builder()
+                                                          .groupName(DEFAULT_GROUP_NAME)
+                                                          .mlAnalysisType(TimeSeriesMlAnalysisType.COMPARATIVE)
+                                                          .build();
+    metricGroups.put(DEFAULT_GROUP_NAME, analysisGroupInfo);
+    doNothing()
+        .when(metricAnalysisService)
+        .saveMetricGroups(appId, StateType.NEW_RELIC, stateExecutionId, metricGroups);
+
+    // execute
+
+    nrState.setComparisonStrategy("COMPARE_WITH_CURRENT");
+    nrState.createAndSaveGroup(executionContext);
+
+    // verify
+    verify(metricAnalysisService).saveMetricGroups(appId, StateType.NEW_RELIC, stateExecutionId, metricGroups);
   }
 
   @Test
