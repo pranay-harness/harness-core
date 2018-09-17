@@ -133,12 +133,15 @@ public class SamlBasedAuthHandler implements AuthHandler {
     SamlClient samlClient = samlClientService.getSamlClient(samlSettings);
     SamlResponse samlResponse = samlClient.decodeAndValidateSamlResponse(samlResponseString);
     String nameId = samlResponse.getNameID();
-    User user = authenticationUtil.getUser(nameId);
-    if (user == null) {
+    try {
+      User user = authenticationUtil.getUser(nameId);
+      validateUser(user, samlSettings.getAccountId());
+      return user;
+    } catch (WingsException e) {
+      logger.warn("SamlResponse contains nameId=[{}] which does not exist in db, url=[{}], accountId=[{}]", nameId,
+          samlSettings.getUrl(), samlSettings.getAccountId());
       throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
     }
-    validateUser(user, samlSettings.getAccountId());
-    return user;
   }
 
   // TODO : revisit this method when we are doing SAML authorization
