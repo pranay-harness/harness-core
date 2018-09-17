@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.inject.Inject;
 
@@ -32,6 +33,8 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.AnalysisToleranceProvider;
 import software.wings.service.impl.analysis.DataCollectionCallback;
+import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.intfc.newrelic.NewRelicService;
@@ -43,6 +46,7 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,6 +62,14 @@ public class NewRelicState extends AbstractMetricAnalysisState {
   @Attributes(required = true, title = "New Relic Server") private String analysisServerConfigId;
 
   @Attributes(required = true, title = "Application Name") private String applicationId;
+
+  public TimeSeriesMlAnalysisType getAnalysisType() {
+    if (getComparisonStrategy() == AnalysisComparisonStrategy.PREDICTIVE) {
+      return TimeSeriesMlAnalysisType.PREDICTIVE;
+    } else {
+      return TimeSeriesMlAnalysisType.COMPARATIVE;
+    }
+  }
 
   @Attributes(required = true, title = "Metrics") private List<String> metrics;
 
@@ -160,6 +172,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
 
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingAttribute.getValue();
     final long dataCollectionStartTimeStamp = Timestamp.currentMinuteBoundary();
+    createAndSaveGroup(context);
     final NewRelicDataCollectionInfo dataCollectionInfo =
         NewRelicDataCollectionInfo.builder()
             .newRelicConfig(newRelicConfig)
@@ -171,6 +184,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
             .startTime(dataCollectionStartTimeStamp)
             .collectionTime(Integer.parseInt(timeDuration))
             .newRelicAppId(Long.parseLong(finalNewRelicApplicationId))
+            .timeSeriesMlAnalysisType(getAnalysisType())
             .dataCollectionMinute(0)
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 newRelicConfig, context.getAppId(), context.getWorkflowExecutionId()))
@@ -193,6 +207,16 @@ public class NewRelicState extends AbstractMetricAnalysisState {
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);
+  }
+
+  protected void createAndSaveGroup(final ExecutionContext context) {
+    // By default, we're just creating a default group for this state execution
+    Map<String, TimeSeriesMlAnalysisGroupInfo> metricGroups = new HashMap<>();
+    TimeSeriesMlAnalysisGroupInfo analysisGroupInfo =
+        TimeSeriesMlAnalysisGroupInfo.builder().groupName(DEFAULT_GROUP_NAME).mlAnalysisType(getAnalysisType()).build();
+    metricGroups.put(DEFAULT_GROUP_NAME, analysisGroupInfo);
+    metricAnalysisService.saveMetricGroups(
+        context.getAppId(), StateType.NEW_RELIC, context.getStateExecutionInstanceId(), metricGroups);
   }
 
   @Override

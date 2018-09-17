@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.NewRelicConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 
 import java.util.List;
 import java.util.Map;
@@ -32,4 +33,5 @@ public class NewRelicDataCollectionInfo {
   private Map<String, String> hosts;
   private String settingAttributeId;
   private String deploymentMarker;
+  private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType;
 }
