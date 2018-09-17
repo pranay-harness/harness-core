@@ -47,6 +47,9 @@ import java.util.Map;
 public class ArtifactCollectionState extends State {
   @Transient private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionState.class);
 
+  public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
+  public static final String BUILD_NO_KEY = "buildNo";
+
   private static final String LATEST = "LATEST";
   @EnumData(enumDataProvider = ArtifactSourceProvider.class)
   @Attributes(title = "Artifact Source")

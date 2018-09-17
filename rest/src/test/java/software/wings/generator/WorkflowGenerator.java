@@ -1,15 +1,22 @@
 package software.wings.generator;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
+import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
+import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.PREPARE_STEPS;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
+import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
+import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.JENKINS;
 import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
 
 import com.google.inject.Inject;
@@ -23,15 +30,21 @@ import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
+import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.WorkflowType;
+import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.Constants;
+import software.wings.generator.ArtifactStreamGenerator.ArtifactStreams;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.ResourceConstraintGenerator.ResourceConstraints;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.sm.states.ArtifactCollectionState;
+import software.wings.sm.states.JenkinsState;
 import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 
 @Singleton
@@ -42,8 +55,10 @@ public class WorkflowGenerator {
   @Inject private OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
+  @Inject private ArtifactStreamGenerator artifactStreamGenerator;
+  @Inject private ServiceGenerator serviceGenerator;
 
-  public enum Workflows { BASIC_SIMPLE, BASIC_10_NODES, PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT }
+  public enum Workflows { BASIC_SIMPLE, BASIC_10_NODES, PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT, BUILD }
 
   public Workflow ensurePredefined(Randomizer.Seed seed, Owners owners, Workflows predefined) {
     switch (predefined) {
@@ -53,6 +68,8 @@ public class WorkflowGenerator {
         return ensureBasic10Nodes(seed, owners);
       case PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT:
         return ensurePermanentlyBlockedResourceConstraint(seed, owners);
+      case BUILD:
+        return ensureBuildWorkflow(seed, owners);
       default:
         unhandled(predefined);
     }
@@ -133,11 +150,54 @@ public class WorkflowGenerator {
             .build());
   }
 
+  private Workflow ensureBuildWorkflow(Randomizer.Seed seed, Owners owners) {
+    // Ensure artifact stream
+
+    WorkflowPhaseBuilder workflowPhaseBuilder = WorkflowPhaseBuilder.aWorkflowPhase();
+    workflowPhaseBuilder.addPhaseStep(aPhaseStep(PREPARE_STEPS, Constants.PREPARE_STEPS).build());
+
+    JenkinsArtifactStream jenkinsArtifactStream = (JenkinsArtifactStream) artifactStreamGenerator.ensurePredefined(
+        seed, owners, ArtifactStreams.HARNESS_SAMPLE_ECHO_WAR);
+
+    workflowPhaseBuilder.addPhaseStep(
+        aPhaseStep(COLLECT_ARTIFACT, Constants.COLLECT_ARTIFACT)
+            .addStep(aGraphNode()
+                         .withId(generateUuid())
+                         .withType(JENKINS.name())
+                         .withName(JENKINS.name())
+                         .addProperty(JenkinsState.JENKINS_CONFIG_ID_KEY, jenkinsArtifactStream.getSettingId())
+                         .addProperty(JenkinsState.JOB_NAME_KEY, jenkinsArtifactStream.getJobname())
+                         .build())
+            .addStep(aGraphNode()
+                         .withId(generateUuid())
+                         .withType(ARTIFACT_COLLECTION.name())
+                         .addProperty(ArtifactCollectionState.ARTIFACT_STREAM_ID_KEY, jenkinsArtifactStream.getUuid())
+                         .addProperty(ArtifactCollectionState.BUILD_NO_KEY, "Jenkins.buildNumber")
+                         .withName(Constants.ARTIFACT_COLLECTION)
+                         .build())
+            .build());
+    workflowPhaseBuilder.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+
+    return ensureWorkflow(seed, owners,
+        aWorkflow()
+            .withName("Build Workflow")
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withOrchestrationWorkflow(
+                aBuildOrchestrationWorkflow()
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .addWorkflowPhase(workflowPhaseBuilder.build())
+                    .build())
+            .build());
+  }
+
   public Workflow ensureWorkflow(Randomizer.Seed seed, OwnerManager.Owners owners, Workflow workflow) {
     EnhancedRandom random = Randomizer.instance(seed);
 
     WorkflowBuilder builder = aWorkflow();
 
+    OrchestrationWorkflowType orchestrationWorkflowType =
+        workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
     if (workflow != null && workflow.getAppId() != null) {
       builder.withAppId(workflow.getAppId());
     } else {
@@ -155,8 +215,10 @@ public class WorkflowGenerator {
     if (workflow != null && workflow.getServiceId() != null) {
       builder.withServiceId(workflow.getServiceId());
     } else {
-      Service service = owners.obtainService();
-      builder.withServiceId(service.getUuid());
+      if (!OrchestrationWorkflowType.BUILD.equals(orchestrationWorkflowType)) {
+        Service service = owners.obtainService();
+        builder.withServiceId(service.getUuid());
+      }
     }
 
     if (workflow != null && workflow.getName() != null) {
@@ -180,7 +242,9 @@ public class WorkflowGenerator {
     if (workflow != null && workflow.getInfraMappingId() != null) {
       builder.withInfraMappingId(workflow.getInfraMappingId());
     } else {
-      throw new UnsupportedOperationException();
+      if (!OrchestrationWorkflowType.BUILD.equals(orchestrationWorkflowType)) {
+        throw new UnsupportedOperationException();
+      }
     }
 
     return workflowService.createWorkflow(builder.build());
