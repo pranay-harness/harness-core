@@ -7,7 +7,7 @@ function getProperty () {
    echo $PROP_VALUE
 }
 
-rm -f harness_installer.zip
+rm -f harness_installer.tar.gz
 
 mkdir -p harness_installer
 cp scripts/first_time_only_install_harness.sh harness_installer
@@ -62,5 +62,5 @@ mv jre-8u131-solaris-x64.tar.gz harness_installer/harness_disconnected_on_prem_p
 mv jre-8u131-macosx-x64.tar.gz harness_installer/harness_disconnected_on_prem_pov_final/images/
 mv jre-8u131-linux-x64.tar.gz harness_installer/harness_disconnected_on_prem_pov_final/images/
 
-tar -cvzf harness_disconnected_on_prem_pov_final.tar.gz harness_disconnected_on_prem_pov_final
+tar -cvzf harness_installer.tar.gz harness_installer
 rm -rf harness_installer
