@@ -63,6 +63,8 @@ import java.util.Map;
  */
 public class JenkinsState extends State {
   public static final String COMMAND_UNIT_NAME = "Console Output";
+  public static final String JENKINS_CONFIG_ID_KEY = "jenkinsConfigId";
+  public static final String JOB_NAME_KEY = "jobName";
 
   @Transient private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
 
