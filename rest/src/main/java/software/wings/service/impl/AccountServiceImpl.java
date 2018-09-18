@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -34,6 +36,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -91,7 +94,6 @@ import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 /**
  * Created by peeyushaggarwal on 10/11/16.
@@ -147,7 +149,7 @@ public class AccountServiceImpl implements AccountService {
     return account;
   }
 
-  private byte[] getEncryptedLicenseInfo(LicenseInfo licenseInfo, boolean setExpiry) {
+  private byte[] getEncryptedLicenseInfo(LicenseInfo licenseInfo, boolean checkAndSetDefaultExpiry) {
     if (licenseInfo == null) {
       licenseInfo = new LicenseInfo();
     }
@@ -160,7 +162,7 @@ public class AccountServiceImpl implements AccountService {
       licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     }
 
-    if (setExpiry) {
+    if (checkAndSetDefaultExpiry) {
       // TODO when licensing is implemented, we need to set the expiry time for paid accounts too
       if (licenseInfo.getAccountType().equals(AccountType.TRIAL)
           && licenseInfo.getExpiryTime() <= System.currentTimeMillis()) {
@@ -169,6 +171,17 @@ public class AccountServiceImpl implements AccountService {
     }
 
     return EncryptionUtils.encrypt(LicenseUtil.convertToString(licenseInfo).getBytes(Charset.forName("UTF-8")), null);
+  }
+
+  private long getExpiryTime(int numberOfDays) {
+    Calendar calendar = Calendar.getInstance();
+    calendar.add(Calendar.DATE, numberOfDays);
+    calendar.set(Calendar.HOUR, 11);
+    calendar.set(Calendar.MINUTE, 59);
+    calendar.set(Calendar.SECOND, 59);
+    calendar.set(Calendar.MILLISECOND, 0);
+    calendar.set(Calendar.AM_PM, Calendar.PM);
+    return calendar.getTimeInMillis();
   }
 
   @Override
@@ -365,7 +378,7 @@ public class AccountServiceImpl implements AccountService {
     // TODO this check would extend to PAID accounts as well
     if (AccountType.TRIAL.equals(accountType) && (System.currentTimeMillis() > licenseInfo.getExpiryTime())) {
       account.getLicenseInfo().setAccountStatus(AccountStatus.EXPIRED);
-      updateAccountLicense(account, false);
+      updateAccountLicense(accountId, accountType, AccountStatus.EXPIRED, null, null, false);
       return true;
     }
 
@@ -391,15 +404,21 @@ public class AccountServiceImpl implements AccountService {
           return;
         }
 
-        byte[] encryptedLicenseInfo = Base64.getDecoder().decode(encryptedLicenseInfoBase64String.getBytes());
-
         if (!account.getAccountName().equalsIgnoreCase("Global")) {
+          byte[] encryptedLicenseInfo = Base64.getDecoder().decode(encryptedLicenseInfoBase64String.getBytes());
           byte[] encryptedLicenseInfoFromDB = account.getEncryptedLicenseInfo();
 
-          if (isEmpty(encryptedLicenseInfoFromDB) || !Arrays.equals(encryptedLicenseInfo, encryptedLicenseInfoFromDB)) {
+          boolean noLicenseInfoInDB = isEmpty(encryptedLicenseInfoFromDB);
+
+          if (noLicenseInfoInDB || !Arrays.equals(encryptedLicenseInfo, encryptedLicenseInfoFromDB)) {
             account.setEncryptedLicenseInfo(encryptedLicenseInfo);
             decryptLicenseInfo(account, true);
-            updateAccountLicense(account, true);
+            LicenseInfo licenseInfo = account.getLicenseInfo();
+            if (licenseInfo != null) {
+              updateAccountLicense(account.getUuid(), licenseInfo, null, false);
+            } else {
+              throw new WingsException("No license info could be extracted from the encrypted license info");
+            }
           }
         }
       });
@@ -420,35 +439,109 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public Account updateAccountLicense(@NotNull Account account, boolean setExpiry) {
-    if (!featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, account.getUuid())) {
-      logger.error("Feature is not enabled for account {}", account.getUuid());
-      return account;
+  public Account updateAccountLicense(
+      @NotEmpty String accountId, LicenseInfo licenseInfo, String salesContacts, boolean checkAndSetDefaultExpiry) {
+    Account accountInDB = get(accountId);
+    if (!featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, accountId)) {
+      logger.error("Feature is not enabled for account {}", accountId);
+      return accountInDB;
     }
 
-    notNullCheck("Account object is null", account);
-    notNullCheck("Account id is null", account.getUuid());
-    Account accountInDB = wingsPersistence.get(Account.class, account.getUuid());
-    notNullCheck("Invalid Account for the given Id: " + account.getUuid(), accountInDB);
+    notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB);
 
     UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
 
-    byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(account.getLicenseInfo(), setExpiry);
-    account.setEncryptedLicenseInfo(encryptedLicenseInfo);
+    byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(licenseInfo, checkAndSetDefaultExpiry);
 
     updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
 
-    if (isNotEmpty(account.getSalesContacts())) {
-      updateOperations.set("salesContacts", account.getSalesContacts());
+    if (isNotEmpty(salesContacts)) {
+      updateOperations.set("salesContacts", salesContacts);
     }
 
-    wingsPersistence.update(account, updateOperations);
-    dbCache.invalidate(Account.class, account.getUuid());
-    return wingsPersistence.get(Account.class, account.getUuid());
+    wingsPersistence.update(accountInDB, updateOperations);
+    dbCache.invalidate(Account.class, accountId);
+    return wingsPersistence.get(Account.class, accountId);
   }
 
   @Override
-  public String generateLicense(@NotNull LicenseInfo licenseInfo) {
+  public Account updateAccountLicense(@NotEmpty String accountId, String accountType, String accountStatus,
+      String expiryInDaysString, String salesContacts, boolean checkAndSetDefaultExpiry) {
+    Account accountInDB = get(accountId);
+    if (!featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, accountId)) {
+      logger.error("Feature is not enabled for account {}", accountId);
+      return accountInDB;
+    }
+
+    notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB);
+
+    LicenseInfo licenseInfo = accountInDB.getLicenseInfo();
+
+    if (licenseInfo == null) {
+      licenseInfo = new LicenseInfo();
+    }
+
+    if (isNotEmpty(expiryInDaysString)) {
+      try {
+        int expiryInDays = Integer.parseInt(expiryInDaysString);
+        if (expiryInDays > 0) {
+          licenseInfo.setExpiryTime(getExpiryTime(expiryInDays));
+        }
+      } catch (NumberFormatException ex) {
+        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Invalid expiry time " + expiryInDaysString);
+      }
+    } else {
+      if (checkAndSetDefaultExpiry) {
+        licenseInfo.setExpiryTime(getDefaultTrialExpiryTime());
+      }
+    }
+
+    if (AccountStatus.isValid(accountStatus)) {
+      licenseInfo.setAccountStatus(accountStatus);
+    }
+
+    if (AccountType.isValid(accountType)) {
+      licenseInfo.setAccountType(accountType);
+    }
+
+    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
+
+    byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(licenseInfo, checkAndSetDefaultExpiry);
+
+    updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
+
+    if (isNotEmpty(salesContacts)) {
+      updateOperations.set("salesContacts", salesContacts);
+    }
+
+    wingsPersistence.update(accountInDB, updateOperations);
+    dbCache.invalidate(Account.class, accountId);
+    return wingsPersistence.get(Account.class, accountId);
+  }
+
+  @Override
+  public String generateLicense(String accountType, String accountStatus, String expiryInDaysString) {
+    LicenseInfo licenseInfo = new LicenseInfo();
+
+    if (isNotEmpty(expiryInDaysString)) {
+      try {
+        int expiryInDays = Integer.parseInt(expiryInDaysString);
+        if (expiryInDays > 0) {
+          licenseInfo.setExpiryTime(getExpiryTime(expiryInDays));
+        }
+      } catch (NumberFormatException ex) {
+        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Invalid expiry time " + expiryInDaysString);
+      }
+    }
+
+    if (AccountStatus.isValid(accountStatus)) {
+      licenseInfo.setAccountStatus(accountStatus);
+    }
+
+    if (AccountType.isValid(accountType)) {
+      licenseInfo.setAccountType(accountType);
+    }
+
     byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(licenseInfo, true);
     return Base64.getEncoder().encodeToString(encryptedLicenseInfo);
   }

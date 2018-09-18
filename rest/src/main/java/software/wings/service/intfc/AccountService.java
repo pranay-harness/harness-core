@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateConfiguration;
@@ -24,9 +25,13 @@ public interface AccountService {
 
   @ValidationGroups(Update.class) Account update(@Valid Account account);
 
-  Account updateAccountLicense(@NotNull Account account, boolean setExpiry);
+  Account updateAccountLicense(
+      @NotEmpty String accountId, LicenseInfo licenseInfo, String salesContacts, boolean setExpiry);
 
-  String generateLicense(@NotNull LicenseInfo licenseInfo);
+  Account updateAccountLicense(@NotEmpty String accountId, String accountType, String accountStatus,
+      String expiryInDays, String salesContacts, boolean setExpiry);
+
+  String generateLicense(String accountType, String accountStatus, String expiryInDays);
 
   Account getByName(String companyName);
 
