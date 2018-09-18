@@ -25,9 +25,10 @@ public class SweepingOutputServiceImpl implements SweepingOutputService {
   }
 
   @Override
-  public SweepingOutput find(String appId, String pipelineExecutionId, String workflowExecutionId) {
-    final Query<SweepingOutput> query =
-        wingsPersistence.createQuery(SweepingOutput.class).filter(SweepingOutput.APP_ID_KEY, appId);
+  public SweepingOutput find(String appId, String name, String pipelineExecutionId, String workflowExecutionId) {
+    final Query<SweepingOutput> query = wingsPersistence.createQuery(SweepingOutput.class)
+                                            .filter(SweepingOutput.APP_ID_KEY, appId)
+                                            .filter(SweepingOutput.NAME_KEY, name);
 
     if (pipelineExecutionId != null) {
       query.or(query.criteria(SweepingOutput.PIPELINE_EXECUTION_ID_KEY).equal(pipelineExecutionId),

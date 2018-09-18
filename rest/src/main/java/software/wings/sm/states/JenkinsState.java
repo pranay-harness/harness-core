@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -15,7 +16,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
@@ -58,6 +58,7 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
+import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.NotifyResponseData;
 
@@ -408,19 +409,21 @@ public class JenkinsState extends State {
 
     if (isNotEmpty(sweepingOutputName)) {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      // In case this is independent workflow execution we still need to provide pipelineExecutionId to allow
+      // for unique index by pipelineExecutionId to works.
+      String pipelineExecutionId = workflowStandardParams != null && workflowStandardParams.getWorkflowElement() != null
+              && workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid() != null
+          ? workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid()
+          : generateUuid();
 
-      ObjectMapper mapper = new ObjectMapper();
-
-      Map<String, Object> variables = mapper.convertValue(jenkinsExecutionData, Map.class);
-
-      SweepingOutput sweepingOutput = sweepingOutputService.save(
-          SweepingOutput.builder()
-              .name(sweepingOutputName)
-              .appId(context.getAppId())
-              .pipelineExecutionId(workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid())
-              .workflowExecutionId(context.getWorkflowExecutionId())
-              .variables(variables)
-              .build());
+      SweepingOutput sweepingOutput =
+          sweepingOutputService.save(SweepingOutput.builder()
+                                         .name(sweepingOutputName)
+                                         .appId(context.getAppId())
+                                         .pipelineExecutionId(pipelineExecutionId)
+                                         .workflowExecutionId(context.getWorkflowExecutionId())
+                                         .output(KryoUtils.asDeflatedBytes(jenkinsExecutionData))
+                                         .build());
     }
 
     return anExecutionResponse()

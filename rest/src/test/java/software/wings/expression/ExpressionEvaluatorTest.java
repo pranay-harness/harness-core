@@ -23,6 +23,7 @@ import software.wings.api.HostElement;
 import software.wings.beans.SweepingOutput;
 import software.wings.beans.infrastructure.Host;
 import software.wings.service.intfc.SweepingOutputService;
+import software.wings.utils.KryoUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -307,13 +308,14 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
     String workflowExecutionId = generateUuid();
     String followingWorkflowExecutionId = generateUuid();
 
-    SweepingOutput sweepingOutput = sweepingOutputService.save(SweepingOutput.builder()
-                                                                   .name("jenkins")
-                                                                   .appId(appId)
-                                                                   .pipelineExecutionId(pipelineExecutionId)
-                                                                   .workflowExecutionId(workflowExecutionId)
-                                                                   .variables(ImmutableMap.of("foo", "bar"))
-                                                                   .build());
+    SweepingOutput sweepingOutput =
+        sweepingOutputService.save(SweepingOutput.builder()
+                                       .name("jenkins")
+                                       .appId(appId)
+                                       .pipelineExecutionId(pipelineExecutionId)
+                                       .workflowExecutionId(workflowExecutionId)
+                                       .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
+                                       .build());
 
     Map<String, Object> context = ImmutableMap.<String, Object>builder()
                                       .put("sweeping",
