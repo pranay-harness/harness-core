@@ -892,18 +892,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public String queueTask(DelegateTask task) {
-    task.setAsync(true);
-    task.setVersion(getVersion());
-    task.setBroadcastCount(1);
-    task.setLastBroadcastAt(clock.millis());
-    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
-    DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
-    logger.info("Queueing async task uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
-        delegateTask.getAccountId(), delegateTask.getTaskType());
-
-    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
-
-    return delegateTask.getUuid();
+    return saveAndBroadcastTask(task, true).getUuid();
   }
 
   @Override
@@ -913,16 +902,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (isEmpty(eligibleDelegateIds)) {
       throw new WingsException(UNAVAILABLE_DELEGATES, USER_ADMIN);
     }
-    task.setAsync(false);
-    task.setVersion(getVersion());
-    task.setBroadcastCount(1);
-    task.setLastBroadcastAt(clock.millis());
-    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
-    DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
-    logger.info("Executing sync task: uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
-        delegateTask.getAccountId(), delegateTask.getTaskType());
-
-    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+    DelegateTask delegateTask = saveAndBroadcastTask(task, false);
 
     // Wait for task to complete
     DelegateTask completedTask;
@@ -956,6 +936,20 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     logger.info("Returned response to calling function for delegate task [{}] ", delegateTask.getUuid());
     return (T) responseData;
+  }
+
+  private DelegateTask saveAndBroadcastTask(DelegateTask task, boolean async) {
+    task.setAsync(async);
+    task.setVersion(getVersion());
+    task.setBroadcastCount(1);
+    task.setLastBroadcastAt(clock.millis());
+    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
+    DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
+    logger.info("{} task: uuid: {}, accountId: {}, type: {}", async ? "Queueing async" : "Executing sync",
+        delegateTask.getUuid(), delegateTask.getAccountId(), delegateTask.getTaskType());
+
+    broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
+    return delegateTask;
   }
 
   private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
