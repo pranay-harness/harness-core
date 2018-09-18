@@ -420,4 +420,42 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     assertThat(delegateIds.size()).isEqualTo(0);
   }
+
+  @Test
+  public void shouldGetNullFirstAttemptDelegate() {
+    Object[] params = {"", "criteria-other"};
+    DelegateTask delegateTask =
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+
+    String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
+
+    assertThat(delegateId).isEqualTo(null);
+  }
+
+  @Test
+  public void shouldGetFirstAttemptDelegate() {
+    Delegate delegate = aDelegate()
+                            .withAccountId(ACCOUNT_ID)
+                            .withUuid(DELEGATE_ID)
+                            .withStatus(ENABLED)
+                            .withLastHeartBeat(clock.millis())
+                            .withConnected(true)
+                            .build();
+    wingsPersistence.save(delegate);
+    wingsPersistence.save(DelegateConnectionResult.builder()
+                              .accountId(ACCOUNT_ID)
+                              .delegateId(DELEGATE_ID)
+                              .criteria("criteria")
+                              .validated(true)
+                              .build());
+    when(delegateService.get(ACCOUNT_ID, DELEGATE_ID, false)).thenReturn(delegate);
+
+    Object[] params = {"", "criteria"};
+    DelegateTask delegateTask =
+        aDelegateTask().withAccountId(ACCOUNT_ID).withTaskType(TaskType.HTTP).withParameters(params).build();
+
+    String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
+
+    assertThat(delegateId).isEqualTo(DELEGATE_ID);
+  }
 }

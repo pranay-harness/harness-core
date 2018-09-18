@@ -55,6 +55,7 @@ public class DelegateTask extends Base {
   private Set<String> validatingDelegateIds = new HashSet<>();
   private Set<String> validationCompleteDelegateIds = new HashSet<>();
   private byte[] serializedNotifyResponseData;
+  private String preAssignedDelegateId;
 
   @Transient private transient NotifyResponseData notifyResponse;
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
@@ -239,6 +240,14 @@ public class DelegateTask extends Base {
     this.serializedNotifyResponseData = serializedNotifyResponseData;
   }
 
+  public void setPreAssignedDelegateId(String preAssignedDelegateId) {
+    this.preAssignedDelegateId = preAssignedDelegateId;
+  }
+
+  public String getPreAssignedDelegateId() {
+    return this.preAssignedDelegateId;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -258,14 +267,15 @@ public class DelegateTask extends Base {
         && Objects.equals(envId, that.envId) && Objects.equals(infrastructureMappingId, that.infrastructureMappingId)
         && Objects.equals(delegateRunnableTask, that.delegateRunnableTask)
         && Objects.equals(notifyResponse, that.notifyResponse)
-        && Arrays.equals(serializedNotifyResponseData, that.serializedNotifyResponseData);
+        && Arrays.equals(serializedNotifyResponseData, that.serializedNotifyResponseData)
+        && Objects.equals(preAssignedDelegateId, that.preAssignedDelegateId);
   }
 
   @Override
   public int hashCode() {
     return Objects.hash(super.hashCode(), version, taskType, parameters, tags, accountId, waitId, status, delegateId,
         timeout, async, envId, infrastructureMappingId, delegateRunnableTask, notifyResponse,
-        serializedNotifyResponseData);
+        serializedNotifyResponseData, preAssignedDelegateId);
   }
 
   @Override
@@ -422,6 +432,7 @@ public class DelegateTask extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private NotifyResponseData notifyResponse;
+    private String preAssignedDelegateId;
 
     private Builder() {}
 
@@ -525,6 +536,11 @@ public class DelegateTask extends Base {
       return this;
     }
 
+    public Builder withPreAssignedDelegateId(String preAssignedDelegateId) {
+      this.preAssignedDelegateId = preAssignedDelegateId;
+      return this;
+    }
+
     public Builder but() {
       return aDelegateTask()
           .withVersion(version)
@@ -545,7 +561,8 @@ public class DelegateTask extends Base {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withNotifyResponse(notifyResponse);
+          .withNotifyResponse(notifyResponse)
+          .withPreAssignedDelegateId(preAssignedDelegateId);
     }
 
     public DelegateTask build() {
@@ -569,6 +586,7 @@ public class DelegateTask extends Base {
       delegateTask.setLastUpdatedBy(lastUpdatedBy);
       delegateTask.setLastUpdatedAt(lastUpdatedAt);
       delegateTask.setNotifyResponse(notifyResponse);
+      delegateTask.setPreAssignedDelegateId(preAssignedDelegateId);
       return delegateTask;
     }
   }

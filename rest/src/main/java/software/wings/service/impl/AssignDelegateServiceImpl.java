@@ -39,6 +39,7 @@ import java.time.Clock;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -70,6 +71,23 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                                                  .get());
                 }
               });
+
+  private LoadingCache<String, List<String>> accountConnectedDelegatesCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(1000)
+          .expireAfterWrite(1, TimeUnit.MINUTES)
+          .build(new CacheLoader<String, List<String>>() {
+            public List<String> load(String accountId) {
+              return wingsPersistence.createQuery(Delegate.class)
+                  .filter("accountId", accountId)
+                  .field("lastHeartBeat")
+                  .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
+                  .asKeyList()
+                  .stream()
+                  .map(key -> key.getId().toString())
+                  .collect(toList());
+            }
+          });
 
   @Override
   public boolean canAssign(String delegateId, DelegateTask task) {
@@ -184,13 +202,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public List<String> connectedWhitelistedDelegates(DelegateTask task) {
     List<String> delegateIds = new ArrayList<>();
     try {
-      List<String> connectedEligibleDelegates = wingsPersistence.createQuery(Delegate.class)
-                                                    .filter("accountId", task.getAccountId())
-                                                    .field("lastHeartBeat")
-                                                    .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
-                                                    .asKeyList()
+      List<String> connectedEligibleDelegates = accountConnectedDelegatesCache.get(task.getAccountId())
                                                     .stream()
-                                                    .map(key -> key.getId().toString())
                                                     .filter(delegateId -> canAssign(delegateId, task))
                                                     .collect(toList());
 
@@ -209,6 +222,15 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       logger.error(format("Error checking for whitelisted delegates for task %s", task.getUuid()), e);
     }
     return delegateIds;
+  }
+
+  @Override
+  public String pickFirstAttemptDelegate(DelegateTask task) {
+    List<String> delegates = connectedWhitelistedDelegates(task);
+    if (delegates.isEmpty()) {
+      return null;
+    }
+    return delegates.get(new Random().nextInt(delegates.size()));
   }
 
   @Override
@@ -270,46 +292,49 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   public String getActiveDelegateAssignmentErrorMessage(DelegateTask delegateTask) {
     logger.info("Delegate task {} is terminated", delegateTask.getUuid());
 
-    List<Delegate> activeDelegates = wingsPersistence.createQuery(Delegate.class)
-                                         .filter("accountId", delegateTask.getAccountId())
-                                         .field("lastHeartBeat")
-                                         .greaterThan(clock.millis() - MAX_DELEGATE_LAST_HEARTBEAT)
-                                         .asList();
+    String errorMessage = "Unknown";
 
-    logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
+    try {
+      List<String> activeDelegates = accountConnectedDelegatesCache.get(delegateTask.getAccountId());
 
-    List<Delegate> eligibleDelegates =
-        activeDelegates.stream().filter(delegate -> canAssign(delegate.getUuid(), delegateTask)).collect(toList());
+      logger.info("{} delegates {} are active", activeDelegates.size(), activeDelegates);
 
-    String errorMessage;
-    if (activeDelegates.isEmpty()) {
-      errorMessage = "There were no active delegates to complete the task.";
-    } else if (eligibleDelegates.isEmpty()) {
-      StringBuilder msg = new StringBuilder();
-      for (Delegate delegate : activeDelegates) {
-        msg.append(" ===> ").append(delegate.getHostName()).append(": ");
-        boolean cannotAssignScope = !canAssignScopes(delegate, delegateTask);
-        boolean cannotAssignTags = !canAssignTags(delegate, delegateTask);
-        if (cannotAssignScope) {
-          msg.append("Not in scope");
+      List<String> eligibleDelegates = connectedWhitelistedDelegates(delegateTask);
+
+      if (activeDelegates.isEmpty()) {
+        errorMessage = "There were no active delegates to complete the task.";
+      } else if (eligibleDelegates.isEmpty()) {
+        StringBuilder msg = new StringBuilder();
+        for (String delegateId : activeDelegates) {
+          Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateId, false);
+          if (delegate != null) {
+            msg.append(" ===> ").append(delegate.getHostName()).append(": ");
+            boolean cannotAssignScope = !canAssignScopes(delegate, delegateTask);
+            boolean cannotAssignTags = !canAssignTags(delegate, delegateTask);
+            if (cannotAssignScope) {
+              msg.append("Not in scope");
+            }
+            if (cannotAssignScope && cannotAssignTags) {
+              msg.append(" - ");
+            }
+            if (cannotAssignTags) {
+              msg.append("Tag mismatch: ").append(Optional.ofNullable(delegate.getTags()).orElse(emptyList()));
+            }
+            msg.append('\n');
+          }
         }
-        if (cannotAssignScope && cannotAssignTags) {
-          msg.append(" - ");
-        }
-        if (cannotAssignTags) {
-          msg.append("Tag mismatch: ").append(Optional.ofNullable(delegate.getTags()).orElse(emptyList()));
-        }
-        msg.append('\n');
+        String taskTagsMsg = isNotEmpty(delegateTask.getTags()) ? " Task tags: " + delegateTask.getTags() : "";
+        errorMessage =
+            "None of the active delegates were eligible to complete the task." + taskTagsMsg + "\n\n" + msg.toString();
+      } else if (delegateTask.getDelegateId() != null) {
+        Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateTask.getDelegateId(), false);
+        errorMessage = "Delegate task timed out. Delegate: "
+            + (delegate != null ? delegate.getHostName() : "not found: " + delegateTask.getDelegateId());
+      } else {
+        errorMessage = "Delegate task was never assigned and timed out.";
       }
-      String taskTagsMsg = isNotEmpty(delegateTask.getTags()) ? " Task tags: " + delegateTask.getTags() : "";
-      errorMessage =
-          "None of the active delegates were eligible to complete the task." + taskTagsMsg + "\n\n" + msg.toString();
-    } else if (delegateTask.getDelegateId() != null) {
-      Delegate delegate = delegateService.get(delegateTask.getAccountId(), delegateTask.getDelegateId(), false);
-      errorMessage = "Delegate task timed out. Delegate: "
-          + (delegate != null ? delegate.getHostName() : "not found: " + delegateTask.getDelegateId());
-    } else {
-      errorMessage = "Delegate task was never assigned and timed out.";
+    } catch (Exception e) {
+      logger.error("Execution exception", e);
     }
     return errorMessage;
   }

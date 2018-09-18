@@ -45,7 +45,13 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
         }
       }
 
-      if (versionMatched && delegateService.filter(delegateId, task)) {
+      boolean preassignedIdMatched = true;
+      if (StringUtils.isNotEmpty(task.getPreAssignedDelegateId())
+          && !StringUtils.equals(task.getPreAssignedDelegateId(), delegateId)) {
+        preassignedIdMatched = false;
+      }
+
+      if (versionMatched && preassignedIdMatched && delegateService.filter(delegateId, task)) {
         return new BroadcastAction(JsonUtils.asJson(aDelegateTaskEvent()
                                                         .withDelegateTaskId(task.getUuid())
                                                         .withSync(!task.isAsync())
