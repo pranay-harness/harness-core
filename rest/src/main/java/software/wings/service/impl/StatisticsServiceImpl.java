@@ -1,7 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.time.EpochUtil.PST_ZONE_ID;
+import static io.harness.time.EpochUtils.PST_ZONE_ID;
 import static java.util.Comparator.comparing;
 import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.groupingBy;
@@ -17,7 +17,7 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.time.EpochUtil;
+import io.harness.time.EpochUtils;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.PipelineStageExecution;
@@ -135,7 +135,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     Map<Long, List<WorkflowExecution>> wflExecutionByDate = new HashMap<>();
     if (workflowExecutions != null) {
       wflExecutionByDate = workflowExecutions.parallelStream().collect(
-          groupingBy(wfl -> EpochUtil.obtainStartOfTheDayEpoch(wfl.getCreatedAt(), PST_ZONE_ID)));
+          groupingBy(wfl -> EpochUtils.obtainStartOfTheDayEpoch(wfl.getCreatedAt(), PST_ZONE_ID)));
     }
 
     int aggTotalCount = 0;
@@ -254,6 +254,6 @@ public class StatisticsServiceImpl implements StatisticsService {
   }
 
   private long getEpochMilliPSTZone(int days) {
-    return EpochUtil.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(days, PST_ZONE_ID);
+    return EpochUtils.calculateEpochMilliOfStartOfDayForXDaysInPastFromNow(days, PST_ZONE_ID);
   }
 }
