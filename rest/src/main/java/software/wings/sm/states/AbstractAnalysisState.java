@@ -293,11 +293,16 @@ public abstract class AbstractAnalysisState extends State {
       return hosts;
     }
     int offSet = 0;
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+    String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
+
     final PageRequest<WorkflowExecution> pageRequest =
         aPageRequest()
             .addFilter("appId", Operator.EQ, context.getAppId())
             .addFilter("workflowId", Operator.EQ, getWorkflowId(context))
             .addFilter("_id", Operator.NOT_EQ, context.getWorkflowExecutionId())
+            .addFilter("envId", Operator.EQ, envId)
             .addFilter("status", Operator.EQ, SUCCESS)
             .addOrder("createdAt", OrderType.DESC)
             .withOffset(String.valueOf(offSet))
