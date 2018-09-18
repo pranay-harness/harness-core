@@ -34,6 +34,7 @@ import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.Environment;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Workflow;
@@ -54,6 +55,7 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
+import software.wings.sm.WorkflowStandardParams;
 
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
@@ -76,6 +78,7 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
   @Mock private InfrastructureMapping infrastructureMapping;
 
   private final String workflowId = UUID.randomUUID().toString();
+  private final String envId = UUID.randomUUID().toString();
   private final String appId = UUID.randomUUID().toString();
   private final String previousWorkflowExecutionId = UUID.randomUUID().toString();
 
@@ -108,12 +111,13 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
             .withAppId(appId)
             .withUuid(previousWorkflowExecutionId)
             .withWorkflowId(workflowId)
+            .withEnvId(envId)
             .withStatus(ExecutionStatus.SUCCESS)
             .withServiceExecutionSummaries(elementExecutionSummary)
             .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
 
-    Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).build();
+    Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).withEnvId(envId).build();
 
     wingsPersistence.save(workflow);
     wingsPersistence.save(workflowExecution);
@@ -122,11 +126,15 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     doReturn(aPhaseElement().withServiceElement(aServiceElement().withUuid("serviceA").build()).build())
         .when(context)
         .getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    WorkflowStandardParams wsp = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
+    Reflect.on(wsp).set("env", Environment.Builder.anEnvironment().withUuid(envId).build());
+    doReturn(wsp).when(context).getContextElement(ContextElementType.STANDARD);
     doReturn(appId).when(context).getAppId();
     doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
+
     setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
@@ -172,12 +180,13 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
             .withAppId(appId)
             .withUuid(previousWorkflowExecutionId)
             .withWorkflowId(workflowId)
+            .withEnvId(envId)
             .withStatus(ExecutionStatus.SUCCESS)
             .withServiceExecutionSummaries(elementExecutionSummary)
             .withBreakdown(CountsByStatuses.Builder.aCountsByStatuses().withSuccess(1).build())
             .build();
 
-    Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).build();
+    Workflow workflow = WorkflowBuilder.aWorkflow().withAppId(appId).withUuid(workflowId).withEnvId(envId).build();
 
     wingsPersistence.save(workflow);
     wingsPersistence.save(workflowExecution);
@@ -212,8 +221,13 @@ public class AbstractAnalysisStateTest extends WingsBaseTest {
     doReturn(appId).when(context).getAppId();
     doReturn(UUID.randomUUID().toString()).when(context).getWorkflowExecutionId();
 
+    WorkflowStandardParams wsp = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
+    Reflect.on(wsp).set("env", Environment.Builder.anEnvironment().withUuid(envId).build());
+    doReturn(wsp).when(context).getContextElement(ContextElementType.STANDARD);
+
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);
+
     setInternalState(splunkV2State, "containerInstanceHandler", containerInstanceHandler);
     setInternalState(splunkV2State, "infraMappingService", infraMappingService);
     Reflect.on(splunkV2State).set("workflowExecutionService", workflowExecutionService);
