@@ -4,7 +4,7 @@ environmentType: PROD
 variableOverrides:
   - name: learning_env
     serviceName: Learning Engine
-    value: ${serviceVariable.DEPLOY_MODE}
+    value: on_prem
     valueType: TEXT
   - name: server_url
     serviceName: Learning Engine
