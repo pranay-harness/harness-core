@@ -48,6 +48,7 @@ import software.wings.annotation.Encryptable;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
+import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
@@ -74,6 +75,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.KmsResource;
 import software.wings.resources.SecretManagementResource;
+import software.wings.resources.ServiceVariableResource;
 import software.wings.rules.RealMongo;
 import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;
@@ -136,6 +138,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject private SettingsService settingsService;
   @Inject private SettingValidationService settingValidationService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private ServiceVariableResource serviceVariableResource;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private ContainerService containerService;
   @Mock private NewRelicService newRelicService;
@@ -155,7 +158,8 @@ public class KmsTest extends WingsBaseTest {
   public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     accountId = generateUuid();
     initMocks(this);
-    appId = generateUuid();
+    appId = wingsPersistence.save(
+        Application.Builder.anApplication().withName(generateUuid()).withAccountId(accountId).build());
     workflowName = generateUuid();
     envId = generateUuid();
     workflowExecutionId = wingsPersistence.save(
@@ -1327,23 +1331,34 @@ public class KmsTest extends WingsBaseTest {
     String secretValue = UUID.randomUUID().toString();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
+    // try with invalid secret id
     final ServiceVariable serviceVariable = ServiceVariable.builder()
-                                                .templateId(UUID.randomUUID().toString())
-                                                .envId(UUID.randomUUID().toString())
-                                                .entityType(EntityType.APPLICATION)
-                                                .entityId(UUID.randomUUID().toString())
-                                                .parentServiceVariableId(UUID.randomUUID().toString())
+                                                .templateId(generateUuid())
+                                                .envId(generateUuid())
+                                                .entityType(EntityType.SERVICE)
+                                                .entityId(generateUuid())
+                                                .parentServiceVariableId(generateUuid())
                                                 .overrideType(OverrideType.ALL)
-                                                .instances(Collections.singletonList(UUID.randomUUID().toString()))
-                                                .expression(UUID.randomUUID().toString())
+                                                .instances(Collections.singletonList(generateUuid()))
+                                                .expression(generateUuid())
                                                 .accountId(accountId)
-                                                .name(UUID.randomUUID().toString())
-                                                .value(secretId.toCharArray())
+                                                .name(generateUuid())
+                                                .value(generateUuid().toCharArray())
                                                 .type(Type.ENCRYPTED_TEXT)
                                                 .build();
 
-    String savedAttributeId = wingsPersistence.save(serviceVariable);
-    ServiceVariable savedAttribute = wingsPersistence.get(ServiceVariable.class, savedAttributeId);
+    try {
+      serviceVariableResource.save(appId, serviceVariable);
+      fail("saved invalid service variable");
+    } catch (WingsException e) {
+      // expected
+    }
+
+    serviceVariable.setValue(secretId.toCharArray());
+    String savedAttributeId = serviceVariableResource.save(appId, serviceVariable).getResource().getUuid();
+    ServiceVariable savedAttribute = serviceVariableResource.get(appId, savedAttributeId).getResource();
+    assertNotNull(savedAttribute.getSecretTextName());
+    serviceVariable.setSecretTextName(savedAttribute.getSecretTextName());
     assertEquals(serviceVariable, savedAttribute);
     assertEquals(1, wingsPersistence.createQuery(ServiceVariable.class).count());
     assertEquals(numOfEncryptedValsForKms + 1, wingsPersistence.createQuery(EncryptedData.class).count());
@@ -1385,6 +1400,15 @@ public class KmsTest extends WingsBaseTest {
         savedVariable, secretManager.getEncryptionDetails(savedVariable, workflowExecutionId, appId));
     assertEquals(secretValue, String.valueOf(savedVariable.getValue()));
     assertNull(savedVariable.getEncryptedValue());
+
+    // update serviceVariable with invalid reference and fail
+    serviceVariable.setValue(generateUuid().toCharArray());
+    try {
+      serviceVariableResource.update(appId, savedAttributeId, serviceVariable);
+      fail("updated invalid service variable");
+    } catch (WingsException e) {
+      // expected
+    }
   }
 
   @Test

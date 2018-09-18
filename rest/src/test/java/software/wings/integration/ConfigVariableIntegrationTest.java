@@ -24,6 +24,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.OverrideType;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.rules.SetupScheduler;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -93,9 +94,15 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void shouldOverrideEncryptedServiceConfigVariable() {
+    String encryptedId = wingsPersistence.save(EncryptedData.builder()
+                                                   .name(generateUuid())
+                                                   .encryptedValue(generateUuid().toCharArray())
+                                                   .encryptionKey(generateUuid())
+                                                   .build());
     // Config variable - Entity type as Service
     serviceVariable1 = getServiceVariable(Type.ENCRYPTED_TEXT);
     serviceVariable1.setAppId(app.getAppId());
+    serviceVariable1.setValue(encryptedId.toCharArray());
     serviceVariable1.setEncryptedValue("encryptedValue");
 
     String svId = serviceVariableService.save(serviceVariable1).getUuid();
@@ -110,6 +117,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
     serviceVariable2.setAppId(app.getAppId());
     serviceVariable2.setEntityType(EntityType.SERVICE_TEMPLATE);
     serviceVariable2.setTemplateId(serviceTemplate.getUuid());
+    serviceVariable2.setValue(encryptedId.toCharArray());
     serviceVariable2.setEncryptedValue("updatedEncryptedValue");
     serviceVariable2.setParentServiceVariableId(parentServiceVariable.getUuid());
 

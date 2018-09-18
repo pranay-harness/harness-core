@@ -93,6 +93,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
   @Override
   @ValidationGroups(Create.class)
   public ServiceVariable save(@Valid ServiceVariable serviceVariable) {
+    checkValidEncryptedReference(serviceVariable);
     return save(serviceVariable, false);
   }
 
@@ -144,6 +145,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public ServiceVariable update(@Valid ServiceVariable serviceVariable, boolean syncFromGit) {
+    checkValidEncryptedReference(serviceVariable);
     ServiceVariable savedServiceVariable = get(serviceVariable.getAppId(), serviceVariable.getUuid());
     executorService.submit(
         () -> removeSearchTagsIfNecessary(savedServiceVariable, String.valueOf(serviceVariable.getValue())));
@@ -412,5 +414,18 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     }
 
     wingsPersistence.save(encryptedData);
+  }
+
+  private void checkValidEncryptedReference(@Valid ServiceVariable serviceVariable) {
+    if (serviceVariable.getType().equals(ENCRYPTED_TEXT)) {
+      Preconditions.checkNotNull(serviceVariable.getValue(), "value passed is null for " + serviceVariable);
+      EncryptedData encryptedData =
+          wingsPersistence.get(EncryptedData.class, String.valueOf(serviceVariable.getValue()));
+      if (encryptedData == null) {
+        throw new WingsException(
+            INVALID_ARGUMENT, "No secret text with id " + new String(serviceVariable.getValue()) + " exists", USER)
+            .addParam("args", "No secret text with given name exists. Please select one from the drop down.");
+      }
+    }
   }
 }

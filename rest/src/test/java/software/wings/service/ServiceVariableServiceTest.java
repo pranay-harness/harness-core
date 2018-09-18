@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -208,8 +209,12 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldUpdateNone() {
-    ServiceVariable variable =
-        ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityType(EntityType.SERVICE_TEMPLATE).build();
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .name(SERVICE_VARIABLE_NAME)
+                                   .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .type(TEXT)
+                                   .value(generateUuid().toCharArray())
+                                   .build();
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
 
@@ -227,6 +232,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     ServiceVariable variable = ServiceVariable.builder()
                                    .name(SERVICE_VARIABLE_NAME)
                                    .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .type(TEXT)
                                    .value("test".toCharArray())
                                    .build();
 
@@ -248,6 +254,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     ServiceVariable variable = ServiceVariable.builder()
                                    .name(null)
                                    .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .type(TEXT)
                                    .value("test".toCharArray())
                                    .build();
 
@@ -266,8 +273,12 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldAllowUpdateServiceVariable() {
-    ServiceVariable variable =
-        ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityType(EntityType.SERVICE_TEMPLATE).build();
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .name(SERVICE_VARIABLE_NAME)
+                                   .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .type(TEXT)
+                                   .value(generateUuid().toCharArray())
+                                   .build();
 
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
@@ -288,8 +299,12 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
    */
   @Test(expected = InvalidRequestException.class)
   public void shouldThrowExceptionUpdateServiceVariable() {
-    ServiceVariable variable =
-        ServiceVariable.builder().name(SERVICE_VARIABLE_NAME).entityType(EntityType.SERVICE_TEMPLATE).build();
+    ServiceVariable variable = ServiceVariable.builder()
+                                   .name(SERVICE_VARIABLE_NAME)
+                                   .entityType(EntityType.SERVICE_TEMPLATE)
+                                   .type(TEXT)
+                                   .value(generateUuid().toCharArray())
+                                   .build();
 
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
@@ -297,8 +312,12 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     String secondVariableName = "SERVICE_VARIABLE_NAME_2";
     String secondVariableId = "SERVICE_VARIABLE_ID";
-    ServiceVariable variable2 =
-        ServiceVariable.builder().name(secondVariableName).entityType(EntityType.SERVICE_TEMPLATE).build();
+    ServiceVariable variable2 = ServiceVariable.builder()
+                                    .name(secondVariableName)
+                                    .entityType(EntityType.SERVICE_TEMPLATE)
+                                    .type(TEXT)
+                                    .value(generateUuid().toCharArray())
+                                    .build();
 
     variable.setAppId(APP_ID);
     variable.setUuid(secondVariableId);
