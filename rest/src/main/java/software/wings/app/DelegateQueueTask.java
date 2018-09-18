@@ -3,7 +3,6 @@ package software.wings.app;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.time.Duration.ofMinutes;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -30,7 +29,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
-import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.waitnotify.ErrorNotifyResponseData;
@@ -69,8 +67,7 @@ public class DelegateQueueTask implements Runnable {
       return;
     }
 
-    try (AcquiredLock ignore =
-             persistentLocker.acquireLock(DelegateQueueTask.class, DelegateQueueTask.class.getName(), ofMinutes(1))) {
+    try {
       timeLimiter.callWithTimeout(() -> {
         if (configurationController.isPrimary()) {
           markTimedOutTasksAsFailed();

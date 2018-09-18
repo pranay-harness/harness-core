@@ -47,7 +47,6 @@ import static software.wings.utils.message.MessageConstants.WATCHER_VERSION;
 import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -122,7 +121,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Clock;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -407,7 +405,6 @@ public class DelegateServiceImpl implements DelegateService {
 
       logger.info("Delegate started");
 
-      updateConfigs();
       startInstallCheck();
 
       synchronized (waiter) {
@@ -424,47 +421,6 @@ public class DelegateServiceImpl implements DelegateService {
 
     } catch (Exception e) {
       logger.error("Exception while starting/running delegate", e);
-    }
-  }
-
-  private void updateConfigs() {
-    String oldWatcherPath = "http://wingswatchers.s3-website-us-east-1.amazonaws.com/watcherprod.txt";
-    String newWatcherPath = "https://app.harness.io/storage/wingswatchers/watcherprod.txt";
-    String oldDelegatePath = "http://wingsdelegates.s3-website-us-east-1.amazonaws.com/delegateprod.txt";
-    String newDelegatePath = "https://app.harness.io/storage/wingsdelegates/delegateprod.txt";
-    String apiHarnessIo = "api.harness.io";
-    String appHarnessIo = "app.harness.io";
-    try {
-      List<String> configFileNames = ImmutableList.of("config-delegate.yml", "config-watcher.yml");
-      for (String configName : configFileNames) {
-        File config = new File(configName);
-        if (config.exists()) {
-          String fileContents = FileUtils.readFileToString(config, UTF_8);
-          if (StringUtils.contains(fileContents, apiHarnessIo) || StringUtils.contains(fileContents, oldWatcherPath)
-              || StringUtils.contains(fileContents, oldDelegatePath)) {
-            List<String> outLines = new ArrayList<>();
-            for (String line : FileUtils.readLines(config, UTF_8)) {
-              if (StringUtils.contains(line, apiHarnessIo)) {
-                outLines.add(line.replace(apiHarnessIo, appHarnessIo));
-              } else if (StringUtils.contains(line, oldWatcherPath)) {
-                outLines.add(line.replace(oldWatcherPath, newWatcherPath));
-              } else if (StringUtils.contains(line, oldDelegatePath)) {
-                outLines.add(line.replace(oldDelegatePath, newDelegatePath));
-              } else {
-                outLines.add(line);
-              }
-            }
-            FileUtils.forceDelete(config);
-            FileUtils.touch(config);
-            FileUtils.writeLines(config, outLines);
-            Files.setPosixFilePermissions(config.toPath(),
-                Sets.newHashSet(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE,
-                    PosixFilePermission.GROUP_READ, PosixFilePermission.OTHERS_READ));
-          }
-        }
-      }
-    } catch (Exception e) {
-      logger.error("Error updating config.", e);
     }
   }
 
