@@ -53,7 +53,7 @@ public class ResourceConstraintBackupJob implements Job {
       Set<String> completelyBlocked = resourceConstraintService.selectBlockedConstraints();
       if (isNotEmpty(completelyBlocked)) {
         if (logger.isWarnEnabled()) {
-          logger.error("There are completely blocked constraints: %s", Strings.join(", ", completelyBlocked));
+          logger.error("There are completely blocked constraints: {}", Strings.join(", ", completelyBlocked));
         }
       }
 

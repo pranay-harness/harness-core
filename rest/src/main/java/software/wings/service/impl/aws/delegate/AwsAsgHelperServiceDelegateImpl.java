@@ -419,7 +419,7 @@ public class AwsAsgHelperServiceDelegateImpl
   private void describeAutoScalingGroupActivities(AmazonAutoScalingClient amazonAutoScalingClient,
       String autoScalingGroupName, Set<String> completedActivities, LogCallback callback, boolean withCause) {
     if (callback == null) {
-      logger.info("Not describing autoScalingGroupActivities for [%s] since logCallback is null");
+      logger.info("Not describing autoScalingGroupActivities for {} since logCallback is null", completedActivities);
       return;
     }
     try {
@@ -435,7 +435,6 @@ public class AwsAsgHelperServiceDelegateImpl
               Integer progress = activity.getProgress();
               String activityDescription = activity.getDescription();
               String statuscode = activity.getStatusCode();
-              String statusMessage = activity.getStatusMessage();
               String logStatement =
                   format("AutoScalingGroup [%s] activity [%s] progress [%d percent] , statuscode [%s]  details [%s]",
                       autoScalingGroupName, activityDescription, progress, statuscode, details);
