@@ -39,7 +39,8 @@ public class LicenseUtil {
     return builder.toString();
   }
 
-  public static LicenseInfo convertToObject(byte[] decryptedBytes, long defaultExpiryTime, boolean setExpiry) {
+  public static LicenseInfo convertToObject(
+      byte[] decryptedBytes, long defaultExpiryTime, boolean checkAndSetDefaultExpiry) {
     if (isEmpty(decryptedBytes)) {
       return null;
     }
@@ -74,7 +75,7 @@ public class LicenseUtil {
     } else {
       try {
         expiryTime = Long.parseLong(expiryTimeString);
-        if (setExpiry) {
+        if (checkAndSetDefaultExpiry) {
           if (expiryTime < System.currentTimeMillis()) {
             expiryTime = defaultExpiryTime;
           }

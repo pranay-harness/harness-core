@@ -21,7 +21,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.FeatureFlag;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.RestResponse.Builder;
@@ -193,22 +192,20 @@ public class UserResource {
   }
 
   @PUT
-  @Path("account/license/{accountId}")
+  @Path("license/account/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<Account> updateAccountLicense(
-      @PathParam("accountId") @NotEmpty String accountId, Account account) {
+  public RestResponse<Account> updateAccountLicense(@PathParam("accountId") @NotEmpty String accountId,
+      @QueryParam("expireAfter") String expireAfterDays, @QueryParam("accountType") String accountType,
+      @QueryParam("accountStatus") String accountStatus, @QueryParam("salesContacts") String salesContacts) {
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {
       throw new InvalidRequestException("Invalid User");
     }
 
     if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
-      if (account != null && isEmpty(account.getUuid())) {
-        account.setUuid(accountId);
-      }
-
-      return new RestResponse<>(accountService.updateAccountLicense(account, true));
+      return new RestResponse<>(accountService.updateAccountLicense(
+          accountId, accountType, accountStatus, expireAfterDays, salesContacts, false));
     } else {
       return Builder.aRestResponse()
           .withResponseMessages(Lists.newArrayList(
@@ -218,18 +215,19 @@ public class UserResource {
   }
 
   @GET
-  @Path("account/license")
+  @Path("license/account/{accountId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> generateLicense(
-      @PathParam("accountId") @NotEmpty String accountId, LicenseInfo licenseInfo) {
+  public RestResponse<String> generateLicense(@PathParam("accountId") @NotEmpty String accountId,
+      @QueryParam("expireAfter") String expireAfterDays, @QueryParam("accountType") String accountType,
+      @QueryParam("accountStatus") String accountStatus, @QueryParam("salesContacts") String salesContacts) {
     User existingUser = UserThreadLocal.get();
     if (existingUser == null) {
       throw new InvalidRequestException("Invalid User");
     }
 
     if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
-      return new RestResponse<>(accountService.generateLicense(licenseInfo));
+      return new RestResponse<>(accountService.generateLicense(accountType, accountStatus, expireAfterDays));
     } else {
       return Builder.aRestResponse()
           .withResponseMessages(Lists.newArrayList(

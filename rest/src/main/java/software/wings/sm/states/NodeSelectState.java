@@ -260,7 +260,7 @@ public abstract class NodeSelectState extends State {
       Account account = accountService.get(((ExecutionContextImpl) context).getApp().getAccountId());
       if (account == null
           || (account.getLicenseInfo() != null && isNotEmpty(account.getLicenseInfo().getAccountType())
-                 && AccountType.LITE.equals(account.getLicenseInfo().getAccountType()))) {
+                 && AccountType.FREEMIUM.equals(account.getLicenseInfo().getAccountType()))) {
         errorMessage = "The license for this account does not allow more than "
             + Constants.DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT
             + " concurrent instance deployments. Please contact Harness Support.";

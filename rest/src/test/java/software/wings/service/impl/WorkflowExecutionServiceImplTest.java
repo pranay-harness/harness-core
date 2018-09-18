@@ -923,7 +923,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 5000);
     account.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(account, true);
+    accountService.updateAccountLicense(account.getUuid(), licenseInfo, null, false);
 
     Thread.sleep(10000);
     Workflow workflow = createExecutableWorkflow(app.getUuid(), env);
@@ -943,7 +943,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 1000000);
     account.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(account, true);
+    accountService.updateAccountLicense(account.getUuid(), licenseInfo, null, false);
 
     WorkflowExecution workflowExecution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
         appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback);
@@ -958,7 +958,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 5000);
     account.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(account, true);
+    accountService.updateAccountLicense(account.getUuid(), licenseInfo, null, false);
 
     Thread.sleep(10000);
     Service service = wingsPersistence.saveAndGet(
@@ -974,7 +974,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 1000000);
     account.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(account, true);
+    accountService.updateAccountLicense(account.getUuid(), licenseInfo, null, false);
 
     WorkflowExecution workflowExecution = triggerPipeline(app.getUuid(), pipeline, service);
     assertNotNull(workflowExecution);
