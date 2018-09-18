@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,7 +29,6 @@ import static software.wings.beans.trigger.ArtifactSelection.Type.WEBHOOK_VARIAB
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.artifact;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.assertWebhookToken;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildArtifactTrigger;
@@ -62,6 +62,8 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.exception.WingsException;
@@ -93,8 +95,6 @@ import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.scheduler.JobScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactCollectionService;

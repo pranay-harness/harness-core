@@ -1,14 +1,15 @@
 package software.wings.resources.yaml;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -31,7 +32,6 @@ import software.wings.beans.User;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.dl.PageResponse;
 import software.wings.exception.YamlProcessingException;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;

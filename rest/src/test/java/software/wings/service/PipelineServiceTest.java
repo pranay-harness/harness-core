@@ -1,5 +1,8 @@
 package software.wings.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,11 +27,8 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -45,6 +45,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import io.harness.resource.Loader;
@@ -76,8 +78,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;

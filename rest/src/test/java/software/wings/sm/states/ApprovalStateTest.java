@@ -32,6 +32,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import io.harness.beans.PageResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -51,7 +52,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;

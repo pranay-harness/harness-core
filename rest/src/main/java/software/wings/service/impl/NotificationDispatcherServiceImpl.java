@@ -1,11 +1,12 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.common.Constants.ABORTED_COLOR;
 import static software.wings.common.Constants.COMPLETED_COLOR;
 import static software.wings.common.Constants.FAILED_COLOR;
@@ -14,11 +15,12 @@ import static software.wings.common.Constants.LINK_COLOR;
 import static software.wings.common.Constants.PAUSED_COLOR;
 import static software.wings.common.Constants.RESUMED_COLOR;
 import static software.wings.common.NotificationMessageResolver.getDecoratedNotificationMessage;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Notification;
@@ -30,8 +32,6 @@ import software.wings.beans.SlackConfig;
 import software.wings.beans.User;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTemplate;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.NotificationDispatcherService;

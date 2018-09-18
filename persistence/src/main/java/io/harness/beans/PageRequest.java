@@ -1,14 +1,17 @@
-package software.wings.dl;
+package io.harness.beans;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static software.wings.beans.SortOrder.Builder.aSortOrder;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SearchFilter.SearchFilterBuilder;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.parser.Parser;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.ReadPref;
@@ -16,12 +19,6 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.MappedClass;
 import org.mongodb.morphia.mapping.MappedField;
 import org.mongodb.morphia.mapping.Mapper;
-import software.wings.beans.Base;
-import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.SearchFilter.SearchFilterBuilder;
-import software.wings.beans.SortOrder;
-import software.wings.beans.SortOrder.OrderType;
 
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -281,7 +278,7 @@ public class PageRequest<T> {
             } else {
               constructor = mappedField.getCTor();
             }
-            Base referenceObject = (Base) constructor.getDeclaringClass().newInstance();
+            Object referenceObject = constructor.getDeclaringClass().newInstance();
             String collection = mapper.getCollectionName(referenceObject);
             addFilter(key, Operator.IN,
                 map.get(key).stream().map(s -> new Key(referenceObject.getClass(), collection, s)).toArray());

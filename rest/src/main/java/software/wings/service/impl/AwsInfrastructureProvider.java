@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
@@ -7,7 +8,6 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -19,6 +19,8 @@ import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ecs.model.AmazonECSException;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -35,8 +37,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;

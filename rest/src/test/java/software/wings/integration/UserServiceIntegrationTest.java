@@ -1,5 +1,6 @@
 package software.wings.integration;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
@@ -8,13 +9,13 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Sets;
 import com.google.common.io.ByteStreams;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import org.apache.http.HttpStatus;
 import org.junit.Assert;
@@ -25,7 +26,6 @@ import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.security.PermissionAttribute.Action;

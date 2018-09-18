@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -9,25 +10,24 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.dl.MongoHelper.setUnset;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Account;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.LdapGroupSyncJob;
 import software.wings.scheduler.QuartzScheduler;

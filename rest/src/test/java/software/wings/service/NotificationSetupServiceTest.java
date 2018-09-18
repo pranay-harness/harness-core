@@ -1,15 +1,18 @@
 package software.wings.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -18,9 +21,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
-import software.wings.beans.SearchFilter.Operator;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;
 

@@ -1,6 +1,8 @@
 package software.wings.service;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -12,8 +14,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -24,6 +24,8 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -38,8 +40,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.intfc.ConfigService;

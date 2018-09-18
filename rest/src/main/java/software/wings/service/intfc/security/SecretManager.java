@@ -1,9 +1,9 @@
 package software.wings.service.intfc.security;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.persistence.UuidAware;
 import software.wings.annotation.Encryptable;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;

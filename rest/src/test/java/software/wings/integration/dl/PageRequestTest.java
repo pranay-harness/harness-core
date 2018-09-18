@@ -1,23 +1,23 @@
 package software.wings.integration.dl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.ELEMENT_MATCH;
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static software.wings.beans.SearchFilter.Operator.ELEMENT_MATCH;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.GE;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
 

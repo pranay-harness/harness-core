@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -14,7 +15,6 @@ import static software.wings.beans.command.CommandUnitDetails.CommandUnitType.CO
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.beans.command.InitSshCommandUnit.INITIALIZE_UNIT;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ACTIVITY_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -36,6 +36,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
+import io.harness.beans.SearchFilter.Operator;
 import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -43,7 +44,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Activity;
 import software.wings.beans.Event.Type;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.command.CleanupSshCommandUnit;
 import software.wings.beans.command.CommandUnit;

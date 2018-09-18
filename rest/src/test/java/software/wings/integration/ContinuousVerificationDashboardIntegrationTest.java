@@ -8,14 +8,14 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.PageResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
-import software.wings.dl.PageRequest.PageRequestBuilder;
-import software.wings.dl.PageResponse;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;

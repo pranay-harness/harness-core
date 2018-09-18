@@ -1,5 +1,7 @@
 package software.wings.common;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
@@ -8,13 +10,16 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.ReadPref;
 import software.wings.api.InstanceElement;
@@ -23,15 +28,10 @@ import software.wings.api.PartitionElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceInstanceIdsParam;
 import software.wings.beans.Application;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.PageRequestBuilder;
-import software.wings.dl.PageResponse;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;

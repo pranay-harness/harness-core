@@ -42,6 +42,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Reservation;
+import io.harness.beans.PageResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -64,7 +65,6 @@ import software.wings.beans.infrastructure.instance.info.Ec2InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
-import software.wings.dl.PageResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsInfrastructureProvider;

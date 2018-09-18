@@ -9,6 +9,8 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.beans.Activity;
@@ -17,8 +19,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ServiceInstanceService;
 

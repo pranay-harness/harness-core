@@ -16,6 +16,8 @@ import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskRes
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.hk2.utilities.binding.AbstractBinder;
 import org.junit.Before;
@@ -36,8 +38,6 @@ import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.common.Constants;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateScopeService;

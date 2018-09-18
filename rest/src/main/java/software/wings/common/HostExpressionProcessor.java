@@ -4,16 +4,16 @@
 
 package software.wings.common;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter.Operator;
 import software.wings.api.HostElement;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.PageRequest;
 import software.wings.service.intfc.HostService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;

@@ -1,19 +1,19 @@
 package migrations.all;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 
 import java.util.List;

@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotBlank;
@@ -10,7 +11,6 @@ import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
-import software.wings.dl.PageRequest;
 
 import java.util.Collection;
 import java.util.List;

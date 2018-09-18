@@ -10,6 +10,8 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.slf4j.Logger;
@@ -23,8 +25,6 @@ import software.wings.beans.Notification;
 import software.wings.beans.NotificationAction.NotificationActionType;
 import software.wings.beans.NotificationRule;
 import software.wings.common.NotificationMessageResolver;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationDispatcherService;

@@ -1,5 +1,7 @@
 package software.wings.service.impl.template;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -7,9 +9,7 @@ import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC_CHANGED;
@@ -19,18 +19,18 @@ import static software.wings.utils.WingsTestConstants.INVALID_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter;
 import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
-import software.wings.beans.SearchFilter;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
-import software.wings.dl.PageRequest;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;

@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -13,10 +15,8 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionCredential.HostConnectionCredentialBuilder.aHostConnectionCredential;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
@@ -27,6 +27,8 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -41,8 +43,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.ConfigService;

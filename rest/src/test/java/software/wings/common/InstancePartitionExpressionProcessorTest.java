@@ -26,6 +26,8 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.Test;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -36,8 +38,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;

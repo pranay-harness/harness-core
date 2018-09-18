@@ -1,16 +1,17 @@
 package software.wings.dl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.ELEMENT_MATCH;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static software.wings.beans.SearchFilter.Operator.ELEMENT_MATCH;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.SearchFilter;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 

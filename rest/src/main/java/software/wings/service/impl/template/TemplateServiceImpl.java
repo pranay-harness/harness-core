@@ -26,6 +26,8 @@ import com.google.inject.Singleton;
 
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
@@ -47,8 +49,6 @@ import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.VersionedTemplate;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.beans.template.command.SshCommandTemplate;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;

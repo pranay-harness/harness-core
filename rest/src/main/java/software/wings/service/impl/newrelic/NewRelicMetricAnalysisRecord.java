@@ -3,6 +3,7 @@ package software.wings.service.impl.newrelic;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -19,7 +20,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
-import software.wings.beans.SortOrder;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.StateType;

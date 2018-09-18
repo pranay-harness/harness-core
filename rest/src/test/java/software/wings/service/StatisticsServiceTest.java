@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,7 +19,6 @@ import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStage
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
@@ -30,6 +30,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
 import io.harness.persistence.HIterator;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,6 @@ import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats.DayStat;
 import software.wings.beans.stats.ServiceInstanceStatistics;
 import software.wings.beans.stats.TopConsumer;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StatisticsService;

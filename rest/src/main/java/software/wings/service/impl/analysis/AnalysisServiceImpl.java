@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.compression.CompressionUtils.compressString;
 import static io.harness.data.compression.CompressionUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -13,13 +14,16 @@ import static java.util.Collections.emptySet;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.Constants.DEFAULT_SYNC_CALL_TIMEOUT;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -38,17 +42,13 @@ import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.ElkConfig;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.security.encryption.EncryptedDataDetail;

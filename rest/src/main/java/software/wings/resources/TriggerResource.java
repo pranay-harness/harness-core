@@ -1,12 +1,14 @@
 package software.wings.resources;
 
-import static software.wings.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WebHookToken;
@@ -15,8 +17,6 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.TriggerService;
 import software.wings.utils.Validator;

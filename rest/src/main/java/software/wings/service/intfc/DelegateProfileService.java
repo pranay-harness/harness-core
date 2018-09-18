@@ -1,8 +1,8 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import software.wings.beans.DelegateProfile;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 
 /**
  * Created by brett on 8/4/17

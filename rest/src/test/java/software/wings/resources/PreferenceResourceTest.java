@@ -14,6 +14,8 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -22,8 +24,6 @@ import software.wings.beans.DeploymentPreference;
 import software.wings.beans.Preference;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.PreferenceService;
 import software.wings.utils.ResourceTestRule;

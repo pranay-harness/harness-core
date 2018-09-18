@@ -36,6 +36,7 @@ import static software.wings.service.impl.instance.InstanceSyncTestConstants.SPA
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -56,7 +57,6 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
-import software.wings.dl.PageResponse;
 import software.wings.service.impl.PcfHelperService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;

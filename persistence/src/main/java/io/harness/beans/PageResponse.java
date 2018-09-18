@@ -1,4 +1,4 @@
-package software.wings.dl;
+package io.harness.beans;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -8,8 +8,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonFormat.Shape;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.eclipse.jetty.util.LazyList;
-import software.wings.beans.SearchFilter;
-import software.wings.beans.SortOrder;
 
 import java.util.ArrayList;
 import java.util.Collection;

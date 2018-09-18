@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -16,8 +18,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeploy
 import software.wings.beans.infrastructure.instance.key.deployment.ContainerDeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.beans.infrastructure.instance.key.deployment.PcfDeploymentKey;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.DeploymentService;

@@ -1,10 +1,10 @@
 package software.wings.service.impl.artifactstream;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 

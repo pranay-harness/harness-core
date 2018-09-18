@@ -1,5 +1,6 @@
 package software.wings.service.impl.artifactstream;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyBoolean;
@@ -20,7 +21,6 @@ import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REGISTRY_URL_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_REPOSITORY_NAME_KEY;
 import static software.wings.common.Constants.ARTIFACT_SOURCE_USER_NAME_KEY;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -30,6 +30,8 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +44,6 @@ import software.wings.beans.AzureConfig;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
@@ -57,7 +58,6 @@ import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
-import software.wings.dl.PageRequest;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;

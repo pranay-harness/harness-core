@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -9,10 +10,12 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
@@ -25,14 +28,11 @@ import software.wings.alerts.AlertStatus;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.KmsConfig;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.security.KmsService;

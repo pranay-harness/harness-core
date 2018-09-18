@@ -16,15 +16,15 @@ import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ResourceTestRule;

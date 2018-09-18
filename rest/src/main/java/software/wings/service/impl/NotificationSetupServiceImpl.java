@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -10,12 +11,14 @@ import static org.atteo.evo.inflector.English.plural;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.persistence.HIterator;
 import software.wings.beans.Application;
@@ -24,12 +27,9 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.SettingsService;

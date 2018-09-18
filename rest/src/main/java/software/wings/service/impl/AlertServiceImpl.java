@@ -16,6 +16,8 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.Query;
@@ -29,8 +31,6 @@ import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.beans.alert.NoEligibleDelegatesAlert;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;

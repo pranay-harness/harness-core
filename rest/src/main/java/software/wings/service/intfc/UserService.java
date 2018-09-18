@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -11,8 +13,6 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.SecretManager;
 
 import java.util.List;

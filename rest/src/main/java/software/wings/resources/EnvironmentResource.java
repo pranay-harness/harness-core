@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static software.wings.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ENVIRONMENT;
@@ -9,6 +9,8 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiParam;
 import software.wings.beans.Environment;
@@ -17,8 +19,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.stats.CloneMetadata;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;

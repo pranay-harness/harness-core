@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -15,7 +16,6 @@ import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysic
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
@@ -26,6 +26,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import com.amazonaws.regions.Regions;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -44,8 +46,6 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.common.Constants;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.StateExecutionService;

@@ -26,6 +26,8 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.data.structure.ListUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -41,8 +43,6 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateHelper;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;

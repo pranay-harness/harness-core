@@ -1,15 +1,15 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.beans.SortOrder.Builder.aSortOrder;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.SortOrder.Builder.aSortOrder;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.math.Stats;
 
+import io.harness.beans.SortOrder;
+import io.harness.beans.SortOrder.OrderType;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.beans.SortOrder;
-import software.wings.beans.SortOrder.OrderType;
 import software.wings.metrics.MetricType;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;

@@ -1,13 +1,14 @@
 package migrations.all;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
 import io.harness.data.validator.EntityNameValidator;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -25,7 +26,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.utils.Misc;
 

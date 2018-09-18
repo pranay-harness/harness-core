@@ -17,6 +17,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.data.structure.ListUtils;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -32,8 +34,6 @@ import software.wings.beans.template.TemplateHelper;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.VersionedTemplate;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AccountService;

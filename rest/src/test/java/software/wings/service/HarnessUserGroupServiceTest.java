@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -8,12 +9,12 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageResponse;
 import io.harness.data.structure.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,7 +24,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Account.Builder;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.HarnessUserGroupService;

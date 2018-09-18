@@ -5,11 +5,11 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.dropwizard.jersey.caching.CacheControl;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.RestResponse;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.service.intfc.AuditService;
 
 import java.util.concurrent.TimeUnit;

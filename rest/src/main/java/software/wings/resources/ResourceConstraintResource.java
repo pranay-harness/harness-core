@@ -13,13 +13,13 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.distribution.constraint.Constraint.Strategy;
 import io.swagger.annotations.Api;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.RestResponse;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;

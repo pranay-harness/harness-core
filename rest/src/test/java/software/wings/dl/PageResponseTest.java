@@ -5,6 +5,8 @@ import static net.javacrumbs.jsonunit.fluent.JsonFluentAssert.assertThatJson;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.utils.JsonUtils;

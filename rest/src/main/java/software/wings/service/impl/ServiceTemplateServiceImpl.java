@@ -1,5 +1,8 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
@@ -9,16 +12,15 @@ import static java.util.stream.Stream.concat;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.IN;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -33,8 +35,6 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;

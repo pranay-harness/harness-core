@@ -19,6 +19,9 @@ import static software.wings.utils.WingsTestConstants.LOG_ID;
 
 import com.google.common.collect.Lists;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -28,12 +31,9 @@ import org.junit.rules.Verifier;
 import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.RestResponse;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.common.Constants;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;

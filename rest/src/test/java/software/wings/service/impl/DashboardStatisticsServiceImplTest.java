@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.collect.Sets.newHashSet;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static java.util.Objects.deepEquals;
 import static org.junit.Assert.assertEquals;
@@ -12,7 +13,6 @@ import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_1_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.ACCOUNT_2_ID;
 import static software.wings.service.impl.instance.InstanceSyncTestConstants.APP_1_ID;
@@ -81,6 +81,8 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -107,8 +109,6 @@ import software.wings.beans.instance.dashboard.ArtifactSummary;
 import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.RealMongo;
 import software.wings.security.AppPermissionSummaryForUI;

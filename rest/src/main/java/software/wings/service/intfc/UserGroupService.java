@@ -1,12 +1,12 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOType;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 
 import java.util.Collection;
 import java.util.List;

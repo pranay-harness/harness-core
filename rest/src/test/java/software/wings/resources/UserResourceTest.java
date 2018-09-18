@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -8,16 +9,15 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.authentication.AuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;

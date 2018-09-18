@@ -1,18 +1,18 @@
 package migrations.all;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.NotificationGroup;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.NotificationSetupService;
 

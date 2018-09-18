@@ -1,14 +1,17 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.EntityVersionCollection.Builder.anEntityVersionCollection;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
@@ -21,9 +24,6 @@ import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EntityVersionCollection;
-import software.wings.beans.SearchFilter.Operator;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.EntityVersionService;
 

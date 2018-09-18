@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 
 import allbegray.slack.type.Payload;
 import allbegray.slack.webhook.SlackWebhookClient;
+import io.harness.beans.PageRequest;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -23,7 +24,6 @@ import software.wings.beans.NotificationChannelType;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.SlackConfig;
-import software.wings.dl.PageRequest;
 import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.NotificationSetupService;

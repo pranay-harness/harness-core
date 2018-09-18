@@ -1,19 +1,25 @@
 package software.wings.dl;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.EXISTS;
+import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
+import static io.harness.beans.SearchFilter.Operator.OR;
+import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.beans.SearchFilter.Operator.EXISTS;
-import static software.wings.beans.SearchFilter.Operator.NOT_EXISTS;
-import static software.wings.beans.SearchFilter.Operator.OR;
-import static software.wings.beans.SortOrder.OrderType.DESC;
 
 import com.google.common.base.Preconditions;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter;
+import io.harness.beans.SearchFilter.Operator;
+import io.harness.beans.SortOrder;
+import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -26,10 +32,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.SearchFilter;
-import software.wings.beans.SearchFilter.Operator;
-import software.wings.beans.SortOrder;
-import software.wings.beans.SortOrder.OrderType;
 
 import java.util.ArrayList;
 import java.util.List;

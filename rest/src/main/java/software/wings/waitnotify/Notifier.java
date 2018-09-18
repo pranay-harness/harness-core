@@ -1,24 +1,24 @@
 package software.wings.waitnotify;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageRequest.UNLIMITED;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.core.queue.Queue;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.AcquiredLock;

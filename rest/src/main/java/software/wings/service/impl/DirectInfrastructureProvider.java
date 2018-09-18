@@ -1,15 +1,15 @@
 package software.wings.service.impl;
 
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.InfrastructureProvider;
 

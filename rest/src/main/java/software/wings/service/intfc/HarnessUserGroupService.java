@@ -1,10 +1,10 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.security.HarnessUserGroup;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.Action;
 
 import java.util.List;

@@ -1,10 +1,10 @@
 package software.wings.service.intfc.instance;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentSummary;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
 import java.util.Optional;

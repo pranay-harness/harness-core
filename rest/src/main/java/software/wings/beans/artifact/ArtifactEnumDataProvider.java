@@ -1,7 +1,7 @@
 package software.wings.beans.artifact;
 
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;

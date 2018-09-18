@@ -1,12 +1,15 @@
 package migrations.all;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.lang.String.format;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.service.impl.instance.InstanceHandler.AUTO_SCALE;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import migrations.Migration;
 import org.apache.commons.lang3.StringUtils;
@@ -15,7 +18,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo;
@@ -24,8 +26,6 @@ import software.wings.beans.infrastructure.instance.info.EcsContainerInfo;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.AcquiredLock;

@@ -1,5 +1,7 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -17,8 +19,6 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.stats.CloneMetadata;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.sm.StateMachine;

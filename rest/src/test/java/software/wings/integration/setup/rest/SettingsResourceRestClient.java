@@ -22,10 +22,10 @@ import static software.wings.utils.WingsIntegrationTestConstants.sshKeyName;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageResponse;
 import software.wings.beans.Account;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
-import software.wings.dl.PageResponse;
 import software.wings.integration.UserResourceRestClient;
 
 import java.util.concurrent.ConcurrentHashMap;

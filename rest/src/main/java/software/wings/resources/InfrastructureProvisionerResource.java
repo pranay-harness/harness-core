@@ -1,6 +1,6 @@
 package software.wings.resources;
 
-import static software.wings.beans.SearchFilter.Operator.EQ;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static software.wings.security.PermissionAttribute.Action.CREATE;
 import static software.wings.security.PermissionAttribute.Action.DELETE;
 import static software.wings.security.PermissionAttribute.Action.READ;
@@ -12,6 +12,8 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.api.DeploymentType;
@@ -20,8 +22,6 @@ import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.RestResponse;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;

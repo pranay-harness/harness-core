@@ -1,10 +1,12 @@
 package migrations;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageRequest.UNLIMITED;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -13,8 +15,6 @@ import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;

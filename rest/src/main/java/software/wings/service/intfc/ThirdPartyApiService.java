@@ -1,7 +1,7 @@
 package software.wings.service.intfc;
 
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 
 import java.util.List;

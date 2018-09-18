@@ -1,11 +1,11 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.infrastructure.Host;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ownership.OwnedByInfrastructureMapping;
 import software.wings.utils.BoundedInputStream;
 

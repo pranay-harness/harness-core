@@ -1,10 +1,11 @@
 package software.wings.service.impl;
 
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageResponse;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.query.Query;
@@ -14,7 +15,6 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Role;
 import software.wings.beans.User;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.AccountService;

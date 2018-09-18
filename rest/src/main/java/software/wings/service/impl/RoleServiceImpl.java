@@ -6,12 +6,12 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.User;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;

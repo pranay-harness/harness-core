@@ -2,6 +2,8 @@ package software.wings.dl;
 
 import com.mongodb.DBCollection;
 import com.mongodb.client.gridfs.GridFSBucket;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.Datastore;

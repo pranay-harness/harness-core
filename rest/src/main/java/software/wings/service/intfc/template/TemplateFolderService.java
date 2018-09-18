@@ -1,9 +1,9 @@
 package software.wings.service.intfc.template;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.template.TemplateFolder;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 
 import java.util.List;
 import java.util.Map;
