@@ -3,8 +3,8 @@ package software.wings.service.impl;
 import static com.google.common.collect.Sets.symmetricDifference;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

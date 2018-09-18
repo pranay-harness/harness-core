@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.time.Duration.ofMinutes;
 import static java.util.Arrays.asList;
@@ -7,7 +8,6 @@ import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.beans.Schema.SCHEMA_ID;
 import static software.wings.beans.Schema.SchemaBuilder.aSchema;
-import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;

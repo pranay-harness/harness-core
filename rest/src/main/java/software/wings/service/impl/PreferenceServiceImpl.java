@@ -1,8 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
-import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

@@ -4,11 +4,11 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;

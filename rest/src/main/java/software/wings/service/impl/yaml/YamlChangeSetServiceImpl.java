@@ -4,7 +4,7 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static software.wings.dl.MongoHelper.setUnset;
+import static io.harness.mongo.MongoUtils.setUnset;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

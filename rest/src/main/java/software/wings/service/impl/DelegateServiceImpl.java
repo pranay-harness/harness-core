@@ -7,6 +7,7 @@ import static io.harness.eraro.ErrorCode.UNAVAILABLE_DELEGATES;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
@@ -42,7 +43,6 @@ import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ALL_DELEGATE_DOWN_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
-import static software.wings.dl.MongoHelper.setUnset;
 import static software.wings.utils.KubernetesConvention.getAccountIdentifier;
 
 import com.google.common.base.Joiner;
