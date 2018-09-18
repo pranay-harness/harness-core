@@ -22,6 +22,7 @@ import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 import org.mongodb.morphia.query.WhereCriteria;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +30,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
-import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -49,7 +49,6 @@ public class DelegateQueueTask implements Runnable {
   private static final long REBROADCAST_FACTOR = TimeUnit.SECONDS.toMillis(2);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private PersistentLocker persistentLocker;
   @Inject private BroadcasterFactory broadcasterFactory;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Clock clock;
@@ -86,11 +85,11 @@ public class DelegateQueueTask implements Runnable {
   }
 
   private void markTimedOutTasksAsFailed() {
-    Query<DelegateTask> longRunningTimedOutTasksQuery =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", STARTED);
-    longRunningTimedOutTasksQuery.and(new WhereCriteria("this.lastUpdatedAt + this.timeout < " + clock.millis()));
-
-    List<Key<DelegateTask>> longRunningTimedOutTaskKeys = longRunningTimedOutTasksQuery.asKeyList();
+    List<Key<DelegateTask>> longRunningTimedOutTaskKeys =
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+            .filter("status", STARTED)
+            .where("this.lastUpdatedAt + this.timeout < " + clock.millis())
+            .asKeyList();
 
     if (!longRunningTimedOutTaskKeys.isEmpty()) {
       List<String> keyList = longRunningTimedOutTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
@@ -101,11 +100,11 @@ public class DelegateQueueTask implements Runnable {
 
   private void markLongQueuedTasksAsFailed() {
     // Find tasks which have been queued for too long and update their status to ERROR.
-    Query<DelegateTask> longQueuedTasksQuery =
-        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).filter("status", QUEUED);
-    longQueuedTasksQuery.and(new WhereCriteria("this.createdAt + this.timeout < " + clock.millis()));
 
-    List<Key<DelegateTask>> longQueuedTaskKeys = longQueuedTasksQuery.asKeyList();
+    List<Key<DelegateTask>> longQueuedTaskKeys = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                                     .filter("status", QUEUED)
+                                                     .where("this.createdAt + this.timeout < " + clock.millis())
+                                                     .asKeyList();
 
     if (!longQueuedTaskKeys.isEmpty()) {
       List<String> keyList = longQueuedTaskKeys.stream().map(key -> key.getId().toString()).collect(toList());
@@ -143,33 +142,44 @@ public class DelegateQueueTask implements Runnable {
 
   private void rebroadcastUnassignedTasks() {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
-    List<DelegateTask> unassignedTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                             .filter("status", QUEUED)
-                                             .filter("version", versionInfoManager.getVersionInfo().getVersion())
-                                             .field("delegateId")
-                                             .doesNotExist()
-                                             .asList();
+    Query<DelegateTask> unassignedTasksQuery = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                                   .filter("status", QUEUED)
+                                                   .filter("version", versionInfoManager.getVersionInfo().getVersion())
+                                                   .field("delegateId")
+                                                   .doesNotExist();
 
+    long now = clock.millis();
+
+    unassignedTasksQuery.and(
+        unassignedTasksQuery.or(unassignedTasksQuery.criteria("validationStartedAt").doesNotExist(),
+            unassignedTasksQuery.criteria("validationStartedAt").lessThan(now - VALIDATION_TIMEOUT)),
+        unassignedTasksQuery.or(unassignedTasksQuery.criteria("lastBroadcastAt").doesNotExist(),
+            new WhereCriteria(
+                "this.lastBroadcastAt < " + now + " - Math.pow(2, this.broadcastCount) * " + REBROADCAST_FACTOR)));
+
+    List<DelegateTask> unassignedTasks = unassignedTasksQuery.asList();
     if (isNotEmpty(unassignedTasks)) {
-      long now = clock.millis();
-      unassignedTasks.forEach(delegateTask -> {
-        if ((delegateTask.getValidationStartedAt() == null
-                || now - delegateTask.getValidationStartedAt() > VALIDATION_TIMEOUT)
-            && (delegateTask.getLastBroadcastAt() == null
-                   || now - delegateTask.getLastBroadcastAt()
-                       > Math.pow(2, delegateTask.getBroadcastCount()) * REBROADCAST_FACTOR)) {
-          logger.info("Re-broadcast queued task [{}]", delegateTask.getUuid());
-
+      UpdateResults results = wingsPersistence.update(unassignedTasksQuery,
+          wingsPersistence.createUpdateOperations(DelegateTask.class)
+              .set("lastBroadcastAt", now)
+              .inc("broadcastCount")
+              .unset("preAssignedDelegateId"));
+      if (results.getUpdatedCount() > 0) {
+        if (unassignedTasks.size() != results.getUpdatedCount()) {
+          logger.info("Found {} tasks to rebroadcast. Updated {} tasks in DB.", unassignedTasks.size(),
+              results.getUpdatedCount());
+        } else {
+          logger.info("Rebroadcasting {} tasks", unassignedTasks.size());
+        }
+        for (DelegateTask delegateTask : unassignedTasks) {
+          logger.info("Rebroadcast queued task [{}], broadcast count: {}", delegateTask.getUuid(),
+              delegateTask.getBroadcastCount());
           delegateTask.setPreAssignedDelegateId(null);
           broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
-
-          wingsPersistence.update(delegateTask,
-              wingsPersistence.createUpdateOperations(DelegateTask.class)
-                  .unset("preAssignedDelegateId")
-                  .set("lastBroadcastAt", now)
-                  .set("broadcastCount", delegateTask.getBroadcastCount() + 1));
         }
-      });
+      }
+    } else {
+      logger.info("No tasks found to rebroadcast");
     }
   }
 }

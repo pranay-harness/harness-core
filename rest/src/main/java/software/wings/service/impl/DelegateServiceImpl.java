@@ -894,17 +894,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public String queueTask(DelegateTask task) {
     task.setAsync(true);
     task.setVersion(getVersion());
+    task.setBroadcastCount(1);
+    task.setLastBroadcastAt(clock.millis());
     task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
     DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
     logger.info("Queueing async task uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
         delegateTask.getAccountId(), delegateTask.getTaskType());
 
     broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
-
-    wingsPersistence.update(delegateTask,
-        wingsPersistence.createUpdateOperations(DelegateTask.class)
-            .set("lastBroadcastAt", clock.millis())
-            .set("broadcastCount", 1));
 
     return delegateTask.getUuid();
   }
@@ -918,16 +915,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
     task.setAsync(false);
     task.setVersion(getVersion());
+    task.setBroadcastCount(1);
+    task.setLastBroadcastAt(clock.millis());
+    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
     DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
     logger.info("Executing sync task: uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
         delegateTask.getAccountId(), delegateTask.getTaskType());
 
     broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
-
-    wingsPersistence.update(delegateTask,
-        wingsPersistence.createUpdateOperations(DelegateTask.class)
-            .set("lastBroadcastAt", clock.millis())
-            .set("broadcastCount", 1));
 
     // Wait for task to complete
     DelegateTask completedTask;
