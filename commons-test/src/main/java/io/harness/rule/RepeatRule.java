@@ -43,6 +43,10 @@ public class RepeatRule implements TestRule {
 
     @Override
     public void evaluate() throws Throwable {
+      if (parentRule == null) {
+        return;
+      }
+
       // There might be many different reasons for test to fail, but that is unlikely.
       // Providing the last one is good enough. When it is resolved and there is another - it will became visible.
       Throwable lastException = null;

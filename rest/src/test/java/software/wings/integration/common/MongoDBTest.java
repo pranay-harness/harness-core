@@ -4,10 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
+import io.harness.rule.BypassRule.Bypass;
 import io.harness.threading.Concurrent;
 import lombok.Getter;
 import lombok.Setter;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mongodb.morphia.annotations.Entity;
 import org.slf4j.Logger;
@@ -31,7 +31,7 @@ public class MongoDBTest extends WingsBaseTest {
   @Test
   // this test was used to validate mongo setting for dirty reads
   // there is no need it to be run again and again
-  @Ignore
+  @Bypass
   public void dirtyReads() {
     Concurrent.test(10, t -> {
       try {

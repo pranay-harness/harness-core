@@ -3,6 +3,7 @@ package io.harness;
 import static org.junit.rules.RuleChain.outerRule;
 
 import io.harness.rule.AuthorRule;
+import io.harness.rule.BypassRule;
 import io.harness.rule.CategoryTimeoutRule;
 import io.harness.rule.RepeatRule;
 import org.junit.Before;
@@ -21,7 +22,12 @@ public class CategoryTest {
 
   private RepeatRule repeatRule = new RepeatRule();
 
-  @Rule public TestRule chain = outerRule(repeatRule).around(outerRule(authorRule).around(new CategoryTimeoutRule()));
+  private BypassRule bypassRule = new BypassRule();
+
+  @Rule
+  public TestRule chain =
+      outerRule(repeatRule)
+          .around(outerRule(authorRule).around(outerRule(bypassRule).around(new CategoryTimeoutRule())));
 
   /**
    * Log test case name.
