@@ -3,8 +3,7 @@ package software.wings.expression;
 import lombok.Builder;
 import software.wings.beans.SweepingOutput;
 import software.wings.service.intfc.SweepingOutputService;
-
-import java.util.Map;
+import software.wings.utils.KryoUtils;
 
 @Builder
 public class SweepingOutputFunctor {
@@ -14,11 +13,11 @@ public class SweepingOutputFunctor {
 
   private SweepingOutputService sweepingOutputService;
 
-  public Map<String, Object> output(String key) {
-    SweepingOutput sweepingOutput = sweepingOutputService.find(appId, pipelineExecutionId, workflowExecutionId);
+  public Object output(String name) {
+    SweepingOutput sweepingOutput = sweepingOutputService.find(appId, name, pipelineExecutionId, workflowExecutionId);
     if (sweepingOutput == null) {
       return null;
     }
-    return sweepingOutput.getVariables();
+    return KryoUtils.asInflatedObject(sweepingOutput.getOutput());
   }
 }
