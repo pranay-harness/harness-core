@@ -38,6 +38,7 @@ import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.SweepingOutput;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
@@ -53,6 +54,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
+import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
@@ -247,19 +249,17 @@ public class JenkinsState extends State {
                                               .activityId(activityId)
                                               .unitName(COMMAND_UNIT_NAME)
                                               .unstableSuccess(unstableSuccess)
+                                              .subTaskType(JenkinsSubTaskType.START_TASK)
+                                              .queuedBuildUrl(null)
                                               .build();
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(getTaskType())
-                                    .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
-                                    .withWaitId(activityId)
-                                    .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-                                    .withParameters(new Object[] {jenkinsTaskParams})
-                                    .withEnvId(envId)
-                                    .withInfrastructureMappingId(infrastructureMappingId)
-                                    .build();
+
+    DelegateTask delegateTask =
+        buildDelegateTask(context, activityId, jenkinsTaskParams, envId, infrastructureMappingId);
 
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
+      jenkinsTaskParams.setTimeout(getTimeoutMillis());
+      jenkinsTaskParams.setStartTs(System.currentTimeMillis());
     }
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
@@ -280,13 +280,121 @@ public class JenkinsState extends State {
     return TaskType.JENKINS;
   }
 
+  private DelegateTask buildDelegateTask(ExecutionContext context, String activityId,
+      JenkinsTaskParams jenkinsTaskParams, String envId, String infrastructureMappingId) {
+    return aDelegateTask()
+        .withTaskType(getTaskType())
+        .withAccountId(((ExecutionContextImpl) context).getApp().getAccountId())
+        .withWaitId(activityId)
+        .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+        .withParameters(new Object[] {jenkinsTaskParams})
+        .withEnvId(envId)
+        .withInfrastructureMappingId(infrastructureMappingId)
+        .build();
+  }
+
+  public ExecutionResponse startJenkinsPollTask(ExecutionContext context, Map<String, NotifyResponseData> response) {
+    JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
+
+    if (isEmpty(jenkinsExecutionResponse.queuedBuildUrl)) {
+      return anExecutionResponse().withAsync(true).withExecutionStatus(ExecutionStatus.FAILED).build();
+    }
+
+    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+    String envId = (workflowStandardParams == null || workflowStandardParams.getEnv() == null)
+        ? null
+        : workflowStandardParams.getEnv().getUuid();
+
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String infrastructureMappingId = phaseElement == null ? null : phaseElement.getInfraMappingId();
+
+    String accountId = ((ExecutionContextImpl) context).getApp().getAccountId();
+    JenkinsConfig jenkinsConfig = (JenkinsConfig) context.getGlobalSettingValue(accountId, jenkinsConfigId);
+    if (jenkinsConfig == null) {
+      logger.warn("JenkinsConfig Id {} does not exist. It might have been deleted", jenkinsConfigId);
+      return anExecutionResponse()
+          .withExecutionStatus(FAILED)
+          .withErrorMessage("Jenkins Server was deleted. Please update with an appropriate server.")
+          .build();
+    }
+
+    JenkinsTaskParams jenkinsTaskParams = JenkinsTaskParams.builder()
+                                              .jenkinsConfig(jenkinsConfig)
+                                              .encryptedDataDetails(secretManager.getEncryptionDetails(
+                                                  jenkinsConfig, context.getAppId(), context.getWorkflowExecutionId()))
+                                              .activityId(jenkinsExecutionResponse.activityId)
+                                              .unitName(COMMAND_UNIT_NAME)
+                                              .unstableSuccess(unstableSuccess)
+                                              .subTaskType(JenkinsSubTaskType.POLL_TASK)
+                                              .queuedBuildUrl(jenkinsExecutionResponse.queuedBuildUrl)
+                                              .build();
+
+    DelegateTask delegateTask = buildDelegateTask(
+        context, jenkinsExecutionResponse.activityId, jenkinsTaskParams, envId, infrastructureMappingId);
+
+    if (getTimeoutMillis() != null) {
+      jenkinsTaskParams.setStartTs(System.currentTimeMillis());
+      // Set remaining time for Poll task plus 2 minutes
+      jenkinsTaskParams.setTimeout(getTimeoutMillis() - jenkinsExecutionResponse.getTimeElapsed() + 120000);
+      delegateTask.setTimeout(getTimeoutMillis());
+    }
+
+    String delegateTaskId = delegateService.queueTask(delegateTask);
+    JenkinsExecutionData jenkinsExecutionData = (JenkinsExecutionData) context.getStateExecutionData();
+    jenkinsExecutionData.setActivityId(jenkinsExecutionResponse.activityId);
+    jenkinsExecutionData.setJobStatus(jenkinsExecutionResponse.getJenkinsResult());
+    jenkinsExecutionData.setBuildUrl(jenkinsExecutionResponse.getJobUrl());
+    jenkinsExecutionData.setBuildNumber(jenkinsExecutionResponse.getBuildNumber());
+    jenkinsExecutionData.setBuildDisplayName(jenkinsExecutionResponse.getBuildDisplayName());
+    jenkinsExecutionData.setBuildFullDisplayName(jenkinsExecutionResponse.getBuildFullDisplayName());
+
+    return anExecutionResponse()
+        .withAsync(true)
+        .withStateExecutionData(jenkinsExecutionData)
+        .withCorrelationIds(Collections.singletonList(jenkinsExecutionResponse.activityId))
+        .withDelegateTaskId(delegateTaskId)
+        .build();
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     String activityId = response.keySet().iterator().next();
-    JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
+
+    JenkinsExecutionResponse jenkinsExecutionResponse;
+    if (response.values().iterator().next() instanceof JenkinsExecutionResponse) {
+      jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
+    } else {
+      // Error scenario, when response is in error
+      StateExecutionData stateExecutionData = context.getStateExecutionData();
+      updateActivityStatus(activityId, ((ExecutionContextImpl) context).getApp().getUuid(), ExecutionStatus.FAILED);
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withStateExecutionData(stateExecutionData)
+          .build();
+    }
+
     updateActivityStatus(
         activityId, ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
     JenkinsExecutionData jenkinsExecutionData = (JenkinsExecutionData) context.getStateExecutionData();
+
+    // Async response for START_TASK received, start POLL_TASK
+    if (isNotEmpty(jenkinsExecutionResponse.getSubTaskType().name())
+        && jenkinsExecutionResponse.getSubTaskType().name().equals(JenkinsSubTaskType.START_TASK.name())) {
+      if (isNotEmpty(jenkinsExecutionResponse.getQueuedBuildUrl())) {
+        // Set time taken for Start Task
+        jenkinsExecutionResponse.setTimeElapsed(System.currentTimeMillis() - jenkinsExecutionData.getStartTs());
+        return startJenkinsPollTask(context, response);
+      } else {
+        // Can not start POLL_TASK
+        logger.error("Jenkins Queued Build URL is empty and could not start POLL_TASK");
+        return anExecutionResponse()
+            .withExecutionStatus(ExecutionStatus.FAILED)
+            .withStateExecutionData(jenkinsExecutionData)
+            .build();
+      }
+    }
+
     jenkinsExecutionData.setFilePathAssertionMap(jenkinsExecutionResponse.getFilePathAssertionMap());
     jenkinsExecutionData.setJobStatus(jenkinsExecutionResponse.getJenkinsResult());
     jenkinsExecutionData.setErrorMsg(jenkinsExecutionResponse.getErrorMessage());
@@ -419,5 +527,9 @@ public class JenkinsState extends State {
     private String description;
     private String buildDisplayName;
     private String buildFullDisplayName;
+    private String queuedBuildUrl;
+    private JenkinsSubTaskType subTaskType;
+    private String activityId;
+    private Long timeElapsed; // time taken for task completion
   }
 }

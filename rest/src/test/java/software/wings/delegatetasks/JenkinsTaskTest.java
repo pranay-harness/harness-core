@@ -26,6 +26,7 @@ import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.WingsBaseTest;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.JenkinsTaskParams;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -81,19 +82,21 @@ public class JenkinsTaskTest extends WingsBaseTest {
   public void shouldExecuteSuccessfullyWhenBuildPasses() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.SUCCESS);
     when(buildWithDetails.getDescription()).thenReturn("test-description");
-    JenkinsTaskParams params = JenkinsTaskParams.builder()
-                                   .jenkinsConfig(jenkinsConfig)
-                                   .encryptedDataDetails(emptyList())
-                                   .jobName(jobName)
-                                   .parameters(parameters)
-                                   .filePathsForAssertion(assertions)
-                                   .activityId(activityId)
-                                   .unitName(stateName)
-                                   .build();
+
+    JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setSubTaskType(JenkinsSubTaskType.START_TASK);
+    params.setQueuedBuildUrl(jenkinsUrl);
+
+    // Invoke Jenkins Start Task
+    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
-    verify(jenkins).getBuild(any(QueueReference.class));
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    // Invoke Jenkins Poll Task
+    params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
+    response = jenkinsTask.run(params);
     assertEquals("jenkins job description didn't come through", "test-description", response.getDescription());
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
   }
@@ -101,53 +104,53 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Test
   public void shouldFailWhenBuildFails() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.FAILURE);
-    JenkinsTaskParams params = JenkinsTaskParams.builder()
-                                   .jenkinsConfig(jenkinsConfig)
-                                   .encryptedDataDetails(emptyList())
-                                   .jobName(jobName)
-                                   .parameters(parameters)
-                                   .filePathsForAssertion(assertions)
-                                   .activityId(activityId)
-                                   .unitName(stateName)
-                                   .build();
+
+    JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setSubTaskType(JenkinsSubTaskType.START_TASK);
+    params.setQueuedBuildUrl(jenkinsUrl);
+
+    // Jenkins Start Task
+    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
-    verify(jenkins).getBuild(any(QueueReference.class));
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    // Jenkins Poll Task
+    params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
+    response = jenkinsTask.run(params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   @Test
   public void shouldFailWhenBuildUnstable() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
-    JenkinsTaskParams params = JenkinsTaskParams.builder()
-                                   .jenkinsConfig(jenkinsConfig)
-                                   .encryptedDataDetails(emptyList())
-                                   .jobName(jobName)
-                                   .parameters(parameters)
-                                   .filePathsForAssertion(assertions)
-                                   .activityId(activityId)
-                                   .unitName(stateName)
-                                   .build();
+
+    JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setSubTaskType(JenkinsSubTaskType.START_TASK);
+    params.setQueuedBuildUrl(jenkinsUrl);
+
+    // Jenkins Start Task
+    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
-    verify(jenkins).getBuild(any(QueueReference.class));
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    // Jenkins Poll Task
+    params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
+    response = jenkinsTask.run(params);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   @Test
   public void shouldFailWhenNoJobFound() throws Exception {
     when(build.details()).thenThrow(new HttpResponseException(404, "Job Not found"));
-    JenkinsTaskParams params = JenkinsTaskParams.builder()
-                                   .jenkinsConfig(jenkinsConfig)
-                                   .encryptedDataDetails(emptyList())
-                                   .jobName(jobName)
-                                   .parameters(parameters)
-                                   .filePathsForAssertion(assertions)
-                                   .activityId(activityId)
-                                   .unitName(stateName)
-                                   .build();
+
+    JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setSubTaskType(JenkinsSubTaskType.START_TASK);
+    params.setQueuedBuildUrl(jenkinsUrl);
+
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
@@ -159,20 +162,35 @@ public class JenkinsTaskTest extends WingsBaseTest {
   @Test
   public void shouldPassWhenBuildUnstableAndUnstableSuccessSet() throws Exception {
     when(buildWithDetails.getResult()).thenReturn(BuildResult.UNSTABLE);
-    JenkinsTaskParams params = JenkinsTaskParams.builder()
-                                   .jenkinsConfig(jenkinsConfig)
-                                   .encryptedDataDetails(emptyList())
-                                   .jobName(jobName)
-                                   .parameters(parameters)
-                                   .filePathsForAssertion(assertions)
-                                   .activityId(activityId)
-                                   .unitName(stateName)
-                                   .unstableSuccess(true)
-                                   .build();
+
+    JenkinsTaskParams params = buildJenkinsTaskParams();
+    params.setSubTaskType(JenkinsSubTaskType.START_TASK);
+    params.setQueuedBuildUrl(jenkinsUrl);
+    params.setUnstableSuccess(true);
+
+    when(jenkins.trigger(jobName, Collections.emptyMap())).thenReturn(new QueueReference(jenkinsUrl));
     JenkinsState.JenkinsExecutionResponse response = jenkinsTask.run(params);
     verify(jenkinsFactory).create(jenkinsUrl, userName, password);
     verify(jenkins).trigger(jobName, Collections.emptyMap());
     verify(jenkins).getBuild(any(QueueReference.class));
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+
+    // Jenkins Poll Task
+    params.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
+    response = jenkinsTask.run(params);
+    assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+  }
+
+  // Helper functions
+  private JenkinsTaskParams buildJenkinsTaskParams() {
+    return JenkinsTaskParams.builder()
+        .jenkinsConfig(jenkinsConfig)
+        .encryptedDataDetails(emptyList())
+        .jobName(jobName)
+        .parameters(parameters)
+        .activityId(activityId)
+        .filePathsForAssertion(assertions)
+        .unitName(stateName)
+        .build();
   }
 }

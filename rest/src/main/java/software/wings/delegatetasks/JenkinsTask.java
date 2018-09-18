@@ -1,10 +1,13 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 import static io.harness.threading.Morpheus.sleep;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
+import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.service.impl.LogServiceImpl.NUM_OF_LOGS_TO_KEEP;
 
 import com.google.inject.Inject;
@@ -19,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JenkinsSubTaskType;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -61,53 +65,124 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   public JenkinsExecutionResponse run(JenkinsTaskParams jenkinsTaskParams) {
     JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
-    try {
-      JenkinsConfig jenkinsConfig = jenkinsTaskParams.getJenkinsConfig();
-      encryptionService.decrypt(jenkinsConfig, jenkinsTaskParams.getEncryptedDataDetails());
-      Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
-      logger.info("In JenkinsTask Triggering Job {}", jenkinsTaskParams.getJobName());
-      QueueReference queueItem = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams.getParameters());
-      logger.info("Triggered Job success and queue item Url part {}",
-          queueItem == null ? null : queueItem.getQueueItemUrlPart());
-      Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
-      jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
-      jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
+    JenkinsConfig jenkinsConfig = jenkinsTaskParams.getJenkinsConfig();
+    encryptionService.decrypt(jenkinsConfig, jenkinsTaskParams.getEncryptedDataDetails());
+    Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
-      BuildWithDetails jenkinsBuildWithDetails =
-          waitForJobExecutionToFinish(jenkinsBuild, jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName());
+    switch (jenkinsTaskParams.getSubTaskType()) {
+      case START_TASK:
+        try {
+          logger.info("In Jenkins Task Triggering Job {}", jenkinsTaskParams.getJobName());
+          logService.save(getAccountId(),
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
+                  LogLevel.INFO, "Triggering Jenkins Job : " + jenkinsTaskParams.getJobName(), RUNNING));
 
-      jenkinsExecutionResponse.setJobUrl(jenkinsBuildWithDetails.getUrl());
+          QueueReference queueItem = jenkins.trigger(jenkinsTaskParams.getJobName(), jenkinsTaskParams.getParameters());
+          logger.info("Triggered Job successfully and queued Build  URL {} ",
+              queueItem == null ? null : queueItem.getQueueItemUrlPart());
 
-      BuildResult buildResult = jenkinsBuildWithDetails.getResult();
-      jenkinsExecutionResponse.setJenkinsResult(buildResult.toString());
-      jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuildWithDetails.getNumber()));
-      jenkinsExecutionResponse.setDescription(jenkinsBuildWithDetails.getDescription());
-      jenkinsExecutionResponse.setBuildDisplayName(jenkinsBuildWithDetails.getDisplayName());
-      jenkinsExecutionResponse.setBuildFullDisplayName(jenkinsBuildWithDetails.getFullDisplayName());
+          // Check if start jenkins is success
+          if (queueItem != null && isNotEmpty(queueItem.getQueueItemUrlPart())) {
+            jenkinsExecutionResponse.setQueuedBuildUrl(queueItem.getQueueItemUrlPart());
 
-      try {
-        jenkinsExecutionResponse.setJobParameters(jenkinsBuildWithDetails.getParameters());
-      } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE
-        // unexpected exception
-        logger.error("Error occurred while retrieving build parameters for build number {}",
-            jenkinsBuildWithDetails.getNumber(), e);
-        jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
-      }
+            logService.save(getAccountId(),
+                constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
+                    LogLevel.INFO,
+                    "Triggered Job successfully and queued Build  URL : " + queueItem.getQueueItemUrlPart()
+                        + " and remaining Time (sec): "
+                        + (jenkinsTaskParams.getTimeout()
+                              - (System.currentTimeMillis() - jenkinsTaskParams.getStartTs()))
+                            / 1000,
+                    RUNNING));
+          } else {
+            executionStatus = ExecutionStatus.FAILED;
+            jenkinsExecutionResponse.setErrorMessage("Error occurred while starting Jenkins task");
+          }
 
-      if (buildResult != BuildResult.SUCCESS
-          && (buildResult != BuildResult.UNSTABLE || !jenkinsTaskParams.isUnstableSuccess())) {
-        executionStatus = ExecutionStatus.FAILED;
-      }
-    } catch (WingsException e) {
-      WingsExceptionMapper.logProcessedMessages(e, DELEGATE, logger);
-      executionStatus = ExecutionStatus.FAILED;
-      jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
-    } catch (Exception e) {
-      logger.error("Error occurred while running Jenkins task", e);
-      executionStatus = ExecutionStatus.FAILED;
-      jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+          Build jenkinsBuild = waitForJobToStartExecution(jenkins, queueItem);
+          jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
+          jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
+        } catch (WingsException e) {
+          WingsExceptionMapper.logProcessedMessages(e, DELEGATE, logger);
+          executionStatus = ExecutionStatus.FAILED;
+          jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+        } catch (Exception e) {
+          logger.error("Error occurred while starting Jenkins task", e);
+          executionStatus = ExecutionStatus.FAILED;
+          jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+        }
+        jenkinsExecutionResponse.setExecutionStatus(executionStatus);
+        jenkinsExecutionResponse.setSubTaskType(JenkinsSubTaskType.START_TASK);
+        jenkinsExecutionResponse.setActivityId(jenkinsTaskParams.getActivityId());
+        return jenkinsExecutionResponse;
+
+      case POLL_TASK:
+        jenkinsExecutionResponse.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
+        try {
+          if (isEmpty(jenkinsTaskParams.getQueuedBuildUrl())) {
+            // Queued build URL is empty, jenkins start failed
+            jenkinsExecutionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+            logger.info("Jenkins job is not started or queued build URL is empty");
+            return jenkinsExecutionResponse;
+          }
+
+          // Get jenkins build from queued URL
+          Build jenkinsBuild = jenkins.getBuild(new QueueReference(jenkinsTaskParams.getQueuedBuildUrl()));
+          jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
+          jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
+
+          logService.save(getAccountId(),
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
+                  LogLevel.INFO,
+                  "Waiting for Jenkins task completion. Remaining time (sec): "
+                      + (jenkinsTaskParams.getTimeout() - (System.currentTimeMillis() - jenkinsTaskParams.getStartTs()))
+                          / 1000,
+                  RUNNING));
+
+          BuildWithDetails jenkinsBuildWithDetails = waitForJobExecutionToFinish(
+              jenkinsBuild, jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName());
+          jenkinsExecutionResponse.setJobUrl(jenkinsBuildWithDetails.getUrl());
+
+          logService.save(getAccountId(),
+              constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
+                  LogLevel.INFO, "Jenkins task execution complete", SUCCESS));
+
+          BuildResult buildResult = jenkinsBuildWithDetails.getResult();
+          jenkinsExecutionResponse.setJenkinsResult(buildResult.toString());
+          jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuildWithDetails.getNumber()));
+          jenkinsExecutionResponse.setDescription(jenkinsBuildWithDetails.getDescription());
+          jenkinsExecutionResponse.setBuildDisplayName(jenkinsBuildWithDetails.getDisplayName());
+          jenkinsExecutionResponse.setBuildFullDisplayName(jenkinsBuildWithDetails.getFullDisplayName());
+
+          try {
+            jenkinsExecutionResponse.setJobParameters(jenkinsBuildWithDetails.getParameters());
+          } catch (Exception e) { // cause buildWithDetails.getParameters() can throw NPE, unexpected exception
+            logger.error("Error occurred while retrieving build parameters for build number {}",
+                jenkinsBuildWithDetails.getNumber(), e);
+            jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+          }
+
+          if (buildResult != BuildResult.SUCCESS
+              && (buildResult != BuildResult.UNSTABLE || !jenkinsTaskParams.isUnstableSuccess())) {
+            executionStatus = ExecutionStatus.FAILED;
+          }
+        } catch (WingsException e) {
+          WingsExceptionMapper.logProcessedMessages(e, DELEGATE, logger);
+          executionStatus = ExecutionStatus.FAILED;
+          jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+        } catch (Exception e) {
+          logger.error("Error occurred while running Jenkins task", e);
+          executionStatus = ExecutionStatus.FAILED;
+          jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
+        }
+        break;
+
+      default:
+        jenkinsExecutionResponse.setExecutionStatus(ExecutionStatus.ERROR);
+        throw new WingsException("Unhandled case for Jenkins Sub task, neither start nor poll sub task.");
     }
+
     jenkinsExecutionResponse.setExecutionStatus(executionStatus);
     return jenkinsExecutionResponse;
   }
@@ -136,6 +211,18 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
     logger.info("Job {} execution completed. Status: {}", jenkinsBuildWithDetails.getNumber(),
         jenkinsBuildWithDetails.getResult());
     return jenkinsBuildWithDetails;
+  }
+
+  private Log constructLog(String activityId, String stateName, String appId, LogLevel logLevel, String logLine,
+      CommandExecutionStatus commandExecutionStatus) {
+    return aLog()
+        .withActivityId(activityId)
+        .withCommandUnitName(stateName)
+        .withAppId(appId)
+        .withLogLevel(logLevel)
+        .withLogLine(logLine)
+        .withExecutionResult(commandExecutionStatus)
+        .build();
   }
 
   private void saveConsoleLogs(BuildWithDetails jenkinsBuildWithDetails, AtomicInteger consoleLogsAlreadySent,
