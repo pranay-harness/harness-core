@@ -4,7 +4,9 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
+import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_AUTOSCALING_GROUP;
+import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_ECS_EC2;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 
 import com.google.common.collect.ImmutableMap;
@@ -75,5 +77,22 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
     awsInfrastructureMapping.applyProvisionerVariables(map, AWS_AUTOSCALING_GROUP);
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter()).isNull();
     assertThat(awsInfrastructureMapping.isProvisionInstances()).isTrue();
+  }
+
+  @Test
+  public void testEcs() {
+    Map<String, Object> map = new HashMap<>();
+    map.put("region", "dummy-region");
+    map.put("ecsCluster", "my-cluster");
+    EcsInfrastructureMapping ecsInfrastructureMapping = anEcsInfrastructureMapping().build();
+    ecsInfrastructureMapping.applyProvisionerVariables(map, AWS_ECS_EC2);
+    assertThat(ecsInfrastructureMapping.getLaunchType()).isEqualTo("EC2");
+    assertThat(ecsInfrastructureMapping.getRegion()).isEqualTo("dummy-region");
+    assertThat(ecsInfrastructureMapping.getClusterName()).isEqualTo("my-cluster");
+
+    final Map<String, Object> map2 = new HashMap<>();
+    final EcsInfrastructureMapping ecsInfrastructureMapping1 = anEcsInfrastructureMapping().build();
+    assertThatThrownBy(() -> ecsInfrastructureMapping1.applyProvisionerVariables(map2, AWS_ECS_EC2))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }

@@ -89,9 +89,7 @@ public class CloudFormationCommandTaskHandlerTest extends WingsBaseTest {
         new CreateStackRequest().withStackName("HarnessStack-" + stackNameSuffix).withTemplateBody(templateBody);
     String stackId = "Stack Id 00";
     CreateStackResult createStackResult = new CreateStackResult().withStackId(stackId);
-    doReturn(createStackResult)
-        .when(mockAwsHelperService)
-        .createStack(anyString(), anyString(), any(), eq(createStackRequest));
+    doReturn(createStackResult).when(mockAwsHelperService).createStack(anyString(), anyString(), any(), any());
     List<Stack> createProgressList = Collections.singletonList(new Stack().withStackStatus("CREATE_IN_PROGRESS"));
     List<Stack> createCompleteList =
         Collections.singletonList(new Stack()
