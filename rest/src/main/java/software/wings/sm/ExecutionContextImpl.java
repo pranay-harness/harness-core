@@ -487,7 +487,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
           workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid());
     }
 
-    context.put("ec", sweepingOutputFunctorBuilder.build());
+    context.put("context", sweepingOutputFunctorBuilder.build());
 
     return context;
   }
