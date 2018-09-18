@@ -8,6 +8,9 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
@@ -15,6 +18,7 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -52,6 +56,20 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Clock clock;
   @Inject private Injector injector;
+
+  private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>>
+      delegateConnectionResultCache =
+          CacheBuilder.newBuilder()
+              .maximumSize(10000)
+              .expireAfterWrite(1, TimeUnit.MINUTES)
+              .build(new CacheLoader<ImmutablePair<String, String>, Optional<DelegateConnectionResult>>() {
+                public Optional<DelegateConnectionResult> load(ImmutablePair<String, String> key) {
+                  return Optional.ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                                 .filter("delegateId", key.getLeft())
+                                                 .filter("criteria", key.getRight())
+                                                 .get());
+                }
+              });
 
   @Override
   public boolean canAssign(String delegateId, DelegateTask task) {
@@ -126,14 +144,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     try {
       for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
-          DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                                .filter("accountId", task.getAccountId())
-                                                .filter("delegateId", delegateId)
-                                                .filter("criteria", criteria)
-                                                .field("lastUpdatedAt")
-                                                .greaterThan(clock.millis() - WHITELIST_TTL)
-                                                .get();
-          if (result != null && result.isValidated()) {
+          Optional<DelegateConnectionResult> result =
+              delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
+          if (result.isPresent() && result.get().getLastUpdatedAt() > clock.millis() - WHITELIST_TTL
+              && result.get().isValidated()) {
             return true;
           }
         }
@@ -149,12 +163,10 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     try {
       for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
-          DelegateConnectionResult result = wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                                .filter("accountId", task.getAccountId())
-                                                .filter("delegateId", delegateId)
-                                                .filter("criteria", criteria)
-                                                .get();
-          if (result == null || result.isValidated() || clock.millis() - result.getLastUpdatedAt() > BLACKLIST_TTL
+          Optional<DelegateConnectionResult> result =
+              delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
+          if (!result.isPresent() || result.get().isValidated()
+              || clock.millis() - result.get().getLastUpdatedAt() > BLACKLIST_TTL
               || isEmpty(connectedWhitelistedDelegates(task))) {
             return true;
           }
@@ -184,17 +196,13 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
       for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
-          delegateIds.addAll(wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                 .filter("accountId", task.getAccountId())
-                                 .filter("criteria", criteria)
-                                 .filter("validated", true)
-                                 .field("delegateId")
-                                 .in(connectedEligibleDelegates)
-                                 .project("delegateId", true)
-                                 .asList()
-                                 .stream()
-                                 .map(DelegateConnectionResult::getDelegateId)
-                                 .collect(toList()));
+          for (String delegateId : connectedEligibleDelegates) {
+            Optional<DelegateConnectionResult> result =
+                delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
+            if (result.isPresent() && result.get().isValidated()) {
+              delegateIds.add(delegateId);
+            }
+          }
         }
       }
     } catch (Exception e) {
