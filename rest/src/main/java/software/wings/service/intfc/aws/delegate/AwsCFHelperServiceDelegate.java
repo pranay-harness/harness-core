@@ -10,4 +10,5 @@ public interface AwsCFHelperServiceDelegate {
   String getStackBody(AwsConfig awsConfig, String region, String stackId);
   List<AwsCFTemplateParamsData> getParamsData(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String data, String type);
+  List<String> getCapabilities(AwsConfig awsConfig, String region, String data, String type);
 }

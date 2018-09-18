@@ -80,4 +80,23 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
     }
     return "";
   }
+
+  @Override
+  public List<String> getCapabilities(AwsConfig awsConfig, String region, String data, String type) {
+    try {
+      AmazonCloudFormationClient client =
+          getAmazonCloudFormationClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      GetTemplateSummaryRequest request = new GetTemplateSummaryRequest();
+      if ("s3".equalsIgnoreCase(type)) {
+        request.withTemplateURL(data);
+      } else {
+        request.withTemplateBody(data);
+      }
+      GetTemplateSummaryResult result = client.getTemplateSummary(request);
+      return result.getCapabilities();
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+    return emptyList();
+  }
 }

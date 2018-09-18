@@ -60,4 +60,17 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
     String body = awsCFHelperServiceDelegate.getStackBody(AwsConfig.builder().build(), "us-east-1", "stackId");
     assertThat(body).isEqualTo("body");
   }
+
+  @Test
+  public void testGetCapabilities() {
+    AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
+    doReturn(mockClient).when(awsCFHelperServiceDelegate).getAmazonCloudFormationClient(any(), anyString(), any());
+    doReturn(new GetTemplateSummaryResult().withCapabilities("c1", "c2")).when(mockClient).getTemplateSummary(any());
+    List<String> capabilities =
+        awsCFHelperServiceDelegate.getCapabilities(AwsConfig.builder().build(), "us-east-1", "foo", "body");
+    assertThat(capabilities).isNotNull();
+    assertThat(capabilities.size()).isEqualTo(2);
+    assertThat(capabilities.get(0)).isEqualTo("c1");
+    assertThat(capabilities.get(1)).isEqualTo("c2");
+  }
 }

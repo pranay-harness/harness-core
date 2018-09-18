@@ -75,12 +75,16 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY: {
           executionLogCallback.saveExecutionLog("# Using Template Body to Update Stack");
           updateStackRequest.withTemplateBody(updateRequest.getData());
+          setCapabilitiesOnRequest(updateRequest.getAwsConfig(), updateRequest.getRegion(), updateRequest.getData(),
+              "body", updateStackRequest);
           updateStackAndWaitWithEvents(updateRequest, updateStackRequest, builder, stack);
           break;
         }
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL: {
           executionLogCallback.saveExecutionLog("# Using Template Url to Update Stack");
           updateStackRequest.withTemplateURL(updateRequest.getData());
+          setCapabilitiesOnRequest(updateRequest.getAwsConfig(), updateRequest.getRegion(), updateRequest.getData(),
+              "s3", updateStackRequest);
           updateStackAndWaitWithEvents(updateRequest, updateStackRequest, builder, stack);
           break;
         }
@@ -117,12 +121,16 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY: {
           executionLogCallback.saveExecutionLog("# Using Template Body to create Stack");
           createStackRequest.withTemplateBody(createRequest.getData());
+          setCapabilitiesOnRequest(createRequest.getAwsConfig(), createRequest.getRegion(), createRequest.getData(),
+              "body", createStackRequest);
           createStackAndWaitWithEvents(createRequest, createStackRequest, builder);
           break;
         }
         case CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_URL: {
           executionLogCallback.saveExecutionLog("# Using Template URL to create Stack");
           createStackRequest.withTemplateURL(createRequest.getData());
+          setCapabilitiesOnRequest(createRequest.getAwsConfig(), createRequest.getRegion(), createRequest.getData(),
+              "s3", createStackRequest);
           createStackAndWaitWithEvents(createRequest, createStackRequest, builder);
           break;
         }
@@ -314,5 +322,17 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
     builder.commandExecutionStatus(CommandExecutionStatus.SUCCESS).commandResponse(createBuilder.build());
     executionLogCallback.saveExecutionLog("# Waiting 30 seconds for instances to come up");
     sleep(ofSeconds(30));
+  }
+
+  private void setCapabilitiesOnRequest(
+      AwsConfig awsConfig, String region, String data, String type, CreateStackRequest stackRequest) {
+    List<String> capabilities = awsCFHelperServiceDelegate.getCapabilities(awsConfig, region, data, type);
+    stackRequest.withCapabilities(capabilities);
+  }
+
+  private void setCapabilitiesOnRequest(
+      AwsConfig awsConfig, String region, String data, String type, UpdateStackRequest stackRequest) {
+    List<String> capabilities = awsCFHelperServiceDelegate.getCapabilities(awsConfig, region, data, type);
+    stackRequest.withCapabilities(capabilities);
   }
 }

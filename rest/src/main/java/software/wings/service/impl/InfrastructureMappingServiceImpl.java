@@ -575,6 +575,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validateEcsInfraMapping(EcsInfrastructureMapping infraMapping) {
+    if (isNotEmpty(infraMapping.getProvisionerId())) {
+      return;
+    }
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();

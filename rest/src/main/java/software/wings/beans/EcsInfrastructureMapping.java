@@ -7,6 +7,8 @@ import com.amazonaws.services.ecs.model.LaunchType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,6 +20,7 @@ import software.wings.utils.Util;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
@@ -53,8 +56,52 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
     super(InfrastructureMappingType.AWS_ECS.name());
   }
 
+  private void applyEcsEc2Variables(Map<String, Object> map) {
+    setLaunchType("EC2");
+    try {
+      for (Entry<String, Object> entry : map.entrySet()) {
+        switch (entry.getKey()) {
+          case "region": {
+            setRegion((String) entry.getValue());
+            break;
+          }
+          case "ecsCluster": {
+            setClusterName((String) entry.getValue());
+            break;
+          }
+          default: {
+            throw new InvalidRequestException(
+                format("Unsupported infrastructure mapping provisioner variable %s", entry.getKey()));
+          }
+        }
+      }
+    } catch (WingsException exception) {
+      throw exception;
+    } catch (RuntimeException exception) {
+      throw new InvalidRequestException("Unable to set the provisioner variables to the mapping", exception);
+    }
+
+    if (getRegion() == null) {
+      throw new InvalidRequestException("Region is required.");
+    }
+    if (getClusterName() == null) {
+      throw new InvalidRequestException("ECS cluster name is required.");
+    }
+  }
+
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
+  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {
+    switch (nodeFilteringType) {
+      case AWS_ECS_EC2: {
+        applyEcsEc2Variables(map);
+        break;
+      }
+      default: {
+        // Should never happen
+        throw new InvalidRequestException(format("Unidentified: [%s] node filtering type", nodeFilteringType.name()));
+      }
+    }
+  }
 
   @SchemaIgnore
   @Override
