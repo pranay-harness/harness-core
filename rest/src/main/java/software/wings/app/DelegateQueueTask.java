@@ -160,10 +160,12 @@ public class DelegateQueueTask implements Runnable {
                        > Math.pow(2, delegateTask.getBroadcastCount()) * REBROADCAST_FACTOR)) {
           logger.info("Re-broadcast queued task [{}]", delegateTask.getUuid());
 
+          delegateTask.setPreAssignedDelegateId(null);
           broadcasterFactory.lookup("/stream/delegate/" + delegateTask.getAccountId(), true).broadcast(delegateTask);
 
           wingsPersistence.update(delegateTask,
               wingsPersistence.createUpdateOperations(DelegateTask.class)
+                  .unset("preAssignedDelegateId")
                   .set("lastBroadcastAt", now)
                   .set("broadcastCount", delegateTask.getBroadcastCount() + 1));
         }

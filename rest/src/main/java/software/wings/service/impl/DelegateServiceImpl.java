@@ -894,6 +894,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   public String queueTask(DelegateTask task) {
     task.setAsync(true);
     task.setVersion(getVersion());
+    task.setPreAssignedDelegateId(assignDelegateService.pickFirstAttemptDelegate(task));
     DelegateTask delegateTask = wingsPersistence.saveAndGet(DelegateTask.class, task);
     logger.info("Queueing async task uuid: {}, accountId: {}, type: {}", delegateTask.getUuid(),
         delegateTask.getAccountId(), delegateTask.getTaskType());

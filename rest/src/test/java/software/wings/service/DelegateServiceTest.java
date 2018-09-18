@@ -246,6 +246,24 @@ public class DelegateServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldSaveDelegateTaskWithPreAssignedDelegateId() {
+    when(assignDelegateService.pickFirstAttemptDelegate(any(DelegateTask.class))).thenReturn(DELEGATE_ID);
+
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(generateUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
+                                    .build();
+    delegateService.queueTask(delegateTask);
+    DelegateTask delegateTask1 = wingsPersistence.get(
+        DelegateTask.class, aPageRequest().addFilter(DelegateTask.APP_ID_KEY, Operator.EQ, APP_ID).build());
+    assertThat(delegateTask1.getPreAssignedDelegateId()).isEqualTo(DELEGATE_ID);
+  }
+
+  @Test
   public void shouldProcessDelegateTaskResponse() {
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(ACCOUNT_ID)
