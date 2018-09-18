@@ -346,7 +346,7 @@ public class MessageServiceImpl implements MessageService {
       File file = getDataFile(name);
       try {
         if (acquireLock(file)) {
-          Map<String, Object> data = getDataMap(file);
+          Map<String, Object> data = getData(file);
           data.putAll(dataToWrite);
           if (file.exists()) {
             FileUtils.forceDelete(file);
@@ -361,9 +361,23 @@ public class MessageServiceImpl implements MessageService {
           logger.error("Failed to release lock {}", file.getPath());
         }
       }
-    } catch (IOException e) {
-      logger.error("Error writing data to {}. Couldn't store {}", name, dataToWrite);
+    } catch (UncheckedTimeoutException e) {
+      logger.error("Timed out writing data to {}. Couldn't store {}", name, dataToWrite);
+    } catch (Exception e) {
+      logger.error("Error while writing data to {}. Couldn't store {}", name, dataToWrite, e);
     }
+  }
+
+  private Map<String, Object> getData(File file) throws Exception {
+    return timeLimiter.callWithTimeout(() -> {
+      while (true) {
+        Map<String, Object> map = getDataMap(file);
+        if (map != null) {
+          return map;
+        }
+        Thread.sleep(200L);
+      }
+    }, 2L, TimeUnit.SECONDS, true);
   }
 
   @Override
@@ -389,11 +403,24 @@ public class MessageServiceImpl implements MessageService {
   @Override
   public Map<String, Object> getAllData(String name) {
     try {
-      return getDataMap(getDataFile(name));
+      File file = getDataFile(name);
+      try {
+        if (acquireLock(file)) {
+          return getData(file);
+        } else {
+          logger.error("Failed to acquire lock {}", file.getPath());
+        }
+      } finally {
+        if (!releaseLock(file)) {
+          logger.error("Failed to release lock {}", file.getPath());
+        }
+      }
+    } catch (UncheckedTimeoutException e) {
+      logger.error("Timed out reading data from {}", name);
     } catch (Exception e) {
-      logger.error("Error reading data from {}", name);
-      return null;
+      logger.error("Error reading data from {}", name, e);
     }
+    return null;
   }
 
   @Override
@@ -422,7 +449,7 @@ public class MessageServiceImpl implements MessageService {
       File file = getDataFile(name);
       try {
         if (acquireLock(file)) {
-          Map data = getDataMap(file);
+          Map<String, Object> data = getData(file);
           data.remove(key);
           if (file.exists()) {
             FileUtils.forceDelete(file);
@@ -437,8 +464,10 @@ public class MessageServiceImpl implements MessageService {
           logger.error("Failed to release lock {}", file.getPath());
         }
       }
-    } catch (IOException e) {
-      logger.error("Error removing data from {}. Couldn't remove {}", name, key);
+    } catch (UncheckedTimeoutException e) {
+      logger.error("Timed out removing data from {}. Couldn't remove {}", name, key);
+    } catch (Exception e) {
+      logger.error("Error removing data from {}. Couldn't remove {}", name, key, e);
     }
   }
 
@@ -488,7 +517,8 @@ public class MessageServiceImpl implements MessageService {
       try {
         return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), HashMap.class);
       } catch (Exception e) {
-        logger.error(format("Couldn't read map from %s. Returning empty data map", file.getName()), e);
+        logger.error(format("Couldn't read map from %s.", file.getName()), e);
+        return null;
       }
     }
     return new HashMap<>();

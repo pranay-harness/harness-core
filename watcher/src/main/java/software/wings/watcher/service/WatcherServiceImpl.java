@@ -61,6 +61,8 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
@@ -320,7 +322,10 @@ public class WatcherServiceImpl implements WatcherService {
 
           for (String delegateProcess : runningDelegates) {
             Map<String, Object> delegateData = messageService.getAllData(DELEGATE_DASH + delegateProcess);
-            if (isEmpty(delegateData)) {
+            if (delegateData == null) {
+              continue;
+            }
+            if (delegateData.isEmpty()) {
               if (clock.millis() - startTime > WATCHER_STARTUP_GRACE) {
                 obsolete.add(delegateProcess);
               }
@@ -510,7 +515,7 @@ public class WatcherServiceImpl implements WatcherService {
     } catch (Exception e) {
       logger.warn("Unable to fetch delegate version information", e);
     }
-    return emptyList();
+    throw new WingsException(ErrorCode.GENERAL_ERROR, "Couldn't get delegate versions.");
   }
 
   private Integer getMinorVersion(String delegateVersion) {
