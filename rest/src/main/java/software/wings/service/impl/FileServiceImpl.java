@@ -27,7 +27,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
-import software.wings.dl.FileBucketHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 import software.wings.utils.BoundedInputStream;
@@ -51,7 +50,6 @@ import javax.validation.executable.ValidateOnExecution;
 public class FileServiceImpl implements FileService {
   private static final Logger logger = LoggerFactory.getLogger(FileServiceImpl.class);
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private FileBucketHelper fileBucketHelper;
 
   /**
    * {@inheritDoc}
@@ -60,7 +58,8 @@ public class FileServiceImpl implements FileService {
   public File download(String fileId, File file, FileBucket fileBucket) {
     try {
       FileOutputStream streamToDownload = new FileOutputStream(file);
-      fileBucketHelper.getOrCreateFileBucket(fileBucket).downloadToStream(new ObjectId(fileId), streamToDownload);
+      wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName())
+          .downloadToStream(new ObjectId(fileId), streamToDownload);
       streamToDownload.close();
       return file;
     } catch (IOException ex) {
@@ -74,12 +73,14 @@ public class FileServiceImpl implements FileService {
    */
   @Override
   public void downloadToStream(String fileId, OutputStream outputStream, FileBucket fileBucket) {
-    fileBucketHelper.getOrCreateFileBucket(fileBucket).downloadToStream(new ObjectId(fileId), outputStream);
+    wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName())
+        .downloadToStream(new ObjectId(fileId), outputStream);
   }
 
   @Override
   public InputStream openDownloadStream(String fileId, FileBucket fileBucket) {
-    return fileBucketHelper.getOrCreateFileBucket(fileBucket).openDownloadStream(new ObjectId(fileId));
+    return wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName())
+        .openDownloadStream(new ObjectId(fileId));
   }
 
   /**
@@ -87,8 +88,8 @@ public class FileServiceImpl implements FileService {
    */
   @Override
   public GridFSFile getGridFsFile(String fileId, FileBucket fileBucket) {
-    GridFSFindIterable filemetaData =
-        fileBucketHelper.getOrCreateFileBucket(fileBucket).find(Filters.eq("_id", new ObjectId(fileId)));
+    GridFSFindIterable filemetaData = wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName())
+                                          .find(Filters.eq("_id", new ObjectId(fileId)));
     return filemetaData.first();
   }
 
@@ -97,8 +98,8 @@ public class FileServiceImpl implements FileService {
    */
   @Override
   public List<String> getAllFileIds(String entityId, FileBucket fileBucket) {
-    GridFSFindIterable filemetaData =
-        fileBucketHelper.getOrCreateFileBucket(fileBucket).find(Filters.eq("metadata.entityId", entityId));
+    GridFSFindIterable filemetaData = wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName())
+                                          .find(Filters.eq("metadata.entityId", entityId));
     return stream(filemetaData.sort(descending("uploadDate")).spliterator(), false)
         .map(gridFSFile -> gridFSFile.getObjectId().toHexString())
         .collect(toList());
@@ -106,7 +107,7 @@ public class FileServiceImpl implements FileService {
 
   @Override
   public String getLatestFileId(String entityId, FileBucket fileBucket) {
-    final GridFSFile first = fileBucketHelper.getOrCreateFileBucket(fileBucket)
+    final GridFSFile first = wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName())
                                  .find(Filters.and(Filters.eq("metadata.entityId", entityId)))
                                  .sort(orderBy(descending("uploadDate")))
                                  .limit(1)
@@ -120,7 +121,7 @@ public class FileServiceImpl implements FileService {
   @Override
   public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
     final GridFSFile first =
-        fileBucketHelper.getOrCreateFileBucket(fileBucket)
+        wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName())
             .find(Filters.and(Filters.eq("metadata.entityId", entityId), Filters.eq("metadata.version", version)))
             .limit(1)
             .first();
@@ -138,7 +139,8 @@ public class FileServiceImpl implements FileService {
       String filename, BoundedInputStream in, FileBucket bucket, Map<String, Object> metaData) {
     GridFSUploadOptions gridFSOptions =
         new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize()).metadata(new Document(metaData));
-    ObjectId fileId = fileBucketHelper.getOrCreateFileBucket(bucket).uploadFromStream(filename, in, gridFSOptions);
+    ObjectId fileId = wingsPersistence.getOrCreateGridFSBucket(bucket.representationName())
+                          .uploadFromStream(filename, in, gridFSOptions);
     return fileId.toHexString();
   }
 
@@ -179,8 +181,8 @@ public class FileServiceImpl implements FileService {
     GridFSUploadOptions options =
         new GridFSUploadOptions().chunkSizeBytes(fileBucket.getChunkSize()).metadata(metadata);
 
-    ObjectId fileId =
-        fileBucketHelper.getOrCreateFileBucket(fileBucket).uploadFromStream(fileMetadata.getFileName(), in, options);
+    ObjectId fileId = wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName())
+                          .uploadFromStream(fileMetadata.getFileName(), in, options);
     logger.info("Saved file {}. Returning fileId {}", fileMetadata.getFileName(), fileId.toHexString());
     return fileId.toHexString();
   }
@@ -226,7 +228,7 @@ public class FileServiceImpl implements FileService {
   @Override
   public String saveFile(BaseFile baseFile, InputStream inputStream, FileBucket bucket) {
     GridFSUploadOptions gridFSOptions = new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize());
-    String fileId = fileBucketHelper.getOrCreateFileBucket(bucket)
+    String fileId = wingsPersistence.getOrCreateGridFSBucket(bucket.representationName())
                         .uploadFromStream(baseFile.getFileName(), inputStream, gridFSOptions)
                         .toHexString();
     GridFSFile gridFsFile = getGridFsFile(fileId, bucket);
@@ -242,13 +244,13 @@ public class FileServiceImpl implements FileService {
   @Override
   public void deleteFile(String fileId, FileBucket fileBucket) {
     logger.info("Deleting file {}", fileId);
-    fileBucketHelper.getOrCreateFileBucket(fileBucket).delete(new ObjectId(fileId));
+    wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName()).delete(new ObjectId(fileId));
     logger.info("Deleting file {} success", fileId);
   }
 
   @Override
   public void deleteAllFilesForEntity(String entityId, FileBucket fileBucket) {
-    final GridFSBucket bucket = fileBucketHelper.getOrCreateFileBucket(fileBucket);
+    final GridFSBucket bucket = wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName());
     getAllFileIds(entityId, fileBucket).forEach(fileUuid -> bucket.delete(new ObjectId(fileUuid)));
   }
 
