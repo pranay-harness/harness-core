@@ -551,3 +551,4 @@ software.wings.beans.LicenseInfo, 5511
 software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData, 5512
 software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse, 5513
 software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse$DynaTraceMetricDataResult, 5514
+software.wings.beans.JenkinsSubTaskType, 5515
