@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static software.wings.dl.MongoHelper.setUnset;
+import static io.harness.mongo.MongoUtils.setUnset;
 
 import com.google.inject.Inject;
 

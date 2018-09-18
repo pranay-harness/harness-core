@@ -1,4 +1,4 @@
-package software.wings.dl;
+package io.harness.mongo;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.EXISTS;
@@ -10,7 +10,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
-import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import com.google.common.base.Preconditions;
 
@@ -29,18 +28,14 @@ import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Criteria;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * The Class MongoHelper.
- */
-public class MongoHelper {
-  private static final Logger logger = LoggerFactory.getLogger(MongoHelper.class);
+public class PageController {
+  private static final Logger logger = LoggerFactory.getLogger(PageController.class);
 
   /**
    * Query page request.
@@ -52,9 +47,10 @@ public class MongoHelper {
    * @param req    the req
    * @return the page response
    */
+  @SuppressWarnings("deprecation")
   public static <T> PageResponse<T> queryPageRequest(
       Datastore datastore, Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req) {
-    q = MongoHelper.applyPageRequest(datastore, q, req, cls, mapper);
+    q = applyPageRequest(datastore, q, req, cls, mapper);
 
     PageResponse<T> response = new PageResponse<>(req);
 
@@ -72,27 +68,12 @@ public class MongoHelper {
         // to query for it.
         response.setTotal((list.size() < limit) ? (long) req.getStart() + list.size() : q.count());
       }
-    } else if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
+    }
+    if (req.getOptions() == null || req.getOptions().contains(PageRequest.Option.COUNT)) {
       response.setTotal(q.count());
     }
 
     return response;
-  }
-
-  /**
-   * Get count.
-   *
-   * @param <T>    the generic type
-   * @param q      the q
-   * @param mapper the mapper
-   * @param cls    the cls
-   * @param req    the req
-   * @return the page response
-   */
-  public static <T> long getCount(Datastore datastore, Query<T> q, Mapper mapper, Class<T> cls, PageRequest<T> req) {
-    q = MongoHelper.applyPageRequest(datastore, q, req, cls, mapper);
-
-    return q.count();
   }
 
   /**
@@ -105,6 +86,7 @@ public class MongoHelper {
    * @param mapper the mapper
    * @return the query
    */
+  @SuppressWarnings("deprecation")
   public static <T> Query<T> applyPageRequest(
       Datastore datastore, Query<T> query, PageRequest<T> req, Class<T> cls, Mapper mapper) {
     if (req == null) {
@@ -188,20 +170,6 @@ public class MongoHelper {
     return query;
   }
 
-  private static void assertNone(Object[] values) {
-    if (isNotEmpty(values)) {
-      logger.error(
-          "Unexpected number of arguments {} in expression when none are expected", values.length, new Exception(""));
-    }
-  }
-
-  private static void assertOne(Object[] values) {
-    int length = values == null ? 0 : values.length;
-    if (length != 1) {
-      logger.error("Unexpected number of arguments {} in expression when 1 is expected", length, new Exception(""));
-    }
-  }
-
   private static <T> T applyOperator(FieldEnd<T> fieldEnd, SearchFilter filter) {
     if (!(filter.getOp() == EXISTS || filter.getOp() == NOT_EXISTS) && isEmpty(filter.getFieldValues())) {
       throw new InvalidRequestException("Unspecified fieldValue for search");
@@ -262,20 +230,17 @@ public class MongoHelper {
     return null;
   }
 
-  /**
-   * Sets the unset.
-   *
-   * @param <T>   the generic type
-   * @param ops   the ops
-   * @param field the field
-   * @param value the value
-   * @return the update operations
-   */
-  public static <T> UpdateOperations<T> setUnset(UpdateOperations<T> ops, String field, Object value) {
-    if (value == null || (value instanceof String && isBlank((String) value))) {
-      return ops.unset(field);
-    } else {
-      return ops.set(field, value);
+  private static void assertNone(Object[] values) {
+    if (isNotEmpty(values)) {
+      logger.error(
+          "Unexpected number of arguments {} in expression when none are expected", values.length, new Exception(""));
+    }
+  }
+
+  private static void assertOne(Object[] values) {
+    int length = values == null ? 0 : values.length;
+    if (length != 1) {
+      logger.error("Unexpected number of arguments {} in expression when 1 is expected", length, new Exception(""));
     }
   }
 }

@@ -4,9 +4,9 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.mongo.MongoUtils.setUnset;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.security.access.WhitelistStatus.ACTIVE;
-import static software.wings.dl.MongoHelper.setUnset;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
