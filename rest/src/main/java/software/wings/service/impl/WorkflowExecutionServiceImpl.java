@@ -2249,39 +2249,39 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PhaseStepExecutionSummary phaseStepExecutionSummary = new PhaseStepExecutionSummary();
     List<StepExecutionSummary> stepExecutionSummaryList = phaseStepExecutionSummary.getStepExecutionSummaryList();
 
-    List<String> parentInstanceIds = asList(stateExecutionInstanceId);
+    List<String> parentInstanceIds = new ArrayList<>();
+    parentInstanceIds.add(stateExecutionInstanceId);
+
     while (isNotEmpty(parentInstanceIds)) {
-      List<StateExecutionInstance> allStateExecutionInstances =
-          wingsPersistence.createQuery(StateExecutionInstance.class)
-              .filter(StateExecutionInstance.APP_ID_KEY, appId)
-              .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
-              .field(StateExecutionInstance.PARENT_INSTANCE_ID_KEY)
-              .in(parentInstanceIds)
-              .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
-              .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
-              .project(StateExecutionInstance.ID_KEY, true)
-              .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
-              .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
-              .project(StateExecutionInstance.STATE_TYPE_KEY, true)
-              .project(StateExecutionInstance.STATUS_KEY, true)
-              .asList();
+      try (HIterator<StateExecutionInstance> iterator = new HIterator<StateExecutionInstance>(
+               wingsPersistence.createQuery(StateExecutionInstance.class)
+                   .filter(StateExecutionInstance.APP_ID_KEY, appId)
+                   .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
+                   .field(StateExecutionInstance.PARENT_INSTANCE_ID_KEY)
+                   .in(parentInstanceIds)
+                   .project(StateExecutionInstance.CONTEXT_ELEMENT_KEY, true)
+                   .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
+                   .project(StateExecutionInstance.ID_KEY, true)
+                   .project(StateExecutionInstance.PARENT_INSTANCE_ID_KEY, true)
+                   .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
+                   .project(StateExecutionInstance.STATE_TYPE_KEY, true)
+                   .project(StateExecutionInstance.STATUS_KEY, true)
+                   .fetch())) {
+        if (!iterator.hasNext()) {
+          return null;
+        }
 
-      if (isEmpty(allStateExecutionInstances)) {
-        return null;
+        parentInstanceIds.clear();
+        while (iterator.hasNext()) {
+          StateExecutionInstance instance = iterator.next();
+          if (StateType.REPEAT.name().equals(instance.getStateType())
+              || StateType.FORK.name().equals(instance.getStateType())) {
+            parentInstanceIds.add(instance.getUuid());
+          } else {
+            stepExecutionSummaryList.add(instance.getStateExecutionData().getStepExecutionSummary());
+          }
+        }
       }
-
-      allStateExecutionInstances.stream()
-          .filter(instance -> !StateType.REPEAT.name().equals(instance.getStateType()))
-          .filter(instance -> !StateType.FORK.name().equals(instance.getStateType()))
-          .forEach(
-              instance -> stepExecutionSummaryList.add(instance.getStateExecutionData().getStepExecutionSummary()));
-
-      parentInstanceIds = allStateExecutionInstances.stream()
-                              .filter(instance
-                                  -> StateType.REPEAT.name().equals(instance.getStateType())
-                                      || StateType.FORK.name().equals(instance.getStateType()))
-                              .map(StateExecutionInstance::getUuid)
-                              .collect(toList());
     }
 
     return phaseStepExecutionSummary;
