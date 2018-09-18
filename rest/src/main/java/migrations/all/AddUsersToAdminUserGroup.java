@@ -1,14 +1,16 @@
 package migrations.all;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.FeatureName.RBAC;
 import static software.wings.common.Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
-import static software.wings.dl.PageRequest.UNLIMITED;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import migrations.Migration;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
@@ -16,8 +18,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserGroupService;

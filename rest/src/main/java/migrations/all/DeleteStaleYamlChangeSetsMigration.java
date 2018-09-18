@@ -1,6 +1,6 @@
 package migrations.all;
 
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.COMPLETED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.FAILED;
 import static software.wings.yaml.gitSync.YamlChangeSet.Status.SKIPPED;

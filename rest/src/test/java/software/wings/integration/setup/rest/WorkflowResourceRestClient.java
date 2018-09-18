@@ -19,6 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageResponse;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -29,7 +30,6 @@ import software.wings.beans.Service;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
-import software.wings.dl.PageResponse;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.sm.StateType;
 

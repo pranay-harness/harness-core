@@ -1,19 +1,19 @@
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
 import software.wings.beans.RestResponse;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;

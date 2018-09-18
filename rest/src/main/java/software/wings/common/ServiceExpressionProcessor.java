@@ -4,19 +4,19 @@
 
 package software.wings.common;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import software.wings.api.ServiceElement;
-import software.wings.beans.SearchFilter.Operator;
 import software.wings.beans.Service;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.PageRequestBuilder;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;

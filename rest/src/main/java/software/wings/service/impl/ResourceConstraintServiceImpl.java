@@ -12,6 +12,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.Constraint.Spec;
 import io.harness.distribution.constraint.ConstraintId;
@@ -41,8 +43,6 @@ import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.ResourceConstraintUsage.ActiveScope;
 import software.wings.beans.ResourceConstraintUsage.ActiveScope.ActiveScopeBuilder;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ResourceConstraintService;
 import software.wings.service.intfc.WorkflowExecutionService;

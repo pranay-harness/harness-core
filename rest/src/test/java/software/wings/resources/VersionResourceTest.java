@@ -9,13 +9,13 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.EntityVersion.Builder.anEntityVersion;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.ClassRule;
 import org.junit.Test;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersionCollection;
 import software.wings.beans.RestResponse;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.utils.ResourceTestRule;

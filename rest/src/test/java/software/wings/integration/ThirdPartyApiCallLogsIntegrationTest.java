@@ -10,11 +10,11 @@ import static software.wings.beans.Application.Builder.anApplication;
 
 import com.google.common.collect.Lists;
 
+import io.harness.beans.PageResponse;
 import io.harness.data.structure.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
-import software.wings.dl.PageResponse;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;

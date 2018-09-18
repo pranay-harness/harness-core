@@ -1,5 +1,6 @@
 package software.wings.resources;
 
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -7,11 +8,12 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.ClassRule;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -20,8 +22,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.RestResponse;
 import software.wings.beans.infrastructure.Host;
 import software.wings.beans.infrastructure.Host.Builder;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.HostService;
 import software.wings.utils.ResourceTestRule;

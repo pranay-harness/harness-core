@@ -5,9 +5,9 @@ import static com.google.common.collect.ImmutableMap.of;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageRequest;
 import software.wings.beans.Base;
 import software.wings.beans.SystemCatalog;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;

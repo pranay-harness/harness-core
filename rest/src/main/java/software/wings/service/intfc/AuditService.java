@@ -1,10 +1,10 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
 import software.wings.beans.User;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 
 import java.io.InputStream;
 

@@ -1,9 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.SystemCatalog;
-import software.wings.dl.PageRequest;
 
 import java.util.List;
 import javax.validation.Valid;

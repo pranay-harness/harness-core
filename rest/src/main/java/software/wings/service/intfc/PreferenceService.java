@@ -1,9 +1,9 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Preference;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 
 public interface PreferenceService {
   Preference save(String accountId, String userId, Preference preference);

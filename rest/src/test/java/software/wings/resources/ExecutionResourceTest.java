@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyObject;
@@ -9,8 +10,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.dl.PageResponse.PageResponseBuilder.aPageResponse;
 
+import io.harness.beans.PageResponse;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Ignore;
@@ -18,7 +19,6 @@ import org.junit.Test;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
-import software.wings.dl.PageResponse;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.WorkflowExecutionService;

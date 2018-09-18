@@ -17,6 +17,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.Lists;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -25,8 +27,6 @@ import org.mockito.junit.MockitoRule;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Application;
 import software.wings.beans.Service;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;

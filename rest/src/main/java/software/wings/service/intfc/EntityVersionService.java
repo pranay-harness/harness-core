@@ -1,11 +1,11 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
 import software.wings.beans.EntityVersionCollection;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 
 /**
  * Created by rishi on 10/18/16.

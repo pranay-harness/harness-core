@@ -18,6 +18,10 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_KEY;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.PageResponse;
+import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.exception.UnauthorizedException;
 import org.junit.Test;
 import org.mindrot.jbcrypt.BCrypt;
@@ -28,10 +32,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.ApiKeyEntry;
 import software.wings.beans.Base;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageRequest.PageRequestBuilder;
-import software.wings.dl.PageResponse;
-import software.wings.dl.PageResponse.PageResponseBuilder;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.utils.Validator;

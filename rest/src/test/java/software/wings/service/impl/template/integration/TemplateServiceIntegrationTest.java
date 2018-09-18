@@ -1,5 +1,7 @@
 package software.wings.service.impl.template.integration;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.threading.Morpheus.sleep;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -8,18 +10,17 @@ import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.SearchFilter.Operator.EQ;
 import static software.wings.beans.template.TemplateType.SSH;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_INSTALL_PATH;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_ACCOUNT;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_DEC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_FOLDER_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
 import migrations.all.SystemTemplateGalleryMigration;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.rules.Integration;

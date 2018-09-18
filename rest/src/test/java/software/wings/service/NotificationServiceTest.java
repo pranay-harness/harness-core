@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.SearchFilter.Operator.EQ;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doNothing;
@@ -13,8 +15,6 @@ import static software.wings.beans.ApprovalNotification.Builder.anApprovalNotifi
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationAction.NotificationActionType.APPROVE;
-import static software.wings.beans.SearchFilter.Operator.EQ;
-import static software.wings.dl.PageRequest.PageRequestBuilder.aPageRequest;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -27,6 +27,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.beans.PageRequest;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -38,7 +39,6 @@ import software.wings.beans.ApprovalNotification;
 import software.wings.beans.InformationNotification;
 import software.wings.beans.Notification;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
-import software.wings.dl.PageRequest;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.NotificationServiceImpl;
 import software.wings.service.intfc.AppService;

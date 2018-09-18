@@ -15,9 +15,9 @@ import static software.wings.utils.WingsIntegrationTestConstants.SEED_SERVICE_WA
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.PageResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
-import software.wings.dl.PageResponse;
 import software.wings.integration.UserResourceRestClient;
 import software.wings.utils.ArtifactType;
 

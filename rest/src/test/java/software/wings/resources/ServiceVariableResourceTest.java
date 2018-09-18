@@ -17,6 +17,8 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.AdditionalAnswers;
@@ -26,8 +28,6 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceVariableService;

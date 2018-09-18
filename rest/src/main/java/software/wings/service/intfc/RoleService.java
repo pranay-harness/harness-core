@@ -1,8 +1,8 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import software.wings.beans.Role;
-import software.wings.dl.PageRequest;
-import software.wings.dl.PageResponse;
 
 import java.util.List;
 

@@ -28,6 +28,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.PageResponse;
 import io.harness.data.structure.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,8 +41,6 @@ import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
-import software.wings.dl.PageRequest.PageRequestBuilder;
-import software.wings.dl.PageResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
