@@ -346,7 +346,7 @@ public class MessageServiceImpl implements MessageService {
       File file = getDataFile(name);
       try {
         if (acquireLock(file)) {
-          Map<String, Object> data = getData(file);
+          Map<String, Object> data = getDataMap(file);
           data.putAll(dataToWrite);
           if (file.exists()) {
             FileUtils.forceDelete(file);
@@ -366,18 +366,6 @@ public class MessageServiceImpl implements MessageService {
     } catch (Exception e) {
       logger.error("Error while writing data to {}. Couldn't store {}", name, dataToWrite, e);
     }
-  }
-
-  private Map<String, Object> getData(File file) throws Exception {
-    return timeLimiter.callWithTimeout(() -> {
-      while (true) {
-        Map<String, Object> map = getDataMap(file);
-        if (map != null) {
-          return map;
-        }
-        Thread.sleep(200L);
-      }
-    }, 2L, TimeUnit.SECONDS, true);
   }
 
   @Override
@@ -406,7 +394,7 @@ public class MessageServiceImpl implements MessageService {
       File file = getDataFile(name);
       try {
         if (acquireLock(file)) {
-          return getData(file);
+          return getDataMap(file);
         } else {
           logger.error("Failed to acquire lock {}", file.getPath());
         }
@@ -449,7 +437,7 @@ public class MessageServiceImpl implements MessageService {
       File file = getDataFile(name);
       try {
         if (acquireLock(file)) {
-          Map<String, Object> data = getData(file);
+          Map<String, Object> data = getDataMap(file);
           data.remove(key);
           if (file.exists()) {
             FileUtils.forceDelete(file);
@@ -512,16 +500,28 @@ public class MessageServiceImpl implements MessageService {
   }
 
   @SuppressWarnings({"unchecked"})
-  private Map<String, Object> getDataMap(File file) {
-    if (file.exists()) {
-      try {
-        return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), HashMap.class);
-      } catch (Exception e) {
-        logger.error(format("Couldn't read map from %s.", file.getName()), e);
-        return null;
+  private Map<String, Object> getDataMap(File file) throws Exception {
+    return timeLimiter.callWithTimeout(() -> {
+      while (true) {
+        Map<String, Object> data = null;
+        if (file.exists()) {
+          String fileContent = "";
+          try {
+            fileContent = FileUtils.readFileToString(file, UTF_8);
+            data = JsonUtils.asObject(fileContent, HashMap.class);
+          } catch (Exception e) {
+            logger.error("Couldn't read map from {}. File content: \n{}", file.getName(), fileContent, e);
+          }
+        } else {
+          data = new HashMap<>();
+        }
+
+        if (data != null) {
+          return data;
+        }
+        Thread.sleep(200L);
       }
-    }
-    return new HashMap<>();
+    }, 1L, TimeUnit.SECONDS, true);
   }
 
   private boolean acquireLock(File file) {

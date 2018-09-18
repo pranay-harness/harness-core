@@ -1675,7 +1675,7 @@ public class AwsHelperService {
   protected void describeAutoScalingGroupActivities(AmazonAutoScalingClient amazonAutoScalingClient,
       String autoScalingGroupName, Set<String> completedActivities, LogCallback callback, boolean withCause) {
     if (callback == null) {
-      logger.info("Not describing autoScalingGroupActivities for [%s] since logCallback is null");
+      logger.info("Not describing autoScalingGroupActivities for {} since logCallback is null", completedActivities);
       return;
     }
     try {
@@ -1707,7 +1707,7 @@ public class AwsHelperService {
             });
       }
     } catch (Exception e) {
-      logger.warn("Failed to describe autoScalingGroup for [%s]", autoScalingGroupName, e);
+      logger.warn("Failed to describe autoScalingGroup for [{}]", autoScalingGroupName, e);
     }
   }
 

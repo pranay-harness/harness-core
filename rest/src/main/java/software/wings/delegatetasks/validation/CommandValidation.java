@@ -66,7 +66,7 @@ public class CommandValidation extends AbstractDelegateValidateTask {
   private DelegateConnectionResult validate(CommandExecutionContext context) {
     decryptCredentials(context);
     DeploymentType deploymentType = DeploymentType.valueOf(context.getDeploymentType());
-    logger.info("Processing validate for deploymentType %s", deploymentType.name());
+    logger.info("Processing validate for deploymentType {}", deploymentType.name());
     switch (deploymentType) {
       case KUBERNETES:
         return validateKubernetes(context);
