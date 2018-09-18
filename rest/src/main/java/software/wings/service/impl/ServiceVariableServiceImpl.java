@@ -117,7 +117,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
     // Type.UPDATE is intentionally passed. Don't change this.
     String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
     yamlPushService.pushYamlChangeSet(
-        accountId, serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
+        accountId, newServiceVariable, newServiceVariable, Event.Type.UPDATE, syncFromGit, false);
 
     return newServiceVariable;
   }
@@ -170,7 +170,7 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
       String accountId = appService.getAccountIdByAppId(serviceVariable.getAppId());
       yamlPushService.pushYamlChangeSet(
-          accountId, serviceVariable, serviceVariable, Event.Type.UPDATE, syncFromGit, false);
+          accountId, serviceVariable, updatedServiceVariable, Event.Type.UPDATE, syncFromGit, false);
       serviceVariable.setEncryptedValue(String.valueOf(serviceVariable.getValue()));
       executorService.submit(() -> addAndSaveSearchTags(serviceVariable));
       return updatedServiceVariable;
