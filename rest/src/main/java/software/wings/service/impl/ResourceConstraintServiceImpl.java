@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
@@ -78,7 +79,11 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   @Override
   @ValidationGroups(Create.class)
   public ResourceConstraint save(ResourceConstraint resourceConstraint) {
-    return wingsPersistence.saveAndGet(ResourceConstraint.class, resourceConstraint);
+    try {
+      return wingsPersistence.saveAndGet(ResourceConstraint.class, resourceConstraint);
+    } catch (DuplicateKeyException exception) {
+      throw new InvalidRequestException("The resource constraint name cannot be reused.", exception, USER);
+    }
   }
 
   @Override
