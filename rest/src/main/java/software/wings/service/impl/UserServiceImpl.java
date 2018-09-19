@@ -511,6 +511,7 @@ public class UserServiceImpl implements UserService {
             account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
     model.put("url", inviteUrl);
     model.put("company", account.getCompanyName());
+    model.put("name", userInvite.getEmail());
     return model;
   }
 
