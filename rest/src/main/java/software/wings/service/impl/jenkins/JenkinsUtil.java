@@ -13,7 +13,7 @@ public class JenkinsUtil {
   @Inject private JenkinsFactory jenkinsFactory;
 
   public Jenkins getJenkins(JenkinsConfig jenkinsConfig) {
-    if (Constants.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism()) || jenkinsConfig.getToken() != null) {
+    if (Constants.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism())) {
       return jenkinsFactory.create(jenkinsConfig.getJenkinsUrl(), jenkinsConfig.getToken());
     } else {
       return jenkinsFactory.create(
