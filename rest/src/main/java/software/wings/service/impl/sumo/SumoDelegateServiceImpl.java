@@ -74,7 +74,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     long endTime = Timestamp.currentMinuteBoundary();
     String query = "*exception*";
     return getResponse(config, query, "5m", encryptedDataDetails, null, null, startTime, endTime,
-        SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, null);
+        SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, null);
   }
 
   @Override
@@ -86,7 +86,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     long endTime = Timestamp.currentMinuteBoundary();
 
     List<LogElement> responseWithoutHost = getResponse(config, query, "1m", encryptedDataDetails, null, null, startTime,
-        endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, null);
+        endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, null);
     if (isEmpty(responseWithoutHost)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
@@ -94,7 +94,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           .build();
     } else {
       List<LogElement> responseWithHost = getResponse(config, query, "1m", encryptedDataDetails, hostNameField,
-          hostName, startTime, endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, null);
+          hostName, startTime, endTime, SumoDataCollectionTask.DEFAULT_TIME_ZONE, 5, 0, null);
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .loadResponse(
@@ -127,7 +127,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
    */
   public List<LogElement> getResponse(SumoConfig config, String query, String timeSlice,
       List<EncryptedDataDetail> encryptedDataDetails, String hostNameField, String hostName, long startTime,
-      long endTime, String timeZone, int maxMessageCount, ThirdPartyApiCallLog apiCallLog) {
+      long endTime, String timeZone, int maxMessageCount, int logCollectionMinute, ThirdPartyApiCallLog apiCallLog) {
     String searchQuery = query;
     if (!isEmpty(hostNameField)) {
       searchQuery = searchQuery + "| where " + hostNameField + " = \"" + hostName + "\" ";
@@ -162,7 +162,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       logger.info("Search job Status Response received from SumoLogic with message Count : "
           + searchJobStatusResponse.getMessageCount());
       return getMessagesForSearchJob(
-          query, hostName, messageCount, sumoClient, searchJobId, 0, 0, Math.min(messageCount, 5));
+          query, hostName, messageCount, sumoClient, searchJobId, 0, 0, Math.min(messageCount, 5), logCollectionMinute);
     } catch (InterruptedException e) {
       throw new WingsException("Unable to get client for given config");
     }
@@ -207,7 +207,8 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
    * @param messageLength       @return
    */
   private List<LogElement> getMessagesForSearchJob(String query, String hostName, int messageCount,
-      SumoLogicClient sumoClient, String searchJobId, int clusterLabel, int messageOffset, int messageLength) {
+      SumoLogicClient sumoClient, String searchJobId, int clusterLabel, int messageOffset, int messageLength,
+      int logCollectionMinute) {
     List<LogElement> logElements = new ArrayList<>();
     if (messageCount > 0) {
       do {
@@ -219,6 +220,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           sumoLogElement.setHost(hostName);
           sumoLogElement.setClusterLabel(String.valueOf(clusterLabel++));
           sumoLogElement.setCount(1);
+          sumoLogElement.setLogCollectionMinute(logCollectionMinute);
           sumoLogElement.setLogMessage(logMessage.getProperties().get("_raw"));
           sumoLogElement.setTimeStamp(Long.parseLong(logMessage.getProperties().get("_timeslice")));
           logElements.add(sumoLogElement);

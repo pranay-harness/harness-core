@@ -127,10 +127,10 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               final long collectionEndTime = collectionStartTime + TimeUnit.MINUTES.toMillis(1) - 1;
 
               try {
-                List<LogElement> logElementsResponse =
-                    sumoDelegateService.getResponse(dataCollectionInfo.getSumoConfig(), query, "1m",
-                        dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getHostnameField(), host,
-                        collectionStartTime, collectionEndTime, DEFAULT_TIME_ZONE, 1000, apiCallLog);
+                List<LogElement> logElementsResponse = sumoDelegateService.getResponse(
+                    dataCollectionInfo.getSumoConfig(), query, "1m", dataCollectionInfo.getEncryptedDataDetails(),
+                    dataCollectionInfo.getHostnameField(), host, collectionStartTime, collectionEndTime,
+                    DEFAULT_TIME_ZONE, 1000, logCollectionMinute, apiCallLog);
                 logElements.addAll(logElementsResponse);
               } catch (CancellationException e) {
                 logger.info("Ugh. Search job was cancelled. Retrying ...");

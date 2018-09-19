@@ -65,6 +65,7 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
     final CountsByStatuses breakdown = new CountsByStatuses();
     switch (getStatus()) {
       case FAILED:
+      case ERROR:
         breakdown.setFailed(total);
         break;
       case SUCCESS:
