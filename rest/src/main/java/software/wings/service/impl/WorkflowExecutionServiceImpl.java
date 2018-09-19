@@ -150,7 +150,6 @@ import software.wings.beans.command.ServiceCommand;
 import software.wings.common.Constants;
 import software.wings.common.cache.MongoStore;
 import software.wings.core.queue.Queue;
-import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.lock.PersistentLocker;
@@ -213,6 +212,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Map;
@@ -1284,7 +1284,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.getWorkflowElement().setPipelineDeploymentUuid(workflowExecution.getPipelineExecutionId());
     lastGoodReleaseInfo(stdParams.getWorkflowElement(), workflowExecution);
 
-    WingsDeque<ContextElement> elements = new WingsDeque<>();
+    LinkedList<ContextElement> elements = new LinkedList<>();
     elements.push(stdParams);
     if (contextElements != null) {
       for (ContextElement contextElement : contextElements) {

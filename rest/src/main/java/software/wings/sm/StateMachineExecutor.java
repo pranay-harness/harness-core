@@ -79,7 +79,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver;
-import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.QuartzScheduler;
@@ -113,6 +112,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -206,7 +206,7 @@ public class StateMachineExecutor {
     stateExecutionInstance.setExecutionName(executionName);
     stateExecutionInstance.setExecutionUuid(executionUuid);
 
-    WingsDeque<ContextElement> contextElements = new WingsDeque<>();
+    LinkedList<ContextElement> contextElements = new LinkedList<>();
     if (contextParams != null) {
       contextElements.addAll(contextParams);
     }

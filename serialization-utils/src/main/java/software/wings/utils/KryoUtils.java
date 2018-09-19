@@ -156,6 +156,7 @@ public class KryoUtils {
             kryo.register(java.util.concurrent.atomic.AtomicInteger.class, 75);
             kryo.register(java.net.ConnectException.class, 76);
             kryo.register(java.lang.StringIndexOutOfBoundsException.class, 77);
+            kryo.register(java.util.LinkedList.class, 78);
 
             // External Serializers
             UnmodifiableCollectionsSerializer.registerSerializers(kryo);

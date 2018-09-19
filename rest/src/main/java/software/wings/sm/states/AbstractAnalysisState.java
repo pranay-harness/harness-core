@@ -52,7 +52,6 @@ import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo
 import software.wings.common.Constants;
 import software.wings.common.TemplateExpressionProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.dl.WingsDeque;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
@@ -92,6 +91,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -478,7 +478,7 @@ public abstract class AbstractAnalysisState extends State {
 
   private Map<String, String> getPcfHostNames(ExecutionContext context, boolean includePrevious) {
     StateExecutionInstance stateExecutionInstance = ((ExecutionContextImpl) context).getStateExecutionInstance();
-    WingsDeque<ContextElement> contextElements = stateExecutionInstance.getContextElements();
+    LinkedList<ContextElement> contextElements = stateExecutionInstance.getContextElements();
     Map<String, String> rv = new HashMap<>();
     if (isEmpty(contextElements)) {
       return rv;
