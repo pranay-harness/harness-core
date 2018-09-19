@@ -4,7 +4,6 @@ import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
-import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
@@ -123,6 +122,13 @@ public class WatcherServiceImpl implements WatcherService {
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long DELEGATE_VERSION_MATCH_TIMEOUT = TimeUnit.HOURS.toMillis(2);
 
+  private static final boolean multiVersion;
+
+  static {
+    String deployMode = System.getenv().get("DEPLOY_MODE");
+    multiVersion = isEmpty(deployMode) || !deployMode.contains("ONPREM");
+  }
+
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("watchExecutor") private ScheduledExecutorService watchExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
@@ -144,8 +150,6 @@ public class WatcherServiceImpl implements WatcherService {
   private HttpHost httpProxyHost;
   private long startTime;
 
-  private final boolean multiVersion = "KUBERNETES".equals(System.getenv().get("DEPLOY_MODE"))
-      || TRUE.toString().equals(System.getenv().get("MULTI_VERSION"));
   private static final Pattern VERSION_PATTERN = Pattern.compile("^[1-9]\\.[0-9]\\.[0-9]*$");
 
   @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
