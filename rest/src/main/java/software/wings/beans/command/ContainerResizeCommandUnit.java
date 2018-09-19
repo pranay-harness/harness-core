@@ -172,8 +172,11 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         executionLogCallback.saveExecutionLog("\nContainer IDs:");
         containerInfos.forEach(info
             -> executionLogCallback.saveExecutionLog("  " + info.getHostName()
-                + (info.getHostName().equals(info.getIp()) ? "" : " - " + info.getIp())
-                + (info.getHostName().equals(info.getContainerId()) ? "" : " - " + info.getContainerId())
+                + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getIp()) ? ""
+                                                                                             : " - " + info.getIp())
+                + (isNotEmpty(info.getHostName()) && info.getHostName().equals(info.getContainerId())
+                          ? ""
+                          : " - " + info.getContainerId())
                 + (info.isNewContainer() ? " (new)" : "")));
         executionLogCallback.saveExecutionLog("");
       }
