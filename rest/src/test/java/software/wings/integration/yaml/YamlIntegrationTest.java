@@ -33,6 +33,7 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.Arrays;
 
+@Ignore
 public class YamlIntegrationTest extends BaseIntegrationTest {
   private Application application;
   private Service service;
