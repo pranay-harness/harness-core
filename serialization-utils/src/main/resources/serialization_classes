@@ -170,7 +170,6 @@ software.wings.service.impl.appdynamics.AppdynamicsTier, 5127
 software.wings.service.impl.appdynamics.AppdynamicsMetric, 5129
 software.wings.service.impl.appdynamics.AppdynamicsMetric$AppdynamicsMetricType, 5130
 software.wings.settings.SettingValue$SettingVariableTypes, 5131
-software.wings.dl.WingsDeque, 5132
 software.wings.waitnotify.ListNotifyResponseData, 5133
 software.wings.sm.StateExecutionInstance, 5134
 software.wings.sm.ExecutionResponse, 5135

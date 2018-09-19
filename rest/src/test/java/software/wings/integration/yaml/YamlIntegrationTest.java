@@ -8,6 +8,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.inject.Inject;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Application;
 import software.wings.beans.GitConfig;
@@ -153,6 +154,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Ignore
   public void testGitSyncCloudProviderCreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(

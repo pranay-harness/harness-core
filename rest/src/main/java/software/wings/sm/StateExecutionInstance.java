@@ -16,12 +16,12 @@ import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.WorkflowType;
-import software.wings.dl.WingsDeque;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -73,7 +73,7 @@ public class StateExecutionInstance extends Base {
   private String delegateTaskId;
   private String rollbackPhaseName;
 
-  private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
+  private LinkedList<ContextElement> contextElements = new LinkedList<>();
   private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
   private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
 
@@ -144,7 +144,7 @@ public class StateExecutionInstance extends Base {
     private String stateType;
     private ContextElement contextElement;
     private boolean contextTransition;
-    private WingsDeque<ContextElement> contextElements = new WingsDeque<>();
+    private LinkedList<ContextElement> contextElements = new LinkedList<>();
     private Map<String, StateExecutionData> stateExecutionMap = new HashMap<>();
     private List<StateExecutionData> stateExecutionDataHistory = new ArrayList<>();
     private List<ContextElement> notifyElements;
@@ -209,7 +209,7 @@ public class StateExecutionInstance extends Base {
       return this;
     }
 
-    public Builder withContextElements(WingsDeque<ContextElement> contextElements) {
+    public Builder withContextElements(LinkedList<ContextElement> contextElements) {
       this.contextElements = contextElements;
       return this;
     }
