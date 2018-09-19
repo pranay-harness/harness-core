@@ -43,6 +43,8 @@ import software.wings.utils.Misc;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -247,6 +249,11 @@ public class MetricAnalysisJob implements Job {
       String metricAnalysisSaveUrl = getMetricAnalysisSaveUrl(
           MetricDataAnalysisService.RESOURCE_URL, "/save-analysis", uuid, groupName, analysisMinute);
 
+      String metricTemplateUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+          + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
+          + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
+          + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName;
+      metricTemplateUrl = metricTemplateUrl.replaceAll(" ", URLEncoder.encode(" ", "UTF-8"));
       LearningEngineAnalysisTask learningEngineAnalysisTask =
           LearningEngineAnalysisTask.builder()
               .workflow_id(context.getWorkflowId())
@@ -264,10 +271,7 @@ public class MetricAnalysisJob implements Job {
               .test_input_url(testInputUrl)
               .control_input_url(controlInputUrl)
               .analysis_save_url(metricAnalysisSaveUrl)
-              .metric_template_url("/api/" + MetricDataAnalysisService.RESOURCE_URL
-                  + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-                  + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
-                  + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName)
+              .metric_template_url(metricTemplateUrl)
               .control_nodes(getNodesForGroup(groupName, controlNodes))
               .test_nodes(mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
                       ? Sets.newHashSet(groupName)
@@ -478,7 +482,8 @@ public class MetricAnalysisJob implements Job {
      * @param groupName
      * @param mlAnalysisType
      */
-    private void createExperimentalTask(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType) {
+    private void createExperimentalTask(int analysisMinute, String groupName, TimeSeriesMlAnalysisType mlAnalysisType)
+        throws UnsupportedEncodingException {
       String uuid = generateUuid();
       String testInputUrl = getTestInputUrl(groupName);
       String controlInputUrl = getControlInputUrl(groupName);
@@ -495,6 +500,11 @@ public class MetricAnalysisJob implements Job {
       }
       List<MLExperiments> experiments = learningEngineService.getExperiments(MLAnalysisType.TIME_SERIES);
 
+      String metricTemplateUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+          + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
+          + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
+          + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName;
+      metricTemplateUrl = metricTemplateUrl.replaceAll(" ", URLEncoder.encode(" ", "UTF-8"));
       LearningEngineExperimentalAnalysisTask analysisTask =
           LearningEngineExperimentalAnalysisTask.builder()
               .workflow_id(context.getWorkflowId())
@@ -512,10 +522,7 @@ public class MetricAnalysisJob implements Job {
               .test_input_url(testInputUrl)
               .control_input_url(controlInputUrl)
               .analysis_save_url(experimentalMetricAnalysisSaveUrl)
-              .metric_template_url("/api/" + MetricDataAnalysisService.RESOURCE_URL
-                  + "/get-metric-template?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-                  + "&stateType=" + context.getStateType() + "&stateExecutionId=" + context.getStateExecutionId()
-                  + "&serviceId=" + context.getServiceId() + "&groupName=" + groupName)
+              .metric_template_url(metricTemplateUrl)
               .control_nodes(getNodesForGroup(groupName, controlNodes))
               .test_nodes(mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)
                       ? Sets.newHashSet(groupName)
@@ -605,7 +612,7 @@ public class MetricAnalysisJob implements Job {
       return metricAnalysisSaveUrl;
     }
 
-    private String getControlInputUrl(String groupName) {
+    private String getControlInputUrl(String groupName) throws UnsupportedEncodingException {
       String controlInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
           + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
           + "&stateType=" + context.getStateType() + "&groupName=" + groupName + "&compareCurrent=";
@@ -615,13 +622,15 @@ public class MetricAnalysisJob implements Job {
         controlInputUrl = controlInputUrl + false + "&workflowExecutionId=" + context.getPrevWorkflowExecutionId();
       }
 
-      return controlInputUrl;
+      return controlInputUrl.replaceAll(" ", URLEncoder.encode(" ", "UTF-8"));
     }
 
-    private String getTestInputUrl(String groupName) {
-      return "/api/" + MetricDataAnalysisService.RESOURCE_URL + "/get-metrics?accountId=" + context.getAccountId()
-          + "&appId=" + context.getAppId() + "&stateType=" + context.getStateType() + "&workflowExecutionId="
-          + context.getWorkflowExecutionId() + "&groupName=" + groupName + "&compareCurrent=true";
+    private String getTestInputUrl(String groupName) throws UnsupportedEncodingException {
+      String testInputUrl = "/api/" + MetricDataAnalysisService.RESOURCE_URL
+          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
+          + "&stateType=" + context.getStateType() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
+          + "&groupName=" + groupName + "&compareCurrent=true";
+      return testInputUrl.replaceAll(" ", URLEncoder.encode(" ", "UTF-8"));
     }
   }
 }
