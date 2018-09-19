@@ -194,6 +194,14 @@ public interface UserService {
   UserInvite inviteUser(UserInvite userInvite);
 
   /**
+   * Send added new role email
+   *
+   * @param user        user
+   * @param account     account
+   */
+  void sendAddedRoleEmail(User user, Account account);
+
+  /**
    * List invites page response.
    *
    * @param pageRequest the page request

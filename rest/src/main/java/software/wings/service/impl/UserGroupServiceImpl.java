@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -46,6 +47,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -143,27 +146,39 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup updateMembers(UserGroup userGroup) {
-    List<String> memberIds = new ArrayList<>();
+    Set<String> newMemberIds = Sets.newHashSet();
     if (isNotEmpty(userGroup.getMembers())) {
-      memberIds = userGroup.getMembers()
-                      .stream()
-                      .filter(user -> StringUtils.isNotBlank(user.getUuid()))
-                      .map(User::getUuid)
-                      .collect(toList());
+      newMemberIds = userGroup.getMembers()
+                         .stream()
+                         .filter(user -> StringUtils.isNotBlank(user.getUuid()))
+                         .map(User::getUuid)
+                         .collect(Collectors.toSet());
     }
     UserGroup existingUserGroup = get(userGroup.getAccountId(), userGroup.getUuid());
+    Set<String> existingMemberIds = isEmpty(existingUserGroup.getMemberIds())
+        ? Sets.newHashSet()
+        : Sets.newHashSet(existingUserGroup.getMemberIds());
 
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
-    setUnset(operations, "memberIds", memberIds);
+    setUnset(operations, "memberIds", newMemberIds);
     UserGroup updatedUserGroup = update(userGroup, operations);
     if (isNotEmpty(existingUserGroup.getMemberIds())) {
-      memberIds.addAll(existingUserGroup.getMemberIds());
+      newMemberIds.addAll(existingUserGroup.getMemberIds());
     }
 
-    if (isNotEmpty(memberIds)) {
+    if (isNotEmpty(newMemberIds)) {
       evictUserPermissionInfoCacheForUserGroup(
-          userGroup.getAccountId(), memberIds.stream().distinct().collect(toList()));
+          userGroup.getAccountId(), newMemberIds.stream().distinct().collect(toList()));
     }
+
+    // Send added role email for all newly added users to the group
+    Set newlyAddedMemberIds = Sets.difference(newMemberIds, existingMemberIds);
+    Account account = accountService.get(updatedUserGroup.getAccountId());
+    updatedUserGroup.getMembers().forEach(member -> {
+      if (newlyAddedMemberIds.contains(member.getUuid())) {
+        userService.sendAddedRoleEmail(member, account);
+      }
+    });
     return updatedUserGroup;
   }
 

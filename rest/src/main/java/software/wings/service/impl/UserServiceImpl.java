@@ -414,7 +414,13 @@ public class UserServiceImpl implements UserService {
                  .withEmailVerified(false)
                  .build();
       user = save(user);
-      sendNewInvitationMailIfRequired(userInvite, account);
+      // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
+      // we need user to set the password.
+      if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.USER_PASSWORD)) {
+        sendNewInvitationMail(userInvite, account);
+      } else if (isNotEmpty(userInvite.getUserGroups())) {
+        sendAddedRoleEmail(user, account);
+      }
     } else {
       boolean userAlreadyAddedToAccount = user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(accountId));
       if (userAlreadyAddedToAccount) {
@@ -423,9 +429,9 @@ public class UserServiceImpl implements UserService {
         addAccountRoles(user, account, userInvite.getRoles());
       }
       if (StringUtils.equals(user.getName(), user.getEmail())) {
-        sendNewInvitationMailIfRequired(userInvite, account);
+        sendNewInvitationMail(userInvite, account);
       } else {
-        sendAddedRoleEmail(user, account, userInvite);
+        sendAddedRoleEmail(user, account);
       }
     }
 
@@ -508,13 +514,8 @@ public class UserServiceImpl implements UserService {
     return model;
   }
 
-  private void sendNewInvitationMailIfRequired(UserInvite userInvite, Account account) {
+  private void sendNewInvitationMail(UserInvite userInvite, Account account) {
     try {
-      // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
-      // we need user to set the password.
-      if (!account.getAuthenticationMechanism().equals(AuthenticationMechanism.USER_PASSWORD)) {
-        return;
-      }
       Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account);
       List<String> toList = new ArrayList<>();
       toList.add(userInvite.getEmail());
@@ -533,8 +534,7 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private Map<String, Object> getAddedRoleTemplateModel(UserInvite userInvite, User user, Account account)
-      throws URISyntaxException {
+  private Map<String, Object> getAddedRoleTemplateModel(User user, Account account) throws URISyntaxException {
     String loginUrl = buildAbsoluteUrl(format(
         "/login?company=%s&account=%s&email=%s", account.getCompanyName(), account.getAccountName(), user.getEmail()));
 
@@ -542,7 +542,6 @@ public class UserServiceImpl implements UserService {
     model.put("name", user.getName());
     model.put("url", loginUrl);
     model.put("company", account.getCompanyName());
-    model.put("roles", userInvite.getRoles());
     model.put("email", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
 
@@ -564,9 +563,10 @@ public class UserServiceImpl implements UserService {
     return model;
   }
 
-  private void sendAddedRoleEmail(User user, Account account, UserInvite userInvite) {
+  @Override
+  public void sendAddedRoleEmail(User user, Account account) {
     try {
-      Map<String, Object> templateModel = getAddedRoleTemplateModel(userInvite, user, account);
+      Map<String, Object> templateModel = getAddedRoleTemplateModel(user, account);
       List<String> toList = new ArrayList<>();
       toList.add(user.getEmail());
       EmailData emailData = EmailData.builder()
@@ -830,6 +830,7 @@ public class UserServiceImpl implements UserService {
 
     if (isNotEmpty(userGroupMemberAdditions)) {
       addUserToUserGroups(accountId, userFromDB, userGroupMemberAdditions);
+      sendAddedRoleEmail(userFromDB, accountService.get(accountId));
     }
 
     if (isNotEmpty(userGroupMemberDeletions)) {

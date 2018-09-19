@@ -3,18 +3,22 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.service.impl.UserServiceImpl.ADD_ROLE_EMAIL_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -33,6 +37,7 @@ import io.harness.beans.PageResponse;
 import io.harness.data.structure.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -42,14 +47,17 @@ import software.wings.beans.User;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
+import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
@@ -62,9 +70,11 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Mock private AuthService authService;
   @Mock private RoleService roleService;
   @Mock private AccountService accountService;
+  @Mock private EmailNotificationService emailNotificationService;
   private Account account = Account.Builder.anAccount()
                                 .withAccountName(ACCOUNT_NAME)
                                 .withCompanyName(COMPANY_NAME)
+                                .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
                                 .withUuid(ACCOUNT_ID)
                                 .build();
   private User user = anUser()
@@ -228,8 +238,8 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateUserGroup() {
-    when(accountService.get(ACCOUNT_ID))
-        .thenReturn(anAccount().withCompanyName(COMPANY_NAME).withUuid(ACCOUNT_ID).build());
+    ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
 
     GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
     AppPermission appPermission =
@@ -263,6 +273,14 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(userAfterUpdate.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet()))
         .containsExactlyInAnyOrder(userGroup1.getUuid(), userGroup2.getUuid());
 
+    verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
+    List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
+    assertFalse(emailsData.stream()
+                    .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
+                    .collect(Collectors.toList())
+                    .size()
+        == 1);
+
     userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
     userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
     userGroup3 = userGroupService.get(ACCOUNT_ID, userGroup3.getUuid());
@@ -282,6 +300,57 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(userGroup1.getMemberIds()).containsExactly(user.getUuid());
     assertThat(userGroup2.getMemberIds()).isNullOrEmpty();
     assertThat(userGroup3.getMemberIds()).containsExactly(user.getUuid());
+  }
+
+  @Test
+  public void testUpdateMembers() {
+    ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+
+    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    AppPermission appPermission =
+        AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
+    UserGroup userGroup1 = UserGroup.builder()
+                               .accountId(ACCOUNT_ID)
+                               .name("USER_GROUP1")
+                               .appPermissions(Sets.newHashSet(appPermission))
+                               .build();
+    User user1 = anUser()
+                     .withAppId(APP_ID)
+                     .withEmail("user1@wings.software")
+                     .withName(USER_NAME)
+                     .withPassword(PASSWORD)
+                     .withAccountName(ACCOUNT_NAME)
+                     .withCompanyName(COMPANY_NAME)
+                     .withAccounts(Lists.newArrayList(account))
+                     .build();
+
+    User user2 = anUser()
+                     .withAppId(APP_ID)
+                     .withEmail("user2@wings.software")
+                     .withName(USER_NAME)
+                     .withPassword(PASSWORD)
+                     .withAccountName(ACCOUNT_NAME)
+                     .withCompanyName(COMPANY_NAME)
+                     .withAccounts(Lists.newArrayList(account))
+                     .build();
+
+    userGroup1 = userGroupService.save(userGroup1);
+    try {
+      userService.register(user1);
+      userService.register(user2);
+    } catch (IndexOutOfBoundsException e) {
+      // Ignoring the primary account fetch failure
+    }
+    userGroup1.setMembers(Arrays.asList(user1, user2));
+    userGroupService.updateMembers(userGroup1);
+    verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
+    List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
+    assertFalse(emailsData.stream()
+                    .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
+                    .collect(Collectors.toList())
+                    .size()
+        == 2);
   }
 
   @Test
