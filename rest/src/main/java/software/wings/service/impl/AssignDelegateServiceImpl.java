@@ -51,6 +51,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
 
   private static final long WHITELIST_TTL = TimeUnit.HOURS.toMillis(6);
   private static final long BLACKLIST_TTL = TimeUnit.MINUTES.toMillis(5);
+  private static final long WHITELIST_REFRESH_INTERVAL = TimeUnit.MINUTES.toMillis(10);
 
   @Inject private DelegateService delegateService;
   @Inject private EnvironmentService environmentService;
@@ -62,7 +63,7 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
       delegateConnectionResultCache =
           CacheBuilder.newBuilder()
               .maximumSize(10000)
-              .expireAfterWrite(1, TimeUnit.MINUTES)
+              .expireAfterWrite(2, TimeUnit.MINUTES)
               .build(new CacheLoader<ImmutablePair<String, String>, Optional<DelegateConnectionResult>>() {
                 public Optional<DelegateConnectionResult> load(ImmutablePair<String, String> key) {
                   return Optional.ofNullable(wingsPersistence.createQuery(DelegateConnectionResult.class)
@@ -238,18 +239,23 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
     try {
       for (String criteria : TaskType.valueOf(task.getTaskType()).getCriteria(task, injector)) {
         if (isNotBlank(criteria)) {
-          Query<DelegateConnectionResult> query = wingsPersistence.createQuery(DelegateConnectionResult.class)
-                                                      .filter("accountId", task.getAccountId())
-                                                      .filter("delegateId", delegateId)
-                                                      .filter("criteria", criteria);
-          UpdateOperations<DelegateConnectionResult> updateOperations =
-              wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
-                  .set("lastUpdatedAt", clock.millis());
-          DelegateConnectionResult result = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
-          if (result != null) {
-            logger.info("Whitelist entry refreshed for task {} and delegate {}", task.getUuid(), delegateId);
-          } else {
-            logger.info("Whitelist entry was not updated for task {} and delegate {}", task.getUuid(), delegateId);
+          Optional<DelegateConnectionResult> cachedResult =
+              delegateConnectionResultCache.get(ImmutablePair.of(delegateId, criteria));
+          if (cachedResult.isPresent()
+              && cachedResult.get().getLastUpdatedAt() < clock.millis() - WHITELIST_REFRESH_INTERVAL) {
+            Query<DelegateConnectionResult> query = wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                                        .filter("accountId", task.getAccountId())
+                                                        .filter("delegateId", delegateId)
+                                                        .filter("criteria", criteria);
+            UpdateOperations<DelegateConnectionResult> updateOperations =
+                wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
+                    .set("lastUpdatedAt", clock.millis());
+            DelegateConnectionResult result = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+            if (result != null) {
+              logger.info("Whitelist entry refreshed for task {} and delegate {}", task.getUuid(), delegateId);
+            } else {
+              logger.info("Whitelist entry was not updated for task {} and delegate {}", task.getUuid(), delegateId);
+            }
           }
         }
       }
