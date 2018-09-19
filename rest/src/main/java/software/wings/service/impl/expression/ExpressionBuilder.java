@@ -115,9 +115,6 @@ public abstract class ExpressionBuilder {
   protected static final String EMAIL_SUBJECT = "subject";
   protected static final String EMAIL_BODY = "body";
 
-  public static final String WORKFLOW_VARIABLE_PREFIX = "workflow.variables";
-  public static final String SERVICE_VARIABLE_PREFIX = "service.variables";
-
   @Inject private ServiceVariableService serviceVariablesService;
   @Inject private ServiceTemplateService serviceTemplateService;
 

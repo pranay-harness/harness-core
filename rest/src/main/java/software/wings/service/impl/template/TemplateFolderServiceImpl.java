@@ -93,7 +93,9 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
       templateFolder.setPathId(pathId);
     }
     templateFolder.setKeywords(getKeywords(templateFolder));
-    return wingsPersistence.saveAndGet(TemplateFolder.class, templateFolder);
+    return Validator.duplicateCheck(()
+                                        -> wingsPersistence.saveAndGet(TemplateFolder.class, templateFolder),
+        TemplateFolder.NAME_KEY, templateFolder.getName());
   }
 
   private List<String> getKeywords(TemplateFolder templateFolder) {
@@ -122,7 +124,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
     }
     operations.set("name", templateFolder.getName());
     operations.set("keywords", getKeywords(templateFolder));
-    wingsPersistence.update(query, operations);
+    Validator.duplicateCheck(() -> wingsPersistence.update(query, operations), "name", templateFolder.getName());
     return get(savedTemplateFolder.getUuid());
   }
 

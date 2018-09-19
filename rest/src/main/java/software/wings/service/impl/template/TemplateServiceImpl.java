@@ -99,6 +99,7 @@ public class TemplateServiceImpl implements TemplateService {
     String templateUuid = Validator.duplicateCheck(() -> wingsPersistence.save(template), "name", template.getName());
     getTemplateVersion(template, templateUuid, template.getType(), template.getName(), CREATED);
 
+    // Save Versioned template
     wingsPersistence.save(buildTemplateDetails(template, templateUuid));
 
     return get(templateUuid);
