@@ -1134,6 +1134,16 @@ public class EcsContainerServiceImpl implements EcsContainerService {
             if (optionalTask.isPresent() && isNotEmpty(optionalTask.get().getContainers())) {
               String containerId =
                   StringUtils.substring(optionalTask.get().getContainers().get(0).getDockerId(), 0, 12);
+
+              if (containerId == null) {
+                containerId = ipAddress;
+                executionLogCallback.saveExecutionLog("Failed to get DockerId. Received as NULL. "
+                    + "Verification steps using containerId may not work");
+
+              } else {
+                executionLogCallback.saveExecutionLog("Successfully fetched dockerId");
+              }
+
               ContainerInfo containerInfo = ContainerInfo.builder()
                                                 .hostName(containerId)
                                                 .ip(ipAddress)
