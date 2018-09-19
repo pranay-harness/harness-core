@@ -156,7 +156,7 @@ public class StepYamlHandler extends BaseYamlHandler<StepYaml, GraphNode> {
       // Step is linkedH
       templateUri = templateService.fetchTemplateUri(templateUuid);
       if (templateUri == null) {
-        logger.error("Linked template for http template  {} was deleted ", templateUuid);
+        logger.warn("Linked template for http template  {} was deleted", templateUuid);
       }
       if (step.getTemplateVersion() != null) {
         templateUri = templateUri + ":" + step.getTemplateVersion();

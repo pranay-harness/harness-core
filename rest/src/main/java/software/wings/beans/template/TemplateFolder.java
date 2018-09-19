@@ -15,7 +15,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
 
@@ -27,6 +31,9 @@ import java.util.List;
 @NoArgsConstructor
 @JsonInclude(NON_NULL)
 @EqualsAndHashCode(callSuper = false)
+@Indexes(@Index(options = @IndexOptions(name = "duplicateKey", unique = true),
+    fields = { @Field("accountId")
+               , @Field("name"), @Field("pathId") }))
 public class TemplateFolder extends Base {
   public static final String PATH_KEY = "path";
   public static final String PATH_ID_KEY = "pathId";
