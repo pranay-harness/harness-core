@@ -429,7 +429,7 @@ public class DelegateResource {
   @ExceptionMetered
   public void clearCache(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
-    delegateService.clearCache(delegateId);
+    delegateService.clearCache(accountId, delegateId);
   }
 
   @DelegateAuth

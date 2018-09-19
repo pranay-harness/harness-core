@@ -289,9 +289,16 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
   }
 
   @Override
-  public void clearConnectionResults(String delegateId) {
+  public void clearConnectionResults(String accountId) {
     wingsPersistence.delete(
-        wingsPersistence.createQuery(DelegateConnectionResult.class).filter("delegateId", delegateId));
+        wingsPersistence.createQuery(DelegateConnectionResult.class).filter("accountId", accountId));
+  }
+
+  @Override
+  public void clearConnectionResults(String accountId, String delegateId) {
+    wingsPersistence.delete(wingsPersistence.createQuery(DelegateConnectionResult.class)
+                                .filter("accountId", accountId)
+                                .filter("delegateId", delegateId));
   }
 
   @Override

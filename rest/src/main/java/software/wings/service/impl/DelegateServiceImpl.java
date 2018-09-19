@@ -780,6 +780,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
+    assignDelegateService.clearConnectionResults(delegate.getAccountId());
     return savedDelegate;
   }
 
@@ -1187,8 +1188,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public void clearCache(String delegateId) {
-    assignDelegateService.clearConnectionResults(delegateId);
+  public void clearCache(String accountId, String delegateId) {
+    assignDelegateService.clearConnectionResults(accountId, delegateId);
   }
 
   @Override
