@@ -75,7 +75,7 @@ public interface DelegateService {
 
   DelegateTask failIfAllDelegatesFailed(String accountId, String delegateId, String taskId);
 
-  void clearCache(String delegateId);
+  void clearCache(String accountId, String delegateId);
 
   void processDelegateResponse(
       String accountId, String delegateId, String taskId, @Valid DelegateTaskResponse response);

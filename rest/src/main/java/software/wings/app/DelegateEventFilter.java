@@ -67,6 +67,12 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
       } else {
         return new BroadcastAction(ACTION.ABORT, message);
       }
+    } else if (message instanceof String && ((String) message).startsWith("[X]")) {
+      if (delegateId.equals(((String) message).substring(3))) { // Remove the "[X]"
+        return new BroadcastAction(message);
+      } else {
+        return new BroadcastAction(ACTION.ABORT, message);
+      }
     }
     return new BroadcastAction(message);
   }

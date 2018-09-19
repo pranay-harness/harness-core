@@ -121,6 +121,7 @@ public class WatcherServiceImpl implements WatcherService {
   private static final long DELEGATE_UPGRADE_TIMEOUT = TimeUnit.MINUTES.toMillis(10);
   private static final long DELEGATE_SHUTDOWN_TIMEOUT = TimeUnit.HOURS.toMillis(2);
   private static final long DELEGATE_VERSION_MATCH_TIMEOUT = TimeUnit.HOURS.toMillis(2);
+  private static final Pattern VERSION_PATTERN = Pattern.compile("^[1-9]\\.[0-9]\\.[0-9]*$");
 
   private static final boolean multiVersion;
 
@@ -149,8 +150,6 @@ public class WatcherServiceImpl implements WatcherService {
   private final Map<String, Long> delegateVersionMatchedAt = new HashMap<>();
   private HttpHost httpProxyHost;
   private long startTime;
-
-  private static final Pattern VERSION_PATTERN = Pattern.compile("^[1-9]\\.[0-9]\\.[0-9]*$");
 
   @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP"})
   @Override

@@ -757,7 +757,7 @@ public class DelegateServiceImpl implements DelegateService {
         if (isNotEmpty(taskEvents)) {
           logger.info("Processing DelegateTaskEvents {}", taskEvents);
           for (DelegateTaskEvent taskEvent : taskEvents) {
-            try (TaskLogContext ctx = new TaskLogContext(taskEvent.getDelegateTaskId())) {
+            try (TaskLogContext ignore = new TaskLogContext(taskEvent.getDelegateTaskId())) {
               if (taskEvent instanceof DelegateTaskAbortEvent) {
                 abortDelegateTask((DelegateTaskAbortEvent) taskEvent);
               } else {
