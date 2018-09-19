@@ -305,7 +305,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
 
         if (failFast) {
-          throw new WingsException(ErrorCode.GENERAL_ERROR).addParam("message", message);
+          throw new WingsException(ErrorCode.GENERAL_ERROR, message, WingsException.USER).addParam("message", message);
         } else {
           listOfYamlErrors.ifPresent(strings -> strings.add(message));
         }

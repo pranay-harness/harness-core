@@ -120,15 +120,8 @@ public class DelegateQueueTask implements Runnable {
         wingsPersistence.createUpdateOperations(DelegateTask.class).set("status", ERROR);
     wingsPersistence.update(updateQuery, updateOperations);
 
-    List<DelegateTask> delegateTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                           .field(ID_KEY)
-                                           .in(taskIds)
-                                           .project(ID_KEY, true)
-                                           .project("delegateId", true)
-                                           .project("waitId", true)
-                                           .project("tags", true)
-                                           .project("accountId", true)
-                                           .asList();
+    List<DelegateTask> delegateTasks =
+        wingsPersistence.createQuery(DelegateTask.class, excludeAuthority).field(ID_KEY).in(taskIds).asList();
 
     delegateTasks.forEach(delegateTask -> {
       if (isNotBlank(delegateTask.getWaitId())) {
