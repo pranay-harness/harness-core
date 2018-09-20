@@ -40,6 +40,18 @@ cp -r ../harness_disconnected_on_prem_pov_final harness_installer/
 mkdir -p harness_installer/harness_disconnected_on_prem_pov_final/images
 cp version.properties harness_installer/harness_disconnected_on_prem_pov_final/
 
+if [[ -z $1 ]]; then
+   echo "No license file supplied, skipping setting the license file in the installer"
+else
+   echo "License file supplied, generating installer with license file $1"
+   if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' -e "s|harness_license|$1|g" harness_installer/harness_disconnected_on_prem_pov_final/config.properties
+   else
+        sed -i "s|harness_license|$1|g" harness_installer/harness_disconnected_on_prem_pov_final/config.properties
+   fi
+fi
+
+
 docker pull harness/manager:${manager_version}
 docker pull harness/learning-engine:${learning_engine_version}
 docker pull harness/ui:${ui_version}
