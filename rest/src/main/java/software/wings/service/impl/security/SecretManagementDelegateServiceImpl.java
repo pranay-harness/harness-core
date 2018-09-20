@@ -95,8 +95,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(100));
         } else {
           logger.error(format("Encryption failed after %d retries ", retry), e);
-          throw new WingsException(
-              ErrorCode.KMS_OPERATION_ERROR, "Encryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
+          throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER, e)
+              .addParam("reason", "Encryption failed after " + NUM_OF_RETRIES + " retries");
         }
       }
     }
@@ -133,8 +133,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(100));
         } else {
           logger.error(format("Decryption failed after %d retries ", retry), e);
-          throw new WingsException(
-              ErrorCode.KMS_OPERATION_ERROR, "Decryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
+          throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER, e)
+              .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
         }
       }
     }

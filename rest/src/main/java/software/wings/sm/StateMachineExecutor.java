@@ -56,6 +56,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -722,13 +723,21 @@ public class StateMachineExecutor {
    * @param exception the exception
    * @return the state execution instance
    */
+  @SuppressFBWarnings("NP_NULL_PARAM_DEREF")
   StateExecutionInstance handleExecuteResponseException(ExecutionContextImpl context, WingsException exception) {
-    StateExecutionInstance stateExecutionInstance = context.getStateExecutionInstance();
-    StateMachine sm = context.getStateMachine();
-    State currentState =
-        sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
-    addContext(context, exception);
-    WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+    StateExecutionInstance stateExecutionInstance = null;
+    State currentState = null;
+    try {
+      stateExecutionInstance = context.getStateExecutionInstance();
+      StateMachine sm = context.getStateMachine();
+      currentState =
+          sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+      addContext(context, exception);
+      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+    } catch (Exception ex) {
+      logger.error("Error when processing exception", ex);
+    }
+
     updateStateExecutionData(stateExecutionInstance, null, FAILED, Misc.getMessage(exception), null, null);
 
     try {

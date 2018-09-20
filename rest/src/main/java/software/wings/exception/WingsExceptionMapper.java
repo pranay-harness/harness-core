@@ -110,26 +110,30 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
   }
 
   public static void logProcessedMessages(WingsException exception, ExecutionContext context, Logger logger) {
-    ReportTarget target = LOG_SYSTEM;
+    try {
+      ReportTarget target = LOG_SYSTEM;
 
-    switch (context) {
-      case MANAGER:
-        target = LOG_SYSTEM;
-        break;
-      case DELEGATE:
-        target = DELEGATE_LOG_SYSTEM;
-        break;
-      default:
-        unhandled(context);
-    }
+      switch (context) {
+        case MANAGER:
+          target = LOG_SYSTEM;
+          break;
+        case DELEGATE:
+          target = DELEGATE_LOG_SYSTEM;
+          break;
+        default:
+          unhandled(context);
+      }
 
-    List<ResponseMessage> responseMessages = getResponseMessageList(exception, target);
-    if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
-      logger.error(calculateErrorMessage(exception, responseMessages), exception);
-    } else {
-      responseMessages = getResponseMessageList(exception, UNIVERSAL);
-      logger.info(calculateInfoMessage(responseMessages));
-      logger.info(calculateDebugMessage(exception), exception);
+      List<ResponseMessage> responseMessages = getResponseMessageList(exception, target);
+      if (responseMessages.stream().anyMatch(responseMessage -> responseMessage.getLevel() == ERROR)) {
+        logger.error(calculateErrorMessage(exception, responseMessages), exception);
+      } else {
+        responseMessages = getResponseMessageList(exception, UNIVERSAL);
+        logger.info(calculateInfoMessage(responseMessages));
+        logger.info(calculateDebugMessage(exception), exception);
+      }
+    } catch (Exception e) {
+      logger.error("Error processing messages.", e);
     }
   }
 

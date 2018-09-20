@@ -2662,7 +2662,7 @@ public class KmsTest extends WingsBaseTest {
       delegateService.encrypt(accountId, toEncrypt.toCharArray(), kmsConfig);
       fail("should have been failed");
     } catch (WingsException e) {
-      assertEquals("Encryption failed after " + NUM_OF_RETRIES + " retries", e.getMessage());
+      assertEquals("Encryption failed after " + NUM_OF_RETRIES + " retries", e.getParams().get("reason"));
     }
 
     kmsConfig = getKmsConfig();
@@ -2674,7 +2674,7 @@ public class KmsTest extends WingsBaseTest {
           kmsConfig);
       fail("should have been failed");
     } catch (WingsException e) {
-      assertEquals("Decryption failed after " + NUM_OF_RETRIES + " retries", e.getMessage());
+      assertEquals("Decryption failed after " + NUM_OF_RETRIES + " retries", e.getParams().get("reason"));
     }
   }
 
