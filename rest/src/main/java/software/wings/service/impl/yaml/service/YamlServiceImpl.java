@@ -7,7 +7,9 @@ import static io.harness.threading.Morpheus.quietSleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.beans.yaml.YamlConstants.SETUP_FOLDER_PATH;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.ACCOUNT_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
@@ -138,6 +140,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
 
   public List<ChangeContext> processChangeSet(List<Change> changeList, boolean isGitSyncPath)
       throws YamlProcessingException {
+    // e.g. remove files outside of setup folder. (checking filePath)
+    changeList = filterInvalidFilePaths(changeList);
+
     // compute the order of processing
     computeProcessingOrder(changeList);
     // validate
@@ -146,6 +151,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     process(changeContextList, isGitSyncPath);
 
     return changeContextList;
+  }
+
+  private List<Change> filterInvalidFilePaths(List<Change> changeList) {
+    return changeList.stream().filter(change -> change.getFilePath().startsWith(SETUP_FOLDER_PATH)).collect(toList());
   }
 
   @Override
