@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.COMMAND_DOES_NOT_EXIST;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static org.joor.Reflect.on;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
@@ -9,6 +10,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
+import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -233,9 +235,9 @@ public class CommandState extends State {
           serviceResourceService.getCommandByName(appId, service.getUuid(), envId, actualCommand);
       Command command = serviceCommand != null ? serviceCommand.getCommand() : null;
       if (command == null) {
-        throw new WingsException(format("Unable to find command %s for service %s", actualCommand, service.getUuid()));
+        throw new WingsException(
+            format("Unable to find command %s for service %s", actualCommand, service.getUuid()), WingsException.USER);
       }
-      executionDataBuilder.withTemplateVariable(obtainVariableMap(command.getTemplateVariables()));
 
       command.setGraph(null);
 
@@ -334,8 +336,9 @@ public class CommandState extends State {
         ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
         // Observed NPE in alerts
         if (artifactStream == null) {
-          throw new WingsException(format(
-              "Unable to find artifact stream for service %s, artifact %s", service.getName(), artifact.getUuid()));
+          throw new WingsException(format("Unable to find artifact stream for service %s, artifact %s",
+                                       service.getName(), artifact.getUuid()),
+              WingsException.USER);
         }
 
         ArtifactStreamAttributes artifactStreamAttributes = artifactStream.getArtifactStreamAttributes();
@@ -343,7 +346,8 @@ public class CommandState extends State {
         SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
         if (settingAttribute == null) {
           throw new WingsException(
-              format("Unable to find setting attribute for artifact stream %s", artifactStream.getUuid()));
+              format("Unable to find setting attribute for artifact stream %s", artifactStream.getUuid()),
+              WingsException.USER);
         }
         artifactStreamAttributes.setServerSetting(settingAttribute);
         artifactStreamAttributes.setMedatadataOnly(artifactStream.isMetadataOnly());
@@ -363,7 +367,8 @@ public class CommandState extends State {
         commandExecutionContextBuilder.withArtifactFiles(artifact.getArtifactFiles());
         executionDataBuilder.withArtifactName(artifact.getDisplayName()).withActivityId(artifact.getUuid());
       } else if (command.isArtifactNeeded()) {
-        throw new WingsException(format("Unable to find artifact for service %s", service.getName()));
+        throw new WingsException(
+            format("Unable to find artifact for service %s", service.getName()), WingsException.USER);
       }
       Activity act = activityBuilder.build();
       act.setAppId(application.getUuid());
@@ -372,6 +377,7 @@ public class CommandState extends State {
 
       executionDataBuilder.withActivityId(activityId);
       expandCommand(serviceInstance, command, service.getUuid(), envId);
+      executionDataBuilder.withTemplateVariable(convertToVariableMap(command.getTemplateVariables()));
       renderCommandString(command, context, executionDataBuilder.build(), artifact);
 
       CommandExecutionContext commandExecutionContext =
@@ -418,6 +424,8 @@ public class CommandState extends State {
       CommandStateExecutionData commandStateExecutionData, Artifact artifact) {
     for (CommandUnit commandUnit : command.getCommandUnits()) {
       if (CommandUnitType.COMMAND.equals(commandUnit.getCommandUnitType())) {
+        Command commandCommandUnit = (Command) commandUnit;
+        commandStateExecutionData.setTemplateVariable(convertToVariableMap(commandCommandUnit.getTemplateVariables()));
         renderCommandString((Command) commandUnit, context, commandStateExecutionData, artifact);
         continue;
       }
@@ -609,9 +617,10 @@ public class CommandState extends State {
                                     .orElse(aServiceCommand().build())
                                     .getCommand();
       if (referredCommand == null) {
-        throw new WingsException(COMMAND_DOES_NOT_EXIST);
+        throw new WingsException(COMMAND_DOES_NOT_EXIST, USER);
       }
       command.setCommandUnits(referredCommand.getCommandUnits());
+      command.setTemplateVariables(referredCommand.getTemplateVariables());
     }
 
     for (CommandUnit commandUnit : command.getCommandUnits()) {

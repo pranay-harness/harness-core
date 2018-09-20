@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -87,6 +88,8 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.Command;
+import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.infrastructure.Host;
@@ -110,6 +113,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
@@ -146,7 +150,13 @@ public class CommandStateTest extends WingsBaseTest {
   public static final String WINDOWS_RUNTIME_PATH_TEST =
       "%USERPROFILE%/${app.name}/${service.name}/${env.name}/runtime/test";
 
-  private static final Command COMMAND = aCommand().build();
+  private static final Command COMMAND =
+      aCommand()
+          .addCommandUnits(aCommand()
+                               .withReferenceId("Start")
+                               .addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build())
+                               .build())
+          .build();
   private static final Service SERVICE = Service.builder().uuid(SERVICE_ID).build();
   private static final ServiceTemplate SERVICE_TEMPLATE =
       aServiceTemplate().withUuid(TEMPLATE_ID).withServiceId(SERVICE.getUuid()).build();
@@ -229,6 +239,8 @@ public class CommandStateTest extends WingsBaseTest {
         .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build());
     when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
         .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(COMMAND).build());
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "Start"))
+        .thenReturn(aServiceCommand().withCommand(aCommand().withName("Start").build()).build());
     when(serviceResourceService.getFlattenCommandUnitList(APP_ID, SERVICE_ID, ENV_ID, "START")).thenReturn(emptyList());
     when(serviceInstanceService.get(APP_ID, ENV_ID, SERVICE_INSTANCE_ID)).thenReturn(SERVICE_INSTANCE);
     when(activityService.save(any(Activity.class))).thenReturn(ACTIVITY_WITH_ID);
@@ -358,37 +370,39 @@ public class CommandStateTest extends WingsBaseTest {
 
     verify(workflowExecutionService).incrementInProgressCount(eq(APP_ID), anyString(), eq(1));
     verify(workflowExecutionService).incrementSuccess(eq(APP_ID), anyString(), eq(1));
-
-    verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, serviceCommandExecutorService,
-        activityService, settingsService, workflowExecutionService, artifactStreamService);
+    verify(serviceResourceService).getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "Start");
+    verifyNoMoreInteractions(serviceInstanceService, serviceCommandExecutorService, activityService, settingsService,
+        workflowExecutionService, artifactStreamService);
   }
 
-  /**
-   * Execute.
-   *
-   * @throws Exception the exception
-   */
   @Test
-  public void shouldExecuteWithVariables() {
-    AbstractCommandUnit commandUnit = anExecCommandUnit()
-                                          .withName(COMMAND_UNIT_NAME)
-                                          .withCommandString("rm -f echo ${var.var1}\n, echo ${var.var2}\n")
-                                          .build();
-    Command command = aCommand()
-                          .withName(COMMAND_NAME)
-                          .addCommandUnits(commandUnit)
-                          .withTemplateVariables(asList(aVariable().withName("var1").withValue("var1Value").build(),
-                              aVariable().withName("var2").withValue("var2Value").build()))
-                          .build();
+  public void shouldHandleAsyncResponseWithNoResponse() {
+    ExecutionResponse executionResponse = commandState.handleAsyncResponse(context, new HashMap<>());
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
 
-    when(serviceCommandExecutorService.execute(eq(COMMAND), any())).thenReturn(SUCCESS);
+  @Test
+  public void shouldFailCommandStateOnErrorResponse() {
+    ExecutionResponse executionResponse = commandState.handleAsyncResponse(
+        context, ImmutableMap.of(ACTIVITY_ID, ErrorNotifyResponseData.builder().errorMessage("Failed").build()));
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
 
-    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
-        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
-
-    //    when(context.renderExpression(any(), any()).
-
-    //    ExecutionResponse executionResponse = commandState.execute(context);
+  @Test
+  public void shouldHandleCommandException() {
+    when(context.getStateExecutionData())
+        .thenReturn(CommandStateExecutionData.Builder.aCommandStateExecutionData().build());
+    ExecutionResponse executionResponse = commandState.handleAsyncResponse(context,
+        ImmutableMap.of(ACTIVITY_ID,
+            CommandExecutionResult.Builder.aCommandExecutionResult()
+                .withStatus(CommandExecutionStatus.FAILURE)
+                .withErrorMessage("Command Failed")
+                .build()));
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    verify(activityService, times(2)).updateStatus(ACTIVITY_ID, APP_ID, ExecutionStatus.FAILED);
   }
 
   /**
@@ -532,6 +546,66 @@ public class CommandStateTest extends WingsBaseTest {
     verifyNoMoreInteractions(serviceResourceService, serviceInstanceService, activityService,
         serviceCommandExecutorService, settingsService, workflowExecutionService, artifactStreamService);
   }
+  /**
+   * Execute with artifact.
+   *
+   * @throws Exception the exception
+   */
+  @Test
+  public void executeFailWhenNoArtifactStreamOrSettingAttribute() throws Exception {
+    Artifact artifact = anArtifact()
+                            .withUuid(ARTIFACT_ID)
+                            .withAppId(APP_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withServiceIds(asList(SERVICE_ID))
+                            .build();
+
+    ArtifactStreamAttributes artifactStreamAttributes = anArtifactStreamAttributes().withMetadataOnly(false).build();
+
+    Command command =
+        aCommand()
+            .addCommandUnits(
+                ScpCommandUnit.Builder.aScpCommandUnit().withFileCategory(ScpFileCategory.ARTIFACTS).build())
+            .build();
+
+    WorkflowStandardParams workflowStandardParams =
+        aWorkflowStandardParams().withAppId(APP_ID).withEnvId(ENV_ID).build();
+    on(workflowStandardParams).set("artifacts", asList(artifact));
+    on(workflowStandardParams).set("appService", appService);
+    when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+
+    when(context.getArtifactForService(SERVICE_ID)).thenReturn(artifact);
+
+    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(SERVICE);
+    when(serviceResourceService.getCommandByName(APP_ID, SERVICE_ID, ENV_ID, "START"))
+        .thenReturn(aServiceCommand().withTargetToAllEnv(true).withCommand(command).build());
+
+    when(settingsService.get(SETTING_ID))
+        .thenReturn(aSettingAttribute()
+                        .withValue(JenkinsConfig.builder()
+                                       .jenkinsUrl(JENKINS_URL)
+                                       .username(USER_NAME)
+                                       .password(PASSWORD)
+                                       .accountId(ACCOUNT_ID)
+                                       .build())
+                        .build());
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(null);
+
+    ExecutionResponse executionResponse = commandState.execute(context);
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+
+    // Now Setting attribute null
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(artifactStream);
+    when(artifactStream.getArtifactStreamAttributes()).thenReturn(artifactStreamAttributes);
+    when(artifactStream.getSettingId()).thenReturn(SETTING_ID);
+    when(artifactStream.getUuid()).thenReturn(ARTIFACT_STREAM_ID);
+    when(settingsService.get(SETTING_ID)).thenReturn(null);
+
+    executionResponse = commandState.execute(context);
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+  }
 
   /**
    * Should throw exception for unknown command.
@@ -612,6 +686,31 @@ public class CommandStateTest extends WingsBaseTest {
             .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
             .addCommandUnits(
                 aCommand().addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build()).build())
+            .build();
+    CommandState.renderCommandString(command, context, commandStateExecutionData, null);
+    verify(context, times(1)).renderExpression("${var1}", commandStateExecutionData, null);
+    verify(context, times(1)).renderExpression("${var2}", commandStateExecutionData, null);
+  }
+
+  @Test
+  public void shouldRenderReferencedCommandStringWithVariables() {
+    Map<String, Object> stateVariables = new HashMap<>();
+    List<Variable> variables = new ArrayList<>();
+    variables.add(aVariable().withName("var1").withValue("var1Value").build());
+    variables.add(aVariable().withName("var2").withValue("var2Value").build());
+    if (isNotEmpty(command.getTemplateVariables())) {
+      stateVariables.putAll(
+          command.getTemplateVariables().stream().collect(Collectors.toMap(Variable::getName, Variable::getValue)));
+    }
+    CommandStateExecutionData commandStateExecutionData =
+        CommandStateExecutionData.Builder.aCommandStateExecutionData().withTemplateVariable(stateVariables).build();
+    final Command command =
+        aCommand()
+            .addCommandUnits(anExecCommandUnit().withCommandString("${var1}").build())
+            .addCommandUnits(aCommand()
+                                 .withReferenceId("Start")
+                                 .addCommandUnits(anExecCommandUnit().withCommandString("${var2}").build())
+                                 .build())
             .build();
     CommandState.renderCommandString(command, context, commandStateExecutionData, null);
     verify(context, times(1)).renderExpression("${var1}", commandStateExecutionData, null);

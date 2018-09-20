@@ -1,7 +1,5 @@
 package software.wings.sm;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import software.wings.beans.EntityType;
@@ -12,7 +10,6 @@ import software.wings.waitnotify.NotifyResponseData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Represents a state object.
@@ -297,14 +294,5 @@ public abstract class State {
 
   public void setTemplateVariables(List<Variable> templateVariables) {
     this.templateVariables = templateVariables;
-  }
-
-  public Map<String, Object> obtainVariableMap(List<Variable> variables) {
-    if (isEmpty(variables)) {
-      return null;
-    }
-    return variables.stream()
-        .filter(variable -> variable.getName() != null && variable.getValue() != null)
-        .collect(Collectors.toMap(Variable::getName, Variable::getValue));
   }
 }

@@ -219,4 +219,12 @@ public class TemplateHelper {
     }
     return ListUtils.trimStrings(generatedKeywords);
   }
+  public static Map<String, Object> convertToVariableMap(List<Variable> variables) {
+    if (isEmpty(variables)) {
+      return null;
+    }
+    return variables.stream()
+        .filter(variable -> variable.getName() != null && variable.getValue() != null)
+        .collect(Collectors.toMap(Variable::getName, Variable::getValue));
+  }
 }
