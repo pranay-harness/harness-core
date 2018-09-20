@@ -134,6 +134,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -189,18 +190,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
             }
           });
 
-  private LoadingCache<String, Delegate> delegateCache =
+  private LoadingCache<String, Optional<Delegate>> delegateCache =
       CacheBuilder.newBuilder()
           .maximumSize(MAX_DELEGATE_META_INFO_ENTRIES)
           .expireAfterWrite(1, TimeUnit.MINUTES)
-          .build(new CacheLoader<String, Delegate>() {
-            public Delegate load(String delegateId) throws NotFoundException {
-              Delegate delegate = wingsPersistence.createQuery(Delegate.class).filter(ID_KEY, delegateId).get();
-              if (delegate != null) {
-                return delegate;
-              } else {
-                throw new NotFoundException("Delegate with id " + delegateId + " not found");
-              }
+          .build(new CacheLoader<String, Optional<Delegate>>() {
+            public Optional<Delegate> load(String delegateId) throws NotFoundException {
+              return Optional.ofNullable(wingsPersistence.createQuery(Delegate.class).filter(ID_KEY, delegateId).get());
             }
           });
 
@@ -299,7 +295,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (forceRefresh) {
         delegateCache.refresh(delegateId);
       }
-      return delegateCache.get(delegateId);
+      return delegateCache.get(delegateId).orElse(null);
     } catch (ExecutionException e) {
       logger.error("Execution exception", e);
     } catch (UncheckedExecutionException e) {
@@ -1238,12 +1234,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Override
   public boolean filter(String delegateId, DelegateTask task) {
     Delegate delegate = get(task.getAccountId(), delegateId, false);
-    if (delegate != null) {
-      if (StringUtils.equals(delegate.getAccountId(), task.getAccountId())) {
-        return true;
-      }
-    }
-    return false;
+    return delegate != null && StringUtils.equals(delegate.getAccountId(), task.getAccountId());
   }
 
   @Override
@@ -1450,8 +1441,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       try {
         DelegateTaskNotifyResponseData delegateTaskNotifyResponseData =
             (DelegateTaskNotifyResponseData) response.getResponse();
+        Optional<Delegate> delegate = delegateCache.get(delegateId);
         delegateTaskNotifyResponseData.setDelegateMetaInfo(
-            DelegateMetaInfo.builder().id(delegateId).hostName(delegateCache.get(delegateId).getHostName()).build());
+            DelegateMetaInfo.builder()
+                .id(delegateId)
+                .hostName(delegate.isPresent() ? delegate.get().getHostName() : delegateId)
+                .build());
       } catch (ExecutionException e) {
         logger.error("Execution exception", e);
       } catch (UncheckedExecutionException e) {
