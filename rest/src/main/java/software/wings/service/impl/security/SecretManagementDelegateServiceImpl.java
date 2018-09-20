@@ -132,7 +132,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           logger.warn(format("Decryption failed. trial num: %d", retry), e);
           sleep(ofMillis(100));
         } else {
-          logger.error(format("Decryption failed after %d retries ", retry), e);
+          logger.error("Decryption failed after {} retries for {}", retry, data, e);
           throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER, e)
               .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
         }
@@ -195,7 +195,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         } else {
           logger.error(format("encryption failed after %d retries ", retry), e);
           throw new WingsException(
-              ErrorCode.VAULT_OPERATION_ERROR, "Decryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
+              ErrorCode.VAULT_OPERATION_ERROR, "encryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
         }
       }
     }
