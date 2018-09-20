@@ -28,6 +28,7 @@ import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC_CHANGED;
+import static software.wings.utils.TemplateTestConstants.TEMPLATE_ID;
 
 import com.google.inject.Inject;
 
@@ -322,6 +323,11 @@ public class TemplateServiceTest extends TemplateBaseTest {
     assertThat(templateUri).isNotEmpty();
     assertThat(obtainTemplateFolderPath(templateUri)).isEqualTo("Harness/Tomcat Commands");
     assertThat(obtainTemplateName(templateUri)).isEqualTo("My Start Command");
+  }
+
+  @Test
+  public void shouldFetchTemplateUriWhenTemplateDeleted() {
+    assertThat(templateService.fetchTemplateUri(TEMPLATE_ID)).isNull();
   }
 
   @Test

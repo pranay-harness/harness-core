@@ -8,6 +8,7 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
+import static software.wings.beans.template.TemplateHelper.convertToVariableMap;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.base.MoreObjects;
@@ -264,7 +265,7 @@ public class HttpState extends State {
    */
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     HttpStateExecutionDataBuilder httpStateExecutionDataBuilder =
-        HttpStateExecutionData.builder().variables(obtainVariableMap(getTemplateVariables()));
+        HttpStateExecutionData.builder().variables(convertToVariableMap(getTemplateVariables()));
     String envId = obtainEnvId(context.getContextElement(ContextElementType.STANDARD));
 
     context.renderExpression("${app.Name}");
@@ -366,7 +367,7 @@ public class HttpState extends State {
 
       String errorMessage = httpStateExecutionResponse.getErrorMessage();
       executionData.setAssertionStatement(assertion);
-      executionData.setTemplateVariable(obtainVariableMap(getTemplateVariables()));
+      executionData.setTemplateVariable(convertToVariableMap(getTemplateVariables()));
       ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
       boolean assertionStatus = true;
       if (isNotBlank(assertion)) {
