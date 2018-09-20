@@ -19,6 +19,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SimpleEncryption;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
+import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -55,7 +56,7 @@ public class EncryptionServiceImpl implements EncryptionService {
         encryptedRefField.setAccessible(true);
         encryptedRefField.set(object, null);
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER, e);
+        throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER, e).addParam("reason", Misc.getMessage(e));
       }
     }
     object.setDecrypted(true);
