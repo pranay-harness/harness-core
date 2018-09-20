@@ -35,7 +35,7 @@ host1=$(getProperty "$INFRA_PROPERTY_FILE" "HOST1_IP_ADDRESS")
 echo "Reading config mapping from $CONFIG_PROPERTY_FILE"
 mongodbUserName=$(getProperty "$CONFIG_PROPERTY_FILE" "mongodbUserName" | base64 --decode)
 mongodbPassword=$(getProperty "$CONFIG_PROPERTY_FILE" "mongodbPassword" | base64 --decode)
-newreliclicensekey=$(getProperty "$CONFIG_PROPERTY_FILE" "newreliclicensekey" | base64 --decode)
+licenseInfo=$(getProperty "$CONFIG_PROPERTY_FILE" "licenseInfo")
 
 echo "#######Account details start #############"
 echo "AccountName="$accountName
@@ -217,9 +217,7 @@ function setupManager(){
     FEATURES=$(getProperty "config_template/manager/manager.properties" "FEATURES")
     jre_version=$(getProperty "config_template/manager/manager.properties" "jre_version")
     UI_SERVER_URL=$LOAD_BALANCER_URL
-    NEWRELIC_ENV=$(getProperty "config_template/manager/manager.properties" "NEWRELIC_ENV")
     CAPSULE_JAR=$(getProperty "config_template/manager/manager.properties" "CAPSULE_JAR")
-    NEWRELIC_LICENSE_KEY=$newreliclicensekey
     MEMORY=$(getProperty "config_template/manager/manager.properties" "MEMORY")
     LOGGING_LEVEL=$(getProperty "config_template/manager/manager.properties" "LOGGING_LEVEL")
     DEPLOY_MODE=ONPREM
@@ -246,7 +244,7 @@ function setupManager(){
   sudo mkdir -p $runtime_dir/manager/logs
   sudo chmod -R 777 $runtime_dir/manager
 
- docker run -d --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e NEWRELIC_LICENSE_KEY=$newreliclicensekey -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e NEWRELIC_ENV=$NEWRELIC_ENV -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager:$managerVersion
+ docker run -d --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager:$managerVersion
 
  sleep 10
 
