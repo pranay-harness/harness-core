@@ -1137,10 +1137,12 @@ public class EcsContainerServiceImpl implements EcsContainerService {
 
               if (containerId == null) {
                 containerId = ipAddress;
-                executionLogCallback.saveExecutionLog("Failed to get DockerId. Received as NULL. "
-                    + "Verification steps using containerId may not work");
+                if (executionLogCallback != null) {
+                  executionLogCallback.saveExecutionLog("Failed to get DockerId. Received as NULL. "
+                      + "Verification steps using containerId may not work");
+                }
 
-              } else {
+              } else if (executionLogCallback != null) {
                 executionLogCallback.saveExecutionLog("Successfully fetched dockerId");
               }
 
