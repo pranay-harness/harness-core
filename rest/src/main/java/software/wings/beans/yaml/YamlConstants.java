@@ -11,6 +11,7 @@ public interface YamlConstants {
   String YAML_FILE_NAME_PATTERN = ".*?" + PATH_DELIMITER + YAML_EXPRESSION;
   //  String SETUP_ENTITY_ID = "setup";
   String SETUP_FOLDER = "Setup";
+  String SETUP_FOLDER_PATH = "Setup/";
   String APPLICATIONS_FOLDER = "Applications";
   String SERVICES_FOLDER = "Services";
   String PROVISIONERS_FOLDER = "Provisioners";
