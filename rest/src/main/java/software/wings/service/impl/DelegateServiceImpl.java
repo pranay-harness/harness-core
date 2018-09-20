@@ -775,9 +775,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public Delegate add(Delegate delegate) {
-    logger.info("Adding delegate: {}", delegate.getUuid());
+    logger.info("Adding delegate {} for account {}", delegate.getHostName(), delegate.getAccountId());
     delegate.setAppId(GLOBAL_APP_ID);
     Delegate savedDelegate = wingsPersistence.saveAndGet(Delegate.class, delegate);
+    logger.info("Delegate saved: {}", savedDelegate.getUuid());
     eventEmitter.send(Channel.DELEGATES,
         anEvent().withOrgId(delegate.getAccountId()).withUuid(delegate.getUuid()).withType(Type.CREATE).build());
     assignDelegateService.clearConnectionResults(delegate.getAccountId());
