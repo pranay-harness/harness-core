@@ -229,6 +229,14 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         }
         collectionStartTime += TimeUnit.MINUTES.toMillis(1);
         logCollectionMinute++;
+        if (logCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+          // We are done with all data collection, so setting task status to success and quitting.
+          logger.info(
+              "Completed ELK collection task. So setting task status to success and quitting. StateExecutionId {}",
+              dataCollectionInfo.getStateExecutionId());
+          completed.set(true);
+          taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+        }
         // dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
 
       } catch (Exception e) {

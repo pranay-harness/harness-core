@@ -135,6 +135,14 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
 
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+              // We are done with all data collection, so setting task status to success and quitting.
+              logger.info(
+                  "Completed CloudWatch collection task. So setting task status to success and quitting. StateExecutionId {}",
+                  dataCollectionInfo.getStateExecutionId());
+              completed.set(true);
+              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+            }
             break;
 
           } catch (Exception ex) {

@@ -182,6 +182,14 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
         collectionStartTime += TimeUnit.MINUTES.toMillis(1);
         logCollectionMinute++;
         dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
+        if (dataCollectionInfo.getCollectionTime() <= 0) {
+          // We are done with all data collection, so setting task status to success and quitting.
+          logger.info(
+              "Completed SumoLogic collection task. So setting task status to success and quitting. StateExecutionId {}",
+              dataCollectionInfo.getStateExecutionId());
+          completed.set(true);
+          taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+        }
 
       } catch (Exception e) {
         completed.set(true);

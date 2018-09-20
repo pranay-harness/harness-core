@@ -141,6 +141,14 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+              // We are done with all data collection, so setting task status to success and quitting.
+              logger.info(
+                  "Completed Dynatrace collection task. So setting task status to success and quitting. StateExecutionId {}",
+                  dataCollectionInfo.getStateExecutionId());
+              completed.set(true);
+              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+            }
             break;
 
           } catch (Exception ex) {
