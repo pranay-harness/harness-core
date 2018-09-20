@@ -22,6 +22,7 @@ import io.harness.exception.InvalidRequestException;
 import org.junit.Test;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.utils.WingsTestConstants;
 
 import java.util.Arrays;
 import javax.validation.ConstraintViolationException;
@@ -44,6 +45,14 @@ public class TemplateFolderServiceTest extends TemplateBaseTest {
     assertThat(myTemplateFolder.getKeywords()).contains(TEMPLATE_FOLDER_DEC.toLowerCase());
     assertThat(myTemplateFolder.getPathId()).isNotEmpty();
     assertThat(myTemplateFolder.getPathId().split("/")[0]).isEqualTo(parentFolder.getUuid());
+  }
+
+  @Test(expected = ConstraintViolationException.class)
+  public void shouldNotSaveInvalidNameTemplateFolder() {
+    TemplateFolder parentFolder = templateFolderService.getByFolderPath(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    TemplateFolder templateFolder = constructTemplateBuilder(parentFolder.getUuid());
+    templateFolder.setName(WingsTestConstants.INVALID_NAME);
+    TemplateFolder myTemplateFolder = templateFolderService.save(templateFolder);
   }
 
   @Test
