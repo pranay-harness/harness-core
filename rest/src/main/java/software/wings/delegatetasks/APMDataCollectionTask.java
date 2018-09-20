@@ -32,6 +32,7 @@ import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
+import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.apm.APMResponseParser;
@@ -483,6 +484,14 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             }
             lastEndTime = currentEndTime;
             collectionStartTime += TimeUnit.MINUTES.toMillis(collectionWindow);
+            if (dataCollectionMinute >= dataCollectionInfo.getDataCollectionTotalTime()) {
+              // We are done with all data collection, so setting task status to success and quitting.
+              logger.info(
+                  "Completed APM collection task. So setting task status to success and quitting. StateExecutionId {}",
+                  dataCollectionInfo.getStateExecutionId());
+              completed.set(true);
+              taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+            }
             break;
 
           } catch (Exception ex) {

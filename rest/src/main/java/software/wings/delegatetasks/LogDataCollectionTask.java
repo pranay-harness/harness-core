@@ -237,6 +237,14 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
           }
           logCollectionMinute++;
           collectionStartTime += TimeUnit.MINUTES.toMillis(1);
+          if (logCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+            // We are done with all data collection, so setting task status to success and quitting.
+            logger.info(
+                "Completed Log collection task. So setting task status to success and quitting. StateExecutionId {}",
+                dataCollectionInfo.getStateExecutionId());
+            completed.set(true);
+            taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
+          }
           break;
         } catch (Exception ex) {
           if (++retry >= RETRIES) {
