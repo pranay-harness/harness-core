@@ -9,7 +9,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -545,13 +544,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
 
-    // We haven't stored the delegate in persistence store. So if we call the processDelegateResponse with response
-    // which doesn't extends DelegateTaskNotifyResponseData, then the test would throw a null pointer exception. In this
-    // case we are creating a response which doesn't extends DelegateTaskNotifyResponseData.
-    wingsPersistence.save(delegateTask);
-    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        aDelegateTaskResponse().withAccountId(ACCOUNT_ID).withResponse(jenkinsExecutionResponse).build());
-
     wingsPersistence.save(delegate);
     wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
@@ -560,36 +552,13 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(USER_NAME);
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
 
-    // Delete the delegate from the persistence store. If the cached entry is not there in
-    // delegateMetaInfoCache then the test would fail.
     jenkinsExecutionResponse = new JenkinsExecutionResponse();
     delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     wingsPersistence.save(delegateTask);
     wingsPersistence.delete(delegate);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
         aDelegateTaskResponse().withAccountId(ACCOUNT_ID).withResponse(jenkinsExecutionResponse).build());
-    assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(USER_NAME);
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
-  }
-
-  @Test
-  public void testProcessDelegateTaskResponseWithDelegateMetaInfoNotFoundException() {
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(ACCOUNT_ID)
-                                    .withWaitId(generateUuid())
-                                    .withTaskType(TaskType.HTTP)
-                                    .withAppId(APP_ID)
-                                    .withParameters(new Object[] {})
-                                    .withTags(new ArrayList<>())
-                                    .build();
-
-    JenkinsExecutionResponse jenkinsExecutionResponse = new JenkinsExecutionResponse();
-
-    wingsPersistence.save(delegateTask);
-    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        aDelegateTaskResponse().withAccountId(ACCOUNT_ID).withResponse(jenkinsExecutionResponse).build());
-    DelegateTaskNotifyResponseData delegateTaskNotifyResponseData = jenkinsExecutionResponse;
-    assertNull(delegateTaskNotifyResponseData.getDelegateMetaInfo());
   }
 
   @Test
