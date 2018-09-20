@@ -405,18 +405,20 @@ public class UserServiceImpl implements UserService {
 
     User user = getUserByEmail(userInvite.getEmail());
     if (user == null) {
+      AuthenticationMechanism currentAuthenticationMechanism = account.getAuthenticationMechanism();
+      boolean emailVerified = !currentAuthenticationMechanism.equals(AuthenticationMechanism.USER_PASSWORD);
       user = anUser()
                  .withAccounts(Lists.newArrayList(account))
                  .withEmail(userInvite.getEmail().trim().toLowerCase())
                  .withName(userInvite.getName().trim())
                  .withRoles(userInvite.getRoles())
                  .withAppId(Base.GLOBAL_APP_ID)
-                 .withEmailVerified(false)
+                 .withEmailVerified(emailVerified)
                  .build();
       user = save(user);
       // Invitation email should sent only in case of USER_PASSWORD authentication mechanism. Because only in that case
       // we need user to set the password.
-      if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.USER_PASSWORD)) {
+      if (currentAuthenticationMechanism.equals(AuthenticationMechanism.USER_PASSWORD)) {
         sendNewInvitationMail(userInvite, account);
       } else if (isNotEmpty(userInvite.getUserGroups())) {
         sendAddedRoleEmail(user, account);
