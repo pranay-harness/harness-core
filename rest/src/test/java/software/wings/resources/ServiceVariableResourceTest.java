@@ -29,6 +29,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.utils.ResourceTestRule;
@@ -44,6 +45,7 @@ import javax.ws.rs.core.Response;
 public class ServiceVariableResourceTest {
   private static final String ACCOUNT_ID = UUID.randomUUID().toString();
   private static final ServiceVariableService VARIABLE_SERVICE = mock(ServiceVariableService.class);
+  private static final AuthHandler AUTH_HANDLER = mock(AuthHandler.class);
   private static final AppService APP_SERVICE = mock(AppService.class);
   private static final ServiceVariableResource VARIABLE_RESOURCE = new ServiceVariableResource();
 
@@ -69,8 +71,10 @@ public class ServiceVariableResourceTest {
         .thenReturn(Application.Builder.anApplication().withAccountId(ACCOUNT_ID).build());
     setInternalState(VARIABLE_RESOURCE, "serviceVariablesService", VARIABLE_SERVICE);
     setInternalState(VARIABLE_RESOURCE, "appService", APP_SERVICE);
+    setInternalState(VARIABLE_RESOURCE, "authHandler", AUTH_HANDLER);
     SERVICE_VARIABLE.setUuid(WingsTestConstants.SERVICE_VARIABLE_ID);
     SERVICE_VARIABLE.setAppId(APP_ID);
+    when(AUTH_HANDLER.authorize(any(), any(), any())).thenReturn(true);
   }
 
   /**
@@ -154,13 +158,14 @@ public class ServiceVariableResourceTest {
    */
   @Test
   public void shouldDeleteServiceVariable() throws Exception {
+    when(VARIABLE_SERVICE.get("APP_ID_1", WingsTestConstants.SERVICE_VARIABLE_ID, true)).thenReturn(SERVICE_VARIABLE);
     Response restResponse =
         RESOURCES.client()
-            .target(format("/service-variables/%s?appId=%s", WingsTestConstants.SERVICE_VARIABLE_ID, APP_ID))
+            .target(format("/service-variables/%s?appId=%s", WingsTestConstants.SERVICE_VARIABLE_ID, "APP_ID_1"))
             .request()
             .delete();
     assertThat(restResponse.getStatus()).isEqualTo(200);
-    verify(VARIABLE_SERVICE).delete(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID);
+    verify(VARIABLE_SERVICE).delete("APP_ID_1", WingsTestConstants.SERVICE_VARIABLE_ID);
   }
 
   /**
