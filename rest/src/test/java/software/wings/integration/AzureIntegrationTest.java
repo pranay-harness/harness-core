@@ -1,86 +1,85 @@
 package software.wings.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
-import org.junit.Ignore;
+import com.google.inject.Inject;
+
+import org.junit.Before;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.WingsBaseTest;
 import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.AzureTagDetails;
 import software.wings.beans.AzureVirtualMachineScaleSet;
+import software.wings.generator.ScmSecret;
+import software.wings.generator.SecretName;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.rules.Integration;
-import software.wings.service.impl.security.EncryptionServiceImpl;
+import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 @Integration
-@Ignore
-/*
-This test class is making calls to Azure. The purpose is to do directed testing for Azure APIs.
-This is not to be run as an automated test[hence the @Ignore].
- */
-public class AzureIntegrationTest {
+public class AzureIntegrationTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(AzureIntegrationTest.class);
 
-  private static final String clientId = "placeholder";
-  private static final String tenantId = "placeholder";
-  private static final String key = "placeholder";
-  private static final String subscriptionId = "placeholder";
+  private String clientId = "";
+  private String tenantId = "";
+  private String key = "";
+  private final String subscriptionId = "20d6a917-99fa-4b1b-9b2e-a3d624e9dcf0"; // Harness-QA subscription
 
-  private static AzureHelperService azureHelperService = new AzureHelperService();
+  @Inject private ScmSecret scmSecret;
+  @Inject private AzureHelperService azureHelperService;
+  @Inject private EncryptionService encryptionService;
 
-  public static void setUp() {
-    setInternalState(azureHelperService, "encryptionService", new EncryptionServiceImpl());
+  @Before
+  public void setUp() {
+    setInternalState(azureHelperService, "encryptionService", encryptionService);
+    clientId = scmSecret.decryptToString(new SecretName("azure_client_id"));
+    tenantId = scmSecret.decryptToString(new SecretName("azure_tenant_id"));
+    key = scmSecret.decryptToString(new SecretName("azure_key"));
   }
 
-  public static void main(String[] args) {
-    logger.info("AzureIntegrationTest: Start.");
-    setUp();
-    azureAuthenticationTest();
-    getSubscriptions();
-    getContainerRegistries();
-    getRepositoryTags();
-    getKubernetesClusters();
-    getKubernetesClusterConfig();
-    getAvailableTags();
-    getVirtualMachineScaleSets();
-    getAvailabilitySets();
-    logger.info("AzureIntegrationTest: Done.");
-  }
-
-  private static void azureAuthenticationTest() {
+  @Test
+  public void azureAuthenticationTest() {
     azureHelperService.validateAzureAccountCredential(clientId, tenantId, key);
   }
 
-  private static void getSubscriptions() {
+  @Test
+  public void getSubscriptionsTest() {
     AzureConfig config = getAzureConfig();
-    logger.info(
-        "Azure Subscriptions: " + azureHelperService.listSubscriptions(config, Collections.emptyList()).toString());
+
+    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    assertThat(subscriptions).isNotEmpty();
+    logger.info("Azure Subscriptions: " + subscriptions);
   }
 
-  private static void getContainerRegistries() {
+  @Test
+  public void getContainerRegistriesTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
-    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    List<String> registries = new ArrayList<>();
+
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
-      List<String> registries =
-          azureHelperService.listContainerRegistries(config, Collections.emptyList(), subscriptionId);
-      for (String registry : registries) {
-        logger.info("Details: " + subscriptionId + " " + registry);
-      }
+      registries.addAll(azureHelperService.listContainerRegistries(config, Collections.emptyList(), subscriptionId));
     }
+    assertThat(registries).isNotEmpty();
+
+    logger.info("Azure Container Registries: " + registries);
   }
 
-  private static void getVirtualMachineScaleSets() {
+  @Test
+  public void getVirtualMachineScaleSetsTest() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
-    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
       List<AzureVirtualMachineScaleSet> virtualMachineScaleSets =
@@ -91,10 +90,10 @@ public class AzureIntegrationTest {
     }
   }
 
-  private static void getAvailabilitySets() {
+  @Test
+  public void getAvailabilitySets() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
-    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
       List<AzureAvailabilitySet> availabilitySets =
@@ -105,7 +104,8 @@ public class AzureIntegrationTest {
     }
   }
 
-  private static void getAvailableTags() {
+  @Test
+  public void getAvailableTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
     subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
@@ -113,6 +113,7 @@ public class AzureIntegrationTest {
       String subscriptionId = entry.getKey();
       logger.info("Subscription: " + subscriptionId);
       List<AzureTagDetails> tags = azureHelperService.listTags(config, Collections.emptyList(), subscriptionId);
+      assertThat(tags).isNotEmpty();
       for (AzureTagDetails tag : tags) {
         logger.info("Tag: " + tag.getTagName());
         for (String value : tag.getValues()) {
@@ -122,7 +123,8 @@ public class AzureIntegrationTest {
     }
   }
 
-  private static void getRepositoryTags() {
+  @Test
+  public void getRepositoryTags() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
     subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
@@ -142,21 +144,22 @@ public class AzureIntegrationTest {
     }
   }
 
-  private static void getKubernetesClusters() {
+  @Test
+  public void getKubernetesClusters() {
     AzureConfig config = getAzureConfig();
     List<AzureKubernetesCluster> clusters =
         azureHelperService.listKubernetesClusters(config, Collections.emptyList(), subscriptionId);
-    logger.info("Clusters:");
-    clusters.forEach(cluster -> logger.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName()));
+
+    assertThat(clusters).isNotEmpty();
+
+    clusters.forEach(cluster -> {
+      logger.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName());
+      azureHelperService.getKubernetesClusterConfig(
+          config, Collections.emptyList(), subscriptionId, cluster.getResourceGroup(), cluster.getName(), "default");
+    });
   }
 
-  private static void getKubernetesClusterConfig() {
-    AzureConfig config = getAzureConfig();
-    azureHelperService.getKubernetesClusterConfig(
-        config, Collections.emptyList(), subscriptionId, "puneet-aks", "puneet-aks", "default");
-  }
-
-  private static AzureConfig getAzureConfig() {
+  private AzureConfig getAzureConfig() {
     return new AzureConfig(clientId, tenantId, key.toCharArray(), "", "");
   }
 }
