@@ -25,13 +25,11 @@ import javax.validation.constraints.NotNull;
       fields = { @Field("appId")
                  , @Field("name"), @Field("pipelineExecutionId") })
   ,
-      @Index(options = @IndexOptions(name = "uniqueWorkflowExecution", unique = true),
-          fields = { @Field("appId")
-                     , @Field("name"), @Field("workflowExecutionId") }),
-      @Index(options = @IndexOptions(
-                 name = "uniquePhaseExecution" /*, enable this after the migration is executed unique = true */),
-          fields = { @Field("appId")
-                     , @Field("name"), @Field("phaseExecutionId") })
+      @Index(options = @IndexOptions(name = "uniqueWorkflowExecution", unique = true), fields = {
+        @Field("appId"), @Field("name"), @Field("workflowExecutionId")
+      }), @Index(options = @IndexOptions(name = "uniquePhaseExecution", unique = true), fields = {
+        @Field("appId"), @Field("name"), @Field("phaseExecutionId")
+      })
 })
 @Value
 public class SweepingOutput extends Base {
