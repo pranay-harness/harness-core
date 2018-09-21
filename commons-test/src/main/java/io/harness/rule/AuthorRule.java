@@ -17,12 +17,14 @@ import java.util.List;
 public class AuthorRule extends RepeatRule {
   private static final Logger logger = LoggerFactory.getLogger(AuthorRule.class);
 
-  private static List<String> active = asList("george@harness.io", "raghu@harness.io", "sriram@harness.io");
+  private static List<String> active =
+      asList("george@harness.io", "puneet.saraswat@harness.io", "raghu@harness.io", "sriram@harness.io");
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})
   public @interface Author {
     String[] emails();
+    boolean resent() default true;
     boolean intermittent() default false;
   }
 
@@ -52,6 +54,10 @@ public class AuthorRule extends RepeatRule {
       if (author.intermittent()) {
         return RepeatRule.RepeatStatement.builder().build();
       }
+      return statement;
+    }
+
+    if (!author.resent()) {
       return statement;
     }
 

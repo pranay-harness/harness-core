@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
 
 import io.harness.persistence.HQuery;
+import io.harness.rule.AuthorRule.Author;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import org.junit.After;
@@ -87,6 +88,7 @@ public class ConfigurationControllerTest extends WingsBaseTest {
   }
 
   @Test
+  @Author(emails = "puneet.saraswat@harness.io", intermittent = true)
   public void listenerIsCalled() {
     TestListener testListener = new TestListener();
 
