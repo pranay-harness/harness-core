@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
+import io.harness.rule.AuthorRule.Author;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -659,6 +660,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Author(emails = {"sriram@harness.io", "raghu@harness.io"}, intermittent = true)
   public void testButNoControlData() throws IOException, JobExecutionException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();

@@ -2,6 +2,7 @@ package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
 import static software.wings.sm.ContextElement.ARTIFACT;
@@ -25,13 +26,15 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.SweepingOutput;
+import software.wings.beans.SweepingOutput.Scope;
+import software.wings.beans.SweepingOutput.SweepingOutputBuilder;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.expression.SweepingOutputFunctor;
-import software.wings.expression.SweepingOutputFunctor.SweepingOutputFunctorBuilder;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -472,22 +475,20 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       context.put(SERVICE_VARIABLE, map);
     }
 
-    context.putAll(
-        variableProcessor.getVariables(stateExecutionInstance.getContextElements(), getWorkflowExecutionId()));
+    String workflowExecutionId = getWorkflowExecutionId();
 
-    final SweepingOutputFunctorBuilder sweepingOutputFunctorBuilder =
+    context.putAll(variableProcessor.getVariables(stateExecutionInstance.getContextElements(), workflowExecutionId));
+
+    final SweepingOutput sweepingOutput = prepareSweepingOutputBuilder(null).build();
+
+    context.put("context",
         SweepingOutputFunctor.builder()
             .sweepingOutputService(sweepingOutputService)
-            .appId(getAppId())
-            .workflowExecutionId(getWorkflowExecutionId());
-
-    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
-    if (workflowStandardParams != null && workflowStandardParams.getWorkflowElement() != null) {
-      sweepingOutputFunctorBuilder.pipelineExecutionId(
-          workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid());
-    }
-
-    context.put("context", sweepingOutputFunctorBuilder.build());
+            .appId(sweepingOutput.getAppId())
+            .pipelineExecutionId(sweepingOutput.getPipelineExecutionId())
+            .workflowExecutionId(sweepingOutput.getWorkflowExecutionId())
+            .phaseExecutionId(sweepingOutput.getPhaseExecutionId())
+            .build());
 
     return context;
   }
@@ -586,5 +587,36 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Override
   public SettingValue getGlobalSettingValue(String accountId, String settingId) {
     return settingsService.getSettingValueById(accountId, settingId);
+  }
+
+  @Override
+  public SweepingOutputBuilder prepareSweepingOutputBuilder(SweepingOutput.Scope sweepingOutputScope) {
+    // Default scope is pipeline
+    if (sweepingOutputScope == null) {
+      sweepingOutputScope = Scope.PIPELINE;
+    }
+    WorkflowStandardParams workflowStandardParams = getContextElement(ContextElementType.STANDARD);
+    String pipelineExecutionId = workflowStandardParams == null || workflowStandardParams.getWorkflowElement() == null
+        ? null
+        : workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid();
+    String workflowExecutionId = getWorkflowExecutionId();
+
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    String phaseExecutionId = phaseElement == null ? null : workflowExecutionId + phaseElement.getUuid();
+
+    if (pipelineExecutionId == null || !Scope.PIPELINE.equals(sweepingOutputScope)) {
+      pipelineExecutionId = generateUuid();
+    }
+    if (workflowExecutionId == null || Scope.PHASE.equals(sweepingOutputScope)) {
+      workflowExecutionId = generateUuid();
+    }
+    if (phaseExecutionId == null) {
+      phaseExecutionId = generateUuid();
+    }
+    return SweepingOutput.builder()
+        .appId(getAppId())
+        .pipelineExecutionId(pipelineExecutionId)
+        .workflowExecutionId(workflowExecutionId)
+        .phaseExecutionId(phaseExecutionId);
   }
 }

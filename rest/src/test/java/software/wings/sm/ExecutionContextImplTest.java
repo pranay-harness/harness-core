@@ -9,6 +9,7 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
@@ -29,10 +30,13 @@ import software.wings.api.HostElement;
 import software.wings.api.HttpStateExecutionData;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
+import software.wings.api.WorkflowElement;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.SweepingOutput;
+import software.wings.beans.SweepingOutput.Scope;
 import software.wings.beans.artifact.Artifact;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
@@ -287,5 +291,78 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     String evaluatedExpression = context.renderExpression(expr, commandStateExecutionData, artifact);
     assertThat(evaluatedExpression).isNotEmpty();
     assertThat(evaluatedExpression).isEqualTo("echo MyValue-123-SNAPSHOT");
+  }
+
+  private ExecutionContextImpl prepareSweepingExecutionContext(
+      String appId, String pipelineExecutionId, String workflowExecutionId, String phaseId) {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setExecutionUuid(workflowExecutionId);
+    stateExecutionInstance.setPhaseSubWorkflowId(phaseId);
+    stateExecutionInstance.getContextElements().add(
+        aWorkflowStandardParams()
+            .withAppId(appId)
+            .withWorkflowElement(WorkflowElement.builder().pipelineDeploymentUuid(pipelineExecutionId).build())
+            .build());
+    return new ExecutionContextImpl(stateExecutionInstance);
+  }
+
+  @Test
+  public void shouldPrepareSweepingOutputBuilderForPipelineScope() {
+    String appId = generateUuid();
+    String pipelineExecutionId = generateUuid();
+
+    ExecutionContextImpl context = prepareSweepingExecutionContext(appId, pipelineExecutionId, null, null);
+    final SweepingOutput sweepingOutput1 = context.prepareSweepingOutputBuilder(Scope.PIPELINE).build();
+    assertThat(sweepingOutput1.getPipelineExecutionId()).isEqualTo(pipelineExecutionId);
+    assertThat(sweepingOutput1.getAppId()).isEqualTo(appId);
+
+    final SweepingOutput sweepingOutput2 = context.prepareSweepingOutputBuilder(null).build();
+    assertThat(sweepingOutput2.getPipelineExecutionId()).isEqualTo(pipelineExecutionId);
+    assertThat(sweepingOutput2.getAppId()).isEqualTo(appId);
+  }
+
+  @Test
+  public void shouldPrepareSweepingOutputBuilderForPipelineScopeJustAWorkflow() {
+    String appId = generateUuid();
+    String workflowExecutionId = generateUuid();
+
+    ExecutionContextImpl context = prepareSweepingExecutionContext(appId, null, workflowExecutionId, null);
+    final SweepingOutput sweepingOutput1 = context.prepareSweepingOutputBuilder(Scope.PIPELINE).build();
+    assertThat(sweepingOutput1.getWorkflowExecutionId()).isEqualTo(workflowExecutionId);
+    assertThat(sweepingOutput1.getAppId()).isEqualTo(appId);
+
+    final SweepingOutput sweepingOutput2 = context.prepareSweepingOutputBuilder(null).build();
+    assertThat(sweepingOutput2.getWorkflowExecutionId()).isEqualTo(workflowExecutionId);
+    assertThat(sweepingOutput2.getAppId()).isEqualTo(appId);
+  }
+
+  @Test
+  public void shouldPrepareSweepingOutputBuilderForWorkflowScope() {
+    String appId = generateUuid();
+    String pipelineExecutionId = generateUuid();
+    String workflowExecutionId = generateUuid();
+
+    ExecutionContextImpl context =
+        prepareSweepingExecutionContext(appId, pipelineExecutionId, workflowExecutionId, null);
+    final SweepingOutput sweepingOutput1 = context.prepareSweepingOutputBuilder(Scope.WORKFLOW).build();
+    assertThat(sweepingOutput1.getPipelineExecutionId()).isNotEqualTo(pipelineExecutionId);
+    assertThat(sweepingOutput1.getWorkflowExecutionId()).isEqualTo(workflowExecutionId);
+    assertThat(sweepingOutput1.getAppId()).isEqualTo(appId);
+  }
+
+  @Test
+  public void shouldPrepareSweepingOutputBuilderForPhaseScope() {
+    String appId = generateUuid();
+    String pipelineExecutionId = generateUuid();
+    String workflowExecutionId = generateUuid();
+    String phaseId = generateUuid();
+
+    ExecutionContextImpl context =
+        prepareSweepingExecutionContext(appId, pipelineExecutionId, workflowExecutionId, null);
+    final SweepingOutput sweepingOutput1 = context.prepareSweepingOutputBuilder(Scope.PHASE).build();
+    assertThat(sweepingOutput1.getPipelineExecutionId()).isNotEqualTo(pipelineExecutionId);
+    assertThat(sweepingOutput1.getWorkflowExecutionId()).isNotEqualTo(workflowExecutionId);
+    assertThat(sweepingOutput1.getPhaseExecutionId()).isNotEqualTo(workflowExecutionId + phaseId);
+    assertThat(sweepingOutput1.getAppId()).isEqualTo(appId);
   }
 }

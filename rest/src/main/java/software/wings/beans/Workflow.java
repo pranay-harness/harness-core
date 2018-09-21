@@ -28,6 +28,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "workflows", noClassnameStored = true)
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class Workflow extends Base {
+  public static final String NAME_KEY = "name";
+
   @NotNull @EntityName private String name;
 
   private String description;

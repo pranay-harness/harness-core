@@ -218,7 +218,7 @@ public class PipelineGenerator {
             .build());
   }
   public Pipeline ensureBuildPipeline(Randomizer.Seed seed, Owners owners) {
-    Workflow buildWorkflow = workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD);
+    Workflow buildWorkflow = workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD_JENKINS);
 
     return ensurePipeline(seed, owners,
         Pipeline.builder()

@@ -2,7 +2,6 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -76,6 +75,7 @@ public class JenkinsState extends State {
   public static final String JENKINS_CONFIG_ID_KEY = "jenkinsConfigId";
   public static final String JOB_NAME_KEY = "jobName";
   public static final String SWEEPING_OUTPUT_NAME_KEY = "sweepingOutputName";
+  public static final String SWEEPING_OUTPUT_SCOPE_KEY = "sweepingOutputScope";
 
   private String jenkinsConfigId;
 
@@ -88,7 +88,8 @@ public class JenkinsState extends State {
   @Attributes(title = "Artifacts/Files Paths")
   private List<FilePathAssertionEntry> filePathsForAssertion = Lists.newArrayList();
 
-  @Attributes(title = "Sweeping output name") @Getter @Setter private String sweepingOutputName;
+  @Getter @Setter private String sweepingOutputName;
+  @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
 
   @Transient @Inject private DelegateService delegateService;
   @Transient @Inject private ActivityService activityService;
@@ -408,22 +409,12 @@ public class JenkinsState extends State {
     jenkinsExecutionData.setDelegateMetaInfo(jenkinsExecutionResponse.getDelegateMetaInfo());
 
     if (isNotEmpty(sweepingOutputName)) {
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-      // In case this is independent workflow execution we still need to provide pipelineExecutionId to allow
-      // for unique index by pipelineExecutionId to works.
-      String pipelineExecutionId = workflowStandardParams != null && workflowStandardParams.getWorkflowElement() != null
-              && workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid() != null
-          ? workflowStandardParams.getWorkflowElement().getPipelineDeploymentUuid()
-          : generateUuid();
+      final SweepingOutput sweepingOutput = context.prepareSweepingOutputBuilder(sweepingOutputScope)
+                                                .name(sweepingOutputName)
+                                                .output(KryoUtils.asDeflatedBytes(jenkinsExecutionData))
+                                                .build();
 
-      SweepingOutput sweepingOutput =
-          sweepingOutputService.save(SweepingOutput.builder()
-                                         .name(sweepingOutputName)
-                                         .appId(context.getAppId())
-                                         .pipelineExecutionId(pipelineExecutionId)
-                                         .workflowExecutionId(context.getWorkflowExecutionId())
-                                         .output(KryoUtils.asDeflatedBytes(jenkinsExecutionData))
-                                         .build());
+      sweepingOutputService.save(sweepingOutput);
     }
 
     return anExecutionResponse()

@@ -34,7 +34,7 @@ public class WorkflowIntegrationTest extends BaseIntegrationTest {
 
     final Owners owners = ownerManager.create();
 
-    Workflow seedBuildWorkflow = workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD);
+    Workflow seedBuildWorkflow = workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD_JENKINS);
     assertThat(seedBuildWorkflow).isNotNull().hasFieldOrPropertyWithValue("name", SEED_BUILD_WORKFLOW_NAME);
   }
 

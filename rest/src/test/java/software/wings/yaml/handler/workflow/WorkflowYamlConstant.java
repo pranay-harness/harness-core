@@ -401,9 +401,9 @@ public class WorkflowYamlConstant {
       + "templatized: false";
 
   public static final String BUILD_INVALID_YAML_FILE_PATH = "Setup/Applications/APP_NAME/WorkflowsInvalid/build.yaml";
-  // END STRING CONSTANTS FOR BUILD WORFLOW YAML TEST
+  // END STRING CONSTANTS FOR BUILD WORKFLOW YAML TEST
 
-  // START STRING CONSTANTS FOR CANARY WORFLOW YAML TEST
+  // START STRING CONSTANTS FOR CANARY WORKFLOW YAML TEST
   public static final String CANARY_VALID_YAML_CONTENT = "harnessApiVersion: '1.0'\n"
       + "type: CANARY\n"
       + "envName: ENV_NAME\n"
