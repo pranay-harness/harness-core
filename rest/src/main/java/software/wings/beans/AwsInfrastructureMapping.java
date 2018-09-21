@@ -1024,48 +1024,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
 
     /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return anAwsInfrastructureMapping()
-          .withRestrictionType(restrictionType)
-          .withRestrictionExpression(restrictionExpression)
-          .withRegion(region)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withAccountId(accountId)
-          .withCreatedBy(createdBy)
-          .withHostConnectionAttrs(hostConnectionAttrs)
-          .withCreatedAt(createdAt)
-          .withLoadBalancerId(loadBalancerId)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withLoadBalancerName(loadBalancerName)
-          .withCustomName(customName)
-          .withEntityYamlPath(entityYamlPath)
-          .withUsePublicDns(usePublicDns)
-          .withComputeProviderSettingId(computeProviderSettingId)
-          .withProvisionInstances(provisionInstances)
-          .withEnvId(envId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withAwsInstanceFilter(awsInstanceFilter)
-          .withServiceId(serviceId)
-          .withAutoScalingGroupName(autoScalingGroupName)
-          .withComputeProviderType(computeProviderType)
-          .withInfraMappingType(infraMappingType)
-          .withSetDesiredCapacity(setDesiredCapacity)
-          .withDeploymentType(deploymentType)
-          .withDesiredCapacity(desiredCapacity)
-          .withComputeProviderName(computeProviderName)
-          .withName(name)
-          .withProvisionerId(provisionerId)
-          .withAutoPopulate(autoPopulate)
-          .withHostNameConvention(hostNameConvention);
-    }
-
-    /**
      * Build aws infrastructure mapping.
      *
      * @return the aws infrastructure mapping

@@ -180,32 +180,6 @@ public class AzureKubernetesInfrastructureMapping extends ContainerInfrastructur
       return this;
     }
 
-    public Builder but() {
-      return anAzureKubernetesInfrastructureMapping()
-          .withClusterName(clusterName)
-          .withSubscriptionId(subscriptionId)
-          .withResourceGroup(resourceGroup)
-          .withNamespace(namespace)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withAccountId(accountId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withEntityYamlPath(entityYamlPath)
-          .withComputeProviderSettingId(computeProviderSettingId)
-          .withEnvId(envId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withServiceId(serviceId)
-          .withComputeProviderType(computeProviderType)
-          .withInfraMappingType(infraMappingType)
-          .withDeploymentType(deploymentType)
-          .withComputeProviderName(computeProviderName)
-          .withName(name)
-          .withAutoPopulate(autoPopulate);
-    }
-
     public AzureKubernetesInfrastructureMapping build() {
       AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
           new AzureKubernetesInfrastructureMapping();

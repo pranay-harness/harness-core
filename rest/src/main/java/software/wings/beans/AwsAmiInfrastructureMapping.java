@@ -211,31 +211,6 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
-    public Builder but() {
-      return anAwsAmiInfrastructureMapping()
-          .withRegion(awsAmiInfrastructureMapping.getRegion())
-          .withAutoScalingGroupName(awsAmiInfrastructureMapping.getAutoScalingGroupName())
-          .withClassicLoadBalancers(awsAmiInfrastructureMapping.getClassicLoadBalancers())
-          .withTargetGroupArns(awsAmiInfrastructureMapping.getTargetGroupArns())
-          .withUuid(awsAmiInfrastructureMapping.getUuid())
-          .withAppId(awsAmiInfrastructureMapping.getAppId())
-          .withCreatedBy(awsAmiInfrastructureMapping.getCreatedBy())
-          .withCreatedAt(awsAmiInfrastructureMapping.getCreatedAt())
-          .withLastUpdatedBy(awsAmiInfrastructureMapping.getLastUpdatedBy())
-          .withLastUpdatedAt(awsAmiInfrastructureMapping.getLastUpdatedAt())
-          .withComputeProviderSettingId(awsAmiInfrastructureMapping.getComputeProviderSettingId())
-          .withEnvId(awsAmiInfrastructureMapping.getEnvId())
-          .withServiceTemplateId(awsAmiInfrastructureMapping.getServiceTemplateId())
-          .withServiceId(awsAmiInfrastructureMapping.getServiceId())
-          .withComputeProviderType(awsAmiInfrastructureMapping.getComputeProviderType())
-          .withInfraMappingType(awsAmiInfrastructureMapping.getInfraMappingType())
-          .withDeploymentType(awsAmiInfrastructureMapping.getDeploymentType())
-          .withComputeProviderName(awsAmiInfrastructureMapping.getComputeProviderName())
-          .withName(awsAmiInfrastructureMapping.getName())
-          .withAccountId(awsAmiInfrastructureMapping.getAccountId())
-          .withHostNameConvention(awsAmiInfrastructureMapping.getHostNameConvention());
-    }
-
     public AwsAmiInfrastructureMapping build() {
       return awsAmiInfrastructureMapping;
     }
