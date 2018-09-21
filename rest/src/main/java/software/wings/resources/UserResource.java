@@ -506,7 +506,7 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
-  public RestResponse<TwoFactorAdminOverrideSettings> overrideTwoFactorAuth(
+  public RestResponse<TwoFactorAdminOverrideSettings> setTwoFactorAuthAtAccountLevel(
       @PathParam("accountId") @NotEmpty String accountId, TwoFactorAdminOverrideSettings settings) {
     // Trying Override = true
     if (settings.isAdminOverrideTwoFactorEnabled()) {

@@ -62,7 +62,6 @@ public class WhitelistResource {
   @GET
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<PageResponse<Whitelist>> list(
       @BeanParam PageRequest<Whitelist> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     PageResponse<Whitelist> pageResponse = whitelistService.list(accountId, pageRequest);
