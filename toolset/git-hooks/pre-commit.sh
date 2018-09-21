@@ -44,11 +44,14 @@ else
     #do the formatting
     for file in `git diff-index --cached --name-only $against | grep "\.java$"`
     do
-        clang-format -i "$file"
-        git diff --exit-code -- $file
-        if [ "$?" -ne "0" ]
+        if [ -e "${file}" ]
         then
-            git add $file
+            clang-format -i "${file}"
+            git diff --exit-code -- "${file}"
+            if [ "$?" -ne "0" ]
+            then
+                git add "${file}"
+            fi
         fi
     done
 fi
