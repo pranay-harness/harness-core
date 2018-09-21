@@ -18,7 +18,9 @@ import retrofit2.http.Body;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.RestResponse;
 import software.wings.security.EncryptionType;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
@@ -106,6 +108,7 @@ public class SecretManagementResource {
   @Path("/transition-config")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
   public RestResponse<Boolean> transitionSecrets(@QueryParam("accountId") final String accountId,
       @QueryParam("fromEncryptionType") EncryptionType fromEncryptionType, @QueryParam("fromKmsId") String fromKmsId,
       @QueryParam("toEncryptionType") EncryptionType toEncryptionType, @QueryParam("toKmsId") String toKmsId) {

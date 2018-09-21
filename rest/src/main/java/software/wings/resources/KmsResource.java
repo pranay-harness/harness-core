@@ -7,7 +7,9 @@ import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.RestResponse;
+import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.security.KmsService;
 
@@ -24,6 +26,7 @@ import javax.ws.rs.QueryParam;
 @Path("/kms")
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
+@AuthRule(permissionType = PermissionType.ACCOUNT_MANAGEMENT)
 public class KmsResource {
   @Inject private KmsService kmsService;
 
