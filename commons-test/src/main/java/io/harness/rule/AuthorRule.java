@@ -1,5 +1,8 @@
 package io.harness.rule;
 
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
+
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -8,16 +11,18 @@ import org.slf4j.LoggerFactory;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Objects;
+import java.util.Arrays;
+import java.util.List;
 
 public class AuthorRule extends RepeatRule {
   private static final Logger logger = LoggerFactory.getLogger(AuthorRule.class);
 
+  private static List<String> active = asList("george@harness.io", "raghu@harness.io");
+
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})
   public @interface Author {
-    String name() default "";
-    String email();
+    String[] emails();
     boolean intermittent() default false;
   }
 
@@ -28,29 +33,26 @@ public class AuthorRule extends RepeatRule {
       return statement;
     }
 
+    for (String email : author.emails()) {
+      if (!active.contains(email)) {
+        throw new RuntimeException(format("Email %s is not active.", email));
+      }
+    }
+
     // If there is email, it should match
-    if (!author.email().isEmpty()) {
-      final String ghprbActualCommitAuthorEmail = System.getenv("ghprbActualCommitAuthorEmail");
-      logger.info("ghprbActualCommitAuthorEmail = {}", ghprbActualCommitAuthorEmail);
+    final String ghprbActualCommitAuthorEmail = System.getenv("ghprbActualCommitAuthorEmail");
+    if (ghprbActualCommitAuthorEmail == null) {
+      return statement;
+    }
 
-      if (!Objects.equals(author.email(), ghprbActualCommitAuthorEmail)) {
-        if (author.intermittent()) {
-          return RepeatRule.RepeatStatement.builder().build();
-        }
-        return statement;
-      }
-    } else if (!author.name().isEmpty()) {
-      final String ghprbActualCommitAuthor = System.getenv("ghprbActualCommitAuthor");
-      logger.info("ghprbActualCommitAuthor = {}", ghprbActualCommitAuthor);
+    logger.info("ghprbActualCommitAuthorEmail = {}", ghprbActualCommitAuthorEmail);
 
-      if (!Objects.equals(author.name(), ghprbActualCommitAuthor)) {
-        if (author.intermittent()) {
-          return RepeatRule.RepeatStatement.builder().build();
-        }
-        return statement;
+    final boolean match = Arrays.stream(author.emails()).anyMatch(email -> email.equals(ghprbActualCommitAuthorEmail));
+    if (!match) {
+      if (author.intermittent()) {
+        return RepeatRule.RepeatStatement.builder().build();
       }
-    } else {
-      throw new RuntimeException("Either author email or name should be set");
+      return statement;
     }
 
     return RepeatRule.RepeatStatement.builder()
