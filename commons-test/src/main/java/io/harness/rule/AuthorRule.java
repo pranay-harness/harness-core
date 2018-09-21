@@ -1,6 +1,5 @@
 package io.harness.rule;
 
-import io.harness.rule.RepeatRule.RepeatStatement.RepeatStatementBuilder;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.slf4j.Logger;
@@ -19,12 +18,11 @@ public class AuthorRule extends RepeatRule {
   public @interface Author {
     String name() default "";
     String email();
+    boolean intermittent() default false;
   }
 
   @Override
   public Statement apply(Statement statement, Description description) {
-    final RepeatStatementBuilder builder = RepeatRule.RepeatStatement.builder().statement(statement).parentRule(this);
-
     Author author = description.getAnnotation(Author.class);
     if (author == null) {
       return statement;
@@ -36,6 +34,9 @@ public class AuthorRule extends RepeatRule {
       logger.info("ghprbActualCommitAuthorEmail = {}", ghprbActualCommitAuthorEmail);
 
       if (!Objects.equals(author.email(), ghprbActualCommitAuthorEmail)) {
+        if (author.intermittent()) {
+          return RepeatRule.RepeatStatement.builder().build();
+        }
         return statement;
       }
     } else if (!author.name().isEmpty()) {
@@ -43,11 +44,21 @@ public class AuthorRule extends RepeatRule {
       logger.info("ghprbActualCommitAuthor = {}", ghprbActualCommitAuthor);
 
       if (!Objects.equals(author.name(), ghprbActualCommitAuthor)) {
+        if (author.intermittent()) {
+          return RepeatRule.RepeatStatement.builder().build();
+        }
         return statement;
       }
     } else {
       throw new RuntimeException("Either author email or name should be set");
     }
-    return builder.times(20).successes(20).timeoutOnly(true).build();
+
+    return RepeatRule.RepeatStatement.builder()
+        .statement(statement)
+        .parentRule(this)
+        .times(20)
+        .successes(20)
+        .timeoutOnly(true)
+        .build();
   }
   }
