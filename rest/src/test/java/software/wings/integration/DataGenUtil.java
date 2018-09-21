@@ -675,7 +675,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             .build());
 
     // Build Workflow
-    workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD);
+    workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD_JENKINS);
     // Build Pipeline
     pipelineGenerator.ensurePredefined(seed, owners, Pipelines.BUILD);
   }

@@ -77,6 +77,9 @@ public class HttpState extends State {
   private static final String ASSERTION_ERROR_MSG =
       "Assertion should return true/false (Expression syntax is based on java language).";
 
+  public static final String URL_KEY = "url";
+  public static final String METHOD_KEY = "method";
+
   @Attributes(required = true, title = "URL") private String url;
   @Attributes(required = true, enums = {"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"}, title = "Method")
   @DefaultValue("GET")

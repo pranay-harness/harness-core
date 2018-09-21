@@ -6,6 +6,8 @@ package software.wings.sm;
 
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.OrchestrationWorkflowType;
+import software.wings.beans.SweepingOutput;
+import software.wings.beans.SweepingOutput.SweepingOutputBuilder;
 import software.wings.beans.WorkflowType;
 import software.wings.settings.SettingValue;
 
@@ -71,4 +73,6 @@ public interface ExecutionContext {
   String renderExpression(String expression, Map<String, Object> context);
 
   Map<String, Object> prepareContext(Object stateExecutionData);
+
+  SweepingOutputBuilder prepareSweepingOutputBuilder(SweepingOutput.Scope sweepingOutputScope);
 }

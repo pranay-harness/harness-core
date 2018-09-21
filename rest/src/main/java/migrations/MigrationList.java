@@ -43,6 +43,7 @@ import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SetRollbackFlagToWorkflows;
+import migrations.all.SweepingPhaseMigration;
 import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
@@ -114,6 +115,7 @@ public class MigrationList {
         .add(Pair.of(182, CleanupOrphanInstances.class))
         .add(Pair.of(183, InfraProvisionerFilteringTypeMigration.class))
         .add(Pair.of(184, CleanUpDatadogCallLogMigration.class))
+        .add(Pair.of(185, SweepingPhaseMigration.class))
         .build();
   }
 }

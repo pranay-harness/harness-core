@@ -10,11 +10,13 @@ public class SweepingOutputFunctor {
   private String appId;
   private String pipelineExecutionId;
   private String workflowExecutionId;
+  private String phaseExecutionId;
 
   private SweepingOutputService sweepingOutputService;
 
   public Object output(String name) {
-    SweepingOutput sweepingOutput = sweepingOutputService.find(appId, name, pipelineExecutionId, workflowExecutionId);
+    SweepingOutput sweepingOutput =
+        sweepingOutputService.find(appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId);
     if (sweepingOutput == null) {
       return null;
     }
