@@ -14,7 +14,10 @@ FILES=`git diff-index --cached --name-only $against`
 CHECKING=`
 for file in $FILES
 do
-    grep -nr "^<\{7\} \|^=\{7\}\|^>\{7\} " $file
+    if [ -e "${file}" ]
+    then
+        grep -nr "^<\{7\} \|^=\{7\}\|^>\{7\} " "${file}"
+    fi
 done`
 
 if [ ! -z "$CHECKING" ]

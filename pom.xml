@@ -10,13 +10,14 @@
 
     <modules>
         <!-- Harness Commons provides all aspects of reusable Java components. -->
-        <module>commons</module>
-        <module>commons-test</module>
+        <module>tools</module>
+
+        <module>11-commons-test</module>
+        <module>12-commons</module>
 
         <module>persistence</module>
 
         <module>rest</module>
-        <module>tools</module>
         <module>serialization-utils</module>
         <module>delegate</module>
         <module>watcher</module>
