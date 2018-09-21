@@ -3,6 +3,7 @@ package software.wings.service.impl.trigger;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
@@ -216,16 +217,18 @@ public class TriggerServiceHelper {
     payload.put("application", trigger.getAppId());
 
     List<Map<String, String>> artifactList = new ArrayList();
-    if (services != null) {
-      for (Service service : services) {
-        Map<String, String> artifacts = new HashMap<>();
-        artifacts.put("service", service.getName());
-        artifacts.put("buildNumber", service.getName() + "_BUILD_NUMBER_PLACE_HOLDER");
-        artifactList.add(artifacts);
+    if (isNotEmpty(trigger.getArtifactSelections())) {
+      if (services != null) {
+        for (Service service : services) {
+          Map<String, String> artifacts = new HashMap<>();
+          artifacts.put("service", service.getName());
+          artifacts.put("buildNumber", service.getName() + "_BUILD_NUMBER_PLACE_HOLDER");
+          artifactList.add(artifacts);
+        }
       }
-    }
-    if (!artifactList.isEmpty() && artifactNeeded) {
-      payload.put("artifacts", artifactList);
+      if (!artifactList.isEmpty() && artifactNeeded) {
+        payload.put("artifacts", artifactList);
+      }
     }
     if (!parameters.isEmpty()) {
       payload.put("parameters", parameters);

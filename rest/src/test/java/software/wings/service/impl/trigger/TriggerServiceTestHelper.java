@@ -3,7 +3,6 @@ package software.wings.service.impl.trigger;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -32,7 +31,6 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.gson.Gson;
 
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
@@ -210,24 +208,5 @@ public class TriggerServiceTestHelper {
             .build();
     pipelineStages.add(pipelineStage);
     pipeline.setPipelineStages(pipelineStages);
-  }
-
-  public static void assertWebhookToken(Trigger savedTrigger) {
-    assertThat(savedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
-    assertThat(savedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
-    WebHookToken webHookToken = ((WebHookTriggerCondition) savedTrigger.getCondition()).getWebHookToken();
-    assertThat(webHookToken).isNotNull();
-    assertThat(webHookToken.getWebHookToken()).isNotNull();
-    assertThat(webHookToken.getPayload()).isNotEmpty();
-
-    HashMap<String, Object> hashMap = new Gson().fromJson(webHookToken.getPayload(), HashMap.class);
-    assertThat(hashMap).containsKeys("application", "artifacts", "parameters");
-    assertThat(hashMap.get("application")).isEqualTo(APP_ID);
-    assertThat(hashMap.get("artifacts"))
-        .isNotNull()
-        .toString()
-        .contains(
-            "{service=Catalog, buildNumber=Catalog_BUILD_NUMBER_PLACE_HOLDER}, {service=Order, buildNumber=Order_BUILD_NUMBER_PLACE_HOLDER}");
-    assertThat(hashMap.get("parameters")).isNotNull().toString().contains("MyVar=MyVar_placeholder");
   }
 }

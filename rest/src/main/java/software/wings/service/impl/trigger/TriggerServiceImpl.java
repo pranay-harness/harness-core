@@ -2,7 +2,6 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static java.lang.String.format;
@@ -58,7 +57,6 @@ import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
-import software.wings.beans.VariableType;
 import software.wings.beans.WebHookToken;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
@@ -463,20 +461,19 @@ public class TriggerServiceImpl implements TriggerService {
    * @param artifacts
    */
   private void addLastCollectedArtifact(String appId, ArtifactSelection artifactSelection, List<Artifact> artifacts) {
-    String artifactStreamId = artifactSelection.getArtifactStreamId();
-    notNullCheck("Artifact Stream was deleted", artifactStreamId, ADMIN_SRE);
-    ArtifactStream artifactStream = validateArtifactStream(appId, artifactStreamId);
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactSelection.getArtifactStreamId());
+    notNullCheck("ArtifactStream was deleted", artifactStream, USER_ADMIN);
     Artifact lastCollectedArtifact;
     if (isEmpty(artifactSelection.getArtifactFilter())) {
-      lastCollectedArtifact =
-          artifactService.fetchLastCollectedArtifact(appId, artifactStreamId, artifactStream.getSourceName());
+      lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(
+          appId, artifactSelection.getArtifactStreamId(), artifactStream.getSourceName());
       if (lastCollectedArtifact != null
           && lastCollectedArtifact.getServiceIds().contains(artifactSelection.getServiceId())) {
         addIfArtifactFilterMatches(
             lastCollectedArtifact, artifactSelection.getArtifactFilter(), artifactSelection.isRegex(), artifacts);
       }
     } else {
-      lastCollectedArtifact = artifactService.getArtifactByBuildNumber(appId, artifactStreamId,
+      lastCollectedArtifact = artifactService.getArtifactByBuildNumber(appId, artifactSelection.getArtifactStreamId(),
           artifactStream.getSourceName(), artifactSelection.getArtifactFilter(), artifactSelection.isRegex());
       if (lastCollectedArtifact != null) {
         artifacts.add(lastCollectedArtifact);
@@ -629,7 +626,7 @@ public class TriggerServiceImpl implements TriggerService {
         } else {
           String msg = "Environment name [" + templatizedEnvName + "] not present in the trigger variables";
           logger.warn(msg, templatizedEnvName);
-          throw new WingsException(msg);
+          throw new WingsException(msg, USER_ADMIN);
         }
       } else {
         envId = workflow.getEnvId();
@@ -647,7 +644,7 @@ public class TriggerServiceImpl implements TriggerService {
               "Service does not exist by Id, checking if environment {} can be found by name.", serviceIdOrName);
           service = serviceResourceService.getServiceByName(trigger.getAppId(), serviceIdOrName, false);
         }
-        notNullCheck("Service [" + serviceIdOrName + "] does not exist", service, USER);
+        notNullCheck("Service [" + serviceIdOrName + "] does not exist", service, USER_ADMIN);
         triggerWorkflowVariableValues.put(serviceVarName, service.getUuid());
       }
 
@@ -667,7 +664,7 @@ public class TriggerServiceImpl implements TriggerService {
               infrastructureMappingService.getInfraMappingByName(trigger.getAppId(), envId, serviceInfraIdOrName);
         }
         notNullCheck(
-            "Service Infrastructure [" + serviceInfraIdOrName + "] does not exist", infrastructureMapping, USER);
+            "Service Infrastructure [" + serviceInfraIdOrName + "] does not exist", infrastructureMapping, USER_ADMIN);
         triggerWorkflowVariableValues.put(serviceInfraVarName, infrastructureMapping.getUuid());
       }
     }
@@ -761,9 +758,10 @@ public class TriggerServiceImpl implements TriggerService {
   private void validateAndSetNewArtifactCondition(Trigger trigger) {
     ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
     ArtifactStream artifactStream =
-        validateArtifactStream(trigger.getAppId(), artifactTriggerCondition.getArtifactStreamId());
+        artifactStreamService.get(trigger.getAppId(), artifactTriggerCondition.getArtifactStreamId());
+    notNullCheck("Artifact Source is mandatory for New Artifact Condition Trigger", artifactStream, USER);
     Service service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
-    notNullCheck("Service", service, USER);
+    notNullCheck("Service does not exist", service, USER);
     artifactTriggerCondition.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
   }
 
@@ -930,6 +928,8 @@ public class TriggerServiceImpl implements TriggerService {
           if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {
             services = workflowService.getResolvedServices(workflow, workflowVariables);
           }
+        } else {
+          artifactNeeded = false;
         }
       }
       addVariables(parameters, workflow);
@@ -940,11 +940,7 @@ public class TriggerServiceImpl implements TriggerService {
   private void addVariables(Map<String, String> parameters, Workflow workflow) {
     List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
     if (isNotEmpty(userVariables)) {
-      userVariables.forEach(variable -> {
-        if (!variable.getType().equals(VariableType.ENTITY)) {
-          parameters.put(variable.getName(), variable.getName() + "_placeholder");
-        }
-      });
+      userVariables.forEach(variable -> { parameters.put(variable.getName(), variable.getName() + "_placeholder"); });
     }
   }
 
@@ -964,7 +960,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private ArtifactStream validateArtifactStream(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("ArtifactStream was deleted", artifactStream, USER_ADMIN);
+    notNullCheck("Artifact Source does not exist", artifactStream, USER_ADMIN);
     return artifactStream;
   }
 
