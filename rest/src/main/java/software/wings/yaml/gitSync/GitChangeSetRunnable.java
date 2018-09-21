@@ -1,5 +1,6 @@
 package software.wings.yaml.gitSync;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.util.stream.Collectors.toList;
@@ -8,7 +9,6 @@ import static software.wings.core.maintenance.MaintenanceController.isMaintenanc
 
 import com.google.inject.Inject;
 
-import com.mongodb.BasicDBObject;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,19 +23,26 @@ import software.wings.utils.Misc;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 /**
  * @author bsollish on 09/26/17
  */
 public class GitChangeSetRunnable implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(GitChangeSetRunnable.class);
+  private static AtomicLong lastTimestampForStuckJobCheck = new AtomicLong(0);
 
   @Inject private YamlGitService yamlGitSyncService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private ConfigurationController configurationController;
+  @Inject private GitChangeSetRunnableHelper gitChangeSetRunnableHelper;
 
   @Override
   public void run() {
@@ -46,16 +53,18 @@ public class GitChangeSetRunnable implements Runnable {
       }
 
       // TODO:: Use aggregate query for this group by??
-      List<String> queuedAccountIdList =
-          wingsPersistence.getDatastore()
-              .getCollection(YamlChangeSet.class)
-              .distinct("accountId",
-                  new BasicDBObject(
-                      "status", new BasicDBObject("$in", new String[] {Status.FAILED.name(), Status.QUEUED.name()})));
-      List<String> runningAccountIdList =
-          wingsPersistence.getDatastore()
-              .getCollection(YamlChangeSet.class)
-              .distinct("accountId", new BasicDBObject("status", Status.RUNNING.name()));
+      // Get ACCId list having yamlChangeSets in Queued state
+      List<String> queuedAccountIdList = gitChangeSetRunnableHelper.getQueuedAccountIdList(wingsPersistence);
+
+      // Get ACCId list having yamlChangeSets in Running state
+      List<String> runningAccountIdList = gitChangeSetRunnableHelper.getRunningAccountIdList(wingsPersistence);
+
+      // Check if any YamlChangeSet is stuck in Running state
+      if (isNotEmpty(runningAccountIdList) && shouldPerformStuckJobCheck()) {
+        lastTimestampForStuckJobCheck.set(System.currentTimeMillis());
+        retryAnyStuckYamlChangeSet(runningAccountIdList);
+      }
+
       List<String> waitingAccountIdList =
           queuedAccountIdList.stream().filter(accountId -> !runningAccountIdList.contains(accountId)).collect(toList());
 
@@ -113,6 +122,46 @@ public class GitChangeSetRunnable implements Runnable {
       WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error(GIT_YAML_LOG_PREFIX + "Unexpected error", exception);
+    }
+  }
+
+  /**
+   * This job runs every few seconds. We dont need to check for stuck job every time.
+   * We will check it every 30 mins.
+   * @return
+   */
+  boolean shouldPerformStuckJobCheck() {
+    return lastTimestampForStuckJobCheck.get() == 0
+        || (System.currentTimeMillis() - lastTimestampForStuckJobCheck.get() > TimeUnit.MINUTES.toMillis(30));
+  }
+
+  /**
+   * If any YamlChangeSet is stuck in Running mode for more than 90 minutes
+   * (somehow delegate response was lost or something, mark that changeset as Queued again)
+   * So let it be processed again as we don't know if that was applied.
+   * If it was already applied, delegate won't do anything.
+   * @param runningAccountIdList
+   */
+  void retryAnyStuckYamlChangeSet(List<String> runningAccountIdList) {
+    if (isEmpty(runningAccountIdList)) {
+      return;
+    }
+
+    // Get yamlChangeSet that is in running mode for more than 90 mins.
+    List<YamlChangeSet> stuckChangeSets =
+        gitChangeSetRunnableHelper.getStuckYamlChangeSets(wingsPersistence, runningAccountIdList);
+
+    if (isNotEmpty(stuckChangeSets)) {
+      // Map Acc vs such yamlChangeSets (with multigit support, there can be more than 1 for an account)
+      Map<String, List<YamlChangeSet>> accountIdToStuckChangeSets =
+          stuckChangeSets.stream().collect(Collectors.groupingBy(yamlChangeSet -> yamlChangeSet.getAccountId()));
+
+      // Mark these yamlChagneSets as Queued.
+      accountIdToStuckChangeSets.forEach(
+          (k, v)
+              -> yamlChangeSetService.updateStatusForGivenYamlChangeSets(k, Status.QUEUED,
+                  Arrays.asList(Status.RUNNING),
+                  v.stream().map(yamlChangeSet -> yamlChangeSet.getUuid()).collect(toList())));
     }
   }
 }
