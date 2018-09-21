@@ -199,31 +199,6 @@ public class PhysicalInfrastructureMapping extends PhysicalInfrastructureMapping
       return this;
     }
 
-    public PhysicalInfrastructureMapping.Builder but() {
-      return aPhysicalInfrastructureMapping()
-          .withHostConnectionAttrs(hostConnectionAttrs)
-          .withHostNames(hostNames)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withAccountId(accountId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withEntityYamlPath(entityYamlPath)
-          .withComputeProviderSettingId(computeProviderSettingId)
-          .withEnvId(envId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withServiceId(serviceId)
-          .withComputeProviderType(computeProviderType)
-          .withInfraMappingType(infraMappingType)
-          .withDeploymentType(deploymentType)
-          .withComputeProviderName(computeProviderName)
-          .withName(name)
-          .withAutoPopulate(autoPopulate)
-          .withAccountId(accountId);
-    }
-
     public PhysicalInfrastructureMapping build() {
       PhysicalInfrastructureMapping physicalInfrastructureMapping = new PhysicalInfrastructureMapping();
       physicalInfrastructureMapping.setHostConnectionAttrs(hostConnectionAttrs);

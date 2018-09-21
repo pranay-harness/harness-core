@@ -355,39 +355,6 @@ public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructu
       return this;
     }
 
-    public Builder but() {
-      return aDirectKubernetesInfrastructureMapping()
-          .withClusterName(clusterName)
-          .withMasterUrl(masterUrl)
-          .withUsername(username)
-          .withPassword(password)
-          .withCaCert(caCert)
-          .withClientCert(clientCert)
-          .withClientKey(clientKey)
-          .withClientKeyPassphrase(clientKeyPassphrase)
-          .withServiceAccountToken(serviceAccountToken)
-          .withClientKeyAlgo(clientKeyAlgo)
-          .withNamespace(namespace)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withAccountId(accountId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withEntityYamlPath(entityYamlPath)
-          .withComputeProviderSettingId(computeProviderSettingId)
-          .withEnvId(envId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withServiceId(serviceId)
-          .withComputeProviderType(computeProviderType)
-          .withInfraMappingType(infraMappingType)
-          .withDeploymentType(deploymentType)
-          .withComputeProviderName(computeProviderName)
-          .withName(name)
-          .withAutoPopulate(autoPopulate);
-    }
-
     public DirectKubernetesInfrastructureMapping build() {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           new DirectKubernetesInfrastructureMapping();

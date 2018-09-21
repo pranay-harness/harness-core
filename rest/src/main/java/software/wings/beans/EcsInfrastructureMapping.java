@@ -498,41 +498,6 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
       return this;
     }
 
-    public Builder but() {
-      return anEcsInfrastructureMapping()
-          .withClusterName(clusterName)
-          .withRegion(region)
-          .withVpcId(vpcId)
-          .withSubnetIds(subnetIds)
-          .withSecurityGroupIds(securityGroupIds)
-          .withType(type)
-          .withRole(role)
-          .withDiskSize(diskSize)
-          .withAmi(ami)
-          .withNumberOfNodes(numberOfNodes)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withAccountId(accountId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withEntityYamlPath(entityYamlPath)
-          .withComputeProviderSettingId(computeProviderSettingId)
-          .withEnvId(envId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withServiceId(serviceId)
-          .withComputeProviderType(computeProviderType)
-          .withInfraMappingType(infraMappingType)
-          .withDeploymentType(deploymentType)
-          .withComputeProviderName(computeProviderName)
-          .withName(name)
-          .withAutoPopulate(autoPopulate)
-          .withAssignPublicIp(assignPublicIp)
-          .withExecutionRole(executionRole)
-          .withLaunchType(launchType);
-    }
-
     public EcsInfrastructureMapping build() {
       EcsInfrastructureMapping ecsInfrastructureMapping = new EcsInfrastructureMapping();
       ecsInfrastructureMapping.setClusterName(clusterName);

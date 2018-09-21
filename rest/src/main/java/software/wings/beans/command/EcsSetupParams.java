@@ -163,32 +163,6 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
-    public EcsSetupParamsBuilder but() {
-      return anEcsSetupParams()
-          .withTaskFamily(taskFamily)
-          .withServiceName(serviceName)
-          .withUseLoadBalancer(useLoadBalancer)
-          .withClusterName(clusterName)
-          .withRoleArn(roleArn)
-          .withAppName(appName)
-          .withTargetGroupArn(targetGroupArn)
-          .withEnvName(envName)
-          .withLoadBalancerName(loadBalancerName)
-          .withImageDetails(imageDetails)
-          .withRegion(region)
-          .withContainerTask(containerTask)
-          .withVpcId(vpcId)
-          .withInfraMappingId(infraMappingId)
-          .withSubnetIds(subnetIds)
-          .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
-          .withSecurityGroupIds(securityGroupIds)
-          .withAssignPublicIps(assignPublicIps)
-          .withExecutionRoleArn(executionRoleArn)
-          .withLaunchType(launchType)
-          .withTargetContainerName(targetContainerName)
-          .withTargetPort(targetPort);
-    }
-
     public EcsSetupParams build() {
       EcsSetupParams ecsSetupParams = new EcsSetupParams();
       ecsSetupParams.setTaskFamily(taskFamily);

@@ -267,33 +267,6 @@ public class CodeDeployInfrastructureMapping extends InfrastructureMapping {
       return this;
     }
 
-    public CodeDeployInfrastructureMappingBuilder but() {
-      return aCodeDeployInfrastructureMapping()
-          .withRegion(region)
-          .withApplicationName(applicationName)
-          .withDeploymentGroup(deploymentGroup)
-          .withDeploymentConfig(deploymentConfig)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withAccountId(accountId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withEntityYamlPath(entityYamlPath)
-          .withComputeProviderSettingId(computeProviderSettingId)
-          .withEnvId(envId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withServiceId(serviceId)
-          .withComputeProviderType(computeProviderType)
-          .withInfraMappingType(infraMappingType)
-          .withDeploymentType(deploymentType)
-          .withComputeProviderName(computeProviderName)
-          .withName(name)
-          .withAutoPopulate(autoPopulate)
-          .withHostNameConvention(hostNameConvention);
-    }
-
     public CodeDeployInfrastructureMapping build() {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping = new CodeDeployInfrastructureMapping();
       codeDeployInfrastructureMapping.setRegion(region);

@@ -299,35 +299,6 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
     }
 
     /**
-     * But builder.
-     *
-     * @return the builder
-     */
-    public Builder but() {
-      return aGcpKubernetesInfrastructureMapping()
-          .withClusterName(clusterName)
-          .withNamespace(namespace)
-          .withUuid(uuid)
-          .withAppId(appId)
-          .withAccountId(accountId)
-          .withCreatedBy(createdBy)
-          .withCreatedAt(createdAt)
-          .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt)
-          .withEntityYamlPath(entityYamlPath)
-          .withComputeProviderSettingId(computeProviderSettingId)
-          .withEnvId(envId)
-          .withServiceTemplateId(serviceTemplateId)
-          .withServiceId(serviceId)
-          .withComputeProviderType(computeProviderType)
-          .withInfraMappingType(infraMappingType)
-          .withDeploymentType(deploymentType)
-          .withComputeProviderName(computeProviderName)
-          .withName(name)
-          .withAutoPopulate(autoPopulate);
-    }
-
-    /**
      * Build gcp kubernetes infrastructure mapping.
      *
      * @return the gcp kubernetes infrastructure mapping
