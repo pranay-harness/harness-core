@@ -30,7 +30,6 @@ import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
 import static software.wings.beans.trigger.WebhookSource.BITBUCKET;
 import static software.wings.beans.trigger.WebhookSource.GITHUB;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.artifact;
-import static software.wings.service.impl.trigger.TriggerServiceTestHelper.assertWebhookToken;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildArtifactTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildJenkinsArtifactStream;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildNewInstanceTrigger;
@@ -60,6 +59,7 @@ import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.gson.Gson;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
@@ -365,6 +365,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     Trigger updatedTrigger = triggerService.update(scheduledConditionTrigger);
     assertThat(updatedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
+
     assertThat(updatedTrigger.getCondition()).isInstanceOf(ScheduledTriggerCondition.class);
     assertThat(((ScheduledTriggerCondition) updatedTrigger.getCondition()).getCronDescription()).isNotNull();
     assertThat(((ScheduledTriggerCondition) updatedTrigger.getCondition()).getCronExpression())
@@ -391,21 +392,100 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldSaveWorkflowWebhookConditionTrigger() {
+  public void shouldSaveWorkflowWebhookTriggerNoArtifactSelections() {
     Trigger trigger = triggerService.save(workflowWebhookConditionTrigger);
     Trigger savedTrigger = triggerService.get(APP_ID, trigger.getUuid());
-    assertWebhookToken(savedTrigger);
+
+    assertThat(savedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
+    assertThat(savedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
+    WebHookToken webHookToken = ((WebHookTriggerCondition) savedTrigger.getCondition()).getWebHookToken();
+    assertThat(webHookToken).isNotNull();
+    assertThat(webHookToken.getWebHookToken()).isNotNull();
+    assertThat(webHookToken.getPayload()).isNotEmpty();
+
+    HashMap<String, Object> hashMap = new Gson().fromJson(webHookToken.getPayload(), HashMap.class);
+    assertThat(hashMap).containsKeys("application", "parameters");
+    assertThat(hashMap.get("application")).isEqualTo(APP_ID);
+    assertThat(hashMap.get("artifacts")).isNull();
+    assertThat(hashMap.get("parameters")).isNotNull().toString().contains("MyVar=MyVar_placeholder");
   }
 
   @Test
-  public void shouldSavePipelineWebhookConditionTrigger() {
+  public void shouldSaveWorkflowWebhookTriggerWithArtifactSelections() {
+    workflowWebhookConditionTrigger.setArtifactSelections(asList(ArtifactSelection.builder()
+                                                                     .type(WEBHOOK_VARIABLE)
+                                                                     .serviceId(SERVICE_ID)
+                                                                     .artifactStreamId(ARTIFACT_STREAM_ID)
+                                                                     .build()));
+
+    Trigger trigger = triggerService.save(workflowWebhookConditionTrigger);
+    Trigger savedTrigger = triggerService.get(APP_ID, trigger.getUuid());
+
+    assertThat(savedTrigger.getUuid()).isEqualTo(TRIGGER_ID);
+    assertThat(savedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
+    WebHookToken webHookToken = ((WebHookTriggerCondition) savedTrigger.getCondition()).getWebHookToken();
+    assertThat(webHookToken).isNotNull();
+    assertThat(webHookToken.getWebHookToken()).isNotNull();
+    assertThat(webHookToken.getPayload()).isNotEmpty();
+
+    HashMap<String, Object> hashMap = new Gson().fromJson(webHookToken.getPayload(), HashMap.class);
+    assertThat(hashMap).containsKeys("application", "artifacts", "parameters");
+    assertThat(hashMap).containsKeys("application", "artifacts", "parameters");
+    assertThat(hashMap.get("application")).isEqualTo(APP_ID);
+    assertThat(hashMap.get("artifacts"))
+        .isNotNull()
+        .toString()
+        .contains(
+            "{service=Catalog, buildNumber=Catalog_BUILD_NUMBER_PLACE_HOLDER}, {service=Order, buildNumber=Order_BUILD_NUMBER_PLACE_HOLDER}");
+    assertThat(hashMap.get("parameters")).isNotNull().toString().contains("MyVar=MyVar_placeholder");
+  }
+
+  @Test
+  public void shouldSavePipelineWebhookTriggerNoArtifactSelections() {
     setPipelineStages(pipeline);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
 
     Trigger trigger = triggerService.save(webhookConditionTrigger);
 
     Trigger savedTrigger = triggerService.get(APP_ID, trigger.getUuid());
-    assertWebhookToken(savedTrigger);
+    assertThat(savedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
+    WebHookToken webHookToken = ((WebHookTriggerCondition) savedTrigger.getCondition()).getWebHookToken();
+    assertThat(webHookToken).isNotNull();
+    assertThat(webHookToken.getWebHookToken()).isNotNull();
+    assertThat(webHookToken.getPayload()).isNotEmpty();
+
+    HashMap<String, Object> hashMap = new Gson().fromJson(webHookToken.getPayload(), HashMap.class);
+    assertThat(hashMap).containsKeys("application", "parameters");
+    assertThat(hashMap.get("application")).isEqualTo(APP_ID);
+    assertThat(hashMap.get("artifacts")).isNull();
+    assertThat(hashMap.get("parameters")).isNotNull().toString().contains("MyVar=MyVar_placeholder");
+  }
+
+  @Test
+  public void shouldSavePipelineWebhookTriggerWithArtifactSelections() {
+    setPipelineStages(pipeline);
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    setWebhookArtifactSelections();
+
+    Trigger trigger = triggerService.save(webhookConditionTrigger);
+
+    Trigger savedTrigger = triggerService.get(APP_ID, trigger.getUuid());
+    assertThat(savedTrigger.getCondition()).isInstanceOf(WebHookTriggerCondition.class);
+    WebHookToken webHookToken = ((WebHookTriggerCondition) savedTrigger.getCondition()).getWebHookToken();
+    assertThat(webHookToken).isNotNull();
+    assertThat(webHookToken.getWebHookToken()).isNotNull();
+    assertThat(webHookToken.getPayload()).isNotEmpty();
+
+    HashMap<String, Object> hashMap = new Gson().fromJson(webHookToken.getPayload(), HashMap.class);
+    assertThat(hashMap).containsKeys("application", "artifacts", "parameters");
+    assertThat(hashMap).containsKeys("application", "artifacts", "parameters");
+    assertThat(hashMap.get("application")).isEqualTo(APP_ID);
+    assertThat(hashMap.get("artifacts"))
+        .isNotNull()
+        .toString()
+        .contains(
+            "{service=Catalog, buildNumber=Catalog_BUILD_NUMBER_PLACE_HOLDER}, {service=Order, buildNumber=Order_BUILD_NUMBER_PLACE_HOLDER}");
+    assertThat(hashMap.get("parameters")).isNotNull().toString().contains("MyVar=MyVar_placeholder");
   }
 
   @Test
