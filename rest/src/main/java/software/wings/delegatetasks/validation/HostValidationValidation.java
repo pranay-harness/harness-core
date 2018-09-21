@@ -9,6 +9,8 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ExecutionCredential;
@@ -31,6 +33,8 @@ import java.util.function.Consumer;
  * Created by brett on 11/2/17
  */
 public class HostValidationValidation extends AbstractDelegateValidateTask {
+  private static final Logger logger = LoggerFactory.getLogger(HostValidationValidation.class);
+
   @Inject @Transient private transient EncryptionService encryptionService;
   @Inject @Transient private transient TimeLimiter timeLimiter;
   @Inject @Transient private transient Clock clock;
@@ -71,10 +75,13 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
                                             .workingDirectory(WINDOWS_HOME_DIR)
                                             .environment(Collections.emptyMap())
                                             .build();
+            logger.info("Validating WinrmSession to Host: {}, Port: {}, useSsl: {}", config.getHostname(),
+                config.getPort(), config.isUseSSL());
 
             try (WinRmSession ignore = new WinRmSession(config)) {
               resultBuilder.validated(true);
             } catch (Exception e) {
+              logger.info("Exception in WinrmSession Validation: {}", e);
               resultBuilder.validated(false);
             }
           } else {
