@@ -174,6 +174,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     return null;
   }
 
+  @SuppressFBWarnings("DE_MIGHT_IGNORE")
   private Callable<HasMetadata> getControllerInternal(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
     return () -> {
@@ -181,22 +182,52 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       logger.info("Trying to get controller for name {}", name);
       if (isNotBlank(name)) {
         boolean success = false;
+        boolean allFailed = true;
         while (!success) {
           try {
-            controller = rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+            try {
+              controller = rcOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+              allFailed = false;
+            } catch (Exception e) {
+              // Ignore
+            }
             if (controller == null) {
+              try {
+                controller = deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+                allFailed = false;
+              } catch (Exception e) {
+                // Ignore
+              }
+            }
+            if (controller == null) {
+              try {
+                controller = replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+                allFailed = false;
+              } catch (Exception e) {
+                // Ignore
+              }
+            }
+            if (controller == null) {
+              try {
+                controller = statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+                allFailed = false;
+              } catch (Exception e) {
+                // Ignore
+              }
+            }
+            if (controller == null) {
+              try {
+                controller = daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+                allFailed = false;
+              } catch (Exception e) {
+                // Ignore
+              }
+            }
+            if (allFailed) {
               controller = deploymentOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
+            } else {
+              success = true;
             }
-            if (controller == null) {
-              controller = replicaOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-            }
-            if (controller == null) {
-              controller = statefulOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-            }
-            if (controller == null) {
-              controller = daemonOperations(kubernetesConfig, encryptedDataDetails).withName(name).get();
-            }
-            success = true;
           } catch (Exception e) {
             logger.warn(
                 "Exception while getting controller {}: {}:{}", name, e.getClass().getSimpleName(), Misc.getMessage(e));
@@ -214,33 +245,94 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
+  @SuppressFBWarnings("DE_MIGHT_IGNORE")
   @SuppressWarnings("unchecked")
   public List<? extends HasMetadata> getControllers(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> labels) {
     List<? extends HasMetadata> controllers = new ArrayList<>();
-    controllers.addAll(
-        (List) rcOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
-    controllers.addAll(
-        (List) deploymentOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
-    controllers.addAll(
-        (List) replicaOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
-    controllers.addAll(
-        (List) statefulOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
-    controllers.addAll(
-        (List) daemonOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+    boolean allFailed = true;
+    try {
+      controllers.addAll(
+          (List) rcOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll(
+          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll(
+          (List) replicaOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll(
+          (List) statefulOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll(
+          (List) daemonOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    if (allFailed) {
+      controllers.addAll(
+          (List) deploymentOperations(kubernetesConfig, encryptedDataDetails).withLabels(labels).list().getItems());
+    }
     return controllers;
   }
 
   @Override
+  @SuppressFBWarnings("DE_MIGHT_IGNORE")
   @SuppressWarnings("unchecked")
   public List<? extends HasMetadata> listControllers(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     List<? extends HasMetadata> controllers = new ArrayList<>();
-    controllers.addAll((List) rcOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
-    controllers.addAll((List) deploymentOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
-    controllers.addAll((List) replicaOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
-    controllers.addAll((List) statefulOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
-    controllers.addAll((List) daemonOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+    boolean allFailed = true;
+    try {
+      controllers.addAll((List) rcOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll((List) deploymentOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll((List) replicaOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll((List) statefulOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    try {
+      controllers.addAll((List) daemonOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+      allFailed = false;
+    } catch (Exception e) {
+      // Ignore
+    }
+    if (allFailed) {
+      controllers.addAll((List) deploymentOperations(kubernetesConfig, encryptedDataDetails).list().getItems());
+    }
     return controllers;
   }
 
