@@ -605,13 +605,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     String phaseExecutionId = phaseElement == null ? null : workflowExecutionId + phaseElement.getUuid();
 
     if (pipelineExecutionId == null || !Scope.PIPELINE.equals(sweepingOutputScope)) {
-      pipelineExecutionId = generateUuid();
+      pipelineExecutionId = "dummy-" + generateUuid();
     }
     if (workflowExecutionId == null || Scope.PHASE.equals(sweepingOutputScope)) {
-      workflowExecutionId = generateUuid();
+      workflowExecutionId = "dummy-" + generateUuid();
     }
     if (phaseExecutionId == null) {
-      phaseExecutionId = generateUuid();
+      phaseExecutionId = "dummy-" + generateUuid();
     }
     return SweepingOutput.builder()
         .appId(getAppId())
