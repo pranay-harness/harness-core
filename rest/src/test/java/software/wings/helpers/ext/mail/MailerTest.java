@@ -89,7 +89,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws IOException        the io exception
    */
   @Test
-  @Author(email = "raghu@harness.io", intermittent = true)
+  @Author(emails = "raghu@harness.io", intermittent = true)
   public void shouldSendHtmlEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
                     .fromAddress(EMAIL)

@@ -25,7 +25,7 @@ public class InfrastructureProvisionerServiceIntegrationTest extends BaseIntegra
   @Inject InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
 
   @Test
-  @Author(email = "george@harness.io")
+  @Author(emails = "george@harness.io")
   public void listForTaskTest() {
     Randomizer.Seed seed = Randomizer.seed();
     final InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerGenerator.ensureRandom(seed);
