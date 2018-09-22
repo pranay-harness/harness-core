@@ -4,6 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
@@ -163,6 +164,14 @@ public interface UserService {
   boolean resendVerificationEmail(String email);
 
   /**
+   * Resend the invitation email.
+   * @param accountId account id
+   * @param email     email address
+   * @return the boolean
+   */
+  boolean resendInvitationEmail(@NotNull UserService userService, @NotBlank String accountId, @NotBlank String email);
+
+  /**
    * Verify email string.
    *
    * @param token the token
@@ -192,6 +201,14 @@ public interface UserService {
    * @return the user invite
    */
   UserInvite inviteUser(UserInvite userInvite);
+
+  /**
+   * Send user invitation email
+   *
+   * @param userInvite  user invite
+   * @param account     account
+   */
+  void sendNewInvitationMail(UserInvite userInvite, Account account);
 
   /**
    * Send added new role email
@@ -234,6 +251,14 @@ public interface UserService {
    * @return the user invite
    */
   UserInvite deleteInvite(String accountId, String inviteId);
+
+  /**
+   * Delete existing user invites by email
+   * @param accountId the account id
+   * @param email     the user email
+   * @return the boolean
+   */
+  boolean deleteInvites(@NotBlank String accountId, @NotBlank String email);
 
   /**
    * Gets user account role.

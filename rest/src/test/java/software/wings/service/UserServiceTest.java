@@ -12,6 +12,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -92,6 +93,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
 import software.wings.security.SecretManager.JWT_CATEGORY;
 import software.wings.security.authentication.AuthenticationMechanism;
+import software.wings.service.impl.UserServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
@@ -157,6 +159,7 @@ public class UserServiceTest extends WingsBaseTest {
   @Mock Cache<String, User> cache;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
   @Inject @InjectMocks private UserService userService;
+  @InjectMocks private UserService mockedUserService = mock(UserServiceImpl.class);
   @Captor private ArgumentCaptor<EmailData> emailDataArgumentCaptor;
   @Captor private ArgumentCaptor<User> userArgumentCaptor;
   @Captor private ArgumentCaptor<PageRequest<User>> pageRequestArgumentCaptor;
@@ -731,5 +734,42 @@ public class UserServiceTest extends WingsBaseTest {
     } catch (WingsException e) {
       Assertions.assertThatExceptionOfType(WingsException.class);
     }
+  }
+
+  /**
+   * Should resend the invitation email
+   */
+  @Test
+  public void resendInvitationEmail() {
+    User user = userBuilder.withUuid(USER_ID)
+                    .withEmailVerified(false)
+                    .withCompanyName(COMPANY_NAME)
+                    .withAccountName(ACCOUNT_NAME)
+                    .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
+                    .build();
+    UserInvite userInvite = UserInviteBuilder.anUserInvite()
+                                .withAppId(GLOBAL_APP_ID)
+                                .withAccountId(ACCOUNT_ID)
+                                .withEmail(USER_EMAIL)
+                                .build();
+    Account account = anAccount()
+                          .withCompanyName(COMPANY_NAME)
+                          .withUuid(ACCOUNT_ID)
+                          .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                          .build();
+    when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+    when(wingsPersistence.save(userInvite)).thenReturn(USER_INVITE_ID);
+    when(wingsPersistence.delete(any(Query.class))).thenReturn(true);
+    when(mockedUserService.getUserByEmail(USER_EMAIL)).thenReturn(user);
+    when(mockedUserService.deleteInvites(ACCOUNT_ID, USER_EMAIL)).thenCallRealMethod();
+    doCallRealMethod().when(mockedUserService).sendNewInvitationMail(userInvite, account);
+    userService.resendInvitationEmail(mockedUserService, ACCOUNT_ID, USER_EMAIL);
+    verify(accountService).get(ACCOUNT_ID);
+    verify(wingsPersistence).delete(any(Query.class));
+    verify(wingsPersistence).save(userInvite);
+
+    verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
+    assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
   }
 }

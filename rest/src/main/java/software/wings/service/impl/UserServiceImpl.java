@@ -30,6 +30,7 @@ import static org.mindrot.jbcrypt.BCrypt.hashpw;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AccountRole.AccountRoleBuilder.anAccountRole;
 import static software.wings.beans.ApplicationRole.ApplicationRoleBuilder.anApplicationRole;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.PermissionAttribute.ResourceType.APPLICATION;
 import static software.wings.security.PermissionAttribute.ResourceType.ARTIFACT;
@@ -82,11 +83,11 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
 import software.wings.beans.Application;
 import software.wings.beans.ApplicationRole;
-import software.wings.beans.Base;
 import software.wings.beans.EmailVerificationToken;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
+import software.wings.beans.UserInvite.UserInviteBuilder;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOSettings;
@@ -242,7 +243,7 @@ public class UserServiceImpl implements UserService {
   public User registerNewUser(User user, Account account) {
     User existingUser = getUserByEmail(user.getEmail());
     if (existingUser == null) {
-      user.setAppId(Base.GLOBAL_APP_ID);
+      user.setAppId(GLOBAL_APP_ID);
       user.getAccounts().add(account);
       user.setEmailVerified(false);
       String hashed = hashpw(new String(user.getPassword()), BCrypt.gensalt());
@@ -355,9 +356,26 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public boolean resendInvitationEmail(UserService userService, String accountId, String email) {
+    logger.info("Initiating resending invitation email for user: {}", email);
+    User existingUser = userService.getUserByEmail(email);
+    if (existingUser == null) {
+      logger.info("Resending invitation email failed. User: {} does not exist.", email);
+      throw new WingsException(USER_DOES_NOT_EXIST);
+    }
+    userService.deleteInvites(accountId, email);
+    UserInvite newInvite =
+        UserInviteBuilder.anUserInvite().withAccountId(accountId).withAppId(GLOBAL_APP_ID).withEmail(email).build();
+    wingsPersistence.save(newInvite);
+    userService.sendNewInvitationMail(newInvite, accountService.get(accountId));
+    logger.info("Resent invitation email for user: {}", email);
+    return true;
+  }
+
+  @Override
   public boolean verifyToken(String emailToken) {
     EmailVerificationToken verificationToken = wingsPersistence.createQuery(EmailVerificationToken.class)
-                                                   .filter("appId", Base.GLOBAL_APP_ID)
+                                                   .filter("appId", GLOBAL_APP_ID)
                                                    .filter("token", emailToken)
                                                    .get();
 
@@ -412,7 +430,7 @@ public class UserServiceImpl implements UserService {
                  .withEmail(userInvite.getEmail().trim().toLowerCase())
                  .withName(userInvite.getName().trim())
                  .withRoles(userInvite.getRoles())
-                 .withAppId(Base.GLOBAL_APP_ID)
+                 .withAppId(GLOBAL_APP_ID)
                  .withEmailVerified(emailVerified)
                  .build();
       user = save(user);
@@ -517,7 +535,8 @@ public class UserServiceImpl implements UserService {
     return model;
   }
 
-  private void sendNewInvitationMail(UserInvite userInvite, Account account) {
+  @Override
+  public void sendNewInvitationMail(UserInvite userInvite, Account account) {
     try {
       Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account);
       List<String> toList = new ArrayList<>();
@@ -635,6 +654,13 @@ public class UserServiceImpl implements UserService {
       wingsPersistence.delete(userInvite);
     }
     return userInvite;
+  }
+
+  @Override
+  public boolean deleteInvites(String accountId, String email) {
+    Query userInvitesQuery =
+        wingsPersistence.createQuery(UserInvite.class).filter("accountId", accountId).filter("email", email);
+    return wingsPersistence.delete(userInvitesQuery);
   }
 
   @Override
@@ -1197,7 +1223,7 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "Account Name should be unique");
     }
 
-    account.setAppId(Base.GLOBAL_APP_ID);
+    account.setAppId(GLOBAL_APP_ID);
     return accountService.save(account);
   }
 
