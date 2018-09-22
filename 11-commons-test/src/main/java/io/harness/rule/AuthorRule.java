@@ -42,14 +42,14 @@ public class AuthorRule extends RepeatRule {
     }
 
     // If there is email, it should match
-    final String ghprbActualCommitAuthorEmail = System.getenv("ghprbActualCommitAuthorEmail");
-    if (ghprbActualCommitAuthorEmail == null) {
+    final String prEmail = System.getenv("ghprbPullAuthorEmail");
+    if (prEmail == null) {
       return statement;
     }
 
-    logger.info("ghprbActualCommitAuthorEmail = {}", ghprbActualCommitAuthorEmail);
+    logger.info("ghprbPullAuthorEmail = {}", prEmail);
 
-    final boolean match = Arrays.stream(author.emails()).anyMatch(email -> email.equals(ghprbActualCommitAuthorEmail));
+    final boolean match = Arrays.stream(author.emails()).anyMatch(email -> email.equals(prEmail));
     if (!match) {
       if (author.intermittent()) {
         return RepeatRule.RepeatStatement.builder().build();
