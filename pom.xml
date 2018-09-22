@@ -15,13 +15,15 @@
         <module>11-commons-test</module>
         <module>12-commons</module>
 
-        <module>persistence</module>
+        <module>21-persistence</module>
+
+        <module>61-serialization-utils</module>
+        <module>62-rest-utils</module>
 
         <module>rest</module>
-        <module>serialization-utils</module>
-        <module>delegate</module>
-        <module>watcher</module>
-        <module>rest-utils</module>
+
+        <module>81-delegate</module>
+        <module>82-watcher</module>
     </modules>
 
     <scm>
