@@ -43,6 +43,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -335,20 +337,31 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
     }
 
+    Collection<String> updatedMetrics = new ArrayList<>();
+    // TODO: Make a longterm fix for encoding '|'
+    Iterator<String> namesIter = metricNames.iterator();
+    while (namesIter.hasNext()) {
+      String name = namesIter.next();
+      if (name.contains("|")) {
+        name = name.replace("|", URLEncoder.encode("|", "UTF-8"));
+      }
+      updatedMetrics.add(name);
+    }
+
     String urlToCall = instanceId > 0
         ? "/v2/applications/" + applicationId + "/instances/" + instanceId + "/metrics/data.json"
         : "/v2/applications/" + applicationId + "/metrics/data.json";
     apiCallLog.setTitle("Fetching " + (instanceId > 0 ? "instance" : "application") + " metric data for "
-        + metricNames.size() + " transactions from " + newRelicConfig.getNewRelicUrl() + urlToCall);
+        + updatedMetrics.size() + " transactions from " + newRelicConfig.getNewRelicUrl() + urlToCall);
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final SimpleDateFormat dateFormatter = new SimpleDateFormat(NEW_RELIC_DATE_FORMAT);
     final Call<NewRelicMetricDataResponse> request = instanceId > 0
         ? getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
               .getInstanceMetricData(applicationId, instanceId, dateFormatter.format(new Date(fromTime)),
-                  dateFormatter.format(new Date(toTime)), metricNames)
+                  dateFormatter.format(new Date(toTime)), updatedMetrics)
         : getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
               .getApplicationMetricData(applicationId, dateFormatter.format(new Date(fromTime)),
-                  dateFormatter.format(new Date(toTime)), metricNames);
+                  dateFormatter.format(new Date(toTime)), updatedMetrics);
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name(URL_STRING)
                                      .value(request.request().url().toString())
