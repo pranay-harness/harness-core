@@ -19,6 +19,8 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
+import lombok.Data;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
@@ -57,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -336,6 +339,23 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse resetPassword(@NotNull ResetPasswordRequest passwordRequest) {
     return new RestResponse<>(userService.resetPassword(passwordRequest.getEmail()));
+  }
+
+  /**
+   * Resend invitation email
+   *
+   * @param invitationEmailRequest the invitation email request
+   * @return the rest response
+   */
+  @POST
+  @Path("resend-invitation-email")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
+  public RestResponse resendInvitationEmail(@QueryParam("accountId") @NotBlank String accountId,
+      @Valid @NotNull ResendInvitationEmailRequest invitationEmailRequest) {
+    return new RestResponse<>(
+        userService.resendInvitationEmail(userService, accountId, invitationEmailRequest.getEmail()));
   }
 
   /**
@@ -847,5 +867,10 @@ public class UserResource {
     public void setPassword(String password) {
       this.password = password;
     }
+  }
+
+  @Data
+  public static class ResendInvitationEmailRequest {
+    @NotBlank private String email;
   }
 }
