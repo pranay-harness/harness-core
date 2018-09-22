@@ -1,7 +1,7 @@
 #!/bin/sh
 #
 
-BUILD=`mvn install -pl tools -pl tools/checkstyle -pl tools/config -pl commons -pl commons-test`
+BUILD=`mvn install -pl tools -pl tools/checkstyle -pl tools/config`
 if [ $? -ne 0 ]
 then
     echo "$BUILD"
