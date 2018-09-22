@@ -20,7 +20,7 @@
         <module>61-serialization-utils</module>
         <module>62-rest-utils</module>
 
-        <module>71-rest</module>
+        <module>rest</module>
 
         <module>81-delegate</module>
         <module>82-watcher</module>
