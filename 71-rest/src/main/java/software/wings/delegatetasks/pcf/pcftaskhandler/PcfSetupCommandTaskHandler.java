@@ -6,9 +6,11 @@ import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
@@ -39,9 +41,12 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
    * This method is responsible for fetching previous release version information
    * like, previous releaseNames with Running instances, All existing previous releaseNames.
    */
-  @SuppressFBWarnings({"BC_UNCONFIRMED_CAST", "REC_CATCH_EXCEPTION"})
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   public PcfCommandExecutionResponse executeTaskInternal(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+    if (!(pcfCommandRequest instanceof PcfCommandSetupRequest)) {
+      throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfCommandSetupRequest"));
+    }
     executionLogCallback.saveExecutionLog("---------- Starting PCF App Setup Command");
 
     PcfConfig pcfConfig = pcfCommandRequest.getPcfConfig();

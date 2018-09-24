@@ -4,11 +4,13 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
+import org.cloudfoundry.operations.applications.InstanceDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
@@ -28,9 +30,11 @@ import java.util.List;
 public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandler {
   private static final Logger logger = LoggerFactory.getLogger(PcfApplicationDetailsCommandTaskHandler.class);
 
-  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   public PcfCommandExecutionResponse executeTaskInternal(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+    if (!(pcfCommandRequest instanceof PcfInstanceSyncRequest)) {
+      throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfInstanceSyncRequest"));
+    }
     PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();
     PcfInstanceSyncResponse pcfInstanceSyncResponse = PcfInstanceSyncResponse.builder().build();
     pcfCommandExecutionResponse.setPcfCommandResponse(pcfInstanceSyncResponse);
@@ -56,10 +60,8 @@ public class PcfApplicationDetailsCommandTaskHandler extends PcfCommandTaskHandl
       pcfInstanceSyncResponse.setOrganization(pcfCommandRequest.getOrganization());
       pcfInstanceSyncResponse.setSpace(pcfCommandRequest.getSpace());
       if (CollectionUtils.isNotEmpty(applicationDetail.getInstanceDetails())) {
-        pcfInstanceSyncResponse.setInstanceIndices(applicationDetail.getInstanceDetails()
-                                                       .stream()
-                                                       .map(instanceDetail -> instanceDetail.getIndex())
-                                                       .collect(toList()));
+        pcfInstanceSyncResponse.setInstanceIndices(
+            applicationDetail.getInstanceDetails().stream().map(InstanceDetail::getIndex).collect(toList()));
       }
 
       pcfInstanceSyncResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);

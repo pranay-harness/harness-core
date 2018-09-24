@@ -9,7 +9,6 @@ import static software.wings.utils.message.MessengerType.DELEGATE;
 import static software.wings.utils.message.MessengerType.WATCHER;
 
 import com.google.common.base.Splitter;
-import com.google.common.io.CharStreams;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -21,6 +20,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
@@ -31,7 +31,7 @@ import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
 import software.wings.utils.message.MessageService;
 
-import java.io.FileReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
@@ -53,7 +53,6 @@ public class DelegateApplication {
     return processId;
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public static void main(String... args) throws IOException {
     processId = Splitter.on("@").split(ManagementFactory.getRuntimeMXBean().getName()).iterator().next();
 
@@ -73,7 +72,7 @@ public class DelegateApplication {
       throw new WingsException(exception);
     }
 
-    String configFile = args[0];
+    File configFile = new File(args[0]);
 
     String watcherProcess = null;
     if (args.length > 1 && StringUtils.equals(args[1], "watched")) {
@@ -90,7 +89,7 @@ public class DelegateApplication {
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DelegateApplication delegateApplication = new DelegateApplication();
     final DelegateConfiguration configuration =
-        new YamlUtils().read(CharStreams.toString(new FileReader(configFile)), DelegateConfiguration.class);
+        new YamlUtils().read(FileUtils.readFileToString(configFile, "UTF-8"), DelegateConfiguration.class);
     delegateApplication.run(configuration, watcherProcess);
   }
 

@@ -12,7 +12,6 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.MessageManager;
@@ -51,7 +50,6 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
   public static final Splitter SPLITTER = Splitter.on("/").omitEmptyStrings();
   @Inject private AuthService authService;
 
-  @SuppressFBWarnings("NP_IMMEDIATE_DEREFERENCE_OF_READLINE")
   @Override
   public void onRequest(AtmosphereResource resource) throws IOException {
     AtmosphereRequest req = resource.getRequest();
@@ -96,7 +94,10 @@ public class UiStreamHandler extends AtmosphereHandlerAdapter {
 
       resource.suspend();
     } else if (req.getMethod().equalsIgnoreCase("POST")) {
-      resource.getBroadcaster().broadcast(req.getReader().readLine().trim());
+      String line = req.getReader().readLine();
+      if (line != null) {
+        resource.getBroadcaster().broadcast(line.trim());
+      }
     }
   }
 
