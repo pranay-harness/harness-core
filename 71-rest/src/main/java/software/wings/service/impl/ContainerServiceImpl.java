@@ -305,4 +305,10 @@ public class ContainerServiceImpl implements ContainerService {
 
     throw new WingsException("invalid setting type " + containerServiceParams);
   }
+
+  @Override
+  public List<String> listClusters(ContainerServiceParams containerServiceParams) {
+    return gkeClusterService.listClusters(
+        containerServiceParams.getSettingAttribute(), containerServiceParams.getEncryptionDetails());
+  }
 }

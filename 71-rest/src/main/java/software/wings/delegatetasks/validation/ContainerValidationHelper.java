@@ -37,7 +37,7 @@ public class ContainerValidationHelper {
   @Inject @Transient private transient AzureHelperService azureHelperService;
   @Inject @Transient private transient EncryptionService encryptionService;
 
-  public boolean validateContainerServiceParams(ContainerServiceParams containerServiceParams) {
+  boolean validateContainerServiceParams(ContainerServiceParams containerServiceParams) {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
 
     // see if we can decrypt from this delegate
@@ -58,7 +58,10 @@ public class ContainerValidationHelper {
         && ((KubernetesClusterConfig) value).isUseKubernetesDelegate()) {
       validated = ((KubernetesClusterConfig) value).getDelegateName().equals(System.getenv().get("DELEGATE_NAME"));
     } else {
-      validated = connectableHttpUrl(getKubernetesMasterUrl(containerServiceParams));
+      String url;
+      url = "None".equals(containerServiceParams.getClusterName()) ? "https://container.googleapis.com/"
+                                                                   : getKubernetesMasterUrl(containerServiceParams);
+      validated = connectableHttpUrl(url);
     }
 
     return validated;

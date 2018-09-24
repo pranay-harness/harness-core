@@ -24,4 +24,6 @@ public interface ContainerService {
 
   @DelegateTaskType(TaskType.FETCH_CONTAINER_INFO)
   List<software.wings.cloudprovider.ContainerInfo> fetchContainerInfos(ContainerServiceParams containerServiceParams);
+
+  @DelegateTaskType(TaskType.LIST_CLUSTERS) List<String> listClusters(ContainerServiceParams containerServiceParams);
 }

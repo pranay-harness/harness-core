@@ -211,6 +211,7 @@ public enum TaskType {
   AMI_GET_BUILDS(TaskGroup.AMI, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   CONTAINER_CONNECTION_VALIDATION(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   FETCH_CONTAINER_INFO(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
+  LIST_CLUSTERS(TaskGroup.CONTAINER, ServiceImplDelegateTask.class, ContainerValidation.class),
   DYNA_TRACE_VALIDATE_CONFIGURATION_TASK(
       TaskGroup.DYNA_TRACE, ServiceImplDelegateTask.class, DynaTraceValidation.class),
   DYNA_TRACE_METRIC_DATA_COLLECTION_TASK(
