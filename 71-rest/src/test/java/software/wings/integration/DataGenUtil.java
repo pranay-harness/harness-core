@@ -12,21 +12,15 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.EntityType.SERVICE;
-import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.HostConnectionAttributes.AccessType.KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
-import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
-import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
-import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SystemCatalog.Builder.aSystemCatalog;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
 import static software.wings.beans.User.Builder.anUser;
-import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static software.wings.generator.SettingGenerator.Settings.HARNESS_ARTIFACTORY_CONNECTOR;
@@ -40,8 +34,6 @@ import static software.wings.integration.SeedData.containerNames;
 import static software.wings.integration.SeedData.seedNames;
 import static software.wings.service.intfc.FileService.FileBucket.PLATFORMS;
 import static software.wings.sm.StateType.ENV_STATE;
-import static software.wings.sm.StateType.TERRAFORM_DESTROY;
-import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 import static software.wings.utils.ContainerFamily.TOMCAT;
 
 import com.google.common.collect.ImmutableMap;
@@ -81,7 +73,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.License;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.NewRelicConfig;
@@ -92,14 +83,12 @@ import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowType;
 import software.wings.beans.security.HarnessUserGroup;
 import software.wings.beans.security.UserGroup;
 import software.wings.common.Constants;
@@ -109,9 +98,7 @@ import software.wings.generator.ArtifactStreamGenerator;
 import software.wings.generator.EnvironmentGenerator;
 import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.InfrastructureMappingGenerator;
-import software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings;
 import software.wings.generator.InfrastructureProvisionerGenerator;
-import software.wings.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import software.wings.generator.LicenseGenerator;
 import software.wings.generator.LicenseGenerator.Licenses;
 import software.wings.generator.OwnerManager;
@@ -625,59 +612,7 @@ public class DataGenUtil extends BaseIntegrationTest {
             .build());
 
     final Owners terraformOwners = ownerManager.create();
-    terraformOwners.add(environment);
-    terraformOwners.add(service);
-    final InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerGenerator.ensurePredefined(
-        seed, terraformOwners, InfrastructureProvisioners.TERRAFORM_TEST);
-
-    final InfrastructureMapping terraformInfrastructureMapping = infrastructureMappingGenerator.ensurePredefined(
-        seed, terraformOwners, InfrastructureMappings.TERRAFORM_AWS_SSH_TEST);
-
-    final SecretName awsPlaygroundAccessKeyName = SecretName.builder().value("aws_playground_access_key").build();
-    final String awsPlaygroundAccessKey = scmSecret.decryptToString(awsPlaygroundAccessKeyName);
-    final SecretName awsPlaygroundSecretKeyName = SecretName.builder().value("aws_playground_secret_key").build();
-    final String awsPlaygroundSecretKeyId = secretGenerator.ensureStored(terraformOwners, awsPlaygroundSecretKeyName);
-
-    // TODO: this is temporary adding second key, to workaround bug in the UI
-    final SecretName terraformPasswordName = SecretName.builder().value("terraform_password").build();
-    final String terraformPasswordId = secretGenerator.ensureStored(terraformOwners, terraformPasswordName);
-
-    Workflow workflow5 = workflowGenerator.ensureWorkflow(seed, terraformOwners,
-        aWorkflow()
-            .withName("Terraform provision")
-            .withWorkflowType(WorkflowType.ORCHESTRATION)
-            .withInfraMappingId(infrastructureMapping.getUuid())
-            .withOrchestrationWorkflow(
-                aCanaryOrchestrationWorkflow()
-                    .withPreDeploymentSteps(
-                        aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
-                            .addStep(
-                                aGraphNode()
-                                    .withType(TERRAFORM_PROVISION.name())
-                                    .withName("Provision infra")
-                                    .addProperty("provisionerId", infrastructureProvisioner.getUuid())
-                                    .addProperty("variables",
-                                        asList(ImmutableMap.of("name", "access_key", "value", awsPlaygroundAccessKey,
-                                                   "valueType", Type.TEXT.name()),
-                                            ImmutableMap.of("name", "secret_key", "value", awsPlaygroundSecretKeyId,
-                                                "valueType", Type.ENCRYPTED_TEXT.name())))
-                                    .build())
-                            .build())
-                    .withPostDeploymentSteps(
-                        aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT)
-                            .addStep(aGraphNode()
-                                         .withType(TERRAFORM_DESTROY.name())
-                                         .withName("Deprovision infra")
-                                         .addProperty("provisionerId", infrastructureProvisioner.getUuid())
-                                         .build())
-                            .build())
-                    .build())
-            .build());
-
-    // Build Workflow
-    workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD_JENKINS);
-    // Build Pipeline
-    pipelineGenerator.ensurePredefined(seed, owners, Pipelines.BUILD);
+    workflowGenerator.ensurePredefined(seed, terraformOwners, Workflows.TERRAFORM);
   }
 
   private List<Application> createApplications() {

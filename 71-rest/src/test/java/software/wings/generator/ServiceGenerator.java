@@ -34,7 +34,7 @@ public class ServiceGenerator {
   public Service ensurePredefined(Randomizer.Seed seed, Owners owners, Services predefined) {
     switch (predefined) {
       case GENERIC_TEST:
-        return ensureGenericTest(seed, owners);
+        return ensureGenericTest(seed, owners, "Test Service");
       case KUBERNETES_GENERIC_TEST:
         return ensureKubernetesGenericTest(seed, owners);
       default:
@@ -44,7 +44,7 @@ public class ServiceGenerator {
     return null;
   }
 
-  private Service ensureGenericTest(Randomizer.Seed seed, Owners owners) {
+  public Service ensureGenericTest(Randomizer.Seed seed, Owners owners, String name) {
     Application application =
         owners.obtainApplication(() -> applicationGenerator.ensurePredefined(seed, owners, Applications.GENERIC_TEST));
     owners.add(ensureService(seed, owners, builder().name("Test Service").artifactType(ArtifactType.WAR).build()));

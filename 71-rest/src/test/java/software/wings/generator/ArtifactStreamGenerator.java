@@ -17,6 +17,7 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.WingsPersistence;
+import software.wings.generator.EnvironmentGenerator.Environments;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.SettingGenerator.Settings;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -36,7 +37,7 @@ public class ArtifactStreamGenerator {
   public ArtifactStream ensurePredefined(Randomizer.Seed seed, Owners owners, ArtifactStreams predefined) {
     switch (predefined) {
       case HARNESS_SAMPLE_ECHO_WAR:
-        return ensureHarnessSampleEchoWar(seed, owners);
+        return ensureHarnessSampleEchoWar(seed, owners, null);
       default:
         unhandled(predefined);
     }
@@ -44,9 +45,13 @@ public class ArtifactStreamGenerator {
     return null;
   }
 
-  private ArtifactStream ensureHarnessSampleEchoWar(Randomizer.Seed seed, Owners owners) {
-    Environment environment = owners.obtainEnvironment();
-    Service service = owners.obtainService();
+  public ArtifactStream ensureHarnessSampleEchoWar(Randomizer.Seed seed, Owners owners, String serviceId) {
+    Environment environment =
+        owners.obtainEnvironment(() -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
+    if (serviceId == null) {
+      Service service = owners.obtainService();
+      serviceId = service.getUuid();
+    }
 
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_JENKINS_CONNECTOR);
@@ -54,7 +59,7 @@ public class ArtifactStreamGenerator {
     return ensureArtifactStream(seed,
         JenkinsArtifactStream.builder()
             .appId(environment.getAppId())
-            .serviceId(service.getUuid())
+            .serviceId(serviceId)
             .name("harness-samples")
             .sourceName(settingAttribute.getName())
             .jobname("harness-samples")

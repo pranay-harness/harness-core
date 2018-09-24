@@ -5,7 +5,6 @@ import static java.util.Arrays.asList;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType.AWS;
 import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
-import static software.wings.beans.Service.builder;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -27,7 +26,6 @@ import software.wings.generator.SettingGenerator.Settings;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.utils.ArtifactType;
 
 @Singleton
 public class InfrastructureProvisionerGenerator {
@@ -56,14 +54,9 @@ public class InfrastructureProvisionerGenerator {
     return null;
   }
   private InfrastructureProvisioner ensureTerraformTest(Randomizer.Seed seed, Owners owners) {
-    final Service archive =
-        serviceGenerator.ensureService(seed, owners, builder().name("Archive").artifactType(ArtifactType.WAR).build());
-
-    final Service factory =
-        serviceGenerator.ensureService(seed, owners, builder().name("Factory").artifactType(ArtifactType.WAR).build());
-
-    final Service warehouse = serviceGenerator.ensureService(
-        seed, owners, builder().name("Warehouse").artifactType(ArtifactType.WAR).build());
+    final Service archive = serviceGenerator.ensureGenericTest(seed, owners, "Archive");
+    final Service factory = serviceGenerator.ensureGenericTest(seed, owners, "Factory");
+    final Service warehouse = serviceGenerator.ensureGenericTest(seed, owners, "Warehouse");
 
     final SettingAttribute gitSourceSettingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.TERRAFORM_TEST_GIT_REPO);
