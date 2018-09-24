@@ -874,7 +874,7 @@
                                      host="${deployHost}"
                                      username="${deployUsername}"
                                      keyfile="${user.home}/.ssh/id_${deployHost}"
-                                     file="target/rest-0.0.1-SNAPSHOT-capsule.jar"
+                                     file="target/rest-capsule.jar"
                                      todir="${deployUsername}@${deployHost}:/home/ubuntu/staging/"/>
 
                                 <echo message="copy config.yml"/>

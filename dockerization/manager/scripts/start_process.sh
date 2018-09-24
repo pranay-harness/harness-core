@@ -11,7 +11,7 @@ fi
 echo "Using memory " $MEMORY
 
 if [[ -z "$CAPSULE_JAR" ]]; then
-   export CAPSULE_JAR=/opt/harness/rest-0.0.1-SNAPSHOT-capsule.jar
+   export CAPSULE_JAR=/opt/harness/rest-capsule.jar
 fi
 
 if [[ -z "$NEWRELIC_ENV" ]]; then

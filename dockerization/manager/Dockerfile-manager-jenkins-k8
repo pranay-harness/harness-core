@@ -7,7 +7,7 @@ COPY common-resources/local_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
 COPY common-resources/US_export_policy.jar /usr/java/jdk1.8.0_131/jre/lib/security/
 
 # Add the capsule JAR and config.yml
-COPY rest-0.0.1-SNAPSHOT-capsule.jar AppServerAgent-4.5.0.23604.tar.gz newrelic.yml keystore.jks config.yml hazelcast.xml /opt/harness/
+COPY rest-capsule.jar AppServerAgent-4.5.0.23604.tar.gz newrelic.yml keystore.jks config.yml hazelcast.xml /opt/harness/
 
 COPY scripts /opt/harness
 

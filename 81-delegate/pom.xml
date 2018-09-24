@@ -162,7 +162,7 @@
                                      host="${deployHost}"
                                      username="${deployUsername}"
                                      keyfile="${user.home}/.ssh/id_${deployHost}"
-                                     file="target/delegate-0.0.1-SNAPSHOT-capsule.jar"
+                                     file="target/delegate-capsule.jar"
                                      todir="${deployUsername}@${deployHost}:/home/ubuntu/staging/"/>
 
                                 <echo message="copy config.yml"/>
