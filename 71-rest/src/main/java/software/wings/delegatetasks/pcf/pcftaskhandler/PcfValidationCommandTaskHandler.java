@@ -2,8 +2,9 @@ package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
@@ -27,9 +28,12 @@ public class PcfValidationCommandTaskHandler extends PcfCommandTaskHandler {
    * @param pcfCommandRequest
    * @return
    */
-  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   public PcfCommandExecutionResponse executeTaskInternal(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+    if (!(pcfCommandRequest instanceof PcfInfraMappingDataRequest)) {
+      throw new InvalidArgumentsException(
+          Pair.of("pcfCommandRequest", "Must be instance of PcfInfraMappingDataRequest"));
+    }
     PcfInfraMappingDataRequest pcfInfraMappingDataRequest = (PcfInfraMappingDataRequest) pcfCommandRequest;
     PcfConfig pcfConfig = pcfInfraMappingDataRequest.getPcfConfig();
     PcfCommandExecutionResponse pcfCommandExecutionResponse = PcfCommandExecutionResponse.builder().build();

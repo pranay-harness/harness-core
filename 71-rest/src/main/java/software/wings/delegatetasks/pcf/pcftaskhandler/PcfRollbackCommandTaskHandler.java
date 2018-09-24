@@ -5,11 +5,12 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,9 +45,12 @@ public class PcfRollbackCommandTaskHandler extends PcfCommandTaskHandler {
    * @param encryptedDataDetails
    * @return
    */
-  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   public PcfCommandExecutionResponse executeTaskInternal(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+    if (!(pcfCommandRequest instanceof PcfCommandRollbackRequest)) {
+      throw new InvalidArgumentsException(
+          Pair.of("pcfCommandRequest", "Must be instance of PcfCommandRollbackRequest"));
+    }
     executionLogCallback.saveExecutionLog("--------- Starting Rollback deployment");
     List<PcfServiceData> pcfServiceDataUpdated = new ArrayList<>();
     PcfDeployCommandResponse pcfDeployCommandResponse =

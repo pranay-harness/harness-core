@@ -19,7 +19,6 @@ import com.google.inject.name.Named;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalCause;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
@@ -33,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -73,16 +73,17 @@ public class DelegateLogServiceImpl implements DelegateLogService {
   }
 
   @Override
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
   public void save(String accountId, Log log) {
-    cache.get(accountId, s -> new ArrayList<>()).add(log);
+    List<Log> logs = Optional.ofNullable(cache.get(accountId, s -> new ArrayList<>())).orElse(new ArrayList<>());
+    logs.add(log);
   }
 
   @Override
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE")
   public void save(String accountId, ThirdPartyApiCallLog thirdPartyApiCallLog) {
     thirdPartyApiCallLog.setUuid(null);
-    apiCallLogCache.get(accountId, s -> new ArrayList<>()).add(thirdPartyApiCallLog);
+    List<ThirdPartyApiCallLog> thirdPartyApiCallLogs =
+        Optional.ofNullable(apiCallLogCache.get(accountId, s -> new ArrayList<>())).orElse(new ArrayList<>());
+    thirdPartyApiCallLogs.add(thirdPartyApiCallLog);
   }
 
   private void dispatchCommandExecutionLogs(String accountId, List<Log> logs, RemovalCause removalCause) {

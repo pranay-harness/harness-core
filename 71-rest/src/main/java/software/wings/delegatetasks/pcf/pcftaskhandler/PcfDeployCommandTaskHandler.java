@@ -5,9 +5,10 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.cloudfoundry.operations.applications.ApplicationDetail;
 import org.cloudfoundry.operations.applications.ApplicationSummary;
 import org.slf4j.Logger;
@@ -39,9 +40,11 @@ public class PcfDeployCommandTaskHandler extends PcfCommandTaskHandler {
    * @param encryptedDataDetails
    * @return
    */
-  @SuppressFBWarnings("BC_UNCONFIRMED_CAST")
   public PcfCommandExecutionResponse executeTaskInternal(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
+    if (!(pcfCommandRequest instanceof PcfCommandDeployRequest)) {
+      throw new InvalidArgumentsException(Pair.of("pcfCommandRequest", "Must be instance of PcfCommandDeployRequest"));
+    }
     PcfCommandDeployRequest pcfCommandDeployRequest = (PcfCommandDeployRequest) pcfCommandRequest;
 
     List<PcfServiceData> pcfServiceDataUpdated = new ArrayList<>();

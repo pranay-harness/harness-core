@@ -139,6 +139,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.TrustManager;
 import javax.validation.constraints.NotNull;
 
 @Singleton
@@ -324,7 +325,7 @@ public class DelegateServiceImpl implements DelegateService {
       logger.info("[New] Delegate registered in {} ms", clock.millis() - start);
 
       SSLContext sslContext = javax.net.ssl.SSLContext.getInstance("SSL");
-      sslContext.init(null, TRUST_ALL_CERTS, new java.security.SecureRandom());
+      sslContext.init(null, TRUST_ALL_CERTS.toArray(new TrustManager[1]), new java.security.SecureRandom());
 
       if (delegateConfiguration.isPollForTasks()) {
         pollingForTasks.set(true);
