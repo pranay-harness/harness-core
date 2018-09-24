@@ -30,7 +30,7 @@ configVariables:
   value: development
   valueType: TEXT
 - name: CAPSULE_JAR
-  value: rest-0.0.1-SNAPSHOT-capsule.jar
+  value: rest-capsule.jar
   valueType: TEXT
 - name: ALLOWED_ORIGINS
   value: https://localhost:8000

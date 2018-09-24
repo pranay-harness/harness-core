@@ -10,7 +10,7 @@ fi
 
 echo "System-Properties: version=1.0.${1} logdnakey=${3}" >> app.mf
 echo "Application-Version: version=1.0.${1}" >> app.mf
-jar ufm watcher-0.0.1-SNAPSHOT-capsule.jar app.mf
+jar ufm watcher-capsule.jar app.mf
 rm -rf app.mf
 echo "1.0.${1} latest/watcher.jar" >> watcher${2}.txt
-mv watcher-0.0.1-SNAPSHOT-capsule.jar watcher.jar
+mv watcher-capsule.jar watcher.jar
