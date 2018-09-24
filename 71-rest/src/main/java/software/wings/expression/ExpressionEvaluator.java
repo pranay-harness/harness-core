@@ -136,7 +136,7 @@ public class ExpressionEvaluator {
         do {
           String name = matcher.group(0);
           String value = String.valueOf(jc.get(name));
-          matcher.appendReplacement(sb, value.replace("$", "\\$"));
+          matcher.appendReplacement(sb, value.replace("\\", "\\\\").replace("$", "\\$"));
         } while (matcher.find());
         matcher.appendTail(sb);
         result = sb.toString();

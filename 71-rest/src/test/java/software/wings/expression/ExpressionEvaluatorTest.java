@@ -329,4 +329,14 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
 
     assertThat(expressionEvaluator.substitute("${sweeping.output(\"jenkins\").foo}", context)).isEqualTo("bar");
   }
+
+  @Test
+  public void shouldEscapeSpecialCharacters() {
+    Map<String, Object> context =
+        ImmutableMap.<String, Object>builder()
+            .put("WINDOWS_RUNTIME_PATH", "%USERPROFILE%\\${app.name}\\${service.name}\\${env.name}\\runtime")
+            .build();
+    assertThat(expressionEvaluator.substitute("${WINDOWS_RUNTIME_PATH}", context))
+        .isEqualTo("%USERPROFILE%\\${app.name}\\${service.name}\\${env.name}\\runtime");
+  }
 }
