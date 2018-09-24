@@ -5,7 +5,7 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>commons</artifactId>
+    <artifactId>12-commons</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
     <repositories>
@@ -62,7 +62,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>commons-test</artifactId>
+            <artifactId>11-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>

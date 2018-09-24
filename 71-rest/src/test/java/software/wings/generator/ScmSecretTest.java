@@ -66,7 +66,7 @@ public class ScmSecretTest extends WingsBaseTest {
     final List<Object> sortedKeys = scmSecret.getSecrets().keySet().stream().sorted().collect(toList());
 
     final Path secretsPath =
-        Paths.get(Project.rootDirectory(), "rest", "src", "test", "resources", "secrets.properties");
+        Paths.get(Project.rootDirectory(), "71-rest", "src", "test", "resources", "secrets.properties");
 
     String passphrase = System.getenv("NEW_HARNESS_GENERATION_PASSPHRASE");
     if (passphrase == null) {

@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>delegate</artifactId>
+    <artifactId>81-delegate</artifactId>
 
     <parent>
         <groupId>software.wings</groupId>
@@ -14,13 +14,13 @@
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>commons</artifactId>
+            <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>rest-utils</artifactId>
+            <artifactId>62-rest-utils</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
@@ -48,7 +48,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>rest</artifactId>
+            <artifactId>71-rest</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -85,6 +85,7 @@
     </dependencies>
 
     <build>
+        <finalName>delegate</finalName>
         <plugins>
             <plugin>
                 <groupId>sg.enixsoft</groupId>

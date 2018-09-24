@@ -22,7 +22,6 @@ delgate.out
 dependency-reduced-pom.xml
 dump.tar.gz
 dump/
-maintenance
 mygclogfilename.gc
 portal-gc-logs.gc
 portal.log
