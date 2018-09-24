@@ -74,16 +74,14 @@ public class DelegateLogServiceImpl implements DelegateLogService {
 
   @Override
   public void save(String accountId, Log log) {
-    List<Log> logs = Optional.ofNullable(cache.get(accountId, s -> new ArrayList<>())).orElse(new ArrayList<>());
-    logs.add(log);
+    Optional.ofNullable(cache.get(accountId, s -> new ArrayList<>())).ifPresent(logs -> logs.add(log));
   }
 
   @Override
   public void save(String accountId, ThirdPartyApiCallLog thirdPartyApiCallLog) {
     thirdPartyApiCallLog.setUuid(null);
-    List<ThirdPartyApiCallLog> thirdPartyApiCallLogs =
-        Optional.ofNullable(apiCallLogCache.get(accountId, s -> new ArrayList<>())).orElse(new ArrayList<>());
-    thirdPartyApiCallLogs.add(thirdPartyApiCallLog);
+    Optional.ofNullable(apiCallLogCache.get(accountId, s -> new ArrayList<>()))
+        .ifPresent(logs -> logs.add(thirdPartyApiCallLog));
   }
 
   private void dispatchCommandExecutionLogs(String accountId, List<Log> logs, RemovalCause removalCause) {

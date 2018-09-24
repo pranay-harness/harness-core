@@ -1,20 +1,21 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsInfrastructureMapping;
+import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
-import software.wings.cloudprovider.gke.GkeClusterService;
+import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureProvider;
 
@@ -25,10 +26,8 @@ import java.util.List;
  */
 @Singleton
 public class GcpInfrastructureProvider implements InfrastructureProvider {
-  private static final Logger logger = LoggerFactory.getLogger(GcpInfrastructureProvider.class);
-
-  @Inject private GkeClusterService gkeClusterService;
   @Inject private HostService hostService;
+  @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override
   public PageResponse<Host> listHosts(AwsInfrastructureMapping awsInfrastructureMapping,
@@ -52,8 +51,18 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
     return hostService.saveHost(host);
   }
 
-  public List<String> listClusterNames(
+  List<String> listClusterNames(
       SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
-    return gkeClusterService.listClusters(computeProviderSetting, encryptedDataDetails);
+    SyncTaskContext syncTaskContext = aContext()
+                                          .withAccountId(computeProviderSetting.getAccountId())
+                                          .withAppId(computeProviderSetting.getAppId())
+                                          .withEnvId(computeProviderSetting.getEnvId())
+                                          .build();
+    return delegateProxyFactory.get(ContainerService.class, syncTaskContext)
+        .listClusters(ContainerServiceParams.builder()
+                          .encryptionDetails(encryptedDataDetails)
+                          .settingAttribute(computeProviderSetting)
+                          .clusterName("None")
+                          .build());
   }
 }
