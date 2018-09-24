@@ -206,6 +206,8 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
 
     outputs.put("security_group", asList("dummy-securityGroups"));
     outputs.put("archive_tags", ImmutableMap.<String, Object>of("a", "b"));
+    outputs.put("factory_tags", ImmutableMap.<String, Object>of("a", "b"));
+    outputs.put("warehouse_tags", ImmutableMap.<String, Object>of("a", "b"));
     infrastructureProvisionerService.regenerateInfrastructureMappings(
         infrastructureProvisioner.getUuid(), context, outputs);
 

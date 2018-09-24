@@ -1,5 +1,7 @@
 package software.wings.generator;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -36,6 +38,10 @@ public class OwnerManager {
       if (owner != null) {
         objects.add(owner);
       }
+    }
+
+    public void clear(Class clz) {
+      objects = objects.stream().filter(obj -> obj.getClass().equals(clz)).collect(toList());
     }
 
     public Account obtainAccount() {

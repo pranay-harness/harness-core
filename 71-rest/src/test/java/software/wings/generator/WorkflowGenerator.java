@@ -3,8 +3,10 @@ package software.wings.generator;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
+import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.COLLECT_ARTIFACT;
@@ -15,15 +17,18 @@ import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.SweepingOutput.Scope.PHASE;
 import static software.wings.beans.SweepingOutput.Scope.PIPELINE;
 import static software.wings.beans.SweepingOutput.Scope.WORKFLOW;
+import static software.wings.beans.TaskType.JENKINS;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.common.Constants.INFRASTRUCTURE_NODE_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
 import static software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static software.wings.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
 import static software.wings.sm.StateType.HTTP;
-import static software.wings.sm.StateType.JENKINS;
 import static software.wings.sm.StateType.RESOURCE_CONSTRAINT;
+import static software.wings.sm.StateType.TERRAFORM_DESTROY;
+import static software.wings.sm.StateType.TERRAFORM_PROVISION;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -35,9 +40,11 @@ import software.wings.beans.BasicOrchestrationWorkflow;
 import software.wings.beans.Environment;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
 import software.wings.beans.Workflow.WorkflowBuilder;
@@ -47,8 +54,12 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.ArtifactStreamGenerator.ArtifactStreams;
+import software.wings.generator.EnvironmentGenerator.Environments;
+import software.wings.generator.InfrastructureMappingGenerator.InfrastructureMappings;
+import software.wings.generator.InfrastructureProvisionerGenerator.InfrastructureProvisioners;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.ResourceConstraintGenerator.ResourceConstraints;
+import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.states.HttpState;
 import software.wings.sm.states.JenkinsState;
@@ -57,17 +68,29 @@ import software.wings.sm.states.ResourceConstraintState.HoldingScope;
 @Singleton
 public class WorkflowGenerator {
   @Inject private WorkflowService workflowService;
+  @Inject private ServiceResourceService serviceResourceService;
 
   @Inject private ApplicationGenerator applicationGenerator;
   @Inject private OrchestrationWorkflowGenerator orchestrationWorkflowGenerator;
   @Inject private InfrastructureMappingGenerator infrastructureMappingGenerator;
+  @Inject private InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
   @Inject private ResourceConstraintGenerator resourceConstraintGenerator;
   @Inject private ArtifactStreamGenerator artifactStreamGenerator;
+  @Inject private EnvironmentGenerator environmentGenerator;
   @Inject private ServiceGenerator serviceGenerator;
+  @Inject private ScmSecret scmSecret;
+  @Inject private SecretGenerator secretGenerator;
   @Inject private SettingGenerator settingGenerator;
-  @Inject WingsPersistence wingsPersistence;
+  @Inject private WorkflowGenerator workflowGenerator;
+  @Inject private WingsPersistence wingsPersistence;
 
-  public enum Workflows { BASIC_SIMPLE, BASIC_10_NODES, PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT, BUILD_JENKINS }
+  public enum Workflows {
+    BASIC_SIMPLE,
+    BASIC_10_NODES,
+    TERRAFORM,
+    PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT,
+    BUILD_JENKINS
+  }
 
   public Workflow ensurePredefined(Randomizer.Seed seed, Owners owners, Workflows predefined) {
     switch (predefined) {
@@ -75,6 +98,8 @@ public class WorkflowGenerator {
         return ensureBasicSimple(seed, owners);
       case BASIC_10_NODES:
         return ensureBasic10Nodes(seed, owners);
+      case TERRAFORM:
+        return ensureTerraform(seed, owners);
       case PERMANENTLY_BLOCKED_RESOURCE_CONSTRAINT:
         return ensurePermanentlyBlockedResourceConstraint(seed, owners);
       case BUILD_JENKINS:
@@ -121,6 +146,66 @@ public class WorkflowGenerator {
 
     workflow = postProcess(workflow, PostProcessInfo.builder().selectNodeCount(10).build());
     return workflow;
+  }
+
+  private Workflow ensureTerraform(Randomizer.Seed seed, Owners owners) {
+    Environment environment =
+        owners.obtainEnvironment(() -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
+
+    final InfrastructureProvisioner infrastructureProvisioner =
+        infrastructureProvisionerGenerator.ensurePredefined(seed, owners, InfrastructureProvisioners.TERRAFORM_TEST);
+
+    Service service = owners.obtainService(
+        ()
+            -> serviceResourceService.get(infrastructureProvisioner.getAppId(),
+                infrastructureProvisioner.getMappingBlueprints().iterator().next().getServiceId()));
+
+    final InfrastructureMapping terraformInfrastructureMapping =
+        infrastructureMappingGenerator.ensurePredefined(seed, owners, InfrastructureMappings.TERRAFORM_AWS_SSH_TEST);
+
+    final SecretName awsPlaygroundAccessKeyName = SecretName.builder().value("aws_playground_access_key").build();
+    final String awsPlaygroundAccessKey = scmSecret.decryptToString(awsPlaygroundAccessKeyName);
+    final SecretName awsPlaygroundSecretKeyName = SecretName.builder().value("aws_playground_secret_key").build();
+    final String awsPlaygroundSecretKeyId = secretGenerator.ensureStored(owners, awsPlaygroundSecretKeyName);
+
+    // TODO: this is temporary adding second key, to workaround bug in the UI
+    final SecretName terraformPasswordName = SecretName.builder().value("terraform_password").build();
+    final String terraformPasswordId = secretGenerator.ensureStored(owners, terraformPasswordName);
+
+    InfrastructureMapping infrastructureMapping =
+        infrastructureMappingGenerator.ensurePredefined(seed, owners, AWS_SSH_TEST);
+
+    return workflowGenerator.ensureWorkflow(seed, owners,
+        aWorkflow()
+            .withName("Terraform provision")
+            .withWorkflowType(WorkflowType.ORCHESTRATION)
+            .withInfraMappingId(infrastructureMapping.getUuid())
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withPreDeploymentSteps(
+                        aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT)
+                            .addStep(
+                                aGraphNode()
+                                    .withType(TERRAFORM_PROVISION.name())
+                                    .withName("Provision infra")
+                                    .addProperty("provisionerId", infrastructureProvisioner.getUuid())
+                                    .addProperty("variables",
+                                        asList(ImmutableMap.of("name", "access_key", "value", awsPlaygroundAccessKey,
+                                                   "valueType", Type.TEXT.name()),
+                                            ImmutableMap.of("name", "secret_key", "value", awsPlaygroundSecretKeyId,
+                                                "valueType", Type.ENCRYPTED_TEXT.name())))
+                                    .build())
+                            .build())
+                    .withPostDeploymentSteps(
+                        aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT)
+                            .addStep(aGraphNode()
+                                         .withType(TERRAFORM_DESTROY.name())
+                                         .withName("Deprovision infra")
+                                         .addProperty("provisionerId", infrastructureProvisioner.getUuid())
+                                         .build())
+                            .build())
+                    .build())
+            .build());
   }
 
   private Workflow ensurePermanentlyBlockedResourceConstraint(Randomizer.Seed seed, Owners owners) {
