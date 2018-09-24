@@ -17,13 +17,20 @@
 
         <module>21-persistence</module>
 
+        <module>31-orchestration</module>
+
         <module>61-serialization-utils</module>
         <module>62-rest-utils</module>
 
-        <module>rest</module>
+        <module>71-rest</module>
+        <module>75-model-test</module>
+        <module>76-functional</module>
 
         <module>81-delegate</module>
         <module>82-watcher</module>
+
+        <module>91-model-gen</module>
+        <module>95-e2e</module>
     </modules>
 
     <scm>

@@ -2,7 +2,7 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>rest</artifactId>
+    <artifactId>71-rest</artifactId>
 
     <parent>
         <groupId>software.wings</groupId>
@@ -51,24 +51,24 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>commons</artifactId>
+            <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>persistence</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>serialization-utils</artifactId>
+            <artifactId>21-persistence</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>rest-utils</artifactId>
+            <artifactId>61-serialization-utils</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>62-rest-utils</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
@@ -489,7 +489,7 @@
 
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>commons-test</artifactId>
+            <artifactId>11-commons-test</artifactId>
             <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
@@ -711,6 +711,7 @@
     </dependencies>
 
     <build>
+        <finalName>rest</finalName>
         <plugins>
             <plugin>
                 <groupId>com.github.chrisdchristo</groupId>

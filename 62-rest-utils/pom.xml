@@ -3,7 +3,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>rest-utils</artifactId>
+    <artifactId>62-rest-utils</artifactId>
 
     <parent>
         <groupId>software.wings</groupId>
@@ -14,7 +14,7 @@
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>commons</artifactId>
+            <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -35,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>serialization-utils</artifactId>
+            <artifactId>61-serialization-utils</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>

@@ -29,14 +29,14 @@ if [[ -z "${SERVER_BUILD_DIR}" ]]; then
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
        -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 \
        -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar \
-       -Dfile.encoding=UTF-8 -jar rest/target/rest-0.0.1-SNAPSHOT-capsule.jar rest/config.yml > portal.log 2>&1 &
+       -Dfile.encoding=UTF-8 -jar 71-rest/target/rest-capsule.jar 71-rest/config.yml > portal.log 2>&1 &
 else
   echo "SERVER_BUILD_DIR is set, using prebuilt server build"
   echo $SERVER_BUILD_DIR
   java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps \
          -Xloggc:portal-gc-logs.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 \
          -Xbootclasspath/p:$HOME/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar \
-         -Dfile.encoding=UTF-8 -jar $SERVER_BUILD_DIR/rest/target/rest-0.0.1-SNAPSHOT-capsule.jar rest/config.yml > portal.log 2>&1 &
+         -Dfile.encoding=UTF-8 -jar $SERVER_BUILD_DIR/71-rest/target/rest-capsule.jar 71-rest/config.yml > portal.log 2>&1 &
 fi
 
 echo 'sleep for server to start'
@@ -62,7 +62,7 @@ echo "server started, going to run DataGen util"
 set -e
 
 # run data gen to load test data
-mvn -B failsafe:integration-test -pl rest -Dit.test=DataGenUtil -P datagen -P integration-coverage
+mvn -B failsafe:integration-test -pl 71-rest -Dit.test=DataGenUtil -P datagen -P integration-coverage
 datagen_status=$?
 if [[ $datagen_status -ne 0 ]] ; then
   echo 'Datagen failed';
@@ -70,7 +70,7 @@ if [[ $datagen_status -ne 0 ]] ; then
 fi
 echo "datagen finished"
 # specifying -DfailIfNoTests=false flag b/c we are using surefire on integration dir
-mvn -B test -pl rest -Dtest=software.wings.integration.JenkinsIntegrationTest -DfailIfNoTests=false
+mvn -B test -pl 71-rest -Dtest=software.wings.integration.JenkinsIntegrationTest -DfailIfNoTests=false
 
 jenkins_overwrite_status=$?
 echo "JenkinsIntegrationTest finished with status $jenkins_overwrite_status"
@@ -82,7 +82,7 @@ fi
 #Delegate integration test. Don't run with UI integration tests
 if [ "$TEST_SUITE" != "UI_INTEGRATION" ] ;
 then
-  mvn -B test -pl rest -Dtest=software.wings.integration.DelegateIntegrationTest -DfailIfNoTests=false
+  mvn -B test -pl 71-rest -Dtest=software.wings.integration.DelegateIntegrationTest -DfailIfNoTests=false
   delegateIntegrationTestResult=$?
   if [[ $delegateIntegrationTestResult -ne 0 ]] ;
   then
@@ -96,16 +96,16 @@ sed -i -e 's/^doUpgrade.*/doUpgrade: false/' 81-delegate/config-delegate.yml
 rm -rf $HOME/appagent/ver4.3.1.0/logs/
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
     java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:delegate-gc-logs.gc -XX:+UseParallelGC \
-         -XX:MaxGCPauseMillis=500 -jar 81-delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar 81-delegate/config-delegate.yml > delgate.out 2>&1 &
+         -XX:MaxGCPauseMillis=500 -jar 81-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml > delgate.out 2>&1 &
 else
     java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:delegate-gc-logs.gc -XX:+UseParallelGC \
-         -XX:MaxGCPauseMillis=500 -jar $SERVER_BUILD_DIR/81-delegate/target/delegate-0.0.1-SNAPSHOT-capsule.jar 81-delegate/config-delegate.yml > delgate.out 2>&1 &
+         -XX:MaxGCPauseMillis=500 -jar $SERVER_BUILD_DIR/81-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml > delgate.out 2>&1 &
 fi
 
 # wait for delegate to start
 echo 'wait for delegate to start'
 
-mvn -B test -pl rest -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister -DfailIfNoTests=false
+mvn -B test -pl 71-rest -Dtest=software.wings.integration.DelegateRegistrationIntegrationTest#shouldWaitForADelegateToRegister -DfailIfNoTests=false
 foundRegisteredDelegate=$?
 if [[ $foundRegisteredDelegate -ne 0 ]] ; then
   echo 'Delegate registration failed';
