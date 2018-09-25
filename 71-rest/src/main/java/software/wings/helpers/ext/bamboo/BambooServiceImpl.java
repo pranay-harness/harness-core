@@ -450,7 +450,7 @@ public class BambooServiceImpl implements BambooService {
           artifactUrl = bambooConfig.getBambooUrl() + "/browse/" + buildKey + "/artifact";
         }
         artifactUrl = artifactUrl + "/" + jobName + "/" + artifactSourcePath;
-        logger.info("Constructed url {]", artifactUrl);
+        logger.info("Constructed url {}", artifactUrl);
         try {
           URL url = new URL(artifactUrl);
           URLConnection uc = url.openConnection();
