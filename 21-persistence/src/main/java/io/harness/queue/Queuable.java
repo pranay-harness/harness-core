@@ -1,4 +1,4 @@
-package software.wings.core.queue;
+package io.harness.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
@@ -20,7 +20,6 @@ import java.util.Date;
         @Field("running"), @Field("priority"), @Field("created"), @Field("earliestGet")
       })
 })
-
 public abstract class Queuable {
   @Id private String id;
   @Indexed private boolean running;

@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
+import io.harness.queue.Queuable;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.core.queue.Queuable;
 
 import java.util.Date;
 import java.util.Map;
