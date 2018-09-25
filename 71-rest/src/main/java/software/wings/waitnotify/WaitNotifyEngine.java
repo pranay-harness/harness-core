@@ -16,9 +16,9 @@ import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.ReadPref;
+import io.harness.queue.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;

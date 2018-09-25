@@ -1,9 +1,12 @@
 package software.wings.core.queue;
 
+import static io.harness.govern.Switch.unhandled;
+import static java.lang.String.format;
 import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
 
+import io.harness.queue.Queue;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
@@ -154,19 +157,21 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.core.queue.Queue#count()
-   */
-  @Override
-  public long count() {
-    return datastore.getCount(klass);
-  }
-
-  /* (non-Javadoc)
    * @see software.wings.core.queue.Queue#count(boolean)
    */
   @Override
-  public long count(final boolean running) {
-    return datastore.getCount(createQuery().filter("running", running));
+  public long count(final Filter filter) {
+    switch (filter) {
+      case ALL:
+        return datastore.getCount(klass);
+      case RUNNING:
+        return datastore.getCount(createQuery().filter("running", true));
+      case NOT_RUNNING:
+        return datastore.getCount(createQuery().filter("running", false));
+      default:
+        unhandled(filter);
+    }
+    throw new RuntimeException(format("Unknown filter type %s", filter));
   }
 
   /* (non-Javadoc)

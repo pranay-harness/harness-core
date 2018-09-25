@@ -3,6 +3,7 @@ package software.wings.app;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
+import io.harness.queue.Queue;
 import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.KmsTransitionEvent;
@@ -10,7 +11,6 @@ import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.MongoQueueImpl;
-import software.wings.core.queue.Queue;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.service.impl.DelayEvent;

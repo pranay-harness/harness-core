@@ -1,8 +1,5 @@
-package software.wings.core.queue;
+package io.harness.queue;
 
-/**
- * Created by peeyushaggarwal on 4/11/16.
- */
 import java.util.Date;
 
 /**
@@ -42,20 +39,15 @@ public interface Queue<T> {
    */
   void updateResetDuration(T message);
 
-  /**
-   * Count in queue, running true or false.
-   *
-   * @return count long
-   */
-  long count();
+  enum Filter { ALL, RUNNING, NOT_RUNNING }
 
   /**
    * Count in queue.
    *
-   * @param running count running messages or not running
+   * @param filter what to return
    * @return count long
    */
-  long count(boolean running);
+  long count(Filter filter);
 
   /**
    * Acknowledge a message was processed and remove from queue.

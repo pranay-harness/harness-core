@@ -17,13 +17,13 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.queue.Queue;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
-import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;

@@ -5,9 +5,9 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.queue.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.queue.Queue;
 
 import java.time.OffsetDateTime;
 import java.util.Date;
