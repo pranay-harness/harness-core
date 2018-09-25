@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.allChecks;
+import static io.harness.persistence.ReadPref.NORMAL;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -31,6 +32,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
+import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.MongoUtils;
 import io.harness.mongo.PageController;
 import io.harness.persistence.HIterator;
@@ -83,14 +85,10 @@ import java.util.UUID;
  * The Class WingsMongoPersistence.
  */
 @Singleton
-public class WingsMongoPersistence implements WingsPersistence, Managed {
+public class WingsMongoPersistence extends MongoPersistence implements WingsPersistence, Managed {
   protected static Logger logger = LoggerFactory.getLogger(WingsMongoPersistence.class);
 
   @Inject private SecretManager secretManager;
-  private AdvancedDatastore primaryDatastore;
-  private AdvancedDatastore secondaryDatastore;
-
-  private Map<ReadPref, AdvancedDatastore> datastoreMap;
 
   /**
    * Creates a new object for wings mongo persistence.
@@ -101,21 +99,18 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
    */
   @Inject
   public WingsMongoPersistence(@Named("primaryDatastore") AdvancedDatastore primaryDatastore,
-      @Named("secondaryDatastore") AdvancedDatastore secondaryDatastore,
-      @Named("datastoreMap") Map<ReadPref, AdvancedDatastore> datastoreMap) {
-    this.primaryDatastore = primaryDatastore;
-    this.secondaryDatastore = secondaryDatastore;
-    this.datastoreMap = datastoreMap;
+      @Named("secondaryDatastore") AdvancedDatastore secondaryDatastore) {
+    super(primaryDatastore, secondaryDatastore);
   }
 
   @Override
   public <T extends Base> T get(Class<T> cls, String id) {
-    return get(cls, id, ReadPref.NORMAL);
+    return get(cls, id, NORMAL);
   }
 
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id) {
-    return get(cls, appId, id, ReadPref.NORMAL);
+    return get(cls, appId, id, NORMAL);
   }
 
   @Override
@@ -275,7 +270,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     Query<T> query = primaryDatastore.createQuery(cls).filter(ID_KEY, entityId);
     UpdateOperations<T> operations = primaryDatastore.createUpdateOperations(cls);
     boolean encryptable = Encryptable.class.isAssignableFrom(cls);
-    Object savedObject = datastoreMap.get(ReadPref.NORMAL).get(cls, entityId);
+    Object savedObject = datastoreMap.get(NORMAL).get(cls, entityId);
     List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(cls);
     for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
       Object value = entry.getValue();
@@ -406,7 +401,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     if (!authFilters(req, cls)) {
       return aPageResponse().withTotal(0).build();
     }
-    ReadPref readPref = req.getReadPref() != null ? req.getReadPref() : ReadPref.NORMAL;
+    ReadPref readPref = req.getReadPref() != null ? req.getReadPref() : NORMAL;
     AdvancedDatastore advancedDatastore = datastoreMap.get(readPref);
     Query<T> query = advancedDatastore.createQuery(cls);
 
@@ -418,8 +413,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T> long getCount(Class<T> cls, PageRequest<T> req) {
-    AdvancedDatastore advancedDatastore =
-        datastoreMap.get(req.getReadPref() != null ? req.getReadPref() : ReadPref.NORMAL);
+    AdvancedDatastore advancedDatastore = datastoreMap.get(req.getReadPref() != null ? req.getReadPref() : NORMAL);
     Query<T> query = advancedDatastore.createQuery(cls);
     Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
 
@@ -433,12 +427,12 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
 
   @Override
   public <T> Query<T> createQuery(Class<T> cls) {
-    return createQuery(cls, ReadPref.NORMAL);
+    return createQuery(cls, NORMAL);
   }
 
   @Override
   public <T> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks) {
-    Query<T> query = createQuery(cls, ReadPref.NORMAL);
+    Query<T> query = createQuery(cls, NORMAL);
     ((HQuery) query).setQueryChecks(queryChecks);
     return query;
   }
@@ -795,7 +789,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
     // if its an update
     Object savedObject = null;
     if (isNotBlank(o.getUuid()) && (SettingAttribute.class.isInstance(o) || Encryptable.class.isInstance(o))) {
-      savedObject = datastoreMap.get(ReadPref.NORMAL).get((Class<T>) o.getClass(), o.getUuid());
+      savedObject = datastoreMap.get(NORMAL).get((Class<T>) o.getClass(), o.getUuid());
     }
     Object toEncrypt = o;
     if (SettingAttribute.class.isInstance(o)) {
@@ -823,7 +817,7 @@ public class WingsMongoPersistence implements WingsPersistence, Managed {
       return;
     }
 
-    Object toDelete = datastoreMap.get(ReadPref.NORMAL).get(o.getClass(), o.getUuid());
+    Object toDelete = datastoreMap.get(NORMAL).get(o.getClass(), o.getUuid());
     if (toDelete == null) {
       return;
     }

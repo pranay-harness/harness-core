@@ -8,9 +8,7 @@ import static org.mongodb.morphia.logging.MorphiaLoggerFactory.registerLogger;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Maps;
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
@@ -29,7 +27,6 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
-import io.harness.persistence.ReadPref;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -59,7 +56,6 @@ public class DatabaseModule extends AbstractModule {
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;
-  private Map<ReadPref, AdvancedDatastore> datastoreMap = Maps.newHashMap();
 
   public static final MongoClientOptions.Builder mongoClientOptions =
       MongoClientOptions.builder()
@@ -105,8 +101,6 @@ public class DatabaseModule extends AbstractModule {
 
     this.primaryDatastore.setQueryFactory(new HQueryFactory());
     this.secondaryDatastore.setQueryFactory(new HQueryFactory());
-    datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
-    datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
   }
 
   /**
@@ -121,8 +115,6 @@ public class DatabaseModule extends AbstractModule {
     this.primaryDatastore = primaryDatastore;
     this.secondaryDatastore = secondaryDatastore;
 
-    datastoreMap.put(ReadPref.CRITICAL, primaryDatastore);
-    datastoreMap.put(ReadPref.NORMAL, secondaryDatastore);
     this.distributedLockSvc = distributedLockSvc;
   }
 
@@ -375,9 +367,6 @@ public class DatabaseModule extends AbstractModule {
   protected void configure() {
     bind(AdvancedDatastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);
     bind(AdvancedDatastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
-    bind(new TypeLiteral<Map<ReadPref, AdvancedDatastore>>() {})
-        .annotatedWith(Names.named("datastoreMap"))
-        .toInstance(datastoreMap);
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
   }
 
