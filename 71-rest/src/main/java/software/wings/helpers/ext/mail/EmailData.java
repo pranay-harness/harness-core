@@ -1,12 +1,12 @@
 package software.wings.helpers.ext.mail;
 
+import io.harness.queue.Queuable;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
-import software.wings.core.queue.Queuable;
 
 import java.util.ArrayList;
 import java.util.List;

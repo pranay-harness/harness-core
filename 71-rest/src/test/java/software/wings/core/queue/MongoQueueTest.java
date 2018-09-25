@@ -11,6 +11,7 @@ import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
 import io.harness.rule.RepeatRule.Repeat;

@@ -4,10 +4,10 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.queue.Queuable;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Reference;
 import software.wings.beans.artifact.Artifact;
-import software.wings.core.queue.Queuable;
 
 import java.util.Date;
 

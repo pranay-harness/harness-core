@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
+import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

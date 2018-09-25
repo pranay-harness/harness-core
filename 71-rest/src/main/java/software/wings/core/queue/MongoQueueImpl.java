@@ -6,6 +6,7 @@ import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
 
+import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.Datastore;

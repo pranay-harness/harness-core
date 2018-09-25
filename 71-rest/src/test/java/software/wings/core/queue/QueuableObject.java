@@ -2,6 +2,7 @@ package software.wings.core.queue;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.queue.Queuable;
 import org.junit.Ignore;
 import org.mongodb.morphia.annotations.Entity;
 
