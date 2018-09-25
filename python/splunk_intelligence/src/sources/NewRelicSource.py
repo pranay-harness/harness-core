@@ -17,6 +17,7 @@ class NewRelicSource(object):
 
     def get_request(self, url, headers, max_retries=1):
         sleep_time = 1
+        num_max_retries = max_retries
         while max_retries > 0:
             r = requests.get(url, headers=headers, verify=False, timeout=30)
             if r.status_code != 500 and r.status_code != 503:
@@ -27,7 +28,7 @@ class NewRelicSource(object):
                     time.sleep(sleep_time)
                     sleep_time = sleep_time * 2
 
-        raise Exception(str(max_retries) + ' is tried, but unable to get request from ' + url)
+        raise Exception(str(num_max_retries) + ' retries attempted, but unable to get request from ' + url)
 
     def get_node_instances(self):
         url = self.url + '/v2/applications/' + str(self.appId) + '/instances.json'
