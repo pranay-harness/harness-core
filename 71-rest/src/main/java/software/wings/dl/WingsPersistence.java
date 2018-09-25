@@ -4,6 +4,7 @@ import com.mongodb.DBCollection;
 import com.mongodb.client.gridfs.GridFSBucket;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.Datastore;
@@ -20,7 +21,7 @@ import java.util.Set;
 /**
  * The Interface WingsPersistence.
  */
-public interface WingsPersistence {
+public interface WingsPersistence extends HPersistence {
   /**
    * Gets the.
    *
