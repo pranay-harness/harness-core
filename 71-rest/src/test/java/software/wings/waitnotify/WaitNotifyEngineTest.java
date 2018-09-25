@@ -8,12 +8,13 @@ import static software.wings.waitnotify.StringNotifyResponseData.Builder.aString
 
 import com.google.inject.Inject;
 
+import io.harness.queue.Queue;
+import io.harness.queue.Queue.Filter;
 import io.harness.threading.Concurrent;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.core.maintenance.MaintenanceController;
-import software.wings.core.queue.Queue;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 
@@ -70,7 +71,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(NotifyResponse::getResponse)
         .containsExactly(data);
 
-    while (notifyEventQueue.count() != 0) {
+    while (notifyEventQueue.count(Filter.ALL) != 0) {
       Thread.yield();
     }
 
@@ -104,7 +105,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
 
       Concurrent.test(10, i -> { notifyEventListener.execute(); });
 
-      assertThat(notifyEventQueue.count()).isEqualTo(0);
+      assertThat(notifyEventQueue.count(Filter.ALL)).isEqualTo(0);
 
       assertThat(responseMap).hasSize(1).isEqualTo(of("123", data));
       assertThat(callCount.get()).isEqualTo(1);
@@ -136,7 +137,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(NotifyResponse::getResponse)
         .containsExactly(data1);
 
-    while (notifyEventQueue.count() != 0) {
+    while (notifyEventQueue.count(Filter.ALL) != 0) {
       Thread.yield();
     }
 
@@ -150,7 +151,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(NotifyResponse::getResponse)
         .containsExactly(data2);
 
-    while (notifyEventQueue.count() != 0) {
+    while (notifyEventQueue.count(Filter.ALL) != 0) {
       Thread.yield();
     }
 
@@ -164,7 +165,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(NotifyResponse::getResponse)
         .containsExactly(data3);
 
-    while (notifyEventQueue.count() != 0) {
+    while (notifyEventQueue.count(Filter.ALL) != 0) {
       Thread.yield();
     }
 
@@ -199,7 +200,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(NotifyResponse::getResponse)
         .containsExactly(data);
 
-    while (notifyEventQueue.count() != 0) {
+    while (notifyEventQueue.count(Filter.ALL) != 0) {
       Thread.yield();
     }
 

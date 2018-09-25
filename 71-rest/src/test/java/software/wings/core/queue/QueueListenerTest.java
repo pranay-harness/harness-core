@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.queue.Queue.Filter;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
@@ -67,9 +68,9 @@ public class QueueListenerTest extends WingsBaseTest {
   public void shouldProcessWhenRecievedMessageFromQueue() {
     QueuableObject message = new QueuableObject(1);
     queue.send(message);
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
     listener.run();
-    assertThat(queue.count()).isEqualTo(0);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(0);
     verify(listener).onMessage(message);
   }
 
@@ -84,13 +85,13 @@ public class QueueListenerTest extends WingsBaseTest {
 
     QueuableObject message = new QueuableObject(1);
     queue.send(message);
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
     doThrow(new RuntimeException(new InterruptedException())).when(queue).get();
 
     listener.run();
 
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
     verify(listener, times(0)).onMessage(any(QueuableObject.class));
   }
 
@@ -104,7 +105,7 @@ public class QueueListenerTest extends WingsBaseTest {
   public void shouldExtendResetDuration() throws Exception {
     QueuableObject message = new QueuableObject(1);
     queue.send(message);
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
     listener.setRunOnce(true);
     queue.resetDuration(1);
@@ -122,7 +123,7 @@ public class QueueListenerTest extends WingsBaseTest {
     runThread.start();
     runThread.join();
 
-    assertThat(queue.count()).isEqualTo(0);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(0);
     verify(listener).onMessage(message);
     verify(queue, atLeast(1)).updateResetDuration(any(QueuableObject.class));
   }
@@ -168,11 +169,11 @@ public class QueueListenerTest extends WingsBaseTest {
     message.setRetries(1);
     listener.setThrowException(true);
     queue.send(message);
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
     listener.run();
 
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
     verify(listener).onMessage(message);
     verify(listener).onException(any(Exception.class), eq(message));
     verify(queue).requeue(message);
@@ -188,11 +189,11 @@ public class QueueListenerTest extends WingsBaseTest {
     QueuableObject message = new QueuableObject(1);
     listener.setThrowException(true);
     queue.send(message);
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
     listener.run();
 
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
     verify(listener).onMessage(message);
     verify(listener).onException(any(Exception.class), eq(message));
     verify(queue, times(0)).requeue(message);

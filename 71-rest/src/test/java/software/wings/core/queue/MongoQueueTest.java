@@ -11,6 +11,8 @@ import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.queue.Queue;
+import io.harness.queue.Queue.Filter;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
@@ -254,21 +256,21 @@ public class MongoQueueTest extends WingsBaseTest {
    */
   @Test
   public void shouldReturnCountOfObjectsInTheQueue() {
-    assertThat(queue.count(true)).isEqualTo(0);
-    assertThat(queue.count(false)).isEqualTo(0);
-    assertThat(queue.count()).isEqualTo(0);
+    assertThat(queue.count(Filter.RUNNING)).isEqualTo(0);
+    assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(0);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(0);
 
     queue.send(new QueuableObject(1));
 
-    assertThat(queue.count(true)).isEqualTo(0);
-    assertThat(queue.count(false)).isEqualTo(1);
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.RUNNING)).isEqualTo(0);
+    assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(1);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
 
     queue.get();
 
-    assertThat(queue.count(true)).isEqualTo(1);
-    assertThat(queue.count(false)).isEqualTo(0);
-    assertThat(queue.count()).isEqualTo(1);
+    assertThat(queue.count(Filter.RUNNING)).isEqualTo(1);
+    assertThat(queue.count(Filter.NOT_RUNNING)).isEqualTo(0);
+    assertThat(queue.count(Filter.ALL)).isEqualTo(1);
   }
 
   /**
