@@ -728,7 +728,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Value
   @Builder
   static class Tree implements Distributable, Ordinal {
-    public static final long structureHash = ObjectStreamClass.lookup(Tree.class).getSerialVersionUID();
+    public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(Tree.class).getSerialVersionUID();
 
     private long contextOrder;
     private String key;
@@ -739,7 +739,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     @Override
     public long structureHash() {
-      return structureHash;
+      return STRUCTURE_HASH;
     }
 
     @Override
@@ -768,7 +768,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                           .max(Long::compare)
                           .orElseGet(() -> Long.valueOf(0));
 
-    Tree tree = mongoStore.get(GraphRenderer.algorithmId, Tree.structureHash, workflowExecutionId);
+    Tree tree = mongoStore.get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecutionId);
     if (tree != null && tree.getContextOrder() >= lastUpdate) {
       return tree;
     }
@@ -821,7 +821,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     Tree tree = null;
     if (!upToDate) {
-      tree = mongoStore.<Tree>get(GraphRenderer.algorithmId, Tree.structureHash, workflowExecution.getUuid());
+      tree = mongoStore.<Tree>get(GraphRenderer.algorithmId, Tree.STRUCTURE_HASH, workflowExecution.getUuid());
     }
 
     if (upToDate || tree == null || tree.lastUpdatedAt < (System.currentTimeMillis() - 5000)) {

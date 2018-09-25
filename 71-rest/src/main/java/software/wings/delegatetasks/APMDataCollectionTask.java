@@ -39,7 +39,6 @@ import software.wings.service.impl.apm.APMResponseParser;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
@@ -79,8 +78,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
-  @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
+
   private int initialDelayMins = 2;
   private int collectionWindow = 1;
 

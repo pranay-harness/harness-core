@@ -37,8 +37,6 @@ import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.CloudWatchService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -59,9 +57,7 @@ import java.util.concurrent.TimeUnit;
 public class CloudWatchState extends AbstractMetricAnalysisState {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(CloudWatchState.class);
 
-  @Inject private transient SettingsService settingsService;
   @Inject private transient AwsHelperService awsHelperService;
-  @Inject private transient SecretManager secretManager;
   @Inject private transient CloudWatchService cloudWatchService;
 
   @Attributes(required = true, title = "AWS account") private String analysisServerConfigId;

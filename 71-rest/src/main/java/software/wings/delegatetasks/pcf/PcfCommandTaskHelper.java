@@ -372,9 +372,9 @@ public class PcfCommandTaskHelper {
     File manifestFile = getManifestFile(releaseName, dir);
     manifestFile.createNewFile();
 
-    BufferedWriter writer = new BufferedWriter(new FileWriter(manifestFile));
-    writer.write(manifestYaml);
-    writer.close();
+    try (BufferedWriter writer = new BufferedWriter(new FileWriter(manifestFile))) {
+      writer.write(manifestYaml);
+    }
     return manifestFile;
   }
 

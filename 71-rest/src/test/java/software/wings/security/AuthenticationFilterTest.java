@@ -75,12 +75,12 @@ public class AuthenticationFilterTest {
   public void testAuthenticationFilterTestOptions() throws IOException {
     when(context.getMethod()).thenReturn(HttpMethod.OPTIONS);
     authenticationFilter.filter(context);
-    assertThat(context.getSecurityContext().isSecure());
+    assertThat(context.getSecurityContext().isSecure()).isTrue();
 
     doReturn(true).when(authenticationFilter).authenticationExemptedRequests(any(ContainerRequestContext.class));
     doReturn(false).when(authenticationFilter).externalFacingAPI();
     authenticationFilter.filter(context);
-    assertThat(context.getSecurityContext().isSecure());
+    assertThat(context.getSecurityContext().isSecure()).isTrue();
   }
 
   @Test
@@ -106,7 +106,7 @@ public class AuthenticationFilterTest {
     when(uriInfo.getQueryParameters()).thenReturn(new MultivaluedHashMap<>());
     when(context.getUriInfo()).thenReturn(uriInfo);
     authenticationFilter.filter(context);
-    assertThat(context.getSecurityContext().isSecure());
+    assertThat(context.getSecurityContext().isSecure()).isTrue();
   }
 
   @Test
@@ -117,7 +117,7 @@ public class AuthenticationFilterTest {
     doReturn(true).when(authenticationFilter).learningEngineServiceAPI();
     doReturn(false).when(authenticationFilter).delegateAPI();
     authenticationFilter.filter(context);
-    assertThat(context.getSecurityContext().isSecure());
+    assertThat(context.getSecurityContext().isSecure()).isTrue();
   }
 
   @Test
@@ -135,7 +135,7 @@ public class AuthenticationFilterTest {
     when(context.getUriInfo()).thenReturn(uriInfo);
     authenticationFilter.filter(context);
     verify(apiKeyService).validate(eq(apiKey), eq(ACCOUNT_ID));
-    assertThat(context.getSecurityContext().isSecure());
+    assertThat(context.getSecurityContext().isSecure()).isTrue();
   }
 
   @Test

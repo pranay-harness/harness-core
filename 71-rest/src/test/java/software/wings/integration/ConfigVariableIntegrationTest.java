@@ -71,7 +71,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
     String svId = serviceVariableService.save(serviceVariable1).getUuid();
     ServiceVariable parentServiceVariable = serviceVariableService.get(app.getAppId(), svId);
 
-    assertThat(parentServiceVariable.getEntityType().equals(EntityType.SERVICE));
+    assertThat(parentServiceVariable.getEntityType()).isEqualTo(EntityType.SERVICE);
     assertThat(parentServiceVariable.getUuid()).isEqualTo(svId);
     assertThat(parentServiceVariable.getType().name()).isEqualTo(Type.TEXT.name());
 
@@ -86,7 +86,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
     String newSvId = serviceVariableService.save(serviceVariable2).getUuid();
     ServiceVariable overrideServiceVariable = serviceVariableService.get(app.getAppId(), newSvId);
 
-    assertThat(overrideServiceVariable.getEntityType().equals(EntityType.SERVICE_TEMPLATE));
+    assertThat(overrideServiceVariable.getEntityType()).isEqualTo(EntityType.SERVICE_TEMPLATE);
     assertThat(overrideServiceVariable.getUuid()).isEqualTo(newSvId);
     assertThat(overrideServiceVariable.getType().name()).isEqualTo(Type.TEXT.name());
     assertThat(overrideServiceVariable.getParentServiceVariableId()).isEqualTo(parentServiceVariable.getUuid());
@@ -108,7 +108,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
     String svId = serviceVariableService.save(serviceVariable1).getUuid();
     ServiceVariable parentServiceVariable = serviceVariableService.get(app.getAppId(), svId);
 
-    assertThat(parentServiceVariable.getEntityType().equals(EntityType.SERVICE));
+    assertThat(parentServiceVariable.getEntityType()).isEqualTo(EntityType.SERVICE);
     assertThat(parentServiceVariable.getUuid()).isEqualTo(svId);
     assertThat(parentServiceVariable.getType().name()).isEqualTo(Type.ENCRYPTED_TEXT.name());
 
@@ -124,7 +124,7 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
     String newSvId = serviceVariableService.save(serviceVariable2).getUuid();
     ServiceVariable overrideServiceVariable = serviceVariableService.get(app.getAppId(), newSvId);
 
-    assertThat(overrideServiceVariable.getEntityType().equals(EntityType.SERVICE_TEMPLATE));
+    assertThat(overrideServiceVariable.getEntityType()).isEqualTo(EntityType.SERVICE_TEMPLATE);
     assertThat(overrideServiceVariable.getUuid()).isEqualTo(newSvId);
     assertThat(overrideServiceVariable.getType().name()).isEqualTo(Type.ENCRYPTED_TEXT.name());
     assertThat(overrideServiceVariable.getParentServiceVariableId()).isEqualTo(parentServiceVariable.getUuid());

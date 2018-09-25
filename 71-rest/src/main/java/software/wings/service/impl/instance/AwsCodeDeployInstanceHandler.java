@@ -32,7 +32,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.AwsCodeDeploy
 import software.wings.beans.infrastructure.instance.key.deployment.DeploymentKey;
 import software.wings.exception.HarnessException;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
@@ -48,7 +47,6 @@ import java.util.stream.Collectors;
  * @author rktummala on 01/30/18
  */
 public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
-  @Inject private InfrastructureMappingService infraMappingService;
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
 
   @Override

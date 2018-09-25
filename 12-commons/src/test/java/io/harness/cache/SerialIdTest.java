@@ -8,11 +8,11 @@ import org.junit.Test;
 import java.io.ObjectStreamClass;
 
 class Dummy implements Distributable, Nominal {
-  public static final long structureHash = ObjectStreamClass.lookup(Dummy.class).getSerialVersionUID();
+  public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(Dummy.class).getSerialVersionUID();
 
   @Override
   public long structureHash() {
-    return structureHash;
+    return STRUCTURE_HASH;
   }
 
   @Override
@@ -35,6 +35,6 @@ public class SerialIdTest extends CategoryTest {
   @Test
   public void testSanity() {
     final Dummy dummy = new Dummy();
-    assertThat(dummy.structureHash()).isEqualTo(-7224268178141562437L);
+    assertThat(dummy.structureHash()).isEqualTo(492977267398168896L);
   }
 }

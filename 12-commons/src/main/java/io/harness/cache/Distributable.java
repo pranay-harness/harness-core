@@ -38,7 +38,7 @@ public interface Distributable extends Cacheable, Serializable {
   // structure, the hash will automatically differ from the previous one, making the following
   // implementation the recommended one:
   //
-  // public static final long structureHash = ObjectStreamClass.lookup(Dummy.class).getSerialVersionUID();
+  // public static final long STRUCTURE_HASH = ObjectStreamClass.lookup(Dummy.class).getSerialVersionUID();
   //
   // @Override
   // public long structureHash() {

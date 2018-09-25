@@ -357,7 +357,7 @@ public class JenkinsImpl implements Jenkins {
 
     Build lastSuccessfulBuild = jobWithDetails.getLastSuccessfulBuild();
     if (lastSuccessfulBuild == null) {
-      logger.info("There is no last successful build for job {]", jobName);
+      logger.info("There is no last successful build for job {}", jobName);
       return null;
     }
     BuildWithDetails buildWithDetails = lastSuccessfulBuild.details();

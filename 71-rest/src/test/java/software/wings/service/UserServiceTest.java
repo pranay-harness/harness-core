@@ -310,7 +310,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.update(user);
     verify(wingsPersistence).update(user, updateOperations);
     verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
-    assertThat(user.getName().equals("test"));
+    assertThat(user.getName()).isEqualTo("test");
     verify(cache).remove(USER_ID);
   }
 
