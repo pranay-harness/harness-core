@@ -50,6 +50,7 @@ class HarnessLoader(object):
     def get_request(url, version_file_path, service_secret, max_retries=1):
         sleep_time = 1
         headers = HarnessLoader.make_header(version_file_path, service_secret)
+        num_max_retries = max_retries
         while max_retries > 0:
             http = urllib3.PoolManager(cert_reqs='CERT_NONE', timeout=30)
             r = http.request('GET', url, headers=headers)
@@ -61,7 +62,7 @@ class HarnessLoader(object):
                     time.sleep(sleep_time)
                     sleep_time = sleep_time * 2
 
-        raise Exception(str(max_retries) + ' is tried, but unable to get request from ' + url)
+        raise Exception(str(num_max_retries) + ' retries attempted, but unable to get request from ' + url)
 
 
     @staticmethod
