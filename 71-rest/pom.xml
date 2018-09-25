@@ -734,10 +734,6 @@
                             <value>8=91</value>
                         </entry>
                         <entry>
-                            <key>JVM-Args</key>
-                            <value>-Dcom.sun.management.jmxremote.port=7091 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=$HOSTNAME</value>
-                        </entry>
-                        <entry>
                             <key>Args</key>
                             <value>server $*</value>
                         </entry>

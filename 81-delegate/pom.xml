@@ -115,10 +115,6 @@
                             <key>System-Properties</key>
                             <value>version=1.0.10</value>
                         </entry>
-                        <!--entry>
-                            <key>JVM-Args</key>
-                            <value>-Dcom.sun.management.jmxremote.port=7092 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=$HOSTNAME</value>
-                        </entry-->
                         <entry>
                             <key>Args</key>
                             <value>$*</value>
