@@ -56,11 +56,9 @@ public class FileServiceImpl implements FileService {
    */
   @Override
   public File download(String fileId, File file, FileBucket fileBucket) {
-    try {
-      FileOutputStream streamToDownload = new FileOutputStream(file);
+    try (FileOutputStream streamToDownload = new FileOutputStream(file)) {
       wingsPersistence.getOrCreateGridFSBucket(fileBucket.representationName())
           .downloadToStream(new ObjectId(fileId), streamToDownload);
-      streamToDownload.close();
       return file;
     } catch (IOException ex) {
       logger.error("Error in download", ex);

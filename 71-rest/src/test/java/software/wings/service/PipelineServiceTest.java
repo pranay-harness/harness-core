@@ -495,7 +495,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(pipelineIterator.next()).thenReturn(pipeline);
 
     List<String> refPipelines = pipelineService.isEnvironmentReferenced(APP_ID, ENV_ID);
-    assertThat(!refPipelines.isEmpty() && refPipelines.size() > 0);
+    assertThat(!refPipelines.isEmpty() && refPipelines.size() > 0).isTrue();
   }
 
   @Test

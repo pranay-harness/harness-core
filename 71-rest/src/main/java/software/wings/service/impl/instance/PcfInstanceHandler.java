@@ -36,7 +36,6 @@ import software.wings.beans.infrastructure.instance.key.deployment.PcfDeployment
 import software.wings.exception.HarnessException;
 import software.wings.helpers.ext.pcf.PcfAppNotFoundException;
 import software.wings.service.impl.PcfHelperService;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.StepExecutionSummary;
 import software.wings.utils.Validator;
@@ -54,7 +53,6 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class PcfInstanceHandler extends InstanceHandler {
-  @Inject private InfrastructureMappingService infraMappingService;
   @Inject private PcfHelperService pcfHelperService;
 
   @Override

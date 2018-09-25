@@ -408,7 +408,7 @@ public class GitClientImpl implements GitClient {
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       String errorMsg = Misc.getMessage(ex);
-      if (ex instanceof InvalidRemoteException | ex.getCause() instanceof NoRemoteRepositoryException) {
+      if (ex instanceof InvalidRemoteException || ex.getCause() instanceof NoRemoteRepositoryException) {
         errorMsg = "Invalid git repo or user doesn't have write access to repository. repo:" + gitConfig.getRepoUrl();
       }
 
@@ -615,7 +615,7 @@ public class GitClientImpl implements GitClient {
       if (logError) {
         logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Git validation failed [{}]", e);
       }
-      if (e instanceof InvalidRemoteException | e.getCause() instanceof NoRemoteRepositoryException) {
+      if (e instanceof InvalidRemoteException || e.getCause() instanceof NoRemoteRepositoryException) {
         return "Invalid git repo " + gitConfig.getRepoUrl();
       }
 

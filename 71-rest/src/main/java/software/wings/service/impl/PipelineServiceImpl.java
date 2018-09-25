@@ -475,7 +475,7 @@ public class PipelineServiceImpl implements PipelineService {
 
     List<Variable> nonEntityVariables =
         userVariables.stream()
-            .filter(variable -> (variable.getEntityType() == null) & !variable.isFixed())
+            .filter(variable -> (variable.getEntityType() == null) && !variable.isFixed())
             .collect(toList());
 
     if (isEmpty(pseWorkflowVariables)) {

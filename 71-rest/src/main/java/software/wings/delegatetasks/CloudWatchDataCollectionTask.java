@@ -24,7 +24,6 @@ import software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo;
 import software.wings.service.impl.cloudwatch.CloudWatchDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
@@ -48,7 +47,6 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
   private CloudWatchDataCollectionInfo dataCollectionInfo;
 
   @Inject private MetricDataStoreService metricStoreService;
-  @Inject private EncryptionService encryptionService;
   @Inject private CloudWatchDelegateServiceImpl cloudWatchDelegateService;
 
   public CloudWatchDataCollectionTask(String delegateId, DelegateTask delegateTask,

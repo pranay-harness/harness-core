@@ -143,7 +143,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
     Artifact updatedArtifact = artifactService.get(savedArtifact.getAppId(), savedArtifact.getUuid());
     assertThat(updatedArtifact).isNotNull().extracting(Artifact::getArtifactFiles).hasSize(1);
 
-    assertThat(updatedArtifact.getArtifactFiles().get(0).getFileUuid().equals("5942bffe1e204f7f3004f455"));
+    assertThat(updatedArtifact.getArtifactFiles().get(0).getFileUuid()).isEqualTo("5942bffe1e204f7f3004f455");
   }
 
   @Test

@@ -77,7 +77,7 @@ public class PreferenceServiceTest extends WingsBaseTest {
                    .filter(ACCOUNT_ID_KEY, TEST_ACCOUNT_ID)
                    .filter(USER_ID_KEY, TEST_USER_ID)
                    .filter(Mapper.ID_KEY, TEST_PREFERENCE_ID)
-                   .get()
-        == null);
+                   .get())
+        .isNull();
   }
 }

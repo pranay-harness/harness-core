@@ -44,7 +44,6 @@ import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
 import software.wings.service.intfc.ConfigService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
@@ -65,7 +64,6 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   @Transient @Inject private transient ConfigService configService;
   @Transient @Inject private transient ServiceTemplateService serviceTemplateService;
-  @Transient @Inject private transient FeatureFlagService featureFlagService;
 
   private String replicationControllerName;
   private KubernetesServiceType serviceType;
