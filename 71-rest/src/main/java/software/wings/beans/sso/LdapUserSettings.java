@@ -14,7 +14,7 @@ import software.wings.helpers.ext.ldap.LdapUserConfig;
 public class LdapUserSettings implements LdapUserConfig {
   @JsonProperty @NotBlank String baseDN;
   @JsonProperty @NotBlank String searchFilter = LdapConstants.DEFAULT_USER_SEARCH_FILTER;
-  @JsonProperty @NotBlank String emailAttr = "email";
+  @JsonProperty @NotBlank String emailAttr = "mail";
   @JsonProperty @NotBlank String displayNameAttr = "cn";
   @JsonProperty @NotBlank String groupMembershipAttr = "memberOf";
 
