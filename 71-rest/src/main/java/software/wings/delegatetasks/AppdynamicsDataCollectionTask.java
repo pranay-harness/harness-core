@@ -27,6 +27,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
@@ -55,6 +56,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
 
   @Inject private MetricDataStoreService metricStoreService;
+  @Inject private EncryptionService encryptionService;
 
   public AppdynamicsDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
@@ -91,6 +93,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
     private long collectionStartTime;
     private int dataCollectionMinute;
     private final DataCollectionTaskResult taskResult;
+    private AppDynamicsConfig appDynamicsConfig;
 
     private AppdynamicsMetricCollector(
         AppdynamicsDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
@@ -99,10 +102,11 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
       this.taskResult = taskResult;
+      appDynamicsConfig = dataCollectionInfo.getAppDynamicsConfig();
+      encryptionService.decrypt(appDynamicsConfig, dataCollectionInfo.getEncryptedDataDetails());
     }
 
     private List<AppdynamicsMetricData> getMetricsData() throws IOException, CloneNotSupportedException {
-      final AppDynamicsConfig appDynamicsConfig = dataCollectionInfo.getAppDynamicsConfig();
       final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
       final long appId = dataCollectionInfo.getAppId();
       final long tierId = dataCollectionInfo.getTierId();
@@ -242,9 +246,9 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           try {
             logger.info("starting metric data collection for {} for minute {}",
                 dataCollectionInfo.getStateExecutionId(), dataCollectionMinute);
-            AppdynamicsTier appdynamicsTier = appdynamicsDelegateService.getAppdynamicsTier(
-                dataCollectionInfo.getAppDynamicsConfig(), dataCollectionInfo.getAppId(),
-                dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());
+            AppdynamicsTier appdynamicsTier =
+                appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, dataCollectionInfo.getAppId(),
+                    dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());
             Preconditions.checkNotNull("No trier found for {}", dataCollectionInfo);
             List<AppdynamicsMetricData> metricsData = getMetricsData();
             logger.info(
@@ -274,8 +278,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                         .build());
 
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
-            if (!saveMetrics(dataCollectionInfo.getAppDynamicsConfig().getAccountId(),
-                    dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
+            if (!saveMetrics(appDynamicsConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
+                    dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
               logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                   dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
             } else {
