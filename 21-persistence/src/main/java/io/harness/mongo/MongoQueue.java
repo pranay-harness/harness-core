@@ -1,14 +1,14 @@
-package software.wings.core.queue;
+package io.harness.mongo;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
-import static org.joor.Reflect.on;
 
 import com.google.inject.Inject;
 
 import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
 import io.harness.version.VersionInfoManager;
+import org.joor.Reflect;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
  *
  * @param <T> the generic type
  */
-public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
-  private static final Logger logger = LoggerFactory.getLogger(MongoQueueImpl.class);
+public class MongoQueue<T extends Queuable> implements Queue<T> {
+  private static final Logger logger = LoggerFactory.getLogger(MongoQueue.class);
 
   private final Datastore datastore;
   private final Class<T> klass;
@@ -41,7 +41,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
    * @param klass     the klass
    * @param datastore the datastore
    */
-  public MongoQueueImpl(Class<T> klass, final Datastore datastore) {
+  public MongoQueue(Class<T> klass, final Datastore datastore) {
     this(klass, datastore, 5);
   }
 
@@ -52,7 +52,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
    * @param datastore              the datastore
    * @param resetDurationInSeconds the reset duration in seconds
    */
-  public MongoQueueImpl(Class<T> klass, final Datastore datastore, int resetDurationInSeconds) {
+  public MongoQueue(Class<T> klass, final Datastore datastore, int resetDurationInSeconds) {
     this(klass, datastore, resetDurationInSeconds, false);
   }
 
@@ -64,8 +64,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
    * @param resetDurationInSeconds the reset duration in seconds
    * @param filterWithVersion      the filterWithVersion
    */
-  public MongoQueueImpl(
-      Class<T> klass, final Datastore datastore, int resetDurationInSeconds, boolean filterWithVersion) {
+  public MongoQueue(Class<T> klass, final Datastore datastore, int resetDurationInSeconds, boolean filterWithVersion) {
     Objects.requireNonNull(datastore);
     Objects.requireNonNull(klass);
     this.datastore = datastore;
@@ -230,7 +229,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
       throw new IllegalArgumentException("priority was NaN");
     }
 
-    T forRequeue = on(klass).create(message).get();
+    T forRequeue = Reflect.on(klass).create(message).get();
     forRequeue.setId(null);
     forRequeue.setPriority(priority);
     forRequeue.setEarliestGet(earliestGet);
@@ -269,7 +268,7 @@ public class MongoQueueImpl<T extends Queuable> implements Queue<T> {
    * @param resetDurationInSeconds the reset duration in seconds
    */
   // package protected
-  void resetDuration(int resetDurationInSeconds) {
+  public void resetDuration(int resetDurationInSeconds) {
     this.resetDurationInSeconds = resetDurationInSeconds;
   }
 

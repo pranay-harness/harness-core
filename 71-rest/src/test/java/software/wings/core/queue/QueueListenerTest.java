@@ -14,6 +14,7 @@ import static org.mockito.Mockito.verify;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queue.Filter;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
@@ -35,7 +36,7 @@ import java.util.concurrent.TimeUnit;
  * Created by peeyushaggarwal on 4/13/16.
  */
 public class QueueListenerTest extends WingsBaseTest {
-  private MongoQueueImpl<QueuableObject> queue;
+  private MongoQueue<QueuableObject> queue;
   private QueuableObjectListener listener;
 
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
@@ -48,7 +49,7 @@ public class QueueListenerTest extends WingsBaseTest {
    */
   @Before
   public void setup() throws UnknownHostException {
-    queue = spy(new MongoQueueImpl<>(QueuableObject.class, datastore));
+    queue = spy(new MongoQueue<>(QueuableObject.class, datastore));
     on(queue).set("versionInfoManager", versionInfoManager);
     listener = new QueuableObjectListener();
     listener.setQueue(queue);

@@ -11,6 +11,7 @@ import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
@@ -37,7 +38,7 @@ public class MongoQueueTest extends WingsBaseTest {
   @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
   @Inject private VersionInfoManager versionInfoManager;
 
-  private MongoQueueImpl<QueuableObject> queue;
+  private MongoQueue<QueuableObject> queue;
 
   /**
    * Setup.
@@ -46,7 +47,7 @@ public class MongoQueueTest extends WingsBaseTest {
    */
   @Before
   public void setup() throws UnknownHostException {
-    queue = new MongoQueueImpl<>(QueuableObject.class, datastore);
+    queue = new MongoQueue<>(QueuableObject.class, datastore);
     on(queue).set("versionInfoManager", versionInfoManager);
   }
 
@@ -455,7 +456,7 @@ public class MongoQueueTest extends WingsBaseTest {
   @Test
   public void shouldSendAndGetMessageWithEntityReference() {
     Queue<TestQueuableWithEntity> entityQueue;
-    entityQueue = new MongoQueueImpl<>(TestQueuableWithEntity.class, datastore);
+    entityQueue = new MongoQueue<>(TestQueuableWithEntity.class, datastore);
     on(entityQueue).set("versionInfoManager", versionInfoManager);
 
     TestEntity testEntity = new TestEntity(1);
@@ -475,7 +476,7 @@ public class MongoQueueTest extends WingsBaseTest {
   @Test
   public void shouldFilterWithVersion() {
     Queue<QueuableObject> versionQueue;
-    versionQueue = new MongoQueueImpl<>(QueuableObject.class, datastore, 5, true);
+    versionQueue = new MongoQueue<>(QueuableObject.class, datastore, 5, true);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
     QueuableObject message = new QueuableObject(1);
     versionQueue.send(message);
@@ -486,7 +487,7 @@ public class MongoQueueTest extends WingsBaseTest {
   @Test
   public void shouldNotFilterWithVersion() {
     Queue<QueuableObject> versionQueue;
-    versionQueue = new MongoQueueImpl<>(QueuableObject.class, datastore, 5, false);
+    versionQueue = new MongoQueue<>(QueuableObject.class, datastore, 5, false);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
     QueuableObject message = new QueuableObject(1);
     versionQueue.send(message);

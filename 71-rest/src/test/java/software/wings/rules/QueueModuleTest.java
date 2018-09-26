@@ -3,6 +3,7 @@ package software.wings.rules;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 
+import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queue;
 import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.api.DeploymentEvent;
@@ -11,7 +12,6 @@ import software.wings.api.KmsTransitionEvent;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
 import software.wings.core.queue.AbstractQueueListener;
-import software.wings.core.queue.MongoQueueImpl;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.service.impl.DelayEvent;
@@ -39,20 +39,18 @@ public class QueueModuleTest extends AbstractModule {
    */
   @Override
   protected void configure() {
-    bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueueImpl<>(EmailData.class, datastore));
-    bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueueImpl<>(CollectEvent.class, datastore));
-    bind(new TypeLiteral<Queue<NotifyEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(NotifyEvent.class, datastore, 5, false));
+    bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueue<>(EmailData.class, datastore));
+    bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueue<>(CollectEvent.class, datastore));
+    bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueue<>(NotifyEvent.class, datastore, 5, false));
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(KmsTransitionEvent.class, datastore, 30));
+        .toInstance(new MongoQueue<>(KmsTransitionEvent.class, datastore, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(ExecutionEvent.class, datastore, 30, false));
+        .toInstance(new MongoQueue<>(ExecutionEvent.class, datastore, 30, false));
     bind(new TypeLiteral<Queue<DeploymentEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(DeploymentEvent.class, datastore, 60, false));
+        .toInstance(new MongoQueue<>(DeploymentEvent.class, datastore, 60, false));
     bind(new TypeLiteral<Queue<InstanceChangeEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(InstanceChangeEvent.class, datastore, 60));
-    bind(new TypeLiteral<Queue<DelayEvent>>() {})
-        .toInstance(new MongoQueueImpl<>(DelayEvent.class, datastore, 5, false));
+        .toInstance(new MongoQueue<>(InstanceChangeEvent.class, datastore, 60));
+    bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, datastore, 5, false));
 
     bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
