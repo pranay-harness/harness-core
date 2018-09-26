@@ -15,6 +15,8 @@ import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream.AmazonS3ArtifactStreamBuilder;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.artifact.ArtifactoryArtifactStream;
+import software.wings.beans.artifact.ArtifactoryArtifactStream.ArtifactoryArtifactStreamBuilder;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.EnvironmentGenerator.Environments;
@@ -204,10 +206,64 @@ public class ArtifactStreamGenerator {
 
         newArtifactStream = s3ArtifactStreamBuilder.build();
         break;
+      case ARTIFACTORY:
+        ArtifactoryArtifactStream artifactoryArtifactStream = (ArtifactoryArtifactStream) artifactStream;
+        final ArtifactoryArtifactStreamBuilder artifactoryArtifactStreamBuilder = ArtifactoryArtifactStream.builder();
+
+        if (artifactStream != null && artifactStream.getAppId() != null) {
+          artifactoryArtifactStreamBuilder.appId(artifactStream.getAppId());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactStream != null && artifactStream.getServiceId() != null) {
+          artifactoryArtifactStreamBuilder.serviceId(artifactStream.getServiceId());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactStream != null && artifactStream.getName() != null) {
+          artifactoryArtifactStreamBuilder.name(artifactStream.getName());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        ArtifactStream existingArtifactoryArtifactStream = exists(artifactoryArtifactStreamBuilder.build());
+        if (existingArtifactoryArtifactStream != null) {
+          return existingArtifactoryArtifactStream;
+        }
+
+        if (artifactoryArtifactStream != null && artifactoryArtifactStream.getJobname() != null) {
+          artifactoryArtifactStreamBuilder.jobname(artifactoryArtifactStream.getJobname());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactoryArtifactStream != null && artifactoryArtifactStream.getArtifactPaths() != null) {
+          artifactoryArtifactStreamBuilder.artifactPaths(artifactoryArtifactStream.getArtifactPaths());
+        }
+
+        if (artifactStream != null && artifactStream.getSourceName() != null) {
+          artifactoryArtifactStreamBuilder.sourceName(artifactStream.getSourceName());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactStream != null && artifactStream.getSettingId() != null) {
+          artifactoryArtifactStreamBuilder.settingId(artifactStream.getSettingId());
+        } else {
+          throw new UnsupportedOperationException();
+        }
+
+        if (artifactStream != null) {
+          artifactoryArtifactStreamBuilder.metadataOnly(artifactStream.isMetadataOnly());
+        }
+
+        newArtifactStream = artifactoryArtifactStreamBuilder.build();
+        break;
       default:
         throw new UnsupportedOperationException();
     }
-
     return artifactStreamService.forceCreate(newArtifactStream);
   }
 }
