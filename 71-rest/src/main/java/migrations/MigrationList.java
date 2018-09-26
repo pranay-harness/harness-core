@@ -28,6 +28,7 @@ import migrations.all.EntityNameValidationMigration_All_03;
 import migrations.all.EntityNameValidationMigration_All_04;
 import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
+import migrations.all.GcsArtifactProjectIdMigration;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
@@ -118,6 +119,7 @@ public class MigrationList {
         .add(Pair.of(184, CleanUpDatadogCallLogMigration.class))
         .add(Pair.of(185, SweepingPhaseMigration.class))
         .add(Pair.of(186, SecretTextNameKeyWordsMigration.class))
+        .add(Pair.of(187, GcsArtifactProjectIdMigration.class))
         .build();
   }
 }
