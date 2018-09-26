@@ -1478,7 +1478,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Test
   @RealMongo
   public void serviceVariableSearchTags() throws IllegalAccessException, InterruptedException {
-    String secretName = generateUuid();
+    String secretName = "name1";
     String secretValue = generateUuid();
     String secretId =
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
@@ -1548,7 +1548,7 @@ public class SecretTextTest extends WingsBaseTest {
     });
 
     // update and test
-    secretName = generateUuid();
+    secretName = "name2";
     secretValue = generateUuid();
     String newSecretId =
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
@@ -1590,7 +1590,8 @@ public class SecretTextTest extends WingsBaseTest {
           assertNull(oldEncryptedData.getSearchTags().get(serviceVariable.getName()));
           assertEquals(1, newEncryptedData.getSearchTags().get(serviceVariable.getName()).get());
         } else {
-          assertNull(oldEncryptedData.getSearchTags());
+          assertEquals(1, oldEncryptedData.getSearchTags().size());
+          assertEquals(1, oldEncryptedData.getSearchTags().get("name1").get());
           assertNull(oldEncryptedData.getAppIds());
           assertNull(oldEncryptedData.getServiceIds());
         }
@@ -1626,7 +1627,8 @@ public class SecretTextTest extends WingsBaseTest {
 
           assertNull(newEncryptedData.getSearchTags().get(serviceVariable.getName()));
         } else {
-          assertNull(newEncryptedData.getSearchTags());
+          assertEquals(1, newEncryptedData.getSearchTags().size());
+          assertEquals(1, newEncryptedData.getSearchTags().get("name2").get());
           assertNull(newEncryptedData.getAppIds());
           assertNull(newEncryptedData.getServiceIds());
         }
@@ -1637,7 +1639,7 @@ public class SecretTextTest extends WingsBaseTest {
   @Test
   @RealMongo
   public void serviceVariableTemplateSearchTags() throws IllegalAccessException {
-    String secretName = generateUuid();
+    String secretName = "name1";
     String secretValue = generateUuid();
     String secretId =
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
@@ -1726,7 +1728,7 @@ public class SecretTextTest extends WingsBaseTest {
     });
 
     // update and test
-    secretName = generateUuid();
+    secretName = "name2";
     secretValue = generateUuid();
     String newSecretId =
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
@@ -1767,7 +1769,8 @@ public class SecretTextTest extends WingsBaseTest {
             assertNull(oldEncryptedData.getSearchTags().get(serviceVariable.getName()));
             assertEquals(k + 1, newEncryptedData.getSearchTags().get(serviceTemplate.getName()).get());
           } else {
-            assertNull(oldEncryptedData.getSearchTags());
+            assertEquals(1, oldEncryptedData.getSearchTags().size());
+            assertEquals(1, oldEncryptedData.getSearchTags().get("name1").get());
             assertNull(oldEncryptedData.getAppIds());
             assertNull(oldEncryptedData.getServiceIds());
           }
@@ -1807,7 +1810,8 @@ public class SecretTextTest extends WingsBaseTest {
 
             assertNull(newEncryptedData.getSearchTags().get(serviceVariable.getName()));
           } else {
-            assertNull(newEncryptedData.getSearchTags());
+            assertEquals(1, newEncryptedData.getSearchTags().size());
+            assertEquals(1, newEncryptedData.getSearchTags().get("name2").get());
             assertNull(newEncryptedData.getAppIds());
             assertNull(newEncryptedData.getServiceIds());
           }
@@ -1819,12 +1823,16 @@ public class SecretTextTest extends WingsBaseTest {
   @Test
   @RealMongo
   public void serviceVariableEnvironmentSearchTags() throws IllegalAccessException {
-    String secretName = generateUuid();
+    String secretName = "name1";
     String secretValue = generateUuid();
     String secretId =
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
             .getResource();
 
+    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    assertEquals(1, encryptedData.getSearchTags().size());
+    assertEquals(1, encryptedData.getKeywords().size());
+    assertEquals(secretName, encryptedData.getKeywords().get(0));
     int numOfEnvs = 3;
     int numOfServiceVariables = 4;
 
@@ -1859,7 +1867,7 @@ public class SecretTextTest extends WingsBaseTest {
       }
     }
 
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
+    encryptedData = wingsPersistence.get(EncryptedData.class, secretId);
     assertEquals(appIds, encryptedData.getAppIds());
     assertEquals(numOfServiceVariables * numOfEnvs, encryptedData.getAppIds().size());
     Map<String, AtomicInteger> searchTags = encryptedData.getSearchTags();
@@ -1875,7 +1883,7 @@ public class SecretTextTest extends WingsBaseTest {
     });
 
     // update and test
-    secretName = generateUuid();
+    secretName = "name2";
     secretValue = generateUuid();
     String newSecretId =
         secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
@@ -1909,7 +1917,9 @@ public class SecretTextTest extends WingsBaseTest {
           assertNull(oldEncryptedData.getSearchTags().get(serviceVariable.getName()));
           assertEquals(k + 1, newEncryptedData.getSearchTags().get(envName).get());
         } else {
-          assertNull(oldEncryptedData.getSearchTags());
+          assertEquals(1, oldEncryptedData.getSearchTags().size());
+          assertEquals(1, oldEncryptedData.getKeywords().size());
+          assertEquals("name1", oldEncryptedData.getKeywords().get(0));
           assertNull(oldEncryptedData.getAppIds());
           assertNull(oldEncryptedData.getServiceIds());
         }
@@ -1943,7 +1953,9 @@ public class SecretTextTest extends WingsBaseTest {
 
           assertNull(newEncryptedData.getSearchTags().get(serviceVariable.getName()));
         } else {
-          assertNull(newEncryptedData.getSearchTags());
+          assertEquals(1, newEncryptedData.getSearchTags().size());
+          assertEquals(1, newEncryptedData.getKeywords().size());
+          assertEquals("name2", newEncryptedData.getKeywords().get(0));
           assertNull(newEncryptedData.getAppIds());
           assertNull(newEncryptedData.getServiceIds());
         }

@@ -42,6 +42,7 @@ import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
+import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.SweepingPhaseMigration;
 import migrations.all.SystemTemplateGalleryMigration;
@@ -116,6 +117,7 @@ public class MigrationList {
         .add(Pair.of(183, InfraProvisionerFilteringTypeMigration.class))
         .add(Pair.of(184, CleanUpDatadogCallLogMigration.class))
         .add(Pair.of(185, SweepingPhaseMigration.class))
+        .add(Pair.of(186, SecretTextNameKeyWordsMigration.class))
         .build();
   }
 }
