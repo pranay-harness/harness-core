@@ -67,13 +67,11 @@
         <dependency>
             <groupId>de.bwaldvogel</groupId>
             <artifactId>mongo-java-server-core</artifactId>
-            <version>1.7.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>de.bwaldvogel</groupId>
             <artifactId>mongo-java-server-memory-backend</artifactId>
-            <version>1.6.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

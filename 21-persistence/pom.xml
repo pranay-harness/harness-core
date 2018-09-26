@@ -14,9 +14,22 @@
     <dependencies>
         <dependency>
             <groupId>software.wings</groupId>
+            <artifactId>11-commons-test</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
             <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>20-persistence-test</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
@@ -33,6 +46,14 @@
         <dependency>
             <groupId>org.jooq</groupId>
             <artifactId>joor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.modelmapper</groupId>
+            <artifactId>modelmapper</artifactId>
         </dependency>
     </dependencies>
 </project>
