@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
@@ -32,8 +33,8 @@ import software.wings.helpers.ext.vault.VaultRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
-import software.wings.service.impl.security.VaultReadResponse;
 import software.wings.service.impl.security.VaultSecretValue;
+import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -57,13 +58,13 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
   public void validationVaultReachable() throws Exception {
     PowerMockito.mockStatic(Http.class);
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
-    Call<VaultReadResponse> restCall = Mockito.mock(Call.class);
+    Call<Void> restCall = Mockito.mock(Call.class);
     VaultConfig vaultConfig =
         VaultConfig.builder().vaultUrl(generateUuid()).accountId(generateUuid()).authToken(generateUuid()).build();
-    when(restCall.execute())
-        .thenReturn(Response.success(
-            VaultReadResponse.builder().data(VaultSecretValue.builder().value(generateUuid()).build()).build()));
-    when(vaultRestClient.readSecret(anyString(), anyString())).thenReturn(restCall);
+    when(restCall.execute()).thenReturn(Response.success(null));
+    when(vaultRestClient.writeSecret(
+             anyString(), anyString(), any(SettingVariableTypes.class), any(VaultSecretValue.class)))
+        .thenReturn(restCall);
     PowerMockito.mockStatic(SecretManagementDelegateServiceImpl.class);
     PowerMockito.when(SecretManagementDelegateServiceImpl.getVaultRestClient(vaultConfig)).thenReturn(vaultRestClient);
 
@@ -92,11 +93,13 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
   public void validationVaultUnReachable() throws Exception {
     PowerMockito.mockStatic(Http.class);
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
-    Call<VaultReadResponse> restCall = Mockito.mock(Call.class);
+    Call<Void> restCall = Mockito.mock(Call.class);
     VaultConfig vaultConfig =
         VaultConfig.builder().vaultUrl(generateUuid()).accountId(generateUuid()).authToken(generateUuid()).build();
     doThrow(new SocketException("can't reach to vault")).when(restCall).execute();
-    when(vaultRestClient.readSecret(anyString(), anyString())).thenReturn(restCall);
+    when(vaultRestClient.writeSecret(
+             anyString(), anyString(), any(SettingVariableTypes.class), any(VaultSecretValue.class)))
+        .thenReturn(restCall);
     PowerMockito.mockStatic(SecretManagementDelegateServiceImpl.class);
     PowerMockito.when(SecretManagementDelegateServiceImpl.getVaultRestClient(vaultConfig)).thenReturn(vaultRestClient);
 
@@ -125,13 +128,13 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
   public void validationNewRelicUnReachable() throws Exception {
     PowerMockito.mockStatic(Http.class);
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(false);
-    Call<VaultReadResponse> restCall = Mockito.mock(Call.class);
+    Call<Void> restCall = Mockito.mock(Call.class);
     VaultConfig vaultConfig =
         VaultConfig.builder().vaultUrl(generateUuid()).accountId(generateUuid()).authToken(generateUuid()).build();
-    when(restCall.execute())
-        .thenReturn(Response.success(
-            VaultReadResponse.builder().data(VaultSecretValue.builder().value(generateUuid()).build()).build()));
-    when(vaultRestClient.readSecret(anyString(), anyString())).thenReturn(restCall);
+    when(restCall.execute()).thenReturn(Response.success(null));
+    when(vaultRestClient.writeSecret(
+             anyString(), anyString(), any(SettingVariableTypes.class), any(VaultSecretValue.class)))
+        .thenReturn(restCall);
     PowerMockito.mockStatic(SecretManagementDelegateServiceImpl.class);
     PowerMockito.when(SecretManagementDelegateServiceImpl.getVaultRestClient(vaultConfig)).thenReturn(vaultRestClient);
 

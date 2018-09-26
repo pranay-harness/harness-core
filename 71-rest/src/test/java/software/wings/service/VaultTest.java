@@ -215,12 +215,12 @@ public class VaultTest extends WingsBaseTest {
     List<EncryptionConfig> encryptionConfigs = secretManager.listEncryptionConfig(accountId);
     assertEquals(1, encryptionConfigs.size());
     VaultConfig next = (VaultConfig) encryptionConfigs.get(0);
-    assertTrue(next.isDefault());
+    assertFalse(next.isDefault());
     assertEquals(accountId, next.getAccountId());
     assertEquals(SECRET_MASK, String.valueOf(next.getAuthToken()));
     assertEquals(vaultConfig.getName(), next.getName());
     assertEquals(vaultConfig.getVaultUrl(), next.getVaultUrl());
-    assertTrue(next.isDefault());
+    assertFalse(next.isDefault());
 
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setDefault(true);

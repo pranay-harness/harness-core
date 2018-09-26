@@ -174,10 +174,6 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
     List<KmsConfig> kmsConfigs = kmsConfigQuery.asList();
 
-    if (savedConfigs.isEmpty() && kmsConfigs.isEmpty()) {
-      vaultConfig.setDefault(true);
-    }
-
     EncryptedData encryptedData =
         kmsService.encrypt(vaultConfig.getAuthToken().toCharArray(), accountId, kmsService.getSecretConfig(accountId));
     if (isNotBlank(vaultConfig.getUuid())) {
