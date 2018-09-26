@@ -24,6 +24,7 @@ import java.util.List;
 public class GcsArtifactStream extends ArtifactStream {
   @NotEmpty private String jobname;
   @NotEmpty private List<String> artifactPaths;
+  @NotEmpty private String projectId;
 
   public GcsArtifactStream() {
     super(GCS.name());
