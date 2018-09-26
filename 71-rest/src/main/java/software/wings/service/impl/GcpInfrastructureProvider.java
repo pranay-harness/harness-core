@@ -53,11 +53,7 @@ public class GcpInfrastructureProvider implements InfrastructureProvider {
 
   List<String> listClusterNames(
       SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails) {
-    SyncTaskContext syncTaskContext = aContext()
-                                          .withAccountId(computeProviderSetting.getAccountId())
-                                          .withAppId(computeProviderSetting.getAppId())
-                                          .withEnvId(computeProviderSetting.getEnvId())
-                                          .build();
+    SyncTaskContext syncTaskContext = aContext().withAccountId(computeProviderSetting.getAccountId()).build();
     return delegateProxyFactory.get(ContainerService.class, syncTaskContext)
         .listClusters(ContainerServiceParams.builder()
                           .encryptionDetails(encryptedDataDetails)
