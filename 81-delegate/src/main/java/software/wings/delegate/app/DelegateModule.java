@@ -10,8 +10,6 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
-import io.harness.version.VersionInfoManager;
-import org.apache.commons.io.IOUtils;
 import software.wings.api.DeploymentType;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
@@ -171,8 +169,6 @@ import software.wings.utils.message.MessageService;
 import software.wings.utils.message.MessageServiceImpl;
 import software.wings.utils.message.MessengerType;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -331,14 +327,6 @@ public class DelegateModule extends AbstractModule {
     bind(GitService.class).to(GitServiceImpl.class);
     bind(LdapDelegateService.class).to(LdapDelegateServiceImpl.class);
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
-
-    try {
-      VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
-          this.getClass().getClassLoader().getResourceAsStream("versionInfo.yaml"), StandardCharsets.UTF_8));
-      bind(VersionInfoManager.class).toInstance(versionInfoManager);
-    } catch (IOException e) {
-      throw new RuntimeException("Could not load versionInfo.yaml", e);
-    }
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

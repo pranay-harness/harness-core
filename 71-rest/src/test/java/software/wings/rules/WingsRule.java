@@ -58,6 +58,7 @@ import io.harness.exception.WingsException;
 import io.harness.rule.DatabaseRuleMixin;
 import io.harness.rule.MongoServerFactory;
 import io.harness.rule.RealMongo;
+import io.harness.version.VersionModule;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
@@ -248,8 +249,9 @@ public class WingsRule implements MethodRule, DatabaseRuleMixin {
           }
         },
         new LicenseModule(), new ValidationModule(validatorFactory),
-        new DatabaseModule(datastore, datastore, distributedLockSvc), new WingsModule(configuration), new YamlModule(),
-        new ExecutorModule(executorService), new WingsTestModule(), new TemplateModule());
+        new DatabaseModule(datastore, datastore, distributedLockSvc), new VersionModule(),
+        new WingsModule(configuration), new YamlModule(), new ExecutorModule(executorService), new WingsTestModule(),
+        new TemplateModule());
 
     if (fakeMongo) {
       modules.add(new QueueModuleTest(datastore));

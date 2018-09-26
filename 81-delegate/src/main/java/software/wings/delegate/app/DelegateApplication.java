@@ -20,6 +20,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
+import io.harness.version.VersionModule;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
@@ -104,7 +105,7 @@ public class DelegateApplication {
         },
         new ManagerClientModule(
             configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()),
-        new DelegateModule());
+        new VersionModule(), new DelegateModule());
 
     boolean watched = watcherProcess != null;
     if (watched) {
