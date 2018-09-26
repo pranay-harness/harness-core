@@ -60,7 +60,7 @@ public class AddRestrictionsToSecrets implements Migration {
                   new Object[] {SettingVariableTypes.SECRET_TEXT.name(), SettingVariableTypes.CONFIG_FILE.name()})
               .build();
 
-      PageResponse<EncryptedData> pageResponse = secretManager.listSecrets(accountId, pageRequest, null, null);
+      PageResponse<EncryptedData> pageResponse = secretManager.listSecrets(accountId, pageRequest, null, null, true);
       List<EncryptedData> secretTextList = pageResponse.getResponse();
 
       secretTextList.forEach(secretText -> {

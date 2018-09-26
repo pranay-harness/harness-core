@@ -90,7 +90,7 @@ public interface SecretManager {
   boolean deleteFile(String accountId, String uuId);
 
   PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
-      String appIdFromRequest, String envIdFromRequest) throws IllegalAccessException;
+      String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException;
 
   List<UuidAware> getSecretUsage(String accountId, String secretTextId);
 

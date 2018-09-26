@@ -39,6 +39,7 @@ import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -208,10 +209,11 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<PageResponse<EncryptedData>> listSecrets(@QueryParam("accountId") final String accountId,
       @QueryParam("type") final SettingVariableTypes type, @QueryParam("currentAppId") String currentAppId,
-      @QueryParam("currentEnvId") String currentEnvId, @BeanParam PageRequest<EncryptedData> pageRequest) {
+      @QueryParam("currentEnvId") String currentEnvId, @DefaultValue("true") @QueryParam("details") boolean details,
+      @BeanParam PageRequest<EncryptedData> pageRequest) {
     try {
       pageRequest.addFilter("type", Operator.EQ, type);
-      return new RestResponse<>(secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId));
+      return new RestResponse<>(secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId, details));
     } catch (IllegalAccessException e) {
       throw new WingsException(e);
     }

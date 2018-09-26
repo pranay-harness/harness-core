@@ -809,7 +809,7 @@ public class SecretTextTest extends WingsBaseTest {
     int numOfUpdates = 2;
     PageResponse<EncryptedData> pageResponse =
         (PageResponse<EncryptedData>) secretManagementResource
-            .listSecrets(accountId, SECRET_TEXT, null, null, aPageRequest().build())
+            .listSecrets(accountId, SECRET_TEXT, null, null, true, aPageRequest().build())
             .getResource();
     List<EncryptedData> secrets = pageResponse.getResponse();
 
@@ -849,7 +849,7 @@ public class SecretTextTest extends WingsBaseTest {
       }
 
       pageResponse = (PageResponse<EncryptedData>) secretManagementResource
-                         .listSecrets(accountId, SECRET_TEXT, null, null, aPageRequest().build())
+                         .listSecrets(accountId, SECRET_TEXT, null, null, true, aPageRequest().build())
                          .getResource();
       secrets = pageResponse.getResponse();
       assertEquals(i + 1, secrets.size());
@@ -867,7 +867,7 @@ public class SecretTextTest extends WingsBaseTest {
     }
 
     pageResponse = (PageResponse<EncryptedData>) secretManagementResource
-                       .listSecrets(accountId, SECRET_TEXT, null, null, aPageRequest().build())
+                       .listSecrets(accountId, SECRET_TEXT, null, null, true, aPageRequest().build())
                        .getResource();
     secrets = pageResponse.getResponse();
 
@@ -879,6 +879,86 @@ public class SecretTextTest extends WingsBaseTest {
     }
   }
 
+  @Test
+  public void listSecretsWithSummary() throws IOException, IllegalAccessException {
+    int numOfSecrets = 3;
+    int numOfVariable = 4;
+    int numOfAccess = 3;
+    int numOfUpdates = 2;
+    PageResponse<EncryptedData> pageResponse =
+        (PageResponse<EncryptedData>) secretManagementResource
+            .listSecrets(accountId, SECRET_TEXT, null, null, false, aPageRequest().build())
+            .getResource();
+    List<EncryptedData> secrets = pageResponse.getResponse();
+
+    assertTrue(secrets.isEmpty());
+    for (int i = 0; i < numOfSecrets; i++) {
+      String secretName = generateUuid();
+      String secretValue = generateUuid();
+      String secretId = secretManagementResource
+                            .saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
+                            .getResource();
+
+      for (int j = 0; j < numOfVariable; j++) {
+        final ServiceVariable serviceVariable = ServiceVariable.builder()
+                                                    .templateId(generateUuid())
+                                                    .envId(generateUuid())
+                                                    .entityType(EntityType.APPLICATION)
+                                                    .entityId(generateUuid())
+                                                    .parentServiceVariableId(generateUuid())
+                                                    .overrideType(OverrideType.ALL)
+                                                    .instances(Collections.singletonList(generateUuid()))
+                                                    .expression(generateUuid())
+                                                    .accountId(accountId)
+                                                    .name(generateUuid())
+                                                    .value(secretId.toCharArray())
+                                                    .type(Type.ENCRYPTED_TEXT)
+                                                    .build();
+
+        wingsPersistence.save(serviceVariable);
+        for (int k = 0; k < numOfAccess; k++) {
+          secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId);
+        }
+
+        for (int l = 0; l < numOfUpdates; l++) {
+          secretManagementResource.updateSecret(
+              accountId, secretId, SecretText.builder().name(generateUuid()).value(generateUuid()).build());
+        }
+      }
+
+      pageResponse = (PageResponse<EncryptedData>) secretManagementResource
+                         .listSecrets(accountId, SECRET_TEXT, null, null, false, aPageRequest().build())
+                         .getResource();
+      secrets = pageResponse.getResponse();
+      assertEquals(i + 1, secrets.size());
+
+      for (EncryptedData secret : secrets) {
+        assertEquals(SECRET_MASK, secret.getEncryptionKey());
+        assertEquals(SECRET_MASK, String.valueOf(secret.getEncryptedValue()));
+        assertEquals(accountId, secret.getAccountId());
+        assertTrue(secret.isEnabled());
+        assertEquals(kmsId, secret.getKmsId());
+        assertEquals(encryptionType, secret.getEncryptionType());
+        assertEquals(SECRET_TEXT, secret.getType());
+        assertNull(secret.getEncryptedBy());
+        assertEquals(0, secret.getSetupUsage());
+        assertEquals(0, secret.getRunTimeUsage());
+        assertEquals(0, secret.getChangeLog());
+      }
+    }
+
+    pageResponse = (PageResponse<EncryptedData>) secretManagementResource
+                       .listSecrets(accountId, SECRET_TEXT, null, null, false, aPageRequest().build())
+                       .getResource();
+    secrets = pageResponse.getResponse();
+
+    assertFalse(isEmpty(secrets));
+    for (EncryptedData secret : secrets) {
+      assertEquals(0, secret.getSetupUsage());
+      assertEquals(0, secret.getRunTimeUsage());
+      assertEquals(0, secret.getChangeLog());
+    }
+  }
   @Test
   public void secretTextUsage() throws IOException, IllegalAccessException {
     String secretName = generateUuid();
@@ -2112,7 +2192,7 @@ public class SecretTextTest extends WingsBaseTest {
                                                  .addFilter("keywords", Operator.CONTAINS, appName)
                                                  .build();
     List<EncryptedData> encryptedDataList =
-        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
             .getResource();
     assertEquals(numOfEnvs, encryptedDataList.size());
 
@@ -2122,7 +2202,7 @@ public class SecretTextTest extends WingsBaseTest {
                       .build();
 
     encryptedDataList =
-        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
             .getResource();
     assertEquals(0, encryptedDataList.size());
 
@@ -2131,7 +2211,7 @@ public class SecretTextTest extends WingsBaseTest {
                       .addFilter("keywords", Operator.CONTAINS, "env")
                       .build();
     encryptedDataList =
-        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
             .getResource();
     assertEquals(numOfEnvs, encryptedDataList.size());
 
@@ -2140,7 +2220,7 @@ public class SecretTextTest extends WingsBaseTest {
                       .addFilter("keywords", Operator.CONTAINS, "env-0")
                       .build();
     encryptedDataList =
-        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
+        secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
             .getResource();
     assertEquals(numOfEnvs, encryptedDataList.size());
     for (int i = 0; i < numOfServices; i++) {
@@ -2149,9 +2229,9 @@ public class SecretTextTest extends WingsBaseTest {
                           .addFilter("accountId", Operator.EQ, accountId)
                           .addFilter("keywords", Operator.CONTAINS, "env-" + i + "-" + j)
                           .build();
-        encryptedDataList =
-            secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
-                .getResource();
+        encryptedDataList = secretManagementResource
+                                .listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
+                                .getResource();
         assertEquals(1, encryptedDataList.size());
         assertEquals(secretTexts.get(j * numOfServiceVariables).getName(), encryptedDataList.get(0).getName());
 
@@ -2159,9 +2239,9 @@ public class SecretTextTest extends WingsBaseTest {
                           .addFilter("accountId", Operator.EQ, accountId)
                           .addFilter("keywords", Operator.CONTAINS, "serviceTemplate-" + i + "-" + j)
                           .build();
-        encryptedDataList =
-            secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, pageRequest)
-                .getResource();
+        encryptedDataList = secretManagementResource
+                                .listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
+                                .getResource();
         assertEquals(1, encryptedDataList.size());
         assertEquals(secretTexts.get(j * numOfServiceVariables).getName(), encryptedDataList.get(0).getName());
       }
