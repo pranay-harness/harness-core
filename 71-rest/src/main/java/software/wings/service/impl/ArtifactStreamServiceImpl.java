@@ -166,7 +166,15 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
     validateArtifactSourceData(artifactStream);
+    return forceUpdate(artifactStream);
+  }
 
+  public ArtifactStream forceUpdate(ArtifactStream artifactStream) {
+    ArtifactStream savedArtifactStream =
+        wingsPersistence.get(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
+    if (savedArtifactStream == null) {
+      throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
+    }
     artifactStream.setSourceName(artifactStream.generateSourceName());
     ArtifactStream finalArtifactStream = wingsPersistence.saveAndGet(ArtifactStream.class, artifactStream);
 
@@ -178,7 +186,6 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
     yamlPushService.pushYamlChangeSet(
         accountId, savedArtifactStream, finalArtifactStream, Type.UPDATE, artifactStream.isSyncFromGit(), isRename);
-
     return finalArtifactStream;
   }
 

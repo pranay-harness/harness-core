@@ -63,6 +63,14 @@ public interface ArtifactStreamService extends OwnedByService {
   @ValidationGroups(Update.class) ArtifactStream update(@Valid ArtifactStream artifactStream);
 
   /**
+   * Update artifact stream.
+   *
+   * @param artifactStream the artifact stream
+   * @return the artifact stream
+   */
+  @ValidationGroups(Update.class) ArtifactStream forceUpdate(@Valid ArtifactStream artifactStream);
+
+  /**
    * Delete.
    *
    * @param appId            the app id
