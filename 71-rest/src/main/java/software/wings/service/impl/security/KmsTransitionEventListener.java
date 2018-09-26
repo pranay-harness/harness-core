@@ -24,6 +24,7 @@ public class KmsTransitionEventListener extends AbstractQueueListener<KmsTransit
   @Override
   protected void onMessage(KmsTransitionEvent message) {
     try {
+      logger.info("Processing secret manager transition event with entityId: {}", message.getEntityId());
       secretManager.changeSecretManager(message.getAccountId(), message.getEntityId(), message.getFromEncryptionType(),
           message.getFromKmsId(), message.getToEncryptionType(), message.getToKmsId());
     } catch (IOException e) {
