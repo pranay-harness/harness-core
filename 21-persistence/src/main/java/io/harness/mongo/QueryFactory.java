@@ -1,4 +1,4 @@
-package software.wings.app;
+package io.harness.mongo;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
@@ -8,10 +8,7 @@ import org.mongodb.morphia.query.DefaultQueryFactory;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryImpl;
 
-/**
- * Created by anubhaw on 3/30/18.
- */
-public class HQueryFactory extends DefaultQueryFactory {
+public class QueryFactory extends DefaultQueryFactory {
   @Override
   public <T> Query<T> createQuery(
       final Datastore datastore, final DBCollection collection, final Class<T> type, final DBObject query) {

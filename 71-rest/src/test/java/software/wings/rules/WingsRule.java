@@ -55,7 +55,9 @@ import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.WingsException;
-import io.harness.rule.DatabaseRuleMixin;
+import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
+import io.harness.mongo.QueryFactory;
+import io.harness.rule.MongoRuleMixin;
 import io.harness.rule.MongoServerFactory;
 import io.harness.rule.RealMongo;
 import io.harness.version.VersionModule;
@@ -76,7 +78,6 @@ import software.wings.WingsTestModule;
 import software.wings.app.CacheModule;
 import software.wings.app.DatabaseModule;
 import software.wings.app.ExecutorModule;
-import software.wings.app.HQueryFactory;
 import software.wings.app.LicenseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.app.QueueModule;
@@ -91,7 +92,6 @@ import software.wings.integration.BaseIntegrationTest;
 import software.wings.lock.ManagedDistributedLockSvc;
 import software.wings.service.impl.EventEmitter;
 import software.wings.utils.KryoUtils;
-import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
 
@@ -110,7 +110,7 @@ import javax.validation.ValidatorFactory;
 /**
  * Created by peeyushaggarwal on 4/5/16.
  */
-public class WingsRule implements MethodRule, DatabaseRuleMixin {
+public class WingsRule implements MethodRule, MongoRuleMixin {
   private static final Logger logger = LoggerFactory.getLogger(WingsRule.class);
 
   private static IRuntimeConfig runtimeConfig =
@@ -208,7 +208,7 @@ public class WingsRule implements MethodRule, DatabaseRuleMixin {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
-    datastore.setQueryFactory(new HQueryFactory());
+    datastore.setQueryFactory(new QueryFactory());
     DistributedLockSvcOptions distributedLockSvcOptions = new DistributedLockSvcOptions(mongoClient, dbName, "locks");
     distributedLockSvcOptions.setEnableHistory(false);
     distributedLockSvc =

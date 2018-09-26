@@ -1,4 +1,4 @@
-package software.wings.core.queue;
+package io.harness.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.threading.Morpheus.sleep;
@@ -9,33 +9,25 @@ import static org.joor.Reflect.on;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
+import io.harness.PersistenceTest;
 import io.harness.mongo.MongoQueue;
-import io.harness.queue.Queuable;
-import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
 import org.mongodb.morphia.annotations.Reference;
-import software.wings.WingsBaseTest;
 
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.Objects;
 
-/**
- * Created by peeyushaggarwal on 4/11/16.
- */
-public class MongoQueueTest extends WingsBaseTest {
-  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
+public class MongoQueueTest extends PersistenceTest {
   @Inject private VersionInfoManager versionInfoManager;
 
   private MongoQueue<QueuableObject> queue;
@@ -47,7 +39,7 @@ public class MongoQueueTest extends WingsBaseTest {
    */
   @Before
   public void setup() throws UnknownHostException {
-    queue = new MongoQueue<>(QueuableObject.class, datastore);
+    queue = new MongoQueue<>(QueuableObject.class, getDatastore());
     on(queue).set("versionInfoManager", versionInfoManager);
   }
 
@@ -207,7 +199,7 @@ public class MongoQueueTest extends WingsBaseTest {
 
     queue.updateResetDuration(message);
 
-    QueuableObject actual = datastore.get(QueuableObject.class, message.getId());
+    QueuableObject actual = getDatastore().get(QueuableObject.class, message.getId());
 
     assertThat(actual.getResetTimestamp()).isEqualTo(message.getResetTimestamp());
   }
@@ -223,7 +215,7 @@ public class MongoQueueTest extends WingsBaseTest {
 
     queue.updateResetDuration(message);
 
-    QueuableObject actual = datastore.get(QueuableObject.class, message.getId());
+    QueuableObject actual = getDatastore().get(QueuableObject.class, message.getId());
 
     assertThat(actual).isEqualToComparingFieldByField(message);
   }
@@ -245,7 +237,7 @@ public class MongoQueueTest extends WingsBaseTest {
     queue.resetDuration(20);
     queue.updateResetDuration(message);
 
-    QueuableObject actual = datastore.get(QueuableObject.class, message.getId());
+    QueuableObject actual = getDatastore().get(QueuableObject.class, message.getId());
     log().info("Actual Timestamp of message = {}", actual.getResetTimestamp());
 
     assertThat(actual.getResetTimestamp()).isAfter(messageResetTimeStamp);
@@ -285,13 +277,14 @@ public class MongoQueueTest extends WingsBaseTest {
 
     QueuableObject result = queue.get();
 
-    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(2);
+    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(2);
 
-    datastore.getCollection(QueuableObject.class)
+    getDatastore()
+        .getCollection(QueuableObject.class)
         .find()
         .forEach(dbObject -> log().debug("TestQueueable = {}", dbObject));
     queue.ack(result);
-    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
   }
 
   /**
@@ -311,7 +304,7 @@ public class MongoQueueTest extends WingsBaseTest {
 
     queue.send(message);
 
-    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
 
     QueuableObject resultOne = queue.get();
 
@@ -323,9 +316,9 @@ public class MongoQueueTest extends WingsBaseTest {
     toBeSent.setPriority(expectedPriority);
     queue.ackSend(resultOne, toBeSent);
 
-    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
 
-    QueuableObject actual = datastore.find(QueuableObject.class).get();
+    QueuableObject actual = getDatastore().find(QueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeAckSend).isBeforeOrEqualsTo(new Date());
@@ -370,9 +363,9 @@ public class MongoQueueTest extends WingsBaseTest {
     Date timeBeforeRequeue = new Date();
     queue.requeue(resultOne, expectedEarliestGet, expectedPriority);
 
-    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
 
-    QueuableObject actual = datastore.find(QueuableObject.class).get();
+    QueuableObject actual = getDatastore().find(QueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeRequeue).isBeforeOrEqualsTo(new Date());
@@ -434,9 +427,9 @@ public class MongoQueueTest extends WingsBaseTest {
     message.setEarliestGet(expectedEarliestGet);
     queue.send(message);
 
-    assertThat(datastore.getCount(QueuableObject.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(QueuableObject.class)).isEqualTo(1);
 
-    QueuableObject actual = datastore.find(QueuableObject.class).get();
+    QueuableObject actual = getDatastore().find(QueuableObject.class).get();
 
     Date actualCreated = actual.getCreated();
     assertThat(actualCreated).isAfterOrEqualsTo(timeBeforeSend).isBeforeOrEqualsTo(new Date());
@@ -456,17 +449,17 @@ public class MongoQueueTest extends WingsBaseTest {
   @Test
   public void shouldSendAndGetMessageWithEntityReference() {
     Queue<TestQueuableWithEntity> entityQueue;
-    entityQueue = new MongoQueue<>(TestQueuableWithEntity.class, datastore);
+    entityQueue = new MongoQueue<>(TestQueuableWithEntity.class, getDatastore());
     on(entityQueue).set("versionInfoManager", versionInfoManager);
 
     TestEntity testEntity = new TestEntity(1);
-    datastore.save(testEntity);
+    getDatastore().save(testEntity);
 
     TestQueuableWithEntity message = new TestQueuableWithEntity(testEntity);
 
     entityQueue.send(message);
 
-    assertThat(datastore.getCount(TestQueuableWithEntity.class)).isEqualTo(1);
+    assertThat(getDatastore().getCount(TestQueuableWithEntity.class)).isEqualTo(1);
 
     TestQueuableWithEntity actual = entityQueue.get();
 
@@ -476,7 +469,7 @@ public class MongoQueueTest extends WingsBaseTest {
   @Test
   public void shouldFilterWithVersion() {
     Queue<QueuableObject> versionQueue;
-    versionQueue = new MongoQueue<>(QueuableObject.class, datastore, 5, true);
+    versionQueue = new MongoQueue<>(QueuableObject.class, getDatastore(), 5, true);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
     QueuableObject message = new QueuableObject(1);
     versionQueue.send(message);
@@ -487,7 +480,7 @@ public class MongoQueueTest extends WingsBaseTest {
   @Test
   public void shouldNotFilterWithVersion() {
     Queue<QueuableObject> versionQueue;
-    versionQueue = new MongoQueue<>(QueuableObject.class, datastore, 5, false);
+    versionQueue = new MongoQueue<>(QueuableObject.class, getDatastore(), 5, false);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
     QueuableObject message = new QueuableObject(1);
     versionQueue.send(message);

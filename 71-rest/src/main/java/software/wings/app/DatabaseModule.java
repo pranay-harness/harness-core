@@ -27,6 +27,8 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
+import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
+import io.harness.mongo.QueryFactory;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -40,7 +42,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.MongoConfig;
 import software.wings.lock.ManagedDistributedLockSvc;
-import software.wings.utils.NoDefaultConstructorMorphiaObjectFactory;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -99,8 +100,8 @@ public class DatabaseModule extends AbstractModule {
     morphia.mapPackage("software.wings");
     ensureIndex(morphia);
 
-    this.primaryDatastore.setQueryFactory(new HQueryFactory());
-    this.secondaryDatastore.setQueryFactory(new HQueryFactory());
+    this.primaryDatastore.setQueryFactory(new QueryFactory());
+    this.secondaryDatastore.setQueryFactory(new QueryFactory());
   }
 
   /**

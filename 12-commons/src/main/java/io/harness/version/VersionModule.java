@@ -5,17 +5,26 @@ import com.google.inject.AbstractModule;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 public class VersionModule extends AbstractModule {
   @Override
   protected void configure() {
+    String versionInfo = "version   : 0.0.0.0\n"
+        + "buildNo   : 0.0\n"
+        + "gitCommit : 0000000\n"
+        + "gitBranch : unknown\n"
+        + "timestamp : 000000-0000";
+
     try {
-      VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
-          this.getClass().getClassLoader().getResourceAsStream("versionInfo.yaml"), StandardCharsets.UTF_8));
-      bind(VersionInfoManager.class).toInstance(versionInfoManager);
-    } catch (IOException e) {
-      throw new RuntimeException("Could not load versionInfo.yaml", e);
+      final InputStream stream = this.getClass().getClassLoader().getResourceAsStream("versionInfo.yaml");
+      if (stream != null) {
+        versionInfo = IOUtils.toString(stream, StandardCharsets.UTF_8);
+      }
+    } catch (IOException ignore) {
+      // Do nothing
     }
+    bind(VersionInfoManager.class).toInstance(new VersionInfoManager(versionInfo));
   }
 }
