@@ -138,12 +138,23 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   @Override
   public CommandExecutionStatus executeCommandString(String command) {
-    return executeCommandString(command, null);
+    return executeCommandString(command, null, true);
+  }
+
+  @Override
+  public CommandExecutionStatus executeCommandString(String command, boolean displayCommand) {
+    return executeCommandString(command, null, displayCommand);
   }
 
   @SuppressFBWarnings("REC_CATCH_EXCEPTION") // TODO
   @Override
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output) {
+    return executeCommandString(command, output, true);
+  }
+
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION") // TODO
+  @Override
+  public CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     Channel channel = null;
     long start = System.currentTimeMillis();
@@ -158,7 +169,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         saveExecutionLog(format("Connecting to %s ....", config.getHost()));
         channel.connect();
         saveExecutionLog(format("Connection to %s established", config.getHost()));
-        saveExecutionLog(format("Executing command %s ...", command));
+        if (displayCommand) {
+          saveExecutionLog(format("Executing command %s ...", command));
+        } else {
+          saveExecutionLog("Executing command ...");
+        }
 
         int totalBytesRead = 0;
         byte[] byteBuffer = new byte[1024];

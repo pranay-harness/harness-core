@@ -11,7 +11,11 @@ import java.util.List;
 public interface BaseExecutor {
   CommandExecutionStatus executeCommandString(String command);
 
+  CommandExecutionStatus executeCommandString(String command, boolean displayCommand);
+
   CommandExecutionStatus executeCommandString(String command, StringBuffer output);
+
+  CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand);
 
   CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData);
 

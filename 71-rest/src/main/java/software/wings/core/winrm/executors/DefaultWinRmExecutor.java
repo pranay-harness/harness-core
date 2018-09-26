@@ -41,13 +41,25 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     return executeCommandString(command, null);
   }
 
+  public CommandExecutionStatus executeCommandString(String command, boolean displayCommand) {
+    return executeCommandString(command, null, displayCommand);
+  }
+
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output) {
+    return executeCommandString(command, output, false);
+  }
+
+  public CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     saveExecutionLog(format("Initializing WinRM connection to %s ...", config.getHostname()), INFO);
 
     try (WinRmSession session = new WinRmSession(config)) {
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
-      saveExecutionLog(format("Executing command ..."), INFO);
+      if (displayCommand) {
+        saveExecutionLog(format("Executing command %s...", command), INFO);
+      } else {
+        saveExecutionLog(format("Executing command ..."), INFO);
+      }
 
       ExecutionLogWriter outputWriter = ExecutionLogWriter.builder()
                                             .accountId(config.getAccountId())
