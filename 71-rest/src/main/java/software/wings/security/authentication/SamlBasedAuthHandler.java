@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.User;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.security.saml.SamlClientService;
+import software.wings.security.saml.SamlClientService.HostType;
 import software.wings.service.intfc.AccountService;
 
 import java.net.URI;
@@ -28,8 +29,6 @@ public class SamlBasedAuthHandler implements AuthHandler {
   @Inject private AuthenticationUtil authenticationUtil;
   @Inject private AccountService accountService;
   private static Logger logger = LoggerFactory.getLogger(SamlBasedAuthHandler.class);
-  private static final String GOOGLE = "accounts.google.com";
-  private static final String AZURE = "login.microsoftonline.com";
 
   @Override
   public User authenticate(String... credentials) {
@@ -46,8 +45,9 @@ public class SamlBasedAuthHandler implements AuthHandler {
   }
 
   private User decodeResponse(String idpUrl, String samlResponseString) throws SamlException, URISyntaxException {
-    String host = new URI(idpUrl).getHost();
-    switch (host) {
+    String host = samlClientService.getHost(idpUrl);
+    HostType hostType = samlClientService.getHostType(idpUrl);
+    switch (hostType) {
       case GOOGLE: {
         Iterator<SamlSettings> samlSettingsIterator = samlClientService.getSamlSettingsFromOrigin(host);
         if (samlSettingsIterator != null) {
