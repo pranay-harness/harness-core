@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -11,6 +12,7 @@ import static software.wings.api.DeploymentType.SSH;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType.AWS;
+import static software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType.AWS_INSTANCE_FILTER;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
@@ -33,6 +35,7 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.Service;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow;
@@ -111,15 +114,22 @@ public class InfrastructureProvisionerServiceTest extends WingsBaseTest {
         infrastructureProvisionerGenerator.ensureInfrastructureProvisioner(seed, owners,
             TerraformInfrastructureProvisioner.builder()
                 .name("Test")
-                .mappingBlueprints(asList(InfrastructureMappingBlueprint.builder()
-                                              .serviceId(service1.getUuid())
-                                              .deploymentType(SSH)
-                                              .cloudProviderType(AWS)
-                                              .build(),
+                .mappingBlueprints(asList(
+                    InfrastructureMappingBlueprint.builder()
+                        .serviceId(service1.getUuid())
+                        .deploymentType(SSH)
+                        .cloudProviderType(AWS)
+                        .nodeFilteringType(AWS_INSTANCE_FILTER)
+                        .properties(
+                            singletonList(NameValuePair.builder().name("region").value("${terraform.region}").build()))
+                        .build(),
                     InfrastructureMappingBlueprint.builder()
                         .serviceId(service2.getUuid())
                         .deploymentType(SSH)
                         .cloudProviderType(AWS)
+                        .nodeFilteringType(AWS_INSTANCE_FILTER)
+                        .properties(
+                            singletonList(NameValuePair.builder().name("region").value("${terraform.region}").build()))
                         .build()))
                 .build());
 
