@@ -100,6 +100,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.TwoFactorAuthenticationManager;
 import software.wings.security.authentication.TwoFactorAuthenticationMechanism;
+import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -162,6 +163,7 @@ public class UserServiceImpl implements UserService {
   @Inject private SecretManager secretManager;
   @Inject TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   @Inject private SSOSettingService ssoSettingService;
+  @Inject private SamlClientService samlClientService;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#register(software.wings.beans.User)
@@ -559,7 +561,7 @@ public class UserServiceImpl implements UserService {
   private Map<String, Object> getAddedRoleTemplateModel(User user, Account account) throws URISyntaxException {
     String loginUrl = buildAbsoluteUrl(format(
         "/login?company=%s&account=%s&email=%s", account.getCompanyName(), account.getAccountName(), user.getEmail()));
-
+    boolean includeAccessUrl = true;
     Map<String, Object> model = new HashMap<>();
     model.put("name", user.getName());
     model.put("url", loginUrl);
@@ -575,12 +577,22 @@ public class UserServiceImpl implements UserService {
     SSOSettings ssoSettings;
     if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.SAML)) {
       ssoSettings = ssoSettingService.getSamlSettingsByAccountId(account.getUuid());
+      switch (samlClientService.getHostType(ssoSettings.getUrl())) {
+        case GOOGLE:
+          includeAccessUrl = false;
+          break;
+        case AZURE:
+          includeAccessUrl = false;
+          break;
+        default:
+      }
     } else if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.LDAP)) {
       ssoSettings = ssoSettingService.getLdapSettingsByAccountId(account.getUuid());
     } else {
       logger.warn("New authentication mechanism detected. Needs to handle the added role email template flow.");
       throw new WingsException("New authentication mechanism detected.");
     }
+    model.put("includeAccessUrl", includeAccessUrl);
     model.put("ssoUrl", ssoSettings.getUrl());
     return model;
   }
