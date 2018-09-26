@@ -4,11 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.service.intfc.FileService.FileBucket.AUDITS;
 
 import io.harness.beans.PageRequest;
+import io.harness.rule.RealMongo;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.audit.AuditHeader;
 import software.wings.audit.AuditHeader.RequestType;
-import software.wings.rules.RealMongo;
 import software.wings.service.AuditServiceTest;
 
 import java.io.ByteArrayInputStream;

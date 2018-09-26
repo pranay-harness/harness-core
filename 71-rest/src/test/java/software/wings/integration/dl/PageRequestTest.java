@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.rule.RealMongo;
 import lombok.Builder;
 import lombok.Value;
 import org.junit.Test;
@@ -19,7 +20,6 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
-import software.wings.rules.RealMongo;
 
 import java.util.List;
 

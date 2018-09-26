@@ -16,6 +16,7 @@ import static software.wings.integration.IntegrationTestUtil.randomInt;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
+import io.harness.rule.RealMongo;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -33,7 +34,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
-import software.wings.rules.RealMongo;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;

@@ -14,6 +14,7 @@ import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentRegistry;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
+import io.harness.rule.RealMongo;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.threading.Concurrent;
 import org.junit.Test;
@@ -21,7 +22,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Idempotent;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.WingsPersistence;
-import software.wings.rules.RealMongo;
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
