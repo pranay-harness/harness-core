@@ -69,6 +69,7 @@ catch (Exception e) {
 }
 
 @Test
+@Ignore
 public void shouldDownloadDelegateZipWithWatcher()
     throws IOException, JSONException, TimeoutException, InterruptedException {
   String responseString =
