@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.utils.Misc;
 
 public class SecretTextNameKeyWordsMigration implements Migration {
   private static Logger logger = LoggerFactory.getLogger(SecretTextNameKeyWordsMigration.class);
@@ -22,7 +23,7 @@ public class SecretTextNameKeyWordsMigration implements Migration {
       while (iterator.hasNext()) {
         EncryptedData encryptedData = iterator.next();
         logger.info("updating {} id {}", encryptedData.getName(), encryptedData.getUuid());
-        encryptedData.addSearchTag(encryptedData.getName());
+        encryptedData.addSearchTag(Misc.replaceDotWithUnicode(encryptedData.getName()));
         logger.info("updating search tags for {} to {}", encryptedData.getName(), encryptedData.getSearchTags());
         wingsPersistence.save(encryptedData);
       }
