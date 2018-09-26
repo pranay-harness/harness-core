@@ -151,7 +151,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
       Long responseTimeStamp = OffsetDateTime.now().toInstant().toEpochMilli();
 
       // SaveLogs is called for given job response.
-      saveThirdPartyCallLogs(apiCallLog, config, query, String.valueOf(startTime), String.valueOf(endTime),
+      saveThirdPartyCallLogs(apiCallLog, config, searchQuery, String.valueOf(startTime), String.valueOf(endTime),
           searchJobStatusResponse, requestTimeStamp, responseTimeStamp);
 
       // SumoLogic may end up resulting lot of records that we may not need, so we have a maxMessageCount limit defined.
