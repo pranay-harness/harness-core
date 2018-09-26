@@ -18,7 +18,7 @@
     <logger name="com.hazelcast" level="ERROR"/>
     <logger name="ro.fortsoft" level="ERROR"/>
     <logger name="software.wings.rules.WingsRule" level="ERROR"/>
-    <logger name="software.wings.rules.RealMongo" level="ERROR"/>
+    <logger name="io.harness.rule.RealMongo" level="ERROR"/>
 
 
     <root level="INFO">

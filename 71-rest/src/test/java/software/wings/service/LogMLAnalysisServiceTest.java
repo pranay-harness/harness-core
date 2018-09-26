@@ -15,6 +15,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.rule.RealMongo;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -38,7 +39,6 @@ import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
 import software.wings.generator.SecretName;
 import software.wings.metrics.RiskLevel;
-import software.wings.rules.RealMongo;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
 import software.wings.service.impl.analysis.ElkConnector;

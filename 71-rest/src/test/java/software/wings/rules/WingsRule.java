@@ -2,7 +2,6 @@ package software.wings.rules;
 
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
-import static software.wings.app.DatabaseModule.mongoClientOptions;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.core.maintenance.MaintenanceController.forceMaintenance;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
@@ -25,9 +24,6 @@ import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.hazelcast.core.HazelcastInstance;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
-import com.mongodb.ServerAddress;
-import de.bwaldvogel.mongo.MongoServer;
-import de.bwaldvogel.mongo.backend.memory.MemoryBackend;
 import de.flapdoodle.embed.mongo.Command;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -59,6 +55,9 @@ import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.WingsException;
+import io.harness.rule.DatabaseRuleMixin;
+import io.harness.rule.MongoServerFactory;
+import io.harness.rule.RealMongo;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
@@ -97,7 +96,6 @@ import software.wings.waitnotify.Notifier;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
-import java.net.InetSocketAddress;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -111,7 +109,7 @@ import javax.validation.ValidatorFactory;
 /**
  * Created by peeyushaggarwal on 4/5/16.
  */
-public class WingsRule implements MethodRule {
+public class WingsRule implements MethodRule, DatabaseRuleMixin {
   private static final Logger logger = LoggerFactory.getLogger(WingsRule.class);
 
   private static IRuntimeConfig runtimeConfig =
@@ -128,7 +126,6 @@ public class WingsRule implements MethodRule {
 
   private MongodExecutable mongodExecutable;
   private Injector injector;
-  private MongoServer mongoServer;
   private AdvancedDatastore datastore;
   private DistributedLockSvc distributedLockSvc;
   private int port;
@@ -204,10 +201,7 @@ public class WingsRule implements MethodRule {
       }
     } else {
       fakeMongo = true;
-      mongoServer = new MongoServer(new MemoryBackend());
-      mongoServer.bind("localhost", port);
-      InetSocketAddress serverAddress = mongoServer.getLocalAddress();
-      mongoClient = new MongoClient(new ServerAddress(serverAddress));
+      mongoClient = fakeMongoClient(port);
     }
 
     Morphia morphia = new Morphia();
@@ -404,9 +398,8 @@ public class WingsRule implements MethodRule {
     }
 
     log().info("Stopping Mongo server...");
-    if (mongoServer != null) {
-      mongoServer.shutdown();
-    }
+    MongoServerFactory.stopMongoServers();
+
     try {
       if (mongodExecutable != null) {
         mongodExecutable.stop();

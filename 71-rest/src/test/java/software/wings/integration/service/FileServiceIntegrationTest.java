@@ -8,13 +8,13 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import io.harness.rule.RealMongo;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FileMetadata;
-import software.wings.rules.RealMongo;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 

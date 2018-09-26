@@ -83,6 +83,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.rule.RealMongo;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -110,7 +111,6 @@ import software.wings.beans.instance.dashboard.EntitySummary;
 import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.dl.WingsPersistence;
-import software.wings.rules.RealMongo;
 import software.wings.security.AppPermissionSummaryForUI;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
