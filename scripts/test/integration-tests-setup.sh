@@ -7,6 +7,31 @@ sleep 5
 docker run -p 27017:27017 -d --rm mongo:3.6 || true
 sleep 5
 
+echo 'starting vault server'
+touch vault.log
+~/vault server --dev > vault.log &
+i=0
+while [ "$i" -lt 30 ]
+do
+  vault_token=`cat vault.log | grep "Root Token:" | awk '{print $3}'`
+  if [ -z "$vault_token" ]
+  then
+    echo 'sleeping since did not find vault token yet'
+    sleep 2
+    i=$((i+1))
+  else
+    echo "found vault token"
+    echo $vault_token
+    break
+  fi
+done
+
+if [ -z "$vault_token" ]
+  then
+    echo 'could not find vault token. exiting....'
+    exit 1
+fi
+
 echo 'starting server'
 export HOSTNAME
 export SPLUNKML_ROOT=$(pwd)/python/splunk_intelligence
