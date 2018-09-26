@@ -9,6 +9,7 @@ import com.codahale.metrics.annotation.Timed;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.InvalidRequestException;
 import io.swagger.annotations.Api;
+import lombok.Data;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotBlank;
@@ -16,6 +17,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
+import software.wings.helpers.ext.ldap.LdapResponse;
+import software.wings.helpers.ext.ldap.LdapResponse.Status;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -28,6 +31,7 @@ import software.wings.service.intfc.SSOService;
 import java.io.InputStream;
 import java.util.Collection;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -82,6 +86,44 @@ public class SSOResource {
   public RestResponse<SSOConfig> setAuthMechanism(@QueryParam("accountId") String accountId,
       @QueryParam("authMechanism") AuthenticationMechanism authenticationMechanism) {
     return new RestResponse<SSOConfig>(ssoService.setAuthenticationMechanism(accountId, authenticationMechanism));
+  }
+
+  @PUT
+  @Path("auth-mechanism/LDAP")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SSOConfig> enableLdapAuthMechanism(
+      @QueryParam("accountId") String accountId, @NotNull @Valid LDAPTestAuthenticationRequest authenticationRequest) {
+    LdapSettings settings = ssoService.getLdapSettings(accountId);
+    if (null == settings) {
+      throw new InvalidRequestException(
+          String.format("No LDAP SSO Provider settings found for account: %s", accountId));
+    }
+
+    // Validate ldap settings against provided username password.
+    LdapResponse response = ssoService.validateLdapAuthentication(
+        settings, authenticationRequest.getEmail(), authenticationRequest.getPassword());
+    if (response.getStatus().equals(Status.FAILURE)) {
+      throw new InvalidRequestException(response.getMessage());
+    }
+
+    return new RestResponse<>(ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.LDAP));
+  }
+
+  @PUT
+  @Path("auth-mechanism/SAML")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SSOConfig> enableSamlAuthMechanism(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.SAML));
+  }
+
+  @PUT
+  @Path("auth-mechanism/USER_PASSWORD")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SSOConfig> enableBasicAuthMechanism(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(ssoService.setAuthenticationMechanism(accountId, AuthenticationMechanism.USER_PASSWORD));
   }
 
   @GET
@@ -159,6 +201,21 @@ public class SSOResource {
     return new RestResponse<>(ssoService.validateLdapGroupSettings(settings, accountId));
   }
 
+  @POST
+  @Path("ldap/settings/test/authentication")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<LdapResponse> validateLdapAuthentication(@QueryParam("accountId") @NotBlank String accountId,
+      @NotNull @Valid LDAPTestAuthenticationRequest authenticationRequest) {
+    LdapSettings settings = ssoService.getLdapSettings(accountId);
+    if (null == settings) {
+      throw new InvalidRequestException(
+          String.format("No LDAP SSO Provider settings found for account: %s", accountId));
+    }
+    return new RestResponse<>(ssoService.validateLdapAuthentication(
+        settings, authenticationRequest.getEmail(), authenticationRequest.getPassword()));
+  }
+
   @GET
   @Path("ldap/{ldapId}/search/group")
   @Timed
@@ -167,5 +224,11 @@ public class SSOResource {
       @QueryParam("accountId") @NotBlank String accountId, @QueryParam("q") @NotBlank String query) {
     Collection<LdapGroupResponse> groups = ssoService.searchGroupsByName(ldapId, query);
     return new RestResponse<>(groups);
+  }
+
+  @Data
+  public static class LDAPTestAuthenticationRequest {
+    @NotBlank String email;
+    @NotBlank String password;
   }
 }
