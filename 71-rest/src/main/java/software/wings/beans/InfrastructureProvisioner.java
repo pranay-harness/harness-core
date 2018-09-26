@@ -11,6 +11,7 @@ import org.mongodb.morphia.annotations.Entity;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.List;
+import javax.validation.Valid;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -26,7 +27,7 @@ public abstract class InfrastructureProvisioner extends Base {
   private String description;
   @NotEmpty private String infrastructureProvisionerType;
   private List<NameValuePair> variables;
-  List<InfrastructureMappingBlueprint> mappingBlueprints;
+  @Valid List<InfrastructureMappingBlueprint> mappingBlueprints;
 
   public InfrastructureProvisioner(String name, String description, String infrastructureProvisionerType,
       List<NameValuePair> variables, List<InfrastructureMappingBlueprint> mappingBlueprints, String uuid, String appId,
