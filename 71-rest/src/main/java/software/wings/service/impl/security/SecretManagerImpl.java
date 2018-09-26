@@ -615,6 +615,7 @@ public class SecretManagerImpl implements SecretManager {
     usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
     EncryptedData encryptedData = encrypt(encryptionType, accountId, SettingVariableTypes.SECRET_TEXT,
         value.toCharArray(), null, name, usageRestrictions);
+    encryptedData.addSearchTag(name);
     String encryptedDataId;
     try {
       encryptedDataId = wingsPersistence.save(encryptedData);
@@ -660,7 +661,9 @@ public class SecretManagerImpl implements SecretManager {
     if (usageRestrictions != null) {
       description += " & usage restrictions";
     }
+    savedData.removeSearchTag(null, savedData.getName(), null);
     savedData.setName(name);
+    savedData.addSearchTag(name);
     if (!value.equals(SECRET_MASK)) {
       EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
           value.toCharArray(), savedData, name, usageRestrictions);

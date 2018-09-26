@@ -1,6 +1,7 @@
 package software.wings.security.encryption;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -110,7 +111,7 @@ public class EncryptedData extends Base {
   }
 
   public void removeApplication(String appId, String appName) {
-    removeReference(appId, appName, appIds);
+    removeSearchTag(appId, appName, appIds);
   }
 
   public void addService(String serviceId, String serviceName) {
@@ -122,7 +123,7 @@ public class EncryptedData extends Base {
   }
 
   public void removeService(String serviceId, String serviceName) {
-    removeReference(serviceId, serviceName, serviceIds);
+    removeSearchTag(serviceId, serviceName, serviceIds);
   }
 
   public void addEnvironment(String envId, String environmentName) {
@@ -134,7 +135,7 @@ public class EncryptedData extends Base {
   }
 
   public void removeEnvironment(String envId, String envName) {
-    removeReference(envId, envName, envIds);
+    removeSearchTag(envId, envName, envIds);
   }
 
   public void addServiceVariable(String serviceVariableId, String serviceVariableName) {
@@ -155,7 +156,7 @@ public class EncryptedData extends Base {
     }
   }
 
-  private void addSearchTag(String searchTag) {
+  public void addSearchTag(String searchTag) {
     if (searchTags == null) {
       searchTags = new HashMap<>();
     }
@@ -174,8 +175,10 @@ public class EncryptedData extends Base {
     }
   }
 
-  private void removeReference(String key, String searchTag, List<String> collection) {
-    collection.remove(key);
+  public void removeSearchTag(String key, String searchTag, List<String> collection) {
+    if (isNotEmpty(collection)) {
+      collection.remove(key);
+    }
     int refCount = searchTags.get(searchTag).decrementAndGet();
     if (refCount == 0) {
       searchTags.remove(searchTag);
