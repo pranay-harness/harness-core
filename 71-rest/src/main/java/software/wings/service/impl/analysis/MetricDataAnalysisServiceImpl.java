@@ -934,5 +934,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     // delete learning engine tasks
     wingsPersistence.delete(
         wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("state_execution_id", stateExecutionId));
+
+    // delete the metric groups
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(TimeSeriesMetricGroup.class).filter("stateExecutionId", stateExecutionId));
   }
 }
