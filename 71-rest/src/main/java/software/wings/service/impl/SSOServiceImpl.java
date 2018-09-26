@@ -21,6 +21,7 @@ import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.ldap.LdapConstants;
+import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -183,6 +184,25 @@ public class SSOServiceImpl implements SSOService {
       if (temporaryEncryption) {
         secretManager.deleteSecretUsingUuid(encryptedDataDetail.getEncryptedData().getUuid());
       }
+    }
+  }
+
+  @Override
+  public LdapResponse validateLdapAuthentication(LdapSettings ldapSettings, String identifier, String password) {
+    EncryptedDataDetail settingsEncryptedDataDetail = ldapSettings.getEncryptedDataDetails(secretManager);
+
+    String encryptedPassword = secretManager.encrypt(ldapSettings.getAccountId(), password, null);
+    EncryptedDataDetail passwordEncryptedDataDetail =
+        secretManager
+            .encryptedDataDetails(ldapSettings.getAccountId(), LdapConstants.USER_PASSWORD_KEY, encryptedPassword)
+            .get();
+    try {
+      SyncTaskContext syncTaskContext =
+          aContext().withAccountId(ldapSettings.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
+      return delegateProxyFactory.get(LdapDelegateService.class, syncTaskContext)
+          .authenticate(ldapSettings, settingsEncryptedDataDetail, identifier, passwordEncryptedDataDetail);
+    } finally {
+      secretManager.deleteSecretUsingUuid(passwordEncryptedDataDetail.getEncryptedData().getUuid());
     }
   }
 

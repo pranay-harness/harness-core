@@ -3,7 +3,6 @@ package software.wings.service.impl.ldap;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.ldaptive.LdapEntry;
@@ -72,19 +71,6 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       return LdapTestResponse.builder().status(Status.SUCCESS).message(response.getMessage()).build();
     }
     return LdapTestResponse.builder().status(Status.FAILURE).message(response.getMessage()).build();
-  }
-
-  @Override
-  public LdapTestResponse validateUserSettings(LdapSettings settings, EncryptedDataDetail encryptedDataDetail) {
-    LdapTestResponse response = validateLdapConnectionSettings(settings, encryptedDataDetail);
-    if (response.getStatus().equals(Status.FAILURE)) {
-      throw new WingsException(ErrorCode.INVALID_LDAP_CONFIGURATION, response.getMessage());
-    }
-    response = validateLdapUserSettings(settings, encryptedDataDetail);
-    if (response.getStatus().equals(Status.FAILURE)) {
-      throw new WingsException(ErrorCode.INVALID_LDAP_CONFIGURATION, response.getMessage());
-    }
-    return response;
   }
 
   @Override

@@ -4,6 +4,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
+import software.wings.helpers.ext.ldap.LdapResponse;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.authentication.SSOConfig;
 
@@ -36,6 +37,9 @@ public interface SSOService {
   LdapTestResponse validateLdapUserSettings(@NotNull LdapSettings ldapSettings, @NotBlank String accountId);
 
   LdapTestResponse validateLdapGroupSettings(@NotNull LdapSettings ldapSettings, @NotBlank String accountId);
+
+  LdapResponse validateLdapAuthentication(
+      @NotNull LdapSettings ldapSettings, @NotBlank String identifier, @NotBlank String password);
 
   Collection<LdapGroupResponse> searchGroupsByName(@NotBlank String ldapSettingsId, @NotBlank String nameQuery);
 }

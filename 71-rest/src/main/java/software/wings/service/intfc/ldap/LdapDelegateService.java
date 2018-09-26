@@ -43,15 +43,6 @@ public interface LdapDelegateService {
   LdapTestResponse validateLdapGroupSettings(LdapSettings settings, EncryptedDataDetail encryptedDataDetail);
 
   /**
-   * API to validate both connection and user Ldap settings
-   * @param settings
-   * @param encryptedDataDetail
-   * @return
-   */
-  @DelegateTaskType(TaskType.LDAP_VALIDATE_SETTINGS)
-  LdapTestResponse validateUserSettings(LdapSettings settings, EncryptedDataDetail encryptedDataDetail);
-
-  /**
    * API to authenticate username and password using ldap settings
    * @param settings
    * @param settingsEncryptedDataDetail

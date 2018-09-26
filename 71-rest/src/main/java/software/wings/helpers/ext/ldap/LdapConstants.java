@@ -7,6 +7,7 @@ public class LdapConstants {
   public static final int DEFAULT_CONNECT_TIMEOUT = 5000;
   public static final int DEFAULT_RESPONSE_TIMEOUT = 5000;
   public static final String BIND_PASSWORD_KEY = "bindPassword";
+  public static final String USER_PASSWORD_KEY = "password";
   public static final String LDAP_MATCHING_RULE_IN_CHAIN = "1.2.840.113556.1.4.1941";
   public static final int MIN_USER_QUERY_SIZE = 10;
   public static final int MIN_GROUP_QUERY_SIZE = 10;
