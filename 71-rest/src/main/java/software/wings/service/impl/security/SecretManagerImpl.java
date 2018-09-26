@@ -990,7 +990,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
-      String appIdFromRequest, String envIdFromRequest) throws IllegalAccessException {
+      String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException {
     PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
 
     List<EncryptedData> encryptedDataList = pageResponse.getResponse();
@@ -1005,14 +1005,16 @@ public class SecretManagerImpl implements SecretManager {
     for (EncryptedData encryptedData : encryptedDataList) {
       encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
       encryptedData.setEncryptionKey(SECRET_MASK);
-      encryptedData.setEncryptedBy(getSecretManagerName(encryptedData.getType(), encryptedData.getUuid(),
-          encryptedData.getKmsId(), encryptedData.getEncryptionType()));
+      if (details) {
+        encryptedData.setEncryptedBy(getSecretManagerName(encryptedData.getType(), encryptedData.getUuid(),
+            encryptedData.getKmsId(), encryptedData.getEncryptionType()));
 
-      encryptedData.setSetupUsage(getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid()).size());
-      encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
-      encryptedData.setChangeLog(
-          getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
-              .size());
+        encryptedData.setSetupUsage(getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid()).size());
+        encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
+        encryptedData.setChangeLog(
+            getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
+                .size());
+      }
 
       UsageRestrictions usageRestrictionsFromEntity = encryptedData.getUsageRestrictions();
       if (usageRestrictionsFromEntity == null) {
@@ -1036,7 +1038,6 @@ public class SecretManagerImpl implements SecretManager {
         usageRestrictionsFromEntity.setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
             encryptedData.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
             restrictionsFromUserPermissions, appEnvMapFromPermissions));
-
         filteredEncryptedDataList.add(encryptedData);
       }
     }
