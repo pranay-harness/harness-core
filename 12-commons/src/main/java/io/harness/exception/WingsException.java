@@ -146,7 +146,7 @@ public class WingsException extends RuntimeException {
   }
 
   public WingsException addParam(String key, Object value) {
-    params.put(key, value);
+    params.put(key, value.toString().replace("${", "$ {"));
     return this;
   }
 
