@@ -1,5 +1,6 @@
 package migrations.all;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.google.inject.Inject;
@@ -43,7 +44,8 @@ public class GcsArtifactProjectIdMigration implements Migration {
       while (records.hasNext()) {
         GcsArtifactStream artifactStream = (GcsArtifactStream) records.next();
 
-        if (artifactStream != null && artifactStream.getSettingId() != null) {
+        if (artifactStream != null && isNotEmpty(artifactStream.getSettingId())
+            && isEmpty(artifactStream.getProjectId())) {
           SettingAttribute settingAttribute = settingsService.get(artifactStream.getSettingId());
           if (settingAttribute == null) {
             logger.info("GCP Cloud provider Settings Attribute is null. Can not set Project Id in Artifact Stream");
