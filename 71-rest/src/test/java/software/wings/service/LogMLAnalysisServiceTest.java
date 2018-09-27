@@ -15,6 +15,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.rule.AuthorRule.Author;
 import io.harness.rule.RealMongo;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
@@ -672,6 +673,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Author(emails = "raghu@harness.io", intermittent = true)
   public void testAnalysisSummaryCompression() throws Exception {
     ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(r.nextInt(10)).values());
     Map<String, List<SplunkAnalysisCluster>> testEvents = getEvents(r.nextInt(10));

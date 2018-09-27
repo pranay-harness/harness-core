@@ -13,14 +13,12 @@ import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlEngine;
 import org.apache.commons.jexl3.JexlExpression;
-import org.apache.commons.jexl3.MapContext;
 import org.apache.commons.logging.impl.NoOpLog;
 import org.apache.commons.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -180,13 +178,7 @@ public class ExpressionEvaluator {
   }
 
   private JexlContext prepareContext(Map<String, Object> context) {
-    JexlContext jc = new MapContext();
-    if (context != null) {
-      for (Entry<String, Object> entry : context.entrySet()) {
-        jc.set(entry.getKey(), entry.getValue());
-      }
-    }
-
+    JexlContext jc = new LateBindingContext(context);
     jc.set("regex", regexFunctor);
     jc.set("aws", awsFunctor);
     return jc;
