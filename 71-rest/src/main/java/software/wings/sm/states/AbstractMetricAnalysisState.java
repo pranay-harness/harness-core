@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.time.Duration.ofMillis;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.NUM_OF_RETRIES;
@@ -10,6 +11,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -19,6 +21,7 @@ import org.quartz.TriggerBuilder;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.api.PcfInstanceElement;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.metrics.RiskLevel;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -198,7 +201,11 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .withStateExecutionData(executionData)
           .build();
     } catch (Exception ex) {
-      getLogger().error("metric analysis state failed", ex);
+      if (ex instanceof WingsException) {
+        WingsExceptionMapper.logProcessedMessages((WingsException) ex, MANAGER, getLogger());
+      } else {
+        getLogger().error("metric analysis state failed", ex);
+      }
       return anExecutionResponse()
           .withAsync(false)
           .withCorrelationIds(Collections.singletonList(corelationId))
