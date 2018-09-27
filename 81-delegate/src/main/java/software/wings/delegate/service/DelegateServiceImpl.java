@@ -90,7 +90,7 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Builder;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegateInitialization;
+import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
@@ -406,7 +406,7 @@ public class DelegateServiceImpl implements DelegateService {
 
       logger.info("Delegate started");
 
-      startInstallCheck();
+      startProfileCheck();
 
       synchronized (waiter) {
         waiter.wait();
@@ -567,23 +567,23 @@ public class DelegateServiceImpl implements DelegateService {
     return null;
   }
 
-  private void startInstallCheck() {
+  private void startProfileCheck() {
     installCheckExecutor.scheduleWithFixedDelay(() -> {
       boolean forCodeFormattingOnly; // This line is here for clang-format
       synchronized (this) {
-        checkForInitialization();
+        checkForProfile();
       }
     }, 0, 3, TimeUnit.MINUTES);
   }
 
-  private void checkForInitialization() {
+  private void checkForProfile() {
     if (!initializing.get()) {
       logger.info("Checking for initialization...");
       try {
-        DelegateInitialization profile = getProfile();
-        String profileId = profile == null ? "" : profile.getProfileId();
-        long updated = profile == null ? 0L : profile.getProfileLastUpdatedAt();
-        RestResponse<DelegateInitialization> response = timeLimiter.callWithTimeout(
+        DelegateProfileParams profileParams = getProfile();
+        String profileId = profileParams == null ? "" : profileParams.getProfileId();
+        long updated = profileParams == null ? 0L : profileParams.getProfileLastUpdatedAt();
+        RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
             ()
                 -> execute(managerClient.checkForProfile(delegateId, accountId, profileId, updated)),
             15L, TimeUnit.SECONDS, true);
@@ -598,11 +598,11 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private DelegateInitialization getProfile() {
+  private DelegateProfileParams getProfile() {
     File file = new File("profile");
     if (file.exists()) {
       try {
-        return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), DelegateInitialization.class);
+        return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), DelegateProfileParams.class);
       } catch (Exception e) {
         logger.error("Error reading profile", e);
       }
@@ -610,7 +610,7 @@ public class DelegateServiceImpl implements DelegateService {
     return null;
   }
 
-  private void saveProfile(DelegateInitialization profile) {
+  private void saveProfile(DelegateProfileParams profile) {
     try {
       File file = new File("profile");
       if (file.exists()) {
@@ -623,14 +623,15 @@ public class DelegateServiceImpl implements DelegateService {
     }
   }
 
-  private void applyProfile(DelegateInitialization profile) {
+  private void applyProfile(DelegateProfileParams profile) {
     if (profile != null && initializing.compareAndSet(false, true)) {
       try {
-        logger.info("Updating delegate profile to [{}], last update {} ...", profile.getName(),
-            profile.getProfileLastUpdatedAt());
+        logger.info("Updating delegate profile to [{} : {}], last update {} ...", profile.getProfileId(),
+            profile.getName(), profile.getProfileLastUpdatedAt());
         String script = PROXY_SETUP + profile.getScriptContent();
 
-        logger.info("Executing script:\n{}", script);
+        Logger scriptLogger = LoggerFactory.getLogger("delegate-profile-" + profile.getProfileId());
+        scriptLogger.info("Executing profile script: {}", profile.getName());
 
         ProcessExecutor processExecutor = new ProcessExecutor()
                                               .timeout(5, TimeUnit.MINUTES)
@@ -639,7 +640,13 @@ public class DelegateServiceImpl implements DelegateService {
                                               .redirectOutput(new LogOutputStream() {
                                                 @Override
                                                 protected void processLine(String line) {
-                                                  logger.info(line);
+                                                  scriptLogger.info(line);
+                                                }
+                                              })
+                                              .redirectError(new LogOutputStream() {
+                                                @Override
+                                                protected void processLine(String line) {
+                                                  scriptLogger.error(line);
                                                 }
                                               });
         processExecutor.execute();

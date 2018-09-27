@@ -53,8 +53,8 @@ import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnection;
-import software.wings.beans.DelegateInitialization;
 import software.wings.beans.DelegateProfile;
+import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
@@ -572,7 +572,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     profile.setLastUpdatedAt(100L);
     when(delegateProfileService.get(ACCOUNT_ID, "profile1")).thenReturn(profile);
 
-    DelegateInitialization init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "", 0);
+    DelegateProfileParams init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "", 0);
     assertThat(init).isNotNull();
     assertThat(init.getProfileId()).isEqualTo("profile1");
     assertThat(init.getName()).isEqualTo("A Profile");

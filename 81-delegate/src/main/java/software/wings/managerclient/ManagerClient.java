@@ -15,7 +15,7 @@ import retrofit2.http.Query;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegateInitialization;
+import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
@@ -58,7 +58,7 @@ public interface ManagerClient {
       @Query("accountId") String accountId, @Query("fileBucket") FileBucket bucket, @Part MultipartBody.Part file);
 
   @GET("delegates/{delegateId}/profile")
-  Call<RestResponse<DelegateInitialization>> checkForProfile(@Path("delegateId") String delegateId,
+  Call<RestResponse<DelegateProfileParams>> checkForProfile(@Path("delegateId") String delegateId,
       @Query("accountId") String accountId, @Query("profileId") String profileId,
       @Query("lastUpdatedAt") Long lastUpdatedAt);
 

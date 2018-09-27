@@ -7,7 +7,7 @@ import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegateInitialization;
+import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
@@ -58,7 +58,7 @@ public interface DelegateService {
 
   Delegate register(@Valid Delegate delegate);
 
-  DelegateInitialization checkForProfile(String accountId, String delegateId, String profileId, long lastUpdatedAt);
+  DelegateProfileParams checkForProfile(String accountId, String delegateId, String profileId, long lastUpdatedAt);
 
   void removeDelegateConnection(String accountId, String delegateConnectionId);
 

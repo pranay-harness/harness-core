@@ -28,7 +28,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegateInitialization;
+import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
@@ -275,10 +275,10 @@ public class DelegateResource {
   @Path("{delegateId}/profile")
   @Timed
   @ExceptionMetered
-  public RestResponse<DelegateInitialization> checkForProfile(@QueryParam("accountId") @NotEmpty String accountId,
+  public RestResponse<DelegateProfileParams> checkForProfile(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("delegateId") String delegateId, @QueryParam("profileId") String profileId,
       @QueryParam("lastUpdatedAt") Long lastUpdatedAt) {
-    DelegateInitialization init = delegateService.checkForProfile(accountId, delegateId, profileId, lastUpdatedAt);
+    DelegateProfileParams init = delegateService.checkForProfile(accountId, delegateId, profileId, lastUpdatedAt);
     return new RestResponse<>(init);
   }
 

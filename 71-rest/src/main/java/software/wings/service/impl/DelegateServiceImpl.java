@@ -86,8 +86,8 @@ import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnectionHeartbeat;
-import software.wings.beans.DelegateInitialization;
 import software.wings.beans.DelegateProfile;
+import software.wings.beans.DelegateProfileParams;
 import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
@@ -838,7 +838,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public DelegateInitialization checkForProfile(
+  public DelegateProfileParams checkForProfile(
       String accountId, String delegateId, String profileId, long lastUpdatedAt) {
     logger.info("Checking delegate profile for account {}, delegate [{}]. Previous profile [{}] updated at {}",
         accountId, delegateId, profileId, lastUpdatedAt);
@@ -846,7 +846,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (isNotBlank(delegate.getDelegateProfileId())) {
       DelegateProfile profile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
       if (profile != null && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt)) {
-        return DelegateInitialization.builder()
+        return DelegateProfileParams.builder()
             .profileId(profile.getUuid())
             .name(profile.getName())
             .profileLastUpdatedAt(profile.getLastUpdatedAt())
