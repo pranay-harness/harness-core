@@ -201,6 +201,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           .withStateExecutionData(executionData)
           .build();
     } catch (Exception ex) {
+      // set the CV Metadata status to ERROR as well.
+      continuousVerificationService.setMetaDataExecutionStatus(
+          context.getStateExecutionInstanceId(), ExecutionStatus.ERROR);
       if (ex instanceof WingsException) {
         WingsExceptionMapper.logProcessedMessages((WingsException) ex, MANAGER, getLogger());
       } else {
@@ -317,6 +320,8 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
           }
         }
         if (!isResultPresent) {
+          continuousVerificationService.setMetaDataExecutionStatus(
+              executionResponse.getStateExecutionData().getStateExecutionInstanceId(), ExecutionStatus.FAILED);
           return anExecutionResponse()
               .withExecutionStatus(ExecutionStatus.FAILED)
               .withStateExecutionData(executionResponse.getStateExecutionData())
