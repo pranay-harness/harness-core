@@ -251,14 +251,10 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
-  public RestResponse<User> updateUserGroupsOfUser(
+  public RestResponse<User> updateUserGroupsAndNameOfUser(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId, User user) {
-    user.setUuid(userId);
-    if (isEmpty(user.getAppId())) {
-      user.setAppId(GLOBAL_APP_ID);
-    }
     return new RestResponse<>(
-        userService.updateUserGroupsAndFullnameOfUser(user, user.getUserGroups(), accountId, true));
+        userService.updateUserGroupsAndNameOfUser(userId, user.getUserGroups(), user.getName(), accountId, true));
   }
 
   /**
