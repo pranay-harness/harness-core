@@ -2026,7 +2026,7 @@ public class AwsHelperService {
     return false;
   }
 
-  private String getBucketRegion(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
+  public String getBucketRegion(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String bucketName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       // You can query the bucket location using any region, it returns the result. So, using the default

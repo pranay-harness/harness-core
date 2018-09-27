@@ -100,7 +100,8 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
   private ScriptType getScriptType(List<CommandUnit> commandUnits) {
     if (commandUnits.stream().anyMatch(unit
-            -> unit.getCommandUnitType() == CommandUnitType.EXEC
+            -> (unit.getCommandUnitType() == CommandUnitType.EXEC
+                   || unit.getCommandUnitType() == CommandUnitType.DOWNLOAD_ARTIFACT)
                 && ((ExecCommandUnit) unit).getScriptType() == ScriptType.POWERSHELL)) {
       return ScriptType.POWERSHELL;
     } else {
