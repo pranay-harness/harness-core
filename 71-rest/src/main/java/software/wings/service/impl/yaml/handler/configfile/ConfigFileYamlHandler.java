@@ -11,7 +11,6 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +36,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.utils.Util;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -120,7 +120,6 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
         .build();
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public ConfigFile upsertFromYaml(ChangeContext<Yaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
@@ -162,7 +161,11 @@ public class ConfigFileYamlHandler extends BaseYamlHandler<Yaml, ConfigFile> {
         if (contentChangeContext.isPresent()) {
           ChangeContext fileContext = contentChangeContext.get();
           String fileContent = fileContext.getChange().getFileContent();
-          inputStream = new BoundedInputStream(new ByteArrayInputStream(fileContent.getBytes()));
+          try {
+            inputStream = new BoundedInputStream(new ByteArrayInputStream(fileContent.getBytes("UTF-8")));
+          } catch (UnsupportedEncodingException e) {
+            throw new WingsException("Could not read file: " + yaml.getFileName(), e);
+          }
         } else {
           logger.error("Could not locate file: " + yaml.getFileName());
           throw new WingsException("Could not locate file: " + yaml.getFileName());

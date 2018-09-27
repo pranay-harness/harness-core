@@ -52,7 +52,6 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -134,6 +133,7 @@ import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -893,7 +893,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         safeDisplayServiceVariables.entrySet()
             .stream()
             .filter(entry -> SECRET_MASK.equals(entry.getValue()))
-            .collect(toMap(Entry::getKey, entry -> serviceVariables.get(entry.getKey())));
+            .collect(toMap(Entry::getKey,
+                entry -> Base64.getEncoder().encodeToString(serviceVariables.get(entry.getKey()).getBytes())));
 
     if (isNotEmpty(encryptedServiceVars)) {
       secretData.putAll(encryptedServiceVars);
@@ -909,13 +910,13 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     if (secretMap != null) {
       executionLogCallback.saveExecutionLog("Creating secret map:\n\n"
-              + toDisplayYaml(new SecretBuilder()
-                                  .withMetadata(secretMap.getMetadata())
-                                  .withStringData(secretData.entrySet().stream().collect(
-                                      toMap(Entry::getKey, entry -> SECRET_MASK)))
-                                  .build()),
+              + toDisplayYaml(
+                    new SecretBuilder()
+                        .withMetadata(secretMap.getMetadata())
+                        .withData(secretData.entrySet().stream().collect(toMap(Entry::getKey, entry -> SECRET_MASK)))
+                        .build()),
           LogLevel.INFO);
-      secretMap.setStringData(secretData);
+      secretMap.setData(secretData);
       kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secretMap);
     }
     return secretMap;
@@ -964,7 +965,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     if (isNotEmpty(setupParams.getPlainConfigFiles())) {
-      configMap.getData().putAll(setupParams.getPlainConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
+      configMap.getData().putAll(setupParams.getPlainConfigFiles().stream().collect(
+          toMap(sa -> sa[0], sa -> new String(Base64.getDecoder().decode(sa[1])))));
     }
 
     if (isEmpty(configMap.getData())) {
@@ -1395,24 +1397,27 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                : ContainerApiVersions.KUBERNETES_V2_BETA1.getVersionName();
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private Secret createRegistrySecret(String secretName, String namespace, ImageDetails imageDetails,
       Map<String, String> controllerLabels, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Setting image pull secret " + secretName);
     String credentialData = format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
         imageDetails.getUsername(), imageDetails.getPassword());
-    Map<String, String> data =
-        ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes())));
-    return new SecretBuilder()
-        .withNewMetadata()
-        .withAnnotations(harnessAnnotations)
-        .withLabels(controllerLabels)
-        .withName(secretName)
-        .withNamespace(namespace)
-        .endMetadata()
-        .withType("kubernetes.io/dockercfg")
-        .withData(data)
-        .build();
+    try {
+      Map<String, String> data =
+          ImmutableMap.of(".dockercfg", Base64.getEncoder().encodeToString(credentialData.getBytes("UTF-8")));
+      return new SecretBuilder()
+          .withNewMetadata()
+          .withAnnotations(harnessAnnotations)
+          .withLabels(controllerLabels)
+          .withName(secretName)
+          .withNamespace(namespace)
+          .endMetadata()
+          .withType("kubernetes.io/dockercfg")
+          .withData(data)
+          .build();
+    } catch (UnsupportedEncodingException e) {
+      throw new WingsException("Couldn't read value. ", e);
+    }
   }
 
   private String waitForLoadBalancerEndpoint(KubernetesConfig kubernetesConfig,

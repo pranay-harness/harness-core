@@ -308,7 +308,7 @@ public class PcfCommandTaskHelper {
     File dir = new File(PCF_ARTIFACT_DOWNLOAD_DIR_PATH);
 
     InputStream inputStream =
-        delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId, false);
+        delegateFileManager.downloadArtifactByFileId(FileBucket.ARTIFACTS, fileIds.get(0).getKey(), accountId);
 
     String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
     File artifactFile = new File(dir.getAbsolutePath() + "/" + fileName);

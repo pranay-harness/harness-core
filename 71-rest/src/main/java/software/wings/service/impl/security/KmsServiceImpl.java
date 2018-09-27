@@ -37,10 +37,12 @@ import software.wings.utils.BoundedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -267,19 +269,23 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, BoundedInputStream inputStream) {
     try {
       Preconditions.checkNotNull(kmsConfig);
-      byte[] bytes = ByteStreams.toByteArray(inputStream);
-      EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
-      fileData.setName(name);
-      fileData.setAccountId(accountId);
-      fileData.setType(SettingVariableTypes.CONFIG_FILE);
-      char[] encryptedValue = fileData.getEncryptedValue();
-      BaseFile baseFile = new BaseFile();
-      baseFile.setFileName(name);
-      String fileId = fileService.saveFile(
-          baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
-      fileData.setEncryptedValue(fileId.toCharArray());
-      fileData.setFileSize(inputStream.getTotalBytesRead());
-      return fileData;
+      String base64String = Base64.getEncoder().encodeToString(ByteStreams.toByteArray(inputStream));
+      try (InputStream encodedInputStream = new ByteArrayInputStream(base64String.getBytes("UTF-8"))) {
+        byte[] bytes = ByteStreams.toByteArray(encodedInputStream);
+        EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
+        fileData.setName(name);
+        fileData.setAccountId(accountId);
+        fileData.setType(SettingVariableTypes.CONFIG_FILE);
+        fileData.setBase64Encoded(true);
+        char[] encryptedValue = fileData.getEncryptedValue();
+        BaseFile baseFile = new BaseFile();
+        baseFile.setFileName(name);
+        String fileId = fileService.saveFile(
+            baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
+        fileData.setEncryptedValue(fileId.toCharArray());
+        fileData.setFileSize(inputStream.getTotalBytesRead());
+        return fileData;
+      }
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
     }
@@ -294,7 +300,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       byte[] bytes = Files.toByteArray(file);
       encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
       char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
-      Files.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), file);
+      byte[] fileData = encryptedData.isBase64Encoded() ? Base64.getDecoder().decode(new String(decrypt))
+                                                        : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
@@ -310,7 +318,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       byte[] bytes = Files.toByteArray(file);
       encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
       char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
-      output.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), 0, decrypt.length);
+      byte[] fileData = encryptedData.isBase64Encoded() ? Base64.getDecoder().decode(new String(decrypt))
+                                                        : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);

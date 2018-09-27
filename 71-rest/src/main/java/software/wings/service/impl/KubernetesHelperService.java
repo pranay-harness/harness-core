@@ -32,6 +32,7 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperationsImpl;
 import io.fabric8.kubernetes.client.internal.SSLUtils;
+import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
@@ -59,6 +60,7 @@ import software.wings.yaml.YamlHelper;
 import software.wings.yaml.YamlRepresenter;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.Proxy;
@@ -324,11 +326,14 @@ public class KubernetesHelperService {
     return null;
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING"}) // TODO
   private String encode(char[] value) {
     String encodedValue = new String(value).trim();
     if (isNotBlank(encodedValue) && encodedValue.startsWith("-----BEGIN ")) {
-      encodedValue = new String(Base64.getEncoder().encode(encodedValue.getBytes()));
+      try {
+        encodedValue = Base64.getEncoder().encodeToString(encodedValue.getBytes("UTF-8"));
+      } catch (UnsupportedEncodingException e) {
+        throw new WingsException("Couldn't read value", e);
+      }
     }
     return encodedValue;
   }

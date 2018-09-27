@@ -5,6 +5,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeCount;
@@ -20,6 +21,7 @@ import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
+import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
@@ -37,7 +39,6 @@ import io.harness.queue.Queue;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,10 +89,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -495,7 +497,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public void changeSecretManager(String accountId, String entityId, EncryptionType fromEncryptionType,
-      String fromKmsId, EncryptionType toEncryptionType, String toKmsId) throws IOException {
+      String fromKmsId, EncryptionType toEncryptionType, String toKmsId) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, entityId);
     Preconditions.checkNotNull(encryptedData, "No encrypted data with id " + entityId);
     Preconditions.checkState(encryptedData.getEncryptionType() == fromEncryptionType,
@@ -512,7 +514,7 @@ public class SecretManagerImpl implements SecretManager {
       return;
     }
 
-    char[] decrypted = null;
+    char[] decrypted;
     switch (fromEncryptionType) {
       case KMS:
         decrypted = kmsService.decrypt(encryptedData, accountId, (KmsConfig) fromConfig);
@@ -550,22 +552,22 @@ public class SecretManagerImpl implements SecretManager {
     wingsPersistence.save(encryptedData);
   }
 
-  private void changeFileSecretManager(String accountId, EncryptedData encryptedData, EncryptionType toEncryptionType,
-      EncryptionConfig toConfig) throws IOException {
-    String decryptedFileContent = getFileContents(accountId, encryptedData.getUuid());
+  private void changeFileSecretManager(
+      String accountId, EncryptedData encryptedData, EncryptionType toEncryptionType, EncryptionConfig toConfig) {
+    byte[] decryptedFileContent = getFileContents(accountId, encryptedData.getUuid());
     String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
-    EncryptedData encryptedFileData = null;
+    EncryptedData encryptedFileData;
     switch (toEncryptionType) {
       case KMS:
         encryptedFileData = kmsService.encryptFile(accountId, (KmsConfig) toConfig, encryptedData.getName(),
-            new BoundedInputStream(IOUtils.toInputStream(decryptedFileContent, "UTF-8")));
+            new BoundedInputStream(new ByteArrayInputStream(decryptedFileContent)));
         fileService.deleteFile(savedFileId, CONFIGS);
         break;
 
       case VAULT:
         encryptedFileData =
             vaultService.encryptFile(accountId, vaultService.getSecretConfig(accountId), encryptedData.getName(),
-                new BoundedInputStream(IOUtils.toInputStream(decryptedFileContent, "UTF-8")), encryptedData);
+                new BoundedInputStream(new ByteArrayInputStream(decryptedFileContent)), encryptedData);
         break;
 
       default:
@@ -576,6 +578,7 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setEncryptedValue(encryptedFileData.getEncryptedValue());
     encryptedData.setEncryptionType(toEncryptionType);
     encryptedData.setKmsId(toConfig.getUuid());
+    encryptedData.setBase64Encoded(true);
     wingsPersistence.save(encryptedData);
   }
 
@@ -735,7 +738,7 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
-    Preconditions.checkNotNull("No encrypted record found with id " + uuId);
+    Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
     }
@@ -754,27 +757,34 @@ public class SecretManagerImpl implements SecretManager {
   public String saveFile(
       String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
     usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
-
     EncryptionType encryptionType = getEncryptionType(accountId);
     EncryptedData encryptedData;
     switch (encryptionType) {
       case LOCAL:
-        char[] encryptedFileData = EncryptionUtils.encrypt(inputStream, accountId);
-        BaseFile baseFile = new BaseFile();
-        baseFile.setFileName(name);
-        String fileId = fileService.saveFile(
-            baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedFileData)).array()), CONFIGS);
-        encryptedData = EncryptedData.builder()
-                            .accountId(accountId)
-                            .name(name)
-                            .encryptionKey(accountId)
-                            .encryptedValue(fileId.toCharArray())
-                            .encryptionType(LOCAL)
-                            .kmsId(null)
-                            .type(SettingVariableTypes.CONFIG_FILE)
-                            .fileSize(inputStream.getTotalBytesRead())
-                            .enabled(true)
-                            .build();
+        try {
+          String base64String = Base64.getEncoder().encodeToString(ByteStreams.toByteArray(inputStream));
+          try (InputStream encodedInputStream = new ByteArrayInputStream(base64String.getBytes("UTF-8"))) {
+            char[] encryptedFileData = EncryptionUtils.encrypt(encodedInputStream, accountId);
+            BaseFile baseFile = new BaseFile();
+            baseFile.setFileName(name);
+            String fileId = fileService.saveFile(baseFile,
+                new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedFileData)).array()), CONFIGS);
+            encryptedData = EncryptedData.builder()
+                                .accountId(accountId)
+                                .name(name)
+                                .encryptionKey(accountId)
+                                .encryptedValue(fileId.toCharArray())
+                                .encryptionType(LOCAL)
+                                .kmsId(null)
+                                .type(SettingVariableTypes.CONFIG_FILE)
+                                .fileSize(inputStream.getTotalBytesRead())
+                                .enabled(true)
+                                .base64Encoded(true)
+                                .build();
+          }
+        } catch (IOException e) {
+          throw new WingsException(DEFAULT_ERROR_CODE, e);
+        }
         break;
 
       case KMS:
@@ -821,7 +831,7 @@ public class SecretManagerImpl implements SecretManager {
     switch (encryptionType) {
       case LOCAL:
         fileService.download(String.valueOf(encryptedData.getEncryptedValue()), readInto, CONFIGS);
-        return EncryptionUtils.decrypt(readInto, encryptedData.getEncryptionKey());
+        return EncryptionUtils.decrypt(readInto, encryptedData.getEncryptionKey(), encryptedData.isBase64Encoded());
 
       case KMS:
         fileService.download(String.valueOf(encryptedData.getEncryptedValue()), readInto, CONFIGS);
@@ -835,21 +845,20 @@ public class SecretManagerImpl implements SecretManager {
     }
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
-  public String getFileContents(String accountId, String uuid) {
+  public byte[] getFileContents(String accountId, String uuid) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
     Preconditions.checkNotNull(encryptedData, "could not find file with id " + uuid);
     EncryptionType encryptionType = encryptedData.getEncryptionType();
-    try {
-      OutputStream output = new ByteArrayOutputStream();
+    try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
       File file;
       switch (encryptionType) {
         case LOCAL:
           file = new File(Files.createTempDir(), generateUuid());
           logger.info("Temp file path [{}]", file.getAbsolutePath());
           fileService.download(String.valueOf(encryptedData.getEncryptedValue()), file, CONFIGS);
-          EncryptionUtils.decryptToStream(file, encryptedData.getEncryptionKey(), output);
+          EncryptionUtils.decryptToStream(
+              file, encryptedData.getEncryptionKey(), output, encryptedData.isBase64Encoded());
           break;
 
         case KMS:
@@ -867,7 +876,7 @@ public class SecretManagerImpl implements SecretManager {
           throw new IllegalArgumentException("Invalid type " + encryptionType);
       }
       output.flush();
-      return output.toString();
+      return output.toByteArray();
     } catch (IOException e) {
       throw new WingsException(INVALID_ARGUMENT, e).addParam("args", "Failed to get content");
     }
@@ -888,14 +897,21 @@ public class SecretManagerImpl implements SecretManager {
     EncryptedData encryptedFileData;
     switch (encryptionType) {
       case LOCAL:
-        char[] encryptedFileDataVal = EncryptionUtils.encrypt(inputStream, accountId);
-        BaseFile baseFile = new BaseFile();
-        baseFile.setFileName(name);
-        String fileId = fileService.saveFile(
-            baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedFileDataVal)).array()), CONFIGS);
-        encryptedFileData =
-            EncryptedData.builder().encryptionKey(accountId).encryptedValue(fileId.toCharArray()).build();
-        fileService.deleteFile(savedFileId, CONFIGS);
+        try {
+          String base64String = Base64.getEncoder().encodeToString(ByteStreams.toByteArray(inputStream));
+          try (InputStream encodedInputStream = new ByteArrayInputStream(base64String.getBytes("UTF-8"))) {
+            char[] encryptedFileDataVal = EncryptionUtils.encrypt(encodedInputStream, accountId);
+            BaseFile baseFile = new BaseFile();
+            baseFile.setFileName(name);
+            String fileId = fileService.saveFile(baseFile,
+                new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedFileDataVal)).array()), CONFIGS);
+            encryptedFileData =
+                EncryptedData.builder().encryptionKey(accountId).encryptedValue(fileId.toCharArray()).build();
+            fileService.deleteFile(savedFileId, CONFIGS);
+          }
+        } catch (IOException e) {
+          throw new WingsException(DEFAULT_ERROR_CODE, e);
+        }
         break;
 
       case KMS:
@@ -917,6 +933,7 @@ public class SecretManagerImpl implements SecretManager {
     encryptedData.setName(name);
     encryptedData.setFileSize(inputStream.getTotalBytesRead());
     encryptedData.setUsageRestrictions(usageRestrictions);
+    encryptedData.setBase64Encoded(true);
     wingsPersistence.save(encryptedData);
 
     // update parent's file size

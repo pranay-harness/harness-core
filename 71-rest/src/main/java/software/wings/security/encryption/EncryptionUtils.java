@@ -18,6 +18,7 @@ import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Base64;
 
 /**
  * Utility classes used for encryption-related work.
@@ -81,22 +82,24 @@ public class EncryptionUtils {
     }
   }
 
-  public static File decrypt(File file, String containerId) {
+  public static File decrypt(File file, String containerId, boolean base64Encoded) {
     try {
       SimpleEncryption encryption = new SimpleEncryption(containerId);
       byte[] outputBytes = encryption.decrypt(Files.toByteArray(file));
-      Files.write(outputBytes, file);
+      byte[] fileData = base64Encoded ? Base64.getDecoder().decode(new String(outputBytes, "UTF-8")) : outputBytes;
+      Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
     }
   }
 
-  public static void decryptToStream(File file, String containerId, OutputStream output) {
+  public static void decryptToStream(File file, String containerId, OutputStream output, boolean base64Encoded) {
     try {
       SimpleEncryption encryption = new SimpleEncryption(containerId);
       byte[] outputBytes = encryption.decrypt(Files.toByteArray(file));
-      output.write(outputBytes, 0, outputBytes.length);
+      byte[] fileData = base64Encoded ? Base64.getDecoder().decode(new String(outputBytes, "UTF-8")) : outputBytes;
+      output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
