@@ -34,6 +34,7 @@ import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.CommandUnitType.COPY_CONFIGS;
 import static software.wings.beans.command.CommandUnitType.DOCKER_START;
 import static software.wings.beans.command.CommandUnitType.DOCKER_STOP;
+import static software.wings.beans.command.CommandUnitType.DOWNLOAD_ARTIFACT;
 import static software.wings.beans.command.CommandUnitType.ECS_SETUP;
 import static software.wings.beans.command.CommandUnitType.EXEC;
 import static software.wings.beans.command.CommandUnitType.KUBERNETES_SETUP;
@@ -78,6 +79,7 @@ import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.CopyConfigCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.DockerStartCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.DockerStopCommandUnitYamlHandler;
+import software.wings.service.impl.yaml.handler.command.DownloadArtifactCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.EcsSetupCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.ExecCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.command.KubernetesResizeCommandUnitYamlHandler;
@@ -305,6 +307,8 @@ public class YamlModule extends AbstractModule {
         .to(KubernetesResizeCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(ECS_SETUP.name()).to(EcsSetupCommandUnitYamlHandler.class);
     commandUnitYamlHandlerMapBinder.addBinding(KUBERNETES_SETUP.name()).to(KubernetesSetupCommandUnitYamlHandler.class);
+    commandUnitYamlHandlerMapBinder.addBinding(DOWNLOAD_ARTIFACT.name())
+        .to(DownloadArtifactCommandUnitYamlHandler.class);
 
     MapBinder<String, InfrastructureProvisionerYamlHandler> infrastructureProvisionerYamlHandlerMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvisionerYamlHandler.class);

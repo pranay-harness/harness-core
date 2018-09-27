@@ -231,4 +231,6 @@ public interface WingsTestConstants {
   String S3_URL = "S3_URL";
   String DESTINATION_DIR_PATH = "DESTINATION_DIR_PATH";
   Long ARTIFACT_FILE_SIZE = Long.MAX_VALUE;
+
+  String PUBLIC_DNS = "PUBLIC_DNS";
 }

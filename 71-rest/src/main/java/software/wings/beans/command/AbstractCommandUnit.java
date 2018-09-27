@@ -180,7 +180,8 @@ public abstract class AbstractCommandUnit implements CommandUnit {
         @Type(value = AmiCommandUnit.Yaml.class, name = "AWS_AMI"),
         @Type(value = KubernetesResizeCommandUnit.Yaml.class, name = "RESIZE_KUBERNETES"),
         @Type(value = KubernetesSetupCommandUnit.Yaml.class, name = "KUBERNETES_SETUP"),
-        @Type(value = EcsSetupCommandUnit.Yaml.class, name = "ECS_SETUP")
+        @Type(value = EcsSetupCommandUnit.Yaml.class, name = "ECS_SETUP"),
+        @Type(value = DownloadArtifactCommandUnit.Yaml.class, name = "DOWNLOAD_ARTIFACT")
   })
   public abstract static class Yaml extends BaseYaml {
     private String name;
