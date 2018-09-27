@@ -192,6 +192,9 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .build();
     } catch (Exception ex) {
       getLogger().error("log analysis state failed ", ex);
+      // set the CV Metadata status to ERROR as well.
+      continuousVerificationService.setMetaDataExecutionStatus(
+          executionContext.getStateExecutionInstanceId(), ExecutionStatus.ERROR);
       return anExecutionResponse()
           .withAsync(false)
           .withCorrelationIds(Collections.singletonList(corelationId))

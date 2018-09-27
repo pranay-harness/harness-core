@@ -26,6 +26,7 @@ import migrations.all.EntityNameValidationMigration_All_01;
 import migrations.all.EntityNameValidationMigration_All_02;
 import migrations.all.EntityNameValidationMigration_All_03;
 import migrations.all.EntityNameValidationMigration_All_04;
+import migrations.all.FixCVDashboardStatusMigration;
 import migrations.all.FixInstanceData;
 import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GcsArtifactProjectIdMigration;
@@ -120,6 +121,7 @@ public class MigrationList {
         .add(Pair.of(185, SweepingPhaseMigration.class))
         .add(Pair.of(186, SecretTextNameKeyWordsMigration.class))
         .add(Pair.of(187, GcsArtifactProjectIdMigration.class))
+        .add(Pair.of(188, FixCVDashboardStatusMigration.class))
         .build();
   }
 }
