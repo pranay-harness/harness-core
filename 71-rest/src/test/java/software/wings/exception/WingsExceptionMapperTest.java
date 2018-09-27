@@ -2,6 +2,7 @@ package software.wings.exception;
 
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SOURCE;
+import static io.harness.eraro.ErrorCode.VAULT_OPERATION_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
@@ -84,5 +85,18 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
     inOrder.verify(mockLogger, never()).error(any());
     inOrder.verify(mockLogger, never()).error(any(), (Object) anyObject());
     inOrder.verify(mockLogger, never()).error(any(), (Throwable) any());
+  }
+
+  @Test
+  public void recursiveParamTest() {
+    WingsException exception = new WingsException(VAULT_OPERATION_ERROR, USER);
+    exception.addParam("reason", "recursive call to ${reason}");
+
+    final WingsExceptionMapper mapper = new WingsExceptionMapper();
+
+    Logger mockLogger = mock(Logger.class);
+    Whitebox.setInternalState(mapper, "logger", mockLogger);
+
+    mapper.toResponse(exception); // should not throw.
   }
 }
