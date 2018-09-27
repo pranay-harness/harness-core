@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class DelegateInitialization {
+public class DelegateProfileParams {
   private String name;
   private String profileId;
   private long profileLastUpdatedAt;
