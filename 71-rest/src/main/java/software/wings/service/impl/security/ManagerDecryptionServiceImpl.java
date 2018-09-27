@@ -8,8 +8,7 @@ import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 
 import com.google.inject.Inject;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.exception.KmsOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -83,7 +82,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
       }
       object.setDecrypted(true);
     } catch (Exception e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, e).addParam("reason", Misc.getMessage(e));
+      throw new KmsOperationException(Misc.getMessage(e), e);
     }
   }
 }

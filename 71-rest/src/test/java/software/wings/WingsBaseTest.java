@@ -1,8 +1,7 @@
 package software.wings;
 
 import io.harness.CategoryTest;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.exception.KmsOperationException;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -33,7 +32,7 @@ public abstract class WingsBaseTest extends CategoryTest {
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "Invalid credentials");
+      throw new KmsOperationException("Invalid credentials");
     }
     char[] encryptedValue = value == null ? null
                                           : SecretManagementDelegateServiceImpl.encrypt(
@@ -59,7 +58,7 @@ public abstract class WingsBaseTest extends CategoryTest {
   protected EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws IOException {
     if (vaultConfig.getAuthToken().equals("invalidKey")) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR);
+      throw new KmsOperationException("invalidKey");
     }
     String keyUrl = settingType + "/" + name;
     if (savedEncryptedData != null) {

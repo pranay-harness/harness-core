@@ -8,8 +8,7 @@ import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.exception.KmsOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.Encryptable;
@@ -56,7 +55,7 @@ public class EncryptionServiceImpl implements EncryptionService {
         encryptedRefField.setAccessible(true);
         encryptedRefField.set(object, null);
       } catch (Exception e) {
-        throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER, e).addParam("reason", Misc.getMessage(e));
+        throw new KmsOperationException(Misc.getMessage(e), USER);
       }
     }
     object.setDecrypted(true);

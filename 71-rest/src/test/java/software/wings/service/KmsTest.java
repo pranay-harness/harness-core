@@ -31,7 +31,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.Queue;
@@ -220,8 +220,8 @@ public class KmsTest extends WingsBaseTest {
     try {
       kmsResource.saveKmsConfig(kmsConfig.getAccountId(), kmsConfig);
       fail("Saved invalid kms config");
-    } catch (WingsException e) {
-      assertEquals(ErrorCode.KMS_OPERATION_ERROR, e.getCode());
+    } catch (KmsOperationException e) {
+      assertTrue(true);
     }
   }
 
@@ -2661,7 +2661,7 @@ public class KmsTest extends WingsBaseTest {
     try {
       delegateService.encrypt(accountId, toEncrypt.toCharArray(), kmsConfig);
       fail("should have been failed");
-    } catch (WingsException e) {
+    } catch (KmsOperationException e) {
       assertEquals("Encryption failed after " + NUM_OF_RETRIES + " retries", e.getParams().get("reason"));
     }
 
@@ -2673,7 +2673,7 @@ public class KmsTest extends WingsBaseTest {
                                   .build(),
           kmsConfig);
       fail("should have been failed");
-    } catch (WingsException e) {
+    } catch (KmsOperationException e) {
       assertEquals("Decryption failed after " + NUM_OF_RETRIES + " retries", e.getParams().get("reason"));
     }
   }
