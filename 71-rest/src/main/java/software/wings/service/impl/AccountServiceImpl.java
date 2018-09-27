@@ -243,7 +243,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Account get(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
-    notNullCheck("Account is null for the given id:" + accountId, account);
+    notNullCheck("Account is null for the given id:" + accountId, account, USER);
 
     decryptLicenseInfo(asList(account));
     return account;
