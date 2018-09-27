@@ -1,6 +1,5 @@
 package software.wings.resources;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
@@ -28,9 +27,9 @@ import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.delegatetasks.DelegateFile;
+import software.wings.dl.WingsPersistence;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
-import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -61,6 +60,7 @@ public class DelegateFileResource {
   @Inject private FileService fileService;
   @Inject private MainConfiguration configuration;
   @Inject private ConfigService configService;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Inject MongoIdempotentRegistry<String> idempotentRegistry;
 
@@ -133,19 +133,9 @@ public class DelegateFileResource {
   @Timed
   @ExceptionMetered
   public StreamingOutput downloadFile(@QueryParam("fileId") @NotEmpty String fileId,
-      @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("encrypted") boolean encrypted) {
+      @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
     logger.info("fileId: {}, fileBucket: {}", fileId, fileBucket);
-    return output -> {
-      if (encrypted) {
-        File file = new File(Files.createTempDir(), generateUuid());
-        logger.info("Temp file path [{}]", file.getAbsolutePath());
-        fileService.download(fileId, file, fileBucket);
-        EncryptionUtils.decryptToStream(file, accountId, output);
-      } else {
-        fileService.downloadToStream(fileId, output, fileBucket);
-      }
-    };
+    return output -> fileService.downloadToStream(fileId, output, fileBucket);
   }
 
   @DelegateAuth

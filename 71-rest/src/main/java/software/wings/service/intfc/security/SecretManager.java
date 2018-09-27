@@ -82,7 +82,7 @@ public interface SecretManager {
 
   File getFile(String accountId, String uuId, File readInto);
 
-  String getFileContents(String accountId, String uuId);
+  byte[] getFileContents(String accountId, String uuId);
 
   boolean updateFile(
       String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream);

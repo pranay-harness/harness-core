@@ -36,12 +36,15 @@ import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.BoundedInputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -280,14 +283,18 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       BoundedInputStream inputStream, EncryptedData savedEncryptedData) {
     try {
       Preconditions.checkNotNull(vaultConfig);
-      byte[] bytes = ByteStreams.toByteArray(inputStream);
-      EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
-          SettingVariableTypes.CONFIG_FILE, vaultConfig, savedEncryptedData);
-      fileData.setAccountId(accountId);
-      fileData.setName(name);
-      fileData.setType(SettingVariableTypes.CONFIG_FILE);
-      fileData.setFileSize(inputStream.getTotalBytesRead());
-      return fileData;
+      String base64String = Base64.getEncoder().encodeToString(ByteStreams.toByteArray(inputStream));
+      try (InputStream encodedInputStream = new ByteArrayInputStream(base64String.getBytes("UTF-8"))) {
+        byte[] bytes = ByteStreams.toByteArray(encodedInputStream);
+        EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
+            SettingVariableTypes.CONFIG_FILE, vaultConfig, savedEncryptedData);
+        fileData.setAccountId(accountId);
+        fileData.setName(name);
+        fileData.setType(SettingVariableTypes.CONFIG_FILE);
+        fileData.setBase64Encoded(true);
+        fileData.setFileSize(inputStream.getTotalBytesRead());
+        return fileData;
+      }
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
     }
@@ -300,7 +307,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       Preconditions.checkNotNull(vaultConfig);
       Preconditions.checkNotNull(encryptedData);
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
-      Files.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), file);
+      byte[] fileData = encryptedData.isBase64Encoded() ? Base64.getDecoder().decode(new String(decrypt))
+                                                        : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
@@ -314,7 +323,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       Preconditions.checkNotNull(vaultConfig);
       Preconditions.checkNotNull(encryptedData);
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
-      output.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), 0, decrypt.length);
+      byte[] fileData = encryptedData.isBase64Encoded() ? Base64.getDecoder().decode(new String(decrypt))
+                                                        : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);

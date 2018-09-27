@@ -26,6 +26,4 @@ public interface BaseExecutor {
 
   CommandExecutionStatus copyGridFsFiles(
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds);
-
-  CommandExecutionStatus copyGridFsFiles(ConfigFileMetaData configFileMetaData);
 }

@@ -73,7 +73,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   }
 
   @Override
-  public InputStream downloadArtifactByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
+  public InputStream downloadArtifactByFileId(FileBucket bucket, String fileId, String accountId)
       throws IOException, ExecutionException {
     logger.info("Downloading file:[{}] , bucket:[{}], accountId:[{}]", fileId, bucket, accountId);
     synchronized (fileIdLocks.get(fileId)) { // Block all thread only one gets to enter
@@ -85,7 +85,7 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
       }
       logger.info("file:[{}] doesn't exist locally. Download from manager", fileId);
 
-      InputStream inputStream = downloadByFileId(bucket, fileId, accountId, encrypted);
+      InputStream inputStream = downloadByFileId(bucket, fileId, accountId);
 
       logger.info("Input stream acquired for file:[{}]. Saving locally", fileId);
 
@@ -162,11 +162,10 @@ public class DelegateFileManagerImpl implements DelegateFileManager {
   }
 
   @Override
-  public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId, boolean encrypted)
-      throws IOException {
+  public InputStream downloadByFileId(FileBucket bucket, String fileId, String accountId) throws IOException {
     Response<ResponseBody> response = null;
     try {
-      response = managerClient.downloadFile(fileId, bucket, accountId, encrypted).execute();
+      response = managerClient.downloadFile(fileId, bucket, accountId).execute();
       if (response.body() == null) {
         return null;
       }
