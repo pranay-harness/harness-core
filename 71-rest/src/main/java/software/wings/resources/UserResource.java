@@ -257,7 +257,8 @@ public class UserResource {
     if (isEmpty(user.getAppId())) {
       user.setAppId(GLOBAL_APP_ID);
     }
-    return new RestResponse<>(userService.updateUserGroupsAndFullnameOfUser(user, user.getUserGroups(), accountId));
+    return new RestResponse<>(
+        userService.updateUserGroupsAndFullnameOfUser(user, user.getUserGroups(), accountId, true));
   }
 
   /**

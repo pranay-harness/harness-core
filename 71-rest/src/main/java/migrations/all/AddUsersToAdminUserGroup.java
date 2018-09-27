@@ -74,7 +74,7 @@ public class AddUsersToAdminUserGroup implements Migration {
               }
 
               userGroup.getMembers().add(user);
-              userGroupService.updateMembers(userGroup);
+              userGroupService.updateMembers(userGroup, false);
             } else {
               logger.error("No Account Admin User Group is found for account: {}", account.getUuid());
             }

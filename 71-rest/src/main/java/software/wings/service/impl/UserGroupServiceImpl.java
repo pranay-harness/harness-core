@@ -145,7 +145,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   @Override
-  public UserGroup updateMembers(UserGroup userGroup) {
+  public UserGroup updateMembers(UserGroup userGroup, boolean sendNotification) {
     Set<String> newMemberIds = Sets.newHashSet();
     if (isNotEmpty(userGroup.getMembers())) {
       newMemberIds = userGroup.getMembers()
@@ -171,19 +171,21 @@ public class UserGroupServiceImpl implements UserGroupService {
           userGroup.getAccountId(), newMemberIds.stream().distinct().collect(toList()));
     }
 
-    // Send added role email for all newly added users to the group
-    Set newlyAddedMemberIds = Sets.difference(newMemberIds, existingMemberIds);
-    Account account = accountService.get(updatedUserGroup.getAccountId());
-    updatedUserGroup.getMembers().forEach(member -> {
-      if (newlyAddedMemberIds.contains(member.getUuid())) {
-        userService.sendAddedRoleEmail(member, account);
-      }
-    });
+    if (sendNotification) {
+      // Send added role email for all newly added users to the group
+      Set newlyAddedMemberIds = Sets.difference(newMemberIds, existingMemberIds);
+      Account account = accountService.get(updatedUserGroup.getAccountId());
+      updatedUserGroup.getMembers().forEach(member -> {
+        if (newlyAddedMemberIds.contains(member.getUuid())) {
+          userService.sendAddedRoleEmail(member, account);
+        }
+      });
+    }
     return updatedUserGroup;
   }
 
   @Override
-  public UserGroup removeMembers(UserGroup userGroup, Collection<User> members) {
+  public UserGroup removeMembers(UserGroup userGroup, Collection<User> members, boolean sendNotification) {
     if (isEmpty(members)) {
       return userGroup;
     }
@@ -194,7 +196,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
 
     members.forEach(groupMembers::remove);
-    return updateMembers(userGroup);
+    return updateMembers(userGroup, sendNotification);
   }
 
   @Override
@@ -367,7 +369,7 @@ public class UserGroupServiceImpl implements UserGroupService {
 
     if (!retainMembers) {
       group.setMembers(Collections.emptyList());
-      group = updateMembers(group);
+      group = updateMembers(group, false);
     }
 
     group.setSsoLinked(false);

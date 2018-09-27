@@ -1263,7 +1263,7 @@ public class AuthHandler {
     return Sets.newHashSet(Action.CREATE, Action.READ, Action.UPDATE, Action.DELETE);
   }
 
-  public void addUserToDefaultAccountAdminUserGroup(User user, Account account) {
+  public void addUserToDefaultAccountAdminUserGroup(User user, Account account, boolean sendNotification) {
     if (account == null) {
       logger.info("account is null, continuing....");
       return;
@@ -1310,7 +1310,7 @@ public class AuthHandler {
         members.add(user);
         userGroup.setMembers(members);
 
-        userGroupService.updateMembers(userGroup);
+        userGroupService.updateMembers(userGroup, sendNotification);
 
         logger.info("User {} is added to the user group in account {}", user.getName(), accountId);
       }

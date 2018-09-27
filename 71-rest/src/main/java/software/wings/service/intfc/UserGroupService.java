@@ -66,16 +66,17 @@ public interface UserGroupService {
    * Update Overview.
    *
    * @param userGroup the userGroup
+   * @param sendNotification send notification flag
    * @return the userGroup
    */
-  UserGroup updateMembers(UserGroup userGroup);
+  UserGroup updateMembers(UserGroup userGroup, boolean sendNotification);
 
   /**
    * Remove members from the userGroup
    *
    * @return the userGroup
    */
-  UserGroup removeMembers(UserGroup userGroup, Collection<User> members);
+  UserGroup removeMembers(UserGroup userGroup, Collection<User> members, boolean sendNotification);
 
   /**
    * Update Overview.

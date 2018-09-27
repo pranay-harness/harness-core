@@ -402,12 +402,12 @@ public class DataGenUtil extends BaseIntegrationTest {
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
     UserGroup userGroup = pageResponse.get(0);
     userGroup.setMembers(asList(user));
-    userGroupService.updateMembers(userGroup);
+    userGroupService.updateMembers(userGroup, false);
   }
 
   private void addUserToUserGroup(User user, UserGroup userGroup) {
     userGroup.setMembers(asList(user));
-    userGroupService.updateMembers(userGroup);
+    userGroupService.updateMembers(userGroup, false);
   }
 
   private void addUserToHarnessUserGroup(User user) {

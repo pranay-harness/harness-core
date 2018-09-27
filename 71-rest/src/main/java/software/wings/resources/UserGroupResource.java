@@ -167,7 +167,7 @@ public class UserGroupResource {
 
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
-    return new RestResponse<>(userGroupService.updateMembers(userGroup));
+    return new RestResponse<>(userGroupService.updateMembers(userGroup, true));
   }
 
   /**

@@ -209,7 +209,7 @@ public class UserServiceImpl implements UserService {
 
     account = setupAccount(account);
     addAccountAdminRole(user, account);
-    authHandler.addUserToDefaultAccountAdminUserGroup(user, account);
+    authHandler.addUserToDefaultAccountAdminUserGroup(user, account, true);
     sendSuccessfullyAddedToNewAccountEmail(user, account);
     evictUserFromCache(user.getUuid());
     return account;
@@ -413,6 +413,7 @@ public class UserServiceImpl implements UserService {
     String accountId = userInvite.getAccountId();
     Account account = accountService.get(accountId);
     String inviteId = wingsPersistence.save(userInvite);
+    boolean sendNotification = true;
 
     if (CollectionUtils.isEmpty(userInvite.getRoles())) {
       Role accountAdminRole = roleService.getAccountAdminRole(accountId);
@@ -440,8 +441,7 @@ public class UserServiceImpl implements UserService {
       // we need user to set the password.
       if (currentAuthenticationMechanism.equals(AuthenticationMechanism.USER_PASSWORD)) {
         sendNewInvitationMail(userInvite, account);
-      } else if (isNotEmpty(userInvite.getUserGroups())) {
-        sendAddedRoleEmail(user, account);
+        sendNotification = false;
       }
     } else {
       boolean userAlreadyAddedToAccount = user.getAccounts().stream().anyMatch(acc -> acc.getUuid().equals(accountId));
@@ -452,8 +452,7 @@ public class UserServiceImpl implements UserService {
       }
       if (StringUtils.equals(user.getName(), user.getEmail())) {
         sendNewInvitationMail(userInvite, account);
-      } else {
-        sendAddedRoleEmail(user, account);
+        sendNotification = false;
       }
     }
 
@@ -464,12 +463,12 @@ public class UserServiceImpl implements UserService {
           aPageRequest().addFilter("accountId", EQ, accountId).addFilter("_id", IN, userGroupIds.toArray()).build();
       PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
       userGroups = pageResponse.getResponse();
-      addUserToUserGroups(user, userGroups);
+      addUserToUserGroups(accountId, user, userGroups, sendNotification);
     }
     return wingsPersistence.get(UserInvite.class, userInvite.getAppId(), inviteId);
   }
 
-  private void addUserToUserGroups(User user, List<UserGroup> userGroups) {
+  private void addUserToUserGroups(String accountId, User user, List<UserGroup> userGroups, boolean sendNotification) {
     if (isNotEmpty(userGroups)) {
       final User userFinal = user;
       userGroups.forEach(userGroup -> {
@@ -479,33 +478,38 @@ public class UserServiceImpl implements UserService {
           userGroup.setMembers(userGroupMembers);
         }
         userGroupMembers.add(userFinal);
-        userGroupService.updateMembers(userGroup);
+        userGroupService.updateMembers(userGroup, false);
       });
+      if (sendNotification) {
+        sendAddedRoleEmail(user, accountService.get(accountId));
+      }
     }
   }
 
-  private void addUserToUserGroups(String accountId, User user, SetView<String> userGroupIds) {
+  private void addUserToUserGroups(
+      String accountId, User user, SetView<String> userGroupIds, boolean sendNotification) {
     if (isNotEmpty(userGroupIds)) {
       List<UserGroup> userGroups = getUserGroups(accountId, userGroupIds);
-      addUserToUserGroups(user, userGroups);
+      addUserToUserGroups(accountId, user, userGroups, sendNotification);
     }
   }
 
-  private void removeUserFromUserGroups(String accountId, User user, SetView<String> userGroupIds) {
+  private void removeUserFromUserGroups(
+      String accountId, User user, SetView<String> userGroupIds, boolean sendNotification) {
     if (isNotEmpty(userGroupIds)) {
       List<UserGroup> userGroups = getUserGroups(accountId, userGroupIds);
-      removeUserFromUserGroups(user, userGroups);
+      removeUserFromUserGroups(user, userGroups, sendNotification);
     }
   }
 
-  private void removeUserFromUserGroups(User user, List<UserGroup> userGroups) {
+  private void removeUserFromUserGroups(User user, List<UserGroup> userGroups, boolean sendNotification) {
     if (isNotEmpty(userGroups)) {
       final User userFinal = user;
       userGroups.forEach(userGroup -> {
         List<User> userGroupMembers = userGroup.getMembers();
         if (userGroupMembers != null) {
           userGroupMembers.remove(userFinal);
-          userGroupService.updateMembers(userGroup);
+          userGroupService.updateMembers(userGroup, sendNotification);
         }
       });
     }
@@ -859,7 +863,8 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User updateUserGroupsOfUser(String userId, List<UserGroup> userGroups, String accountId) {
+  public User updateUserGroupsOfUser(
+      String userId, List<UserGroup> userGroups, String accountId, boolean sendNotification) {
     User userFromDB = get(accountId, userId);
     List<UserGroup> oldUserGroups = userFromDB.getUserGroups();
 
@@ -870,12 +875,11 @@ public class UserServiceImpl implements UserService {
     SetView<String> userGroupMemberAdditions = Sets.difference(newUserGroupIds, oldUserGroupIds);
 
     if (isNotEmpty(userGroupMemberAdditions)) {
-      addUserToUserGroups(accountId, userFromDB, userGroupMemberAdditions);
-      sendAddedRoleEmail(userFromDB, accountService.get(accountId));
+      addUserToUserGroups(accountId, userFromDB, userGroupMemberAdditions, sendNotification);
     }
 
     if (isNotEmpty(userGroupMemberDeletions)) {
-      removeUserFromUserGroups(accountId, userFromDB, userGroupMemberDeletions);
+      removeUserFromUserGroups(accountId, userFromDB, userGroupMemberDeletions, false);
     }
 
     authService.evictAccountUserPermissionInfoCache(accountId, Arrays.asList(userId));
@@ -883,9 +887,10 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User updateUserGroupsAndFullnameOfUser(User user, List<UserGroup> userGroups, String accountId) {
+  public User updateUserGroupsAndFullnameOfUser(
+      User user, List<UserGroup> userGroups, String accountId, boolean sendNotification) {
     update(user);
-    return updateUserGroupsOfUser(user.getUuid(), userGroups, accountId);
+    return updateUserGroupsOfUser(user.getUuid(), userGroups, accountId, sendNotification);
   }
 
   /* (non-Javadoc)
@@ -957,7 +962,7 @@ public class UserServiceImpl implements UserService {
         Optional<User> userOptional = members.stream().filter(member -> member.getUuid().equals(userId)).findFirst();
         if (userOptional.isPresent()) {
           members.remove(userOptional.get());
-          userGroupService.updateMembers(userGroup);
+          userGroupService.updateMembers(userGroup, false);
         }
       }
     });
@@ -968,7 +973,7 @@ public class UserServiceImpl implements UserService {
     Query<User> updateQuery = wingsPersistence.createQuery(User.class).filter(ID_KEY, userId);
     wingsPersistence.update(updateQuery, updateOp);
 
-    removeUserFromUserGroups(user, user.getUserGroups());
+    removeUserFromUserGroups(user, user.getUserGroups(), false);
 
     evictUserFromCache(userId);
   }

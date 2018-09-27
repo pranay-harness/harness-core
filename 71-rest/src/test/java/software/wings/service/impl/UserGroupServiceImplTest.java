@@ -19,6 +19,7 @@ import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.service.impl.UserServiceImpl.ADD_ROLE_EMAIL_TEMPLATE_NAME;
+import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -266,7 +267,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     // Update operation 1
     User userAfterUpdate =
-        userService.updateUserGroupsOfUser(user.getUuid(), Arrays.asList(userGroup1, userGroup2), ACCOUNT_ID);
+        userService.updateUserGroupsOfUser(user.getUuid(), Arrays.asList(userGroup1, userGroup2), ACCOUNT_ID, true);
     userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
     userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
     assertThat(userAfterUpdate.getUserGroups()).size().isEqualTo(2);
@@ -276,7 +277,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
     List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
     assertFalse(emailsData.stream()
-                    .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
+                    .filter(emailData -> emailData.getTemplateName().equals(INVITE_EMAIL_TEMPLATE_NAME))
                     .collect(Collectors.toList())
                     .size()
         == 1);
@@ -290,7 +291,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     user.setName("John Doe");
     userAfterUpdate =
-        userService.updateUserGroupsAndFullnameOfUser(user, Arrays.asList(userGroup1, userGroup3), ACCOUNT_ID);
+        userService.updateUserGroupsAndFullnameOfUser(user, Arrays.asList(userGroup1, userGroup3), ACCOUNT_ID, true);
     assertThat(userAfterUpdate.getUserGroups().size()).isEqualTo(2);
     assertThat(userAfterUpdate.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet()))
         .containsExactlyInAnyOrder(userGroup1.getUuid(), userGroup3.getUuid());
@@ -302,6 +303,13 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(userGroup1.getMemberIds()).containsExactly(user.getUuid());
     assertThat(userGroup2.getMemberIds()).isNullOrEmpty();
     assertThat(userGroup3.getMemberIds()).containsExactly(user.getUuid());
+    verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
+    emailsData = emailDataArgumentCaptor.getAllValues();
+    assertFalse(emailsData.stream()
+                    .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
+                    .collect(Collectors.toList())
+                    .size()
+        == 1);
   }
 
   @Test
@@ -345,7 +353,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       // Ignoring the primary account fetch failure
     }
     userGroup1.setMembers(Arrays.asList(user1, user2));
-    userGroupService.updateMembers(userGroup1);
+    userGroupService.updateMembers(userGroup1, true);
     verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
     List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
     assertFalse(emailsData.stream()
