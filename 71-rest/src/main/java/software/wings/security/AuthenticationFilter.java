@@ -115,8 +115,8 @@ public class AuthenticationFilter implements ContainerRequestFilter {
   private void ensureValidQPM(String key) {
     if (rateLimitingService.rateLimitRequest(key)) {
       throw new WebApplicationException(Response.status(429)
-                                            .entity("Too Many requests. Throttled. Max QPM: "
-                                                + rateLimitingService.getMaxQPMPerManager() * NUM_MANAGERS)
+                                            .entity("Too Many requests. Throttled. Max QPS: "
+                                                + rateLimitingService.getMaxQPMPerManager() * NUM_MANAGERS / 60)
                                             .build());
     }
   }
