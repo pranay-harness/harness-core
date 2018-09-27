@@ -882,6 +882,12 @@ public class UserServiceImpl implements UserService {
     return get(accountId, userId);
   }
 
+  @Override
+  public User updateUserGroupsAndFullnameOfUser(User user, List<UserGroup> userGroups, String accountId) {
+    update(user);
+    return updateUserGroupsOfUser(user.getUuid(), userGroups, accountId);
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.UserService#list(software.wings.dl.PageRequest)
    */
