@@ -172,7 +172,7 @@ public class LdapGroupSyncJob implements Job {
 
   private void syncUserGroupMembers(String accountId, Map<UserGroup, Set<User>> removedGroupMembers,
       Map<LdapUserResponse, Set<UserGroup>> addedGroupMembers) {
-    removedGroupMembers.forEach((userGroup, users) -> userGroupService.removeMembers(userGroup, users));
+    removedGroupMembers.forEach((userGroup, users) -> userGroupService.removeMembers(userGroup, users, false));
 
     addedGroupMembers.forEach((member, userGroups) -> {
       UserInvite userInvite = UserInviteBuilder.anUserInvite()

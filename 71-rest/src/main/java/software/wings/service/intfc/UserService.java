@@ -64,10 +64,11 @@ public interface UserService {
    * @param userId the user id
    * @param userGroups updated user groups
    * @param accountId the account id
+   * @param sendNotification send notification flag
    * @return the user
    */
   @ValidationGroups(Update.class)
-  User updateUserGroupsOfUser(String userId, List<UserGroup> userGroups, String accountId);
+  User updateUserGroupsOfUser(String userId, List<UserGroup> userGroups, String accountId, boolean sendNotification);
 
   /**
    * Update the user fullname and the associated user groups.
@@ -75,10 +76,12 @@ public interface UserService {
    * @param user       user
    * @param userGroups updated user groups
    * @param accountId the account id
+   * @param sendNotification send notification flag
    * @return the user
    */
   @ValidationGroups(Update.class)
-  User updateUserGroupsAndFullnameOfUser(User user, List<UserGroup> userGroups, String accountId);
+  User updateUserGroupsAndFullnameOfUser(
+      User user, List<UserGroup> userGroups, String accountId, boolean sendNotification);
 
   /**
    * List.
