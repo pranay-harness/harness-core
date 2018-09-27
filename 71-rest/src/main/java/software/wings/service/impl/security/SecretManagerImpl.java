@@ -29,6 +29,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.UuidAware;
@@ -620,8 +621,8 @@ public class SecretManagerImpl implements SecretManager {
     try {
       encryptedDataId = wingsPersistence.save(encryptedData);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR)
-          .addParam("reason", "Variable " + name + " already exists");
+      String reason = "Variable " + name + " already exists";
+      throw new KmsOperationException(reason);
     }
 
     if (UserThreadLocal.get() != null) {
@@ -704,7 +705,7 @@ public class SecretManagerImpl implements SecretManager {
     try {
       wingsPersistence.save(savedData);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "Unable to save Restrictions");
+      throw new KmsOperationException("Unable to save Restrictions");
     }
 
     if (UserThreadLocal.get() != null) {
@@ -729,9 +730,8 @@ public class SecretManagerImpl implements SecretManager {
                                                  .filter("encryptedValue", uuId)
                                                  .asList();
     if (!serviceVariables.isEmpty()) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER)
-          .addParam("reason",
-              "Being used by " + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", ")));
+      String reason = "Being used by " + serviceVariables.stream().map(ServiceVariable::getName).collect(joining(", "));
+      throw new KmsOperationException(reason, USER);
     }
 
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuId);
@@ -795,7 +795,7 @@ public class SecretManagerImpl implements SecretManager {
     try {
       recordId = wingsPersistence.save(encryptedData);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", "File " + name + " already exists");
+      throw new KmsOperationException("File " + name + " already exists");
     }
 
     if (UserThreadLocal.get() != null) {
@@ -970,7 +970,7 @@ public class SecretManagerImpl implements SecretManager {
         errorMessage += configFile.getFileName() + ", ";
       }
 
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR).addParam("reason", errorMessage);
+      throw new KmsOperationException(errorMessage);
     }
 
     switch (encryptedData.getEncryptionType()) {

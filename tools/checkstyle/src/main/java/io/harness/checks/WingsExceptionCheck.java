@@ -1,11 +1,18 @@
 package io.harness.checks;
 
+import com.google.common.collect.ImmutableMap;
+
 import com.puppycrawl.tools.checkstyle.api.AbstractCheck;
 import com.puppycrawl.tools.checkstyle.api.DetailAST;
 import com.puppycrawl.tools.checkstyle.api.TokenTypes;
 
+import java.util.Map;
+
 public class WingsExceptionCheck extends AbstractCheck {
   private static final String MSG_KEY = "exception.use.specific.class";
+
+  final Map<String, String> codes =
+      ImmutableMap.of("INVALID_REQUEST", "InvalidRequestException", "KMS_OPERATION_ERROR", "KmsOperationException");
 
   @Override
   public int[] getDefaultTokens() {
@@ -28,7 +35,7 @@ public class WingsExceptionCheck extends AbstractCheck {
 
   @Override
   public void visitToken(DetailAST identifier) {
-    if (!identifier.getText().equals("INVALID_REQUEST")) {
+    if (!codes.containsKey(identifier.getText())) {
       return;
     }
 
@@ -50,6 +57,6 @@ public class WingsExceptionCheck extends AbstractCheck {
       return;
     }
 
-    log(identifier, MSG_KEY, "InvalidRequestException");
+    log(identifier, MSG_KEY, codes.get(identifier.getText()));
   }
 }

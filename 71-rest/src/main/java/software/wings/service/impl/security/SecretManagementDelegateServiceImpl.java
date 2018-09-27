@@ -18,6 +18,7 @@ import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.slf4j.Logger;
@@ -94,9 +95,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           logger.warn(format("Encryption failed. trial num: %d", retry), e);
           sleep(ofMillis(100));
         } else {
-          logger.error(format("Encryption failed after %d retries ", retry), e);
-          throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER, e)
-              .addParam("reason", "Encryption failed after " + NUM_OF_RETRIES + " retries");
+          String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
+          throw new KmsOperationException(reason, e, USER);
         }
       }
     }
@@ -132,9 +132,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           logger.warn(format("Decryption failed. trial num: %d", retry), e);
           sleep(ofMillis(100));
         } else {
-          logger.error("Decryption failed after {} retries for {}", retry, data, e);
-          throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, USER, e)
-              .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
+          String reason = format("Decryption failed after %d retries", NUM_OF_RETRIES);
+          throw new KmsOperationException(reason, e, USER);
         }
       }
     }

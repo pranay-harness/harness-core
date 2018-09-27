@@ -16,8 +16,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
+import io.harness.exception.KmsOperationException;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -69,12 +68,11 @@ public class KmsAlertTest extends WingsBaseTest {
     when(mockDelegateServiceOK.encrypt(anyString(), anyObject(), anyObject())).thenReturn(null);
     when(mockDelegateServiceOK.renewVaultToken(any(VaultConfig.class))).thenReturn(true);
     when(mockDelegateServiceEx.encrypt(anyString(), anyString(), anyString(), anyObject(), anyObject(), anyObject()))
-        .thenThrow(new WingsException(ErrorCode.KMS_OPERATION_ERROR));
+        .thenThrow(new KmsOperationException("reason"));
     when(mockDelegateServiceEx.encrypt(anyString(), anyObject(), anyObject()))
-        .thenThrow(new WingsException(ErrorCode.KMS_OPERATION_ERROR));
+        .thenThrow(new KmsOperationException("reason"));
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(mockDelegateServiceOK);
-    when(mockDelegateServiceEx.renewVaultToken(any(VaultConfig.class)))
-        .thenThrow(new WingsException(ErrorCode.KMS_OPERATION_ERROR));
+    when(mockDelegateServiceEx.renewVaultToken(any(VaultConfig.class))).thenThrow(new KmsOperationException("reason"));
     setInternalState(vaultService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);

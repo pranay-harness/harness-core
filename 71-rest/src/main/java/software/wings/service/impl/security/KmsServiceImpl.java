@@ -14,7 +14,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
-import io.harness.eraro.ErrorCode;
+import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.CountOptions;
@@ -203,7 +203,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
     if (count > 0) {
       String message = "Can not delete the kms configuration since there are secrets encrypted with this. "
           + "Please transition your secrets to a new kms and then try again";
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, message, USER_SRE).addParam("reason", message);
+      throw new KmsOperationException(message, USER_SRE);
     }
 
     wingsPersistence.delete(KmsConfig.class, kmsConfigId);
@@ -322,7 +322,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       encrypt(UUID.randomUUID().toString().toCharArray(), accountId, kmsConfig);
     } catch (WingsException e) {
       String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
-      throw new WingsException(ErrorCode.KMS_OPERATION_ERROR, message, USER, e).addParam("reason", message);
+      throw new KmsOperationException(message, USER);
     }
   }
 
