@@ -248,13 +248,16 @@ public class UserResource {
    */
   @PUT
   @Path("user/{userId}")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<User> updateUserGroupsOfUser(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId, User user) {
-    return new RestResponse<>(userService.updateUserGroupsOfUser(userId, user.getUserGroups(), accountId));
+    user.setUuid(userId);
+    if (isEmpty(user.getAppId())) {
+      user.setAppId(GLOBAL_APP_ID);
+    }
+    return new RestResponse<>(userService.updateUserGroupsAndFullnameOfUser(user, user.getUserGroups(), accountId));
   }
 
   /**
@@ -266,7 +269,6 @@ public class UserResource {
    */
   @PUT
   @Path("profile/{userId}")
-  @Scope(value = ResourceType.USER, scope = PermissionType.LOGGED_IN)
   @Timed
   @ExceptionMetered
   public RestResponse<User> updateUserProfile(

@@ -288,11 +288,13 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(userGroup2.getMemberIds()).containsExactly(user.getUuid());
     assertThat(userGroup3.getMemberIds()).isNullOrEmpty();
 
+    user.setName("John Doe");
     userAfterUpdate =
-        userService.updateUserGroupsOfUser(user.getUuid(), Arrays.asList(userGroup1, userGroup3), ACCOUNT_ID);
+        userService.updateUserGroupsAndFullnameOfUser(user, Arrays.asList(userGroup1, userGroup3), ACCOUNT_ID);
     assertThat(userAfterUpdate.getUserGroups().size()).isEqualTo(2);
     assertThat(userAfterUpdate.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet()))
         .containsExactlyInAnyOrder(userGroup1.getUuid(), userGroup3.getUuid());
+    assertThat(userAfterUpdate.getName()).isEqualTo("John Doe");
 
     userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
     userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());

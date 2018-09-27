@@ -70,6 +70,17 @@ public interface UserService {
   User updateUserGroupsOfUser(String userId, List<UserGroup> userGroups, String accountId);
 
   /**
+   * Update the user fullname and the associated user groups.
+   *
+   * @param user       user
+   * @param userGroups updated user groups
+   * @param accountId the account id
+   * @return the user
+   */
+  @ValidationGroups(Update.class)
+  User updateUserGroupsAndFullnameOfUser(User user, List<UserGroup> userGroups, String accountId);
+
+  /**
    * List.
    *
    * @param pageRequest the page request
