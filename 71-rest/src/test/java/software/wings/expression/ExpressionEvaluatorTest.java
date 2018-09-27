@@ -302,7 +302,7 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldRenderSweepingOutput() {
+  public void shouldRenderSweepingOutputFunctor() {
     String appId = generateUuid();
     String pipelineExecutionId = generateUuid();
     String workflowExecutionId = generateUuid();
@@ -318,7 +318,7 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
                                        .build());
 
     Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                                      .put("sweeping",
+                                      .put("context",
                                           SweepingOutputFunctor.builder()
                                               .sweepingOutputService(sweepingOutputService)
                                               .appId(appId)
@@ -327,7 +327,51 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
                                               .build())
                                       .build();
 
-    assertThat(expressionEvaluator.substitute("${sweeping.output(\"jenkins\").foo}", context)).isEqualTo("bar");
+    assertThat(expressionEvaluator.substitute("${context.output(\"jenkins\").foo}", context)).isEqualTo("bar");
+    assertThat(expressionEvaluator.substitute("${context.jenkins.foo}", context)).isEqualTo("bar");
+  }
+
+  @Test
+  public void shouldRenderSweepingOutputValue() {
+    String appId = generateUuid();
+    String pipelineExecutionId = generateUuid();
+    String workflowExecutionId = generateUuid();
+    String followingWorkflowExecutionId = generateUuid();
+
+    SweepingOutput sweepingOutput =
+        sweepingOutputService.save(SweepingOutput.builder()
+                                       .name("workflow")
+                                       .appId(appId)
+                                       .pipelineExecutionId(pipelineExecutionId)
+                                       .workflowExecutionId(workflowExecutionId)
+                                       .output(KryoUtils.asDeflatedBytes(ImmutableMap.of("foo", "bar")))
+                                       .build());
+
+    Map<String, Object> context = ImmutableMap.<String, Object>builder()
+                                      .put("workflow",
+                                          SweepingOutputValue.builder()
+                                              .sweepingOutputService(sweepingOutputService)
+                                              .appId(appId)
+                                              .pipelineExecutionId(pipelineExecutionId)
+                                              .workflowExecutionId(followingWorkflowExecutionId)
+                                              .build())
+                                      .build();
+
+    assertThat(expressionEvaluator.substitute("${workflow.foo}", context)).isEqualTo("bar");
+  }
+
+  @Test
+  public void shouldRenderLateBoundValue() {
+    Map<String, Object> context = new HashMap<>();
+
+    context.put("workflow", new LateBindingValue() {
+      @Override
+      public Object bind(String key) {
+        return ImmutableMap.of("foo", "bar");
+      }
+    });
+
+    assertThat(expressionEvaluator.substitute("${workflow.foo}", context)).isEqualTo("bar");
   }
 
   @Test

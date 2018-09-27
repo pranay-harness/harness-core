@@ -6,7 +6,7 @@ import software.wings.service.intfc.SweepingOutputService;
 import software.wings.utils.KryoUtils;
 
 @Builder
-public class SweepingOutputFunctor extends LateBindingMap {
+public class SweepingOutputValue implements LateBindingValue {
   private String appId;
   private String pipelineExecutionId;
   private String workflowExecutionId;
@@ -14,17 +14,13 @@ public class SweepingOutputFunctor extends LateBindingMap {
 
   private SweepingOutputService sweepingOutputService;
 
-  public Object output(String name) {
+  @Override
+  public Object bind(String key) {
     SweepingOutput sweepingOutput =
-        sweepingOutputService.find(appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId);
+        sweepingOutputService.find(appId, key, pipelineExecutionId, workflowExecutionId, phaseExecutionId);
     if (sweepingOutput == null) {
       return null;
     }
     return KryoUtils.asInflatedObject(sweepingOutput.getOutput());
-  }
-
-  @Override
-  public Object get(Object key) {
-    return output((String) key);
   }
 }
