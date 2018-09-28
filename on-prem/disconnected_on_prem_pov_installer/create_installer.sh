@@ -1,78 +1,19 @@
 #!/usr/bin/env bash
+set -e
 
-function getProperty () {
-   FILENAME=$1
-   PROP_KEY=$2
-   PROP_VALUE=`cat "$FILENAME" | grep "$PROP_KEY" | cut -d'=' -f2`
-   echo $PROP_VALUE
-}
+INSTALLER_DIR=/var/harness/installer
+INSTALLER_TEMPLATE_DIR_NAME=harness_disconnected_on_prem_pov_final
+INSTALLER_TEMPLATE_DIR=/var/harness/${INSTALLER_TEMPLATE_DIR_NAME}
+INSTALLER_WORKING_DIR=${INSTALLER_DIR}
+GENERATE_SCRIPT_FILE=generate.sh
+VERSION_PROPERTIES_FILE=version.properties
 
-rm -f harness_installer.tar.gz
-
-mkdir -p harness_installer
-cp scripts/first_time_only_install_harness.sh harness_installer
-cp scripts/upgrade_harness.sh harness_installer
-
-cp README.txt harness_installer
-mongo_version=$(getProperty "version.properties" "mongo")
-manager_version=$(getProperty "version.properties" "manager")
-delegate_version=$(getProperty "version.properties" "delegate")
-watcher_version=$(getProperty "version.properties" "watcher")
-proxy_version=$(getProperty "version.properties" "proxy")
-ui_version=$(getProperty "version.properties" "ui")
-learning_engine_version=$(getProperty "version.properties" "learning-engine")
-
-echo "Manager version is ${manager_version}"
-echo "Mongo version is ${mongo_version}"
-echo "Delegate version is ${delegate_version}"
-echo "Watcher version is ${watcher_version}"
-echo "Proxy version is ${proxy_version}"
-echo "UI version is ${ui_version}"
-echo "Learning Engine version is ${learning_engine_version}"
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    sed -i '' -e "s|MONGO_VERSION|${mongo_version}|g" harness_installer/first_time_only_install_harness.sh
-else
-    sed -i "s|MONGO_VERSION|${mongo_version}|g" harness_installer/first_time_only_install_harness.sh
-fi
-
-cp -r ../harness_disconnected_on_prem_pov_final harness_installer/
-mkdir -p harness_installer/harness_disconnected_on_prem_pov_final/images
-cp version.properties harness_installer/harness_disconnected_on_prem_pov_final/
-
-if [[ -z $1 ]]; then
-   echo "No license file supplied, skipping setting the license file in the installer"
-else
-   echo "License file supplied, generating installer with license file $1"
-   if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' -e "s|harness_license|$1|g" harness_installer/harness_disconnected_on_prem_pov_final/config.properties
-   else
-        sed -i "s|harness_license|$1|g" harness_installer/harness_disconnected_on_prem_pov_final/config.properties
-   fi
-fi
-
-
-docker pull harness/manager:${manager_version}
-docker pull harness/learning-engine:${learning_engine_version}
-docker pull harness/ui:${ui_version}
-docker pull harness/proxy:${proxy_version}
-
-docker save harness/manager:${manager_version} > harness_installer/harness_disconnected_on_prem_pov_final/images/manager.tar
-docker save harness/learning-engine:${learning_engine_version} > harness_installer/harness_disconnected_on_prem_pov_final/images/learning_engine.tar
-docker save harness/ui:${ui_version} > harness_installer/harness_disconnected_on_prem_pov_final/images/ui.tar
-docker save harness/proxy:${proxy_version} > harness_installer/harness_disconnected_on_prem_pov_final/images/proxy.tar
-
-curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-solaris-x64.tar.gz > jre-8u131-solaris-x64.tar.gz
-
-curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-macosx-x64.tar.gz > jre-8u131-macosx-x64.tar.gz
-
-curl https://app.harness.io/storage/wingsdelegates/jre/8u131/jre-8u131-linux-x64.tar.gz > jre-8u131-linux-x64.tar.gz
-
-mv delegate.jar harness_installer/harness_disconnected_on_prem_pov_final/images/
-mv watcher.jar harness_installer/harness_disconnected_on_prem_pov_final/images/
-mv jre-8u131-solaris-x64.tar.gz harness_installer/harness_disconnected_on_prem_pov_final/images/
-mv jre-8u131-macosx-x64.tar.gz harness_installer/harness_disconnected_on_prem_pov_final/images/
-mv jre-8u131-linux-x64.tar.gz harness_installer/harness_disconnected_on_prem_pov_final/images/
-
-tar -cvzf harness_installer.tar.gz harness_installer
-rm -rf harness_installer
+docker run --rm \
+           -v ${PWD}:${INSTALLER_WORKING_DIR} \
+           -v ${PWD}/../${INSTALLER_TEMPLATE_DIR_NAME}:${INSTALLER_TEMPLATE_DIR} \
+           -v /var/run/docker.sock:/var/run/docker.sock \
+           -w ${INSTALLER_WORKING_DIR} \
+           --env-file ./${VERSION_PROPERTIES_FILE} \
+           -e DOCKERHUB_USERNAME \
+           -e DOCKERHUB_PASSWORD \
+           ubuntu:latest ./${GENERATE_SCRIPT_FILE} $1
