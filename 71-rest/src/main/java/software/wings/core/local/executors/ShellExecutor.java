@@ -15,6 +15,7 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.common.Constants.HARNESS_KUBE_CONFIG_PATH;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -78,6 +79,7 @@ public class ShellExecutor {
     return commandExecutionStatus;
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private CommandExecutionStatus executeBashScript(String command) throws IOException {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     File workingDirectory;
@@ -99,13 +101,13 @@ public class ShellExecutor {
 
     if (!isEmpty(config.getKubeConfigContent())) {
       try (FileOutputStream outputStream = new FileOutputStream(kubeConfigFile)) {
-        outputStream.write(config.getKubeConfigContent().getBytes("UTF-8"));
+        outputStream.write(config.getKubeConfigContent().getBytes());
         environment.put(HARNESS_KUBE_CONFIG_PATH, kubeConfigFile.getCanonicalPath());
       }
     }
 
     try (FileOutputStream outputStream = new FileOutputStream(scriptFile)) {
-      outputStream.write(command.getBytes("UTF-8"));
+      outputStream.write(command.getBytes());
 
       String[] commandList = new String[] {"/bin/bash", scriptFilename};
       ProcessExecutor processExecutor = new ProcessExecutor()

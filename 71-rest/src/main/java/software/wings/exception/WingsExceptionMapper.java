@@ -134,7 +134,6 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
       }
     } catch (Exception e) {
       logger.error("Error processing messages.", e);
-      logger.error("Original exception:", exception);
     }
   }
 

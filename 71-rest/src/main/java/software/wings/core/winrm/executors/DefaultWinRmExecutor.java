@@ -140,4 +140,8 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       String destinationDirectoryPath, FileBucket fileBucket, List<Pair<String, String>> fileNamesIds) {
     throw new NotImplementedException("Not implemented");
   }
+
+  public CommandExecutionStatus copyGridFsFiles(ConfigFileMetaData configFileMetaData) {
+    throw new NotImplementedException("Not implemented");
+  }
 }

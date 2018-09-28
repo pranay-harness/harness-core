@@ -15,15 +15,15 @@ import javax.validation.constraints.NotNull;
 public interface DelegateFileManager {
   DelegateFile upload(DelegateFile delegateFile, InputStream contentSource);
   String getFileIdByVersion(FileBucket fileBucket, String entityId, int version, String accountId) throws IOException;
-  InputStream downloadByFileId(@NotNull FileBucket bucket, @NotEmpty String fileId, @NotEmpty String accountId)
-      throws IOException;
+  InputStream downloadByFileId(@NotNull FileBucket bucket, @NotEmpty String fileId, @NotEmpty String accountId,
+      boolean encrypted) throws IOException;
   InputStream downloadByConfigFileId(String fileId, String accountId, String appId, String activityId)
       throws IOException;
   DelegateFile getMetaInfo(FileBucket fileBucket, String fileId, String accountId) throws IOException;
 
   // TODO: this method does not seem to belong here
-  InputStream downloadArtifactByFileId(@NotNull FileBucket bucket, @NotEmpty String fileId, @NotEmpty String accountId)
-      throws IOException, ExecutionException;
+  InputStream downloadArtifactByFileId(@NotNull FileBucket bucket, @NotEmpty String fileId, @NotEmpty String accountId,
+      boolean encrypted) throws IOException, ExecutionException;
 
   InputStream downloadArtifactAtRuntime(ArtifactStreamAttributes artifactStreamAttributes, String accountId,
       String appId, String activityId, String commandUnitName, String hostName) throws IOException, ExecutionException;

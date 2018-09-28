@@ -18,6 +18,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -56,6 +57,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -271,20 +273,22 @@ public class ConfigServiceImpl implements ConfigService {
     return file;
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
-  public byte[] getFileContent(String appId, ConfigFile configFile) {
+  public String getFileContent(String appId, ConfigFile configFile) {
     if (configFile.isEncrypted()) {
       return secretManager.getFileContents(configFile.getAccountId(), configFile.getEncryptedFileId());
     } else {
-      try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-        InputStream inputStream = fileService.openDownloadStream(configFile.getFileUuid(), FileBucket.CONFIGS);
+      OutputStream outputStream = new ByteArrayOutputStream();
+      InputStream inputStream = fileService.openDownloadStream(configFile.getFileUuid(), FileBucket.CONFIGS);
+      try {
         outputStream.write(ByteStreams.toByteArray(inputStream));
         outputStream.flush();
-        return outputStream.toByteArray();
       } catch (IOException e) {
         throw new WingsException(INVALID_ARGUMENT, e)
             .addParam("args", "Failed to get configFile content: " + configFile.getName());
       }
+      return outputStream.toString();
     }
   }
 
@@ -303,7 +307,6 @@ public class ConfigServiceImpl implements ConfigService {
       secretUsageLog.setAppId(configFile.getAppId());
       wingsPersistence.save(secretUsageLog);
     }
-
     return secretManager.getFile(encryptedData.getAccountId(), configFile.getEncryptedFileId(), file);
   }
 

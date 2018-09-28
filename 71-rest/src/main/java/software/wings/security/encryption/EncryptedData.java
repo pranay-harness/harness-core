@@ -78,8 +78,6 @@ public class EncryptedData extends Base {
 
   private UsageRestrictions usageRestrictions;
 
-  @SchemaIgnore private boolean base64Encoded;
-
   @SchemaIgnore @Transient private transient String encryptedBy;
 
   @SchemaIgnore @Transient private transient int setupUsage;
