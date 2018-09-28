@@ -49,7 +49,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -232,8 +231,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
     return configFiles.stream()
         .map(cf -> {
           String fileName = isNotBlank(cf.getRelativeFilePath()) ? cf.getRelativeFilePath() : cf.getFileName();
-          byte[] fileContent = configService.getFileContent(app.getUuid(), cf);
-          return new String[] {fileName, Base64.getEncoder().encodeToString(fileContent)};
+          String fileContent = configService.getFileContent(app.getUuid(), cf);
+          return new String[] {fileName, fileContent};
         })
         .collect(toList());
   }

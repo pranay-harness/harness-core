@@ -992,7 +992,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     }
 
     logger.info(
-        "{} delegates {} eligible to execute task {}", eligibleDelegates.size(), eligibleDelegates, task.getTaskType());
+        "{} delegates {} eligible to execute the task {}", eligibleDelegates.size(), eligibleDelegates, task.getUuid());
     return eligibleDelegates;
   }
 

@@ -84,7 +84,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     writer.write(String.format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "REC_CATCH_EXCEPTION"})
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "DM_DEFAULT_ENCODING", "REC_CATCH_EXCEPTION"})
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
@@ -108,7 +108,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
       if (parameters.getCurrentStateFileId() != null) {
         try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
-                 FileBucket.TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId())) {
+                 FileBucket.TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId(), false)) {
           FileUtils.copyInputStreamToFile(stateRemoteInputStream, tfStateFile);
         }
       } else {
@@ -206,7 +206,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
 
       if (!"Destroy".equals(parameters.getCommandUnitName())) {
-        terraformExecutionDataBuilder.outputs(new String(Files.readAllBytes(tfOutputsFile.toPath()), "UTF-8"));
+        terraformExecutionDataBuilder.outputs(new String(Files.readAllBytes(tfOutputsFile.toPath())));
       }
 
       return terraformExecutionDataBuilder.build();
