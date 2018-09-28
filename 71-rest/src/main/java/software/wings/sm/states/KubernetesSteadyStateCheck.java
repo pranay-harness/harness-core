@@ -9,7 +9,6 @@ import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -160,7 +159,6 @@ public class KubernetesSteadyStateCheck extends State {
                                           .workflowExecutionId(executionContext.getWorkflowExecutionId())
                                           .workflowId(executionContext.getWorkflowId())
                                           .commandUnits(Collections.emptyList())
-                                          .serviceVariables(Maps.newHashMap())
                                           .status(ExecutionStatus.RUNNING)
                                           .commandUnitType(CommandUnitType.KUBERNETES_STEADY_STATE_CHECK);
     if (executionContext.getOrchestrationWorkflowType() != null

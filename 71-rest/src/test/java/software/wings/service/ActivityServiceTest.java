@@ -33,7 +33,6 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import io.harness.beans.SearchFilter.Operator;
@@ -103,7 +102,6 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .workflowId(WORKFLOW_ID)
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
-                            .serviceVariables(Maps.newHashMap())
                             .build();
     activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
@@ -141,7 +139,6 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .workflowId(WORKFLOW_ID)
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
-                            .serviceVariables(Maps.newHashMap())
                             .build();
     activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
@@ -178,7 +175,6 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
                             .commandUnits(Collections.emptyList())
-                            .serviceVariables(Maps.newHashMap())
                             .build();
     activity.setAppId(APP_ID);
     activityService.save(activity);
@@ -268,7 +264,6 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .workflowId(WORKFLOW_ID)
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
-                            .serviceVariables(Maps.newHashMap())
                             .build();
     activity.setAppId(APP_ID);
     wingsPersistence.save(activity);
@@ -305,7 +300,6 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .workflowId(WORKFLOW_ID)
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .commandUnits(Collections.emptyList())
-                            .serviceVariables(Maps.newHashMap())
                             .build();
     activity.setAppId(APP_ID);
     activity.setEnvironmentType(PROD);
@@ -342,7 +336,6 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .stateExecutionInstanceName("STATE")
                             .workflowId(WORKFLOW_ID)
                             .commandUnits(Collections.emptyList())
-                            .serviceVariables(Maps.newHashMap())
                             .serviceInstanceId(SERVICE_INSTANCE_ID)
                             .build();
     activity.setAppId(APP_ID);

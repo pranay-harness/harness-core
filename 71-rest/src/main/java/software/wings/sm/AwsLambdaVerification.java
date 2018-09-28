@@ -135,7 +135,6 @@ public class AwsLambdaVerification extends State {
                             .workflowExecutionId(executionContext.getWorkflowExecutionId())
                             .workflowId(executionContext.getWorkflowId())
                             .commandUnits(Collections.emptyList())
-                            .serviceVariables(Maps.newHashMap())
                             .status(ExecutionStatus.RUNNING)
                             .build();
     activity.setAppId(app.getUuid());

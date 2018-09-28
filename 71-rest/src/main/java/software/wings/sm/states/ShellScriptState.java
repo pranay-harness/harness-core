@@ -8,7 +8,6 @@ import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -322,7 +321,6 @@ public class ShellScriptState extends State {
                                                                    .withName(ShellScriptParameters.CommandUnit)
                                                                    .withCommandType(CommandType.OTHER)
                                                                    .build()))
-                                          .serviceVariables(Maps.newHashMap())
                                           .status(ExecutionStatus.RUNNING);
 
     if (executionContext.getOrchestrationWorkflowType() != null

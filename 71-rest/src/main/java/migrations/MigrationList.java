@@ -43,6 +43,7 @@ import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
+import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.SetRollbackFlagToWorkflows;
@@ -122,6 +123,7 @@ public class MigrationList {
         .add(Pair.of(186, SecretTextNameKeyWordsMigration.class))
         .add(Pair.of(187, GcsArtifactProjectIdMigration.class))
         .add(Pair.of(188, FixCVDashboardStatusMigration.class))
+        .add(Pair.of(189, RemoveServiceVariablesFromActivity.class))
         .build();
   }
 }

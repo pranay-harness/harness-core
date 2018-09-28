@@ -1,7 +1,5 @@
 package software.wings.beans;
 
-import com.google.common.collect.Maps;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
@@ -48,7 +46,8 @@ public class Activity extends Base {
   @NotEmpty private String commandName;
   @NotNull private List<CommandUnit> commandUnits = new ArrayList<>();
   private Map<String, Integer> commandNameVersionMap;
-  private Map<String, String> serviceVariables = Maps.newHashMap();
+  // TODO: remove
+  @Deprecated private Map<String, String> serviceVariables;
   private String commandType;
   private String serviceId;
   private String serviceName;
@@ -98,13 +97,12 @@ public class Activity extends Base {
   public Activity(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, List<String> keywords, String entityYamlPath, Type type, String applicationName,
       String environmentId, String environmentName, EnvironmentType environmentType, String commandName,
-      List<CommandUnit> commandUnits, Map<String, Integer> commandNameVersionMap, Map<String, String> serviceVariables,
-      String commandType, String serviceId, String serviceName, String serviceTemplateId, String serviceTemplateName,
-      String hostName, String publicDns, String serviceInstanceId, String workflowExecutionId, String workflowId,
-      String workflowExecutionName, WorkflowType workflowType, String stateExecutionInstanceId,
-      String stateExecutionInstanceName, Long version, CommandUnitType commandUnitType, boolean logPurged,
-      String artifactStreamId, String artifactStreamName, boolean isPipeline, String artifactId, String artifactName,
-      ExecutionStatus status) {
+      List<CommandUnit> commandUnits, Map<String, Integer> commandNameVersionMap, String commandType, String serviceId,
+      String serviceName, String serviceTemplateId, String serviceTemplateName, String hostName, String publicDns,
+      String serviceInstanceId, String workflowExecutionId, String workflowId, String workflowExecutionName,
+      WorkflowType workflowType, String stateExecutionInstanceId, String stateExecutionInstanceName, Long version,
+      CommandUnitType commandUnitType, boolean logPurged, String artifactStreamId, String artifactStreamName,
+      boolean isPipeline, String artifactId, String artifactName, ExecutionStatus status) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.type = type;
     this.applicationName = applicationName;
@@ -114,7 +112,6 @@ public class Activity extends Base {
     this.commandName = commandName;
     this.commandUnits = commandUnits == null ? new ArrayList<>() : commandUnits;
     this.commandNameVersionMap = commandNameVersionMap;
-    this.serviceVariables = serviceVariables == null ? Maps.newHashMap() : serviceVariables;
     this.commandType = commandType;
     this.serviceId = serviceId;
     this.serviceName = serviceName;

@@ -242,7 +242,6 @@ public class AwsLambdaState extends State {
                                           .stateExecutionInstanceName(context.getStateExecutionInstanceName())
                                           .commandUnits(commandUnitList)
                                           .commandType(command.getCommandUnitType().name())
-                                          .serviceVariables(context.getServiceVariables())
                                           .status(ExecutionStatus.RUNNING);
 
     Artifact artifact =

@@ -474,7 +474,6 @@ public class JenkinsState extends State {
                                           .workflowExecutionId(executionContext.getWorkflowExecutionId())
                                           .workflowId(executionContext.getWorkflowId())
                                           .commandUnits(Collections.emptyList())
-                                          .serviceVariables(Maps.newHashMap())
                                           .status(ExecutionStatus.RUNNING)
                                           .commandUnitType(CommandUnitType.JENKINS);
 

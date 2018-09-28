@@ -13,7 +13,6 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -434,7 +433,6 @@ public class HelmDeployState extends State {
                                           .workflowExecutionId(executionContext.getWorkflowExecutionId())
                                           .workflowId(executionContext.getWorkflowId())
                                           .commandUnits(Collections.emptyList())
-                                          .serviceVariables(Maps.newHashMap())
                                           .status(ExecutionStatus.RUNNING)
                                           .commandUnitType(CommandUnitType.HELM);
 

@@ -192,7 +192,6 @@ public class AwsAmiServiceDeployState extends State {
                                           .stateExecutionInstanceName(context.getStateExecutionInstanceName())
                                           .commandUnits(commandUnitList)
                                           .commandType(command.getCommandUnitType().name())
-                                          .serviceVariables(context.getServiceVariables())
                                           .status(ExecutionStatus.RUNNING)
                                           .artifactStreamId(artifactStream.getUuid())
                                           .artifactStreamName(artifactStream.getSourceName())

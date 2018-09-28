@@ -195,7 +195,6 @@ public class AwsAmiServiceSetup extends State {
                                           .stateExecutionInstanceName(context.getStateExecutionInstanceName())
                                           .commandUnits(commandUnitList)
                                           .commandType(command.getCommandUnitType().name())
-                                          .serviceVariables(context.getServiceVariables())
                                           .status(ExecutionStatus.RUNNING);
 
     Activity build = activityBuilder.build();

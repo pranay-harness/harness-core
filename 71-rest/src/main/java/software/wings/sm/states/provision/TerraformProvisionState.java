@@ -17,7 +17,6 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -380,7 +379,6 @@ public abstract class TerraformProvisionState extends State {
             .workflowId(executionContext.getWorkflowId())
             .commandUnits(
                 asList(Command.Builder.aCommand().withName(commandUnit()).withCommandType(CommandType.OTHER).build()))
-            .serviceVariables(Maps.newHashMap())
             .status(ExecutionStatus.RUNNING);
 
     if (executionContext.getOrchestrationWorkflowType() != null

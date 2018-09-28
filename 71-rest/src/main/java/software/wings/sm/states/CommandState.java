@@ -283,7 +283,6 @@ public class CommandState extends State {
               .hostName(host.getHostName())
               .publicDns(host.getPublicDns())
               .commandUnits(getFlattenCommandUnits(appId, envId, service, infrastructureMapping.getDeploymentType()))
-              .serviceVariables(serviceVariables)
               .status(ExecutionStatus.RUNNING);
 
       String backupPath = getEvaluatedSettingValue(context, accountId, appId, envId, BACKUP_PATH);
