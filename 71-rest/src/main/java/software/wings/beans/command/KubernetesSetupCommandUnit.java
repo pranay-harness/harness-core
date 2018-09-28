@@ -1628,9 +1628,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     Map<String, EnvVar> secretEnvVars = new HashMap<>();
 
     if (secretMap != null) {
-      for (String key : secretMap.getStringData().keySet()) {
-        String value = secretMap.getStringData().get(key);
-        if (envVarPattern.matcher(key).matches() && isNotBlank(value) && value.length() <= MAX_ENV_VAR_LENGTH) {
+      for (String key : secretMap.getData().keySet()) {
+        byte[] value = Base64.getDecoder().decode(secretMap.getData().get(key));
+        if (envVarPattern.matcher(key).matches() && isNotEmpty(value) && value.length <= MAX_ENV_VAR_LENGTH) {
           EnvVarSource varSource = new EnvVarSourceBuilder()
                                        .withNewSecretKeyRef()
                                        .withName(secretMap.getMetadata().getName())
@@ -1642,12 +1642,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           String msg = "";
           if (!envVarPattern.matcher(key).matches()) {
             msg = format("Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
-          } else if (isBlank(value)) {
+          } else if (isEmpty(value)) {
             msg = format("Value for [%s] from secret map is blank. Skipping as environment variable...", key);
-          } else if (value.length() > MAX_ENV_VAR_LENGTH) {
+          } else if (value.length > MAX_ENV_VAR_LENGTH) {
             msg = format(
                 "Value for [%s] from secret map has length %d which exceeds the maximum environment variable length of %d. Skipping...",
-                key, value.length(), MAX_ENV_VAR_LENGTH);
+                key, value.length, MAX_ENV_VAR_LENGTH);
           }
           executionLogCallback.saveExecutionLog(msg, LogLevel.WARN);
         }
