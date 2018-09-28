@@ -51,4 +51,8 @@ public class KmsConfig extends Base implements EncryptionConfig {
   @SchemaIgnore @Transient private int numOfEncryptedValue;
 
   @SchemaIgnore @Transient private EncryptionType encryptionType;
+
+  public String getValidationCriteria() {
+    return EncryptionType.KMS + "-" + getName() + "-" + getUuid();
+  }
 }

@@ -1,12 +1,17 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.network.Http.connectableHttpUrl;
 import static java.util.Collections.singletonList;
 import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.getVaultRestClient;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 
 import com.google.common.base.Preconditions;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.kms.AWSKMS;
+import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -47,14 +52,23 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
 
     Preconditions.checkNotNull(encryptionConfig);
     if (encryptionConfig instanceof KmsConfig) {
-      DelegateConnectionResult delegateConnectionResult = DelegateConnectionResult.builder()
-                                                              .criteria("https://aws.amazon.com/")
-                                                              .validated(connectableHttpUrl("https://aws.amazon.com/"))
-                                                              .build();
-      if (!delegateConnectionResult.isValidated()) {
-        logger.info("Can not reach to aws at https://aws.amazon.com");
+      KmsConfig kmsConfig = (KmsConfig) encryptionConfig;
+      AWSKMS kmsClient =
+          AWSKMSClientBuilder.standard()
+              .withCredentials(new AWSStaticCredentialsProvider(
+                  new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
+              .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
+              .build();
+      GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest();
+      dataKeyRequest.setKeyId(kmsConfig.getKmsArn());
+      dataKeyRequest.setKeySpec("AES_128");
+      try {
+        kmsClient.generateDataKey(dataKeyRequest);
+        return DelegateConnectionResult.builder().criteria(kmsConfig.getValidationCriteria()).validated(true).build();
+      } catch (Exception e) {
+        logger.info("can't reach to kms {} in region {}", kmsConfig.getUuid(), kmsConfig.getRegion());
+        return DelegateConnectionResult.builder().criteria(kmsConfig.getValidationCriteria()).validated(false).build();
       }
-      return delegateConnectionResult;
     }
     if (encryptionConfig instanceof VaultConfig) {
       VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
