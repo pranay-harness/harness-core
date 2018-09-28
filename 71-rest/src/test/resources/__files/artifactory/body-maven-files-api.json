@@ -1,0 +1,69 @@
+{
+  "results": [
+    {
+      "repo": "harness-maven",
+      "path": "io/harness/todolist/todolist/1.2",
+      "name": "todolist-1.2.war",
+      "type": "file",
+      "size": 1776799,
+      "created": "2017-08-18T05:44:38.629Z",
+      "created_by": "admin",
+      "modified": "2017-08-18T05:44:35.000Z",
+      "modified_by": "admin",
+      "updated": "2017-08-18T05:44:35.000Z"
+    },
+    {
+      "repo": "harness-maven",
+      "path": "io/harness/todolist/todolist/1.0.1.0-SNAPSHOT",
+      "name": "todolist-1.0.1.0-20170930.195729-1.war",
+      "type": "file",
+      "size": 1776799,
+      "created": "2017-08-18T05:45:06.225Z",
+      "created_by": "admin",
+      "modified": "2017-08-18T05:44:54.000Z",
+      "modified_by": "admin",
+      "updated": "2017-08-18T05:44:54.000Z"
+    },
+    {
+      "repo": "harness-maven",
+      "path": "io/harness/todolist/todolist/1.0.0-SNAPSHOT",
+      "name": "todolist-1.0.0-20170930.195402-1.war",
+      "type": "file",
+      "size": 1776799,
+      "created": "2017-08-18T05:45:59.346Z",
+      "created_by": "admin",
+      "modified": "2017-08-18T05:45:28.000Z",
+      "modified_by": "admin",
+      "updated": "2017-08-18T05:45:28.000Z"
+    },
+    {
+      "repo": "harness-maven",
+      "path": "io/harness/todolist/todolist/1.1",
+      "name": "todolist-1.1.war",
+      "type": "file",
+      "size": 1776799,
+      "created": "2017-08-18T05:56:17.933Z",
+      "created_by": "admin",
+      "modified": "2017-08-18T05:56:08.000Z",
+      "modified_by": "admin",
+      "updated": "2017-08-18T05:56:08.000Z"
+    },
+    {
+      "repo": "harness-maven",
+      "path": "io/harness/todolist/todolist/1.0",
+      "name": "todolist-1.0.war",
+      "type": "file",
+      "size": 1776799,
+      "created": "2017-08-18T05:56:17.933Z",
+      "created_by": "admin",
+      "modified": "2017-08-18T05:56:08.000Z",
+      "modified_by": "admin",
+      "updated": "2017-08-18T05:56:08.000Z"
+    }
+  ],
+  "range": {
+    "start_pos": 0,
+    "end_pos": 5,
+    "total": 5
+  }
+}

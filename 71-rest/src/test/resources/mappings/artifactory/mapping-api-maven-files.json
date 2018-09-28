@@ -3,14 +3,14 @@
     "method": "POST",
     "url": "/artifactory/api/search/aql",
     "bodyPatterns": [ {
-      "contains": "harness-rpm"
+      "matches": ".*io/harness/todolist/.*"
     }
     ]
   },
 
   "response": {
     "status": 200,
-    "bodyFileName" : "/artifactory/body-rpm-files-api.json",
+    "bodyFileName" : "/artifactory/body-maven-files-api.json",
     "headers": {
       "Content-Type": "application/json"
     }

@@ -291,10 +291,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         }
         logger.info("Artifact paths order from Artifactory Server" + artifactPaths);
         Collections.reverse(artifactPaths);
+        String finalArtifactPath = artifactPath;
         return artifactPaths.stream()
             .map(path
                 -> aBuildDetails()
-                       .withNumber(path.substring(path.lastIndexOf('/') + 1))
+                       .withNumber(constructBuildNumber(finalArtifactPath, path.substring(path.indexOf('/') + 1)))
                        .withArtifactPath(path)
                        .withBuildUrl(getBaseUrl(artifactoryConfig) + path)
                        .build())
@@ -308,10 +309,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         if (httpResponseException.getStatusCode() == 403) {
           logger.warn("User not authorized to perform deep level search. Trying with different search api");
           artifactPaths = getFilePathsForAnonymousUser(artifactory, repoKey, artifactPath, maxVersions);
+          String finalArtifactPath = artifactPath;
           return artifactPaths.stream()
               .map(path
                   -> aBuildDetails()
-                         .withNumber(path.substring(path.lastIndexOf('/') + 1))
+                         .withNumber(constructBuildNumber(finalArtifactPath, path.substring(path.indexOf('/') + 1)))
                          .withArtifactPath(path)
                          .withBuildUrl(getBaseUrl(artifactoryConfig) + path)
                          .build())
@@ -323,6 +325,16 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       prepareException(e, ADMIN);
     }
     return new ArrayList<>();
+  }
+
+  private String constructBuildNumber(String artifactPattern, String path) {
+    String[] tokens = artifactPattern.split("/");
+    for (String token : tokens) {
+      if (token.contains("*") || token.contains("+")) {
+        return path.substring(artifactPattern.indexOf(token));
+      }
+    }
+    return path;
   }
 
   private List<String> getFilePathsForAnonymousUser(

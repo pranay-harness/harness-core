@@ -109,6 +109,44 @@ public class ArtifactoryServiceTest {
   }
 
   @Test
+  public void shouldGetCorrectBuildNoWithAnyWildcardMatch() {
+    List<BuildDetails> builds = artifactoryService.getFilePaths(
+        artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/*/*.war", "any", 50);
+    assertThat(builds).isNotNull();
+    assertThat(builds)
+        .extracting(buildDetails -> buildDetails.getNumber())
+        .contains("1.0.0-SNAPSHOT/todolist-1.0.0-20170930.195402-1.war");
+  }
+
+  @Test
+  public void shouldGetCorrectBuildNoForAtLeastOneWildcardPattern() {
+    List<BuildDetails> builds = artifactoryService.getFilePaths(
+        artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/[0-9]+/*.war", "any", 50);
+    assertThat(builds).isNotNull();
+    assertThat(builds)
+        .extracting(buildDetails -> buildDetails.getNumber())
+        .contains("1.0.0-SNAPSHOT/todolist-1.0.0-20170930.195402-1.war");
+  }
+
+  @Test
+  public void shouldGetCorrectBuildNoForArtifactPathsWithoutAnyWildcardCharacter() {
+    List<BuildDetails> builds = artifactoryService.getFilePaths(
+        artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/1.0/todolist-1.0.war", "any", 50);
+    assertThat(builds).isNotNull();
+    assertThat(builds)
+        .extracting(buildDetails -> buildDetails.getNumber())
+        .contains("io/harness/todolist/todolist/1.0/todolist-1.0.war");
+  }
+
+  @Test
+  public void shouldGetCorrectBuildNoForArtifactPathsWithoutAnyWildcardCharacter1() {
+    List<BuildDetails> builds = artifactoryService.getFilePaths(
+        artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/1.0/*.war", "any", 50);
+    assertThat(builds).isNotNull();
+    assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("todolist-1.0.war");
+  }
+
+  @Test
   public void shouldGetGroupIds() {
     List<String> groupIds = artifactoryService.getRepoPaths(artifactoryConfig, null, "harness-maven");
     assertThat(groupIds).isNotNull();

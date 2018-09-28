@@ -58,7 +58,8 @@ public class ArtifactCollectionUtil {
     if (artifactStreamType.equals(ARTIFACTORY.name())) {
       if (buildDetails.getArtifactPath() != null) {
         metadata.put(ARTIFACT_PATH, buildDetails.getArtifactPath());
-        metadata.put(ARTIFACT_FILE_NAME, buildDetails.getNumber());
+        metadata.put(
+            ARTIFACT_FILE_NAME, buildDetails.getNumber().substring(buildDetails.getNumber().lastIndexOf('/') + 1));
       }
       metadata.put(BUILD_NO, buildDetails.getNumber());
       return metadata;
