@@ -172,7 +172,6 @@ public class AwsCodeDeployState extends State {
                        .commandUnits(serviceResourceService.getFlattenCommandUnitList(
                            app.getUuid(), serviceId, envId, command.getName()))
                        .commandType(command.getCommandUnitType().name())
-                       .serviceVariables(context.getServiceVariables())
                        .status(ExecutionStatus.RUNNING)
                        .build();
 

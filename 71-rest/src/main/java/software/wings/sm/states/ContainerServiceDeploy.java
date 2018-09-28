@@ -123,7 +123,6 @@ public abstract class ContainerServiceDeploy extends State {
                               .commandUnits(serviceResourceService.getFlattenCommandUnitList(contextData.app.getUuid(),
                                   contextData.serviceId, contextData.env.getUuid(), contextData.command.getName()))
                               .commandType(contextData.command.getCommandUnitType().name())
-                              .serviceVariables(context.getServiceVariables())
                               .status(ExecutionStatus.RUNNING)
                               .build();
 

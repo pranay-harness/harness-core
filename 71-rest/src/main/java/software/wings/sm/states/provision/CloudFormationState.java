@@ -10,7 +10,6 @@ import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -236,7 +235,6 @@ public abstract class CloudFormationState extends State {
             .workflowId(executionContext.getWorkflowId())
             .commandUnits(Collections.singletonList(
                 Builder.aCommand().withName(commandUnit()).withCommandType(CommandType.OTHER).build()))
-            .serviceVariables(Maps.newHashMap())
             .status(ExecutionStatus.RUNNING);
 
     if (executionContext.getOrchestrationWorkflowType() != null

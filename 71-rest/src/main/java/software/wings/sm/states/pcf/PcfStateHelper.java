@@ -2,7 +2,6 @@ package software.wings.sm.states.pcf;
 
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Singleton;
 
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
@@ -95,7 +94,6 @@ public class PcfStateHelper {
         .workflowExecutionId(executionContext.getWorkflowExecutionId())
         .workflowId(executionContext.getWorkflowId())
         .commandUnits(Collections.emptyList())
-        .serviceVariables(Maps.newHashMap())
         .status(ExecutionStatus.RUNNING)
         .commandUnitType(commandUnitType)
         .environmentId(environment.getUuid())

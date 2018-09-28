@@ -11,7 +11,6 @@ import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.sm.StateType.BAMBOO;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -270,7 +269,6 @@ public class BambooState extends State {
                                           .workflowExecutionId(executionContext.getWorkflowExecutionId())
                                           .workflowId(executionContext.getWorkflowId())
                                           .commandUnits(Collections.emptyList())
-                                          .serviceVariables(Maps.newHashMap())
                                           .status(RUNNING);
 
     if (executionContext.getOrchestrationWorkflowType() != null

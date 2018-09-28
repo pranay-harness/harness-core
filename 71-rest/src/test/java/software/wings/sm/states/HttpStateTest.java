@@ -37,7 +37,6 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_NAME;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -97,7 +96,6 @@ public class HttpStateTest extends WingsBaseTest {
                                                .commandType(StateType.HTTP.name())
                                                .status(ExecutionStatus.RUNNING)
                                                .commandUnits(Collections.emptyList())
-                                               .serviceVariables(Maps.newHashMap())
                                                .build();
 
   static {
@@ -380,7 +378,6 @@ public class HttpStateTest extends WingsBaseTest {
                        .serviceTemplateName(TEMPLATE_NAME)
                        .status(ExecutionStatus.RUNNING)
                        .commandUnits(Collections.emptyList())
-                       .serviceVariables(Maps.newHashMap())
                        .build();
 
     act.setUuid(ACTIVITY_ID);

@@ -355,7 +355,6 @@ public abstract class ContainerServiceSetup extends State {
                             .commandUnits(serviceResourceService.getFlattenCommandUnitList(
                                 app.getUuid(), service.getUuid(), env.getUuid(), command.getName()))
                             .commandType(command.getCommandUnitType().name())
-                            .serviceVariables(context.getServiceVariables())
                             .status(ExecutionStatus.RUNNING)
                             .build();
 

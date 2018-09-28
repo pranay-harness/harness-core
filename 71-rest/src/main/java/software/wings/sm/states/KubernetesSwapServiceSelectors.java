@@ -9,7 +9,6 @@ import static software.wings.common.Constants.PRIMARY_SERVICE_NAME_EXPRESSION;
 import static software.wings.common.Constants.STAGE_SERVICE_NAME_EXPRESSION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
-import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
@@ -140,7 +139,6 @@ public class KubernetesSwapServiceSelectors extends State {
                                           .workflowExecutionId(executionContext.getWorkflowExecutionId())
                                           .workflowId(executionContext.getWorkflowId())
                                           .commandUnits(Collections.emptyList())
-                                          .serviceVariables(Maps.newHashMap())
                                           .status(ExecutionStatus.RUNNING)
                                           .commandUnitType(CommandUnitType.KUBERNETES_SWAP_SERVICE_SELECTORS);
     if (executionContext.getOrchestrationWorkflowType() != null
