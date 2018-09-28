@@ -552,3 +552,4 @@ software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse, 5513
 software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse$DynaTraceMetricDataResult, 5514
 software.wings.beans.JenkinsSubTaskType, 5515
 software.wings.beans.command.DownloadArtifactCommandUnit, 5516
+io.harness.exception.KmsOperationException, 5517
