@@ -24,7 +24,6 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
-import io.harness.rule.AuthorRule.Author;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -660,7 +659,6 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Author(emails = {"sriram@harness.io", "raghu@harness.io"}, intermittent = true)
   public void testButNoControlData() throws IOException, JobExecutionException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -770,7 +768,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
     new LogAnalysisTestJob(analysisService, waitNotifyEngine, delegateService, analysisContext, jobExecutionContext,
         delegateTaskId, learningEngineService, featureFlagService)
         .run();
-    Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+    Thread.sleep(TimeUnit.SECONDS.toMillis(30));
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.SUMO);
     assertEquals("No baseline data for the given query was found.", logMLAnalysisSummary.getAnalysisSummaryMessage());

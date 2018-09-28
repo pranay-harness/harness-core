@@ -5,8 +5,8 @@ import static java.util.Collections.singletonList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -27,23 +27,26 @@ public class SecretManagerValidation extends AbstractSecretManagerValidation {
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof List)
-                             .map(obj -> {
-                               List<EncryptedDataDetail> encryptedDataDetails = (List) obj;
-                               String secretManagerUrl = "https://aws.amazon.com/";
-                               for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
-                                 EncryptionConfig encryptionConfig = encryptedDataDetail.getEncryptionConfig();
-                                 if (encryptedDataDetail.getEncryptionType().equals(EncryptionType.VAULT)) {
-                                   secretManagerUrl = SettingVariableTypes.VAULT + ":"
-                                       + ((VaultConfig) encryptionConfig).getVaultUrl();
-                                   break;
-                                 }
-                               }
-                               return secretManagerUrl;
-                             })
-                             .findFirst()
-                             .orElse(null));
+    return singletonList(
+        Arrays.stream(getParameters())
+            .filter(o -> o instanceof List)
+            .map(obj -> {
+              List<EncryptedDataDetail> encryptedDataDetails = (List) obj;
+              for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+                EncryptionConfig encryptionConfig = encryptedDataDetail.getEncryptionConfig();
+                switch (encryptedDataDetail.getEncryptionType()) {
+                  case KMS:
+                    return ((KmsConfig) encryptionConfig).getValidationCriteria();
+                  case VAULT:
+                    return SettingVariableTypes.VAULT + ":" + ((VaultConfig) encryptionConfig).getVaultUrl();
+                  default:
+                    throw new IllegalStateException("Invalid encryption " + encryptedDataDetail.getEncryptionType());
+                }
+              }
+              throw new IllegalStateException("No encryption config passed");
+            })
+            .findFirst()
+            .orElse(null));
   }
 
   @Override

@@ -3,8 +3,8 @@ package software.wings.delegatetasks.validation;
 import static java.util.Collections.singletonList;
 
 import software.wings.beans.DelegateTask;
+import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -24,20 +24,23 @@ public class SecretManagerDecryptValidation extends AbstractSecretManagerValidat
 
   @Override
   public List<String> getCriteria() {
-    return singletonList(Arrays.stream(getParameters())
-                             .filter(o -> o instanceof EncryptedDataDetail)
-                             .map(obj -> {
-                               EncryptedDataDetail encryptedDataDetail = (EncryptedDataDetail) obj;
-                               String secretManagerUrl = "https://aws.amazon.com/";
-                               EncryptionConfig encryptionConfig = encryptedDataDetail.getEncryptionConfig();
-                               if (encryptedDataDetail.getEncryptionType().equals(EncryptionType.VAULT)) {
-                                 secretManagerUrl =
-                                     SettingVariableTypes.VAULT + ":" + ((VaultConfig) encryptionConfig).getVaultUrl();
-                               }
-                               return secretManagerUrl;
-                             })
-                             .findFirst()
-                             .orElse(null));
+    return singletonList(
+        Arrays.stream(getParameters())
+            .filter(o -> o instanceof EncryptedDataDetail)
+            .map(obj -> {
+              EncryptedDataDetail encryptedDataDetail = (EncryptedDataDetail) obj;
+              EncryptionConfig encryptionConfig = encryptedDataDetail.getEncryptionConfig();
+              switch (encryptedDataDetail.getEncryptionType()) {
+                case KMS:
+                  return ((KmsConfig) encryptionConfig).getValidationCriteria();
+                case VAULT:
+                  return SettingVariableTypes.VAULT + ":" + ((VaultConfig) encryptionConfig).getVaultUrl();
+                default:
+                  throw new IllegalStateException("Invalid encryption " + encryptedDataDetail.getEncryptionType());
+              }
+            })
+            .findFirst()
+            .orElse(null));
   }
 
   @Override

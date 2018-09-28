@@ -673,16 +673,16 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  @Author(emails = "raghu@harness.io", intermittent = true)
+  @Author(emails = "raghu@harness.io")
   public void testAnalysisSummaryCompression() throws Exception {
     ArrayList<List<SplunkAnalysisCluster>> unknownEvents = Lists.newArrayList(getEvents(r.nextInt(10)).values());
-    Map<String, List<SplunkAnalysisCluster>> testEvents = getEvents(r.nextInt(10));
-    Map<String, List<SplunkAnalysisCluster>> controlEvents = getEvents(r.nextInt(10));
+    Map<String, List<SplunkAnalysisCluster>> testEvents = getEvents(1 + r.nextInt(10));
+    Map<String, List<SplunkAnalysisCluster>> controlEvents = getEvents(1 + r.nextInt(10));
 
-    Map<String, Map<String, SplunkAnalysisCluster>> controlClusters = createClusters(r.nextInt(10));
-    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = createClusters(r.nextInt(10));
-    Map<String, Map<String, SplunkAnalysisCluster>> testClusters = createClusters(r.nextInt(10));
-    Map<String, Map<String, SplunkAnalysisCluster>> ignoreClusters = createClusters(r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> controlClusters = createClusters(1 + r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> unknownClusters = createClusters(1 + r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> testClusters = createClusters(1 + r.nextInt(10));
+    Map<String, Map<String, SplunkAnalysisCluster>> ignoreClusters = createClusters(1 + r.nextInt(10));
     LogMLAnalysisRecord record = new LogMLAnalysisRecord();
     record.setStateExecutionId(stateExecutionId);
     record.setAppId(appId);

@@ -2151,7 +2151,7 @@ public class SecretTextTest extends WingsBaseTest {
 
       for (int j = 0; j < numOfEnvs; j++) {
         String envId = wingsPersistence.save(
-            Environment.Builder.anEnvironment().withAppId(appId).withName("env-" + i + "-" + j).build());
+            Environment.Builder.anEnvironment().withAppId(appId).withName("environment-" + i + "-" + j).build());
         ServiceTemplate serviceTemplate = aServiceTemplate()
                                               .withAppId(appId)
                                               .withServiceId(serviceId)
@@ -2210,16 +2210,16 @@ public class SecretTextTest extends WingsBaseTest {
 
     pageRequest = aPageRequest()
                       .addFilter("accountId", Operator.EQ, accountId)
-                      .addFilter("keywords", Operator.CONTAINS, "env")
+                      .addFilter("keywords", Operator.CONTAINS, "environment")
                       .build();
     encryptedDataList =
         secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
             .getResource();
-    assertEquals(numOfEnvs, encryptedDataList.size());
+    assertEquals("returned elements: " + encryptedDataList, numOfEnvs, encryptedDataList.size());
 
     pageRequest = aPageRequest()
                       .addFilter("accountId", Operator.EQ, accountId)
-                      .addFilter("keywords", Operator.CONTAINS, "env-0")
+                      .addFilter("keywords", Operator.CONTAINS, "environment-0")
                       .build();
     encryptedDataList =
         secretManagementResource.listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
@@ -2229,7 +2229,7 @@ public class SecretTextTest extends WingsBaseTest {
       for (int j = 0; j < numOfEnvs; j++) {
         pageRequest = aPageRequest()
                           .addFilter("accountId", Operator.EQ, accountId)
-                          .addFilter("keywords", Operator.CONTAINS, "env-" + i + "-" + j)
+                          .addFilter("keywords", Operator.CONTAINS, "environment-" + i + "-" + j)
                           .build();
         encryptedDataList = secretManagementResource
                                 .listSecrets(accountId, SettingVariableTypes.SECRET_TEXT, null, null, true, pageRequest)
