@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -26,6 +27,7 @@ import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.time.ZoneOffset;
@@ -72,6 +74,11 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     switch (artifactStreamType) {
       case AMAZON_S3:
         command = constructCommandStringForAmazonS3(context);
+        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        saveExecutionLog(context, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        return context.executeCommandString(command, false);
+      case ARTIFACTORY:
+        command = constructCommandStringForArtifactory(context);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(context, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
@@ -136,7 +143,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String region = awsHelperService.getBucketRegion(awsConfig, encryptionDetails, bucketName);
     String hostName = getAmazonS3HostName(bucketName);
     String url = getAmazonS3Url(bucketName, region, artifactPath);
-    String authorizationHeader = getAuthorizationHeader(context, date);
+    String authorizationHeader = getAmazonS3AuthorizationHeader(context, date);
     String command;
     switch (this.getScriptType()) {
       case POWERSHELL:
@@ -159,7 +166,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     return command;
   }
 
-  private String getAuthorizationHeader(ShellCommandExecutionContext context, String date) {
+  private String getAmazonS3AuthorizationHeader(ShellCommandExecutionContext context, String date) {
     AwsConfig awsConfig = (AwsConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
     List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
     encryptionService.decrypt(awsConfig, encryptionDetails);
@@ -225,5 +232,60 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     bucketRegions.put("eu-west-2", "-eu-west-2");
     bucketRegions.put("eu-west-3", "-eu-west-3");
     bucketRegions.put("sa-east-1", "-sa-east-1");
+  }
+
+  private String constructCommandStringForArtifactory(ShellCommandExecutionContext context) {
+    Map<String, String> metadata = context.getMetadata();
+    String artifactFileName = metadata.get(Constants.ARTIFACT_FILE_NAME);
+    int lastIndexOfSlash = artifactFileName.lastIndexOf('/');
+    if (lastIndexOfSlash > 0) {
+      artifactFileName = artifactFileName.substring(lastIndexOfSlash + 1);
+      logger.info("Got filename: " + artifactFileName);
+    }
+    ArtifactoryConfig artifactoryConfig =
+        (ArtifactoryConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
+    List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
+    encryptionService.decrypt(artifactoryConfig, encryptionDetails);
+    String authHeader = null;
+    if (artifactoryConfig.getUsername() != null) {
+      String pair = artifactoryConfig.getUsername() + ":" + new String(artifactoryConfig.getPassword());
+      authHeader = "Basic " + Base64.getEncoder().encodeToString(pair.getBytes(Charset.forName("UTF-8")));
+    }
+    String command;
+    switch (this.getScriptType()) {
+      case BASH:
+        if (artifactoryConfig.getUsername() == null) {
+          command = "curl --progress-bar -X GET \""
+              + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH)) + "\" -o \""
+              + getCommandPath() + "/" + artifactFileName + "\"";
+        } else {
+          command = "curl --progress-bar -H \"Authorization: " + authHeader + "\" -X GET \""
+              + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH)) + "\" -o \""
+              + getCommandPath() + "/" + artifactFileName + "\"";
+        }
+        break;
+      case POWERSHELL:
+        if (artifactoryConfig.getUsername() == null) {
+          command =
+              "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12\n Invoke-WebRequest -Uri \""
+              + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH)) + "\" -OutFile \""
+              + getCommandPath() + "\\" + artifactFileName + "\"";
+        } else {
+          command = "$Headers = @{\n"
+              + "    Authorization = \"" + authHeader + "\"\n"
+              + "}\n [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12"
+              + "\n Invoke-WebRequest -Uri \""
+              + getArtifactoryUrl(artifactoryConfig, metadata.get(Constants.ARTIFACT_PATH))
+              + "\" -Headers $Headers -OutFile \"" + getCommandPath() + "\\" + artifactFileName + "\"";
+        }
+        break;
+      default:
+        throw new WingsException("Invalid Script type");
+    }
+    return command;
+  }
+
+  private String getArtifactoryUrl(ArtifactoryConfig config, String artifactPath) {
+    return config.fetchRegistryUrl() + "/" + artifactPath;
   }
 }
