@@ -18,6 +18,7 @@ import io.harness.rule.AuthorRule.Author;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SplunkConfig;
@@ -75,6 +76,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
    * Test to verify fetch Log Records based.
    */
   @Test
+  @Ignore
   @Author(emails = "pranjal@harness.io", intermittent = true)
   public void testGetLogRecordsWithQuery() {
     SplunkSetupTestNodeData setupTestNodeData = getSplunkSetupTestNodedata("*exception*");
