@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.InfraMappingElement;
@@ -32,8 +31,6 @@ import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.beans.ServiceTemplate;
-import software.wings.beans.ServiceVariable;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.InstanceExpressionProcessor;
@@ -50,7 +47,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * The Class WorkflowStandardParams.
@@ -133,7 +129,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
       map.put(DEPLOYMENT_TRIGGERED_BY, currentUser.getName());
     }
 
-    infraMappingElement = fetchInfraMappinglement(context);
+    infraMappingElement = fetchInfraMappingElement(context);
     if (infraMappingElement != null) {
       map.put(INFRA, infraMappingElement);
     }
@@ -148,33 +144,6 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     } else {
       artifact = getArtifactForService(serviceElement.getUuid());
       ExecutionContextImpl.addArtifactToContext(artifactStreamService, getApp().getAccountId(), map, artifact);
-
-      List<Key<ServiceTemplate>> templateRefKeysByService =
-          serviceTemplateService.getTemplateRefKeysByService(appId, serviceElement.getUuid(), envId);
-      if (isEmpty(templateRefKeysByService) || templateRefKeysByService.get(0).getId() == null) {
-        map.put(SERVICE_VARIABLE, new HashMap<>());
-        map.put(SAFE_DISPLAY_SERVICE_VARIABLE, new HashMap<>());
-        return map;
-      }
-      String templateId = (String) templateRefKeysByService.get(0).getId();
-
-      List<ServiceVariable> serviceVariables = serviceTemplateService.computeServiceVariables(
-          appId, envId, templateId, context.getWorkflowExecutionId(), false);
-      if (isEmpty(serviceVariables)) {
-        map.put(SERVICE_VARIABLE, new HashMap<>());
-        map.put(SAFE_DISPLAY_SERVICE_VARIABLE, new HashMap<>());
-        return map;
-      }
-
-      map.put(SERVICE_VARIABLE,
-          serviceVariables.stream().collect(
-              Collectors.toMap(ServiceVariable::getName, var -> new String(var.getValue()))));
-
-      map.put(SAFE_DISPLAY_SERVICE_VARIABLE,
-          serviceTemplateService
-              .computeServiceVariables(appId, envId, templateId, context.getWorkflowExecutionId(), true)
-              .stream()
-              .collect(Collectors.toMap(ServiceVariable::getName, var -> new String(var.getValue()))));
     }
 
     return map;
@@ -194,7 +163,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
     }
   }
 
-  public InfraMappingElement fetchInfraMappinglement(ExecutionContext context) {
+  public InfraMappingElement fetchInfraMappingElement(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
 
     if (phaseElement != null && DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
@@ -422,7 +391,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
 
   public InfraMappingElement getInfraMappingElement(ExecutionContext context) {
     if (infraMappingElement == null) {
-      fetchInfraMappinglement(context);
+      fetchInfraMappingElement(context);
     }
     return infraMappingElement;
   }

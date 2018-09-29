@@ -12,6 +12,7 @@ import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import lombok.Builder;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -22,7 +23,6 @@ import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
-import software.wings.beans.NameValuePair;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -34,6 +34,8 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.LateBindingMap;
+import software.wings.expression.LateBindingValue;
 import software.wings.expression.SweepingOutputFunctor;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -52,7 +54,6 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * Describes execution context for a state machine execution.
@@ -430,13 +431,13 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Map<String, Object> asMap() {
-    Map<String, Object> context = new HashMap<>();
+    Map<String, Object> context = new LateBindingMap();
     context.putAll(prepareContext());
     return context;
   }
 
   private Map<String, Object> prepareContext() {
-    Map<String, Object> context = new HashMap<>();
+    Map<String, Object> context = new LateBindingMap();
     if (contextMap == null) {
       contextMap = prepareContext(context);
     }
@@ -446,6 +447,17 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   private String normalizeStateName(String name) {
     Matcher matcher = wildCharPattern.matcher(name);
     return matcher.replaceAll("__");
+  }
+
+  @Builder
+  static class ServiceVariables implements LateBindingValue {
+    boolean maskEncryptedFields;
+    private ExecutionContextImpl executionContext;
+
+    @Override
+    public Object bind(String key) {
+      return executionContext.prepareServiceVariables(maskEncryptedFields);
+    }
   }
 
   @SuppressWarnings("unchecked")
@@ -464,16 +476,9 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       }
     }
 
-    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    if (phaseElement != null && isNotEmpty(phaseElement.getVariableOverrides())) {
-      Map<String, String> map = (Map<String, String>) context.get(SERVICE_VARIABLE);
-      if (map == null) {
-        map = new HashMap<>();
-      }
-      map.putAll(phaseElement.getVariableOverrides().stream().collect(
-          Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
-      context.put(SERVICE_VARIABLE, map);
-    }
+    context.put(SERVICE_VARIABLE, ServiceVariables.builder().maskEncryptedFields(false).executionContext(this).build());
+    context.put(SAFE_DISPLAY_SERVICE_VARIABLE,
+        ServiceVariables.builder().maskEncryptedFields(true).executionContext(this).build());
 
     String workflowExecutionId = getWorkflowExecutionId();
 
@@ -559,6 +564,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
           maskEncryptedFields ? SAFE_DISPLAY_SERVICE_VARIABLE : SERVICE_VARIABLE);
     }
 
+    return prepareServiceVariables(maskEncryptedFields);
+  }
+
+  protected Map<String, String> prepareServiceVariables(boolean maskEncryptedFields) {
     Map<String, String> variables = new HashMap<>();
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     if (phaseElement == null || phaseElement.getServiceElement() == null
@@ -574,9 +583,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
     if (!serviceTemplateKey.isPresent()) {
       return variables;
     }
-    ServiceTemplate serviceTemplate = serviceTemplateService.get(getAppId(), (String) serviceTemplateKey.get().getId());
     List<ServiceVariable> serviceVariables = serviceTemplateService.computeServiceVariables(
-        getAppId(), envId, serviceTemplate.getUuid(), getWorkflowExecutionId(), maskEncryptedFields);
+        getAppId(), envId, (String) serviceTemplateKey.get().getId(), getWorkflowExecutionId(), maskEncryptedFields);
     serviceVariables.forEach(serviceVariable
         -> variables.put(
             renderExpression(serviceVariable.getName()), renderExpression(new String(serviceVariable.getValue()))));

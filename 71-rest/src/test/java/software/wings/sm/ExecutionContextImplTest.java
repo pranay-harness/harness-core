@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.joor.Reflect.on;
 import static org.mockito.Mockito.when;
+import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
@@ -28,6 +29,7 @@ import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.api.HttpStateExecutionData;
+import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.WorkflowElement;
@@ -52,25 +54,14 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
  * @author Rishi
  */
 public class ExecutionContextImplTest extends WingsBaseTest {
-  /**
-   * The Injector.
-   */
   @Inject Injector injector;
-  /**
-   * The App service.
-   */
+
   @Inject @InjectMocks AppService appService;
-  /**
-   * The Environment service.
-   */
   @Inject EnvironmentService environmentService;
 
   @Mock private JobScheduler jobScheduler;
-
   @Mock private SettingsService settingsService;
-
   @Mock private ArtifactService artifactService;
-
   @Mock private ServiceTemplateService serviceTemplateService;
 
   @Before
@@ -108,13 +99,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     assertThat(element).isNotNull().isEqualToComparingFieldByField(element3);
   }
 
-  /**
-   * Should fetch context element.
-   */
-  @Test
-  public void shouldRenderExpression() {
-    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setDisplayName("abc");
+  private ExecutionContextImpl prepareContext(StateExecutionInstance stateExecutionInstance) {
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     injector.injectMembers(context);
 
@@ -141,13 +126,24 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     env = environmentService.save(env);
 
     WorkflowStandardParams std = new WorkflowStandardParams();
+    injector.injectMembers(std);
+
     std.setAppId(app.getUuid());
     std.setEnvId(env.getUuid());
+    std.setArtifactIds(asList(ARTIFACT_ID));
+    context.pushContextElement(std);
+
+    return context;
+  }
+
+  @Test
+  public void shouldRenderExpression() {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setDisplayName("abc");
+    ExecutionContextImpl context = prepareContext(stateExecutionInstance);
+    WorkflowStandardParams std = context.getContextElement(ContextElementType.STANDARD);
 
     String timeStampId = std.getTimestampId();
-
-    injector.injectMembers(std);
-    context.pushContextElement(std);
 
     String expr =
         "$HOME/${env.name}/${app.name}/${service.name}/${serviceTemplate.name}/${host.name}/${timestampId}/runtime";
@@ -155,52 +151,10 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     assertThat(path).isEqualTo("$HOME/DEV/AppA/svc2/st1/host1/" + timeStampId + "/runtime");
   }
 
-  /**
-   * Should evaluate indirect references
-   */
-  @Test
-  public void shouldEvaluateIndirectExpression() {
-    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
-    stateExecutionInstance.setExecutionUuid(generateUuid());
-    stateExecutionInstance.setDisplayName("http");
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    injector.injectMembers(context);
-
-    ServiceElement svc = new ServiceElement();
-    svc.setUuid(generateUuid());
-    svc.setName("svc1");
-    context.pushContextElement(svc);
-
-    ServiceTemplateElement st = new ServiceTemplateElement();
-    st.setUuid(generateUuid());
-    st.setName("st1");
-    st.setServiceElement(aServiceElement().withUuid(generateUuid()).withName("svc2").build());
-    context.pushContextElement(st);
-
-    HostElement host = new HostElement();
-    host.setUuid(generateUuid());
-    host.setHostName("host1");
-    context.pushContextElement(host);
-
-    Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
-    app = appService.save(app);
-
-    Environment env = anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
-    env = environmentService.save(env);
-
-    WorkflowStandardParams std = new WorkflowStandardParams();
-    std.setAppId(app.getUuid());
-    std.setEnvId(env.getUuid());
-    std.setArtifactIds(asList(ARTIFACT_ID));
-
-    Artifact artifact = Artifact.Builder.anArtifact()
-                            .withServiceIds(asList(svc.getUuid()))
-                            .withMetadata(Maps.newHashMap("buildNo", "123-SNAPSHOT"))
-                            .build();
-    String timeStampId = std.getTimestampId();
-
-    injector.injectMembers(std);
-    context.pushContextElement(std);
+  private void programServiceTemplateService(ExecutionContextImpl context, Artifact artifact) {
+    WorkflowStandardParams std = context.getContextElement(ContextElementType.STANDARD);
+    ServiceTemplateElement st = context.getContextElement(ContextElementType.SERVICE_TEMPLATE);
+    ServiceElement svc = context.getContextElement(ContextElementType.SERVICE);
 
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .serviceId(svc.getUuid())
@@ -208,13 +162,37 @@ public class ExecutionContextImplTest extends WingsBaseTest {
                                           .value("${artifact.buildNo}".toCharArray())
                                           .build();
     when(serviceTemplateService.computeServiceVariables(
-             app.getUuid(), env.getUuid(), st.getUuid(), context.getWorkflowExecutionId(), false))
+             context.getAppId(), context.getEnv().getUuid(), st.getUuid(), context.getWorkflowExecutionId(), false))
         .thenReturn(asList(serviceVariable));
-    when(serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), svc.getUuid(), env.getUuid()))
+    when(serviceTemplateService.getTemplateRefKeysByService(
+             context.getAppId(), svc.getUuid(), context.getEnv().getUuid()))
         .thenReturn(asList(new Key(ServiceTemplate.class, "serviceTemplates", st.getUuid())));
-    when(artifactService.get(app.getUuid(), ARTIFACT_ID)).thenReturn(artifact);
+    when(artifactService.get(context.getAppId(), ARTIFACT_ID)).thenReturn(artifact);
     on(std).set("artifactService", artifactService);
     on(std).set("serviceTemplateService", serviceTemplateService);
+  }
+
+  @Test
+  public void shouldEvaluateIndirectExpression() {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setExecutionUuid(generateUuid());
+    stateExecutionInstance.setDisplayName("http");
+
+    ExecutionContextImpl context = prepareContext(stateExecutionInstance);
+    ServiceElement svc = context.getContextElement(ContextElementType.SERVICE);
+
+    on(context).set("serviceTemplateService", serviceTemplateService);
+
+    final PhaseElement phaseElement = aPhaseElement().withServiceElement(svc).build();
+    injector.injectMembers(phaseElement);
+    context.pushContextElement(phaseElement);
+
+    Artifact artifact = Artifact.Builder.anArtifact()
+                            .withServiceIds(asList(svc.getUuid()))
+                            .withMetadata(Maps.newHashMap("buildNo", "123-SNAPSHOT"))
+                            .build();
+
+    programServiceTemplateService(context, artifact);
 
     String expr = "${httpResponseBody}.contains(${serviceVariable.REV})";
     HttpStateExecutionData httpStateExecutionData =
@@ -231,57 +209,15 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setExecutionUuid(generateUuid());
     stateExecutionInstance.setDisplayName("http");
-    ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
-    injector.injectMembers(context);
-
-    ServiceElement svc = new ServiceElement();
-    svc.setUuid(generateUuid());
-    svc.setName("svc1");
-    context.pushContextElement(svc);
-
-    ServiceTemplateElement st = new ServiceTemplateElement();
-    st.setUuid(generateUuid());
-    st.setName("st1");
-    st.setServiceElement(aServiceElement().withUuid(generateUuid()).withName("svc2").build());
-    context.pushContextElement(st);
-
-    HostElement host = new HostElement();
-    host.setUuid(generateUuid());
-    host.setHostName("host1");
-    context.pushContextElement(host);
-
-    Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
-    app = appService.save(app);
-
-    Environment env = anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
-    env = environmentService.save(env);
-
-    WorkflowStandardParams std = new WorkflowStandardParams();
-    std.setAppId(app.getUuid());
-    std.setEnvId(env.getUuid());
-    std.setArtifactIds(asList(ARTIFACT_ID));
+    ExecutionContextImpl context = prepareContext(stateExecutionInstance);
+    ServiceElement svc = context.getContextElement(ContextElementType.SERVICE);
 
     Artifact artifact = Artifact.Builder.anArtifact()
                             .withServiceIds(asList(svc.getUuid()))
                             .withMetadata(Maps.newHashMap("buildNo", "123-SNAPSHOT"))
                             .build();
 
-    injector.injectMembers(std);
-    context.pushContextElement(std);
-
-    ServiceVariable serviceVariable = ServiceVariable.builder()
-                                          .serviceId(svc.getUuid())
-                                          .name("REV")
-                                          .value("${artifact.buildNo}".toCharArray())
-                                          .build();
-    when(serviceTemplateService.computeServiceVariables(
-             app.getUuid(), env.getUuid(), st.getUuid(), context.getWorkflowExecutionId(), false))
-        .thenReturn(asList(serviceVariable));
-    when(serviceTemplateService.getTemplateRefKeysByService(app.getUuid(), svc.getUuid(), env.getUuid()))
-        .thenReturn(asList(new Key(ServiceTemplate.class, "serviceTemplates", st.getUuid())));
-    when(artifactService.get(app.getUuid(), ARTIFACT_ID)).thenReturn(artifact);
-    on(std).set("artifactService", artifactService);
-    on(std).set("serviceTemplateService", serviceTemplateService);
+    programServiceTemplateService(context, artifact);
 
     CommandStateExecutionData commandStateExecutionData = CommandStateExecutionData.Builder.aCommandStateExecutionData()
                                                               .withTemplateVariable(ImmutableMap.of("MyVar", "MyValue"))
