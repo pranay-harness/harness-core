@@ -131,7 +131,7 @@ MANAGER1=$host1:$managerport
 UI1=$host1:$uiport
 WWW_DIR_LOCATION=$runtime_dir/data/proxy/www
 STORAGE_DIR_LOCATION=$WWW_DIR_LOCATION/data/storage
-PROXY_VERSION=$(getProperty "version.properties" "proxy")
+PROXY_VERSION=$(getProperty "version.properties" "PROXY_VERSION")
 mkdir -p $STORAGE_DIR_LOCATION
 
 
@@ -216,7 +216,7 @@ function setupManager(){
     DEPLOY_MODE=ONPREM
     WATCHER_METADATA_URL=$LOAD_BALANCER_URL/storage/wingswatchers/watcherprod.txt
     HAZELCAST_PORT=$(getProperty "config_template/manager/manager.properties" "HAZELCAST_PORT")
-    managerVersion=$(getProperty "version.properties" "manager")
+    managerVersion=$(getProperty "version.properties" "MANAGER_VERSION")
 
 #    echo $LOAD_BALANCER_URL
 #    echo $ALLOWED_ORIGINS
@@ -249,7 +249,7 @@ function setupManager(){
 
 function setupUI(){
    echo "################################Setting up UI ################################"
-   ui_version=$(getProperty "version.properties" "ui")
+   ui_version=$(getProperty "version.properties" "UI_VERSION")
    UI_PORT=$(getProperty "config_template/ui/ui.properties" "ui_port")
    docker run -d --name harness_ui -p $UI_PORT:80 --rm -e API_URL="$LOAD_BALANCER_URL" harness/ui:$ui_version
 
@@ -261,7 +261,7 @@ function setupUI(){
 
 function setUpLearningEngine(){
    echo "################################Setting up Learning Engine ################################"
-   learningEngineVersion=$(getProperty "version.properties" "learning-engine")
+   learningEngineVersion=$(getProperty "version.properties" "LEARNING_ENGINE_VERSION")
    https_port=$(getProperty "config_template/learning_engine/learning_engine.properties" "https_port")
    docker run -d --rm --name learningEngine -e learning_env=on_prem -e https_port=$https_port -e server_url=$LOAD_BALANCER_URL -e service_secret=$learningengine_secret harness/learning-engine:$learningEngineVersion
 
@@ -275,8 +275,8 @@ function setUpLearningEngine(){
 function setupDelegateJars(){
    echo "################################Setting up Delegate Jars ################################"
 
-    DELEGATE_VERSION=$(getProperty "version.properties" "delegate")
-    WATCHER_VERSION=$(getProperty "version.properties" "watcher")
+    DELEGATE_VERSION=$(getProperty "version.properties" "DELEGATE_VERSION")
+    WATCHER_VERSION=$(getProperty "version.properties" "WATCHER_VERSION")
 
     mkdir -p $STORAGE_DIR_LOCATION/wingsdelegates/jre/${jre_version}/
     cp images/*.gz $STORAGE_DIR_LOCATION/wingsdelegates/jre/${jre_version}/
