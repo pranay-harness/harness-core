@@ -9,6 +9,7 @@ import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
 
+import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -166,6 +167,24 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       addArtifactToContext(artifactStreamService, getApp().getAccountId(), context, artifact);
     }
     return renderExpression(expression, context);
+  }
+
+  @Override
+  public List<String> renderExpressionList(List<String> expressions) {
+    return renderExpressionList(expressions, ",");
+  }
+
+  @Override
+  public List<String> renderExpressionList(List<String> expressions, String separator) {
+    List<String> result = null;
+    if (expressions != null) {
+      result = new ArrayList<>();
+      for (String expression : expressions) {
+        result.addAll(
+            Splitter.on(separator).trimResults().omitEmptyStrings().splitToList(renderExpression(expression)));
+      }
+    }
+    return result;
   }
 
   @Override

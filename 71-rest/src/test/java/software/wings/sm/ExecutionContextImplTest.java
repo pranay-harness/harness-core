@@ -14,6 +14,7 @@ import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandard
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -47,6 +48,8 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+
+import java.util.List;
 
 /**
  * The Class ExecutionContextImplTest.
@@ -170,6 +173,69 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     when(artifactService.get(context.getAppId(), ARTIFACT_ID)).thenReturn(artifact);
     on(std).set("artifactService", artifactService);
     on(std).set("serviceTemplateService", serviceTemplateService);
+  }
+
+  @Test
+  public void shouldRenderExpressionList() {
+    ExecutionContextImpl context = prepareContextRenderExpressionList("listExpr", "x, y, z");
+    List<String> exprList = ImmutableList.of("a", "b", "${serviceVariable.listExpr}", "c");
+    List<String> rendered = context.renderExpressionList(exprList);
+    ImmutableList<String> expected = ImmutableList.of("a", "b", "x", "y", "z", "c");
+    assertThat(rendered).isEqualTo(expected);
+  }
+
+  @Test
+  public void shouldRenderExpressionListNoSeparator() {
+    ExecutionContextImpl context = prepareContextRenderExpressionList("listExpr", "xyz");
+    List<String> exprList = ImmutableList.of("abc", "${serviceVariable.listExpr}", "def");
+    List<String> rendered = context.renderExpressionList(exprList);
+    ImmutableList<String> expected = ImmutableList.of("abc", "xyz", "def");
+    assertThat(rendered).isEqualTo(expected);
+  }
+
+  @Test
+  public void shouldRenderExpressionListNull() {
+    ExecutionContextImpl context = prepareContextRenderExpressionList("a", "b");
+    assertThat(context.renderExpressionList(null)).isNull();
+  }
+
+  @Test
+  public void shouldRenderExpressionListWithCustomSeparator() {
+    ExecutionContextImpl context = prepareContextRenderExpressionList("listExpr", "x:y:z");
+    List<String> exprList = ImmutableList.of("a", "b", "${serviceVariable.listExpr}", "c");
+    List<String> rendered = context.renderExpressionList(exprList, ":");
+    ImmutableList<String> expected = ImmutableList.of("a", "b", "x", "y", "z", "c");
+    assertThat(rendered).isEqualTo(expected);
+  }
+
+  private ExecutionContextImpl prepareContextRenderExpressionList(String svcVarName, String svcVarValue) {
+    StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
+    stateExecutionInstance.setExecutionUuid(generateUuid());
+    stateExecutionInstance.setDisplayName("http");
+
+    ExecutionContextImpl context = prepareContext(stateExecutionInstance);
+    ServiceElement svc = context.getContextElement(ContextElementType.SERVICE);
+
+    on(context).set("serviceTemplateService", serviceTemplateService);
+
+    final PhaseElement phaseElement = aPhaseElement().withServiceElement(svc).build();
+    injector.injectMembers(phaseElement);
+    context.pushContextElement(phaseElement);
+
+    WorkflowStandardParams std = context.getContextElement(ContextElementType.STANDARD);
+    ServiceTemplateElement st = context.getContextElement(ContextElementType.SERVICE_TEMPLATE);
+    ServiceElement svc1 = context.getContextElement(ContextElementType.SERVICE);
+
+    ServiceVariable serviceVariable =
+        ServiceVariable.builder().serviceId(svc1.getUuid()).name(svcVarName).value(svcVarValue.toCharArray()).build();
+    when(serviceTemplateService.computeServiceVariables(
+             context.getAppId(), context.getEnv().getUuid(), st.getUuid(), context.getWorkflowExecutionId(), false))
+        .thenReturn(asList(serviceVariable));
+    when(serviceTemplateService.getTemplateRefKeysByService(
+             context.getAppId(), svc1.getUuid(), context.getEnv().getUuid()))
+        .thenReturn(asList(new Key(ServiceTemplate.class, "serviceTemplates", st.getUuid())));
+    on(std).set("serviceTemplateService", serviceTemplateService);
+    return context;
   }
 
   @Test
