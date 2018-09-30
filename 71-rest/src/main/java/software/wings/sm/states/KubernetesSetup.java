@@ -183,6 +183,14 @@ public class KubernetesSetup extends ContainerServiceSetup {
     int maxInstances = computeMaxInstances(context);
     int fixedInstances = computeFixedInstances(context, maxInstances);
 
+    IstioConfig evaluatedIstioConfig = null;
+
+    if (istioConfig != null) {
+      evaluatedIstioConfig = new IstioConfig();
+      evaluatedIstioConfig.setGateways(context.renderExpressionList(istioConfig.getGateways()));
+      evaluatedIstioConfig.setHosts(context.renderExpressionList(istioConfig.getHosts()));
+    }
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -218,7 +226,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withUseIngress(useIngress)
         .withIngressYaml(ingressYamlEvaluated)
         .withUseIstioRouteRule(useIstioRouteRule)
-        .withIstioConfig(istioConfig)
+        .withIstioConfig(evaluatedIstioConfig)
         .withBlueGreen(blueGreen)
         .withBlueGreenConfig(blueGreenConfig)
         .withPlainConfigFiles(plainConfigFiles)

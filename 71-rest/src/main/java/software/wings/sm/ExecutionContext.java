@@ -34,6 +34,10 @@ public interface ExecutionContext {
 
   String renderExpression(String expression, Object stateExecutionData, Object addition);
 
+  List<String> renderExpressionList(List<String> expressions);
+
+  List<String> renderExpressionList(List<String> expressions, String separator);
+
   <T extends ContextElement> T getContextElement();
 
   <T extends ContextElement> T getContextElement(ContextElementType contextElementType);
