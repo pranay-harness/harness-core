@@ -1316,7 +1316,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       executionLogCallback.saveExecutionLog("Setting secretMap:\n\n"
           + toDisplayYaml(new SecretBuilder()
                               .withMetadata(secretMap.getMetadata())
-                              .withStringData(secretMap.getData().entrySet().stream().collect(
+                              .withData(secretMap.getData().entrySet().stream().collect(
                                   toMap(Entry::getKey, entry -> SECRET_MASK)))
                               .build()));
       kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secretMap);
