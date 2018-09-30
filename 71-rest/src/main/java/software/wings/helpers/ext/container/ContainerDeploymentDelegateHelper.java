@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.container;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -39,9 +40,7 @@ import software.wings.utils.Misc;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -87,22 +86,20 @@ public class ContainerDeploymentDelegateHelper {
     }
   }
 
-  private char[] getEncodedChars(char[] chars) throws UnsupportedEncodingException {
+  private char[] getEncodedChars(char[] chars) {
     if (isEmpty(chars) || !(new String(chars).startsWith("-----BEGIN "))) {
       return chars;
     }
-
-    byte[] encode = Base64.getEncoder().encode(new String(chars).getBytes("UTF-8"));
-    return new String(encode, "UTF-8").toCharArray();
+    return encodeBase64(chars).toCharArray();
   }
 
-  private void encodeCharsIfNeeded(KubernetesConfig config) throws UnsupportedEncodingException {
+  private void encodeCharsIfNeeded(KubernetesConfig config) {
     config.setCaCert(getEncodedChars(config.getCaCert()));
     config.setClientCert(getEncodedChars(config.getClientCert()));
     config.setClientKey(getEncodedChars(config.getClientKey()));
   }
 
-  private String getConfigFileContent(KubernetesConfig config) throws UnsupportedEncodingException {
+  private String getConfigFileContent(KubernetesConfig config) {
     encodeCharsIfNeeded(config);
 
     if (isBlank(config.getMasterUrl())) {

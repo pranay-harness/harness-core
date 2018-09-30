@@ -1,17 +1,15 @@
 package software.wings.security.encryption;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
-import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 
-import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 
 import io.harness.exception.WingsException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -51,16 +49,6 @@ public class EncryptionUtils {
     return bytes;
   }
 
-  public static char[] encrypt(InputStream content, String containerId) {
-    try {
-      SimpleEncryption encryption = new SimpleEncryption(containerId);
-      byte[] encryptedBytes = encryption.encrypt(ByteStreams.toByteArray(content));
-      return CHARSET.decode(ByteBuffer.wrap(encryptedBytes)).array();
-    } catch (IOException ioe) {
-      throw new WingsException(DEFAULT_ERROR_CODE, ioe);
-    }
-  }
-
   public static byte[] encrypt(byte[] content, String containerId) {
     try {
       SimpleEncryption encryption =
@@ -81,22 +69,24 @@ public class EncryptionUtils {
     }
   }
 
-  public static File decrypt(File file, String containerId) {
+  public static File decrypt(File file, String containerId, boolean base64Encoded) {
     try {
       SimpleEncryption encryption = new SimpleEncryption(containerId);
       byte[] outputBytes = encryption.decrypt(Files.toByteArray(file));
-      Files.write(outputBytes, file);
+      byte[] fileData = base64Encoded ? decodeBase64(outputBytes) : outputBytes;
+      Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
     }
   }
 
-  public static void decryptToStream(File file, String containerId, OutputStream output) {
+  public static void decryptToStream(File file, String containerId, OutputStream output, boolean base64Encoded) {
     try {
       SimpleEncryption encryption = new SimpleEncryption(containerId);
       byte[] outputBytes = encryption.decrypt(Files.toByteArray(file));
-      output.write(outputBytes, 0, outputBytes.length);
+      byte[] fileData = base64Encoded ? decodeBase64(outputBytes) : outputBytes;
+      output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);

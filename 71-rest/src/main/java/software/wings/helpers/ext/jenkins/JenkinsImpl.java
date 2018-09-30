@@ -15,6 +15,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
+import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -50,7 +51,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -251,10 +251,10 @@ public class JenkinsImpl implements Jenkins {
   protected String getNormalizedName(String jobName) {
     try {
       if (isNotEmpty(jobName)) {
-        return URLDecoder.decode(jobName, Charset.defaultCharset().name());
+        return URLDecoder.decode(jobName, Charsets.UTF_8.name());
       }
     } catch (UnsupportedEncodingException e) {
-      logger.warn(format("Failed to decode jobName %s", jobName), e);
+      logger.warn("Failed to decode jobName {}", jobName, e);
     }
     return jobName;
   }

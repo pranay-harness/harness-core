@@ -1,5 +1,7 @@
 package software.wings.utils;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.gson.Gson;
@@ -18,7 +20,6 @@ import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
-import java.util.Base64;
 
 @Singleton
 public class GcsUtil {
@@ -83,8 +84,7 @@ public class GcsUtil {
     Signature privateSignature = Signature.getInstance("SHA256withRSA");
     privateSignature.initSign(pk);
     privateSignature.update(input.getBytes("UTF-8"));
-    byte[] s = privateSignature.sign();
-    return Base64.getEncoder().encodeToString(s);
+    return encodeBase64(privateSignature.sign());
   }
 
   // Get private key object from unencrypted PKCS#8 file content
@@ -93,7 +93,7 @@ public class GcsUtil {
     String realPK = privateKey.replaceAll("-----END PRIVATE KEY-----", "")
                         .replaceAll("-----BEGIN PRIVATE KEY-----", "")
                         .replaceAll("\n", "");
-    byte[] b1 = Base64.getDecoder().decode(realPK);
+    byte[] b1 = decodeBase64(realPK);
     PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(b1);
     KeyFactory kf = KeyFactory.getInstance("RSA");
     return kf.generatePrivate(spec);

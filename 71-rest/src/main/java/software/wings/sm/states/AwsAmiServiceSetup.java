@@ -8,6 +8,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.utils.Misc.normalizeExpression;
 
+import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
 
@@ -62,7 +63,6 @@ import software.wings.utils.AsgConvention;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -230,13 +230,9 @@ public class AwsAmiServiceSetup extends State {
       UserDataSpecification userDataSpecification =
           serviceResourceService.getUserDataSpecification(app.getUuid(), serviceId);
       if (userDataSpecification != null && userDataSpecification.getData() != null) {
-        try {
-          String userData = userDataSpecification.getData();
-          String userDataAfterEvaluation = context.renderExpression(userData);
-          requestBuilder.userData(BaseEncoding.base64().encode(userDataAfterEvaluation.getBytes("UTF-8")));
-        } catch (UnsupportedEncodingException e) {
-          logger.error("Error in setting user data ", e);
-        }
+        String userData = userDataSpecification.getData();
+        String userDataAfterEvaluation = context.renderExpression(userData);
+        requestBuilder.userData(BaseEncoding.base64().encode(userDataAfterEvaluation.getBytes(Charsets.UTF_8)));
       }
 
       String asgNamePrefix = isNotEmpty(autoScalingGroupName)

@@ -8,6 +8,7 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.delegatetasks.DelegateFile.Builder.aDelegateFile;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
@@ -84,7 +85,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     writer.write(String.format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "DM_DEFAULT_ENCODING", "REC_CATCH_EXCEPTION"})
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "REC_CATCH_EXCEPTION"})
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
@@ -108,7 +109,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
       if (parameters.getCurrentStateFileId() != null) {
         try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
-                 FileBucket.TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId(), false)) {
+                 FileBucket.TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId())) {
           FileUtils.copyInputStreamToFile(stateRemoteInputStream, tfStateFile);
         }
       } else {
@@ -206,7 +207,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
 
       if (!"Destroy".equals(parameters.getCommandUnitName())) {
-        terraformExecutionDataBuilder.outputs(new String(Files.readAllBytes(tfOutputsFile.toPath())));
+        terraformExecutionDataBuilder.outputs(new String(Files.readAllBytes(tfOutputsFile.toPath()), Charsets.UTF_8));
       }
 
       return terraformExecutionDataBuilder.build();

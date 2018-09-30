@@ -1,5 +1,8 @@
 package software.wings.beans.command;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -52,7 +55,6 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
@@ -137,7 +139,6 @@ import java.io.IOException;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -893,7 +894,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         safeDisplayServiceVariables.entrySet()
             .stream()
             .filter(entry -> SECRET_MASK.equals(entry.getValue()))
-            .collect(toMap(Entry::getKey, entry -> serviceVariables.get(entry.getKey())));
+            .collect(toMap(Entry::getKey, entry -> encodeBase64(serviceVariables.get(entry.getKey()))));
 
     if (isNotEmpty(encryptedServiceVars)) {
       secretData.putAll(encryptedServiceVars);
@@ -909,14 +910,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     if (secretMap != null) {
       executionLogCallback.saveExecutionLog("Creating secret map:\n\n"
-              + toDisplayYaml(new SecretBuilder()
-                                  .withMetadata(secretMap.getMetadata())
-                                  .withStringData(secretData.entrySet().stream().collect(
-                                      toMap(Entry::getKey, entry -> SECRET_MASK)))
-                                  .build()),
+              + toDisplayYaml(
+                    new SecretBuilder()
+                        .withMetadata(secretMap.getMetadata())
+                        .withData(secretData.entrySet().stream().collect(toMap(Entry::getKey, entry -> SECRET_MASK)))
+                        .build()),
           LogLevel.INFO);
-      secretMap.setStringData(secretData);
-      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secretMap);
+      secretMap.setData(secretData);
+      secretMap = kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, secretMap);
     }
     return secretMap;
   }
@@ -964,7 +965,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
 
     if (isNotEmpty(setupParams.getPlainConfigFiles())) {
-      configMap.getData().putAll(setupParams.getPlainConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> sa[1])));
+      configMap.getData().putAll(
+          setupParams.getPlainConfigFiles().stream().collect(toMap(sa -> sa[0], sa -> decodeBase64ToString(sa[1]))));
     }
 
     if (isEmpty(configMap.getData())) {
@@ -972,7 +974,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     }
     if (configMap != null) {
       executionLogCallback.saveExecutionLog("Creating config map:\n\n" + toDisplayYaml(configMap));
-      kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
+      configMap =
+          kubernetesContainerService.createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
     }
     return configMap;
   }
@@ -1395,14 +1398,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
                                : ContainerApiVersions.KUBERNETES_V2_BETA1.getVersionName();
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private Secret createRegistrySecret(String secretName, String namespace, ImageDetails imageDetails,
       Map<String, String> controllerLabels, ExecutionLogCallback executionLogCallback) {
     executionLogCallback.saveExecutionLog("Setting image pull secret " + secretName);
     String credentialData = format(DOCKER_REGISTRY_CREDENTIAL_TEMPLATE, imageDetails.getRegistryUrl(),
         imageDetails.getUsername(), imageDetails.getPassword());
-    Map<String, String> data =
-        ImmutableMap.of(".dockercfg", new String(Base64.getEncoder().encode(credentialData.getBytes())));
+    Map<String, String> data = ImmutableMap.of(".dockercfg", encodeBase64(credentialData));
     return new SecretBuilder()
         .withNewMetadata()
         .withAnnotations(harnessAnnotations)
@@ -1623,9 +1624,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     Map<String, EnvVar> secretEnvVars = new HashMap<>();
 
     if (secretMap != null) {
-      for (String key : secretMap.getStringData().keySet()) {
-        String value = secretMap.getStringData().get(key);
-        if (envVarPattern.matcher(key).matches() && isNotBlank(value) && value.length() <= MAX_ENV_VAR_LENGTH) {
+      for (String key : secretMap.getData().keySet()) {
+        byte[] value = decodeBase64(secretMap.getData().get(key));
+        if (envVarPattern.matcher(key).matches() && isNotEmpty(value) && value.length <= MAX_ENV_VAR_LENGTH) {
           EnvVarSource varSource = new EnvVarSourceBuilder()
                                        .withNewSecretKeyRef()
                                        .withName(secretMap.getMetadata().getName())
@@ -1637,12 +1638,12 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           String msg = "";
           if (!envVarPattern.matcher(key).matches()) {
             msg = format("Key name [%s] from secret map is not a valid environment variable name. Skipping...", key);
-          } else if (isBlank(value)) {
+          } else if (isEmpty(value)) {
             msg = format("Value for [%s] from secret map is blank. Skipping as environment variable...", key);
-          } else if (value.length() > MAX_ENV_VAR_LENGTH) {
+          } else if (value.length > MAX_ENV_VAR_LENGTH) {
             msg = format(
                 "Value for [%s] from secret map has length %d which exceeds the maximum environment variable length of %d. Skipping...",
-                key, value.length(), MAX_ENV_VAR_LENGTH);
+                key, value.length, MAX_ENV_VAR_LENGTH);
           }
           executionLogCallback.saveExecutionLog(msg, LogLevel.WARN);
         }

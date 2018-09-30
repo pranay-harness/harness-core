@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -36,7 +38,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 
-import java.util.Base64;
+import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Optional;
@@ -241,7 +243,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldUpdateOnPremTrialAccountWithDefaultValues() {
+  public void shouldUpdateOnPremTrialAccountWithDefaultValues() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     long expiryTime = accountService.getDefaultTrialExpiryTime();
     Account account = accountService.save(
@@ -258,7 +260,7 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldUpdateOnPremTrialAccountWithSpecificValues() {
+  public void shouldUpdateOnPremTrialAccountWithSpecificValues() throws UnsupportedEncodingException {
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
     long expiryTime = accountService.getDefaultTrialExpiryTime();
     Account account = accountService.save(
@@ -288,10 +290,9 @@ public class AccountServiceTest extends WingsBaseTest {
     long expiryTime = calendar.getTimeInMillis();
 
     String generatedLicense = accountService.generateLicense(AccountType.TRIAL, AccountStatus.ACTIVE, "1");
-    byte[] decodedBytes = Base64.getDecoder().decode(generatedLicense);
 
     Account account = new Account();
-    account.setEncryptedLicenseInfo(decodedBytes);
+    account.setEncryptedLicenseInfo(decodeBase64(generatedLicense));
     Account accountWithDecryptedInfo = accountService.decryptLicenseInfo(account, false);
     assertThat(accountWithDecryptedInfo).isNotNull();
     assertThat(accountWithDecryptedInfo.getLicenseInfo()).isNotNull();
@@ -300,10 +301,11 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(accountWithDecryptedInfo.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
   }
 
-  private String getEncryptedString(String accountType, String accountStatus, long expiryTime) {
+  private String getEncryptedString(String accountType, String accountStatus, long expiryTime)
+      throws UnsupportedEncodingException {
     String text = accountType + "_" + accountStatus + "_" + expiryTime;
     byte[] encrypt = EncryptionUtils.encrypt(text.getBytes(), null);
-    return Base64.getEncoder().encodeToString(encrypt);
+    return encodeBase64(encrypt);
   }
 
   @Test

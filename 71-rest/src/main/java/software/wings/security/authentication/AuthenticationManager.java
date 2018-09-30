@@ -1,5 +1,7 @@
 package software.wings.security.authentication;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_TOKEN;
 import static io.harness.eraro.ErrorCode.USER_DOES_NOT_EXIST;
@@ -25,8 +27,6 @@ import software.wings.service.intfc.UserService;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import javax.ws.rs.core.Response;
@@ -108,7 +108,7 @@ public class AuthenticationManager {
 
   public User defaultLogin(String basicToken) {
     try {
-      String[] decryptedData = new String(Base64.getDecoder().decode(basicToken), StandardCharsets.UTF_8).split(":");
+      String[] decryptedData = decodeBase64ToString(basicToken).split(":");
       if (decryptedData.length < 2) {
         throw new WingsException(INVALID_CREDENTIAL, USER);
       }
@@ -148,8 +148,7 @@ public class AuthenticationManager {
     try {
       User user = samlBasedAuthHandler.authenticate(credentials);
       String jwtToken = userService.generateJWTToken(user.getEmail(), JWT_CATEGORY.SSO_REDIRECT);
-      String encodedApiUrl =
-          Base64.getEncoder().encodeToString(configuration.getPortal().getUrl().getBytes(StandardCharsets.UTF_8));
+      String encodedApiUrl = encodeBase64(configuration.getPortal().getUrl());
       Map<String, String> params = new HashMap<>();
       params.put("token", jwtToken);
       params.put("apiurl", encodedApiUrl);

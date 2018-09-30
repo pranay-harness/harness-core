@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -231,8 +232,8 @@ public class KubernetesSetup extends ContainerServiceSetup {
     return configFiles.stream()
         .map(cf -> {
           String fileName = isNotBlank(cf.getRelativeFilePath()) ? cf.getRelativeFilePath() : cf.getFileName();
-          String fileContent = configService.getFileContent(app.getUuid(), cf);
-          return new String[] {fileName, fileContent};
+          byte[] fileContent = configService.getFileContent(app.getUuid(), cf);
+          return new String[] {fileName, encodeBase64(fileContent)};
         })
         .collect(toList());
   }

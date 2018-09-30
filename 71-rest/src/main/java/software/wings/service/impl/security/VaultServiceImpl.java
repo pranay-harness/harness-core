@@ -1,5 +1,7 @@
 package software.wings.service.impl.security;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
@@ -280,12 +282,13 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       BoundedInputStream inputStream, EncryptedData savedEncryptedData) {
     try {
       Preconditions.checkNotNull(vaultConfig);
-      byte[] bytes = ByteStreams.toByteArray(inputStream);
+      byte[] bytes = encodeBase64ToByteArray(ByteStreams.toByteArray(inputStream));
       EncryptedData fileData = encrypt(name, new String(CHARSET.decode(ByteBuffer.wrap(bytes)).array()), accountId,
           SettingVariableTypes.CONFIG_FILE, vaultConfig, savedEncryptedData);
       fileData.setAccountId(accountId);
       fileData.setName(name);
       fileData.setType(SettingVariableTypes.CONFIG_FILE);
+      fileData.setBase64Encoded(true);
       fileData.setFileSize(inputStream.getTotalBytesRead());
       return fileData;
     } catch (IOException ioe) {
@@ -300,7 +303,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       Preconditions.checkNotNull(vaultConfig);
       Preconditions.checkNotNull(encryptedData);
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
-      Files.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), file);
+      byte[] fileData =
+          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
@@ -314,7 +319,9 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       Preconditions.checkNotNull(vaultConfig);
       Preconditions.checkNotNull(encryptedData);
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
-      output.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), 0, decrypt.length);
+      byte[] fileData =
+          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);

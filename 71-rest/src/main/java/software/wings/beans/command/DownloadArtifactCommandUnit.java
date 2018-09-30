@@ -1,9 +1,11 @@
 package software.wings.beans.command;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
+import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -26,7 +28,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -45,7 +46,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   private static final Logger logger = LoggerFactory.getLogger(DownloadArtifactCommandUnit.class);
   private static final String ALGORITHM = "HmacSHA1";
-  private static final String ENCODING = "UTF8";
+  private static final Charset ENCODING = Charsets.UTF_8;
 
   @Inject private EncryptionService encryptionService;
   @Inject @Transient private transient DelegateLogService delegateLogService;
@@ -187,7 +188,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       Mac mac = Mac.getInstance(ALGORITHM);
       mac.init(new SecretKeySpec(key.getBytes(ENCODING), ALGORITHM));
       return mac.doFinal(data.getBytes(ENCODING));
-    } catch (NoSuchAlgorithmException | InvalidKeyException | UnsupportedEncodingException e) {
+    } catch (NoSuchAlgorithmException | InvalidKeyException e) {
       return new byte[] {};
     }
   }
@@ -249,7 +250,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     String authHeader = null;
     if (artifactoryConfig.getUsername() != null) {
       String pair = artifactoryConfig.getUsername() + ":" + new String(artifactoryConfig.getPassword());
-      authHeader = "Basic " + Base64.getEncoder().encodeToString(pair.getBytes(Charset.forName("UTF-8")));
+      authHeader = "Basic " + encodeBase64(pair);
     }
     String command;
     switch (this.getScriptType()) {

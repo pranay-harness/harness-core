@@ -1,8 +1,8 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.compression.CompressionUtils.compressString;
-import static io.harness.data.compression.CompressionUtils.deCompressString;
+import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;

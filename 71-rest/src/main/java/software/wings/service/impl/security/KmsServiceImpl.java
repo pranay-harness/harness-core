@@ -1,5 +1,7 @@
 package software.wings.service.impl.security;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
@@ -267,11 +269,12 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public EncryptedData encryptFile(String accountId, KmsConfig kmsConfig, String name, BoundedInputStream inputStream) {
     try {
       Preconditions.checkNotNull(kmsConfig);
-      byte[] bytes = ByteStreams.toByteArray(inputStream);
+      byte[] bytes = encodeBase64ToByteArray(ByteStreams.toByteArray(inputStream));
       EncryptedData fileData = encrypt(CHARSET.decode(ByteBuffer.wrap(bytes)).array(), accountId, kmsConfig);
       fileData.setName(name);
       fileData.setAccountId(accountId);
       fileData.setType(SettingVariableTypes.CONFIG_FILE);
+      fileData.setBase64Encoded(true);
       char[] encryptedValue = fileData.getEncryptedValue();
       BaseFile baseFile = new BaseFile();
       baseFile.setFileName(name);
@@ -294,7 +297,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       byte[] bytes = Files.toByteArray(file);
       encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
       char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
-      Files.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), file);
+      byte[] fileData =
+          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      Files.write(fileData, file);
       return file;
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);
@@ -310,7 +315,9 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       byte[] bytes = Files.toByteArray(file);
       encryptedData.setEncryptedValue(CHARSET.decode(ByteBuffer.wrap(bytes)).array());
       char[] decrypt = decrypt(encryptedData, accountId, kmsConfig);
-      output.write(CHARSET.encode(CharBuffer.wrap(decrypt)).array(), 0, decrypt.length);
+      byte[] fileData =
+          encryptedData.isBase64Encoded() ? decodeBase64(decrypt) : CHARSET.encode(CharBuffer.wrap(decrypt)).array();
+      output.write(fileData, 0, fileData.length);
       output.flush();
     } catch (IOException ioe) {
       throw new WingsException(DEFAULT_ERROR_CODE, ioe);

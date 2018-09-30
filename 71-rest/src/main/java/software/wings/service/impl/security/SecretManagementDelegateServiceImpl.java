@@ -1,11 +1,14 @@
 package software.wings.service.impl.security;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -38,11 +41,9 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.HashSet;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
@@ -275,33 +276,26 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     return false;
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
-  public static char[] encrypt(String src, Key key)
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,
-             BadPaddingException, InvalidAlgorithmParameterException {
+  public static char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
+                                                           InvalidKeyException, IllegalBlockSizeException,
+                                                           BadPaddingException {
     Cipher cipher = Cipher.getInstance("AES");
     cipher.init(Cipher.ENCRYPT_MODE, key);
-
-    byte[] enc = cipher.doFinal(src.getBytes());
-    return Base64.getEncoder().encodeToString(enc).toCharArray();
+    return encodeBase64(cipher.doFinal(src.getBytes(Charsets.UTF_8))).toCharArray();
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
-  public static String decrypt(char[] src, Key key)
-      throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,
-             BadPaddingException, InvalidAlgorithmParameterException {
+  public static String decrypt(char[] src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
+                                                           InvalidKeyException, IllegalBlockSizeException,
+                                                           BadPaddingException {
     if (src == null) {
       return null;
     }
-
-    byte[] decodeBase64src = Base64.getDecoder().decode(new String(src));
     Cipher cipher = Cipher.getInstance("AES");
-
     cipher.init(Cipher.DECRYPT_MODE, key);
-    return new String(cipher.doFinal(decodeBase64src));
+    return new String(cipher.doFinal(decodeBase64(src)), Charsets.UTF_8);
   }
 
-  public byte[] getByteArray(ByteBuffer b) {
+  private byte[] getByteArray(ByteBuffer b) {
     byte[] byteArray = new byte[b.remaining()];
     b.get(byteArray);
     return byteArray;
