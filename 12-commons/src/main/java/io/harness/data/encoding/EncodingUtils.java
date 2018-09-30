@@ -1,7 +1,8 @@
-package io.harness.data.compression;
+package io.harness.data.encoding;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 
 import java.io.BufferedReader;
@@ -10,13 +11,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-/**
- * Created by rsingh on 8/24/18.
- */
-public class CompressionUtils {
+public class EncodingUtils {
   public static byte[] compressString(String toCompress) throws IOException {
     Preconditions.checkState(isNotEmpty(toCompress));
     ByteArrayOutputStream bos = new ByteArrayOutputStream(toCompress.length());
@@ -42,5 +41,37 @@ public class CompressionUtils {
     gis.close();
     bis.close();
     return sb.toString();
+  }
+
+  public static String encodeBase64(byte[] toEncode) {
+    return new String(Base64.getEncoder().encode(toEncode), Charsets.UTF_8);
+  }
+
+  public static String encodeBase64(char[] toEncode) {
+    return encodeBase64(new String(toEncode));
+  }
+
+  public static String encodeBase64(String toEncode) {
+    return encodeBase64(toEncode.getBytes(Charsets.UTF_8));
+  }
+
+  public static byte[] encodeBase64ToByteArray(byte[] toEncode) {
+    return Base64.getEncoder().encode(toEncode);
+  }
+
+  public static byte[] decodeBase64(String toDecode) {
+    return Base64.getDecoder().decode(toDecode);
+  }
+
+  public static byte[] decodeBase64(char[] toDecode) {
+    return Base64.getDecoder().decode(new String(toDecode));
+  }
+
+  public static byte[] decodeBase64(byte[] toDecode) {
+    return Base64.getDecoder().decode(new String(toDecode, Charsets.UTF_8));
+  }
+
+  public static String decodeBase64ToString(String toDecode) {
+    return new String(decodeBase64(toDecode), Charsets.UTF_8);
   }
 }

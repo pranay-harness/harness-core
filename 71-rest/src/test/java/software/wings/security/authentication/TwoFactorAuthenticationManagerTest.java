@@ -1,5 +1,6 @@
 package software.wings.security.authentication;
 
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
@@ -30,7 +31,6 @@ import software.wings.service.intfc.UserService;
 
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
-import java.util.Base64;
 
 public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
   @Mock UserService userService;
@@ -57,7 +57,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       authenticatedUser.setToken("ValidToken");
 
       when(authService.generateBearerTokenForUser(user)).thenReturn(authenticatedUser);
-      String encryptedCode = Base64.getEncoder().encodeToString(("testJWTToken:" + code).getBytes());
+      String encryptedCode = encodeBase64("testJWTToken:" + code);
       assertThat(twoFactorAuthenticationManager.authenticate(encryptedCode)).isEqualTo(authenticatedUser);
 
       try {
@@ -81,7 +81,7 @@ public class TwoFactorAuthenticationManagerTest extends WingsBaseTest {
       try {
         when(userService.verifyJWTToken(anyString(), any(JWT_CATEGORY.class))).thenReturn(user);
         user.setTotpSecretKey(totpSecretKey);
-        encryptedCode = Base64.getEncoder().encodeToString("testJWTToken:invalid_code".getBytes());
+        encryptedCode = encodeBase64("testJWTToken:invalid_code");
         twoFactorAuthenticationManager.authenticate(encryptedCode);
         failBecauseExceptionWasNotThrown(WingsException.class);
       } catch (WingsException e) {

@@ -267,7 +267,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                   @Override
                   public void downloadToStream(OutputStream outputStream) throws IOException, ExecutionException {
                     try (InputStream inputStream = delegateFileManager.downloadArtifactByFileId(
-                             fileBucket, fileNamesId.getKey(), config.getAccountId(), false)) {
+                             fileBucket, fileNamesId.getKey(), config.getAccountId())) {
                       IOUtils.copy(inputStream, outputStream);
                     }
                   }
@@ -275,28 +275,6 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         .filter(commandExecutionStatus -> commandExecutionStatus == CommandExecutionStatus.FAILURE)
         .findFirst()
         .orElse(CommandExecutionStatus.SUCCESS);
-  }
-
-  @Override
-  public CommandExecutionStatus copyGridFsFiles(ConfigFileMetaData configFileMetaData) {
-    if (isBlank(configFileMetaData.getFileId()) || isBlank(configFileMetaData.getFilename())) {
-      saveExecutionLog("There are no artifacts to copy. " + configFileMetaData.toString());
-      return CommandExecutionStatus.SUCCESS;
-    }
-    return scpOneFile(configFileMetaData.getDestinationDirectoryPath(), new FileProvider() {
-      @Override
-      public Pair<String, Long> getInfo() throws IOException {
-        return ImmutablePair.of(configFileMetaData.getFilename(), configFileMetaData.getLength());
-      }
-
-      @Override
-      public void downloadToStream(OutputStream outputStream) throws IOException, ExecutionException {
-        try (InputStream inputStream = delegateFileManager.downloadArtifactByFileId(configFileMetaData.getFileBucket(),
-                 configFileMetaData.getFileId(), config.getAccountId(), configFileMetaData.isEncrypted())) {
-          IOUtils.copy(inputStream, outputStream);
-        }
-      }
-    });
   }
 
   @Override

@@ -398,7 +398,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           ? Collections.emptyMap()
           : getLastExecutionNodes(context);
       Map<String, String> testNodes = getCanaryNewHostNames(context);
-      testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
+      testNodes.keySet().forEach(controlNodes::remove);
       return AnalysisContext.builder()
           .accountId(this.appService.get(context.getAppId()).getAccountId())
           .appId(context.getAppId())

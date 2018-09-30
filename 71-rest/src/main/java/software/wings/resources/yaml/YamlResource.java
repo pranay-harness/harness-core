@@ -5,6 +5,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
 
+import com.google.common.base.Charsets;
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -793,7 +794,7 @@ public class YamlResource {
   public RestResponse<GitSyncWebhook> getWebhook(
       @PathParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
     try {
-      entityId = URLDecoder.decode(entityId, "UTF-8");
+      entityId = URLDecoder.decode(entityId, Charsets.UTF_8.name());
     } catch (UnsupportedEncodingException e) {
       logger.error("", e);
     }

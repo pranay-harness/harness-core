@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_DOC_START_MARKER;
 import static io.fabric8.kubernetes.client.utils.Utils.isNotNullOrEmpty;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
@@ -64,7 +65,6 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.security.GeneralSecurityException;
-import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
@@ -324,11 +324,10 @@ public class KubernetesHelperService {
     return null;
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING"}) // TODO
   private String encode(char[] value) {
     String encodedValue = new String(value).trim();
     if (isNotBlank(encodedValue) && encodedValue.startsWith("-----BEGIN ")) {
-      encodedValue = new String(Base64.getEncoder().encode(encodedValue.getBytes()));
+      encodedValue = encodeBase64(encodedValue);
     }
     return encodedValue;
   }

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
@@ -542,8 +543,7 @@ public class AccountServiceImpl implements AccountService {
       licenseInfo.setAccountType(accountType);
     }
 
-    byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(licenseInfo, true);
-    return Base64.getEncoder().encodeToString(encryptedLicenseInfo);
+    return encodeBase64(getEncryptedLicenseInfo(licenseInfo, true));
   }
 
   @Override

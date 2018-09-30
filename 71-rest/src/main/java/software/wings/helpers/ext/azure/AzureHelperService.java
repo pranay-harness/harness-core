@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.azure;
 
+import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -43,7 +44,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -290,13 +290,11 @@ public class AzureHelperService {
     return null;
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private KubernetesConfig parseConfig(String configContent, String namespace) {
     try {
-      byte[] configBytes = Base64.getDecoder().decode(configContent);
       ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
       io.fabric8.kubernetes.api.model.Config kubeConfig =
-          mapper.readValue(new String(configBytes), io.fabric8.kubernetes.api.model.Config.class);
+          mapper.readValue(decodeBase64ToString(configContent), io.fabric8.kubernetes.api.model.Config.class);
 
       Context currentContext = KubeConfigUtils.getCurrentContext(kubeConfig);
       Cluster currentCluster = KubeConfigUtils.getCluster(kubeConfig, currentContext);
