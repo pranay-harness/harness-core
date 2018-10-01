@@ -336,13 +336,9 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         trafficWeights =
             kubernetesContainerService.getTrafficWeights(kubernetesConfig, encryptedDataDetails, containerServiceName);
         if (isNotBlank(lastCtrlName)) {
-          String previousAutoscalerName =
-              lastAutoscaler(kubernetesConfig, encryptedDataDetails, setupParams.getControllerNamePrefix());
-          if (isNotBlank(previousAutoscalerName)) {
-            previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, previousAutoscalerName);
-            if (isNotBlank(previousAutoscalerYaml)) {
-              lastAutoscaler = previousAutoscalerName;
-            }
+          previousAutoscalerYaml = getAutoscalerYaml(kubernetesConfig, encryptedDataDetails, lastCtrlName);
+          if (isNotBlank(previousAutoscalerYaml)) {
+            lastAutoscaler = lastCtrlName;
           }
         }
       }
@@ -1024,8 +1020,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private String getAutoscalerYaml(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName) {
-    HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(
-        kubernetesConfig, encryptedDataDetails, containerServiceName, KUBERNETES_V1.getVersionName());
+    HorizontalPodAutoscaler hpa = getAutoscaler(kubernetesConfig, encryptedDataDetails, containerServiceName);
     if (hpa != null) {
       try {
         return toYaml(hpa);
@@ -1501,24 +1496,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         : Integer.parseInt(kubernetesResource.getMetadata().getLabels().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY));
   }
 
-  private String lastAutoscaler(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String controllerNamePrefix) {
-    final AtomicReference<HorizontalPodAutoscaler> lastHpa = new AtomicReference<>();
-    final AtomicInteger lastRevision = new AtomicInteger();
-    kubernetesContainerService.listControllers(kubernetesConfig, encryptedDataDetails)
-        .stream()
-        .filter(ctrl -> ctrl.getMetadata().getName().startsWith(controllerNamePrefix))
-        .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
-        .forEach(ctrl -> {
-          HorizontalPodAutoscaler hpa = kubernetesContainerService.getAutoscaler(
-              kubernetesConfig, encryptedDataDetails, ctrl.getMetadata().getName(), KUBERNETES_V1.getVersionName());
-          Optional<Integer> revision = getRevisionFromControllerName(ctrl.getMetadata().getName());
-          if (hpa != null && revision.isPresent() && (lastHpa.get() == null || revision.get() > lastRevision.get())) {
-            lastHpa.set(hpa);
-            lastRevision.set(revision.get());
-          }
-        });
-    return lastHpa.get() != null ? lastHpa.get().getMetadata().getName() : null;
+  private HorizontalPodAutoscaler getAutoscaler(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String name) {
+    return kubernetesContainerService.getAutoscaler(
+        kubernetesConfig, encryptedDataDetails, name, KUBERNETES_V1.getVersionName());
   }
 
   private HasMetadata createKubernetesControllerDefinition(KubernetesContainerTask kubernetesContainerTask,
