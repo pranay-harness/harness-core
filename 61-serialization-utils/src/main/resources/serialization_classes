@@ -555,3 +555,5 @@ software.wings.service.impl.dynatrace.DynaTraceMetricDataResponse$DynaTraceMetri
 software.wings.beans.JenkinsSubTaskType, 5515
 software.wings.beans.command.DownloadArtifactCommandUnit, 5516
 io.harness.exception.KmsOperationException, 5517
+software.wings.service.impl.aws.model.AwsAmiResizeData, 5518
+software.wings.service.impl.aws.model.AwsAmiPreDeploymentData, 5519

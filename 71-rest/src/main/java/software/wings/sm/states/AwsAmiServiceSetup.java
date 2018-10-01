@@ -133,8 +133,8 @@ public class AwsAmiServiceSetup extends State {
             .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
             .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
             .commandName(commandName)
-            .oldAsgMinSize(amiServiceSetupResponse.getLastDeployedAsgMinSize())
-            .oldAsgDesiredCapacity(amiServiceSetupResponse.getLastDeployedAsgDesiredCapacity())
+            .oldAsgNames(amiServiceSetupResponse.getOldAsgNames())
+            .preDeploymentData(amiServiceSetupResponse.getPreDeploymentData())
             .build();
 
     return ExecutionResponse.Builder.anExecutionResponse()

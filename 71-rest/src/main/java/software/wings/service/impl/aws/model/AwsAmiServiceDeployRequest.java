@@ -22,16 +22,18 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
   private Integer newAsgFinalDesiredCount;
   private String oldAutoScalingGroupName;
   private Integer oldAsgFinalDesiredCount;
+  private List<AwsAmiResizeData> asgDesiredCounts;
   private Integer autoScalingSteadyStateTimeout;
-  private boolean lastDeployStep;
   private int minInstances;
+  private int maxInstances;
+  private AwsAmiPreDeploymentData preDeploymentData;
 
   @Builder
   public AwsAmiServiceDeployRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String accountId, String appId, String activityId, String commandName, boolean resizeNewFirst,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
-      Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, boolean lastDeployStep,
-      int minInstances) {
+      Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, boolean lastDeployStep, int minInstances,
+      List<AwsAmiResizeData> asgDesiredCounts, int maxInstances, AwsAmiPreDeploymentData preDeploymentData) {
     super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_DEPLOY, region);
     this.accountId = accountId;
     this.appId = appId;
@@ -43,7 +45,9 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
     this.oldAutoScalingGroupName = oldAutoScalingGroupName;
     this.oldAsgFinalDesiredCount = oldAsgFinalDesiredCount;
     this.autoScalingSteadyStateTimeout = autoScalingSteadyStateTimeout;
-    this.lastDeployStep = lastDeployStep;
     this.minInstances = minInstances;
+    this.asgDesiredCounts = asgDesiredCounts;
+    this.maxInstances = maxInstances;
+    this.preDeploymentData = preDeploymentData;
   }
 }

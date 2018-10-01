@@ -1,6 +1,10 @@
 package software.wings.sm.states;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyList;
+import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
+
+import com.google.common.collect.Lists;
 
 import software.wings.api.AmiServiceDeployElement;
 import software.wings.api.AmiServiceSetupElement;
@@ -11,16 +15,15 @@ import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
-import software.wings.beans.ResizeStrategy;
 import software.wings.beans.SettingAttribute;
 import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -42,9 +45,14 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
     AmiServiceDeployElement amiServiceDeployElement = context.getContextElement(ContextElementType.AMI_SERVICE_DEPLOY);
 
-    ContainerServiceData oldContainerServiceData = amiServiceDeployElement.getOldInstanceData().get(0);
-    String oldAgName = oldContainerServiceData.getName();
-    int oldAsgFinalDesiredCount = oldContainerServiceData.getPreviousCount();
+    List<ContainerServiceData> oldData = amiServiceDeployElement.getOldInstanceData();
+    List<AwsAmiResizeData> oldAsgCounts = Lists.newArrayList();
+    if (isNotEmpty(oldData)) {
+      oldData.forEach(data -> {
+        oldAsgCounts.add(
+            AwsAmiResizeData.builder().asgName(data.getName()).desiredCount(data.getPreviousCount()).build());
+      });
+    }
 
     ContainerServiceData newContainerServiceData = amiServiceDeployElement.getNewInstanceData().get(0);
     String newAgName = newContainerServiceData.getName();
@@ -58,20 +66,21 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId());
-    boolean resizeNewFirst = serviceSetupElement.getResizeStrategy().equals(ResizeStrategy.RESIZE_NEW_FIRST);
+
+    // If resize new first is selected as true by the user in setup state. Then in rollback we want to resize the
+    // list of older Asgs first. In that case, the flag sent to the delegate would need to be reversed.
+    boolean resizeNewFirst = !RESIZE_NEW_FIRST.equals(serviceSetupElement.getResizeStrategy());
 
     createAndQueueResizeTask(awsConfig, encryptionDetails, region, infrastructureMapping.getAccountId(),
-        infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, oldAgName,
-        oldAsgFinalDesiredCount, newAgName, newAsgFinalDesiredCount,
-        serviceSetupElement.getAutoScalingSteadyStateTimeout(), infrastructureMapping.getEnvId(),
-        !isEmpty(oldAgName) && serviceSetupElement.getOldAsgDesiredCapacity() == oldAsgFinalDesiredCount,
-        serviceSetupElement.getOldAsgMinSize());
+        infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, newAgName,
+        newAsgFinalDesiredCount, oldAsgCounts, serviceSetupElement.getAutoScalingSteadyStateTimeout(),
+        infrastructureMapping.getEnvId(), serviceSetupElement.getMinInstances(), serviceSetupElement.getMaxInstances(),
+        serviceSetupElement.getPreDeploymentData());
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(),
         serviceSetupElement, amiServiceDeployElement.getInstanceCount(), amiServiceDeployElement.getInstanceUnitType(),
         amiServiceDeployElement.getNewInstanceData(), amiServiceDeployElement.getOldInstanceData());
     awsAmiDeployStateExecutionData.setRollback(true);
-
     return awsAmiDeployStateExecutionData;
   }
 
@@ -79,6 +88,6 @@ public class AwsAmiServiceRollback extends AwsAmiServiceDeployState {
   protected List<InstanceElement> handleAsyncInternal(AwsAmiServiceDeployResponse amiServiceDeployResponse,
       ExecutionContext context, AmiServiceSetupElement serviceSetupElement,
       ManagerExecutionLogCallback executionLogCallback) {
-    return Collections.emptyList();
+    return emptyList();
   }
 }

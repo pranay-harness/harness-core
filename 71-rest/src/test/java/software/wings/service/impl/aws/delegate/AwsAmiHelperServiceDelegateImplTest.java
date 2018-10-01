@@ -3,6 +3,7 @@ package software.wings.service.impl.aws.delegate;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.reflect.MethodUtils.invokeMethod;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -33,6 +34,8 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
+import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
@@ -58,8 +61,9 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
             any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
     try {
       invokeMethod(awsAmiHelperServiceDelegate, true, "resizeAsgs",
-          new Object[] {"us-east-1", AwsConfig.builder().build(), emptyList(), "newName", 1, "oldName", 2, mockCallback,
-              true, 10});
+          new Object[] {"us-east-1", AwsConfig.builder().build(), emptyList(), "newName", 2,
+              singletonList(AwsAmiResizeData.builder().asgName("oldName").desiredCount(0).build()), mockCallback, true,
+              10, 2, 0, AwsAmiPreDeploymentData.builder().build()});
     } catch (Exception ex) {
       fail(format("Exception: [%s]", ex.getMessage()));
     }
@@ -254,19 +258,23 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
-  public void testPopulateLastDeployedAsgData() {
+  public void testPopulatePreDeploymentData() {
     List<AutoScalingGroup> scalingGroups =
-        asList(new AutoScalingGroup().withAutoScalingGroupName("name_1").withDesiredCapacity(3).withMinSize(2),
-            new AutoScalingGroup().withAutoScalingGroupName("name_2").withDesiredCapacity(5).withMinSize(4));
+        asList(new AutoScalingGroup().withAutoScalingGroupName("name_2").withDesiredCapacity(3).withMinSize(2),
+            new AutoScalingGroup().withAutoScalingGroupName("name_1").withDesiredCapacity(5).withMinSize(4));
     AwsAmiServiceSetupResponseBuilder builder = AwsAmiServiceSetupResponse.builder();
     try {
-      invokeMethod(awsAmiHelperServiceDelegate, true, "populateLastDeployedAsgData",
-          new Object[] {builder, "name_2", scalingGroups});
+      invokeMethod(
+          awsAmiHelperServiceDelegate, true, "populatePreDeploymentData", new Object[] {scalingGroups, builder});
     } catch (Exception ex) {
       fail(format("Exception: [%s]", ex.getMessage()));
     }
+
     AwsAmiServiceSetupResponse response = builder.build();
-    assertThat(response.getLastDeployedAsgMinSize()).isEqualTo(4);
-    assertThat(response.getLastDeployedAsgDesiredCapacity()).isEqualTo(5);
+    List<String> oldAsgNames = response.getOldAsgNames();
+    assertThat(oldAsgNames).isNotEmpty();
+    assertThat(oldAsgNames.size()).isEqualTo(2);
+    assertThat(oldAsgNames.get(0)).isEqualTo("name_1");
+    assertThat(oldAsgNames.get(1)).isEqualTo("name_2");
   }
 }
