@@ -20,6 +20,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
+import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -80,7 +81,8 @@ public class DelegateApplication {
       watcherProcess = args[2];
     }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      MessageService messageService = Guice.createInjector(new DelegateModule()).getInstance(MessageService.class);
+      MessageService messageService =
+          Guice.createInjector(new TimeModule(), new DelegateModule()).getInstance(MessageService.class);
       messageService.closeChannel(DELEGATE, processId);
       messageService.closeData(DELEGATE_DASH + processId);
       logger.info("Log manager shutdown hook executing.");
@@ -105,7 +107,7 @@ public class DelegateApplication {
         },
         new ManagerClientModule(
             configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()),
-        new VersionModule(), new DelegateModule());
+        new TimeModule(), new VersionModule(), new DelegateModule());
 
     boolean watched = watcherProcess != null;
     if (watched) {

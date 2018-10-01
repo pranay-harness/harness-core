@@ -13,6 +13,7 @@ import com.google.inject.name.Names;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.serializer.YamlUtils;
+import io.harness.time.TimeModule;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
@@ -62,7 +63,8 @@ public class WatcherApplication {
     }
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      MessageService messageService = Guice.createInjector(new WatcherModule()).getInstance(MessageService.class);
+      MessageService messageService =
+          Guice.createInjector(new TimeModule(), new WatcherModule()).getInstance(MessageService.class);
       messageService.closeChannel(WATCHER, processId);
       logger.info("My watch has ended");
       LogManager.shutdown();
@@ -87,7 +89,7 @@ public class WatcherApplication {
         },
         new ManagerClientModule(
             configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()),
-        new WatcherModule());
+        new TimeModule(), new WatcherModule());
     if (upgrade) {
       MessageService messageService = injector.getInstance(MessageService.class);
       logger.info("Sending previous watcher process {} new watcher process ID: {}", previousWatcherProcess, processId);

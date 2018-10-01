@@ -60,6 +60,7 @@ import io.harness.mongo.QueryFactory;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.rule.MongoServerFactory;
 import io.harness.rule.RealMongo;
+import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -249,7 +250,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
           }
         },
         new LicenseModule(), new ValidationModule(validatorFactory),
-        new DatabaseModule(datastore, datastore, distributedLockSvc), new VersionModule(),
+        new DatabaseModule(datastore, datastore, distributedLockSvc), new TimeModule(), new VersionModule(),
         new WingsModule(configuration), new YamlModule(), new ExecutorModule(executorService), new WingsTestModule(),
         new TemplateModule());
 
