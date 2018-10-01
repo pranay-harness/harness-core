@@ -9,11 +9,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.serializer.YamlUtils;
-import io.harness.time.TimeModule;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
@@ -25,6 +25,8 @@ import software.wings.watcher.service.WatcherService;
 
 import java.io.FileReader;
 import java.lang.management.ManagementFactory;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -64,7 +66,7 @@ public class WatcherApplication {
 
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       MessageService messageService =
-          Guice.createInjector(new TimeModule(), new WatcherModule()).getInstance(MessageService.class);
+          Guice.createInjector(new WatcherModule().cumulativeDependencies()).getInstance(MessageService.class);
       messageService.closeChannel(WATCHER, processId);
       logger.info("My watch has ended");
       LogManager.shutdown();
@@ -80,16 +82,22 @@ public class WatcherApplication {
   @SuppressFBWarnings("DM_EXIT")
   private void run(WatcherConfiguration configuration, boolean upgrade, String previousWatcherProcess)
       throws Exception {
-    Injector injector = Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(WatcherConfiguration.class).toInstance(configuration);
-          }
-        },
-        new ManagerClientModule(
-            configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()),
-        new TimeModule(), new WatcherModule());
+    Set<Module> modules = new HashSet<>();
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(WatcherConfiguration.class).toInstance(configuration);
+      }
+    });
+
+    modules.add(new ManagerClientModule(
+        configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
+
+    modules.addAll(new WatcherModule().cumulativeDependencies());
+
+    Injector injector = Guice.createInjector(modules);
+
     if (upgrade) {
       MessageService messageService = injector.getInstance(MessageService.class);
       logger.info("Sending previous watcher process {} new watcher process ID: {}", previousWatcherProcess, processId);

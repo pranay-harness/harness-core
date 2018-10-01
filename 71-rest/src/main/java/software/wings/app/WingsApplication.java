@@ -12,6 +12,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Names;
@@ -34,7 +35,6 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.exception.WingsException;
-import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Connector;
@@ -98,7 +98,9 @@ import software.wings.waitnotify.Notifier;
 import software.wings.waitnotify.NotifyResponseCleanupHandler;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -173,7 +175,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    DatabaseModule databaseModule = new DatabaseModule(configuration);
+    List<Module> modules = new ArrayList<>();
+
+    final DatabaseModule databaseModule = new DatabaseModule(configuration);
+    modules.add(databaseModule);
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
@@ -181,31 +186,39 @@ public class WingsApplication extends Application<MainConfiguration> {
                                             .buildValidatorFactory();
 
     CacheModule cacheModule = new CacheModule(configuration);
+    modules.add(cacheModule);
     StreamModule streamModule = new StreamModule(environment, cacheModule.getHazelcastInstance());
-    Injector injector = Guice.createInjector(MetricsInstrumentationModule.builder()
-                                                 .withMetricRegistry(metricRegistry)
-                                                 .withMatcher(not(new AbstractMatcher<TypeLiteral<?>>() {
-                                                   @Override
-                                                   public boolean matches(TypeLiteral<?> typeLiteral) {
-                                                     return typeLiteral.getRawType().isAnnotationPresent(Path.class);
-                                                   }
-                                                 }))
-                                                 .build(),
-        cacheModule, streamModule,
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
-            bind(MetricRegistry.class).toInstance(metricRegistry);
-          }
-        },
-        new ValidationModule(validatorFactory), databaseModule, new TimeModule(), new VersionModule(),
-        new WingsModule(configuration), new YamlModule(),
 
-        new ExecutorModule(),
-        new QueueModule(databaseModule.getPrimaryDatastore(),
-            StringUtils.contains(configuration.getFeatureNames(), MONGO_QUEUE_VERSIONING.toString())),
-        new TemplateModule());
+    modules.add(streamModule);
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(HazelcastInstance.class).toInstance(cacheModule.getHazelcastInstance());
+        bind(MetricRegistry.class).toInstance(metricRegistry);
+      }
+    });
+
+    modules.add(MetricsInstrumentationModule.builder()
+                    .withMetricRegistry(metricRegistry)
+                    .withMatcher(not(new AbstractMatcher<TypeLiteral<?>>() {
+                      @Override
+                      public boolean matches(TypeLiteral<?> typeLiteral) {
+                        return typeLiteral.getRawType().isAnnotationPresent(Path.class);
+                      }
+                    }))
+                    .build());
+
+    modules.add(new ValidationModule(validatorFactory));
+    modules.add(new VersionModule());
+    modules.addAll(new WingsModule(configuration).cumulativeDependencies());
+    modules.add(new YamlModule());
+    modules.add(new QueueModule(databaseModule.getPrimaryDatastore(),
+        StringUtils.contains(configuration.getFeatureNames(), MONGO_QUEUE_VERSIONING.toString())));
+    modules.add(new ExecutorModule());
+    modules.add(new TemplateModule());
+
+    Injector injector = Guice.createInjector(modules);
 
     Caching.getCachingProvider().getCacheManager().createCache(USER_CACHE, new Configuration<String, User>() {
       public static final long serialVersionUID = 1L;

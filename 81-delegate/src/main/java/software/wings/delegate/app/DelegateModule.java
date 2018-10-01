@@ -1,13 +1,15 @@
 package software.wings.delegate.app;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
+import io.harness.govern.DependencyModule;
+import io.harness.time.TimeModule;
 import software.wings.api.DeploymentType;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
@@ -168,6 +170,7 @@ import software.wings.utils.message.MessageServiceImpl;
 import software.wings.utils.message.MessengerType;
 
 import java.time.Clock;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -177,7 +180,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by peeyushaggarwal on 11/29/16.
  */
-public class DelegateModule extends AbstractModule {
+public class DelegateModule extends DependencyModule {
   @Override
   protected void configure() {
     bind(DelegateService.class).to(DelegateServiceImpl.class);
@@ -351,5 +354,10 @@ public class DelegateModule extends AbstractModule {
         .to(PcfApplicationDetailsCommandTaskHandler.class);
     commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.DATAFETCH.name())
         .to(PcfDataFetchCommandTaskHandler.class);
+  }
+
+  @Override
+  public Set<DependencyModule> dependencies() {
+    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance());
   }
 }

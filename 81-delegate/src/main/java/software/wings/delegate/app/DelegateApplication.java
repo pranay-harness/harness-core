@@ -13,6 +13,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
@@ -20,7 +21,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
-import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +37,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.management.ManagementFactory;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
@@ -82,7 +84,7 @@ public class DelegateApplication {
     }
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       MessageService messageService =
-          Guice.createInjector(new TimeModule(), new DelegateModule()).getInstance(MessageService.class);
+          Guice.createInjector(new DelegateModule().cumulativeDependencies()).getInstance(MessageService.class);
       messageService.closeChannel(DELEGATE, processId);
       messageService.closeData(DELEGATE_DASH + processId);
       logger.info("Log manager shutdown hook executing.");
@@ -98,16 +100,22 @@ public class DelegateApplication {
 
   @SuppressFBWarnings("DM_EXIT")
   private void run(DelegateConfiguration configuration, String watcherProcess) {
-    Injector injector = Guice.createInjector(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(DelegateConfiguration.class).toInstance(configuration);
-          }
-        },
-        new ManagerClientModule(
-            configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()),
-        new TimeModule(), new VersionModule(), new DelegateModule());
+    List<Module> modules = new ArrayList<>();
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(DelegateConfiguration.class).toInstance(configuration);
+      }
+    });
+
+    modules.add(new ManagerClientModule(
+        configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
+
+    modules.add(new VersionModule());
+
+    modules.addAll(new DelegateModule().cumulativeDependencies());
+
+    Injector injector = Guice.createInjector(modules);
 
     boolean watched = watcherProcess != null;
     if (watched) {
