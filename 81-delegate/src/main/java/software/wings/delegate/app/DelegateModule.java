@@ -1,8 +1,6 @@
 package software.wings.delegate.app;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
@@ -251,7 +249,6 @@ public class DelegateModule extends AbstractModule {
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
     bind(DelegateFileManager.class).to(DelegateFileManagerImpl.class).asEagerSingleton();
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(ServiceCommandExecutorService.class).to(ServiceCommandExecutorServiceImpl.class);
     bind(SshExecutorFactory.class);
     bind(DelegateLogService.class).to(DelegateLogServiceImpl.class);

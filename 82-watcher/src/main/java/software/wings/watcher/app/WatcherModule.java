@@ -1,8 +1,6 @@
 package software.wings.watcher.app;
 
-import com.google.common.util.concurrent.SimpleTimeLimiter;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
@@ -53,7 +51,6 @@ public class WatcherModule extends AbstractModule {
     bind(MessageService.class)
         .toInstance(
             new MessageServiceImpl(Clock.systemUTC(), MessengerType.WATCHER, WatcherApplication.getProcessId()));
-    bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(Clock.class).toInstance(Clock.systemUTC());
   }
 }
