@@ -16,6 +16,7 @@ public class TimeModule extends DependencyModule {
     }
     return instance;
   }
+
   @Override
   protected void configure() {
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
