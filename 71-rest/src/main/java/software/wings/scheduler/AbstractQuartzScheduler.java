@@ -15,6 +15,7 @@ import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.mongo.MongoConfig;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -32,7 +33,6 @@ import software.wings.core.maintenance.MaintenanceListener;
 import software.wings.core.managerConfiguration.ConfigChangeEvent;
 import software.wings.core.managerConfiguration.ConfigChangeListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.dl.MongoConfig;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 

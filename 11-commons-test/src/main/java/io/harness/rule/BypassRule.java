@@ -11,7 +11,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 public class BypassRule implements TestRule {
-  private static final Logger logger = LoggerFactory.getLogger(AuthorRule.class);
+  private static final Logger logger = LoggerFactory.getLogger(OwnerRule.class);
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})

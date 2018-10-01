@@ -20,10 +20,10 @@ import io.dropwizard.request.logging.RequestLogFactory;
 import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.mongo.MongoConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
-import software.wings.dl.MongoConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
 import java.util.List;

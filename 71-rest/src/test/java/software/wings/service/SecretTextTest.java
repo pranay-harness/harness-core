@@ -32,7 +32,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAware;
-import io.harness.rule.AuthorRule.Author;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
@@ -2123,7 +2123,7 @@ public class SecretTextTest extends WingsBaseTest {
   }
 
   @Test
-  @Author(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void filterSecretSearchTags() throws IllegalAccessException {
     int numOfServiceVariables = 6;
     int numOfSecrets = numOfServiceVariables * 5;
