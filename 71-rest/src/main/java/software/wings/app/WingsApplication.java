@@ -35,7 +35,6 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.exception.WingsException;
-import io.harness.version.VersionModule;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
@@ -210,7 +209,6 @@ public class WingsApplication extends Application<MainConfiguration> {
                     .build());
 
     modules.add(new ValidationModule(validatorFactory));
-    modules.add(new VersionModule());
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
     modules.add(new QueueModule(databaseModule.getPrimaryDatastore(),

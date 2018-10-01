@@ -1,14 +1,23 @@
 package io.harness.version;
 
-import com.google.inject.AbstractModule;
-
+import io.harness.govern.DependencyModule;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
-public class VersionModule extends AbstractModule {
+public class VersionModule extends DependencyModule {
+  private static VersionModule instance;
+
+  public static VersionModule getInstance() {
+    if (instance == null) {
+      instance = new VersionModule();
+    }
+    return instance;
+  }
+
   @Override
   protected void configure() {
     String versionInfo = "version   : 0.0.0.0\n"
@@ -26,5 +35,10 @@ public class VersionModule extends AbstractModule {
       // Do nothing
     }
     bind(VersionInfoManager.class).toInstance(new VersionInfoManager(versionInfo));
+  }
+
+  @Override
+  public Set<DependencyModule> dependencies() {
+    return null;
   }
 }

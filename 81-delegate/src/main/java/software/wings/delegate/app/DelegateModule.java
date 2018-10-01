@@ -10,6 +10,7 @@ import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
 import io.harness.govern.DependencyModule;
 import io.harness.time.TimeModule;
+import io.harness.version.VersionModule;
 import software.wings.api.DeploymentType;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
@@ -358,6 +359,6 @@ public class DelegateModule extends DependencyModule {
 
   @Override
   public Set<DependencyModule> dependencies() {
-    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance());
+    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance(), VersionModule.getInstance());
   }
 }
