@@ -12,6 +12,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Module;
 import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
@@ -60,7 +61,6 @@ import io.harness.mongo.QueryFactory;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.rule.MongoServerFactory;
 import io.harness.rule.RealMongo;
-import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -98,6 +98,7 @@ import software.wings.waitnotify.Notifier;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -240,19 +241,24 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
 
     HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
-    List<AbstractModule> modules = Lists.newArrayList(
-        new AbstractModule() {
-          @Override
-          protected void configure() {
-            bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
-            bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
-            bind(MetricRegistry.class);
-          }
-        },
-        new LicenseModule(), new ValidationModule(validatorFactory),
-        new DatabaseModule(datastore, datastore, distributedLockSvc), new TimeModule(), new VersionModule(),
-        new WingsModule(configuration), new YamlModule(), new ExecutorModule(executorService), new WingsTestModule(),
-        new TemplateModule());
+    List<Module> modules = new ArrayList();
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
+        bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
+        bind(MetricRegistry.class);
+      }
+    });
+    modules.add(new LicenseModule());
+    modules.add(new ValidationModule(validatorFactory));
+    modules.add(new DatabaseModule(datastore, datastore, distributedLockSvc));
+    modules.add(new VersionModule());
+    modules.addAll(new WingsModule(configuration).cumulativeDependencies());
+    modules.add(new YamlModule());
+    modules.add(new ExecutorModule(executorService));
+    modules.add(new WingsTestModule());
+    modules.add(new TemplateModule());
 
     if (fakeMongo) {
       modules.add(new QueueModuleTest(datastore));

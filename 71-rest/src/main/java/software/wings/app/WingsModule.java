@@ -1,12 +1,14 @@
 package software.wings.app;
 
-import com.google.inject.AbstractModule;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
+import io.harness.govern.DependencyModule;
+import io.harness.time.TimeModule;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.beans.AwsConfig;
@@ -320,13 +322,14 @@ import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
 import java.time.Clock;
+import java.util.Set;
 
 /**
  * Guice Module for initializing all beans.
  *
  * @author Rishi
  */
-public class WingsModule extends AbstractModule {
+public class WingsModule extends DependencyModule {
   public static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
 
   private MainConfiguration configuration;
@@ -525,5 +528,10 @@ public class WingsModule extends AbstractModule {
 
     bind(APMVerificationService.class).to(APMVerificationServiceImpl.class);
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
+  }
+
+  @Override
+  public Set<DependencyModule> dependencies() {
+    return ImmutableSet.<DependencyModule>of(TimeModule.getInstance());
   }
 }
