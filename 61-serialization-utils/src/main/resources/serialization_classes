@@ -26,9 +26,11 @@ com.amazonaws.services.ec2.model.ProductCode, 1019
 com.amazonaws.services.ec2.model.Filter, 1020
 com.amazonaws.regions.Regions, 1021
 
+#Third party related exception classes
 io.fabric8.kubernetes.client.KubernetesClientException, 2000
 org.json.JSONException, 2001
 com.hazelcast.spi.exception.TargetNotMemberException, 2002
+com.sumologic.client.SumoServerException, 2003
 
 software.wings.sm.ExecutionInterruptType, 4000
 software.wings.sm.StateType, 4001
