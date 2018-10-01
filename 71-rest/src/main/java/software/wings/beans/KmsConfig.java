@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
@@ -52,6 +53,8 @@ public class KmsConfig extends Base implements EncryptionConfig {
 
   @SchemaIgnore @Transient private EncryptionType encryptionType;
 
+  @JsonIgnore
+  @SchemaIgnore
   public String getValidationCriteria() {
     return EncryptionType.KMS + "-" + getName() + "-" + getUuid();
   }
