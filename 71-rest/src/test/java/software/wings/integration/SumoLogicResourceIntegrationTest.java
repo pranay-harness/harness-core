@@ -15,7 +15,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import com.google.inject.Inject;
 
-import io.harness.rule.RepeatRule.Repeat;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -79,7 +79,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Owner(emails = {"pranjal@harness.io"}, intermittent = true)
   public void testGetSampleLogRecord() {
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
         + LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL + "?accountId=" + accountId
@@ -92,7 +92,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Repeat(times = TIMES_TO_REPEAT, successes = SUCCESS_COUNT)
+  @Owner(emails = {"pranjal@harness.io"}, intermittent = true)
   public void testGetLogRecords() {
     SumoLogicSetupTestNodedata testNodedata = getSumoLogicSampledata();
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL

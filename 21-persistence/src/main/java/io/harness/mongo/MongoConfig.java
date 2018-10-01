@@ -1,4 +1,4 @@
-package software.wings.dl;
+package io.harness.mongo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.hibernate.validator.constraints.NotEmpty;

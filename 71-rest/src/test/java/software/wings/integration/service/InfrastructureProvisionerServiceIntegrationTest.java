@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.rule.AuthorRule.Author;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.beans.InfrastructureMappingBlueprint;
@@ -25,7 +25,7 @@ public class InfrastructureProvisionerServiceIntegrationTest extends BaseIntegra
   @Inject InfrastructureProvisionerGenerator infrastructureProvisionerGenerator;
 
   @Test
-  @Author(emails = "george@harness.io", resent = false)
+  @Owner(emails = "george@harness.io", resent = false)
   public void listForTaskTest() {
     Randomizer.Seed seed = Randomizer.seed();
     final InfrastructureProvisioner infrastructureProvisioner = infrastructureProvisionerGenerator.ensureRandom(seed);

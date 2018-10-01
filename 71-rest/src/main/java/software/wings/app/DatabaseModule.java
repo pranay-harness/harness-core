@@ -27,6 +27,7 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
 import lombok.AllArgsConstructor;
@@ -40,7 +41,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.dl.MongoConfig;
 import software.wings.lock.ManagedDistributedLockSvc;
 
 import java.time.Duration;

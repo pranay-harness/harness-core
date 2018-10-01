@@ -14,15 +14,15 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 
-public class AuthorRule extends RepeatRule {
-  private static final Logger logger = LoggerFactory.getLogger(AuthorRule.class);
+public class OwnerRule extends RepeatRule {
+  private static final Logger logger = LoggerFactory.getLogger(OwnerRule.class);
 
-  private static List<String> active = asList("george@harness.io", "pranjal@harness.io", "puneet.saraswat@harness.io",
-      "raghu@harness.io", "sriram@harness.io", "aaditi.joag@harness.io");
+  private static List<String> active = asList("aaditi.joag@harness.io", "george@harness.io", "raghu@harness.io",
+      "pranjal@harness.io", "puneet.saraswat@harness.io", "sriram@harness.io");
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})
-  public @interface Author {
+  public @interface Owner {
     String[] emails();
     boolean resent() default true;
     boolean intermittent() default false;
@@ -30,12 +30,12 @@ public class AuthorRule extends RepeatRule {
 
   @Override
   public Statement apply(Statement statement, Description description) {
-    Author author = description.getAnnotation(Author.class);
-    if (author == null) {
+    Owner owner = description.getAnnotation(Owner.class);
+    if (owner == null) {
       return statement;
     }
 
-    for (String email : author.emails()) {
+    for (String email : owner.emails()) {
       if (!active.contains(email)) {
         throw new RuntimeException(format("Email %s is not active.", email));
       }
@@ -49,15 +49,15 @@ public class AuthorRule extends RepeatRule {
 
     logger.info("ghprbPullAuthorEmail = {}", prEmail);
 
-    final boolean match = Arrays.stream(author.emails()).anyMatch(email -> email.equals(prEmail));
+    final boolean match = Arrays.stream(owner.emails()).anyMatch(email -> email.equals(prEmail));
     if (!match) {
-      if (author.intermittent()) {
+      if (owner.intermittent()) {
         return RepeatRule.RepeatStatement.builder().build();
       }
       return statement;
     }
 
-    if (!author.resent()) {
+    if (!owner.resent()) {
       return statement;
     }
 

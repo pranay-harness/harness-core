@@ -11,7 +11,7 @@ import com.icegreen.greenmail.junit.GreenMailRule;
 import com.icegreen.greenmail.util.GreenMailUtil;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import freemarker.template.TemplateException;
-import io.harness.rule.AuthorRule.Author;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -89,7 +89,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws IOException        the io exception
    */
   @Test
-  @Author(emails = "raghu@harness.io", intermittent = true)
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void shouldSendHtmlEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
                     .fromAddress(EMAIL)

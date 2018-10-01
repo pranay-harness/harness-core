@@ -14,7 +14,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import com.google.inject.Inject;
 
-import io.harness.rule.AuthorRule.Author;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -77,7 +77,7 @@ public class SplunkResourceIntegrationTest extends BaseIntegrationTest {
    */
   @Test
   @Ignore
-  @Author(emails = "pranjal@harness.io", intermittent = true)
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void testGetLogRecordsWithQuery() {
     SplunkSetupTestNodeData setupTestNodeData = getSplunkSetupTestNodedata("*exception*");
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SPLUNK_RESOURCE_BASE_URL

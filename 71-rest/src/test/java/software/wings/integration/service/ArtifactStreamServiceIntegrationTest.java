@@ -19,7 +19,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 
-import io.harness.rule.AuthorRule.Author;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -103,7 +103,7 @@ public class ArtifactStreamServiceIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Author(emails = "aaditi.joag@harness.io")
+  @Owner(emails = "aaditi.joag@harness.io")
   public void shouldTestCRUDArtifactoryArtifactStream() {
     artifactStream = artifactStreamGenerator.ensureArtifactStream(seed,
         ArtifactoryArtifactStream.builder()

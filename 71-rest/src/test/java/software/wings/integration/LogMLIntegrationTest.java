@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -360,6 +361,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
       File file = new File(getClass().getClassLoader().getResource("./elk/" + host + ".json").getFile());
@@ -539,6 +541,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = {"sriram@harness.io", "raghu@harness.io"}, intermittent = true)
   public void controlButNoTestData() throws IOException, JobExecutionException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
@@ -911,6 +914,7 @@ public class LogMLIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = {"raghu@harness.io", "sriram@harness.io"}, intermittent = true)
   public void withControlAndTest() throws IOException, JobExecutionException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();

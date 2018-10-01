@@ -32,6 +32,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
@@ -1194,6 +1195,7 @@ public class NewRelicIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = {"raghu@harness.io", "sriram@harness.io"}, intermittent = true)
   public void txnDatadog() throws IOException, InterruptedException {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
