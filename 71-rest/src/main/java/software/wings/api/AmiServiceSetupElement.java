@@ -6,10 +6,12 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.beans.ResizeStrategy;
+import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,8 +32,8 @@ public class AmiServiceSetupElement implements ContextElement {
   private Integer autoScalingSteadyStateTimeout;
   private Integer maxInstances;
   private int minInstances;
-  private int oldAsgMinSize;
-  private int oldAsgDesiredCapacity;
+  private List<String> oldAsgNames;
+  private AwsAmiPreDeploymentData preDeploymentData;
   private ResizeStrategy resizeStrategy;
 
   @Override

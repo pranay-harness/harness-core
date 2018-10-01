@@ -17,6 +17,7 @@ import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
@@ -62,6 +63,8 @@ import software.wings.common.Constants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.AwsUtils;
+import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
+import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.intfc.ActivityService;
@@ -91,7 +94,6 @@ import software.wings.utils.Validator;
 import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -228,23 +230,21 @@ public class AwsAmiServiceDeployState extends State {
     } else {
       totalExpectedCount = getInstanceCount();
     }
-    String newAutoScalingGroupName = serviceSetupElement.getNewAutoScalingGroupName();
-    String oldAutoScalingGroupName = serviceSetupElement.getOldAutoScalingGroupName();
-    List<String> gpNames = new ArrayList<>();
-    if (isNotEmpty(oldAutoScalingGroupName)) {
-      gpNames.add(oldAutoScalingGroupName);
+    List<String> oldAsgNames = serviceSetupElement.getOldAsgNames();
+    List<String> gpNames = Lists.newArrayList();
+    if (isNotEmpty(oldAsgNames)) {
+      gpNames.addAll(oldAsgNames);
     }
+    String newAutoScalingGroupName = serviceSetupElement.getNewAutoScalingGroupName();
     if (isNotEmpty(newAutoScalingGroupName)) {
       gpNames.add(newAutoScalingGroupName);
     }
 
-    Map<String, Integer> desiredCapacities =
+    Map<String, Integer> existingDesiredCapacities =
         awsAsgHelperServiceManager.getDesiredCapacitiesOfAsgs(awsConfig, encryptionDetails, region, gpNames);
-    Integer newAutoScalingGroupDesiredCapacity =
-        isNotEmpty(newAutoScalingGroupName) ? desiredCapacities.get(newAutoScalingGroupName) : 0;
-    Integer oldAutoScalingGroupDesiredCapacity =
-        isNotEmpty(oldAutoScalingGroupName) ? desiredCapacities.get(oldAutoScalingGroupName) : 0;
 
+    Integer newAutoScalingGroupDesiredCapacity =
+        isNotEmpty(newAutoScalingGroupName) ? existingDesiredCapacities.get(newAutoScalingGroupName) : 0;
     Integer totalNewInstancesToBeAdded = Math.max(0, totalExpectedCount - newAutoScalingGroupDesiredCapacity);
     Integer newAsgFinalDesiredCount = newAutoScalingGroupDesiredCapacity + totalNewInstancesToBeAdded;
     List<ContainerServiceData> newInstanceData = singletonList(ContainerServiceData.builder()
@@ -253,12 +253,22 @@ public class AwsAmiServiceDeployState extends State {
                                                                    .previousCount(newAutoScalingGroupDesiredCapacity)
                                                                    .build());
 
-    Integer oldAsgFinalDesiredCount = Math.max(0, oldAutoScalingGroupDesiredCapacity - totalNewInstancesToBeAdded);
-    List<ContainerServiceData> oldInstanceData = singletonList(ContainerServiceData.builder()
-                                                                   .name(oldAutoScalingGroupName)
-                                                                   .desiredCount(oldAsgFinalDesiredCount)
-                                                                   .previousCount(oldAutoScalingGroupDesiredCapacity)
-                                                                   .build());
+    List<AwsAmiResizeData> newDesiredCapacities = getNewDesiredCounts(
+        totalNewInstancesToBeAdded, serviceSetupElement.getOldAsgNames(), existingDesiredCapacities);
+
+    List<ContainerServiceData> oldInstanceData = Lists.newArrayList();
+    if (isNotEmpty(newDesiredCapacities)) {
+      newDesiredCapacities.forEach(newDesiredCapacity -> {
+        String asgName = newDesiredCapacity.getAsgName();
+        int newCount = newDesiredCapacity.getDesiredCount();
+        Integer oldCount = existingDesiredCapacities.get(asgName);
+        if (oldCount == null) {
+          oldCount = 0;
+        }
+        oldInstanceData.add(
+            ContainerServiceData.builder().name(asgName).desiredCount(newCount).previousCount(oldCount).build());
+      });
+    }
 
     awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(), serviceSetupElement,
         getInstanceCount(), getInstanceUnitType(), newInstanceData, oldInstanceData);
@@ -266,17 +276,40 @@ public class AwsAmiServiceDeployState extends State {
 
     createAndQueueResizeTask(awsConfig, encryptionDetails, region, infrastructureMapping.getAccountId(),
         infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, newAutoScalingGroupName,
-        newAsgFinalDesiredCount, oldAutoScalingGroupName, oldAsgFinalDesiredCount,
-        serviceSetupElement.getAutoScalingSteadyStateTimeout(), infrastructureMapping.getEnvId(),
-        serviceSetupElement.getMaxInstances().equals(newAsgFinalDesiredCount), serviceSetupElement.getMinInstances());
+        newAsgFinalDesiredCount, newDesiredCapacities, serviceSetupElement.getAutoScalingSteadyStateTimeout(),
+        infrastructureMapping.getEnvId(), serviceSetupElement.getMinInstances(), serviceSetupElement.getMaxInstances(),
+        serviceSetupElement.getPreDeploymentData());
     return awsAmiDeployStateExecutionData;
+  }
+
+  private List<AwsAmiResizeData> getNewDesiredCounts(
+      int instancesToBeAdded, List<String> oldAsgNames, Map<String, Integer> existingDesiredCapacities) {
+    int n = instancesToBeAdded;
+    List<AwsAmiResizeData> desiredCapacities = Lists.newArrayList();
+    if (isNotEmpty(oldAsgNames)) {
+      for (String oldAsgName : oldAsgNames) {
+        Integer n1 = existingDesiredCapacities.get(oldAsgName);
+        if (n1 == null) {
+          n1 = 0;
+        }
+        if (n1 <= n) {
+          n -= n1;
+          n1 = 0;
+        } else {
+          n1 -= n;
+          n = 0;
+        }
+        desiredCapacities.add(AwsAmiResizeData.builder().asgName(oldAsgName).desiredCount(n1).build());
+      }
+    }
+    return desiredCapacities;
   }
 
   protected void createAndQueueResizeTask(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String region, String accountId, String appId, String activityId, String commandName, boolean resizeNewFirst,
-      String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
-      Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, String envId, boolean lastDeployStep,
-      int minInstaces) {
+      String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, List<AwsAmiResizeData> resizeData,
+      Integer autoScalingSteadyStateTimeout, String envId, int minInstaces, int maxInstances,
+      AwsAmiPreDeploymentData preDeploymentData) {
     AwsAmiServiceDeployRequest request = AwsAmiServiceDeployRequest.builder()
                                              .awsConfig(awsConfig)
                                              .encryptionDetails(encryptionDetails)
@@ -288,11 +321,11 @@ public class AwsAmiServiceDeployState extends State {
                                              .resizeNewFirst(resizeNewFirst)
                                              .newAutoScalingGroupName(newAutoScalingGroupName)
                                              .newAsgFinalDesiredCount(newAsgFinalDesiredCount)
-                                             .oldAutoScalingGroupName(oldAutoScalingGroupName)
-                                             .oldAsgFinalDesiredCount(oldAsgFinalDesiredCount)
                                              .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
-                                             .lastDeployStep(lastDeployStep)
                                              .minInstances(minInstaces)
+                                             .maxInstances(maxInstances)
+                                             .preDeploymentData(preDeploymentData)
+                                             .asgDesiredCounts(resizeData)
                                              .build();
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(accountId)
