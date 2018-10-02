@@ -28,6 +28,8 @@ import static software.wings.common.Constants.HTTP_URL;
 import static software.wings.common.Constants.WINGS_BACKUP_PATH;
 import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.HTTP;
@@ -145,16 +147,19 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                         .withDescription("Awesome app")
                         .withDefaults(ImmutableMap.of("Param1", "Value1"))
                         .build());
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
-    when(serviceVariableService.list(envServiceVariablePageRequest, true)).thenReturn(serviceVariables);
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+        .thenReturn(aPageResponse().build());
+    when(serviceVariableService.list(envServiceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+        .thenReturn(aPageResponse().build());
   }
 
   @Test
   public void shouldGetServiceExpressions() {
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+        .thenReturn(aPageResponse().build());
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
     assertThat(expressions).isNotNull();
     assertThat(expressions).contains("service.name");
@@ -175,8 +180,9 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetServiceExpressionsCommand() {
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+        .thenReturn(aPageResponse().build());
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE, SERVICE_ID, COMMAND);
     assertThat(expressions).isNotNull();
@@ -189,8 +195,9 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetServiceVariableExpressions() {
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+        .thenReturn(aPageResponse().build());
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
     assertThat(expressions).isNotNull();
@@ -206,8 +213,9 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse()
                         .withResponse(asList(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+        .thenReturn(aPageResponse().build());
 
     Set<String> expressions = builderService.listExpressions(APP_ID, "All", SERVICE);
     assertThat(expressions).isNotNull();
@@ -217,10 +225,10 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetServiceTemplateVariableExpressions() {
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(serviceTemplates);
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
-    when(serviceVariableService.list(envServiceVariablePageRequest, true)).thenReturn(envServiceVariables);
-    when(serviceVariableService.list(serviceTemplateServiceVariablePageRequest, true))
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE)).thenReturn(serviceTemplates);
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
+    when(serviceVariableService.list(envServiceVariablePageRequest, MASKED)).thenReturn(envServiceVariables);
+    when(serviceVariableService.list(serviceTemplateServiceVariablePageRequest, MASKED))
         .thenReturn(envServiceOverrideVariables);
     Set<String> expressions = builderService.listExpressions(APP_ID, SERVICE_ID, SERVICE);
 
@@ -233,8 +241,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetEnvironmentExpressions() {
-    when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), anyBoolean()))
-        .thenReturn(aPageResponse().build());
+    when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), any())).thenReturn(aPageResponse().build());
 
     Set<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, ENVIRONMENT, SERVICE_ID);
     assertThat(expressions).isNotNull();
@@ -243,8 +250,8 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetEnvironmentServiceVariableExpressions() {
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
-    when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), anyBoolean())).thenReturn(serviceTemplates);
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
+    when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), any())).thenReturn(serviceTemplates);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, ENVIRONMENT, SERVICE_ID);
     assertThat(expressions).isNotNull();
@@ -264,10 +271,10 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                            .withResponse(asList(
                                ServiceVariable.builder().name("ENV").entityId(ENV_ID).entityType(ENVIRONMENT).build()))
                            .build();
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
-    when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), anyBoolean())).thenReturn(serviceTemplates);
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
+    when(serviceTemplateService.list(any(PageRequest.class), anyBoolean(), any())).thenReturn(serviceTemplates);
 
-    when(serviceVariableService.list(serviceTemplateServiceVariablePageRequest, true))
+    when(serviceVariableService.list(serviceTemplateServiceVariablePageRequest, MASKED))
         .thenReturn(envServiceOverrideVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, ENV_ID, ENVIRONMENT);
@@ -289,7 +296,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                            .withResponse(asList(
                                ServiceVariable.builder().name("ENV").entityId(ENV_ID).entityType(ENVIRONMENT).build()))
                            .build();
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID);
     assertThat(expressions).isNotNull();
@@ -312,7 +319,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
                            .withResponse(asList(
                                ServiceVariable.builder().name("ENV").entityId(ENV_ID).entityType(ENVIRONMENT).build()))
                            .build();
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID);
     assertThat(expressions).isNotNull();
@@ -349,7 +356,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
             .withResponse(asList(
                 ServiceVariable.builder().name("ENV").entityId(TEMPLATE_ID).entityType(SERVICE_TEMPLATE).build()))
             .build();
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, HTTP);
     assertThat(expressions).isNotNull();
@@ -366,7 +373,8 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse()
                         .withResponse(asList(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                         .build());
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(aPageResponse().build());
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+        .thenReturn(aPageResponse().build());
 
     List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("value1").build());
     Workflow workflow =
@@ -414,7 +422,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
             .withResponse(asList(
                 ServiceVariable.builder().name("ENV").entityId(TEMPLATE_ID).entityType(SERVICE_TEMPLATE).build()))
             .build();
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
 
     Set<String> expressions =
         builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, AWS_CODEDEPLOY_STATE);
@@ -430,7 +438,7 @@ public class ExpressionBuilderServiceTest extends WingsBaseTest {
     Workflow workflow = buildCanaryWorkflow(userVariables);
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-    when(serviceVariableService.list(serviceVariablePageRequest, true)).thenReturn(serviceVariables);
+    when(serviceVariableService.list(serviceVariablePageRequest, MASKED)).thenReturn(serviceVariables);
 
     Set<String> expressions = builderService.listExpressions(APP_ID, WORKFLOW_ID, WORKFLOW, SERVICE_ID, COMMAND);
     assertThat(expressions).isNotNull();

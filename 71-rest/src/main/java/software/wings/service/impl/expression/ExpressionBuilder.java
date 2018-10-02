@@ -30,6 +30,8 @@ import static software.wings.common.Constants.WINGS_BACKUP_PATH;
 import static software.wings.common.Constants.WINGS_RUNTIME_PATH;
 import static software.wings.common.Constants.WINGS_STAGING_PATH;
 import static software.wings.common.Constants.XPATH;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.DEPLOYMENT_URL;
 
 import com.google.inject.Inject;
@@ -223,7 +225,7 @@ public abstract class ExpressionBuilder {
     if (entityType != null) {
       serviceVariablePageRequest.addFilter("entityType", EQ, entityType);
     }
-    List<ServiceVariable> serviceVariables = serviceVariablesService.list(serviceVariablePageRequest, true);
+    List<ServiceVariable> serviceVariables = serviceVariablesService.list(serviceVariablePageRequest, MASKED);
 
     return serviceVariables.stream()
         .map(serviceVariable -> "serviceVariable." + serviceVariable.getName())
@@ -232,7 +234,7 @@ public abstract class ExpressionBuilder {
 
   protected Set<String> getServiceVariablesOfTemplates(
       String appId, PageRequest<ServiceTemplate> pageRequest, EntityType entityType) {
-    List<ServiceTemplate> serviceTemplates = serviceTemplateService.list(pageRequest, false, false);
+    List<ServiceTemplate> serviceTemplates = serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE);
     SortedSet<String> serviceVariables = new TreeSet<>();
     if (SERVICE.equals(entityType)) {
       return getServiceVariables(

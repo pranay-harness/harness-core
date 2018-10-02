@@ -14,6 +14,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -106,7 +107,8 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(ServiceTemplate.class, aPageRequest().build())).thenReturn(pageResponse);
     when(infrastructureMappingService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
 
-    PageResponse<ServiceTemplate> templatePageResponse = templateService.list(aPageRequest().build(), true, false);
+    PageResponse<ServiceTemplate> templatePageResponse =
+        templateService.list(aPageRequest().build(), true, OBTAIN_VALUE);
 
     ServiceTemplate expectedServiceTemplate = builder.but().withServiceId(SERVICE_ID).build();
 

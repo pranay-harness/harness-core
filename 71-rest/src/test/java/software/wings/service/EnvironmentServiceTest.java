@@ -22,6 +22,8 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -157,13 +159,14 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     serviceTemplatePageRequest.addFilter("envId", EQ, environment.getUuid());
     PageResponse<ServiceTemplate> serviceTemplatePageResponse = new PageResponse<>();
     serviceTemplatePageResponse.setResponse(asList(serviceTemplate));
-    when(serviceTemplateService.list(serviceTemplatePageRequest, false, false)).thenReturn(serviceTemplatePageResponse);
+    when(serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE))
+        .thenReturn(serviceTemplatePageResponse);
 
     PageResponse<Environment> environments = environmentService.list(envPageRequest, true);
 
     assertThat(environments).containsAll(asList(environment));
     assertThat(environments.get(0).getServiceTemplates()).containsAll(asList(serviceTemplate));
-    verify(serviceTemplateService).list(serviceTemplatePageRequest, false, false);
+    verify(serviceTemplateService).list(serviceTemplatePageRequest, false, OBTAIN_VALUE);
   }
 
   /**
@@ -173,7 +176,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
   public void shouldGetEnvironment() {
     when(wingsPersistence.get(Environment.class, APP_ID, ENV_ID))
         .thenReturn(anEnvironment().withUuid(ENV_ID).withAppId(APP_ID).build());
-    when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
+        .thenReturn(new PageResponse<>());
     environmentService.get(APP_ID, ENV_ID, true);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
   }
@@ -244,18 +248,18 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
     ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
     PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
-    when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
+    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(pageResponse);
     when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);
-    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true))
+    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED))
         .thenReturn(serviceTemplate);
 
     CloneMetadata cloneMetadata = CloneMetadata.builder().environment(environment).build();
     environmentService.cloneEnvironment(APP_ID, ENV_ID, cloneMetadata);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
     verify(wingsPersistence).saveAndGet(any(), any(Environment.class));
-    verify(serviceTemplateService).list(pageRequest, false, false);
+    verify(serviceTemplateService).list(pageRequest, false, OBTAIN_VALUE);
     verify(serviceTemplateService).save(any(ServiceTemplate.class));
-    verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
+    verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
   }
 
   /**
@@ -292,9 +296,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
     ServiceTemplate clonedServiceTemplate = serviceTemplate.cloneInternal();
     PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
-    when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
+    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(pageResponse);
     when(serviceTemplateService.save(any(ServiceTemplate.class))).thenReturn(clonedServiceTemplate);
-    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true))
+    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED))
         .thenReturn(serviceTemplate);
 
     when(serviceResourceService.get(APP_ID, SERVICE_ID))
@@ -315,9 +319,9 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     environmentService.cloneEnvironment(APP_ID, ENV_ID, cloneMetadata);
     verify(wingsPersistence).get(Environment.class, APP_ID, ENV_ID);
     verify(wingsPersistence).saveAndGet(any(), any(Environment.class));
-    verify(serviceTemplateService).list(pageRequest, false, false);
+    verify(serviceTemplateService).list(pageRequest, false, OBTAIN_VALUE);
     verify(serviceTemplateService).save(any(ServiceTemplate.class));
-    verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
+    verify(serviceTemplateService).get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
   }
 
   /**
@@ -447,14 +451,14 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                           .build();
 
     PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
-    when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
-    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true))
+    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(pageResponse);
+    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED))
         .thenReturn(serviceTemplate);
 
     List<Service> services = environmentService.getServicesWithOverrides(APP_ID, ENV_ID);
     assertThat(services).isNotNull().size().isEqualTo(0);
 
-    verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, true);
+    verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, MASKED);
     verify(configService)
         .getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate.getUuid());
   }
@@ -486,8 +490,8 @@ public class EnvironmentServiceTest extends WingsBaseTest {
                                           .build();
 
     PageResponse<ServiceTemplate> pageResponse = aPageResponse().withResponse(asList(serviceTemplate)).build();
-    when(serviceTemplateService.list(pageRequest, false, false)).thenReturn(pageResponse);
-    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true))
+    when(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE)).thenReturn(pageResponse);
+    when(serviceTemplateService.get(APP_ID, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED))
         .thenReturn(serviceTemplate);
 
     ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -504,7 +508,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
 
     PageResponse<ServiceVariable> serviceVariableResponse =
         aPageResponse().withResponse(asList(serviceVariable)).build();
-    when(serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, true))
+    when(serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, MASKED))
         .thenReturn(serviceVariableResponse);
 
     Service service = Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).appId(APP_ID).build();
@@ -521,7 +525,7 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     List<Service> services = environmentService.getServicesWithOverrides(APP_ID, ENV_ID);
 
     assertThat(services).isNotNull().size().isEqualTo(1);
-    verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, true);
+    verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, MASKED);
     verify(configService, times(0))
         .getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate.getUuid());
   }

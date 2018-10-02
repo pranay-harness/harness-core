@@ -4,6 +4,8 @@
 
 package software.wings.common;
 
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -51,7 +53,7 @@ public class VariableProcessor {
 
       InstanceElement instance = (InstanceElement) instanceElement.get();
       List<ServiceVariable> serviceSettingMap = serviceTemplateService.computeServiceVariables(standardParam.getAppId(),
-          standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid(), workflowExecutionId, false);
+          standardParam.getEnvId(), instance.getServiceTemplateElement().getUuid(), workflowExecutionId, OBTAIN_VALUE);
       serviceSettingMap.forEach(
           serviceVariable -> variables.put(serviceVariable.getName(), new String(serviceVariable.getValue())));
     }

@@ -12,6 +12,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.service.intfc.ownership.OwnedByService;
 
@@ -30,7 +31,7 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    * @return the page response
    */
   PageResponse<ServiceTemplate> list(
-      PageRequest<ServiceTemplate> pageRequest, boolean withDetails, boolean maskEncryptedFields);
+      PageRequest<ServiceTemplate> pageRequest, boolean withDetails, EncryptedFieldMode encryptedFieldMode);
 
   /**
    * Save.
@@ -57,7 +58,7 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    * @return the map
    */
   List<ServiceVariable> computeServiceVariables(
-      String appId, String envId, String templateId, String workflowExecutionId, boolean maskEncryptedFields);
+      String appId, String envId, String templateId, String workflowExecutionId, EncryptedFieldMode encryptedFieldMode);
 
   String computeConfigMapYaml(String appId, String envId, String templateId);
 
@@ -101,7 +102,7 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    * @return the service template
    */
   ServiceTemplate get(@NotEmpty String appId, @NotEmpty String envId, @NotEmpty String serviceTemplateId,
-      boolean withDetails, boolean maskEncryptedFields);
+      boolean withDetails, EncryptedFieldMode encryptedFieldMode);
 
   /**
    * Get service template.

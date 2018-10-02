@@ -14,6 +14,8 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.common.Constants.SECRET_MASK;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -77,15 +79,16 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request) {
-    return list(request, false);
+    return list(request, OBTAIN_VALUE);
   }
 
   @Override
-  public PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request, boolean maskEncryptedFields) {
+  public PageResponse<ServiceVariable> list(
+      PageRequest<ServiceVariable> request, EncryptedFieldMode encryptedFieldMode) {
     PageResponse<ServiceVariable> response = wingsPersistence.query(ServiceVariable.class, request);
-    if (maskEncryptedFields) {
+    if (encryptedFieldMode == MASKED) {
       response.getResponse().forEach(
-          serviceVariable -> processEncryptedServiceVariable(maskEncryptedFields, serviceVariable));
+          serviceVariable -> processEncryptedServiceVariable(encryptedFieldMode, serviceVariable));
     }
     return response;
   }
@@ -125,15 +128,15 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public ServiceVariable get(@NotEmpty String appId, @NotEmpty String settingId) {
-    return get(appId, settingId, false);
+    return get(appId, settingId, OBTAIN_VALUE);
   }
 
   @Override
-  public ServiceVariable get(String appId, String settingId, boolean maskEncryptedFields) {
+  public ServiceVariable get(String appId, String settingId, EncryptedFieldMode encryptedFieldMode) {
     ServiceVariable serviceVariable = wingsPersistence.get(ServiceVariable.class, appId, settingId);
     notNullCheck("ServiceVariable is null for id: " + settingId, serviceVariable);
-    if (maskEncryptedFields) {
-      processEncryptedServiceVariable(maskEncryptedFields, serviceVariable);
+    if (encryptedFieldMode == MASKED) {
+      processEncryptedServiceVariable(encryptedFieldMode, serviceVariable);
     }
     return serviceVariable;
   }
@@ -219,24 +222,24 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
 
   @Override
   public List<ServiceVariable> getServiceVariablesForEntity(
-      String appId, String entityId, boolean maskEncryptedFields) {
+      String appId, String entityId, EncryptedFieldMode encryptedFieldMode) {
     PageRequest<ServiceVariable> request =
         aPageRequest().addFilter("appId", Operator.EQ, appId).addFilter("entityId", Operator.EQ, entityId).build();
     List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
-    variables.forEach(serviceVariable -> processEncryptedServiceVariable(maskEncryptedFields, serviceVariable));
+    variables.forEach(serviceVariable -> processEncryptedServiceVariable(encryptedFieldMode, serviceVariable));
     return variables;
   }
 
   @Override
   public List<ServiceVariable> getServiceVariablesByTemplate(
-      String appId, String envId, ServiceTemplate serviceTemplate, boolean maskEncryptedFields) {
+      String appId, String envId, ServiceTemplate serviceTemplate, EncryptedFieldMode encryptedFieldMode) {
     PageRequest<ServiceVariable> request = aPageRequest()
                                                .addFilter("appId", Operator.EQ, appId)
                                                .addFilter("envId", Operator.EQ, envId)
                                                .addFilter("templateId", Operator.EQ, serviceTemplate.getUuid())
                                                .build();
     List<ServiceVariable> variables = wingsPersistence.query(ServiceVariable.class, request).getResponse();
-    variables.forEach(serviceVariable -> processEncryptedServiceVariable(maskEncryptedFields, serviceVariable));
+    variables.forEach(serviceVariable -> processEncryptedServiceVariable(encryptedFieldMode, serviceVariable));
     return variables;
   }
 
@@ -253,9 +256,9 @@ public class ServiceVariableServiceImpl implements ServiceVariableService {
         wingsPersistence.createQuery(ServiceVariable.class).filter("appId", appId).filter("entityId", entityId));
   }
 
-  private void processEncryptedServiceVariable(boolean maskEncryptedFields, ServiceVariable serviceVariable) {
+  private void processEncryptedServiceVariable(EncryptedFieldMode encryptedFieldMode, ServiceVariable serviceVariable) {
     if (serviceVariable.getType() == ENCRYPTED_TEXT) {
-      if (maskEncryptedFields) {
+      if (encryptedFieldMode == MASKED) {
         serviceVariable.setValue(SECRET_MASK.toCharArray());
       }
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, serviceVariable.getEncryptedValue());

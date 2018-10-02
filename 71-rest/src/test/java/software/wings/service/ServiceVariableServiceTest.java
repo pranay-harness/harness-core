@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
@@ -198,7 +199,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(ServiceVariable.class, request)).thenReturn(resp);
     when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(SERVICE_VARIABLE);
     List<ServiceVariable> serviceVariables =
-        serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, false);
+        serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, OBTAIN_VALUE);
 
     verify(wingsPersistence).query(ServiceVariable.class, request);
     assertThat(serviceVariables.get(0)).isEqualTo(SERVICE_VARIABLE);
@@ -378,7 +379,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.query(ServiceVariable.class, pageRequest)).thenReturn(pageResponse);
 
-    serviceVariableService.getServiceVariablesForEntity(APP_ID, "ENTITY_ID", false);
+    serviceVariableService.getServiceVariablesForEntity(APP_ID, "ENTITY_ID", OBTAIN_VALUE);
     verify(wingsPersistence).query(ServiceVariable.class, pageRequest);
   }
 

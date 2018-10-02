@@ -25,6 +25,8 @@ import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
@@ -192,7 +194,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     PageRequest<ServiceTemplate> pageRequest = new PageRequest<>();
     pageRequest.addFilter("appId", EQ, environment.getAppId());
     pageRequest.addFilter("envId", EQ, environment.getUuid());
-    environment.setServiceTemplates(serviceTemplateService.list(pageRequest, false, false).getResponse());
+    environment.setServiceTemplates(serviceTemplateService.list(pageRequest, false, OBTAIN_VALUE).getResponse());
   }
 
   /**
@@ -327,7 +329,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
       boolean includeServiceId = false;
       // For each service template id check if it has service or config overrides
       List<ServiceVariable> serviceVariableOverrides = serviceVariableService.getServiceVariablesByTemplate(
-          environment.getAppId(), environment.getUuid(), serviceTemplate, true);
+          environment.getAppId(), environment.getUuid(), serviceTemplate, MASKED);
       if (isNotEmpty(serviceVariableOverrides)) {
         // This service template has at least on service overrides
         includeServiceId = true;
@@ -470,7 +472,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                   .build();
 
           List<ServiceTemplate> serviceTemplateList =
-              serviceTemplateService.list(serviceTemplatePageRequest, false, false);
+              serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE);
           ServiceTemplate clonedServiceTemplate = null;
           if (isNotEmpty(serviceTemplateList)) {
             clonedServiceTemplate = serviceTemplateList.get(0);
@@ -481,7 +483,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             clonedServiceTemplate = serviceTemplateService.save(clonedServiceTemplate);
           }
           serviceTemplate =
-              serviceTemplateService.get(appId, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
+              serviceTemplateService.get(appId, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
           if (serviceTemplate != null) {
             // Clone Infrastructure Mappings
             List<InfrastructureMapping> infrastructureMappings = serviceTemplate.getInfrastructureMappings();
@@ -514,7 +516,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                                     .addFilter("appId", EQ, appId)
                                                                     .addFilter("entityId", EQ, envId)
                                                                     .build();
-      List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, false);
+      List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
       cloneServiceVariables(clonedEnvironment, serviceVariables, null, null, null);
       return clonedEnvironment;
     } else {
@@ -569,7 +571,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                                         .build();
 
           List<ServiceTemplate> serviceTemplateList =
-              serviceTemplateService.list(serviceTemplatePageRequest, false, false);
+              serviceTemplateService.list(serviceTemplatePageRequest, false, OBTAIN_VALUE);
           ServiceTemplate clonedServiceTemplate = null;
           if (isNotEmpty(serviceTemplateList)) {
             clonedServiceTemplate = serviceTemplateList.get(0);
@@ -584,7 +586,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
             clonedServiceTemplate = serviceTemplateService.save(clonedServiceTemplate);
           }
           serviceTemplate =
-              serviceTemplateService.get(appId, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
+              serviceTemplateService.get(appId, serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
           if (serviceTemplate != null) {
             // Clone Service Variable overrides
             cloneServiceVariables(clonedEnvironment, serviceTemplate.getServiceVariablesOverrides(),
@@ -600,7 +602,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
                                                                       .addFilter("appId", EQ, appId)
                                                                       .addFilter("entityId", EQ, envId)
                                                                       .build();
-        List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, false);
+        List<ServiceVariable> serviceVariables = serviceVariableService.list(serviceVariablePageRequest, OBTAIN_VALUE);
         cloneServiceVariables(clonedEnvironment, serviceVariables, null, targetAppId, null);
         logger.info("Cloning environment from appId {} to appId {}", appId, targetAppId);
       }

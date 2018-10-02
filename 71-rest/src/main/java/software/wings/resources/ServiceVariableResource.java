@@ -6,6 +6,7 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.common.Constants.SECRET_MASK;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 
 import com.google.inject.Inject;
 
@@ -65,7 +66,7 @@ public class ServiceVariableResource {
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<ServiceVariable>> list(@BeanParam PageRequest<ServiceVariable> pageRequest) {
-    return new RestResponse<>(serviceVariablesService.list(pageRequest, true));
+    return new RestResponse<>(serviceVariablesService.list(pageRequest, MASKED));
   }
 
   /**
@@ -150,7 +151,7 @@ public class ServiceVariableResource {
   @ExceptionMetered
   public RestResponse<ServiceVariable> get(
       @QueryParam("appId") String appId, @PathParam("serviceVariableId") String serviceVariableId) {
-    ServiceVariable serviceVariable = serviceVariablesService.get(appId, serviceVariableId, true);
+    ServiceVariable serviceVariable = serviceVariablesService.get(appId, serviceVariableId, MASKED);
     return new RestResponse<>(serviceVariable);
   }
 
@@ -197,7 +198,7 @@ public class ServiceVariableResource {
   @ExceptionMetered
   public RestResponse delete(
       @QueryParam("appId") String appId, @PathParam("serviceVariableId") String serviceVariableId) {
-    ServiceVariable serviceVariable = serviceVariablesService.get(appId, serviceVariableId, true);
+    ServiceVariable serviceVariable = serviceVariablesService.get(appId, serviceVariableId, MASKED);
 
     checkUserPermissions(serviceVariable);
 

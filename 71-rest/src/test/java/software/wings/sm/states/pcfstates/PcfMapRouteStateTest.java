@@ -31,6 +31,8 @@ import static software.wings.common.Constants.INFRA_TEMP_ROUTE;
 import static software.wings.common.Constants.PCF_APP_NAME;
 import static software.wings.common.Constants.PCF_OLD_APP_NAME;
 import static software.wings.common.Constants.URL;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.states.pcf.MapRouteState.PCF_MAP_ROUTE_COMMAND;
 import static software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes.PCF_BG_SWAP_ROUTE_COMMAND;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -207,9 +209,9 @@ public class PcfMapRouteStateTest extends WingsBaseTest {
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
 
     when(serviceTemplateService.get(APP_ID, TEMPLATE_ID)).thenReturn(aServiceTemplate().withUuid(TEMPLATE_ID).build());
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, false))
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, OBTAIN_VALUE))
         .thenReturn(serviceVariableList);
-    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, true))
+    when(serviceTemplateService.computeServiceVariables(APP_ID, ENV_ID, TEMPLATE_ID, null, MASKED))
         .thenReturn(safeDisplayServiceVariableList);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(pcfRouteSwapState, "secretManager", secretManager);

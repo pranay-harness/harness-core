@@ -13,6 +13,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.ConfigFile.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -45,6 +47,7 @@ import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.ArtifactType;
@@ -83,7 +86,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public PageResponse<ServiceTemplate> list(
-      PageRequest<ServiceTemplate> pageRequest, boolean withDetails, boolean maskEncryptedFields) {
+      PageRequest<ServiceTemplate> pageRequest, boolean withDetails, EncryptedFieldMode encryptedFieldMode) {
     PageResponse<ServiceTemplate> pageResponse = wingsPersistence.query(ServiceTemplate.class, pageRequest);
     List<ServiceTemplate> serviceTemplates = pageResponse.getResponse();
     setArtifactTypeAndInfraMappings(serviceTemplates);
@@ -97,7 +100,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
               "Failed to populate the service and override config files for service template {} ", serviceTemplate, e);
         }
         try {
-          populateServiceAndOverrideServiceVariables(serviceTemplate, maskEncryptedFields);
+          populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
         } catch (Exception e) {
           logger.error("Failed to populate the service and service variable overrides for service template {} ",
               serviceTemplate, e);
@@ -168,21 +171,21 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
   public ServiceTemplate update(ServiceTemplate serviceTemplate) {
     wingsPersistence.updateFields(ServiceTemplate.class, serviceTemplate.getUuid(),
         ImmutableMap.of("name", serviceTemplate.getName(), "description", serviceTemplate.getDescription()));
-    return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, true);
+    return get(serviceTemplate.getAppId(), serviceTemplate.getEnvId(), serviceTemplate.getUuid(), true, MASKED);
   }
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ServiceTemplateService#get(java.lang.String, java.lang.String, java.lang.String)
    */
   @Override
-  public ServiceTemplate get(
-      String appId, String envId, String serviceTemplateId, boolean withDetails, boolean maskEncryptedFields) {
+  public ServiceTemplate get(String appId, String envId, String serviceTemplateId, boolean withDetails,
+      EncryptedFieldMode encryptedFieldMode) {
     ServiceTemplate serviceTemplate = get(appId, serviceTemplateId);
     if (serviceTemplate != null) {
       setArtifactTypeAndInfraMappings(asList(serviceTemplate));
       if (withDetails) {
         populateServiceAndOverrideConfigFiles(serviceTemplate);
-        populateServiceAndOverrideServiceVariables(serviceTemplate, maskEncryptedFields);
+        populateServiceAndOverrideServiceVariables(serviceTemplate, encryptedFieldMode);
         populateServiceAndOverrideConfigMapYamls(serviceTemplate);
         populateServiceAndOverrideHelmValueYamls(serviceTemplate);
       }
@@ -257,13 +260,14 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     template.setConfigFilesOverrides(overrideConfigFiles);
   }
 
-  private void populateServiceAndOverrideServiceVariables(ServiceTemplate template, boolean maskEncryptedFields) {
+  private void populateServiceAndOverrideServiceVariables(
+      ServiceTemplate template, EncryptedFieldMode encryptedFieldMode) {
     List<ServiceVariable> serviceVariables = serviceVariableService.getServiceVariablesForEntity(
-        template.getAppId(), template.getServiceId(), maskEncryptedFields);
+        template.getAppId(), template.getServiceId(), encryptedFieldMode);
     template.setServiceVariables(serviceVariables);
 
     List<ServiceVariable> overrideServiceVariables = serviceVariableService.getServiceVariablesByTemplate(
-        template.getAppId(), template.getEnvId(), template, maskEncryptedFields);
+        template.getAppId(), template.getEnvId(), template, encryptedFieldMode);
 
     ImmutableMap<String, ServiceVariable> serviceVariablesMap =
         Maps.uniqueIndex(serviceVariables, ServiceVariable::getUuid);
@@ -363,7 +367,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public List<ConfigFile> computedConfigFiles(String appId, String envId, String templateId) {
-    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, OBTAIN_VALUE);
     if (serviceTemplate == null) {
       return new ArrayList<>();
     }
@@ -385,28 +389,28 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    * java.lang.String)
    */
   @Override
-  public List<ServiceVariable> computeServiceVariables(
-      String appId, String envId, String templateId, String workflowExecutionId, boolean maskEncryptedFields) {
-    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
+  public List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId,
+      String workflowExecutionId, EncryptedFieldMode encryptedFieldMode) {
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, encryptedFieldMode);
     if (serviceTemplate == null) {
       return new ArrayList<>();
     }
 
     List<ServiceVariable> serviceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getServiceId(), maskEncryptedFields);
+        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getServiceId(), encryptedFieldMode);
     List<ServiceVariable> allServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, envId, maskEncryptedFields);
+        serviceVariableService.getServiceVariablesForEntity(appId, envId, encryptedFieldMode);
     List<ServiceVariable> templateServiceVariables =
-        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), maskEncryptedFields);
+        serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), encryptedFieldMode);
 
     return overrideServiceSettings(
-        overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId, maskEncryptedFields),
-        templateServiceVariables, appId, workflowExecutionId, maskEncryptedFields);
+        overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId, encryptedFieldMode),
+        templateServiceVariables, appId, workflowExecutionId, encryptedFieldMode);
   }
 
   @Override
   public String computeConfigMapYaml(String appId, String envId, String templateId) {
-    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, false);
+    ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, OBTAIN_VALUE);
     if (serviceTemplate == null) {
       return null;
     }
@@ -475,7 +479,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   private List<ServiceVariable> overrideServiceSettings(List<ServiceVariable> existingServiceVariables,
       List<ServiceVariable> newServiceVariables, String appId, String workflowExecutionId,
-      boolean maskEncryptedFields) {
+      EncryptedFieldMode encryptedFieldMode) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (!existingServiceVariables.isEmpty() || !newServiceVariables.isEmpty()) {
       logger.debug("Service variables before overrides [{}]", existingServiceVariables.toString());
@@ -489,7 +493,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     }
     logger.debug("Service variables after overrides [{}]", mergedServiceSettings.toString());
     String accountId = appService.get(appId).getAccountId();
-    if (!maskEncryptedFields) {
+    if (encryptedFieldMode == OBTAIN_VALUE) {
       mergedServiceSettings.forEach(serviceVariable -> {
         if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
           if (isEmpty(serviceVariable.getAccountId())) {
