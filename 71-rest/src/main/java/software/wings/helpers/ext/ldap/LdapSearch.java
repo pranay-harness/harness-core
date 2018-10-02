@@ -78,6 +78,9 @@ public class LdapSearch implements LdapValidator {
     SearchDnResolver resolver = new SearchDnResolver(connectionFactory);
     resolver.setBaseDn(baseDN);
     resolver.setUserFilter(userFilter);
+    if (searchScope.equals(SearchScope.SUBTREE)) {
+      resolver.setSubtreeSearch(true);
+    }
     return resolver;
   }
 }
