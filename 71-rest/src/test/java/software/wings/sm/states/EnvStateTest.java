@@ -23,14 +23,15 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.EnvStateExecutionData;
 import software.wings.beans.CanaryOrchestrationWorkflow;
+import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Workflow;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
@@ -103,21 +104,20 @@ public class EnvStateTest extends WingsBaseTest {
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
 
-  @Ignore
   @Test
+  @Owner(emails = "srinivas@harness.io")
   public void shouldExecuteOnError() {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
     when(workflowExecutionService.triggerOrchestrationExecution(
-             eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any()))
+             eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(ExecutionArgs.class)))
         .thenThrow(new InvalidRequestException("Workflow variable [test] is mandatory for execution"));
     ExecutionResponse executionResponse = envState.execute(context);
+
     verify(workflowExecutionService)
         .triggerOrchestrationExecution(
-            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any());
+            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(ExecutionArgs.class));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
-    assertThat(executionResponse.getErrorMessage())
-        .isNotEmpty()
-        .isEqualTo("Invalid request: Workflow variable [test] is mandatory for execution");
+    assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
 
   @Test
