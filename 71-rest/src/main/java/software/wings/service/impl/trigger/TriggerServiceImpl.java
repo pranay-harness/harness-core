@@ -640,7 +640,7 @@ public class TriggerServiceImpl implements TriggerService {
     } else {
       String msg = "Environment name [" + templatizedEnvName + "] not present in the trigger variables";
       logger.warn(msg);
-      throw new WingsException(msg, USER_ADMIN);
+      throw new WingsException(msg, USER);
     }
     return environment.getUuid();
   }
