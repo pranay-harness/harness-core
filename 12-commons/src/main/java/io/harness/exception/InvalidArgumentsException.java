@@ -13,6 +13,11 @@ public class InvalidArgumentsException extends WingsException {
     super.addParam("args", Stream.of(arg1).map(pair -> pair.getKey() + ": " + pair.getValue()).collect(joining("; ")));
   }
 
+  public InvalidArgumentsException(Pair<String, String> arg1, Throwable cause) {
+    super(INVALID_ARGUMENT, cause);
+    super.addParam("args", Stream.of(arg1).map(pair -> pair.getKey() + ": " + pair.getValue()).collect(joining("; ")));
+  }
+
   public InvalidArgumentsException(Pair<String, String> arg1, Pair<String, String> arg2, Throwable cause) {
     super(INVALID_ARGUMENT, cause);
     super.addParam(

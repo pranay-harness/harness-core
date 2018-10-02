@@ -45,17 +45,20 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.validation.Create;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
@@ -612,6 +615,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("SettingAttribute", settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();
     String namespace = infraMapping.getNamespace();
+    validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
@@ -637,6 +641,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  private void validateNamespace(String namespace) {
+    try {
+      new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
+    } catch (Exception e) {
+      throw new InvalidArgumentsException(Pair.of("Namespace", namespace + " is an invalid name"), e);
+    }
+  }
+
   private void validateAzureInfraMapping(AzureKubernetesInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
@@ -644,6 +656,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String subscriptionId = infraMapping.getSubscriptionId();
     String resourceGroup = infraMapping.getResourceGroup();
     String namespace = infraMapping.getNamespace();
+    validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
@@ -677,6 +690,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         ? aSettingAttribute().withValue(infraMapping.createKubernetesConfig()).build()
         : settingsService.get(infraMapping.getComputeProviderSettingId());
     String namespace = infraMapping.getNamespace();
+    validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
         (infraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
