@@ -62,6 +62,7 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupBuilder;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AccountPermissionSummary.AccountPermissionSummaryBuilder;
 import software.wings.security.AppPermissionSummary;
@@ -976,9 +977,12 @@ public class AuthHandler {
                      if (stageEnvIdObj == null) {
                        return true;
                      }
-
+                     // TODO: For now we are comparing if env has expression then not check for env permissions
+                     // TODO: We should find a better way of handling
                      String stageEnvId = (String) stageEnvIdObj;
-
+                     if (ExpressionEvaluator.matchesVariablePattern(stageEnvId)) {
+                       return true;
+                     }
                      if (envIds.contains(stageEnvId)) {
                        return true;
                      } else if (envIdsFromOtherPermissions.contains(stageEnvId)) {

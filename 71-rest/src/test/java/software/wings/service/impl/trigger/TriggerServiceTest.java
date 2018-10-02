@@ -15,6 +15,7 @@ import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrast
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
+import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
@@ -52,8 +53,10 @@ import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.FILE_ID;
 import static software.wings.utils.WingsTestConstants.FILE_NAME;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
+import static software.wings.utils.WingsTestConstants.INFRA_NAME;
 import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TRIGGER_ID;
 import static software.wings.utils.WingsTestConstants.TRIGGER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
@@ -74,7 +77,6 @@ import org.mockito.Mock;
 import org.quartz.JobDetail;
 import org.quartz.TriggerKey;
 import software.wings.WingsBaseTest;
-import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
@@ -115,9 +117,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * Created by sgurubelli on 10/26/17.
- */
 public class TriggerServiceTest extends WingsBaseTest {
   @Mock private JobScheduler jobScheduler;
   @Mock private PipelineService pipelineService;
@@ -1461,7 +1460,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflowWithoutOrchestration(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME, false))
-        .thenReturn(Environment.Builder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID))
         .thenReturn(anAwsInfrastructureMapping()
                         .withUuid(INFRA_MAPPING_ID)
@@ -1495,5 +1494,55 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
     verify(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
     verify(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+  }
+
+  @Test
+  public void shouldTriggerTemplatedPipelineExecutionByBitBucketWebhook() {
+    ExecutionArgs executionArgs = new ExecutionArgs();
+
+    pipeline.getPipelineVariables().add(aVariable().withEntityType(ENVIRONMENT).withName("ENV").build());
+    pipeline.getPipelineVariables().add(aVariable().withEntityType(SERVICE).withName("SERVICE").build());
+    pipeline.getPipelineVariables().add(aVariable().withEntityType(INFRASTRUCTURE_MAPPING).withName("INFRA").build());
+
+    Map<String, String> variables = new HashMap<>();
+    variables.put("ENV", ENV_ID);
+    variables.put("SERVICE", SERVICE_NAME);
+    variables.put("INFRA", INFRA_NAME);
+
+    webhookConditionTrigger.setWorkflowVariables(variables);
+
+    WebHookTriggerCondition webHookTriggerCondition =
+        (WebHookTriggerCondition) workflowWebhookConditionTrigger.getCondition();
+
+    webHookTriggerCondition.setWebhookSource(WebhookSource.BITBUCKET);
+    webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
+
+    triggerService.save(webhookConditionTrigger);
+
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put("MyVar", "MyValue");
+    parameters.put("ENV", ENV_NAME);
+
+    executionArgs.setWorkflowVariables(parameters);
+
+    when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
+    when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME, false))
+        .thenReturn(anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).build());
+    when(serviceResourceService.getServiceByName(APP_ID, SERVICE_NAME, false))
+        .thenReturn(Service.builder().name(SERVICE_NAME).build());
+    when(infrastructureMappingService.getInfraMappingByName(APP_ID, ENV_ID, INFRA_NAME))
+        .thenReturn(anAwsInfrastructureMapping()
+                        .withUuid(INFRA_MAPPING_ID)
+                        .withServiceId(SERVICE_ID)
+                        .withDeploymentType(SSH.name())
+                        .withComputeProviderType("AWS")
+                        .build());
+
+    triggerService.triggerExecutionByWebHook(webhookConditionTrigger, parameters);
+
+    verify(workflowExecutionService).triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class));
+    verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
+    verify(infrastructureMappingService).getInfraMappingByName(APP_ID, ENV_ID, INFRA_NAME);
+    verify(serviceResourceService).getServiceByName(APP_ID, SERVICE_NAME, false);
   }
 }

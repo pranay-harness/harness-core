@@ -7,6 +7,7 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineStage.Yaml;
+import static software.wings.expression.ExpressionEvaluator.matchesVariablePattern;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -74,7 +75,7 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     }
 
     Map<String, Object> properties = Maps.newHashMap();
-    Map<String, String> workflowVariables = Maps.newHashMap();
+    Map<String, String> workflowVariables = Maps.newLinkedHashMap();
     Workflow workflow;
     if (!yaml.getType().equals(StateType.APPROVAL.name())) {
       workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
@@ -90,6 +91,10 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
           String variableName = variable.getName();
           String variableValue = variable.getValue();
           if (entityType != null) {
+            if (matchesVariablePattern(variableValue)) {
+              workflowVariables.put(variableName, variableValue);
+              return;
+            }
             if (ENVIRONMENT.name().equals(entityType)) {
               Environment environment = environmentService.getEnvironmentByName(appId, variableValue, false);
               if (environment != null) {
@@ -183,6 +188,11 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                   .entityType(entityType != null ? entityType.name() : null)
                   .build();
           String entryValue = entry.getValue();
+          if (matchesVariablePattern(entryValue)) {
+            workflowVariable.setValue(entryValue);
+            pipelineStageVariables.add(workflowVariable);
+            continue;
+          }
           if (ENVIRONMENT.equals(entityType)) {
             Environment environment = environmentService.get(appId, entryValue, false);
             if (environment != null) {

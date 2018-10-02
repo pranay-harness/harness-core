@@ -177,6 +177,13 @@ public class ExpressionEvaluator {
     return expression;
   }
 
+  public static boolean matchesVariablePattern(String expression) {
+    if (isEmpty(expression)) {
+      return false;
+    }
+    return ExpressionEvaluator.wingsVariablePattern.matcher(expression).matches();
+  }
+
   private JexlContext prepareContext(Map<String, Object> context) {
     JexlContext jc = new LateBindingContext(context);
     jc.set("regex", regexFunctor);

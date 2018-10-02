@@ -896,10 +896,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution triggerPipelineExecution(
       String appId, String pipelineId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
     checkIfAccountExpired(appId);
-    Pipeline pipeline = pipelineService.readPipeline(appId, pipelineId, true, true);
+    Pipeline pipeline =
+        pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
     if (pipeline == null) {
       throw new WingsException(ErrorCode.NON_EXISTING_PIPELINE);
     }
+    executionArgs.setWorkflowVariables(pipeline.getResolvedPipelineVariables());
+
     List<WorkflowExecution> runningWorkflowExecutions =
         getRunningWorkflowExecutions(WorkflowType.PIPELINE, appId, pipelineId);
     if (runningWorkflowExecutions != null) {
@@ -1020,6 +1023,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setAppId(appId);
     String resolveEnvId = workflowService.resolveEnvironmentId(workflow, executionArgs.getWorkflowVariables());
     if (resolveEnvId != null) {
+      envId = resolveEnvId;
       workflowExecution.setEnvId(resolveEnvId);
       workflowExecution.setEnvIds(Collections.singletonList(resolveEnvId));
     }
