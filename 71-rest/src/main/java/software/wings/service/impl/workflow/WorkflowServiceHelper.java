@@ -234,7 +234,8 @@ public class WorkflowServiceHelper {
       return workflow.getEnvId();
     } else {
       if (isNotEmpty(workflowVariables)) {
-        String envName = WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(orchestrationWorkflow);
+        String envName =
+            WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(orchestrationWorkflow.getUserVariables());
         if (envName != null) {
           if (workflowVariables.get(envName) != null) {
             return workflowVariables.get(envName);

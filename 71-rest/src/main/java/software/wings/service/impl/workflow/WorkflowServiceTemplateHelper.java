@@ -247,13 +247,9 @@ public class WorkflowServiceTemplateHelper {
     return expression;
   }
 
-  public static String getTemplatizedEnvVariableName(OrchestrationWorkflow orchestrationWorkflow) {
-    if (orchestrationWorkflow == null) {
-      return null;
-    }
-    List<Variable> userVariables = orchestrationWorkflow.getUserVariables();
-    if (isNotEmpty(userVariables)) {
-      return userVariables.stream()
+  public static String getTemplatizedEnvVariableName(List<Variable> variables) {
+    if (isNotEmpty(variables)) {
+      return variables.stream()
           .filter((Variable variable) -> ENVIRONMENT.equals(variable.getEntityType()))
           .map(Variable::getName)
           .findFirst()
@@ -270,7 +266,8 @@ public class WorkflowServiceTemplateHelper {
     if (isEmpty(orchestrationWorkflow.getUserVariables())) {
       return;
     }
-    List<String> serviceInfraVariables = getServiceInfrastructureWorkflwVariables(orchestrationWorkflow);
+    List<String> serviceInfraVariables =
+        getServiceInfrastructureWorkflowVariables(orchestrationWorkflow.getUserVariables());
 
     Map<String, Object> metaData = new HashMap<>();
     metaData.put(ENTITY_TYPE, INFRASTRUCTURE_MAPPING.name());
@@ -296,24 +293,22 @@ public class WorkflowServiceTemplateHelper {
         phaseTemplateExpressions, StateType.PHASE.name(), workflowPhase.getName(), null);
   }
 
-  public static List<String> getServiceInfrastructureWorkflwVariables(OrchestrationWorkflow orchestrationWorkflow) {
-    if (orchestrationWorkflow.getUserVariables() == null) {
+  public static List<String> getServiceInfrastructureWorkflowVariables(List<Variable> variables) {
+    if (isEmpty(variables)) {
       return new ArrayList<>();
     }
-    return orchestrationWorkflow.getUserVariables()
-        .stream()
+    return variables.stream()
         .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(INFRASTRUCTURE_MAPPING))
         .map(Variable::getName)
         .distinct()
         .collect(toList());
   }
 
-  public static List<String> getServiceWorkflowVariables(OrchestrationWorkflow orchestrationWorkflow) {
-    if (orchestrationWorkflow.getUserVariables() == null) {
+  public static List<String> getServiceWorkflowVariables(List<Variable> variables) {
+    if (isEmpty(variables)) {
       return new ArrayList<>();
     }
-    return orchestrationWorkflow.getUserVariables()
-        .stream()
+    return variables.stream()
         .filter(variable -> variable.getEntityType() != null && variable.getEntityType().equals(SERVICE))
         .map(Variable::getName)
         .distinct()

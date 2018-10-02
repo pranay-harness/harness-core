@@ -553,23 +553,26 @@ public class TriggerServiceImpl implements TriggerService {
 
   private WorkflowExecution triggerExecution(
       List<Artifact> artifacts, Trigger trigger, Map<String, String> parameters) {
-    WorkflowExecution workflowExecution;
+    WorkflowExecution workflowExecution = null;
     ExecutionArgs executionArgs = new ExecutionArgs();
-    setExecutionArgs(artifacts, trigger, parameters, executionArgs);
+    prepareExecutionArgs(artifacts, trigger, parameters, executionArgs);
     if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
       workflowExecution = triggerOrchestrationExecution(trigger, executionArgs);
     } else {
       logger.info(
           "Triggering  execution of appId {} with  pipeline id {}", trigger.getAppId(), trigger.getWorkflowId());
+
+      resolveTriggerPipelineVariables(trigger, executionArgs);
       workflowExecution =
           workflowExecutionService.triggerPipelineExecution(trigger.getAppId(), trigger.getWorkflowId(), executionArgs);
+
       logger.info(
           "Pipeline execution of appId {} with  pipeline id {} triggered", trigger.getAppId(), trigger.getWorkflowId());
     }
     return workflowExecution;
   }
 
-  private void setExecutionArgs(
+  private void prepareExecutionArgs(
       List<Artifact> artifacts, Trigger trigger, Map<String, String> parameters, ExecutionArgs executionArgs) {
     if (artifacts != null) {
       executionArgs.setArtifacts(
@@ -584,6 +587,87 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
+  private void resolveTriggerPipelineVariables(Trigger trigger, ExecutionArgs executionArgs) {
+    if (isNotEmpty(trigger.getWorkflowVariables())) {
+      Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
+      notNullCheck("Pipeline was deleted or does not exist", pipeline, USER_ADMIN);
+
+      Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(trigger, executionArgs);
+      List<Variable> pipelineVariables = pipeline.getPipelineVariables();
+
+      String envId = null;
+      String templatizedEnvName = getTemplatizedEnvVariableName(pipelineVariables);
+      if (templatizedEnvName != null) {
+        logger.info("One of the environment is parameterized in the pipeline");
+        envId = resolveEnvId(trigger, triggerWorkflowVariableValues.get(templatizedEnvName), templatizedEnvName);
+        triggerWorkflowVariableValues.put(templatizedEnvName, envId);
+      }
+
+      resolveServices(trigger, triggerWorkflowVariableValues, pipelineVariables);
+      resolveServiceInfrastructures(trigger, triggerWorkflowVariableValues, envId, pipelineVariables);
+
+      executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
+    }
+  }
+
+  private void resolveServices(
+      Trigger trigger, Map<String, String> triggerWorkflowVariableValues, List<Variable> variables) {
+    List<String> serviceWorkflowVariables = getServiceWorkflowVariables(variables);
+    for (String serviceVarName : serviceWorkflowVariables) {
+      String serviceIdOrName = triggerWorkflowVariableValues.get(serviceVarName);
+      notNullCheck("There is no corresponding Workflow Variable associated to service", serviceIdOrName);
+      logger.info("Checking  service {} can be found by id first.", serviceIdOrName);
+      Service service = serviceResourceService.get(trigger.getAppId(), serviceIdOrName, false);
+      if (service == null) {
+        logger.info("Service does not exist by Id, checking if environment {} can be found by name.", serviceIdOrName);
+        service = serviceResourceService.getServiceByName(trigger.getAppId(), serviceIdOrName, false);
+      }
+      notNullCheck("Service [" + serviceIdOrName + "] does not exist", service, USER_ADMIN);
+      triggerWorkflowVariableValues.put(serviceVarName, service.getUuid());
+    }
+  }
+
+  private String resolveEnvId(Trigger trigger, String envNameOrId, String templatizedEnvName) {
+    Environment environment;
+    if (envNameOrId != null) {
+      logger.info("Checking  environment {} can be found by id first.", envNameOrId);
+      environment = environmentService.get(trigger.getAppId(), envNameOrId);
+      if (environment == null) {
+        logger.info("Environment does not exist by Id, checking if environment {} can be found by name.", envNameOrId);
+        environment = environmentService.getEnvironmentByName(trigger.getAppId(), envNameOrId, false);
+      }
+      notNullCheck("Environment [" + envNameOrId + "] does not exist", environment);
+    } else {
+      String msg = "Environment name [" + templatizedEnvName + "] not present in the trigger variables";
+      logger.warn(msg);
+      throw new WingsException(msg, USER_ADMIN);
+    }
+    return environment.getUuid();
+  }
+
+  private void resolveServiceInfrastructures(
+      Trigger trigger, Map<String, String> triggerWorkflowVariableValues, String envId, List<Variable> variables) {
+    List<String> serviceInfraWorkflowVariables =
+        WorkflowServiceTemplateHelper.getServiceInfrastructureWorkflowVariables(variables);
+    for (String serviceInfraVarName : serviceInfraWorkflowVariables) {
+      String serviceInfraIdOrName = triggerWorkflowVariableValues.get(serviceInfraVarName);
+      notNullCheck(
+          "There is no corresponding Workflow Variable associated to Service Infrastructure", serviceInfraIdOrName);
+      logger.info("Checking  Service Infrastructure {} can be found by id first.", serviceInfraIdOrName);
+      InfrastructureMapping infrastructureMapping =
+          infrastructureMappingService.get(trigger.getAppId(), serviceInfraIdOrName);
+      if (infrastructureMapping == null) {
+        logger.info(
+            "Service Infrastructure does not exist by Id, checking if service infrastructure {} can be found by name.",
+            serviceInfraIdOrName);
+        infrastructureMapping =
+            infrastructureMappingService.getInfraMappingByName(trigger.getAppId(), envId, serviceInfraIdOrName);
+      }
+      notNullCheck(
+          "Service Infrastructure [" + serviceInfraIdOrName + "] does not exist", infrastructureMapping, USER_ADMIN);
+      triggerWorkflowVariableValues.put(serviceInfraVarName, infrastructureMapping.getUuid());
+    }
+  }
   private WorkflowExecution triggerOrchestrationExecution(Trigger trigger, ExecutionArgs executionArgs) {
     logger.info("Triggering  workflow execution of appId {} with with workflow id {}", trigger.getAppId(),
         trigger.getWorkflowId());
@@ -591,7 +675,35 @@ public class TriggerServiceImpl implements TriggerService {
     Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
     notNullCheck("Workflow was deleted", workflow, USER_ADMIN);
     notNullCheck("Orchestration Workflow not present", workflow.getOrchestrationWorkflow(), USER_ADMIN);
+    Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(trigger, executionArgs);
 
+    String envId = null;
+    if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+      List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
+
+      if (workflow.checkEnvironmentTemplatized()) {
+        String templatizedEnvName = getTemplatizedEnvVariableName(workflowVariables);
+        notNullCheck("There is no corresponding Workflow Variable associated to environment", templatizedEnvName);
+        String envNameOrId = triggerWorkflowVariableValues.get(templatizedEnvName);
+        envId = resolveEnvId(trigger, envNameOrId, templatizedEnvName);
+        triggerWorkflowVariableValues.put(templatizedEnvName, envId);
+      } else {
+        envId = workflow.getEnvId();
+      }
+      notNullCheck("Environment  [" + envId + "] might have been deleted", envId, USER_ADMIN);
+
+      resolveServices(trigger, triggerWorkflowVariableValues, workflowVariables);
+
+      resolveServiceInfrastructures(trigger, triggerWorkflowVariableValues, envId, workflowVariables);
+    }
+
+    executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
+    logger.info("Triggering workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
+        trigger.getWorkflowId());
+    return workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs);
+  }
+
+  private Map<String, String> overrideTriggerVariables(Trigger trigger, ExecutionArgs executionArgs) {
     // Workflow variables come from Webhook
     Map<String, String> webhookVariableValues =
         executionArgs.getWorkflowVariables() == null ? new HashMap<>() : executionArgs.getWorkflowVariables();
@@ -605,74 +717,7 @@ public class TriggerServiceImpl implements TriggerService {
         triggerWorkflowVariableValues.put(entry.getKey(), entry.getValue());
       }
     }
-
-    String envId = null;
-    if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
-      if (workflow.checkEnvironmentTemplatized()) {
-        String templatizedEnvName = getTemplatizedEnvVariableName(workflow.getOrchestrationWorkflow());
-        notNullCheck("There is no corresponding Workflow Variable associated to environment", templatizedEnvName);
-        String envNameOrId = triggerWorkflowVariableValues.get(templatizedEnvName);
-        if (envNameOrId != null) {
-          logger.info("Checking  environment {} can be found by id first.", envNameOrId);
-          Environment environment = environmentService.get(trigger.getAppId(), envNameOrId);
-          if (environment == null) {
-            logger.info(
-                "Environment does not exist by Id, checking if environment {} can be found by name.", envNameOrId);
-            environment = environmentService.getEnvironmentByName(trigger.getAppId(), envNameOrId, false);
-          }
-          notNullCheck("Environment [" + envNameOrId + "] does not exist", environment);
-          envId = environment.getUuid();
-          triggerWorkflowVariableValues.put(templatizedEnvName, envId);
-        } else {
-          String msg = "Environment name [" + templatizedEnvName + "] not present in the trigger variables";
-          logger.warn(msg, templatizedEnvName);
-          throw new WingsException(msg, USER_ADMIN);
-        }
-      } else {
-        envId = workflow.getEnvId();
-      }
-      notNullCheck("Environment  [" + envId + "] might have been deleted", envId, USER_ADMIN);
-
-      List<String> serviceWorkflowVariables = getServiceWorkflowVariables(workflow.getOrchestrationWorkflow());
-      for (String serviceVarName : serviceWorkflowVariables) {
-        String serviceIdOrName = triggerWorkflowVariableValues.get(serviceVarName);
-        notNullCheck("There is no corresponding Workflow Variable associated to service", serviceIdOrName);
-        logger.info("Checking  service {} can be found by id first.", serviceIdOrName);
-        Service service = serviceResourceService.get(trigger.getAppId(), serviceIdOrName, false);
-        if (service == null) {
-          logger.info(
-              "Service does not exist by Id, checking if environment {} can be found by name.", serviceIdOrName);
-          service = serviceResourceService.getServiceByName(trigger.getAppId(), serviceIdOrName, false);
-        }
-        notNullCheck("Service [" + serviceIdOrName + "] does not exist", service, USER_ADMIN);
-        triggerWorkflowVariableValues.put(serviceVarName, service.getUuid());
-      }
-
-      List<String> serviceInfraWorkflowVariables =
-          WorkflowServiceTemplateHelper.getServiceInfrastructureWorkflwVariables(workflow.getOrchestrationWorkflow());
-      for (String serviceInfraVarName : serviceInfraWorkflowVariables) {
-        String serviceInfraIdOrName = triggerWorkflowVariableValues.get(serviceInfraVarName);
-        notNullCheck(
-            "There is no corresponding Workflow Variable associated to Service Infrastructure", serviceInfraIdOrName);
-        logger.info("Checking  Service Infrastructure {} can be found by id first.", serviceInfraIdOrName);
-        InfrastructureMapping infrastructureMapping =
-            infrastructureMappingService.get(trigger.getAppId(), serviceInfraIdOrName);
-        if (infrastructureMapping == null) {
-          logger.info(
-              "Service does not exist by Id, checking if environment {} can be found by name.", serviceInfraIdOrName);
-          infrastructureMapping =
-              infrastructureMappingService.getInfraMappingByName(trigger.getAppId(), envId, serviceInfraIdOrName);
-        }
-        notNullCheck(
-            "Service Infrastructure [" + serviceInfraIdOrName + "] does not exist", infrastructureMapping, USER_ADMIN);
-        triggerWorkflowVariableValues.put(serviceInfraVarName, infrastructureMapping.getUuid());
-      }
-    }
-
-    executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
-    logger.info("Triggering workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
-        trigger.getWorkflowId());
-    return workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs);
+    return triggerWorkflowVariableValues;
   }
 
   @Override
@@ -1057,11 +1102,4 @@ public class TriggerServiceImpl implements TriggerService {
           buildNumber, artifactSelection.getArtifactStreamId());
     }
   }
-
-  /**
-   * It resolves the Entity variable names to Ids
-   * @param variables
-   * @param workflowVariables
-   */
-  public void resolveWorkflowVariables(List<Variable> variables, Map<String, String> workflowVariables) {}
 }

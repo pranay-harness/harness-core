@@ -33,6 +33,14 @@ public class WebhookParameters {
   public static final String GH_PR_STATE = "${pull_request.state}";
   public static final String GH_PR_URL = "${pull_request.url}";
 
+  // Git Hub Push event suggestions
+  public static final String GH_PUSH_REF = "${ref}";
+  public static final String GH_PUSH_REF_BRANCH = "${ref.split('/')[2]}";
+  public static final String GH_PUSH_COMMIT_ID = "${commits[0].id}";
+  public static final String GH_PUSH_HEAD_COMMIT_ID = "${head_commit.id}";
+  public static final String GH_PUSH_REPOSITORY_NAME = "${repository.name}";
+  public static final String GH_PUSH_REPOSITORY_ID = "${repository.id}";
+
   public List<String> bitBucketPullRequestExpressions() {
     List<String> prSuggestions = new ArrayList<>();
     prSuggestions.add(PULL_REQUEST_ID);
@@ -57,6 +65,17 @@ public class WebhookParameters {
     return prSuggestions;
   }
 
+  public List<String> gitHubPushEventExpressions() {
+    List<String> pushSuggestions = new ArrayList<>();
+    pushSuggestions.add(GH_PUSH_REF);
+    pushSuggestions.add(GH_PUSH_REF_BRANCH);
+    pushSuggestions.add(GH_PUSH_COMMIT_ID);
+    pushSuggestions.add(GH_PUSH_HEAD_COMMIT_ID);
+    pushSuggestions.add(GH_PUSH_REPOSITORY_NAME);
+    pushSuggestions.add(GH_PUSH_REPOSITORY_ID);
+    return pushSuggestions;
+  }
+
   public List<String> suggestExpressions(WebhookSource webhookSource, WebhookEventType eventType) {
     if (webhookSource == null || eventType == null) {
       return bitBucketPullRequestExpressions();
@@ -68,6 +87,8 @@ public class WebhookParameters {
     } else if (WebhookSource.GITHUB.equals(webhookSource)) {
       if (WebhookEventType.PULL_REQUEST.equals(eventType)) {
         return gitHubPullRequestExpressions();
+      } else if (WebhookEventType.PUSH.equals(eventType)) {
+        return gitHubPushEventExpressions();
       }
     }
     return new ArrayList<>();

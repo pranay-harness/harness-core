@@ -7,6 +7,7 @@ package software.wings.beans;
 import static java.util.Arrays.asList;
 import static software.wings.beans.WorkflowType.PIPELINE;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,7 @@ import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
@@ -47,6 +49,8 @@ public class Pipeline extends Base {
   private List<FailureStrategy> failureStrategies = new ArrayList<>();
   private transient List<Variable> pipelineVariables = new ArrayList<>();
   private transient List<String> envIds = new ArrayList<>();
+  private transient boolean envParameterized;
+  @JsonIgnore private transient Map<String, String> resolvedPipelineVariables = new LinkedHashMap<>();
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,

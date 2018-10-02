@@ -12,6 +12,7 @@ import software.wings.beans.Pipeline;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 
 /**
@@ -55,7 +56,12 @@ public interface PipelineService extends OwnedByApplication {
    */
   Pipeline readPipeline(String appId, String pipelineId, boolean withServices);
 
-  Pipeline readPipeline(String appId, String pipelineId, boolean withServices, boolean withEnvironments);
+  /**
+   * Reads pipeline with Services, EnvironmentIds, Pipeline Variables and Resolved Pipeline variables
+   *
+   * @return
+   */
+  Pipeline readPipelineWithResolvedVariables(String appId, String pipelineId, Map<String, String> workflowVariables);
 
   Pipeline getPipelineByName(String appId, String pipelineName);
 

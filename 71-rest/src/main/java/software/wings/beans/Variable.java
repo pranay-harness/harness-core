@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.Variable.VariableBuilder.aVariable;
 
 import com.google.common.collect.Maps;
 
@@ -86,6 +87,18 @@ public class Variable {
 
   public void setMetadata(Map<String, Object> metadata) {
     this.metadata = metadata;
+  }
+
+  public Variable cloneInternal() {
+    return aVariable()
+        .withName(name)
+        .withValue(value)
+        .withType(type)
+        .withDescription(description)
+        .withMandatory(mandatory)
+        .withFixed(fixed)
+        .withMetadata(metadata)
+        .build();
   }
 
   @Transient

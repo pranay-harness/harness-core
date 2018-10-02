@@ -117,6 +117,7 @@ public class EnvState extends State {
     executionArgs.setExcludeHostsWithSameArtifact(workflowStandardParams.isExcludeHostsWithSameArtifact());
 
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
+
     EnvStateExecutionData envStateExecutionData =
         anEnvStateExecutionData().withWorkflowId(workflowId).withEnvId(envId).build();
     if (workflow == null || workflow.getOrchestrationWorkflow() == null) {
@@ -135,6 +136,7 @@ public class EnvState extends State {
           .build();
     }
 
+    // TODO: Resolve environment form Workflow
     envStateExecutionData.setOrchestrationWorkflowType(
         workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
     try {
