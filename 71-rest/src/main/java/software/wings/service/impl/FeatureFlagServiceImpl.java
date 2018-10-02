@@ -7,7 +7,6 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static software.wings.app.DeployMode.ONPREM;
 
 import com.google.api.client.repackaged.com.google.common.base.Splitter;
 import com.google.inject.Inject;
@@ -15,6 +14,7 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
@@ -122,7 +122,7 @@ public class FeatureFlagServiceImpl implements FeatureFlagService {
     wingsPersistence.save(newFeatureFlags);
 
     // For on-prem, set all enabled values from the list of enabled flags in the configuration
-    if (ONPREM.equals(mainConfiguration.getDeployMode())) {
+    if (DeployMode.isOnPrem(mainConfiguration.getDeployMode().name())) {
       String features = mainConfiguration.getFeatureNames();
       List<String> enabled =
           isBlank(features) ? emptyList() : Splitter.on(',').omitEmptyStrings().trimResults().splitToList(features);

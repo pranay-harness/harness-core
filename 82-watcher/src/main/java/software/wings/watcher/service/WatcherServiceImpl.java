@@ -127,7 +127,7 @@ public class WatcherServiceImpl implements WatcherService {
 
   static {
     String deployMode = System.getenv().get("DEPLOY_MODE");
-    multiVersion = isEmpty(deployMode) || !deployMode.contains("ONPREM");
+    multiVersion = isEmpty(deployMode) || !(deployMode.equals("ONPREM") || deployMode.equals("KUBERNETES_ONPREM"));
   }
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
