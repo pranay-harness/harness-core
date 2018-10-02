@@ -1074,8 +1074,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           InvalidRequestException exception = new InvalidRequestException(errorMessage, USER);
           response = aRemoteMethodReturnValueData().withException(exception).build();
         }
-        processDelegateResponse(
-            accountId, null, taskId, DelegateTaskResponse.builder().accountId(accountId).response(response).build());
+        processDelegateResponse(accountId, null, taskId,
+            DelegateTaskResponse.builder()
+                .accountId(accountId)
+                .response(response)
+                .responseCode(ResponseCode.OK)
+                .build());
       }
     }
 
