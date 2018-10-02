@@ -19,7 +19,6 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Delegate.Builder.aDelegate;
-import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.managerclient.SafeHttpCall.execute;
@@ -108,7 +107,6 @@ import software.wings.managerclient.ManagerClientFactory;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.message.Message;
 import software.wings.utils.message.MessageService;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -1131,8 +1129,8 @@ public class DelegateServiceImpl implements DelegateService {
     };
   }
 
-  private Consumer<NotifyResponseData> getPostExecutionFunction(@NotNull DelegateTask delegateTask) {
-    return notifyResponseData -> {
+  private Consumer<DelegateTaskResponse> getPostExecutionFunction(@NotNull DelegateTask delegateTask) {
+    return taskResponse -> {
       Response<ResponseBody> response = null;
       try {
         logger.info("Sending response for task {} to manager", delegateTask.getUuid());
@@ -1140,8 +1138,6 @@ public class DelegateServiceImpl implements DelegateService {
           Response<ResponseBody> resp = null;
           int retries = 3;
           while (retries-- > 0) {
-            DelegateTaskResponse taskResponse =
-                aDelegateTaskResponse().withAccountId(accountId).withResponse(notifyResponseData).build();
             resp = managerClient.sendTaskStatus(delegateId, delegateTask.getUuid(), accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
               logger.info("Task {} response sent to manager", delegateTask.getUuid());

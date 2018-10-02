@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsCFGetTemplateParamsRequest;
 import software.wings.service.impl.aws.model.AwsCFGetTemplateParamsResponse;
@@ -15,7 +16,6 @@ import software.wings.service.impl.aws.model.AwsCFRequest.AwsCFRequestType;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 public class AwsCFTask extends AbstractDelegateRunnableTask {
   @Inject private AwsCFHelperServiceDelegate awsCFHelperServiceDelegate;
 
-  public AwsCFTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public AwsCFTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

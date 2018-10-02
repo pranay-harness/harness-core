@@ -12,7 +12,6 @@ import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Delegate.Builder.aDelegate;
-import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
@@ -274,7 +273,7 @@ public class DelegateResourceTest {
   @Test
   @Ignore
   public void shouldAcceptDelegateResponse() {
-    DelegateTaskResponse response = aDelegateTaskResponse().build();
+    DelegateTaskResponse response = DelegateTaskResponse.builder().build();
 
     Response response1 = RESOURCES.client()
                              .target("/delegates/" + ID_KEY + "/tasks/1?accountId=" + ACCOUNT_ID)

@@ -7,13 +7,13 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.response.PcfCommandExecutionResponse;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +25,7 @@ public class PcfCommandTask extends AbstractDelegateRunnableTask {
 
   private static final Logger logger = LoggerFactory.getLogger(PcfCommandTask.class);
 
-  public PcfCommandTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public PcfCommandTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

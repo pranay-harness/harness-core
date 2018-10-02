@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -22,7 +23,7 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   @Inject private NewRelicDelegateService newRelicDelegateService;
 
   public NewRelicDeploymentMarkerTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

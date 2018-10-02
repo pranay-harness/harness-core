@@ -15,6 +15,7 @@ import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
@@ -29,7 +30,6 @@ import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DynatraceState;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -56,7 +56,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
   @Inject private MetricDataStoreService metricStoreService;
 
   public DynaTraceDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

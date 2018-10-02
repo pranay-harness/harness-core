@@ -84,7 +84,6 @@ import software.wings.delegatetasks.validation.SplunkValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
 import software.wings.delegatetasks.validation.TerraformValidation;
 import software.wings.delegatetasks.validation.VaultValidation;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -271,7 +270,7 @@ public enum TaskType {
   }
 
   public DelegateRunnableTask getDelegateRunnableTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
+      Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
     return on(delegateRunnableTaskClass).create(delegateId, delegateTask, postExecute, preExecute).get();
   }
 

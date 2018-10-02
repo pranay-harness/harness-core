@@ -9,12 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.InputStream;
 import java.util.List;
@@ -31,7 +31,7 @@ public class BambooCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private BambooService bambooService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public BambooCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+  public BambooCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }

@@ -56,6 +56,7 @@ public class DelegateTask extends Base {
   private Set<String> validationCompleteDelegateIds = new HashSet<>();
   private byte[] serializedNotifyResponseData;
   private String preAssignedDelegateId;
+  private Set<String> alreadyTriedDelegates = new HashSet<>();
 
   @Transient private transient NotifyResponseData notifyResponse;
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
@@ -246,6 +247,14 @@ public class DelegateTask extends Base {
 
   public String getPreAssignedDelegateId() {
     return this.preAssignedDelegateId;
+  }
+
+  public Set<String> getAlreadyTriedDelegates() {
+    return alreadyTriedDelegates;
+  }
+
+  public void setAlreadyTriedDelegates(Set<String> alreadyTriedDelegates) {
+    this.alreadyTriedDelegates = alreadyTriedDelegates;
   }
 
   @Override

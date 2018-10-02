@@ -9,13 +9,13 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsEcsListClustersResponse;
 import software.wings.service.impl.aws.model.AwsEcsRequest;
 import software.wings.service.impl.aws.model.AwsEcsRequest.AwsEcsRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsEcsHelperServiceDelegate;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -25,7 +25,7 @@ public class AwsEcsTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(AwsEcsTask.class);
   @Inject private AwsEcsHelperServiceDelegate ecsHelperServiceDelegate;
 
-  public AwsEcsTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public AwsEcsTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

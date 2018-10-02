@@ -8,6 +8,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.JenkinsConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.jenkins.Jenkins;
@@ -16,7 +17,6 @@ import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.InputStream;
 import java.util.List;
@@ -34,7 +34,7 @@ public class JenkinsCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private EncryptionService encryptionService;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public JenkinsCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+  public JenkinsCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }

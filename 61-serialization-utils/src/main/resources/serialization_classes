@@ -557,3 +557,5 @@ software.wings.beans.command.DownloadArtifactCommandUnit, 5516
 io.harness.exception.KmsOperationException, 5517
 software.wings.service.impl.aws.model.AwsAmiResizeData, 5518
 software.wings.service.impl.aws.model.AwsAmiPreDeploymentData, 5519
+software.wings.beans.DelegateTaskResponse$ResponseCode, 5520
+io.harness.exception.DelegateRetryableException, 5521

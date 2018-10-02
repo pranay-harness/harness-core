@@ -6,6 +6,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateFileManager;
@@ -13,7 +14,6 @@ import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.InputStream;
 import java.util.List;
@@ -32,7 +32,7 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
 
-  public NexusCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+  public NexusCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }

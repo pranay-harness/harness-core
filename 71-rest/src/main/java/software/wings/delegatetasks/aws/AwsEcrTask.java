@@ -9,6 +9,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsEcrGetAuthTokenRequest;
 import software.wings.service.impl.aws.model.AwsEcrGetAuthTokenResponse;
@@ -18,7 +19,6 @@ import software.wings.service.impl.aws.model.AwsEcrRequest;
 import software.wings.service.impl.aws.model.AwsEcrRequest.AwsEcrRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsEcrHelperServiceDelegate;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -27,7 +27,7 @@ public class AwsEcrTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(AwsEcrTask.class);
   @Inject private AwsEcrHelperServiceDelegate ecrServiceDelegate;
 
-  public AwsEcrTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public AwsEcrTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -30,7 +31,6 @@ import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -59,7 +59,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
   @Inject private EncryptionService encryptionService;
 
   public AppdynamicsDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

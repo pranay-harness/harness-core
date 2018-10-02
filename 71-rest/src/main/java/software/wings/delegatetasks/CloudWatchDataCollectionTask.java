@@ -17,6 +17,7 @@ import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.cloudwatch.AwsNameSpace;
@@ -26,7 +27,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -50,7 +50,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
   @Inject private CloudWatchDelegateServiceImpl cloudWatchDelegateService;
 
   public CloudWatchDataCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

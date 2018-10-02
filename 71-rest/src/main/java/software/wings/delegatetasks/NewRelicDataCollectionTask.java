@@ -24,6 +24,7 @@ import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -42,7 +43,6 @@ import software.wings.service.intfc.newrelic.NewRelicDelegateService;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -73,8 +73,8 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   @Inject private MetricDataStoreService metricStoreService;
   private NewRelicDataCollectionInfo dataCollectionInfo;
 
-  public NewRelicDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
-      Supplier<Boolean> preExecute) {
+  public NewRelicDataCollectionTask(String delegateId, DelegateTask delegateTask,
+      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

@@ -17,7 +17,6 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
@@ -59,6 +58,8 @@ import software.wings.beans.DelegateScripts;
 import software.wings.beans.DelegateStatus;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskEvent;
+import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.TaskType;
 import software.wings.dl.WingsPersistence;
@@ -274,9 +275,9 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .build();
     wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        aDelegateTaskResponse()
-            .withAccountId(ACCOUNT_ID)
-            .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+        DelegateTaskResponse.builder()
+            .accountId(ACCOUNT_ID)
+            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(wingsPersistence.get(DelegateTask.class,
                    aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build()))
@@ -296,9 +297,9 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .build();
     wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        aDelegateTaskResponse()
-            .withAccountId(ACCOUNT_ID)
-            .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+        DelegateTaskResponse.builder()
+            .accountId(ACCOUNT_ID)
+            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     assertThat(wingsPersistence.get(DelegateTask.class,
                    aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build()))
@@ -317,12 +318,69 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .build();
     wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        aDelegateTaskResponse()
-            .withAccountId(ACCOUNT_ID)
-            .withResponse(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+        DelegateTaskResponse.builder()
+            .accountId(ACCOUNT_ID)
+            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
     delegateTask = wingsPersistence.get(DelegateTask.class, delegateTask.getUuid());
     assertThat(delegateTask.getStatus()).isEqualTo(DelegateTask.Status.FINISHED);
+  }
+
+  @Test
+  public void processDelegateTaskResponseShouldRequeueTask() {
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(generateUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withDelegateId(DELEGATE_ID)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
+                                    .build();
+    wingsPersistence.save(delegateTask);
+
+    when(assignDelegateService.connectedWhitelistedDelegates(any())).thenReturn(asList("delegate1", "delegate2"));
+
+    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+        DelegateTaskResponse.builder()
+            .accountId(ACCOUNT_ID)
+            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+            .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
+            .build());
+    DelegateTask updatedDelegateTask = wingsPersistence.get(
+        DelegateTask.class, aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build());
+
+    assertThat(updatedDelegateTask != null);
+    assertThat(updatedDelegateTask.getDelegateId() == null);
+    assertThat(updatedDelegateTask.getAlreadyTriedDelegates().size() == 1);
+    assertThat(updatedDelegateTask.getAlreadyTriedDelegates().contains(DELEGATE_ID));
+  }
+
+  @Test
+  public void shouldNotRequeueTaskWhenAfterDelegatesAreTried() {
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withAccountId(ACCOUNT_ID)
+                                    .withWaitId(generateUuid())
+                                    .withTaskType(TaskType.HTTP)
+                                    .withDelegateId(DELEGATE_ID)
+                                    .withAppId(APP_ID)
+                                    .withParameters(new Object[] {})
+                                    .withTags(new ArrayList<>())
+                                    .build();
+    wingsPersistence.save(delegateTask);
+
+    when(assignDelegateService.connectedWhitelistedDelegates(any())).thenReturn(asList(DELEGATE_ID));
+
+    delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
+        DelegateTaskResponse.builder()
+            .accountId(ACCOUNT_ID)
+            .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
+            .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
+            .build());
+    DelegateTask updatedDelegateTask = wingsPersistence.get(
+        DelegateTask.class, aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build());
+
+    assertThat(updatedDelegateTask).isEqualTo(null);
   }
 
   @Test
@@ -547,7 +605,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     wingsPersistence.save(delegate);
     wingsPersistence.save(delegateTask);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        aDelegateTaskResponse().withAccountId(ACCOUNT_ID).withResponse(jenkinsExecutionResponse).build());
+        DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
     DelegateTaskNotifyResponseData delegateTaskNotifyResponseData = jenkinsExecutionResponse;
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getHostName()).isEqualTo(USER_NAME);
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
@@ -557,7 +615,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     wingsPersistence.save(delegateTask);
     wingsPersistence.delete(delegate);
     delegateService.processDelegateResponse(ACCOUNT_ID, DELEGATE_ID, delegateTask.getUuid(),
-        aDelegateTaskResponse().withAccountId(ACCOUNT_ID).withResponse(jenkinsExecutionResponse).build());
+        DelegateTaskResponse.builder().accountId(ACCOUNT_ID).response(jenkinsExecutionResponse).build());
     assertThat(delegateTaskNotifyResponseData.getDelegateMetaInfo().getId()).isEqualTo(DELEGATE_ID);
   }
 

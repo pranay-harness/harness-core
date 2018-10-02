@@ -8,6 +8,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -18,7 +19,6 @@ import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.KubernetesSteadyStateCheckResponse;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ public class KubernetesSteadyStateCheckTask extends AbstractDelegateRunnableTask
   private static final Logger logger = LoggerFactory.getLogger(KubernetesSteadyStateCheckTask.class);
 
   public KubernetesSteadyStateCheckTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

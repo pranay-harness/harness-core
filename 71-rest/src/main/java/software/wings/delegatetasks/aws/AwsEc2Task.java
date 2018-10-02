@@ -10,6 +10,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesRequest;
 import software.wings.service.impl.aws.model.AwsEc2ListInstancesResponse;
@@ -27,7 +28,6 @@ import software.wings.service.impl.aws.model.AwsEc2Request.AwsEc2RequestType;
 import software.wings.service.impl.aws.model.AwsEc2ValidateCredentialsResponse;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Set;
@@ -38,7 +38,7 @@ public class AwsEc2Task extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(AwsEc2Task.class);
   @Inject private AwsEc2HelperServiceDelegate ec2ServiceDelegate;
 
-  public AwsEc2Task(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public AwsEc2Task(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

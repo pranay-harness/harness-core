@@ -13,8 +13,8 @@ import org.joor.ReflectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.exception.WingsExceptionMapper;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -27,8 +27,8 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
 
   @Inject private Injector injector;
 
-  public ServiceImplDelegateTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
-      Supplier<Boolean> preExecute) {
+  public ServiceImplDelegateTask(String delegateId, DelegateTask delegateTask,
+      Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
 

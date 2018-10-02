@@ -8,6 +8,7 @@ import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.KmsOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,8 @@ public class EncryptionServiceImpl implements EncryptionService {
         Field encryptedRefField = getEncryptedRefField(f, object);
         encryptedRefField.setAccessible(true);
         encryptedRefField.set(object, null);
+      } catch (DelegateRetryableException e) {
+        throw e;
       } catch (Exception e) {
         throw new KmsOperationException(Misc.getMessage(e), USER);
       }

@@ -22,6 +22,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformExecutionData.TerraformExecutionDataBuilder;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -33,7 +34,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -63,7 +63,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService logService;
   @Inject private DelegateFileManager delegateFileManager;
 
-  public TerraformProvisionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public TerraformProvisionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

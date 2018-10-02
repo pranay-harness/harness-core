@@ -10,6 +10,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
@@ -25,7 +26,6 @@ import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -40,7 +40,7 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
 
   private static final Logger logger = LoggerFactory.getLogger(GitCommandTask.class);
 
-  public GitCommandTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public GitCommandTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

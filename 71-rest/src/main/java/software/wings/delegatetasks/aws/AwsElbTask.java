@@ -9,6 +9,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsElbListAppElbsResponse;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsResponse;
@@ -18,7 +19,6 @@ import software.wings.service.impl.aws.model.AwsElbRequest;
 import software.wings.service.impl.aws.model.AwsElbRequest.AwsElbRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ public class AwsElbTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(AwsElbTask.class);
   @Inject private AwsElbHelperServiceDelegate elbHelperServiceDelegate;
 
-  public AwsElbTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public AwsElbTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

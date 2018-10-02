@@ -282,7 +282,9 @@ public enum ErrorCode {
 
   INVALID_USAGE_RESTRICTION("Invalid usage restrictions"),
 
-  STATE_EXECUTION_INSTANCE_NOT_FOUND("State Execution Instance not found");
+  STATE_EXECUTION_INSTANCE_NOT_FOUND("State Execution Instance not found"),
+
+  DELEGATE_TASK_RETRY;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -19,6 +19,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -33,7 +34,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.CustomLogVerificationState.ResponseMapper;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -55,7 +55,7 @@ public class LogDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private CustomLogDataCollectionInfo dataCollectionInfo;
   private Map<String, String> decryptedFields = new HashMap<>();
 
-  public LogDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public LogDataCollectionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
