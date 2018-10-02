@@ -6,6 +6,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
@@ -82,12 +83,12 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     }
     environment.getServiceTemplates().forEach(serviceTemplate -> {
       List<ServiceVariable> serviceVariablesByTemplate = serviceVariableService.getServiceVariablesByTemplate(
-          environment.getAppId(), environment.getUuid(), serviceTemplate, false);
+          environment.getAppId(), environment.getUuid(), serviceTemplate, OBTAIN_VALUE);
       serviceVariableList.addAll(serviceVariablesByTemplate);
     });
 
-    List<ServiceVariable> serviceVariablesForAllServices =
-        serviceVariableService.getServiceVariablesForEntity(environment.getAppId(), environment.getUuid(), false);
+    List<ServiceVariable> serviceVariablesForAllServices = serviceVariableService.getServiceVariablesForEntity(
+        environment.getAppId(), environment.getUuid(), OBTAIN_VALUE);
     serviceVariableList.addAll(serviceVariablesForAllServices);
     return serviceVariableList;
   }
@@ -331,7 +332,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       }
 
       List<ServiceVariable> serviceVariablesList =
-          serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), false);
+          serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), OBTAIN_VALUE);
       Optional<ServiceVariable> variableOptional =
           serviceVariablesList.stream()
               .filter(serviceVariable -> serviceVariable.getName().equals(overrideYaml.getName()))

@@ -12,6 +12,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.HARNESS_NAME;
 import static software.wings.integration.IntegrationTestUtil.randomInt;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 
 import com.google.inject.Inject;
 
@@ -167,7 +168,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
                                         .withEnvId(environment.getUuid())
                                         .withName("Catalog:8080")
                                         .build());
-    template = templateService.get(template.getAppId(), template.getEnvId(), template.getUuid(), false, false);
+    template = templateService.get(template.getAppId(), template.getEnvId(), template.getUuid(), false, OBTAIN_VALUE);
 
     // add hosts and tags to template
     List<String> selectedHosts = asList(hosts.get(8).getUuid(), hosts.get(9).getUuid());

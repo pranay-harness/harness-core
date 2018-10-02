@@ -8,6 +8,7 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.TaskType.AWS_LAMBDA_ASYNC_TASK;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
@@ -335,8 +336,8 @@ public class AwsLambdaState extends State {
     }
     Map<String, String> serviceVariables =
         serviceTemplateService
-            .computeServiceVariables(
-                appId, envId, infrastructureMapping.getServiceTemplateId(), context.getWorkflowExecutionId(), false)
+            .computeServiceVariables(appId, envId, infrastructureMapping.getServiceTemplateId(),
+                context.getWorkflowExecutionId(), OBTAIN_VALUE)
             .stream()
             .collect(
                 Collectors.toMap(ServiceVariable::getName, sv -> context.renderExpression(new String(sv.getValue()))));

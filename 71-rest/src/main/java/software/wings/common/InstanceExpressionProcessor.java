@@ -10,6 +10,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.collections.CollectionUtils.intersection;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -267,7 +268,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
     for (ServiceInstance instance : instances) {
       // TODO:: optimize this block.
       ServiceTemplate serviceTemplate = serviceTemplateService.get(
-          instance.getAppId(), instance.getEnvId(), instance.getServiceTemplateId(), false, false);
+          instance.getAppId(), instance.getEnvId(), instance.getServiceTemplateId(), false, OBTAIN_VALUE);
       Service service = serviceResourceService.get(instance.getAppId(), serviceTemplate.getServiceId());
       Host host = hostService.getHostByEnv(instance.getAppId(), instance.getEnvId(), instance.getHostId());
       elements.add(convertToInstanceElement(instance, host, service, serviceTemplate));
@@ -385,7 +386,7 @@ public class InstanceExpressionProcessor implements ExpressionProcessor {
       pageRequestBuilder.addFilter(
           "name", Operator.IN, Arrays.copyOf(serviceTemplateNames, serviceTemplateNames.length, Object[].class));
     }
-    return serviceTemplateService.list(pageRequestBuilder.build(), false, false).getResponse();
+    return serviceTemplateService.list(pageRequestBuilder.build(), false, OBTAIN_VALUE).getResponse();
   }
 
   private InstanceElementListParam getInstanceListParam() {

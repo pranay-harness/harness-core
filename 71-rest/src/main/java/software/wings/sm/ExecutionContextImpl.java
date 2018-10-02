@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.stream.Collectors.toList;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME_VARIABLE;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.ContextElement.ARTIFACT;
 import static software.wings.sm.ContextElement.SAFE_DISPLAY_SERVICE_VARIABLE;
 import static software.wings.sm.ContextElement.SERVICE_VARIABLE;
@@ -41,6 +43,7 @@ import software.wings.expression.SweepingOutputFunctor;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.settings.SettingValue;
@@ -470,12 +473,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Builder
   static class ServiceVariables implements LateBindingValue {
-    boolean maskEncryptedFields;
+    EncryptedFieldMode encryptedFieldMode;
     private ExecutionContextImpl executionContext;
 
     @Override
     public Object bind(String key) {
-      return executionContext.prepareServiceVariables(maskEncryptedFields);
+      return executionContext.prepareServiceVariables(encryptedFieldMode);
     }
   }
 
@@ -495,9 +498,10 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       }
     }
 
-    context.put(SERVICE_VARIABLE, ServiceVariables.builder().maskEncryptedFields(false).executionContext(this).build());
+    context.put(
+        SERVICE_VARIABLE, ServiceVariables.builder().encryptedFieldMode(OBTAIN_VALUE).executionContext(this).build());
     context.put(SAFE_DISPLAY_SERVICE_VARIABLE,
-        ServiceVariables.builder().maskEncryptedFields(true).executionContext(this).build());
+        ServiceVariables.builder().encryptedFieldMode(MASKED).executionContext(this).build());
 
     String workflowExecutionId = getWorkflowExecutionId();
 
@@ -568,25 +572,25 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
   @Override
   public Map<String, String> getServiceVariables() {
-    return getServiceVariables(false);
+    return getServiceVariables(OBTAIN_VALUE);
   }
 
   @Override
   public Map<String, String> getSafeDisplayServiceVariables() {
-    return getServiceVariables(true);
+    return getServiceVariables(MASKED);
   }
 
   @SuppressWarnings("unchecked")
-  private Map<String, String> getServiceVariables(boolean maskEncryptedFields) {
+  private Map<String, String> getServiceVariables(EncryptedFieldMode encryptedFieldMode) {
     if (contextMap != null) {
       return (Map<String, String>) contextMap.get(
-          maskEncryptedFields ? SAFE_DISPLAY_SERVICE_VARIABLE : SERVICE_VARIABLE);
+          encryptedFieldMode == MASKED ? SAFE_DISPLAY_SERVICE_VARIABLE : SERVICE_VARIABLE);
     }
 
-    return prepareServiceVariables(maskEncryptedFields);
+    return prepareServiceVariables(encryptedFieldMode);
   }
 
-  protected Map<String, String> prepareServiceVariables(boolean maskEncryptedFields) {
+  protected Map<String, String> prepareServiceVariables(EncryptedFieldMode encryptedFieldMode) {
     Map<String, String> variables = new HashMap<>();
     PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     if (phaseElement == null || phaseElement.getServiceElement() == null
@@ -603,7 +607,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return variables;
     }
     List<ServiceVariable> serviceVariables = serviceTemplateService.computeServiceVariables(
-        getAppId(), envId, (String) serviceTemplateKey.get().getId(), getWorkflowExecutionId(), maskEncryptedFields);
+        getAppId(), envId, (String) serviceTemplateKey.get().getId(), getWorkflowExecutionId(), encryptedFieldMode);
     serviceVariables.forEach(serviceVariable
         -> variables.put(
             renderExpression(serviceVariable.getName()), renderExpression(new String(serviceVariable.getValue()))));

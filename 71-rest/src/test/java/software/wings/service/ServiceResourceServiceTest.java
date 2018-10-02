@@ -58,6 +58,7 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.security.UserThreadLocal.userGuard;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.stencils.StencilCategory.CONTAINERS;
 import static software.wings.utils.ArtifactType.JAR;
 import static software.wings.utils.ArtifactType.WAR;
@@ -442,10 +443,10 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     ServiceVariable serviceVariable = ServiceVariable.builder().build();
     serviceVariable.setAppId(APP_ID);
     serviceVariable.setUuid(SERVICE_VARIABLE_ID);
-    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, SERVICE_ID, false))
+    when(serviceVariableService.getServiceVariablesForEntity(APP_ID, SERVICE_ID, OBTAIN_VALUE))
         .thenReturn(asList(serviceVariable));
 
-    when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any(Boolean.class)))
+    when(serviceTemplateService.list(any(PageRequest.class), any(Boolean.class), any()))
         .thenReturn(aPageResponse().withResponse(asList(aServiceTemplate().build())).build());
 
     Service clonedService = spyServiceResourceService.clone(
@@ -476,7 +477,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     verify(configService).getConfigFilesForEntity(APP_ID, DEFAULT_TEMPLATE_ID, SERVICE_ID);
     verify(configService).download(APP_ID, "CONFIG_FILE_ID");
     verify(configService).save(any(ConfigFile.class), new BoundedInputStream(any(InputStream.class)));
-    verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, SERVICE_ID, false);
+    verify(serviceVariableService).getServiceVariablesForEntity(APP_ID, SERVICE_ID, OBTAIN_VALUE);
     verify(serviceVariableService).save(any(ServiceVariable.class));
   }
 

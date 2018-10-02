@@ -10,6 +10,7 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -164,8 +165,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
                                           .name("REV")
                                           .value("${artifact.buildNo}".toCharArray())
                                           .build();
-    when(serviceTemplateService.computeServiceVariables(
-             context.getAppId(), context.getEnv().getUuid(), st.getUuid(), context.getWorkflowExecutionId(), false))
+    when(serviceTemplateService.computeServiceVariables(context.getAppId(), context.getEnv().getUuid(), st.getUuid(),
+             context.getWorkflowExecutionId(), OBTAIN_VALUE))
         .thenReturn(asList(serviceVariable));
     when(serviceTemplateService.getTemplateRefKeysByService(
              context.getAppId(), svc.getUuid(), context.getEnv().getUuid()))
@@ -228,8 +229,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     ServiceVariable serviceVariable =
         ServiceVariable.builder().serviceId(svc1.getUuid()).name(svcVarName).value(svcVarValue.toCharArray()).build();
-    when(serviceTemplateService.computeServiceVariables(
-             context.getAppId(), context.getEnv().getUuid(), st.getUuid(), context.getWorkflowExecutionId(), false))
+    when(serviceTemplateService.computeServiceVariables(context.getAppId(), context.getEnv().getUuid(), st.getUuid(),
+             context.getWorkflowExecutionId(), OBTAIN_VALUE))
         .thenReturn(asList(serviceVariable));
     when(serviceTemplateService.getTemplateRefKeysByService(
              context.getAppId(), svc1.getUuid(), context.getEnv().getUuid()))

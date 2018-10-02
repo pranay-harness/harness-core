@@ -18,6 +18,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -160,7 +161,8 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
 
     when(context.getContextElementList(ContextElementType.PARAM)).thenReturn(asList(serviceInstanceIdsParam));
     when(serviceInstanceServiceMock.list(any(PageRequest.class))).thenReturn(res);
-    when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(false))).thenReturn(new PageResponse<>());
+    when(serviceTemplateService.list(any(PageRequest.class), eq(false), eq(OBTAIN_VALUE)))
+        .thenReturn(new PageResponse<>());
 
     InstancePartitionExpressionProcessor processor = new InstancePartitionExpressionProcessor(context);
     processor.setServiceInstanceService(serviceInstanceServiceMock);
@@ -168,7 +170,7 @@ public class InstancePartitionExpressionProcessorTest extends WingsBaseTest {
     processor.setServiceResourceService(serviceResourceServiceMock);
     on(processor).set("hostService", hostService);
 
-    when(serviceTemplateService.get(anyString(), anyString(), eq(TEMPLATE_ID), anyBoolean(), anyBoolean()))
+    when(serviceTemplateService.get(anyString(), anyString(), eq(TEMPLATE_ID), anyBoolean(), any()))
         .thenReturn(serviceTemplate);
     when(serviceResourceServiceMock.get(anyString(), anyString()))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name(SERVICE_NAME).build());

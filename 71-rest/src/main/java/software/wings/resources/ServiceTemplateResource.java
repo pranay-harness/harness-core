@@ -1,6 +1,7 @@
 package software.wings.resources;
 
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 
 import com.google.inject.Inject;
 
@@ -59,7 +60,7 @@ public class ServiceTemplateResource {
       @QueryParam("appId") String appId, @BeanParam PageRequest<ServiceTemplate> pageRequest) {
     pageRequest.addFilter("appId", EQ, appId);
     pageRequest.addFilter("envId", EQ, envId);
-    return new RestResponse<>(serviceTemplateService.list(pageRequest, true, true));
+    return new RestResponse<>(serviceTemplateService.list(pageRequest, true, MASKED));
   }
 
   /**
@@ -94,7 +95,7 @@ public class ServiceTemplateResource {
   @ExceptionMetered
   public RestResponse<ServiceTemplate> get(@QueryParam("envId") String envId, @QueryParam("appId") String appId,
       @PathParam("templateId") String serviceTemplateId) {
-    return new RestResponse<>(serviceTemplateService.get(appId, envId, serviceTemplateId, true, true));
+    return new RestResponse<>(serviceTemplateService.get(appId, envId, serviceTemplateId, true, MASKED));
   }
 
   /**

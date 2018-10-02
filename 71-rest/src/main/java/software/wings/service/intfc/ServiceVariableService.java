@@ -29,10 +29,10 @@ public interface ServiceVariableService extends OwnedByService {
    * List page response.
    *
    * @param request the request
-   * @param  maskEncryptedFields boolean
+   * @param  encryptedFieldMode EncryptedFieldMode
    * @return the page response
    */
-  PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request, boolean maskEncryptedFields);
+  PageResponse<ServiceVariable> list(PageRequest<ServiceVariable> request, EncryptedFieldMode encryptedFieldMode);
 
   /**
    * Save service variable.
@@ -59,7 +59,7 @@ public interface ServiceVariableService extends OwnedByService {
    * @param maskEncryptedFields boolean
    * @return the service variable
    */
-  ServiceVariable get(@NotEmpty String appId, @NotEmpty String settingId, boolean maskEncryptedFields);
+  ServiceVariable get(@NotEmpty String appId, @NotEmpty String settingId, EncryptedFieldMode encryptedFieldMode);
 
   /**
    * Update service variable.
@@ -77,6 +77,11 @@ public interface ServiceVariableService extends OwnedByService {
    */
   void delete(@NotEmpty String appId, @NotEmpty String settingId);
 
+  enum EncryptedFieldMode {
+    OBTAIN_VALUE,
+    MASKED,
+  }
+
   /**
    * Gets service variables for entity.
    *
@@ -85,7 +90,8 @@ public interface ServiceVariableService extends OwnedByService {
    * @param maskEncryptedFields the boolean
    * @return the service variables for entity
    */
-  List<ServiceVariable> getServiceVariablesForEntity(String appId, String entityId, boolean maskEncryptedFields);
+  List<ServiceVariable> getServiceVariablesForEntity(
+      String appId, String entityId, EncryptedFieldMode encryptedFieldMode);
 
   /**
    * Gets service variables by template.
@@ -96,7 +102,7 @@ public interface ServiceVariableService extends OwnedByService {
    * @return the service variables by template
    */
   List<ServiceVariable> getServiceVariablesByTemplate(
-      String appId, String envId, ServiceTemplate serviceTemplate, boolean maskEncryptedFields);
+      String appId, String envId, ServiceTemplate serviceTemplate, EncryptedFieldMode encryptedFieldMode);
 
   /**
    * Delete by template id.

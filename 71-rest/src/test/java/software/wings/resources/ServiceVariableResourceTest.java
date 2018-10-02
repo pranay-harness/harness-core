@@ -6,7 +6,6 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.anyObject;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.mock;
@@ -14,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.MASKED;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
@@ -87,7 +87,7 @@ public class ServiceVariableResourceTest {
     PageResponse<ServiceVariable> pageResponse = new PageResponse<>();
     pageResponse.setResponse(asList(SERVICE_VARIABLE));
     pageResponse.setTotal(1l);
-    when(VARIABLE_SERVICE.list(any(PageRequest.class), anyBoolean())).thenReturn(pageResponse);
+    when(VARIABLE_SERVICE.list(any(PageRequest.class), any())).thenReturn(pageResponse);
     RestResponse<PageResponse<ServiceVariable>> restResponse =
         RESOURCES.client()
             .target("/service-variables/?appId=" + APP_ID)
@@ -95,7 +95,7 @@ public class ServiceVariableResourceTest {
             .get(new GenericType<RestResponse<PageResponse<ServiceVariable>>>() {});
     PageRequest<ServiceVariable> pageRequest = new PageRequest<>();
     pageRequest.setOffset("0");
-    verify(VARIABLE_SERVICE).list(pageRequest, true);
+    verify(VARIABLE_SERVICE).list(pageRequest, MASKED);
     assertThat(restResponse.getResource().getResponse().size()).isEqualTo(1);
     assertThat(restResponse.getResource().getResponse().get(0)).isNotNull();
   }
@@ -124,14 +124,14 @@ public class ServiceVariableResourceTest {
    */
   @Test
   public void shouldGetVariable() throws Exception {
-    when(VARIABLE_SERVICE.get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, true)).thenReturn(SERVICE_VARIABLE);
+    when(VARIABLE_SERVICE.get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, MASKED)).thenReturn(SERVICE_VARIABLE);
     RestResponse<Service> restResponse =
         RESOURCES.client()
             .target(format("/service-variables/%s?appId=%s", WingsTestConstants.SERVICE_VARIABLE_ID, APP_ID))
             .request()
             .get(new GenericType<RestResponse<Service>>() {});
     assertThat(restResponse.getResource()).isInstanceOf(Service.class);
-    verify(VARIABLE_SERVICE).get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, true);
+    verify(VARIABLE_SERVICE).get(APP_ID, WingsTestConstants.SERVICE_VARIABLE_ID, MASKED);
   }
 
   /**
@@ -158,7 +158,7 @@ public class ServiceVariableResourceTest {
    */
   @Test
   public void shouldDeleteServiceVariable() throws Exception {
-    when(VARIABLE_SERVICE.get("APP_ID_1", WingsTestConstants.SERVICE_VARIABLE_ID, true)).thenReturn(SERVICE_VARIABLE);
+    when(VARIABLE_SERVICE.get("APP_ID_1", WingsTestConstants.SERVICE_VARIABLE_ID, MASKED)).thenReturn(SERVICE_VARIABLE);
     Response restResponse =
         RESOURCES.client()
             .target(format("/service-variables/%s?appId=%s", WingsTestConstants.SERVICE_VARIABLE_ID, "APP_ID_1"))

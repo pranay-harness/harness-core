@@ -29,6 +29,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandUnitType.COMMAND;
 import static software.wings.beans.command.ServiceCommand.Builder.aServiceCommand;
 import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_HELM_VALUE_YAML;
+import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.YamlHelper.trimYaml;
@@ -272,7 +273,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                       .addFilter(ServiceTemplate.APP_ID_KEY, EQ, originalService.getAppId())
                       .addFilter(ServiceTemplate.SERVICE_ID_KEY, EQ, originalService.getUuid())
                       .build(),
-                false, false)
+                false, OBTAIN_VALUE)
             .getResponse();
 
     serviceTemplates.forEach(serviceTemplate -> {
@@ -527,7 +528,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   private void setServiceDetails(Service service, String appId) {
     service.setConfigFiles(configService.getConfigFilesForEntity(appId, DEFAULT_TEMPLATE_ID, service.getUuid()));
-    service.setServiceVariables(serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), false));
+    service.setServiceVariables(
+        serviceVariableService.getServiceVariablesForEntity(appId, service.getUuid(), OBTAIN_VALUE));
     service.setServiceCommands(getServiceCommands(appId, service.getUuid()));
   }
 
