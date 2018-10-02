@@ -572,6 +572,7 @@ public class UserServiceImpl implements UserService {
     model.put("company", account.getCompanyName());
     model.put("email", user.getEmail());
     model.put("authenticationMechanism", account.getAuthenticationMechanism().getType());
+    model.put("includeAccessUrl", true);
 
     // In case of username-password authentication mechanism, we don't need to add the SSO details in the email.
     if (account.getAuthenticationMechanism().equals(AuthenticationMechanism.USER_PASSWORD)) {
