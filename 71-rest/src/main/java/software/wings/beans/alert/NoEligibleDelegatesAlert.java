@@ -15,6 +15,7 @@ import software.wings.beans.CatalogItem;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.TaskGroup;
+import software.wings.beans.TaskType;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.CatalogService;
 import software.wings.service.intfc.EnvironmentService;
@@ -37,14 +38,15 @@ public class NoEligibleDelegatesAlert implements AlertData {
   private String envId;
   private String infraMappingId;
   private TaskGroup taskGroup;
+  private TaskType taskType;
   @Getter @Setter private List<String> tags = new ArrayList<>();
 
   @Override
   public boolean matches(AlertData alertData) {
     NoEligibleDelegatesAlert otherAlertData = (NoEligibleDelegatesAlert) alertData;
 
-    boolean match = taskGroup == otherAlertData.getTaskGroup() && StringUtils.equals(appId, otherAlertData.getAppId())
-        && StringUtils.equals(envId, otherAlertData.getEnvId())
+    boolean match = taskGroup == otherAlertData.getTaskGroup() && taskType == otherAlertData.getTaskType()
+        && StringUtils.equals(appId, otherAlertData.getAppId()) && StringUtils.equals(envId, otherAlertData.getEnvId())
         && StringUtils.equals(infraMappingId, otherAlertData.getInfraMappingId());
 
     if (match && isNotBlank(appId) && isNotBlank(envId)) {
@@ -80,14 +82,15 @@ public class NoEligibleDelegatesAlert implements AlertData {
 
   private String getTaskTypeDisplayName() {
     List<CatalogItem> taskTypes = catalogService.getCatalogItems("TASK_TYPES");
+    String taskTypeName = taskType != null ? " (" + taskType.name() + ")" : "";
     if (taskTypes != null) {
       Optional<CatalogItem> taskTypeCatalogItem =
           taskTypes.stream().filter(catalogItem -> catalogItem.getValue().equals(taskGroup.name())).findFirst();
       if (taskTypeCatalogItem.isPresent()) {
-        return taskTypeCatalogItem.get().getDisplayText();
+        return taskTypeCatalogItem.get().getDisplayText() + taskTypeName;
       }
     }
-    return taskGroup.name();
+    return taskGroup.name() + taskTypeName;
   }
 
   public String getAppId() {
@@ -122,6 +125,14 @@ public class NoEligibleDelegatesAlert implements AlertData {
     this.taskGroup = taskGroup;
   }
 
+  public TaskType getTaskType() {
+    return taskType;
+  }
+
+  public void setTaskType(TaskType taskType) {
+    this.taskType = taskType;
+  }
+
   public static final class NoEligibleDelegatesAlertBuilder {
     private NoEligibleDelegatesAlert noEligibleDelegatesAlert;
 
@@ -153,6 +164,11 @@ public class NoEligibleDelegatesAlert implements AlertData {
       return this;
     }
 
+    public NoEligibleDelegatesAlertBuilder withTaskType(TaskType taskType) {
+      noEligibleDelegatesAlert.setTaskType(taskType);
+      return this;
+    }
+
     public NoEligibleDelegatesAlertBuilder withTags(List<String> tags) {
       noEligibleDelegatesAlert.setTags(tags);
       return this;
@@ -164,6 +180,7 @@ public class NoEligibleDelegatesAlert implements AlertData {
           .withEnvId(noEligibleDelegatesAlert.getEnvId())
           .withInfraMappingId(noEligibleDelegatesAlert.getInfraMappingId())
           .withTaskGroup(noEligibleDelegatesAlert.getTaskGroup())
+          .withTaskType(noEligibleDelegatesAlert.getTaskType())
           .withTags(noEligibleDelegatesAlert.getTags());
     }
 

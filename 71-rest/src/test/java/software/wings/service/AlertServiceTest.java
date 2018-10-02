@@ -40,7 +40,9 @@ import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
 import software.wings.alerts.AlertStatus;
 import software.wings.beans.TaskGroup;
+import software.wings.beans.TaskType;
 import software.wings.beans.alert.Alert;
+import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
@@ -72,8 +74,13 @@ public class AlertServiceTest extends WingsBaseTest {
 
   private final NoActiveDelegatesAlert noActiveDelegatesAlert =
       NoActiveDelegatesAlert.builder().accountId(ACCOUNT_ID).build();
-  private final NoEligibleDelegatesAlert noEligibleDelegatesAlert =
-      aNoEligibleDelegatesAlert().withAppId(GLOBAL_APP_ID).withTaskGroup(TaskGroup.JENKINS).build();
+
+  @InjectMocks
+  private final NoEligibleDelegatesAlert noEligibleDelegatesAlert = aNoEligibleDelegatesAlert()
+                                                                        .withAppId(GLOBAL_APP_ID)
+                                                                        .withTaskGroup(TaskGroup.JENKINS)
+                                                                        .withTaskType(TaskType.JENKINS_COLLECTION)
+                                                                        .build();
 
   private final Alert noActive = anAlert()
                                      .withAccountId(ACCOUNT_ID)
@@ -196,5 +203,22 @@ public class AlertServiceTest extends WingsBaseTest {
     alertService.deploymentCompleted(APP_ID, "executionId");
 
     verify(wingsPersistence, times(2)).update(any(Query.class), any(UpdateOperations.class));
+  }
+
+  @Test
+  public void shouldBuildAlertTitle() {
+    AlertData alertData = aNoEligibleDelegatesAlert()
+                              .withAppId(GLOBAL_APP_ID)
+                              .withTaskGroup(TaskGroup.CONTAINER)
+                              .withTaskType(TaskType.LIST_CLUSTERS)
+                              .build();
+    when(query.asList()).thenReturn(emptyList());
+
+    alertService.openAlert(ACCOUNT_ID, GLOBAL_APP_ID, NoEligibleDelegates, alertData);
+
+    ArgumentCaptor<Alert> alertCaptor = ArgumentCaptor.forClass(Alert.class);
+    verify(wingsPersistence).saveAndGet(eq(Alert.class), alertCaptor.capture());
+    Alert savedAlert = alertCaptor.getValue();
+    assertThat(savedAlert.getTitle()).isEqualTo("No delegates can execute Container (LIST_CLUSTERS) tasks ");
   }
 }

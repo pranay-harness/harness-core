@@ -87,7 +87,7 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public void closeAlertsOfType(String accountId, String appId, AlertType alertType) {
-    executorService.submit(() -> findExistingAlertsOfType(accountId, appId, alertType).forEach(alert -> close(alert)));
+    executorService.submit(() -> findExistingAlertsOfType(accountId, appId, alertType).forEach(this ::close));
   }
 
   @Override
@@ -105,7 +105,7 @@ public class AlertServiceImpl implements AlertService {
   }
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
     String lockName = alertType.name() + "-" + (appId == null || appId.equals(GLOBAL_APP_ID) ? accountId : appId);
-    try (AcquiredLock lock = persistentLocker.acquireLock(AlertType.class, lockName, Duration.ofMinutes(1))) {
+    try (AcquiredLock ignore = persistentLocker.acquireLock(AlertType.class, lockName, Duration.ofMinutes(1))) {
       if (findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
         return;
       }
