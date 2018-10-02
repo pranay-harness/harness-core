@@ -2,6 +2,7 @@ package software.wings.beans.command;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 
@@ -12,13 +13,16 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -69,6 +73,10 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
 
   @Override
   protected CommandExecutionStatus executeInternal(ShellCommandExecutionContext context) {
+    if (StringUtils.isEmpty(getCommandPath())) {
+      saveExecutionLog(context, ERROR, "Artifact Download Directory cannot be null or empty");
+      throw new InvalidRequestException("Artifact Download Directory cannot be null or empty");
+    }
     ArtifactStreamType artifactStreamType =
         ArtifactStreamType.valueOf(context.getArtifactStreamAttributes().getArtifactStreamType());
     String command;
@@ -76,12 +84,14 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
       case AMAZON_S3:
         command = constructCommandStringForAmazonS3(context);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
-        saveExecutionLog(context, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        saveExecutionLog(
+            context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       case ARTIFACTORY:
         command = constructCommandStringForArtifactory(context);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
-        saveExecutionLog(context, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        saveExecutionLog(
+            context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
       default:
         throw new WingsException(ErrorCode.UNKNOWN_ARTIFACT_TYPE);
@@ -193,13 +203,13 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     }
   }
 
-  private void saveExecutionLog(ShellCommandExecutionContext context, String line) {
+  private void saveExecutionLog(ShellCommandExecutionContext context, LogLevel logLevel, String line) {
     delegateLogService.save(context.getAccountId(),
         aLog()
             .withAppId(context.getAppId())
             .withActivityId(context.getActivityId())
             .withHostName(context.getHost().getPublicDns())
-            .withLogLevel(INFO)
+            .withLogLevel(logLevel)
             .withCommandUnitName(getName())
             .withLogLine(line)
             .withExecutionResult(RUNNING)

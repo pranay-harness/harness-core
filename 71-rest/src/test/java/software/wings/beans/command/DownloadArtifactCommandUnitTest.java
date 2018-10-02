@@ -20,6 +20,7 @@ import static software.wings.utils.WingsTestConstants.S3_URL;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
+import io.harness.exception.WingsException;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.naming.TestCaseName;
@@ -198,7 +199,7 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   @Test
   @Parameters(method = "getScriptType")
   @TestCaseName("{method}-{0}")
-  public void shouldDowloadFromArtifactoryAsAnonymous(ScriptType scriptType) {
+  public void shouldDownloadFromArtifactoryAsAnonymous(ScriptType scriptType) {
     downloadArtifactCommandUnit.setScriptType(scriptType);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
     when(encryptionService.decrypt(any(Encryptable.class), anyListOf(EncryptedDataDetail.class)))
@@ -206,6 +207,13 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     when(executor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = downloadArtifactCommandUnit.executeInternal(artifactoryContextAnon);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);
+  }
+
+  @Test(expected = WingsException.class)
+  public void shouldFailWithInvalidArtifactDownloadDir() {
+    downloadArtifactCommandUnit.setScriptType(ScriptType.BASH);
+    CommandExecutionStatus status = downloadArtifactCommandUnit.executeInternal(artifactoryContextAnon);
+    assertThat(status).isEqualTo(CommandExecutionStatus.FAILURE);
   }
 
   private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
