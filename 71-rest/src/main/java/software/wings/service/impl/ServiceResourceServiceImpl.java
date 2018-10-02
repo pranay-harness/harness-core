@@ -1606,7 +1606,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     for (String valueYamlFile : valueOverridesYamlFiles) {
-      if (HelmHelper.checkDockerImageNamePresentInValuesYaml(valueYamlFile)) {
+      if (HelmHelper.isArtifactReferencedInValuesYaml(valueYamlFile)) {
         return true;
       }
     }

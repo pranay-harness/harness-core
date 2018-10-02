@@ -5,6 +5,7 @@ import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_DOCKER_IMAGE_NAME_PLACEHOLDER;
+import static software.wings.helpers.ext.helm.HelmConstants.HELM_DOCKER_IMAGE_TAG_PLACEHOLDER;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER;
 
 import com.google.inject.Singleton;
@@ -62,7 +63,9 @@ public class HelmHelper {
     return found;
   }
 
-  public static boolean checkDockerImageNamePresentInValuesYaml(String helmValueYamlFile) {
-    return checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_NAME_PLACEHOLDER);
+  public static boolean isArtifactReferencedInValuesYaml(String helmValueYamlFile) {
+    return checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_NAME_PLACEHOLDER)
+        || checkStringPresentInHelmValueYaml(helmValueYamlFile, HELM_DOCKER_IMAGE_TAG_PLACEHOLDER)
+        || checkStringPresentInHelmValueYaml(helmValueYamlFile, "${artifact.");
   }
 }

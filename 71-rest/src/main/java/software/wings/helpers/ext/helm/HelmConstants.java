@@ -9,6 +9,7 @@ public class HelmConstants {
   public static final String HELM_NAMESPACE_PLACEHOLDER_REGEX = "\\$\\{NAMESPACE}";
   public static final String HELM_NAMESPACE_PLACEHOLDER = "${NAMESPACE}";
   public static final String HELM_DOCKER_IMAGE_NAME_PLACEHOLDER = "${DOCKER_IMAGE_NAME}";
+  public static final String HELM_DOCKER_IMAGE_TAG_PLACEHOLDER = "${DOCKER_IMAGE_TAG}";
 
   public static final String KUBE_CONFIG_TEMPLATE = "apiVersion: v1\n"
       + "clusters:\n"
