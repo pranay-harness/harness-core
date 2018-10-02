@@ -1095,7 +1095,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           || isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
         if (variable.isMandatory() && variable.getValue() == null) {
           throw new InvalidRequestException(
-              "Workflow variable [" + variable.getName() + "] is mandatory for execution");
+              "Workflow variable [" + variable.getName() + "] is mandatory for execution", USER);
         }
         setVariables(variable.getName(), variable.getValue(), variables);
         continue;
