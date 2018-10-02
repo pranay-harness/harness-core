@@ -7,6 +7,10 @@ public class LateBindingMap extends HashMap<String, Object> {
   public Object get(Object key) {
     Object object = super.get(key);
     if (object instanceof LateBindingValue) {
+      // Remove the late binding value to avoid endless loop
+      synchronized (this) {
+        remove((String) key);
+      }
       object = ((LateBindingValue) object).bind((String) key);
       synchronized (this) {
         put((String) key, object);
