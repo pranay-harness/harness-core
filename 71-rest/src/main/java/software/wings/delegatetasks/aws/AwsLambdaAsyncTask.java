@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
@@ -17,7 +18,6 @@ import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -26,7 +26,7 @@ public class AwsLambdaAsyncTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateLogService delegateLogService;
   @Inject private AwsLambdaHelperServiceDelegate awsLambdaHelperServiceDelegate;
 
-  public AwsLambdaAsyncTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public AwsLambdaAsyncTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

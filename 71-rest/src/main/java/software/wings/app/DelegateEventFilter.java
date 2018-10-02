@@ -51,7 +51,9 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
         preassignedIdMatched = false;
       }
 
-      if (versionMatched && preassignedIdMatched && delegateService.filter(delegateId, task)) {
+      boolean delegateAlreadyTried = task.getAlreadyTriedDelegates().contains(delegateId);
+
+      if (versionMatched && preassignedIdMatched && !delegateAlreadyTried && delegateService.filter(delegateId, task)) {
         return new BroadcastAction(JsonUtils.asJson(aDelegateTaskEvent()
                                                         .withDelegateTaskId(task.getUuid())
                                                         .withSync(!task.isAsync())

@@ -29,7 +29,6 @@ import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTask.Status.STARTED;
 import static software.wings.beans.DelegateTaskAbortEvent.Builder.aDelegateTaskAbortEvent;
 import static software.wings.beans.DelegateTaskEvent.DelegateTaskEventBuilder.aDelegateTaskEvent;
-import static software.wings.beans.DelegateTaskResponse.Builder.aDelegateTaskResponse;
 import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_TASK_VERSIONING;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
@@ -94,6 +93,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
@@ -1074,7 +1074,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           response = aRemoteMethodReturnValueData().withException(exception).build();
         }
         processDelegateResponse(
-            accountId, null, taskId, aDelegateTaskResponse().withAccountId(accountId).withResponse(response).build());
+            accountId, null, taskId, DelegateTaskResponse.builder().accountId(accountId).response(response).build());
       }
     }
 
@@ -1196,7 +1196,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, NOBODY).addParam("args", "response cannot be null");
     }
 
-    logger.info("Delegate [{}], response received for taskId [{}]", delegateId, taskId);
+    logger.info("Delegate [{}], response received for taskId [{}], responseCode [{}]", delegateId, taskId,
+        response.getResponseCode());
 
     Query<DelegateTask> taskQuery = wingsPersistence.createQuery(DelegateTask.class)
                                         .filter("accountId", response.getAccountId())
@@ -1208,6 +1209,30 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
         logger.warn("Version mismatch for task {} in account {}. [managerVersion {}, taskVersion {}]",
             delegateTask.getUuid(), delegateTask.getAccountId(), getVersion(), delegateTask.getVersion());
+      }
+
+      if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
+        logger.info("Delegate {} returned retryable error for task {}.", delegateId, taskId);
+
+        Set<String> alreadyTriedDelegates = delegateTask.getAlreadyTriedDelegates();
+        alreadyTriedDelegates.add(delegateId);
+
+        List<String> remainingConnectedDelegates = assignDelegateService.connectedWhitelistedDelegates(delegateTask)
+                                                       .stream()
+                                                       .filter(item -> !alreadyTriedDelegates.contains(item))
+                                                       .collect(toList());
+
+        if (!remainingConnectedDelegates.isEmpty()) {
+          logger.info("Requeueing task {}.", taskId);
+
+          wingsPersistence.update(taskQuery,
+              wingsPersistence.createUpdateOperations(DelegateTask.class)
+                  .unset("delegateId")
+                  .set("alreadyTriedDelegates", alreadyTriedDelegates));
+          return;
+        } else {
+          logger.info("Task {} has been tried on all the connected delegates. Proceeding with error.", taskId);
+        }
       }
 
       if (delegateTask.isAsync()) {

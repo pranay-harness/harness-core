@@ -7,13 +7,13 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -26,7 +26,7 @@ public class CommandTask extends AbstractDelegateRunnableTask {
 
   @Inject private ServiceCommandExecutorService serviceCommandExecutorService;
 
-  public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+  public CommandTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }

@@ -25,9 +25,9 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -45,7 +45,7 @@ public class HttpTask extends AbstractDelegateRunnableTask {
 
   private static final Logger logger = LoggerFactory.getLogger(HttpTask.class);
 
-  public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+  public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }

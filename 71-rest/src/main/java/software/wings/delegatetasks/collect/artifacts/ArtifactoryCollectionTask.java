@@ -5,13 +5,13 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
   @Inject private ArtifactoryService artifactoryService;
 
   public ArtifactoryCollectionTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> postExecute, Supplier<Boolean> preExecute) {
+      Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
 

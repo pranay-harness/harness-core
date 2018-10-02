@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.Result;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -19,7 +20,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.FilePathAssertionEntry;
 import software.wings.sm.states.ParameterEntry;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,7 +35,7 @@ public class BambooTask extends AbstractDelegateRunnableTask {
 
   @Inject private BambooService bambooService;
 
-  public BambooTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
+  public BambooTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }

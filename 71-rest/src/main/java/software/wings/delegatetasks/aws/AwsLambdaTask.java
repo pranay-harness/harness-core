@@ -7,13 +7,13 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest;
 import software.wings.service.impl.aws.model.AwsLambdaRequest.AwsLambdaRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -22,7 +22,7 @@ public class AwsLambdaTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(AwsLambdaTask.class);
   @Inject private AwsLambdaHelperServiceDelegate awsLambdaHelperServiceDelegate;
 
-  public AwsLambdaTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public AwsLambdaTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

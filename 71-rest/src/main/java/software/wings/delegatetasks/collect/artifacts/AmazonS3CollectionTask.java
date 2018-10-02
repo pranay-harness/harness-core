@@ -8,12 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -27,8 +27,8 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
 
   @Inject private AmazonS3Service amazonS3Service;
 
-  public AmazonS3CollectionTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> postExecute,
-      Supplier<Boolean> preExecute) {
+  public AmazonS3CollectionTask(String delegateId, DelegateTask delegateTask,
+      Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
   }
 

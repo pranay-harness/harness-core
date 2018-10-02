@@ -10,6 +10,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.aws.model.AwsIamListInstanceRolesResponse;
@@ -18,7 +19,6 @@ import software.wings.service.impl.aws.model.AwsIamRequest;
 import software.wings.service.impl.aws.model.AwsIamRequest.AwsIamRequestType;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsIamHelperServiceDelegate;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ public class AwsIamTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(AwsEcrTask.class);
   @Inject private AwsIamHelperServiceDelegate iAmServiceDelegate;
 
-  public AwsIamTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
+  public AwsIamTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }

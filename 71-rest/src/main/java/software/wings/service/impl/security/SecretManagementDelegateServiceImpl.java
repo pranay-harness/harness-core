@@ -16,11 +16,16 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.kms.AWSKMS;
 import com.amazonaws.services.kms.AWSKMSClientBuilder;
+import com.amazonaws.services.kms.model.AWSKMSException;
 import com.amazonaws.services.kms.model.DecryptRequest;
+import com.amazonaws.services.kms.model.DependencyTimeoutException;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import com.amazonaws.services.kms.model.GenerateDataKeyResult;
+import com.amazonaws.services.kms.model.KMSInternalException;
+import com.amazonaws.services.kms.model.KeyUnavailableException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -60,6 +65,23 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   public static final int NUM_OF_RETRIES = 3;
 
+  private boolean isRetryable(Exception e) {
+    if (e instanceof AWSKMSException) {
+      if (e instanceof KMSInternalException || e instanceof DependencyTimeoutException
+          || e instanceof KeyUnavailableException) {
+        return true;
+      }
+      return false;
+    }
+
+    if (e instanceof IllegalArgumentException) {
+      return false;
+    }
+
+    // By default for client side exceptions - do retry.
+    return true;
+  }
+
   @Override
   public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
     Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
@@ -92,12 +114,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
             .accountId(accountId)
             .build();
       } catch (Exception e) {
-        if (retry < NUM_OF_RETRIES) {
-          logger.warn(format("Encryption failed. trial num: %d", retry), e);
-          sleep(ofMillis(100));
+        if (isRetryable(e)) {
+          if (retry < NUM_OF_RETRIES) {
+            logger.warn(format("Encryption failed. trial num: %d", retry), e);
+            sleep(ofMillis(100));
+          } else {
+            String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
+            throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
+          }
         } else {
-          String reason = format("Encryption failed after %d retries", NUM_OF_RETRIES);
-          throw new KmsOperationException(reason, e, USER);
+          throw new KmsOperationException(e.getMessage(), e, USER);
         }
       }
     }
@@ -129,12 +155,16 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
         return decrypt(data.getEncryptedValue(), new SecretKeySpec(getByteArray(plainTextKey), "AES")).toCharArray();
       } catch (Exception e) {
-        if (retry < NUM_OF_RETRIES) {
-          logger.warn(format("Decryption failed. trial num: %d", retry), e);
-          sleep(ofMillis(100));
+        if (isRetryable(e)) {
+          if (retry < NUM_OF_RETRIES) {
+            logger.warn(format("Decryption failed. trial num: %d", retry), e);
+            sleep(ofMillis(100));
+          } else {
+            String reason = format("Decryption failed after %d retries", NUM_OF_RETRIES);
+            throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
+          }
         } else {
-          String reason = format("Decryption failed after %d retries", NUM_OF_RETRIES);
-          throw new KmsOperationException(reason, e, USER);
+          throw new KmsOperationException(e.getMessage(), e, USER);
         }
       }
     }

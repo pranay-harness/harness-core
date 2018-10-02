@@ -9,6 +9,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
@@ -22,8 +23,8 @@ public class CollaborationProviderTask extends AbstractDelegateRunnableTask {
   private static Logger logger = LoggerFactory.getLogger(CollaborationProviderTask.class);
   @Inject EmailHandler emailHandler;
 
-  public CollaborationProviderTask(String delegateId, DelegateTask delegateTask, Consumer<NotifyResponseData> consumer,
-      Supplier<Boolean> preExecute) {
+  public CollaborationProviderTask(String delegateId, DelegateTask delegateTask,
+      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
   }
 

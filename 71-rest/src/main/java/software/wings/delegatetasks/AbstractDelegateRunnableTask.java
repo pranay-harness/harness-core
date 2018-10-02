@@ -7,10 +7,14 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
+import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.DelegateTaskResponse.DelegateTaskResponseBuilder;
+import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.utils.Misc;
@@ -37,13 +41,13 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   private String taskType;
   private boolean isAsync;
   private Object[] parameters;
-  private Consumer<NotifyResponseData> consumer;
+  private Consumer<DelegateTaskResponse> consumer;
   private Supplier<Boolean> preExecute;
 
   @Inject private DataCollectionExecutorService dataCollectionService;
 
   public AbstractDelegateRunnableTask(String delegateId, DelegateTask delegateTask,
-      Consumer<NotifyResponseData> consumer, Supplier<Boolean> preExecute) {
+      Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     this.delegateId = delegateId;
     this.taskId = delegateTask.getUuid();
     this.parameters = delegateTask.getParameters();
@@ -60,27 +64,43 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   public void run() {
     try (TaskLogContext ignore = new TaskLogContext(this.taskId)) {
       if (preExecute.get()) {
-        NotifyResponseData result = null;
+        DelegateTaskResponseBuilder taskResponse =
+            DelegateTaskResponse.builder().accountId(accountId).responseCode(ResponseCode.OK);
         try {
           logger.info("Started executing task {}", taskId);
-          result = run(parameters);
+          NotifyResponseData result = run(parameters);
+          if (result != null) {
+            taskResponse.response(result);
+            if (result instanceof RemoteMethodReturnValueData) {
+              RemoteMethodReturnValueData returnValueData = (RemoteMethodReturnValueData) result;
+              if (returnValueData.getException() instanceof DelegateRetryableException) {
+                taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
+              }
+            }
+          } else {
+            String errorMessage = "No response from delegate task " + taskId;
+            logger.error(errorMessage);
+            taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
+            taskResponse.responseCode(ResponseCode.FAILED);
+          }
           logger.info("Completed executing task {}", taskId);
-
+        } catch (DelegateRetryableException exception) {
+          exception.addContext(DelegateTask.class, taskId);
+          WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
+          taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
+          taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
         } catch (WingsException exception) {
           exception.addContext(DelegateTask.class, taskId);
           WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
-          result = ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build();
+          taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
+          taskResponse.responseCode(ResponseCode.FAILED);
         } catch (Throwable exception) {
           logger.error(format("Unexpected error executing delegate task %s", taskId), exception);
-          result = ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build();
+          taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
+          taskResponse.responseCode(ResponseCode.FAILED);
         } finally {
           if (consumer != null) {
-            if (result == null) {
-              String errorMessage = "No response from delegate task " + taskId;
-              logger.error(errorMessage);
-              result = ErrorNotifyResponseData.builder().errorMessage(errorMessage).build();
-            }
-            consumer.accept(result);
+            consumer.accept(taskResponse.build());
           }
         }
       } else {
