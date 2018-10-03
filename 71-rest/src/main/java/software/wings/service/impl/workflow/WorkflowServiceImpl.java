@@ -155,6 +155,7 @@ import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
+import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
 import software.wings.sm.StateTypeDescriptor;
@@ -2054,5 +2055,38 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     return null;
+  }
+
+  @Override
+  public List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId) {
+    final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
+                                                           .addFilter("appId", Operator.EQ, appId)
+                                                           .addFilter("workflowId", Operator.EQ, workflowId)
+                                                           .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
+                                                           .addOrder("createdAt", OrderType.DESC)
+                                                           .build();
+    if (!isEmpty(serviceId)) {
+      pageRequest.addFilter("serviceIds", Operator.CONTAINS, serviceId);
+    }
+    final PageResponse<WorkflowExecution> workflowExecutions =
+        workflowExecutionService.listExecutions(pageRequest, false, true, false, false);
+    final List<String> workflowExecutionIds = new ArrayList<>();
+    if (workflowExecutions != null) {
+      for (WorkflowExecution workflowExecution : workflowExecutions) {
+        workflowExecutionIds.add(workflowExecution.getUuid());
+      }
+    }
+    return workflowExecutionIds;
+  }
+  @Override
+  public boolean isStateValid(String appId, String stateExecutionId) {
+    StateExecutionInstance stateExecutionInstance =
+        workflowExecutionService.getStateExecutionData(appId, stateExecutionId);
+    return stateExecutionInstance != null && !ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus());
+  }
+  @Override
+  public WorkflowExecution getWorkflowExecutionForStateExecutionId(final String appId, final String stateExecutionId) {
+    StateExecutionInstance stateExecutionData = workflowExecutionService.getStateExecutionData(appId, stateExecutionId);
+    return workflowExecutionService.getWorkflowExecution(appId, stateExecutionData.getExecutionUuid());
   }
 }

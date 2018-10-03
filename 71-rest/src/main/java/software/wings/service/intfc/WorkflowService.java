@@ -17,6 +17,7 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.Service;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.stats.CloneMetadata;
 import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
@@ -155,4 +156,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow);
 
   boolean deleteByYamlGit(String appId, String workflowId, boolean syncFromGit);
+
+  List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId);
+  boolean isStateValid(String appId, String stateExecutionId);
+  WorkflowExecution getWorkflowExecutionForStateExecutionId(String appId, String stateExecutionId);
 }
