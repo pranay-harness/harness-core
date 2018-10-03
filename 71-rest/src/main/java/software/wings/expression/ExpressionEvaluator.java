@@ -170,6 +170,9 @@ public class ExpressionEvaluator {
    * @return
    */
   public static String getName(String expression) {
+    if (isEmpty(expression)) {
+      return expression;
+    }
     Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
     if (matcher.matches()) {
       expression = matcher.group(0).substring(2, matcher.group(0).length() - 1);
