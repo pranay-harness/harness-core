@@ -317,6 +317,11 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(
             aWorkflow()
+                .withOrchestrationWorkflow(
+                    aCanaryOrchestrationWorkflow()
+                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                        .build())
                 .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
                 .build());
 
@@ -464,15 +469,17 @@ public class PipelineServiceTest extends WingsBaseTest {
         .thenReturn(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()));
     when(workflowService.resolveEnvironmentId(any(), any())).thenReturn(ENV_ID);
 
-    Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(
-        APP_ID, PIPELINE_ID, ImmutableMap.of("ENV", ENV_ID, "SERVICE", SERVICE_ID, "INFRA", INFRA_MAPPING_ID));
+    Pipeline pipeline = pipelineService.readPipelineWithResolvedVariables(APP_ID, PIPELINE_ID,
+        ImmutableMap.of("ENV", ENV_ID, "SERVICE", SERVICE_ID, "INFRA", INFRA_MAPPING_ID, "MyVar", "MyValue"));
 
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
     assertThat(pipeline.getResolvedPipelineVariables())
-        .hasSize(3)
+        .hasSize(4)
         .containsKeys("Environment", "Service", "ServiceInfrastructure_SSH");
-    assertThat(pipeline.getResolvedPipelineVariables()).hasSize(3).containsValues(ENV_ID, SERVICE_ID, INFRA_MAPPING_ID);
+    assertThat(pipeline.getResolvedPipelineVariables())
+        .hasSize(4)
+        .containsValues(ENV_ID, SERVICE_ID, INFRA_MAPPING_ID, "MyValue");
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
 
     verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
