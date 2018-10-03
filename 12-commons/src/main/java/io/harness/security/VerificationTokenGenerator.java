@@ -13,6 +13,7 @@ import io.harness.exception.WingsException;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 9/17/18.
@@ -30,10 +31,13 @@ public class VerificationTokenGenerator {
         isNotEmpty(verificationSecret), "could not read verification secret from system or env properties");
     try {
       Algorithm algorithm = Algorithm.HMAC256(verificationSecret);
+
       return JWT.create()
           .withIssuer("Harness Inc")
           .withIssuedAt(new Date())
           .withExpiresAt(new Date(System.currentTimeMillis() + 4 * 60 * 60 * 1000)) // 4 hrs
+          .withNotBefore(new Date(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5)))
+          .withIssuedAt(new Date())
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
