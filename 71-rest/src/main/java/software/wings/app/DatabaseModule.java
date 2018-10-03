@@ -189,9 +189,14 @@ public class DatabaseModule extends AbstractModule {
   // https://www.objectrocket.com/blog/mongodb/considerations-for-using-indexstats-to-find-unused-indexes-in-mongodb/
   // NOTE: This is work in progress. For the time being we are checking only for completely unused indexes.
   private void checkForUnusedIndexes(DBCollection collection) {
-    final Map<String, Accesses> accesses = extractAccesses(
+    final Map<String, Accesses> accessesPrimary = extractAccesses(
         collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
             AggregationOptions.builder().build(), ReadPreference.primary()));
+    final Map<String, Accesses> accessesSecondary = extractAccesses(
+        collection.aggregate(Arrays.<DBObject>asList(new BasicDBObject("$indexStats", new BasicDBObject())),
+            AggregationOptions.builder().build(), ReadPreference.secondary()));
+
+    final Map<String, Accesses> accesses = mergeAccesses(accessesPrimary, accessesSecondary);
 
     final Date tooNew = new Date(System.currentTimeMillis() - Duration.ofDays(7).toMillis());
 
