@@ -61,7 +61,7 @@ def run_learning_engine(parameters): #
     thread.start()
     while 1:
         if 1: #process:
-            learning_api_url = complete_url(parameters.server_url, '/api/learning/get-next-task')
+            learning_api_url = complete_url(parameters.server_url, '/verification/learning/get-next-task')
             try:
                 text, status_code = HarnessLoader.get_request(learning_api_url, VERSIONFILEPATH, parameters.service_secret)
                 version = HarnessLoader.get_accept_header(VERSIONFILEPATH)

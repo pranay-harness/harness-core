@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
+import static io.harness.network.SafeHttpCall.execute;
+import static io.harness.security.VerificationTokenGenerator.VERIFICATION_SERVICE_SECRET;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.Boolean.TRUE;
 import static java.lang.String.format;
@@ -21,7 +23,6 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
-import static software.wings.managerclient.SafeHttpCall.execute;
 import static software.wings.utils.Misc.getDurationString;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
 import static software.wings.utils.message.MessageConstants.DELEGATE_GO_AHEAD;
@@ -67,7 +68,6 @@ import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.atmosphere.wasync.Client;
-import org.atmosphere.wasync.ClientFactory;
 import org.atmosphere.wasync.Encoder;
 import org.atmosphere.wasync.Event;
 import org.atmosphere.wasync.Function;
@@ -328,7 +328,7 @@ public class DelegateServiceImpl implements DelegateService {
       if (delegateConfiguration.isPollForTasks()) {
         pollingForTasks.set(true);
       } else {
-        Client client = ClientFactory.getDefault().newClient();
+        Client client = org.atmosphere.wasync.ClientFactory.getDefault().newClient();
 
         URI uri = new URI(delegateConfiguration.getManagerUrl());
         // Stream the request body
@@ -555,6 +555,7 @@ public class DelegateServiceImpl implements DelegateService {
       }
       String delegateId = delegateResponse.getResource().getUuid();
       builder.withUuid(delegateId).withStatus(delegateResponse.getResource().getStatus());
+      System.setProperty(VERIFICATION_SERVICE_SECRET, delegateResponse.getResource().getVerificationServiceSecret());
       logger.info(
           "Delegate registered with id {} and status {}", delegateId, delegateResponse.getResource().getStatus());
       return delegateId;

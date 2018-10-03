@@ -104,6 +104,20 @@ if [[ jenkins_overwrite_status -ne 0 ]] ; then
   exit $jenkins_overwrite_status
 fi
 
+#run verification engine
+sed -i -e 's/^doUpgrade.*/doUpgrade: false/' 79-verification/verification-config.yml
+if [[ -z "${SERVER_BUILD_DIR}" ]]; then
+    java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:verification-gc-logs.gc -XX:+UseParallelGC \
+         -XX:MaxGCPauseMillis=500 -jar 79-verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log 2>&1 &
+else
+    java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:verification-gc-logs.gc -XX:+UseParallelGC \
+         -XX:MaxGCPauseMillis=500 -jar $SERVER_BUILD_DIR/verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log 2>&1 &
+fi
+
+# wait for verification to start
+echo 'wait for verification engine to start'
+
+
 #Delegate integration test. Don't run with UI integration tests
 if [ "$TEST_SUITE" != "UI_INTEGRATION" ] ;
 then
@@ -146,7 +160,7 @@ wait $docker_container_build_pid
 echo "finished waiting for docker image to build"
 serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
 echo $serviceSecret
-server_url=https://$HOSTNAME:9090
+server_url=https://$HOSTNAME:7070
 echo $server_url
 docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=integration-tests le_local
 

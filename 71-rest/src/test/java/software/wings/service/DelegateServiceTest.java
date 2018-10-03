@@ -14,6 +14,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -61,6 +62,7 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.TaskType;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Cache;
@@ -71,6 +73,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
@@ -106,6 +109,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private AssignDelegateService assignDelegateService;
   @Mock private DelegateProfileService delegateProfileService;
   @Mock private InfraDownloadService infraDownloadService;
+  @Mock private LearningEngineService learningEngineService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -113,14 +117,18 @@ public class DelegateServiceTest extends WingsBaseTest {
 
   @Inject private WingsPersistence wingsPersistence;
 
+  private String verificationServiceSecret;
   @Before
   public void setUp() {
+    verificationServiceSecret = generateUuid();
     when(mainConfiguration.getDelegateMetadataUrl()).thenReturn("http://localhost:8888/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList("0.0.0")).build());
     when(infraDownloadService.getDownloadUrlForDelegate(anyString()))
         .thenReturn("http://localhost:8888/builds/9/delegate.jar");
+    when(learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE)).thenReturn(verificationServiceSecret);
+    setInternalState(delegateService, "learningEngineService", learningEngineService);
     wireMockRule.stubFor(get(urlEqualTo("/delegateci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -201,7 +209,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Test
   public void shouldRegister() {
     Delegate delegate = delegateService.register(BUILDER.but().build());
-    assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid(), true)).isEqualTo(delegate);
+    Delegate delegateFromDb = delegateService.get(ACCOUNT_ID, delegate.getUuid(), true);
+    delegateFromDb.setVerificationServiceSecret(verificationServiceSecret);
+    assertThat(delegateFromDb).isEqualTo(delegate);
   }
 
   @Test
@@ -387,7 +397,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadScripts() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File gzipFile = delegateService.downloadScripts("https://localhost:9090", ACCOUNT_ID);
+    File gzipFile = delegateService.downloadScripts("https://localhost:9090", "https://localhost:7070", ACCOUNT_ID);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
@@ -438,7 +448,7 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadDocker() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File gzipFile = delegateService.downloadDocker("https://localhost:9090", ACCOUNT_ID);
+    File gzipFile = delegateService.downloadDocker("https://localhost:9090", "https://localhost:7070", ACCOUNT_ID);
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
@@ -476,7 +486,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   public void shouldDownloadKubernetes() throws IOException, TemplateException {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
-    File gzipFile = delegateService.downloadKubernetes("https://localhost:9090", ACCOUNT_ID, "harness-delegate", "");
+    File gzipFile = delegateService.downloadKubernetes(
+        "https://localhost:9090", "https://localhost:7070", ACCOUNT_ID, "harness-delegate", "");
     File tarFile = File.createTempFile(DELEGATE_DIR, ".tar");
     uncompressGzipFile(gzipFile, tarFile);
     try (TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new FileInputStream(tarFile))) {
@@ -502,7 +513,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
-    DelegateScripts delegateScripts = delegateService.getDelegateScripts(ACCOUNT_ID, "0.0.0", "https://localhost:9090");
+    DelegateScripts delegateScripts =
+        delegateService.getDelegateScripts(ACCOUNT_ID, "0.0.0", "https://localhost:9090", "https://localhost:7070");
     assertThat(delegateScripts.isDoUpgrade()).isTrue();
   }
 
@@ -512,7 +524,8 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(accountService.get(ACCOUNT_ID))
         .thenReturn(anAccount().withAccountKey("ACCOUNT_KEY").withUuid(ACCOUNT_ID).build());
     wingsPersistence.saveAndGet(Delegate.class, BUILDER.but().withUuid(DELEGATE_ID).build());
-    DelegateScripts delegateScripts = delegateService.getDelegateScripts(ACCOUNT_ID, "9.9.9", "https://localhost:9090");
+    DelegateScripts delegateScripts =
+        delegateService.getDelegateScripts(ACCOUNT_ID, "9.9.9", "https://localhost:9090", "https://localhost:7070");
     assertThat(delegateScripts.isDoUpgrade()).isFalse();
   }
 

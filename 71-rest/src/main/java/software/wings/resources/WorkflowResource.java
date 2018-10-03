@@ -548,6 +548,7 @@ public class WorkflowResource {
       @QueryParam("workflowId") String workflowId, @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(workflowService.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId));
   }
+
   @GET
   @Path(VerificationConstants.CHECK_STATE_VALID)
   @Timed
@@ -556,6 +557,7 @@ public class WorkflowResource {
       @QueryParam("appId") String appId, @QueryParam("stateExecutionId") String stateExecutionId) {
     return new RestResponse<>(workflowService.isStateValid(appId, stateExecutionId));
   }
+
   @GET
   @Path(VerificationConstants.WORKFLOW_FOR_STATE_EXEC)
   @Timed

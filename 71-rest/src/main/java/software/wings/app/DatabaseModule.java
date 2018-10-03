@@ -71,12 +71,10 @@ public class DatabaseModule extends AbstractModule {
   /**
    * Creates a guice module for portal app.
    *
-   * @param configuration DropWizard configuration
    */
-  public DatabaseModule(MainConfiguration configuration) {
+  public DatabaseModule(MongoConfig mongoConfig) {
     registerLogger(MorphiaLoggerFactory.class);
 
-    MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);

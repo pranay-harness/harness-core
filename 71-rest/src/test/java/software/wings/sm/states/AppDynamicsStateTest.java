@@ -80,7 +80,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     setInternalState(appDynamicsState, "settingsService", settingsService);
     setInternalState(appDynamicsState, "waitNotifyEngine", waitNotifyEngine);
     setInternalState(appDynamicsState, "delegateService", delegateService);
-    setInternalState(appDynamicsState, "jobScheduler", jobScheduler);
+    setInternalState(appDynamicsState, "wingsPersistence", wingsPersistence);
     setInternalState(appDynamicsState, "secretManager", secretManager);
     setInternalState(appDynamicsState, "metricAnalysisService", metricAnalysisService);
     setInternalState(appDynamicsState, "templateExpressionProcessor", templateExpressionProcessor);

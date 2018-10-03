@@ -66,7 +66,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     setInternalState(dynatraceState, "settingsService", settingsService);
     setInternalState(dynatraceState, "waitNotifyEngine", waitNotifyEngine);
     setInternalState(dynatraceState, "delegateService", delegateService);
-    setInternalState(dynatraceState, "jobScheduler", jobScheduler);
+    setInternalState(dynatraceState, "wingsPersistence", wingsPersistence);
     setInternalState(dynatraceState, "secretManager", secretManager);
     setInternalState(dynatraceState, "workflowExecutionService", workflowExecutionService);
     setInternalState(dynatraceState, "continuousVerificationService", continuousVerificationService);

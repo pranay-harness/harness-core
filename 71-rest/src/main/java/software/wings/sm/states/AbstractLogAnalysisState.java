@@ -7,27 +7,18 @@ import static software.wings.service.impl.security.SecretManagementDelegateServi
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import org.mongodb.morphia.annotations.Transient;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
-import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.metrics.RiskLevel;
-import software.wings.scheduler.LogAnalysisManagerJob;
-import software.wings.scheduler.LogClusterManagerJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ContextElementType;
@@ -37,26 +28,22 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
+
 /**
  * Created by rsingh on 7/6/17.
  */
 public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   protected static final int HOST_BATCH_SIZE = 5;
-  @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
   protected String query;
 
@@ -179,7 +166,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           executionContext.getStateExecutionInstanceId(), delegateTaskId);
 
-      scheduleClusterCronJob(analysisContext, delegateTaskId);
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
 
       return anExecutionResponse()
@@ -307,52 +293,6 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     }
   }
 
-  private void scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
-    Date startDate =
-        new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(SplunkDataCollectionTask.DELAY_MINUTES + 1));
-    JobDetail job = JobBuilder.newJob(LogAnalysisManagerJob.class)
-                        .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
-                        .usingJobData("jobParams", JsonUtils.asJson(context))
-                        .usingJobData("timestamp", System.currentTimeMillis())
-                        .usingJobData("delegateTaskId", delegateTaskId)
-                        .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(context.getStateExecutionId(), "LOG_VERIFY_CRON_GROUP")
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(10)
-                                            .repeatForever()
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
-                          .startAt(startDate)
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-  }
-
-  private void scheduleClusterCronJob(AnalysisContext context, String delegateTaskId) {
-    Date startDate = new Date(new Date().getTime() + 3 * 60000);
-
-    JobDetail job = JobBuilder.newJob(LogClusterManagerJob.class)
-                        .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
-                        .usingJobData("jobParams", JsonUtils.asJson(context))
-                        .usingJobData("timestamp", System.currentTimeMillis())
-                        .usingJobData("delegateTaskId", delegateTaskId)
-                        .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(context.getStateExecutionId(), "LOG_CLUSTER_CRON_GROUP")
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(10)
-                                            .repeatForever()
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
-                          .startAt(startDate)
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-  }
-
   protected ExecutionResponse generateAnalysisResponse(
       AnalysisContext context, ExecutionStatus status, String message) {
     analysisService.createAndSaveSummary(
@@ -393,34 +333,30 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   }
 
   private AnalysisContext getLogAnalysisContext(ExecutionContext context, String correlationId) {
-    try {
-      Map<String, String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-          ? Collections.emptyMap()
-          : getLastExecutionNodes(context);
-      Map<String, String> testNodes = getCanaryNewHostNames(context);
-      testNodes.keySet().forEach(controlNodes::remove);
-      return AnalysisContext.builder()
-          .accountId(this.appService.get(context.getAppId()).getAccountId())
-          .appId(context.getAppId())
-          .workflowId(getWorkflowId(context))
-          .workflowExecutionId(context.getWorkflowExecutionId())
-          .stateExecutionId(context.getStateExecutionInstanceId())
-          .serviceId(getPhaseServiceId(context))
-          .controlNodes(controlNodes)
-          .testNodes(testNodes)
-          .query(query)
-          .isSSL(this.configuration.isSslEnabled())
-          .appPort(this.configuration.getApplicationPort())
-          .comparisonStrategy(getComparisonStrategy())
-          .timeDuration(Integer.parseInt(timeDuration))
-          .stateType(StateType.valueOf(getStateType()))
-          .authToken(generateAuthToken())
-          .analysisServerConfigId(getAnalysisServerConfigId())
-          .correlationId(correlationId)
-          .build();
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    Map<String, String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
+        ? Collections.emptyMap()
+        : getLastExecutionNodes(context);
+    Map<String, String> testNodes = getCanaryNewHostNames(context);
+    testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
+    return AnalysisContext.builder()
+        .accountId(this.appService.get(context.getAppId()).getAccountId())
+        .appId(context.getAppId())
+        .workflowId(getWorkflowId(context))
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .stateExecutionId(context.getStateExecutionInstanceId())
+        .serviceId(getPhaseServiceId(context))
+        .analysisType(MLAnalysisType.LOG_ML)
+        .controlNodes(controlNodes)
+        .testNodes(testNodes)
+        .query(query)
+        .isSSL(this.configuration.isSslEnabled())
+        .appPort(this.configuration.getApplicationPort())
+        .comparisonStrategy(getComparisonStrategy())
+        .timeDuration(Integer.parseInt(timeDuration))
+        .stateType(StateType.valueOf(getStateType()))
+        .analysisServerConfigId(getAnalysisServerConfigId())
+        .correlationId(correlationId)
+        .build();
   }
 
   public abstract AnalysisTolerance getAnalysisTolerance();

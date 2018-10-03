@@ -101,6 +101,9 @@ test "$(tail -c 1 config-delegate.yml)" && `echo "" >> config-delegate.yml`
 if ! `grep managerUrl config-delegate.yml > /dev/null`; then
   echo "managerUrl: _managerHostAndPort_/api/" >> config-delegate.yml
 fi
+if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
+  echo "verificationServiceUrl: _verificationHostAndPort_/api/" >> config-delegate.yml
+fi
 if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`
 then
   echo "watcherCheckLocation: _watcherStorageUrl_/_watcherCheckLocation_" >> config-delegate.yml

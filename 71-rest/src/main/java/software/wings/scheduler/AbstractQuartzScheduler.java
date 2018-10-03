@@ -26,7 +26,6 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.GuiceQuartzJobFactory;
-import software.wings.app.MainConfiguration;
 import software.wings.app.SchedulerConfig;
 import software.wings.core.maintenance.MaintenanceController;
 import software.wings.core.maintenance.MaintenanceListener;
@@ -41,26 +40,21 @@ import java.util.List;
 import java.util.Properties;
 
 public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceListener, ConfigChangeListener {
-  private Injector injector;
-  private Scheduler scheduler;
-  private MainConfiguration configuration;
+  protected Injector injector;
+  protected Scheduler scheduler;
+  private SchedulerConfig schedulerConfig;
+  private MongoConfig mongoConfig;
   private static final Logger logger = LoggerFactory.getLogger(AbstractQuartzScheduler.class);
 
-  /**
-   * Instantiates a new Cron scheduler.
-   *
-   * @param injector      the injector
-   * @param configuration the configuration
-   */
   @Inject
-  public AbstractQuartzScheduler(Injector injector, MainConfiguration configuration) {
+  public AbstractQuartzScheduler(Injector injector, SchedulerConfig schedulerConfig, MongoConfig mongoConfig) {
     this.injector = injector;
-    this.configuration = configuration;
+    this.schedulerConfig = schedulerConfig;
+    this.mongoConfig = mongoConfig;
     setupScheduler();
   }
 
-  private void setupScheduler() { // TODO: remove this. find a way to disable cronScheduler in test
-    SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
+  protected void setupScheduler() { // TODO: remove this. find a way to disable cronScheduler in test
     if (schedulerConfig.getAutoStart().equals("true")) {
       injector.getInstance(MaintenanceController.class).register(this);
       injector.getInstance(ConfigurationController.class).register(this, asList(ConfigChangeEvent.PrimaryChanged));
@@ -101,12 +95,9 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
     }
   }
 
-  private Properties getDefaultProperties() {
-    SchedulerConfig schedulerConfig = configuration.getSchedulerConfig();
-
+  protected Properties getDefaultProperties() {
     Properties props = new Properties();
     if (schedulerConfig.getJobstoreclass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
-      MongoConfig mongoConfig = configuration.getMongoConnectionFactory();
       Builder mongoClientOptions = MongoClientOptions.builder()
                                        .connectTimeout(30000)
                                        .serverSelectionTimeout(90000)

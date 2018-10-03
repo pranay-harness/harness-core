@@ -158,6 +158,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   boolean deleteByYamlGit(String appId, String workflowId, boolean syncFromGit);
 
   List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId);
+
   boolean isStateValid(String appId, String stateExecutionId);
+
   WorkflowExecution getWorkflowExecutionForStateExecutionId(String appId, String stateExecutionId);
 }

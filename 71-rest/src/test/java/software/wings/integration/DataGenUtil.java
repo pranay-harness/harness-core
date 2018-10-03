@@ -158,6 +158,7 @@ import java.util.stream.Collectors;
 
 @SetupScheduler
 public class DataGenUtil extends BaseIntegrationTest {
+  public static String NEW_RELIC_CONNECTOR_NAME = "NewRelic";
   private static final int NUM_APPS = 1; /* Max 1000 */
   private static final int NUM_APP_CONTAINER_PER_APP = 2; /* Max 1000 */
   private static final int NUM_SERVICES_PER_APP = 1; /* Max 1000 */
@@ -516,7 +517,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     SettingAttribute newRelicSettingAttribute =
         aSettingAttribute()
             .withCategory(Category.CONNECTOR)
-            .withName("NewRelic")
+            .withName(NEW_RELIC_CONNECTOR_NAME)
             .withAccountId(accountId)
             .withValue(NewRelicConfig.builder()
                            .accountId(accountId)

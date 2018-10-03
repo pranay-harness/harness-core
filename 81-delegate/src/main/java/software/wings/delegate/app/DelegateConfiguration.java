@@ -13,6 +13,8 @@ public class DelegateConfiguration {
 
   private String managerUrl;
 
+  private String verificationServiceUrl;
+
   private String watcherCheckLocation;
 
   private long heartbeatIntervalMs;

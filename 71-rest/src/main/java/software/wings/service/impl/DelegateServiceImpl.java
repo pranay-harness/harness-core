@@ -33,6 +33,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.beans.FeatureName.DELEGATE_TASK_VERSIONING;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 import static software.wings.beans.alert.NoEligibleDelegatesAlert.NoEligibleDelegatesAlertBuilder.aNoEligibleDelegatesAlert;
 import static software.wings.common.Constants.DELEGATE_DIR;
@@ -112,6 +113,7 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.sm.DelegateMetaInfo;
@@ -177,6 +179,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private FeatureFlagService featureFlagService;
   @Inject private InfraDownloadService infraDownloadService;
   @Inject private DelegateProfileService delegateProfileService;
+  @Inject private LearningEngineService learningEngineService;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -395,9 +398,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public DelegateScripts getDelegateScripts(String accountId, String version, String managerHost)
-      throws IOException, TemplateException {
-    ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
+  public DelegateScripts getDelegateScripts(String accountId, String version, String managerHost,
+      String verificationHost) throws IOException, TemplateException {
+    ImmutableMap<String, String> scriptParams =
+        getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationHost);
 
     DelegateScripts delegateScripts = DelegateScripts.builder().version(version).doUpgrade(false).build();
     if (isNotEmpty(scriptParams)) {
@@ -453,12 +457,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
-      String accountId, String version, String managerHost) {
-    return getJarAndScriptRunTimeParamMap(accountId, version, managerHost, null, null);
+      String accountId, String version, String managerHost, String verificationHost) {
+    return getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationHost, null, null);
   }
 
-  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(
-      String accountId, String version, String managerHost, String delegateName, String delegateProfile) {
+  private ImmutableMap<String, String> getJarAndScriptRunTimeParamMap(String accountId, String version,
+      String managerHost, String verificationHost, String delegateName, String delegateProfile) {
     String latestVersion = null;
     String jarRelativePath;
     String delegateJarDownloadUrl = null;
@@ -519,6 +523,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                         .put("accountSecret", account.getAccountKey())
                                                         .put("upgradeVersion", latestVersion)
                                                         .put("managerHostAndPort", managerHost)
+                                                        .put("verificationHostAndPort", verificationHost)
                                                         .put("watcherStorageUrl", watcherStorageUrl)
                                                         .put("watcherCheckLocation", watcherCheckLocation)
                                                         .put("delegateStorageUrl", delegateStorageUrl)
@@ -552,7 +557,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public File downloadScripts(String managerHost, String accountId) throws IOException, TemplateException {
+  public File downloadScripts(String managerHost, String verificationUrl, String accountId)
+      throws IOException, TemplateException {
     File delegateFile = File.createTempFile(DELEGATE_DIR, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(delegateFile))) {
@@ -567,7 +573,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         version = "0.0.0";
       }
 
-      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
+      ImmutableMap<String, String> scriptParams =
+          getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationUrl);
 
       File start = File.createTempFile("start", ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(start), UTF_8)) {
@@ -662,7 +669,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public File downloadDocker(String managerHost, String accountId) throws IOException, TemplateException {
+  public File downloadDocker(String managerHost, String verificationUrl, String accountId)
+      throws IOException, TemplateException {
     File dockerDelegateFile = File.createTempFile(DOCKER_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(dockerDelegateFile))) {
@@ -677,7 +685,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         version = "0.0.0";
       }
 
-      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost);
+      ImmutableMap<String, String> scriptParams =
+          getJarAndScriptRunTimeParamMap(accountId, version, managerHost, verificationUrl);
 
       File launch = File.createTempFile("launch-harness-delegate", ".sh");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(launch), UTF_8)) {
@@ -716,8 +725,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
-  public File downloadKubernetes(String managerHost, String accountId, String delegateName, String delegateProfile)
-      throws IOException, TemplateException {
+  public File downloadKubernetes(String managerHost, String verificationUrl, String accountId, String delegateName,
+      String delegateProfile) throws IOException, TemplateException {
     File kubernetesDelegateFile = File.createTempFile(KUBERNETES_DELEGATE, ".tar");
 
     try (TarArchiveOutputStream out = new TarArchiveOutputStream(new FileOutputStream(kubernetesDelegateFile))) {
@@ -732,8 +741,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         version = "0.0.0";
       }
 
-      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
-          accountId, version, managerHost, delegateName, delegateProfile == null ? "" : delegateProfile);
+      ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(accountId, version, managerHost,
+          verificationUrl, delegateName, delegateProfile == null ? "" : delegateProfile);
 
       File yaml = File.createTempFile("harness-delegate", ".yaml");
       try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(yaml), UTF_8)) {
@@ -834,6 +843,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           .broadcast("[X]" + delegate.getUuid());
     }
     alertService.activeDelegateUpdated(registeredDelegate.getAccountId(), registeredDelegate.getUuid());
+    registeredDelegate.setVerificationServiceSecret(learningEngineService.getServiceSecretKey(LEARNING_ENGINE));
     return registeredDelegate;
   }
 

@@ -326,7 +326,7 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
       throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadScripts(getManagerUrl(request), accountId);
+    File delegateFile = delegateService.downloadScripts(getManagerUrl(request), getVerificationUrl(request), accountId);
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
@@ -343,7 +343,7 @@ public class DelegateResource {
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("token") @NotEmpty String token)
       throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile = delegateService.downloadDocker(getManagerUrl(request), accountId);
+    File delegateFile = delegateService.downloadDocker(getManagerUrl(request), getVerificationUrl(request), accountId);
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
@@ -361,8 +361,8 @@ public class DelegateResource {
       @QueryParam("delegateProfileId") String delegateProfileId, @QueryParam("token") @NotEmpty String token)
       throws IOException, TemplateException {
     downloadTokenService.validateDownloadToken("delegate." + accountId, token);
-    File delegateFile =
-        delegateService.downloadKubernetes(getManagerUrl(request), accountId, delegateName, delegateProfileId);
+    File delegateFile = delegateService.downloadKubernetes(
+        getManagerUrl(request), getVerificationUrl(request), accountId, delegateName, delegateProfileId);
     return Response.ok(delegateFile)
         .header("Content-Transfer-Encoding", "binary")
         .type("application/zip; charset=binary")
@@ -375,6 +375,10 @@ public class DelegateResource {
     return !StringUtils.isEmpty(apiUrl)
         ? apiUrl
         : request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+  }
+
+  private String getVerificationUrl(HttpServletRequest request) {
+    return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
   }
 
   @DelegateAuth
@@ -440,7 +444,8 @@ public class DelegateResource {
   public RestResponse<DelegateScripts> checkForUpgrade(@Context HttpServletRequest request,
       @HeaderParam("Version") String version, @PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId) throws IOException, TemplateException {
-    return new RestResponse<>(delegateService.getDelegateScripts(accountId, version, getManagerUrl(request)));
+    return new RestResponse<>(
+        delegateService.getDelegateScripts(accountId, version, getManagerUrl(request), getVerificationUrl(request)));
   }
 
   @DelegateAuth
@@ -451,7 +456,8 @@ public class DelegateResource {
   public RestResponse<DelegateScripts> getDelegateScripts(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
       @QueryParam("delegateVersion") @NotEmpty String delegateVersion) throws IOException, TemplateException {
-    return new RestResponse<>(delegateService.getDelegateScripts(accountId, delegateVersion, getManagerUrl(request)));
+    return new RestResponse<>(delegateService.getDelegateScripts(
+        accountId, delegateVersion, getManagerUrl(request), getVerificationUrl(request)));
   }
 
   @DelegateAuth

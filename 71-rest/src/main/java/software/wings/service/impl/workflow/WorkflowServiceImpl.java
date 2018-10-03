@@ -140,7 +140,6 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -224,7 +223,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private YamlDirectoryService yamlDirectoryService;
-  @Inject private MetricDataAnalysisService metricDataAnalysisService;
   @Inject private TriggerService triggerService;
   @Inject private EnvironmentService environmentService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
@@ -2078,12 +2076,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
     return workflowExecutionIds;
   }
+
   @Override
   public boolean isStateValid(String appId, String stateExecutionId) {
     StateExecutionInstance stateExecutionInstance =
         workflowExecutionService.getStateExecutionData(appId, stateExecutionId);
     return stateExecutionInstance != null && !ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus());
   }
+
   @Override
   public WorkflowExecution getWorkflowExecutionForStateExecutionId(final String appId, final String stateExecutionId) {
     StateExecutionInstance stateExecutionData = workflowExecutionService.getStateExecutionData(appId, stateExecutionId);

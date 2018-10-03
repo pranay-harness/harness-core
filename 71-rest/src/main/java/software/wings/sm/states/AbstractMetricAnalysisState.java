@@ -9,28 +9,20 @@ import static software.wings.service.impl.security.SecretManagementDelegateServi
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
-import org.quartz.JobBuilder;
-import org.quartz.JobDetail;
-import org.quartz.SimpleScheduleBuilder;
-import org.quartz.Trigger;
-import org.quartz.TriggerBuilder;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.api.PcfInstanceElement;
-import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.metrics.RiskLevel;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.AnalysisTolerance;
+import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
-import software.wings.service.impl.newrelic.MetricAnalysisJob;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ContextElementType;
@@ -39,33 +31,26 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.NotifyResponseData;
 
-import java.io.UnsupportedEncodingException;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 9/25/17.
  */
 public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState {
   protected static final int SMOOTH_WINDOW = 3;
-  protected static final int TOLERANCE = 1;
   protected static final int MIN_REQUESTS_PER_MINUTE = 10;
   protected static final int COMPARISON_WINDOW = 1;
   protected static final int PARALLEL_PROCESSES = 7;
   public static final int CANARY_DAYS_TO_COLLECT = 7;
-
-  @Inject @Named("VerificationJobScheduler") private QuartzScheduler jobScheduler;
 
   @Transient @Inject protected MetricDataAnalysisService metricAnalysisService;
 
@@ -240,31 +225,6 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         context.getAppId(), StateType.valueOf(getStateType()), context.getStateExecutionInstanceId(), metricGroups);
   }
 
-  private void scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
-    Date startDate =
-        new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(SplunkDataCollectionTask.DELAY_MINUTES + 1));
-    JobDetail job =
-        JobBuilder.newJob(MetricAnalysisJob.class)
-            .withIdentity(context.getStateExecutionId(), getStateType().toUpperCase() + "METRIC_VERIFY_CRON_GROUP")
-            .usingJobData("jobParams", JsonUtils.asJson(context))
-            .usingJobData("timestamp", System.currentTimeMillis())
-            .usingJobData("delegateTaskId", delegateTaskId)
-            .withDescription(context.getStateType() + "-" + context.getStateExecutionId())
-            .build();
-
-    Trigger trigger =
-        TriggerBuilder.newTrigger()
-            .withIdentity(context.getStateExecutionId(), getStateType().toUpperCase() + "METRIC_VERIFY_CRON_GROUP")
-            .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                              .withIntervalInSeconds(60)
-                              .withMisfireHandlingInstructionNowWithExistingCount()
-                              .repeatForever())
-            .startAt(startDate)
-            .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-  }
-
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
@@ -379,7 +339,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                                             .workflowExecutionId(context.getWorkflowExecutionId())
                                                             .workflowId(getWorkflowId(context))
                                                             .build();
-    metricAnalysisService.saveAnalysisRecords(metricAnalysisRecord);
+    wingsPersistence.save(metricAnalysisRecord);
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), status);
 
     return anExecutionResponse()
@@ -391,39 +351,35 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   private AnalysisContext getAnalysisContext(ExecutionContext context, String correlationId) {
-    try {
-      Map<String, String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-          ? Collections.emptyMap()
-          : getLastExecutionNodes(context);
-      Map<String, String> testNodes = getCanaryNewHostNames(context);
-      testNodes.keySet().forEach(controlNodes::remove);
-      int timeDurationInt = Integer.parseInt(timeDuration);
-      return AnalysisContext.builder()
-          .accountId(this.appService.get(context.getAppId()).getAccountId())
-          .appId(context.getAppId())
-          .workflowId(getWorkflowId(context))
-          .workflowExecutionId(context.getWorkflowExecutionId())
-          .stateExecutionId(context.getStateExecutionInstanceId())
-          .serviceId(getPhaseServiceId(context))
-          .controlNodes(controlNodes)
-          .testNodes(testNodes)
-          .isSSL(this.configuration.isSslEnabled())
-          .appPort(this.configuration.getApplicationPort())
-          .comparisonStrategy(getComparisonStrategy())
-          .timeDuration(timeDurationInt)
-          .stateType(StateType.valueOf(getStateType()))
-          .authToken(generateAuthToken())
-          .analysisServerConfigId(getAnalysisServerConfigId())
-          .correlationId(correlationId)
-          .smooth_window(SMOOTH_WINDOW)
-          .tolerance(getAnalysisTolerance().tolerance())
-          .minimumRequestsPerMinute(MIN_REQUESTS_PER_MINUTE)
-          .comparisonWindow(COMPARISON_WINDOW)
-          .parallelProcesses(PARALLEL_PROCESSES)
-          .build();
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    Map<String, String> controlNodes = getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
+        ? Collections.emptyMap()
+        : getLastExecutionNodes(context);
+    Map<String, String> testNodes = getCanaryNewHostNames(context);
+    testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
+    int timeDurationInt = Integer.parseInt(timeDuration);
+    return AnalysisContext.builder()
+        .accountId(this.appService.get(context.getAppId()).getAccountId())
+        .appId(context.getAppId())
+        .workflowId(getWorkflowId(context))
+        .workflowExecutionId(context.getWorkflowExecutionId())
+        .stateExecutionId(context.getStateExecutionInstanceId())
+        .serviceId(getPhaseServiceId(context))
+        .analysisType(MLAnalysisType.TIME_SERIES)
+        .controlNodes(controlNodes)
+        .testNodes(testNodes)
+        .isSSL(this.configuration.isSslEnabled())
+        .appPort(this.configuration.getApplicationPort())
+        .comparisonStrategy(getComparisonStrategy())
+        .timeDuration(timeDurationInt)
+        .stateType(StateType.valueOf(getStateType()))
+        .analysisServerConfigId(getAnalysisServerConfigId())
+        .correlationId(correlationId)
+        .smooth_window(SMOOTH_WINDOW)
+        .tolerance(getAnalysisTolerance().tolerance())
+        .minimumRequestsPerMinute(MIN_REQUESTS_PER_MINUTE)
+        .comparisonWindow(COMPARISON_WINDOW)
+        .parallelProcesses(PARALLEL_PROCESSES)
+        .build();
   }
 
   @Override

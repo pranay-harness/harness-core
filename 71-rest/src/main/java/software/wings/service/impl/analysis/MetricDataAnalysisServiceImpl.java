@@ -1,10 +1,8 @@
 package software.wings.service.impl.analysis;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.persistence.HQuery.excludeCount;
 import static java.util.Arrays.asList;
 import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -12,31 +10,20 @@ import static software.wings.utils.Misc.replaceDotWithUnicode;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest;
-import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.CountOptions;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.MorphiaIterator;
-import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
-import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
@@ -44,26 +31,23 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewRelicMetricHostAnalysisValue;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowExecutionService;
+import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * Created by rsingh on 9/26/17.
@@ -76,249 +60,13 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   @Inject private LearningEngineService learningEngineService;
   @Inject protected DelegateServiceImpl delegateService;
   @Inject protected SettingsService settingsService;
-
-  @Override
-  public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
-      String delegateTaskId, List<NewRelicMetricDataRecord> metricData) throws IOException {
-    if (!isStateValid(appId, stateExecutionId)) {
-      logger.warn("State is no longer active " + metricData.get(0).getStateExecutionId()
-          + ". Sending delegate abort request " + delegateTaskId);
-      delegateService.abortTask(accountId, delegateTaskId);
-      return false;
-    }
-    if (logger.isDebugEnabled()) {
-      logger.debug("inserting " + metricData.size() + " pieces of new relic metrics data");
-    }
-    wingsPersistence.saveIgnoringDuplicateKeys(metricData);
-    if (logger.isDebugEnabled()) {
-      logger.debug("inserted " + metricData.size() + " NewRelicMetricDataRecord to persistence layer.");
-    }
-    return true;
-  }
-
-  @Override
-  public void saveAnalysisRecords(final NewRelicMetricAnalysisRecord metricAnalysisRecord) {
-    wingsPersistence.save(metricAnalysisRecord);
-    logger.info(
-        "inserted NewRelicMetricAnalysisRecord to persistence layer for workflowExecutionId: {} StateExecutionInstanceId: {}",
-        metricAnalysisRecord.getWorkflowExecutionId(), metricAnalysisRecord.getStateExecutionId());
-  }
-
-  /**
-   * Method to save ml analysed records to mongoDB
-   *
-   * @param stateType
-   * @param accountId
-   * @param appId
-   * @param stateExecutionId
-   * @param workflowExecutionId
-   * @param workflowId
-   * @param serviceId
-   * @param groupName
-   * @param analysisMinute
-   * @param taskId
-   * @param baseLineExecutionId
-   * @param mlAnalysisResponse
-   * @return
-   */
-  @Override
-  public boolean saveAnalysisRecordsML(StateType stateType, String accountId, String appId, String stateExecutionId,
-      String workflowExecutionId, String workflowId, String serviceId, String groupName, Integer analysisMinute,
-      String taskId, String baseLineExecutionId, MetricAnalysisRecord mlAnalysisResponse) {
-    logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
-        stateExecutionId, analysisMinute);
-    mlAnalysisResponse.setStateType(stateType);
-    mlAnalysisResponse.setAppId(appId);
-    mlAnalysisResponse.setWorkflowExecutionId(workflowExecutionId);
-    mlAnalysisResponse.setStateExecutionId(stateExecutionId);
-    mlAnalysisResponse.setAnalysisMinute(analysisMinute);
-    mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
-    mlAnalysisResponse.setGroupName(groupName);
-
-    if (isEmpty(mlAnalysisResponse.getGroupName())) {
-      mlAnalysisResponse.setGroupName(DEFAULT_GROUP_NAME);
-    }
-
-    TimeSeriesMLScores timeSeriesMLScores = TimeSeriesMLScores.builder()
-                                                .appId(appId)
-                                                .stateExecutionId(stateExecutionId)
-                                                .workflowExecutionId(workflowExecutionId)
-                                                .workflowId(workflowId)
-                                                .analysisMinute(analysisMinute)
-                                                .stateType(stateType)
-                                                .scoresMap(new HashMap<>())
-                                                .build();
-    int txnId = 0;
-    int metricId;
-    for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
-      TimeSeriesMLTxnScores txnScores =
-          TimeSeriesMLTxnScores.builder().transactionName(txnSummary.getTxn_name()).scoresMap(new HashMap<>()).build();
-      timeSeriesMLScores.getScoresMap().put(String.valueOf(txnId), txnScores);
-
-      metricId = 0;
-      for (TimeSeriesMLMetricSummary mlMetricSummary : txnSummary.getMetrics().values()) {
-        if (mlMetricSummary.getResults() != null) {
-          TimeSeriesMLMetricScores mlMetricScores = TimeSeriesMLMetricScores.builder()
-                                                        .metricName(mlMetricSummary.getMetric_name())
-                                                        .scores(new ArrayList<>())
-                                                        .build();
-          txnScores.getScoresMap().put(String.valueOf(metricId), mlMetricScores);
-
-          Iterator<Entry<String, TimeSeriesMLHostSummary>> resultsItr =
-              mlMetricSummary.getResults().entrySet().iterator();
-          Map<String, TimeSeriesMLHostSummary> timeSeriesMLHostSummaryMap = new HashMap<>();
-          while (resultsItr.hasNext()) {
-            Entry<String, TimeSeriesMLHostSummary> pair = resultsItr.next();
-            timeSeriesMLHostSummaryMap.put(pair.getKey().replaceAll("\\.", "-"), pair.getValue());
-            mlMetricScores.getScores().add(pair.getValue().getScore());
-          }
-          mlMetricSummary.setResults(timeSeriesMLHostSummaryMap);
-          ++metricId;
-        }
-      }
-      ++txnId;
-    }
-
-    saveTimeSeriesMLScores(timeSeriesMLScores);
-    bumpCollectionMinuteToProcess(
-        stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName, analysisMinute);
-    learningEngineService.markCompleted(taskId);
-
-    wingsPersistence.save(mlAnalysisResponse);
-    logger.info("inserted MetricAnalysisRecord to persistence layer for "
-            + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
-        stateType, workflowExecutionId, stateExecutionId);
-    return true;
-  }
-
-  @Override
-  public List<TimeSeriesMLScores> getTimeSeriesMLScores(
-      String appId, String workflowId, int analysisMinute, int limit) {
-    List<String> workflowExecutionIds = getLastSuccessfulWorkflowExecutionIds(appId, workflowId, null);
-    return wingsPersistence.createQuery(TimeSeriesMLScores.class)
-        .filter("workflowId", workflowId)
-        .filter("appId", appId)
-        .filter("analysisMinute", analysisMinute)
-        .field("workflowExecutionIds")
-        .in(workflowExecutionIds)
-        .order("-createdAt")
-        .asList(new FindOptions().limit(limit));
-  }
-
-  @Override
-  public void saveTimeSeriesMLScores(TimeSeriesMLScores scores) {
-    wingsPersistence.save(scores);
-  }
-
-  /**
-   * Method to fetch Experimental Analysis Record for timeseries data.
-   * @param appId
-   * @param stateExecutionId
-   * @param workflowExecutionId
-   * @return
-   */
-  @Override
-  public List<ExperimentalMetricAnalysisRecord> getExperimentalAnalysisRecordsByNaturalKey(
-      String appId, String stateExecutionId, String workflowExecutionId) {
-    return wingsPersistence.createQuery(ExperimentalMetricAnalysisRecord.class)
-        .filter("appId", appId)
-        .filter("stateExecutionId", stateExecutionId)
-        .filter("workflowExecutionId", workflowExecutionId)
-        .asList();
-  }
-
-  @Override
-  public List<NewRelicMetricDataRecord> getRecords(StateType stateType, String appId, String workflowExecutionId,
-      String stateExecutionId, String workflowId, String serviceId, String groupName, Set<String> nodes,
-      int analysisMinute, int analysisStartMinute) {
-    return wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeCount)
-        .filter("stateType", stateType)
-        .filter("appId", appId)
-        .filter("workflowId", workflowId)
-        .filter("workflowExecutionId", workflowExecutionId)
-        .filter("stateExecutionId", stateExecutionId)
-        .filter("serviceId", serviceId)
-        .filter("groupName", groupName)
-        .field("host")
-        .hasAnyOf(nodes)
-        .field("level")
-        .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-        .field("dataCollectionMinute")
-        .lessThanOrEq(analysisMinute)
-        .field("dataCollectionMinute")
-        .greaterThanOrEq(analysisStartMinute)
-        .asList();
-  }
-
-  @Override
-  public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(StateType stateType, String appId,
-      String workflowId, String workflowExecutionID, String serviceId, String groupName, int analysisMinute,
-      int analysisStartMinute) {
-    MorphiaIterator<NewRelicMetricDataRecord, NewRelicMetricDataRecord> iterator =
-        wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-            .filter("stateType", stateType)
-            .filter("appId", appId)
-            .filter("workflowId", workflowId)
-            .filter("workflowExecutionId", workflowExecutionID)
-            .filter("serviceId", serviceId)
-            .field("groupName")
-            .in(asList(groupName, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME))
-            .field("level")
-            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-            .field("dataCollectionMinute")
-            .lessThanOrEq(analysisMinute)
-            .field("dataCollectionMinute")
-            .greaterThanOrEq(analysisStartMinute)
-            .fetch();
-    List<NewRelicMetricDataRecord> records = new ArrayList<>();
-    while (iterator.hasNext()) {
-      records.add(iterator.next());
-    }
-    return records;
-  }
-
-  @Override
-  public int getMaxControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
-      String workflowExecutionId, String groupName) {
-    NewRelicMetricDataRecord newRelicMetricDataRecord =
-        wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-            .filter("stateType", stateType)
-            .filter("appId", appId)
-            .filter("workflowId", workflowId)
-            .filter("workflowExecutionId", workflowExecutionId)
-            .filter("serviceId", serviceId)
-            .field("groupName")
-            .in(asList(groupName, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME))
-            .field("level")
-            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-            .order("-dataCollectionMinute")
-            .get();
-
-    return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
-  }
-
-  @Override
-  public int getMinControlMinuteWithData(StateType stateType, String appId, String serviceId, String workflowId,
-      String workflowExecutionId, String groupName) {
-    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                            .filter("stateType", stateType)
-                                                            .filter("appId", appId)
-                                                            .filter("workflowId", workflowId)
-                                                            .filter("workflowExecutionId", workflowExecutionId)
-                                                            .filter("serviceId", serviceId)
-                                                            .filter("groupName", groupName)
-                                                            .field("level")
-                                                            .notIn(asList(ClusterLevel.H0, ClusterLevel.HF))
-                                                            .order("dataCollectionMinute")
-                                                            .get();
-
-    return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
-  }
+  @Inject private WorkflowService workflowService;
 
   @Override
   public String getLastSuccessfulWorkflowExecutionIdWithData(
       StateType stateType, String appId, String workflowId, String serviceId) {
-    List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId);
+    List<String> successfulExecutions =
+        workflowService.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId);
     for (String successfulExecution : successfulExecutions) {
       if (wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
               .filter("stateType", stateType)
@@ -335,31 +83,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     }
     logger.warn("Could not get a successful workflow to find control nodes");
     return null;
-  }
-
-  @Override
-  public List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId) {
-    final PageRequest<WorkflowExecution> pageRequest = aPageRequest()
-                                                           .addFilter("appId", Operator.EQ, appId)
-                                                           .addFilter("workflowId", Operator.EQ, workflowId)
-                                                           .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
-                                                           .addOrder("createdAt", OrderType.DESC)
-                                                           .build();
-
-    if (!isEmpty(serviceId)) {
-      pageRequest.addFilter("serviceIds", Operator.CONTAINS, serviceId);
-    }
-
-    final PageResponse<WorkflowExecution> workflowExecutions =
-        workflowExecutionService.listExecutions(pageRequest, false, true, false, false);
-    final List<String> workflowExecutionIds = new ArrayList<>();
-
-    if (workflowExecutions != null) {
-      for (WorkflowExecution workflowExecution : workflowExecutions) {
-        workflowExecutionIds.add(workflowExecution.getUuid());
-      }
-    }
-    return workflowExecutionIds;
   }
 
   private RiskLevel getRiskLevel(int risk) {
@@ -495,33 +218,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                        .filter("groupName", groupName)
                                        .filter("transactionName", transactionName)
                                        .filter("metricName", metricName));
-  }
-
-  @Override
-  public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
-      String appId, StateType stateType, String stateExecutionId, String serviceId, String groupName) {
-    Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();
-    switch (stateType) {
-      case NEW_RELIC:
-        result.put("default", NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE);
-        break;
-      case APP_DYNAMICS:
-        result.put("default", NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
-        break;
-      case DYNA_TRACE:
-        result.put("default", DynaTraceTimeSeries.getDefinitionsToAnalyze());
-        break;
-      case PROMETHEUS:
-      case CLOUD_WATCH:
-      case DATA_DOG:
-      case APM_VERIFICATION:
-        result.put("default", getMetricTemplates(appId, stateType, stateExecutionId));
-        break;
-      default:
-        throw new WingsException("Invalid Verification StateType.");
-    }
-    result.putAll(getCustomMetricTemplates(appId, stateType, serviceId, groupName));
-    return result;
   }
 
   public List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(
@@ -719,89 +415,8 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean isStateValid(String appId, String stateExecutionID) {
-    StateExecutionInstance stateExecutionInstance =
-        workflowExecutionService.getStateExecutionData(appId, stateExecutionID);
-    return stateExecutionInstance != null && !ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus());
-  }
-
-  @Override
-  public NewRelicMetricDataRecord getLastHeartBeat(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String groupName) {
-    logger.info(
-        "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
-        stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
-    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                            .filter("stateType", stateType)
-                                                            .filter("appId", appId)
-                                                            .filter("workflowExecutionId", workflowExecutionId)
-                                                            .filter("stateExecutionId", stateExecutionId)
-                                                            .filter("serviceId", serviceId)
-                                                            .filter("groupName", groupName)
-                                                            .field("level")
-                                                            .in(Lists.newArrayList(ClusterLevel.HF))
-                                                            .order("-dataCollectionMinute")
-                                                            .get();
-
-    if (newRelicMetricDataRecord == null) {
-      logger.info(
-          "No heartbeat record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}",
-          ClusterLevel.HF, stateExecutionId, workflowExecutionId, serviceId);
-      return null;
-    }
-    logger.info("Returning the record {} from getLastHeartBeat", newRelicMetricDataRecord);
-    return newRelicMetricDataRecord;
-  }
-
-  @Override
-  public NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String groupName) {
-    logger.info(
-        "Querying for getLastHeartBeat. Params are: stateType {}, appId {}, stateExecutionId: {}, workflowExecutionId: {} serviceId {}, groupName: {} ",
-        stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName);
-    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                            .filter("stateType", stateType)
-                                                            .filter("appId", appId)
-                                                            .filter("workflowExecutionId", workflowExecutionId)
-                                                            .filter("stateExecutionId", stateExecutionId)
-                                                            .filter("serviceId", serviceId)
-                                                            .filter("groupName", groupName)
-                                                            .field("level")
-                                                            .in(Lists.newArrayList(ClusterLevel.H0))
-                                                            .order("-dataCollectionMinute")
-                                                            .get();
-
-    if (newRelicMetricDataRecord == null) {
-      logger.info(
-          "No metric record with heartbeat level {} found for stateExecutionId: {}, workflowExecutionId: {}, serviceId: {}.",
-          ClusterLevel.H0, stateExecutionId, workflowExecutionId, serviceId);
-      return null;
-    }
-    logger.info("Returning the record: {} from getAnalysisMinute", newRelicMetricDataRecord);
-    return newRelicMetricDataRecord;
-  }
-
-  @Override
-  public void bumpCollectionMinuteToProcess(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String groupName, int analysisMinute) {
-    logger.info(
-        "bumpCollectionMinuteToProcess. Going to update the record for stateExecutionId {} and dataCollectionMinute {}",
-        stateExecutionId, analysisMinute);
-    Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                .filter("stateType", stateType)
-                                                .filter("appId", appId)
-                                                .filter("workflowExecutionId", workflowExecutionId)
-                                                .filter("stateExecutionId", stateExecutionId)
-                                                .filter("serviceId", serviceId)
-                                                .filter("groupName", groupName)
-                                                .filter("level", ClusterLevel.H0)
-                                                .field("dataCollectionMinute")
-                                                .lessThanOrEq(analysisMinute);
-
-    UpdateResults updateResults = wingsPersistence.update(
-        query, wingsPersistence.createUpdateOperations(NewRelicMetricDataRecord.class).set("level", ClusterLevel.HF));
-    logger.info("bumpCollectionMinuteToProcess updated results size {}, for stateExecutionId {} ",
-        updateResults.getUpdatedCount(), stateExecutionId);
+  public boolean isStateValid(String appId, String stateExecutionId) {
+    return workflowService.isStateValid(appId, stateExecutionId);
   }
 
   @Override
@@ -814,46 +429,6 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
                                                    .build();
     metricTemplate.setAppId(appId);
     wingsPersistence.save(metricTemplate);
-  }
-
-  @Override
-  public Map<String, TimeSeriesMetricDefinition> getMetricTemplates(
-      String appId, StateType stateType, String stateExecutionId) {
-    TimeSeriesMetricTemplates newRelicMetricTemplates = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
-                                                            .field("appId")
-                                                            .equal(appId)
-                                                            .field("stateType")
-                                                            .equal(stateType)
-                                                            .field("stateExecutionId")
-                                                            .equal(stateExecutionId)
-                                                            .get();
-    return newRelicMetricTemplates == null ? null : newRelicMetricTemplates.getMetricTemplates();
-  }
-
-  @Override
-  public Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
-      String appId, StateType stateType, String serviceId, String groupName) {
-    List<TimeSeriesMLTransactionThresholds> thresholds =
-        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
-            .field("appId")
-            .equal(appId)
-            .field("stateType")
-            .equal(stateType)
-            .field("serviceId")
-            .equal(serviceId)
-            .field("groupName")
-            .equal(groupName)
-            .asList();
-    Map<String, Map<String, TimeSeriesMetricDefinition>> customThresholds = new HashMap<>();
-    if (thresholds != null) {
-      for (TimeSeriesMLTransactionThresholds threshold : thresholds) {
-        if (!customThresholds.containsKey(threshold.getTransactionName())) {
-          customThresholds.put(threshold.getTransactionName(), new HashMap<>());
-        }
-        customThresholds.get(threshold.getTransactionName()).put(threshold.getMetricName(), threshold.getThresholds());
-      }
-    }
-    return customThresholds;
   }
 
   @Override

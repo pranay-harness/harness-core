@@ -40,12 +40,13 @@ def run_learning_engine(parameters): #
     while 1:
         for exp_name in EXPNAME:
             try:
-                    learning_api_url = complete_url(parameters.server_url,'/api/learning/get-next-exp-task?experimentName=' + exp_name)
+                    learning_api_url = complete_url(parameters.server_url,'/verification/learning/get-next-exp-task?experimentName=' + exp_name)
                     analize_task(parameters, learning_api_url, exp_name)
                     time.sleep(5)
 
             except Exception as e:
                 logger.exception(e)
+
                 time.sleep(10)
 
 

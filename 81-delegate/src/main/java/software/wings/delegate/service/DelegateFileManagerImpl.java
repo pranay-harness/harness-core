@@ -1,8 +1,8 @@
 package software.wings.delegate.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.network.SafeHttpCall.execute;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
-import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;

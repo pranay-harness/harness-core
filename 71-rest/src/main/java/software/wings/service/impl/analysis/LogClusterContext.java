@@ -29,5 +29,4 @@ public class LogClusterContext {
   private int appPort;
   private StateType stateType;
   private String stateBaseUrl;
-  private String authToken;
 }

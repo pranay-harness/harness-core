@@ -54,6 +54,7 @@ import de.javakaffee.kryoserializers.guava.LinkedListMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.ReverseListSerializer;
 import de.javakaffee.kryoserializers.guava.TreeMultimapSerializer;
 import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
+import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.WingsException;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
@@ -126,13 +127,13 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
 
   private static MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
 
-  private MongodExecutable mongodExecutable;
-  private Injector injector;
-  private AdvancedDatastore datastore;
-  private DistributedLockSvc distributedLockSvc;
+  protected MongodExecutable mongodExecutable;
+  protected Injector injector;
+  protected AdvancedDatastore datastore;
+  protected DistributedLockSvc distributedLockSvc;
   private int port;
   private ExecutorService executorService = new CurrentThreadExecutor();
-  private boolean fakeMongo;
+  protected boolean fakeMongo;
 
   /* (non-Javadoc)
    * @see org.junit.rules.MethodRule#apply(org.junit.runners.model.Statement, org.junit.runners.model.FrameworkMethod,
@@ -145,7 +146,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
       public void evaluate() throws Throwable {
         List<Annotation> annotations = Lists.newArrayList(asList(frameworkMethod.getAnnotations()));
         annotations.addAll(asList(target.getClass().getAnnotations()));
-        WingsRule.this.before(annotations, target instanceof BaseIntegrationTest,
+        WingsRule.this.before(annotations, isIntegrationTest(target),
             target.getClass().getSimpleName() + "." + frameworkMethod.getName());
         injector.injectMembers(target);
         try {
@@ -155,6 +156,10 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
         }
       }
     };
+  }
+
+  protected boolean isIntegrationTest(Object target) {
+    return target instanceof BaseIntegrationTest;
   }
 
   /**
@@ -218,55 +223,16 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
       distributedLockSvc.startup();
     }
 
-    MainConfiguration configuration = new MainConfiguration();
-    configuration.getPortal().setCompanyName("COMPANY_NAME");
-    configuration.getPortal().setAllowedDomains("wings.software");
-    configuration.getPortal().setUrl(PORTAL_URL);
-    configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
-    configuration.getMongoConnectionFactory().setUri(
-        System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName));
-    configuration.getSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
-    if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
-      configuration.getSchedulerConfig().setAutoStart("true");
-      if (fakeMongo) {
-        configuration.getSchedulerConfig().setJobstoreclass(org.quartz.simpl.RAMJobStore.class.getCanonicalName());
-      }
-    }
-
-    ValidatorFactory validatorFactory = Validation.byDefaultProvider()
-                                            .configure()
-                                            .parameterNameProvider(new ReflectionParameterNameProvider())
-                                            .buildValidatorFactory();
+    Configuration configuration = getConfiguration(annotations, dbName);
 
     HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
-    List<Module> modules = new ArrayList();
-    modules.add(new AbstractModule() {
-      @Override
-      protected void configure() {
-        bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
-        bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
-        bind(MetricRegistry.class);
-      }
-    });
-    modules.add(new LicenseModule());
-    modules.add(new ValidationModule(validatorFactory));
-    modules.add(new DatabaseModule(datastore, datastore, distributedLockSvc));
-    modules.addAll(new WingsModule(configuration).cumulativeDependencies());
-    modules.add(new YamlModule());
-    modules.add(new ExecutorModule(executorService));
-    modules.add(new WingsTestModule());
-    modules.add(new TemplateModule());
-
-    if (fakeMongo) {
-      modules.add(new QueueModuleTest(datastore));
-    } else {
-      modules.add(new QueueModule(datastore, false));
-    }
+    List<Module> modules = getRequiredModules(configuration);
+    addQueueModules(modules);
 
     if (annotations.stream().filter(annotation -> Cache.class.isInstance(annotation)).findFirst().isPresent()) {
       System.setProperty("hazelcast.jcache.provider.type", "server");
-      CacheModule cacheModule = new CacheModule(configuration);
+      CacheModule cacheModule = new CacheModule((MainConfiguration) configuration);
       modules.add(0, cacheModule);
       hazelcastInstance = cacheModule.getHazelcastInstance();
     }
@@ -294,7 +260,64 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
     ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);
+    registerObservers();
+  }
+
+  protected void registerObservers() {
     WingsApplication.registerObservers(injector);
+  }
+
+  protected void addQueueModules(List<Module> modules) {
+    if (fakeMongo) {
+      modules.add(new QueueModuleTest(datastore));
+    } else {
+      modules.add(new QueueModule(datastore, false));
+    }
+  }
+
+  protected Configuration getConfiguration(List<Annotation> annotations, String dbName) {
+    MainConfiguration configuration = new MainConfiguration();
+    configuration.getPortal().setCompanyName("COMPANY_NAME");
+    configuration.getPortal().setAllowedDomains("wings.software");
+    configuration.getPortal().setUrl(PORTAL_URL);
+    configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
+    configuration.getMongoConnectionFactory().setUri(
+        System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName));
+    configuration.getSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+    if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
+      configuration.getSchedulerConfig().setAutoStart("true");
+      if (fakeMongo) {
+        configuration.getSchedulerConfig().setJobstoreclass(org.quartz.simpl.RAMJobStore.class.getCanonicalName());
+      }
+    }
+    return configuration;
+  }
+
+  protected List<Module> getRequiredModules(Configuration configuration) {
+    ValidatorFactory validatorFactory = Validation.byDefaultProvider()
+                                            .configure()
+                                            .parameterNameProvider(new ReflectionParameterNameProvider())
+                                            .buildValidatorFactory();
+
+    List<Module> modules = new ArrayList();
+
+    modules.add(new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(EventEmitter.class).toInstance(mock(EventEmitter.class));
+        bind(BroadcasterFactory.class).toInstance(mock(BroadcasterFactory.class));
+        bind(MetricRegistry.class);
+      }
+    });
+    modules.add(new LicenseModule());
+    modules.add(new ValidationModule(validatorFactory));
+    modules.add(new DatabaseModule(datastore, datastore, distributedLockSvc));
+    modules.addAll(new WingsModule((MainConfiguration) configuration).cumulativeDependencies());
+    modules.add(new YamlModule());
+    modules.add(new ExecutorModule(executorService));
+    modules.add(new WingsTestModule());
+    modules.add(new TemplateModule());
+    return modules;
   }
 
   private MongoClient getRandomPortMongoClient() throws Exception {
@@ -419,13 +442,13 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
     log().info("Stopped Mongo server...");
   }
 
-  private void registerScheduledJobs(Injector injector) {
+  protected void registerScheduledJobs(Injector injector) {
     log().info("Initializing scheduledJobs...");
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))
         .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 1000L, TimeUnit.MILLISECONDS);
   }
 
-  private Logger log() {
+  protected Logger log() {
     return LoggerFactory.getLogger(getClass());
   }
 

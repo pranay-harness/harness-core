@@ -42,15 +42,17 @@ public interface DelegateService {
 
   Delegate updateScopes(@Valid Delegate delegate);
 
-  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost)
+  DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost)
       throws IOException, TemplateException;
 
   String getLatestDelegateVersion(String accountId);
 
-  File downloadScripts(String managerHost, String accountId) throws IOException, TemplateException;
-  File downloadDocker(String managerHost, String accountId) throws IOException, TemplateException;
-  File downloadKubernetes(String managerHost, String accountId, String delegateName, String delegateProfile)
+  File downloadScripts(String managerHost, String verificationServiceUrl, String accountId)
       throws IOException, TemplateException;
+  File downloadDocker(String managerHost, String verificationServiceUrl, String accountId)
+      throws IOException, TemplateException;
+  File downloadKubernetes(String managerHost, String verificationServiceUrl, String accountId, String delegateName,
+      String delegateProfile) throws IOException, TemplateException;
 
   Delegate add(Delegate delegate);
 

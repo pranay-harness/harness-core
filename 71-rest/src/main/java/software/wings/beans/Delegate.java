@@ -36,6 +36,7 @@ public class Delegate extends Base {
   private String delegateProfileId;
   private long lastHeartBeat;
   private String version;
+  private String verificationServiceSecret;
   @Deprecated private List<String> supportedTaskTypes;
 
   @Transient private List<DelegateTask> currentlyExecutingDelegateTasks;
