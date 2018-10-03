@@ -15,10 +15,8 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
-import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.intfc.LearningEngineService;
-import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.StateType;
 import software.wings.sm.states.NewRelicState;
@@ -67,8 +65,6 @@ import javax.ws.rs.QueryParam;
 public class NewRelicResource {
   @Inject private NewRelicService newRelicService;
 
-  @Inject private MetricDataAnalysisService metricDataAnalysisService;
-
   @Inject private LearningEngineService learningEngineService;
 
   @Produces({"application/json", "application/v2+json"})
@@ -112,19 +108,6 @@ public class NewRelicResource {
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId,
       @QueryParam("applicationId") final long applicationId) throws IOException {
     return new RestResponse<>(newRelicService.getApplicationInstances(settingId, applicationId, StateType.NEW_RELIC));
-  }
-
-  @POST
-  @Path("/save-metrics")
-  @Timed
-  @DelegateAuth
-  @ExceptionMetered
-  public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("delegateTaskId") String delegateTaskId, List<NewRelicMetricDataRecord> metricData)
-      throws IOException {
-    return new RestResponse<>(metricDataAnalysisService.saveMetricData(
-        accountId, applicationId, stateExecutionId, delegateTaskId, metricData));
   }
 
   @GET

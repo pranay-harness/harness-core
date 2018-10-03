@@ -25,7 +25,6 @@ import software.wings.beans.User;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
@@ -44,7 +43,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -80,7 +78,6 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
 
   @Inject protected WorkflowExecutionService workflowExecutionService;
 
-  @Mock protected QuartzScheduler jobScheduler;
   @Mock protected PhaseElement phaseElement;
   @Mock protected Environment environment;
   @Mock protected Application application;
@@ -132,7 +129,6 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
     when(broadcaster.broadcast(anyObject())).thenReturn(null);
     when(broadcasterFactory.lookup(anyObject(), anyBoolean())).thenReturn(broadcaster);
     setInternalState(delegateService, "broadcasterFactory", broadcasterFactory);
-    when(jobScheduler.scheduleJob(anyObject(), anyObject())).thenReturn(new Date());
     setInternalState(continuousVerificationService, "authService", mockAuthService);
     // Setup authService for continuousVerificationService
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {

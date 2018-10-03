@@ -116,6 +116,10 @@ then
 
 `java -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -jar 81-delegate/target/delegate-capsule.jar 81-delegate/config-delegate.yml &`
 
+4. Start Verification service (Optional) : Open a new terminal and navigate to the same directory. And run following command:
+
+`java -Xms1024m -Xmx4096m -XX:+HeapDumpOnOutOfMemoryError -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc -XX:+UseParallelGC -XX:MaxGCPauseMillis=500 -Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar -Dfile.encoding=UTF-8 -jar 79-verification/target/verification-capsule.jar 79-verification/verification-config.yml > verification.log &`
+
 ### Editing setup
 
 1. Install clang-format - https://clang.llvm.org/docs/ClangFormat.html
@@ -215,6 +219,36 @@ Also make sure that the layout looks like this:
 
     _ JRE:  
     Default (1.8 - SDK of 'delegate' module)
+
+3. Create the Verification API Server application - "VerificationServiceApplication":
+   [Run > Edit Configurations...]
+
+       * Add new Application:
+           Use the "+" on the left to add a new application. Call it "VerificationServiceApplication"
+
+       * Set Main class:
+           'VerificationServiceApplication' class (found at io.harness.app.VerificationServiceApplication) with the following configurations.
+
+       * VM Options:
+           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar`
+
+       * Program Arguments:
+           `server verification-config.yml`
+
+       * Working Directory:
+           `$MODULE_DIR$`
+
+       * Environment Variable:
+           `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
+
+       * Use classpath of module:
+           verification
+
+       * JRE:
+           Default (1.8 - SDK of 'rest' module)
+
+       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 152)
+       * Ensure [IntelliJ IDEA > Preferences > Build, Execution, Deployment > Compile > Java Compiler > Module] "Target Bytecode Version" is 1.8 for all modules.
 
 ### Show current git branch in command prompt
 

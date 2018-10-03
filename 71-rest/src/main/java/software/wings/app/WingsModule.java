@@ -67,7 +67,6 @@ import software.wings.licensing.LicenseManagerImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.scheduler.JobScheduler;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.scheduler.VerificationJobScheduler;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
@@ -512,11 +511,6 @@ public class WingsModule extends DependencyModule {
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 
     bind(QuartzScheduler.class).annotatedWith(Names.named("JobScheduler")).to(JobScheduler.class).asEagerSingleton();
-
-    bind(QuartzScheduler.class)
-        .annotatedWith(Names.named("VerificationJobScheduler"))
-        .toProvider(VerificationJobScheduler.JobSchedulerProvider.class)
-        .asEagerSingleton();
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);

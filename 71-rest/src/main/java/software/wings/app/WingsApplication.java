@@ -174,9 +174,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
+    DatabaseModule databaseModule = new DatabaseModule(configuration.getMongoConnectionFactory());
     List<Module> modules = new ArrayList<>();
-
-    final DatabaseModule databaseModule = new DatabaseModule(configuration);
     modules.add(databaseModule);
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
@@ -262,7 +261,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Authentication/Authorization filters
     registerAuthFilters(configuration, environment, injector);
 
-    environment.healthChecks().register("WingsApp", new WingsHealthCheck(configuration));
+    environment.healthChecks().register("WingsApp", new WingsHealthCheck());
 
     startPlugins(injector);
 

@@ -1,0 +1,55 @@
+managerUrl: https://localhost:9090/api/
+xxxxxxxx
+  applicationConnectors:
+    - type: h2
+      port: 7070
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 4457
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: h2
+      port: 7071
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+  requestLog:
+    appenders:
+      - type: rest-log
+        name: rest-accesslogs-appender
+        threshold: TRACE
+        key: 9a3e6eac4dcdbdc41a93ca99100537df
+        programName: verification-saas-accesslogs
+
+logging:
+  level: INFO
+  loggers:
+    com.novemberain.quartz.mongodb: WARN
+    org.quartz.plugins: WARN
+    org.glassfish.jersey: WARN
+    allbegray.slack: WARN
+    # the following is to suppress "Error retrieving job for trigger XYZ, setting trigger state to ERROR."
+    # TODO: remove this suppression when the mentioned issue is resolved
+    com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+    - type: rest-log
+      threshold: TRACE
+      logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+      key: 9a3e6eac4dcdbdc41a93ca99100537df
+      programName: verification-service
+
+mongo:
+  uri: mongodb://localhost:27017/harness
+
+

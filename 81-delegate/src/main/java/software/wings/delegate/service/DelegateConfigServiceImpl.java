@@ -1,6 +1,6 @@
 package software.wings.delegate.service;
 
-import static software.wings.managerclient.SafeHttpCall.execute;
+import static io.harness.network.SafeHttpCall.execute;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

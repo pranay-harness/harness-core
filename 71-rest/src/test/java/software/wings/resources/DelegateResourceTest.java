@@ -255,13 +255,13 @@ public class DelegateResourceTest {
     try (OutputStreamWriter outputStreamWriter = new FileWriter(file)) {
       IOUtils.write("Test", outputStreamWriter);
     }
-    when(DELEGATE_SERVICE.downloadScripts(anyString(), anyString())).thenReturn(file);
+    when(DELEGATE_SERVICE.downloadScripts(anyString(), anyString(), anyString())).thenReturn(file);
     Response restResponse = RESOURCES.client()
                                 .target("/delegates/download?accountId=" + ACCOUNT_ID + "&token=token")
                                 .request()
                                 .get(new GenericType<Response>() {});
 
-    verify(DELEGATE_SERVICE, atLeastOnce()).downloadScripts(anyString(), anyString());
+    verify(DELEGATE_SERVICE, atLeastOnce()).downloadScripts(anyString(), anyString(), anyString());
     verify(DOWNLOAD_TOKEN_SERVICE, atLeastOnce()).validateDownloadToken("delegate." + ACCOUNT_ID, "token");
 
     assertThat(restResponse.getHeaderString("Content-Disposition"))

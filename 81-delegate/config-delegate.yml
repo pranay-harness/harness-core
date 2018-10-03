@@ -1,6 +1,7 @@
 accountId: kmpySmUISimoRrJL6NL73w
 accountSecret: 2f6b0988b6fb3370073c3d0505baee59
 managerUrl: https://localhost:9090/api/
+verificationServiceUrl: https://localhost:7070/verification/
 heartbeatIntervalMs: 60000
 localDiskPath: /tmp
 doUpgrade: false

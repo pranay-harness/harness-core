@@ -67,7 +67,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     setInternalState(splunkState, "settingsService", settingsService);
     setInternalState(splunkState, "waitNotifyEngine", waitNotifyEngine);
     setInternalState(splunkState, "delegateService", delegateService);
-    setInternalState(splunkState, "jobScheduler", jobScheduler);
+    setInternalState(splunkState, "wingsPersistence", wingsPersistence);
     setInternalState(splunkState, "secretManager", secretManager);
     setInternalState(splunkState, "workflowExecutionService", workflowExecutionService);
     setInternalState(splunkState, "continuousVerificationService", continuousVerificationService);

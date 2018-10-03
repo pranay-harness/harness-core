@@ -19,6 +19,6 @@ public class JobScheduler extends AbstractQuartzScheduler {
    */
   @Inject
   public JobScheduler(Injector injector, MainConfiguration configuration) {
-    super(injector, configuration);
+    super(injector, configuration.getSchedulerConfig(), configuration.getMongoConnectionFactory());
   }
 }

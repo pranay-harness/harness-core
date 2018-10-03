@@ -31,6 +31,7 @@ import software.wings.app.WingsModule;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
 import software.wings.utils.message.MessageService;
+import software.wings.verification.VerificationServiceClientModule;
 
 import java.io.File;
 import java.io.IOException;
@@ -109,8 +110,8 @@ public class DelegateApplication {
 
     modules.add(new ManagerClientModule(
         configuration.getManagerUrl(), configuration.getAccountId(), configuration.getAccountSecret()));
-
     modules.addAll(new DelegateModule().cumulativeDependencies());
+    modules.add(new VerificationServiceClientModule(configuration.getVerificationServiceUrl()));
 
     Injector injector = Guice.createInjector(modules);
 

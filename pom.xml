@@ -24,6 +24,8 @@
         <module>62-rest-utils</module>
 
         <module>71-rest</module>
+
+        <module>79-verification</module>
         <module>75-model-test</module>
         <module>76-functional</module>
 

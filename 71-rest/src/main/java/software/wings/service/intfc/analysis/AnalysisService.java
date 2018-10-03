@@ -5,12 +5,10 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.InstanceElement;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
-import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
-import software.wings.service.impl.analysis.LogMLExpAnalysisInfo;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
@@ -47,11 +45,6 @@ public interface AnalysisService {
       Integer logCollectionMinute) throws IOException;
 
   LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType);
-  LogMLAnalysisSummary getExperimentalAnalysisSummary(
-      String stateExecutionId, String appId, StateType stateType, String expName);
-  List<LogMLExpAnalysisInfo> getExpAnalysisInfoList();
-
-  boolean reQueueExperimentalTask(String appId, String stateExecutionId);
 
   void validateConfig(@NotNull SettingAttribute settingAttribute, StateType stateType);
 
@@ -96,9 +89,6 @@ public interface AnalysisService {
       StateType stateType, String appId, String serviceId, String workflowId);
 
   boolean saveFeedback(LogMLFeedback feedback, StateType stateType);
-
-  boolean saveExperimentalLogAnalysisRecords(
-      ExperimentalLogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
 
   List<LogMLFeedbackRecord> getMLFeedback(
       String appId, String serviceId, String workflowId, String workflowExecutionId);

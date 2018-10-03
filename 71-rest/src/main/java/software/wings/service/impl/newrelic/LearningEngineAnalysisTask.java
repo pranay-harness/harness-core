@@ -1,5 +1,7 @@
 package software.wings.service.impl.newrelic;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -17,6 +19,8 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -74,4 +78,10 @@ public class LearningEngineAnalysisTask extends Base {
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
 
   private int retry;
+
+  @Default
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 }

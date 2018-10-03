@@ -1,17 +1,20 @@
 package software.wings.delegate.service;
 
-import static software.wings.managerclient.SafeHttpCall.execute;
+import static io.harness.network.SafeHttpCall.execute;
 
+import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.MetricDataStoreService;
-import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.verification.VerificationServiceClient;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by raghu on 5/19/17.
@@ -20,7 +23,8 @@ import java.util.List;
 public class MetricDataStoreServiceImpl implements MetricDataStoreService {
   private static final Logger logger = LoggerFactory.getLogger(MetricDataStoreServiceImpl.class);
 
-  @Inject private ManagerClient managerClient;
+  @Inject private VerificationServiceClient verificationClient;
+  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public boolean saveNewRelicMetrics(String accountId, String applicationId, String stateExecutionId,
@@ -28,12 +32,20 @@ public class MetricDataStoreServiceImpl implements MetricDataStoreService {
     if (metricData.isEmpty()) {
       return true;
     }
+
     try {
-      return execute(
-          managerClient.saveNewRelicMetrics(accountId, applicationId, stateExecutionId, delegateTaskId, metricData))
-          .getResource();
+      RestResponse<Boolean> restResponse =
+          timeLimiter.callWithTimeout(()
+                                          -> execute(verificationClient.saveTimeSeriesMetrics(
+                                              accountId, applicationId, stateExecutionId, delegateTaskId, metricData)),
+              15, TimeUnit.SECONDS, true);
+      if (restResponse == null) {
+        return false;
+      }
+
+      return restResponse.getResource();
     } catch (Exception e) {
-      logger.error("error saving new relic metrics", e);
+      logger.error("error saving new apm metrics", e);
       return false;
     }
   }

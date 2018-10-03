@@ -1,6 +1,7 @@
 package software.wings.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.network.SafeHttpCall.execute;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.groupingBy;
@@ -10,7 +11,6 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
 import static software.wings.delegate.service.DelegateServiceImpl.getDelegateId;
-import static software.wings.managerclient.SafeHttpCall.execute;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

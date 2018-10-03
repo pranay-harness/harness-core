@@ -73,7 +73,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     setInternalState(elkAnalysisState, "settingsService", settingsService);
     setInternalState(elkAnalysisState, "waitNotifyEngine", waitNotifyEngine);
     setInternalState(elkAnalysisState, "delegateService", delegateService);
-    setInternalState(elkAnalysisState, "jobScheduler", jobScheduler);
+    setInternalState(elkAnalysisState, "wingsPersistence", wingsPersistence);
     setInternalState(elkAnalysisState, "secretManager", secretManager);
     setInternalState(elkAnalysisState, "workflowExecutionService", workflowExecutionService);
     setInternalState(elkAnalysisState, "continuousVerificationService", continuousVerificationService);

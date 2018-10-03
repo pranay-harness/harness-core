@@ -1,15 +1,15 @@
 package software.wings.delegate.service;
 
-import static software.wings.managerclient.SafeHttpCall.execute;
+import static io.harness.network.SafeHttpCall.execute;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import software.wings.delegatetasks.LogAnalysisStoreService;
-import software.wings.managerclient.ManagerClient;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
+import software.wings.verification.VerificationServiceClient;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,23 +19,23 @@ import java.util.List;
  */
 @Singleton
 public class LogAnalysisStoreServiceImpl implements LogAnalysisStoreService {
-  @Inject private ManagerClient managerClient;
+  @Inject private VerificationServiceClient verificationServiceClient;
 
   @Override
   public boolean save(StateType stateType, String accountId, String appId, String stateExecutionId, String workflowId,
       String workflowExecutionId, String serviceId, String delegateTaskId, List<LogElement> logs) throws IOException {
     switch (stateType) {
       case SPLUNKV2:
-        return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L2, delegateTaskId, StateType.SPLUNKV2, logs))
+        return execute(verificationServiceClient.saveLogs(accountId, appId, stateExecutionId, workflowId,
+                           workflowExecutionId, serviceId, ClusterLevel.L2, delegateTaskId, StateType.SPLUNKV2, logs))
             .getResource();
       case SUMO:
       case ELK:
       case LOGZ:
       case LOG_VERIFICATION:
       case BUG_SNAG:
-        return execute(managerClient.saveLogs(accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
-                           serviceId, ClusterLevel.L0, delegateTaskId, stateType, logs))
+        return execute(verificationServiceClient.saveLogs(accountId, appId, stateExecutionId, workflowId,
+                           workflowExecutionId, serviceId, ClusterLevel.L0, delegateTaskId, stateType, logs))
             .getResource();
       default:
         throw new IllegalStateException("Invalid state: " + stateType);

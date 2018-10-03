@@ -11,6 +11,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
+import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -57,6 +58,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
+import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData.ContinuousVerificationExecutionMetaDataBuilder;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
@@ -228,6 +230,19 @@ public abstract class AbstractAnalysisState extends State {
     } catch (Exception ex) {
       getLogger().error("[learning-engine] Unable to save ml analysis metadata", ex);
     }
+  }
+
+  protected void scheduleAnalysisCronJob(AnalysisContext context, String delegateTaskId) {
+    Map<String, String> controlNodes = new HashMap<>();
+    context.getControlNodes().forEach((host, groupName) -> controlNodes.put(replaceDotWithUnicode(host), groupName));
+    context.setControlNodes(controlNodes);
+
+    Map<String, String> testNodes = new HashMap<>();
+    context.getTestNodes().forEach((host, groupName) -> testNodes.put(replaceDotWithUnicode(host), groupName));
+    context.setTestNodes(testNodes);
+
+    context.setDelegateTaskId(delegateTaskId);
+    wingsPersistence.save(context);
   }
 
   protected Map<String, String> getLastExecutionNodes(ExecutionContext context) {
@@ -542,10 +557,6 @@ public abstract class AbstractAnalysisState extends State {
   public abstract String getAnalysisServerConfigId();
 
   public abstract void setAnalysisServerConfigId(String analysisServerConfigId);
-
-  protected String generateAuthToken() throws UnsupportedEncodingException {
-    return generateAuthToken(configuration.getPortal().getJwtExternalServiceSecret());
-  }
 
   public static String generateAuthToken(final String secret) throws UnsupportedEncodingException {
     if (secret == null) {

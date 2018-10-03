@@ -444,7 +444,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   private NewRelicRestClient getNewRelicRestClient(
       final NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     encryptionService.decrypt(newRelicConfig, encryptedDataDetails);
-    OkHttpClient.Builder httpClient = Http.getOkHttpClientWithNoProxyValueSet(newRelicConfig.getNewRelicUrl());
+    OkHttpClient.Builder httpClient =
+        Http.getOkHttpClientWithNoProxyValueSet(newRelicConfig.getNewRelicUrl()).connectTimeout(120, TimeUnit.SECONDS);
     httpClient.addInterceptor(chain -> {
       Request original = chain.request();
 
