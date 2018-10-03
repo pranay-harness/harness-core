@@ -11,7 +11,6 @@ import io.harness.VerificationTestModule;
 import io.harness.app.VerificationQueueModule;
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.app.VerificationServiceModule;
-import io.harness.rule.MongoServerFactory;
 import software.wings.app.DatabaseModule;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
@@ -83,8 +82,9 @@ public class VerificationTestRule extends WingsRule {
       log().error("", ex);
     }
 
-    log().info("Stopping Mongo server...");
-    MongoServerFactory.stopMongoServers();
+    log().info("Stopping servers...");
+    closingFactory.stopServers();
+
     try {
       if (mongodExecutable != null) {
         mongodExecutable.stop();

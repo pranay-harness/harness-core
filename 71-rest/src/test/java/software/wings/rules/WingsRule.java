@@ -57,10 +57,10 @@ import de.javakaffee.kryoserializers.guava.UnmodifiableNavigableSetSerializer;
 import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.WingsException;
+import io.harness.factory.ClosingFactory;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
 import io.harness.rule.MongoRuleMixin;
-import io.harness.rule.MongoServerFactory;
 import io.harness.rule.RealMongo;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -126,6 +126,8 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
           .build();
 
   private static MongodStarter starter = MongodStarter.getInstance(runtimeConfig);
+
+  protected ClosingFactory closingFactory = new ClosingFactory();
 
   protected MongodExecutable mongodExecutable;
   protected Injector injector;
@@ -208,7 +210,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
       }
     } else {
       fakeMongo = true;
-      mongoClient = fakeMongoClient(port);
+      mongoClient = fakeMongoClient(port, closingFactory);
     }
 
     Morphia morphia = new Morphia();
@@ -427,8 +429,8 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
       logger.error("", ex);
     }
 
-    log().info("Stopping Mongo server...");
-    MongoServerFactory.stopMongoServers();
+    log().info("Stopping servers...");
+    closingFactory.stopServers();
 
     try {
       if (mongodExecutable != null) {
