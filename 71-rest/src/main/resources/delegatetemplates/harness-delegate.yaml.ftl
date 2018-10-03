@@ -59,8 +59,6 @@ spec:
           value: ${accountSecret}
         - name: MANAGER_HOST_AND_PORT
           value: ${managerHostAndPort}
-        - name: VERIFICATION_HOST_AND_PORT
-          value: ${verificationHostAndPort}
         - name: WATCHER_STORAGE_URL
           value: ${watcherStorageUrl}
         - name: WATCHER_CHECK_LOCATION

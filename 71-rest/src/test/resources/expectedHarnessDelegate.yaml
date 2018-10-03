@@ -59,8 +59,6 @@ spec:
           value: ACCOUNT_KEY
         - name: MANAGER_HOST_AND_PORT
           value: https://localhost:9090
-        - name: VERIFICATION_HOST_AND_PORT
-          value: https://localhost:7070
         - name: WATCHER_STORAGE_URL
           value: http://localhost:8888
         - name: WATCHER_CHECK_LOCATION

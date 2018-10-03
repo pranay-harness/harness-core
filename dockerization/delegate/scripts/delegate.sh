@@ -102,7 +102,7 @@ if ! `grep managerUrl config-delegate.yml > /dev/null`; then
   echo "managerUrl: _managerHostAndPort_/api/" >> config-delegate.yml
 fi
 if ! `grep verificationServiceUrl config-delegate.yml > /dev/null`; then
-  echo "verificationServiceUrl: _verificationHostAndPort_/api/" >> config-delegate.yml
+  echo "verificationServiceUrl: _managerHostAndPort_/verification/" >> config-delegate.yml
 fi
 if ! `grep watcherCheckLocation config-delegate.yml > /dev/null`
 then
