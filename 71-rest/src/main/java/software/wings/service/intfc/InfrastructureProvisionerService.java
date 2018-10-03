@@ -10,6 +10,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
+import software.wings.beans.NameValuePair;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.sm.ExecutionContext;
@@ -50,4 +51,7 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
   List<AwsCFTemplateParamsData> getCFTemplateParamKeys(String type, String region, String awsConfigId, String data);
 
   void delete(String appId, String infrastructureProvisionerId, boolean syncFromGit);
+
+  List<NameValuePair> getTerraformVariables(
+      String appId, String scmSettingId, String terraformDirectory, String accountId);
 }
