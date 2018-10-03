@@ -1,0 +1,281 @@
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: harness-default-cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: {{ .Values.namespace }}
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: harness-manager
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - port: 9090
+    protocol: TCP
+    targetPort: 9090
+  selector:
+    harness-service: manager
+  sessionAffinity: None
+  type: ClusterIP
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    harness-app: harness
+    harness-service: manager
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  name: harness-manager
+  namespace: {{ .Values.namespace }}
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: harness-manager
+          servicePort: 9090
+        path: /api
+      - backend:
+          serviceName: harness-manager
+          servicePort: 9090
+        path: /stream
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: harness-manager
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      harness-app: harness
+      harness-service: manager
+  template:
+    metadata:
+      annotations:
+        harness.io/application: harness
+        harness.io/service: manager
+      labels:
+        harness-app: harness
+        harness-service: manager
+    spec:
+      containers:
+      - env:
+        - name: jwtPasswordSecret
+          valueFrom:
+            secretKeyRef:
+              key: jwtPasswordSecret
+              name: harness-manager
+        - name: jwtSsoRedirectSecret
+          valueFrom:
+            secretKeyRef:
+              key: jwtSsoRedirectSecret
+              name: harness-manager
+        - name: jwtZendeskSecret
+          valueFrom:
+            secretKeyRef:
+              key: jwtZendeskSecret
+              name: harness-manager
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              key: MONGO_URI
+              name: harness-manager
+        - name: jwtMultiAuthSecret
+          valueFrom:
+            secretKeyRef:
+              key: jwtMultiAuthSecret
+              name: harness-manager
+        - name: jwtAuthSecret
+          valueFrom:
+            secretKeyRef:
+              key: jwtAuthSecret
+              name: harness-manager
+        - name: jwtExternalServiceSecret
+          valueFrom:
+            secretKeyRef:
+              key: jwtExternalServiceSecret
+              name: harness-manager
+        - name: MONGO_DB_URL
+          valueFrom:
+            secretKeyRef:
+              key: MONGO_DB_URL
+              name: harness-manager
+        envFrom:
+        - configMapRef:
+            name: harness-manager
+        image: {{ .Values.images.manager }}
+        imagePullPolicy: Always
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - touch
+              - shutdown
+        livenessProbe:
+          failureThreshold: 2
+          httpGet:
+            path: /api/version
+            port: 9090
+            scheme: HTTP
+          initialDelaySeconds: 1200
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: manager
+        ports:
+        - containerPort: 5701
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /api/version
+            port: 9090
+            scheme: HTTP
+          initialDelaySeconds: 45
+          periodSeconds: 3
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4096Mi
+          requests:
+            cpu: "2"
+            memory: 4096Mi
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: regcred
+      restartPolicy: Always
+
+---
+
+## Persistent volume claim ####
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: harness-data
+  namespace: {{ .Values.namespace }}
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 75Gi
+  storageClassName: standard
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: harness-manager-nginx
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    harness-service: harness-manager-nginx
+  type: ClusterIP
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    harness-app: harness
+    harness-service: harness-manager-nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  name: harness-manager-nginx
+  namespace: {{ .Values.namespace }}
+spec:
+  rules:
+  - http:
+      paths:
+      - backend:
+          serviceName: harness-manager-nginx
+          servicePort: 80
+        path: /storage
+
+---
+
+---
+
+## Nginx config map ###
+
+
+apiVersion: v1
+data:
+  proxy.conf: |
+    server {
+    root /www/data;
+
+    }
+kind: ConfigMap
+metadata:
+  name: harness-nginx-conf
+  namespace: {{ .Values.namespace }}
+
+---
+
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: harness-manager-nginx
+  namespace: {{ .Values.namespace }}
+spec:
+  serviceName: harness-manager-nginx
+  selector:
+    matchLabels:
+      harness-app: harness
+      harness-service: harness-manager-nginx # has to match .spec.template.metadata.labels  template:
+  template:
+    metadata:
+      labels:
+        harness-app: harness
+        harness-service: harness-manager-nginx
+    spec:
+      containers:
+      - image: {{ .Values.images.nginx }}
+        imagePullPolicy: Always
+        name: harness-manager-nginx
+        volumeMounts:
+        - mountPath: /www/data
+          name: harness-data
+        - mountPath: /etc/nginx/conf.d
+          name: harness-nginx-conf
+      volumes:
+      - name: harness-data
+        persistentVolumeClaim:
+          claimName: harness-data
+      - name: harness-nginx-conf
+        configMap:
+          name: harness-nginx-conf
+      imagePullSecrets:
+      - name: regcred

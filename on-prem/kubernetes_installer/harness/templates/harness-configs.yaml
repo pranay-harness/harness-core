@@ -1,0 +1,444 @@
+apiVersion: v1
+data:
+  ENV: on-prem
+  PROJECT_ID: on-prem
+kind: ConfigMap
+metadata:
+  name: nginx-default-backend
+  namespace: {{ .Values.namespace }}
+
+---
+
+apiVersion: v1
+data:
+  ENV: on-prem
+  INSTANCES: "1"
+  IP_WHITELIST_CIDRS: 0.0.0.0/0
+  PROJECT_ID: on-prem
+  proxy-body-size: 1024m
+kind: ConfigMap
+metadata:
+  labels:
+    harness-app: harness
+    harness-service: nginx-ingress-controller
+  name: nginx-ingress-controller
+  namespace: {{ .Values.namespace }}
+---
+
+### Learning Engine configs and secrets ###
+
+apiVersion: v1
+data:
+  CPU: "2"
+  ENV: onprem
+  INSTANCES: "2"
+  MEMORY: "2048"
+  https_port: "10800"
+  server_url: http://harness-manager:9090
+kind: ConfigMap
+metadata:
+  labels:
+    harness-app: harness
+    harness-service: learning-engine
+  name: harness-learning-engine
+  namespace: {{ .Values.namespace }}
+---
+
+apiVersion: v1
+stringData:
+  service_secret: {{ .Values.appSecrets.learningEngineSecret }}
+kind: Secret
+metadata:
+  name: harness-learning-engine
+  namespace: {{ .Values.namespace }}
+
+
+---
+##### Manager configs and secrets #####
+apiVersion: v1
+data:
+  ALLOWED_ORIGINS: {{ .Values.inframapping.lbUrl }},https://localhost:8181
+  CAPSULE_JAR: rest-capsule.jar
+  COMPANYNAME: {{ .Values.accounts.companyName }}
+  DELEGATE_METADATA_URL: {{ .Values.inframapping.lbUrl }}/storage/wingsdelegates/delegateprod.txt
+  DEPLOY_MODE: KUBERNETES_ONPREM
+  DISABLE_NEW_RELIC: "true"
+  ENABLE_APPDYNAMICS: "false"
+  ENV: ONPREM
+  HZ_CLUSTER_NAME: on-prem
+  INSTANCES: "1"
+  LOGGING_LEVEL: INFO
+  MEMORY: "4096"
+  POD_MEMORY: "4096"
+  PROJECT_ID: ONPREM
+  SERVER_PORT: "9090"
+  UI_SERVER_URL: {{ .Values.inframapping.lbUrl }}
+  VERSION: "5919"
+  WATCHER_METADATA_URL: {{ .Values.inframapping.lbUrl }}/storage/wingswatchers/watcherprod.txt
+  FEATURES: RBAC,HELM,LDAP_SSO_PROVIDER
+kind: ConfigMap
+metadata:
+  labels:
+    haress-app: harness
+    harness-service: manager
+  name: harness-manager
+  namespace: {{ .Values.namespace }}
+---
+
+apiVersion: v1
+stringData:
+  MONGO_DB_URL: mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/harness
+  MONGO_URI: mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/harness
+  SERVICE_ACC: ONPREM
+  jwtAuthSecret: {{ .Values.secrets.jwtAuthSecret }}
+  jwtExternalServiceSecret: {{ .Values.secrets.jwtExternalServiceSecret }}
+  jwtMultiAuthSecret: {{ .Values.secrets.jwtMultiAuthSecret }}
+  jwtPasswordSecret: {{ .Values.secrets.jwtPasswordSecret }}
+  jwtSsoRedirectSecret: {{ .Values.secrets.jwtSsoRedirectSecret }}
+  jwtZendeskSecret: {{ .Values.secrets.jwtZendeskSecret }}
+kind: Secret
+metadata:
+  name: harness-manager
+  namespace: {{ .Values.namespace }}
+
+---
+
+### Mongo configs ########
+
+apiVersion: v1
+data:
+  add_first_user.js: |
+    use harness;
+    db.getCollection('accounts').insert({
+        "_id" : "{{ .Values.accounts.accountId }}",
+        "companyName" : "{{ .Values.accounts.companyName }}",
+        "accountName" : "{{ .Values.accounts.accountName }}",
+        "accountKey" : "{{ .Values.accounts.accountSecret }}",
+        "licenseExpiryTime" : NumberLong(-1),
+        "appId" : "__GLOBAL_APP_ID__",
+        "createdAt" : NumberLong(1518718220245),
+        "lastUpdatedAt" : NumberLong(1518718221042)
+    });
+
+
+    db.getCollection('roles').insert({
+        "_id" : "-3CVPDZYRyGVM3Bs7yQoAg",
+        "name" : "Account Administrator",
+        "accountId" : "{{ .Values.accounts.accountId }}",
+        "roleType" : "ACCOUNT_ADMIN",
+        "allApps" : false,
+        "appId" : "__GLOBAL_APP_ID__",
+        "createdAt" : NumberLong(1518718220312),
+        "lastUpdatedAt" : NumberLong(1518718221044)
+    });
+
+
+    db.getCollection('roles').insert({
+        "_id" : "cSk3N98XQde9N9wqV6Q2Aw",
+        "name" : "Application Administrator",
+        "accountId" : "{{ .Values.accounts.accountId }}",
+        "roleType" : "APPLICATION_ADMIN",
+        "allApps" : true,
+        "appId" : "__GLOBAL_APP_ID__",
+        "createdAt" : NumberLong(1518718220321),
+        "lastUpdatedAt" : NumberLong(1518718221044)
+    });
+
+
+    db.getCollection('userGroups').insert({
+        "_id" : "jVT0QBGfREeaP69bV6Juiw",
+        "name" : "Account Administrator",
+        "description" : "Default account admin user group",
+        "accountId" : "{{ .Values.accounts.accountId }}",
+        "appPermissions" : [
+            {
+                "permissionType" : "ALL_APP_ENTITIES",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "actions" : [
+                    "UPDATE",
+                    "READ",
+                    "EXECUTE",
+                    "CREATE",
+                    "DELETE"
+                ]
+            }
+        ],
+        "accountPermissions" : {
+            "permissions" : [
+                "ACCOUNT_MANAGEMENT",
+                "USER_PERMISSION_MANAGEMENT",
+                "APPLICATION_CREATE_DELETE"
+            ]
+        },
+        "memberIds" : [
+            "c0RigPdWTlOCUeeAsdolJQ"
+        ],
+        "createdAt" : NumberLong(1521587621187),
+        "lastUpdatedAt" : NumberLong(1521844132195)
+    });
+
+    db.getCollection('userGroups').insert({
+        "_id" : "Piq4GXDvSDKYS5L5WRlPGA",
+        "name" : "Production Support",
+        "description" : "Production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within PROD environments",
+        "accountId" : "{{ .Values.accounts.accountId }}",
+        "appPermissions" : [
+            {
+                "permissionType" : "ENV",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.EnvFilter",
+                    "filterTypes" : [
+                        "PROD"
+                    ]
+                },
+                "actions" : [
+                    "READ",
+                    "UPDATE",
+                    "DELETE",
+                    "CREATE"
+                ]
+            },
+            {
+                "permissionType" : "SERVICE",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.GenericEntityFilter",
+                    "filterType" : "ALL"
+                },
+                "actions" : [
+                    "READ",
+                    "UPDATE",
+                    "DELETE",
+                    "CREATE"
+                ]
+            },
+            {
+                "permissionType" : "DEPLOYMENT",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.EnvFilter",
+                    "filterTypes" : [
+                        "PROD"
+                    ]
+                },
+                "actions" : [
+                    "READ",
+                    "EXECUTE"
+                ]
+            },
+            {
+                "permissionType" : "WORKFLOW",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.WorkflowFilter",
+                    "filterTypes" : [
+                        "PROD",
+                        "TEMPLATES"
+                    ]
+                },
+                "actions" : [
+                    "READ",
+                    "UPDATE",
+                    "DELETE",
+                    "CREATE"
+                ]
+            },
+            {
+                "permissionType" : "PIPELINE",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.EnvFilter",
+                    "filterTypes" : [
+                        "PROD"
+                    ]
+                },
+                "actions" : [
+                    "READ",
+                    "UPDATE",
+                    "DELETE",
+                    "CREATE"
+                ]
+            }
+        ],
+        "memberIds" : [
+            "c0RigPdWTlOCUeeAsdolJQ"
+        ],
+        "createdAt" : NumberLong(1521844132203),
+        "lastUpdatedAt" : NumberLong(1521844132203)
+    });
+
+    db.getCollection('userGroups').insert({
+        "_id" : "x7B0YhsJRO-Bt89pLPPUSQ",
+        "name" : "Non-Production Support",
+        "description" : "Non-production Support members have access to override configuration, setup infrastructure and setup/execute deployment workflows within NON_PROD environments",
+        "accountId" : "{{ .Values.accounts.accountId }}",
+        "appPermissions" : [
+            {
+                "permissionType" : "DEPLOYMENT",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.EnvFilter",
+                    "filterTypes" : [
+                        "NON_PROD"
+                    ]
+                },
+                "actions" : [
+                    "READ",
+                    "EXECUTE"
+                ]
+            },
+            {
+                "permissionType" : "SERVICE",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.GenericEntityFilter",
+                    "filterType" : "ALL"
+                },
+                "actions" : [
+                    "READ",
+                    "UPDATE",
+                    "DELETE",
+                    "CREATE"
+                ]
+            },
+            {
+                "permissionType" : "PIPELINE",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.EnvFilter",
+                    "filterTypes" : [
+                        "NON_PROD"
+                    ]
+                },
+                "actions" : [
+                    "READ",
+                    "UPDATE",
+                    "DELETE",
+                    "CREATE"
+                ]
+            },
+            {
+                "permissionType" : "ENV",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.EnvFilter",
+                    "filterTypes" : [
+                        "NON_PROD"
+                    ]
+                },
+                "actions" : [
+                    "READ",
+                    "UPDATE",
+                    "DELETE",
+                    "CREATE"
+                ]
+            },
+            {
+                "permissionType" : "WORKFLOW",
+                "appFilter" : {
+                    "filterType" : "ALL"
+                },
+                "entityFilter" : {
+                    "className" : "software.wings.security.WorkflowFilter",
+                    "filterTypes" : [
+                        "NON_PROD",
+                        "TEMPLATES"
+                    ]
+                },
+                "actions" : [
+                    "READ",
+                    "UPDATE",
+                    "DELETE",
+                    "CREATE"
+                ]
+            }
+        ],
+        "memberIds" : [
+            "c0RigPdWTlOCUeeAsdolJQ"
+        ],
+        "createdAt" : NumberLong(1521844132208),
+        "lastUpdatedAt" : NumberLong(1521844132208)
+    });
+
+    db.getCollection('users').insert({
+        "_id" : "c0RigPdWTlOCUeeAsdolJQ",
+        "name" : "Admin",
+        "email" : "{{ .Values.accounts.adminEmail }}",
+        "passwordHash" : "$2a$10$Rf/.q4HvUkS7uG2Utdkk7.jLnqnkck5ruH/vMrHjGVk4R9mL8nQE2",
+        "roles" : [
+            "-3CVPDZYRyGVM3Bs7yQoAg"
+        ],
+        "accounts" : [
+            "{{ .Values.accounts.accountId }}"
+        ],
+        "lastLogin" : NumberLong(0),
+        "emailVerified" : true,
+        "statsFetchedOn" : NumberLong(0),
+        "passwordChangedAt" : NumberLong(1518718220556),
+        "appId" : "__GLOBAL_APP_ID__",
+        "createdAt" : NumberLong(1518718220557),
+        "lastUpdatedAt" : NumberLong(1518718221043)
+    });
+  add_learning_engine_secret.js: |-
+    use harness;
+
+    db.getCollection('serviceSecrets').insert({
+        "_id" : "djEzvOJtTFSvpglImf1fXg",
+        "serviceSecret" : "{{ .Values.appSecrets.learningEngineSecret }}",
+        "serviceType" : "LEARNING_ENGINE",
+        "createdAt" : NumberLong(1518718228292),
+        "lastUpdatedAt" : NumberLong(1518718228292)
+    });
+  initialize_replicaset.js: |-
+    rs.initiate( {
+    _id : "rs0",
+    members: [
+      { _id: 0, host: "mongo-0.mongo:27017" },
+      { _id: 1, host: "mongo-1.mongo:27017" },
+      { _id: 2, host: "mongo-2.mongo:27017" }
+    ]
+    })
+
+
+kind: ConfigMap
+metadata:
+  name: scripts-configmap
+  namespace: {{ .Values.namespace }}
+
+---
+
+### UI ### 
+
+apiVersion: v1
+data:
+  API_URL: {{ .Values.inframapping.lbUrl }}
+kind: ConfigMap
+metadata:
+  labels:
+    harness-app: harness
+    harness-service: ui
+  name: harness-ui
+  namespace: {{ .Values.namespace }}
+
+---

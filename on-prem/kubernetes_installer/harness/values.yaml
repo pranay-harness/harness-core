@@ -1,0 +1,32 @@
+namespace: harness
+
+accounts:
+  accountName: Demo-Account
+  companyName: Demo-Company
+  adminEmail: admin@harness.io
+  accountId: ACCOUNTID
+  accountSecret: ACCOUNTSECRET
+
+privatedockerrepo:
+  docker_registry_url:
+  docker_registry_username:
+  docker_registry_password:
+  docker_reg_auths_url:
+  docker_registry_email:
+
+inframapping:
+  lbUrl: http://127.0.0.1
+  lbIpAddress: 127.0.0.1
+
+secrets:
+  jwtAuthSecret: JWT_AUTH_SECRET
+  jwtExternalServiceSecret: JWT_EXTERNAL_SECRET
+  jwtMultiAuthSecret: JWT_MULTI_AUTH_SECRET
+  jwtPasswordSecret: JWT_PASSWORD_SECRET
+  jwtSsoRedirectSecret: JWT_SSO_SECRET
+  jwtZendeskSecret: JWT_ZENDESK_SECRET
+
+
+appSecrets:
+  learningEngineSecret: LEARNING_ENGINE_SECRET
+

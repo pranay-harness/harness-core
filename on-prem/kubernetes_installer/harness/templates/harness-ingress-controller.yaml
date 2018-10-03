@@ -1,0 +1,173 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-default-backend
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    harness-service: ingress-controller-default-backend
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    harness-service: ingress-controller-default-backend
+  name: nginx-default-backend
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      harness-app: harness
+  template:
+    metadata:
+      labels:
+        app: nginx-default-backend
+        harness-app: harness
+        harness-service: ingress-controller-default-backend
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: nginx-default-backend
+        image: {{ .Values.images.defaultBackend }}
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: default-http-backend
+        ports:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 10m
+            memory: 20Mi
+          requests:
+            cpu: 10m
+            memory: 20Mi
+      securityContext: {}
+      imagePullSecrets:
+      - name: regcred
+      terminationGracePeriodSeconds: 60
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    harness-app: harness
+    harness-service: nginx-ingress-controller
+  name: nginx-ingress-controller
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    harness-service: nginx-ingress-controller
+  sessionAffinity: None
+  type: LoadBalancer
+  loadBalancerIP: {{ .Values.inframapping.lbIpAddress }}
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: ingress-nginx-cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: default
+  namespace: {{ .Values.namespace }}
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    harness-app: harness
+    harness-service: nginx-ingress-controller
+  name: nginx-ingress-controller
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      harness-app: harness
+      harness-service: nginx-ingress-controller
+  template:
+    metadata:
+      labels:
+        app: ingress-nginx
+        harness-app: harness
+        harness-service: nginx-ingress-controller
+    spec:
+      containers:
+      - args:
+        - /nginx-ingress-controller
+        - --default-backend-service=$(POD_NAMESPACE)/nginx-default-backend
+        - --configmap=$(POD_NAMESPACE)/nginx-ingress-controller
+        - --default-ssl-certificate=$(POD_NAMESPACE)/no-secret-map
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        envFrom:
+        - configMapRef:
+            name: nginx-ingress-controller
+        image: {{ .Values.images.ingressController }}
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 10254
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+        name: hs-gcr-io-google-containers-nginx-ingress-controller-hs
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        - containerPort: 443
+          name: https
+          protocol: TCP
+      imagePullSecrets:
+      - name: regcred

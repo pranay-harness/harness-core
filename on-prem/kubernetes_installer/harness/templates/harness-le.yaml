@@ -1,0 +1,46 @@
+## Harness Namespace ###
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    harness-app: harness
+    harness-service: learning-engine
+  name: harness-learning-engine
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      harness-app: harness
+      harness-service: learning-engine
+  template:
+    metadata:
+      labels:
+        harness-app: harness
+        harness-service: learning-engine
+    spec:
+      containers:
+      - env:
+        - name: service_secret
+          valueFrom:
+            secretKeyRef:
+              key: service_secret
+              name: harness-learning-engine
+        envFrom:
+        - configMapRef:
+            name: harness-learning-engine
+        image: {{ .Values.images.le }}
+        imagePullPolicy: Always
+        name: learning-engine
+        resources:
+          limits:
+            cpu: "2"
+            memory: 2Gi
+          requests:
+            cpu: "2"
+            memory: 2Gi
+      imagePullSecrets:
+      - name: regcred
+      restartPolicy: Always
