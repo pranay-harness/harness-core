@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.trim;
@@ -39,6 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
 import software.wings.common.Constants;
+import software.wings.expression.ExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -92,6 +94,7 @@ public class HttpState extends State {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject protected ManagerDecryptionService managerDecryptionService;
   @Inject protected SecretManager secretManager;
+  @Inject protected ExpressionEvaluator expressionEvaluator;
 
   @Inject @Transient private transient ActivityService activityService;
 
@@ -236,7 +239,24 @@ public class HttpState extends State {
   @Override
   @SchemaIgnore
   public List<String> getPatternsForRequiredContextElementType() {
-    return asList(url, body, header, assertion);
+    String resolvedUrl = url;
+    String resolvedBody = body;
+    String resolvedHeader = header;
+    String resolvedAssertion = assertion;
+    Map<String, Object> templateVariables = convertToVariableMap(this.getTemplateVariables());
+    if (isNotEmpty(templateVariables)) {
+      resolvedUrl = fetchTemplatedValue(url);
+      resolvedBody = fetchTemplatedValue(body);
+      resolvedHeader = fetchTemplatedValue(header);
+      resolvedAssertion = fetchTemplatedValue(assertion);
+    }
+    return asList(resolvedUrl, resolvedBody, resolvedHeader, resolvedAssertion);
+  }
+
+  private String fetchTemplatedValue(String fieldName) {
+    String templatedField = ExpressionEvaluator.getName(fieldName);
+    Map<String, Object> templatedVariables = convertToVariableMap(getTemplateVariables());
+    return templatedVariables.containsKey(templatedField) ? (String) templatedVariables.get(templatedField) : fieldName;
   }
 
   @Attributes(title = "Execute with previous steps")

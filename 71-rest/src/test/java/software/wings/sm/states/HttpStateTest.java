@@ -67,6 +67,7 @@ import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -147,6 +148,36 @@ public class HttpStateTest extends WingsBaseTest {
       activity.setValidUntil(null);
       return activity;
     });
+  }
+
+  @Test
+  public void shouldGetPatternsForRequiredContextElementType() {
+    List<String> patternsForRequiredContextElementType =
+        getHttpState(httpStateBuilder, context).getPatternsForRequiredContextElementType();
+    assertThat(patternsForRequiredContextElementType).isNotEmpty();
+    assertThat(patternsForRequiredContextElementType)
+        .contains("http://${host.hostName}:8088/health/status", "Content-Type: application/xml, Accept: */*",
+            "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
+  }
+
+  @Test
+  public void shouldGetTemplatedHttpPatternsForRequiredContextElementType() {
+    HttpState.Builder jsonHttpStateBuilder =
+        aHttpState()
+            .withName("healthCheck1")
+            .withMethod("GET")
+            .withUrl("http://${url}")
+            .withHeader("Content-Type: ${contentType}, Accept: */*")
+            .withAssertion("${httpResponseCode}==200 && ${jsonpath(\"data.version\")}==${buildNo}")
+            .withTemplateVariables(asList(aVariable().withName("url").withValue("localhost:8088/health/status").build(),
+                aVariable().withName("buildNo").withValue("2.31.0-MASTER-SNAPSHOT").build(),
+                aVariable().withName("contentType").withValue("application/json").build()));
+    List<String> patternsForRequiredContextElementType =
+        getHttpState(httpStateBuilder, context).getPatternsForRequiredContextElementType();
+    assertThat(patternsForRequiredContextElementType).isNotEmpty();
+    assertThat(patternsForRequiredContextElementType)
+        .contains("http://${host.hostName}:8088/health/status", "Content-Type: application/xml, Accept: */*",
+            "(${httpResponseCode}==200 || ${httpResponseCode}==201) && ${xmlFormat()} && ${xpath('//health/status/text()')}.equals('Enabled')");
   }
 
   /**
