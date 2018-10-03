@@ -1,0 +1,8 @@
+images:
+  manager: harness/manager:6366
+  le: harness/learning-engine-onprem:portal-6366-onprem-python
+  ui: harness/ui:3290
+  mongo: mongo:3.6
+  defaultBackend: gcr.io/google_containers/defaultbackend:1.4
+  ingressController: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.19.0
+  nginx: nginx:1.15
