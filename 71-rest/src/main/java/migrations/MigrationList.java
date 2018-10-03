@@ -12,6 +12,7 @@ import migrations.all.AppKeywordsMigration;
 import migrations.all.AuthTokenTtlMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
+import migrations.all.DeleteLETaskDelCronMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import migrations.all.DeleteStaleSecretUsageLogs;
 import migrations.all.DeleteStaleYamlChangeSetsMigration;
@@ -124,6 +125,7 @@ public class MigrationList {
         .add(Pair.of(187, GcsArtifactProjectIdMigration.class))
         .add(Pair.of(188, FixCVDashboardStatusMigration.class))
         .add(Pair.of(189, RemoveServiceVariablesFromActivity.class))
+        .add(Pair.of(190, DeleteLETaskDelCronMigration.class))
         .build();
   }
 }
