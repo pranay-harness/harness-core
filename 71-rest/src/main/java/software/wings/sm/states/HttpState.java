@@ -270,7 +270,6 @@ public class HttpState extends State {
         HttpStateExecutionData.builder().variables(convertToVariableMap(getTemplateVariables()));
     String envId = obtainEnvId(context.getContextElement(ContextElementType.STANDARD));
 
-    context.renderExpression("${app.Name}");
     String finalUrl = getFinalUrl(context);
     String evaluatedUrl = trim(context.renderExpression(finalUrl, httpStateExecutionDataBuilder.build(), null));
     logger.debug("evaluatedUrl: {}", evaluatedUrl);
