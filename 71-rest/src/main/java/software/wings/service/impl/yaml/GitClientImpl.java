@@ -479,11 +479,14 @@ public class GitClientImpl implements GitClient {
 
         gitRequest.getFilePaths().forEach(filePath -> {
           try (Stream<Path> paths = Files.walk(Paths.get(repoPath + "/" + filePath))) {
-            paths.filter(Files::isRegularFile).forEach(path -> gitClientHelper.addFiles(gitFiles, path));
+            paths.filter(Files::isRegularFile)
+                .filter(path -> !path.toString().contains(".git"))
+                .forEach(path -> gitClientHelper.addFiles(gitFiles, path));
           } catch (Exception e) {
             throw new WingsException(GENERAL_ERROR,
-                new StringBuilder("Unable to checkout files for filePath")
+                new StringBuilder("Unable to checkout files for filePath [")
                     .append(filePath)
+                    .append("]")
                     .append(gitRequest.isUseBranch() ? " for Branch: " : " for CommitId: ")
                     .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
                     .toString(),
@@ -503,11 +506,13 @@ public class GitClientImpl implements GitClient {
                                  .build())
             .build();
 
+      } catch (WingsException e) {
+        throw e;
       } catch (Exception e) {
         throw new WingsException(GENERAL_ERROR,
             new StringBuilder()
                 .append("Failed while fetching files ")
-                .append(gitRequest.isUseBranch() ? " for Branch: " : " for CommitId: ")
+                .append(gitRequest.isUseBranch() ? "for Branch: " : "for CommitId: ")
                 .append(gitRequest.isUseBranch() ? gitRequest.getBranch() : gitRequest.getCommitId())
                 .append(", FilePaths: ")
                 .append(gitRequest.getFilePaths())
@@ -562,7 +567,11 @@ public class GitClientImpl implements GitClient {
                                             .setForce(true)
                                             .setUpstreamMode(SetupUpstreamMode.TRACK)
                                             .setName(branch);
-      filePaths.forEach(filePath -> checkoutCommand.addPath(filePath));
+      if (isRootDirectory(filePaths)) {
+        checkoutCommand.setAllPaths(true);
+      } else {
+        filePaths.forEach(filePath -> checkoutCommand.addPath(filePath));
+      }
       checkoutCommand.call();
       logger.info("Successfully Checked out Branch: " + branch);
     } catch (Exception ex) {
@@ -571,6 +580,10 @@ public class GitClientImpl implements GitClient {
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
           .addParam("message", "Error in checking out Branch " + branch);
     }
+  }
+
+  private boolean isRootDirectory(List<String> filePaths) {
+    return filePaths.size() == 1 && filePaths.get(0).equals("");
   }
 
   private void resetWorkingDir(List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {

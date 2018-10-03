@@ -15,9 +15,20 @@
             <id>localrepository</id>
             <url>file://${basedir}/../repo</url>
         </repository>
+
+        <repository>
+            <id>central</id>
+            <name>harness-releases</name>
+            <url>https://harness.jfrog.io/harness/harness-maven</url>
+        </repository>
     </repositories>
 
     <dependencies>
+        <dependency>
+            <groupId>com.bertramlabs.plugins</groupId>
+            <artifactId>hcl4j</artifactId>
+            <version>0.1.7</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-collections4</artifactId>

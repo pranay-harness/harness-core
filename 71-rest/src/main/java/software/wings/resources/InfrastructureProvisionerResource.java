@@ -21,6 +21,7 @@ import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerDetails;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.RestResponse;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -148,5 +149,17 @@ public class InfrastructureProvisionerResource {
       @QueryParam("appId") String appId, @PathParam("infraProvisionerId") String infraProvisionerId) {
     infrastructureProvisionerService.delete(appId, infraProvisionerId);
     return new RestResponse();
+  }
+
+  @GET
+  @Path("terraform-variables")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PROVISIONER, action = READ)
+  public RestResponse<List<NameValuePair>> getTerraformVariables(@QueryParam("appId") String appId,
+      @QueryParam("sourceRepoSettingId") String scmSettingId, @QueryParam("path") String terraformDirectory,
+      @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(
+        infrastructureProvisionerService.getTerraformVariables(appId, scmSettingId, terraformDirectory, accountId));
   }
 }

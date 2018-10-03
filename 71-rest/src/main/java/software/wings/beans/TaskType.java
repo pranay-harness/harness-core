@@ -27,6 +27,7 @@ import software.wings.delegatetasks.ServiceImplDelegateTask;
 import software.wings.delegatetasks.ShellScriptTask;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
+import software.wings.delegatetasks.TerraformInputVariablesObtainTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
 import software.wings.delegatetasks.aws.AwsAmiAsyncTask;
 import software.wings.delegatetasks.aws.AwsAsgTask;
@@ -237,6 +238,8 @@ public enum TaskType {
   CLOUD_FORMATION_TASK(TaskGroup.CLOUD_FORMATION, CloudFormationCommandTask.class, AwsConnectionValidation.class),
 
   TERRAFORM_PROVISION_TASK(TaskGroup.TERRAFORM, TerraformProvisionTask.class, TerraformValidation.class),
+  TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK(
+      TaskGroup.TERRAFORM, TerraformInputVariablesObtainTask.class, TerraformValidation.class),
   SECRET_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, SecretManagerValidation.class),
   KUBERNETES_SWAP_SERVICE_SELECTORS_TASK(
       TaskGroup.CONTAINER, KubernetesSwapServiceSelectorsTask.class, KubernetesSwapServiceSelectorsValidation.class),

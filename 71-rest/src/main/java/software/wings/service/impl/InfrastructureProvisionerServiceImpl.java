@@ -8,6 +8,7 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -17,7 +18,9 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -28,8 +31,10 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.DeploymentType;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.Event.Type;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
@@ -39,27 +44,37 @@ import software.wings.beans.InfrastructureProvisionerDetails;
 import software.wings.beans.InfrastructureProvisionerDetails.InfrastructureProvisionerDetailsBuilder;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.TaskType;
 import software.wings.beans.TerraformInfrastructureProvisioner;
+import software.wings.beans.TerraformInputVariablesTaskResponse;
+import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Misc;
+import software.wings.utils.Validator;
+import software.wings.waitnotify.ErrorNotifyResponseData;
+import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -76,6 +91,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject AwsCFHelperServiceManager awsCFHelperServiceManager;
   @Inject private AppService appService;
   @Inject YamlPushService yamlPushService;
+  @Inject private DelegateService delegateService;
+  @Inject private SecretManager secretManager;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -368,5 +385,52 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   public List<AwsCFTemplateParamsData> getCFTemplateParamKeys(
       String type, String region, String awsConfigId, String data) {
     return awsCFHelperServiceManager.getParamsData(type, data, awsConfigId, region);
+  }
+
+  @Override
+  public List<NameValuePair> getTerraformVariables(
+      String appId, String scmSettingId, String terraformDirectory, String accountId) {
+    SettingAttribute gitSettingAttribute = settingService.get(scmSettingId);
+    Validator.notNullCheck("Source repo provided is not Valid", gitSettingAttribute);
+    if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
+      throw new InvalidRequestException("Source repo provided is not Valid");
+    }
+
+    terraformDirectory = handleUserInput(terraformDirectory);
+    GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
+    gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
+    DelegateTask delegateTask =
+        aDelegateTask()
+            .withTaskType(TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK)
+            .withAccountId(accountId)
+            .withAppId(appId)
+            .withParameters(new Object[] {
+                TerraformProvisionParameters.builder()
+                    .scriptPath(terraformDirectory)
+                    .sourceRepo(gitConfig)
+                    .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+                    .build()})
+            .withTimeout(TimeUnit.SECONDS.toMillis(30))
+            .withAsync(false)
+            .build();
+    try {
+      NotifyResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      if (notifyResponseData instanceof ErrorNotifyResponseData) {
+        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      }
+      TerraformInputVariablesTaskResponse taskResponse = (TerraformInputVariablesTaskResponse) notifyResponseData;
+      if (taskResponse.getTerraformExecutionData().getExecutionStatus() == ExecutionStatus.SUCCESS) {
+        return taskResponse.getVariablesList();
+      } else {
+        throw new WingsException(ErrorCode.GENERAL_ERROR)
+            .addParam("message", taskResponse.getTerraformExecutionData().getErrorMessage());
+      }
+    } catch (InterruptedException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  private String handleUserInput(String terraformDirectory) {
+    return terraformDirectory.equals(".") ? "" : terraformDirectory;
   }
 }
