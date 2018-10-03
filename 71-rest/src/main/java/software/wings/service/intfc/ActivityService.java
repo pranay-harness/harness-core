@@ -9,7 +9,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails;
-import software.wings.service.intfc.ownership.OwnedByEnvironment;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
@@ -19,7 +18,7 @@ import javax.validation.Valid;
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
-public interface ActivityService extends OwnedByEnvironment {
+public interface ActivityService {
   /**
    * List.
    *

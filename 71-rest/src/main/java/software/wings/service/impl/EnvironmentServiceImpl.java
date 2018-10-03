@@ -65,7 +65,6 @@ import software.wings.lock.AcquiredLock;
 import software.wings.lock.PersistentLocker;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -104,7 +103,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   private static final Logger logger = LoggerFactory.getLogger(EnvironmentServiceImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ActivityService activityService;
   // DO NOT DELETE THIS, PRUNE logic needs it
   @Inject private InstanceService instanceService;
   @Inject private AppService appService;
