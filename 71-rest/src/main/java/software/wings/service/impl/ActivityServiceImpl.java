@@ -180,15 +180,6 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public void pruneByEnvironment(String appId, String envId) {
-    wingsPersistence.createQuery(Activity.class)
-        .filter(Activity.APP_ID_KEY, appId)
-        .filter("environmentId", envId)
-        .asKeyList()
-        .forEach(activityKey -> delete(appId, (String) activityKey.getId()));
-  }
-
-  @Override
   public void updateCommandUnitStatus(Map<String, Map<String, Log>> activityCommandUnitLastLogMap) {
     activityCommandUnitLastLogMap.forEach(this ::updateActivityCommandUnitStatus);
   }
