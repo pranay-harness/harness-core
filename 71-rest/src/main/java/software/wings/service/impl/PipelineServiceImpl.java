@@ -19,6 +19,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
+import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
 import static software.wings.expression.ExpressionEvaluator.getName;
@@ -49,7 +50,6 @@ import software.wings.beans.Event.Type;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
@@ -322,7 +322,7 @@ public class PipelineServiceImpl implements PipelineService {
               pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
           OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
           if (orchestrationWorkflow != null) {
-            if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(OrchestrationWorkflowType.BUILD)) {
+            if (orchestrationWorkflow.getOrchestrationWorkflowType().equals(BUILD)) {
               return new ArrayList<>();
             }
             Set<EntityType> requiredEntityTypes =
@@ -359,40 +359,55 @@ public class PipelineServiceImpl implements PipelineService {
     List<String> serviceIds = new ArrayList<>();
     List<String> envIds = new ArrayList<>();
     Map<String, String> resolvedPipelineVariables = new LinkedHashMap<>();
-    pipeline.getPipelineStages()
-        .stream()
-        .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
-        .filter(pipelineStageElement -> ENV_STATE.name().equals(pipelineStageElement.getType()))
-        .forEach(pse -> {
+    Map<String, String> reducedPipelineVariables =
+        isEmpty(inputPipelineVariables) ? new LinkedHashMap<>() : new LinkedHashMap<>(inputPipelineVariables);
+    for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+      for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
           try {
-            Workflow workflow =
-                workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
-            Map<String, String> workflowVariables = pse.getWorkflowVariables();
+            Workflow workflow = workflowService.readWorkflow(
+                pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
+            notNullCheck("Workflow does not exist", workflow);
+            Map<String, String> workflowVariables = pipelineStageElement.getWorkflowVariables();
             Map<String, String> resolvedWorkflowVariables = new LinkedHashMap<>();
-            if (isNotEmpty(workflowVariables) && inputPipelineVariables != null) {
+            if (isNotEmpty(workflowVariables)) {
               for (Entry<String, String> variableEntry : workflowVariables.entrySet()) {
                 String key = variableEntry.getKey();
                 String value = getName(workflowVariables.get(key));
-                if (inputPipelineVariables.containsKey(value)) {
-                  resolvedPipelineVariables.put(key, inputPipelineVariables.get(value));
-                } else if (inputPipelineVariables.containsKey(key)) {
-                  resolvedPipelineVariables.put(key, inputPipelineVariables.get(key));
+                if (isNotEmpty(inputPipelineVariables)) {
+                  if (inputPipelineVariables.containsKey(value)) {
+                    resolvedPipelineVariables.put(key, inputPipelineVariables.get(value));
+                    resolvedWorkflowVariables.put(key, inputPipelineVariables.get(value));
+                    reducedPipelineVariables.remove(value);
+                  } else if (inputPipelineVariables.containsKey(key)) {
+                    resolvedPipelineVariables.put(key, inputPipelineVariables.get(key));
+                    resolvedWorkflowVariables.put(key, inputPipelineVariables.get(key));
+                    reducedPipelineVariables.remove(key);
+                  }
+                } else {
+                  resolvedWorkflowVariables.put(key, value);
                 }
-                resolvedWorkflowVariables.put(key, value);
               }
-            } else if (isNotEmpty(workflowVariables)) {
-              resolvedWorkflowVariables.putAll(workflowVariables);
             }
-            resolveServicesOfWorkflow(services, serviceIds, resolvedWorkflowVariables, workflow);
-            resolveEnvIds(envIds, resolvedWorkflowVariables, workflow);
-
+            if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
+              resolveServicesOfWorkflow(services, serviceIds, resolvedWorkflowVariables, workflow);
+              resolveEnvIds(envIds, resolvedWorkflowVariables, workflow);
+            }
           } catch (Exception ex) {
             logger.warn("Exception occurred while reading workflow associated to the pipeline + [" + pipelineId
                     + "]. Reason: {}",
                 ex.getMessage());
           }
-        });
+        }
+      }
+    }
     pipeline.setServices(services);
+    // Add all input variables to the resolved pipeline variables
+    for (Entry<String, String> entry : reducedPipelineVariables.entrySet()) {
+      if (!resolvedPipelineVariables.containsKey(entry.getKey())) {
+        resolvedPipelineVariables.put(entry.getKey(), entry.getValue());
+      }
+    }
     pipeline.setResolvedPipelineVariables(resolvedPipelineVariables);
     pipeline.setEnvIds(envIds);
     return pipeline;
@@ -575,7 +590,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   private void resolveEnvIds(List<String> envIds, Map<String, String> pseWorkflowVariables, Workflow workflow) {
     String envId = workflowService.resolveEnvironmentId(workflow, pseWorkflowVariables);
-    if (envId != null) {
+    if (envId != null && !envIds.contains(envId)) {
       envIds.add(envId);
     }
   }
@@ -679,7 +694,7 @@ public class PipelineServiceImpl implements PipelineService {
         keywords.add(workflow.getName());
         keywords.add(workflow.getDescription());
         resolveServicesOfWorkflow(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
-        if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != OrchestrationWorkflowType.BUILD
+        if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != BUILD
             && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
           throw new WingsException(INVALID_ARGUMENT, USER)
               .addParam("args", "Environment can not be null for non-build state");

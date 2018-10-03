@@ -717,6 +717,11 @@ public class TriggerServiceImpl implements TriggerService {
         triggerWorkflowVariableValues.put(entry.getKey(), entry.getValue());
       }
     }
+    triggerWorkflowVariableValues = triggerWorkflowVariableValues.entrySet()
+                                        .stream()
+                                        .filter(variableEntry -> isNotEmpty(variableEntry.getValue()))
+                                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
     return triggerWorkflowVariableValues;
   }
 
