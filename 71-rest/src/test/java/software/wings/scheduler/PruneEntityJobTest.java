@@ -15,7 +15,6 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
-import io.harness.MockableTest;
 import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -120,7 +119,7 @@ public class PruneEntityJobTest extends WingsBaseTest {
     when(context.getJobDetail()).thenReturn(details(Base.class, APP_ID, ENTITY_ID));
 
     Logger mockLogger = mock(Logger.class);
-    MockableTest.setStaticFieldValue(PruneEntityJob.class, "logger", mockLogger);
+    setStaticFieldValue(PruneEntityJob.class, "logger", mockLogger);
 
     job.execute(context);
 
@@ -165,7 +164,7 @@ public class PruneEntityJobTest extends WingsBaseTest {
     when(context.getJobDetail()).thenReturn(details(Activity.class, APP_ID, ENTITY_ID));
 
     Logger mockLogger = mock(Logger.class);
-    MockableTest.setStaticFieldValue(PruneEntityJob.class, "logger", mockLogger);
+    setStaticFieldValue(PruneEntityJob.class, "logger", mockLogger);
 
     job.execute(context);
 

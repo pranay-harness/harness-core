@@ -11,7 +11,7 @@ import io.harness.VerificationTestModule;
 import io.harness.app.VerificationQueueModule;
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.app.VerificationServiceModule;
-import software.wings.app.DatabaseModule;
+import io.harness.mongo.MongoModule;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
 import software.wings.rules.WingsRule;
@@ -43,7 +43,7 @@ public class VerificationTestRule extends WingsRule {
 
   @Override
   protected List<Module> getRequiredModules(Configuration configuration) {
-    return Lists.newArrayList(new DatabaseModule(datastore, datastore, distributedLockSvc),
+    return Lists.newArrayList(new MongoModule(datastore, datastore, distributedLockSvc),
         new VerificationServiceModule((VerificationServiceConfiguration) configuration), new VerificationTestModule());
   }
 
@@ -93,8 +93,6 @@ public class VerificationTestRule extends WingsRule {
       // we are   swallowing this - couldn't kill the embedded mongod process, but we don't care
       log().info("Had issues stopping embedded mongod: {}", ise.getMessage());
     }
-
-    log().info("Stopped Mongo server...");
   }
 
   @Override

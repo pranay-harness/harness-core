@@ -1,4 +1,4 @@
-package software.wings.lock;
+package io.harness.lock;
 
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;

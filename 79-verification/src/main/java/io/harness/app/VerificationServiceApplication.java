@@ -28,7 +28,10 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.health.VerificationServiceHealthCheck;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.managerclient.VerificationManagerClientModule;
+import io.harness.mongo.MongoModule;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.VerificationServiceExecutorJob;
 import io.harness.security.VerificationServiceAuthenticationFilter;
@@ -42,7 +45,6 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CharsetResponseFilter;
-import software.wings.app.DatabaseModule;
 import software.wings.app.WingsApplication;
 import software.wings.core.maintenance.MaintenanceController;
 import software.wings.dl.WingsPersistence;
@@ -51,8 +53,6 @@ import software.wings.exception.GenericExceptionMapper;
 import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
-import software.wings.lock.AcquiredLock;
-import software.wings.lock.PersistentLocker;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MigrationService;
@@ -124,7 +124,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    DatabaseModule databaseModule = new DatabaseModule(configuration.getMongoConnectionFactory());
+    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory());
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()

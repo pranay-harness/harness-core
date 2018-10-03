@@ -1,4 +1,4 @@
-package software.wings.lock;
+package io.harness.lock;
 
 import java.time.Duration;
 

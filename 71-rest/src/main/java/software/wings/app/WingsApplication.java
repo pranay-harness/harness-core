@@ -35,6 +35,9 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
+import io.harness.mongo.MongoModule;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
@@ -64,8 +67,6 @@ import software.wings.filter.AuditResponseFilter;
 import software.wings.health.WingsHealthCheck;
 import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
-import software.wings.lock.AcquiredLock;
-import software.wings.lock.PersistentLocker;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.ArchivalManager;
@@ -174,7 +175,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    DatabaseModule databaseModule = new DatabaseModule(configuration.getMongoConnectionFactory());
+    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory());
     List<Module> modules = new ArrayList<>();
     modules.add(databaseModule);
 

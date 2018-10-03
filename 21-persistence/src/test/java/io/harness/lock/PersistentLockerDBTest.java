@@ -1,4 +1,4 @@
-package software.wings.lock;
+package io.harness.lock;
 
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,24 +12,24 @@ import com.google.inject.Inject;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
+import io.harness.PersistenceTest;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.WingsBaseTest;
-import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
 
 /**
  * The Class PersistentLockerTest.
  */
-public class PersistentLockerDBTest extends WingsBaseTest {
+public class PersistentLockerDBTest extends PersistenceTest {
   private static final Logger logger = LoggerFactory.getLogger(PersistentLockerDBTest.class);
 
   @Inject private DistributedLockSvc distributedLockSvc;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private PersistentLocker persistentLocker;
 
   @Test
@@ -39,7 +39,7 @@ public class PersistentLockerDBTest extends WingsBaseTest {
 
     final BasicDBObject filter = new BasicDBObject().append("_id", "foo");
 
-    DBObject dbLock = wingsPersistence.getCollection("locks").findOne(filter);
+    DBObject dbLock = persistence.getCollection("locks").findOne(filter);
     assertNotNull(dbLock);
 
     boolean damage = false;
@@ -52,7 +52,7 @@ public class PersistentLockerDBTest extends WingsBaseTest {
 
     assertFalse(damage);
 
-    dbLock = wingsPersistence.getCollection("locks").findOne(filter);
+    dbLock = persistence.getCollection("locks").findOne(filter);
     assertNull(dbLock);
   }
 

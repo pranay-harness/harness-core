@@ -1,6 +1,5 @@
 package software.wings.dl;
 
-import com.mongodb.DBCollection;
 import com.mongodb.client.gridfs.GridFSBucket;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -329,14 +328,6 @@ public interface WingsPersistence extends HPersistence {
    * @return the datastore
    */
   Datastore getDatastore();
-
-  /**
-   * Gets the collection.
-   *
-   * @param collectionName the collection name
-   * @return the collection
-   */
-  DBCollection getCollection(String collectionName);
 
   /**
    * Close.

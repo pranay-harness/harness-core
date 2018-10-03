@@ -11,6 +11,8 @@ import com.google.inject.name.Named;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -34,8 +36,6 @@ import software.wings.beans.sso.LdapUserResponse;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.ldap.LdapConstants;
-import software.wings.lock.AcquiredLock;
-import software.wings.lock.PersistentLocker;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;

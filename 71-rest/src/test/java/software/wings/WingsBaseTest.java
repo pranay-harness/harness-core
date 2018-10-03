@@ -1,6 +1,7 @@
 package software.wings;
 
 import io.harness.CategoryTest;
+import io.harness.MockableTestMixin;
 import io.harness.exception.KmsOperationException;
 import org.junit.Rule;
 import org.mockito.junit.MockitoJUnit;
@@ -22,13 +23,14 @@ import javax.crypto.spec.SecretKeySpec;
 /**
  * Created by anubhaw on 4/28/16.
  */
-public abstract class WingsBaseTest extends CategoryTest {
+public abstract class WingsBaseTest extends CategoryTest implements MockableTestMixin {
   private static final String plainTextKey = "1234567890123456";
+
+  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   // I am not absolutely sure why, but there is dependency between wings io.harness.rule and
   // MockitoJUnit io.harness.rule and they have to be listed in these order
   @Rule public WingsRule wingsRule = new WingsRule();
-  @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   protected EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
     if (kmsConfig.getAccessKey().equals("invalidKey")) {

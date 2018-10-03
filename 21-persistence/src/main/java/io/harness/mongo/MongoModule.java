@@ -1,4 +1,4 @@
-package software.wings.app;
+package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -26,10 +26,9 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
+import io.harness.lock.ManagedDistributedLockSvc;
 import io.harness.logging.MorphiaLoggerFactory;
-import io.harness.mongo.MongoConfig;
-import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
-import io.harness.mongo.QueryFactory;
+import io.harness.persistence.HPersistence;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -41,7 +40,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.lock.ManagedDistributedLockSvc;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -52,8 +50,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class DatabaseModule extends AbstractModule {
-  private static final Logger logger = LoggerFactory.getLogger(DatabaseModule.class);
+public class MongoModule extends AbstractModule {
+  private static final Logger logger = LoggerFactory.getLogger(MongoModule.class);
+
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;
@@ -72,7 +71,7 @@ public class DatabaseModule extends AbstractModule {
    * Creates a guice module for portal app.
    *
    */
-  public DatabaseModule(MongoConfig mongoConfig) {
+  public MongoModule(MongoConfig mongoConfig) {
     registerLogger(MorphiaLoggerFactory.class);
 
     Morphia morphia = new Morphia();
@@ -109,7 +108,7 @@ public class DatabaseModule extends AbstractModule {
    * @param secondaryDatastore the secondary datastore
    * @param distributedLockSvc the distributed lock svc
    */
-  public DatabaseModule(
+  public MongoModule(
       AdvancedDatastore primaryDatastore, AdvancedDatastore secondaryDatastore, DistributedLockSvc distributedLockSvc) {
     this.primaryDatastore = primaryDatastore;
     this.secondaryDatastore = secondaryDatastore;
@@ -367,6 +366,7 @@ public class DatabaseModule extends AbstractModule {
     bind(AdvancedDatastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);
     bind(AdvancedDatastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
+    bind(HPersistence.class).to(MongoPersistence.class);
   }
 
   /**

@@ -6,13 +6,6 @@
     <artifactId>20-persistence-test</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
-    <repositories>
-        <repository>
-            <id>localrepository</id>
-            <url>file://${basedir}/../repo</url>
-        </repository>
-    </repositories>
-
     <parent>
         <groupId>software.wings</groupId>
         <artifactId>portal</artifactId>
