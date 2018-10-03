@@ -89,9 +89,10 @@ import javax.ws.rs.core.GenericType;
  * Created by rsingh on 4/24/17.
  */
 public abstract class BaseIntegrationTest extends WingsBaseTest implements WingsIntegrationTestConstants {
+  protected static final Logger logger = LoggerFactory.getLogger(BaseIntegrationTest.class);
+
   protected static Client client;
 
-  protected static final Logger logger = LoggerFactory.getLogger(BaseIntegrationTest.class);
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private AccountService accountService;
   @Inject protected SettingsService settingsService;

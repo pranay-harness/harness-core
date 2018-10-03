@@ -3,6 +3,7 @@ package io.harness.rule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
+import io.harness.factory.ClosingFactory;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
 import io.harness.version.VersionModule;
@@ -20,17 +21,19 @@ public class PersistenceRule implements MethodRule, MongoRuleMixin {
 
   private Injector injector = Guice.createInjector(new VersionModule());
 
+  private ClosingFactory closingFactory = new ClosingFactory();
+
   @Getter private AdvancedDatastore datastore;
 
   protected void before() {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
-    datastore = (AdvancedDatastore) morphia.createDatastore(fakeMongoClient(0), databaseName());
+    datastore = (AdvancedDatastore) morphia.createDatastore(fakeMongoClient(0, closingFactory), databaseName());
     datastore.setQueryFactory(new QueryFactory());
   }
   protected void after() {
-    logger.info("Stopping Mongo server...");
-    MongoServerFactory.stopMongoServers();
+    logger.info("Stopping server...");
+    closingFactory.stopServers();
   }
 
   @Override
