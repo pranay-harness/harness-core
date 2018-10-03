@@ -351,6 +351,7 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
                                       .put("workflow",
                                           SweepingOutputValue.builder()
                                               .sweepingOutputService(sweepingOutputService)
+                                              .name("workflow")
                                               .appId(appId)
                                               .pipelineExecutionId(pipelineExecutionId)
                                               .workflowExecutionId(followingWorkflowExecutionId)
@@ -366,7 +367,7 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
 
     context.put("workflow", new LateBindingValue() {
       @Override
-      public Object bind(String key) {
+      public Object bind() {
         return ImmutableMap.of("foo", "bar");
       }
     });

@@ -11,7 +11,7 @@ public class LateBindingMap extends HashMap<String, Object> {
       synchronized (this) {
         remove((String) key);
       }
-      object = ((LateBindingValue) object).bind((String) key);
+      object = ((LateBindingValue) object).bind();
       synchronized (this) {
         put((String) key, object);
       }

@@ -21,7 +21,10 @@ public class LateBindingContext implements JexlContext {
   public Object get(String key) {
     Object object = map.get(key);
     if (object instanceof LateBindingValue) {
-      object = ((LateBindingValue) object).bind(key);
+      synchronized (this) {
+        map.remove((String) key);
+      }
+      object = ((LateBindingValue) object).bind();
       synchronized (map) {
         map.put((String) key, object);
       }
