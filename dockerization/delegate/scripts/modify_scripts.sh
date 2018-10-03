@@ -16,12 +16,6 @@ then
     sed -i "s|_managerHostAndPort_|${MANAGER_HOST_AND_PORT}|" /opt/harness-delegate/delegate.sh
 fi
 
-if [[ -v "VERIFICATION_HOST_AND_PORT" ]]
-then
-    sed -i "s|_verificationHostAndPort_|${VERIFICATION_HOST_AND_PORT}|" /opt/harness-delegate/start.sh
-    sed -i "s|_verificationHostAndPort_|${VERIFICATION_HOST_AND_PORT}|" /opt/harness-delegate/delegate.sh
-fi
-
 if [[ -v "WATCHER_STORAGE_URL" ]]
 then
     sed -i "s|_watcherStorageUrl_|${WATCHER_STORAGE_URL}|" /opt/harness-delegate/start.sh

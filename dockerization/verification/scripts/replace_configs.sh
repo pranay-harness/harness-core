@@ -32,6 +32,11 @@ if [[ -v "MANAGER_URL" ]]; then
     sed -i "s|managerUrl: https://localhost:9090/api/|managerUrl: ${MANAGER_URL}|" /opt/harness/verification-config.yml
 fi
 
+if [[ -v "ENV" ]]; then
+    sed -i "s|programName: verification-saas-accesslogs|programName: verification-saas-accesslogs-${ENV}|" /opt/harness/verification-config.yml
+    sed -i "s|programName: verification-service|programName: verification-service-${ENV}|" /opt/harness/verification-config.yml
+fi
+
 if [[ "${SKIP_LOGS}" == "true" ]]; then
     sed -i "s|9a3e6eac4dcdbdc41a93ca99100537df||" /opt/harness/verification-config.yml
 elif [[ -v "LOGDNA_KEY" ]]; then
