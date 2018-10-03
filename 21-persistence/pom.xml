@@ -15,7 +15,7 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>11-commons-test</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>20-persistence-test</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -54,6 +54,18 @@
         <dependency>
             <groupId>org.modelmapper</groupId>
             <artifactId>modelmapper</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.deftlabs</groupId>
+            <artifactId>mongo-java-distributed-lock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-lifecycle</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jgit</groupId>
+            <artifactId>org.eclipse.jgit</artifactId>
         </dependency>
     </dependencies>
 </project>

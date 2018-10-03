@@ -1,4 +1,4 @@
-package software.wings.lock;
+package io.harness.lock;
 
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.NOBODY;
@@ -15,9 +15,9 @@ import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 public class PersistentLocker implements Locker {
   private static final Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
   @Inject private DistributedLockSvc distributedLockSvc;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private TimeLimiter timeLimiter;
 
   @Override
@@ -86,7 +86,7 @@ public class PersistentLocker implements Locker {
     // NOTE: DistributedLockSvc destroy does not work. Also it expects the lock to not be acquired which
     //       is design flow. The only safe moment to destroy lock is, when you currently have it acquired.
     final BasicDBObject filter = new BasicDBObject().append("_id", name);
-    wingsPersistence.getCollection("locks").remove(filter);
+    persistence.getCollection("locks").remove(filter);
     acquiredLock.release();
     throw new WingsException(GENERAL_ERROR, NOBODY)
         .addParam("message", format("Acquired distributed lock %s was destroyed and the lock was broken.", name));

@@ -50,6 +50,8 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.apache.commons.collections.map.LRUMap;
@@ -70,8 +72,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
-import software.wings.lock.AcquiredLock;
-import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.Exterminator;
 

@@ -9,6 +9,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -19,8 +21,6 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.lock.AcquiredLock;
-import software.wings.lock.PersistentLocker;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.yaml.gitSync.YamlChangeSet;

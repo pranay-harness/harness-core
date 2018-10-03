@@ -16,6 +16,8 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import io.harness.persistence.ReadPref;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -23,8 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.WingsPersistence;
-import software.wings.lock.AcquiredLock;
-import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 
 import java.time.Duration;

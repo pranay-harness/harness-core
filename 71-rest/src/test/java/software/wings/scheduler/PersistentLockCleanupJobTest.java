@@ -6,13 +6,13 @@ import com.google.inject.Inject;
 
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.lock.AcquiredLock;
-import software.wings.lock.PersistentLocker;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;

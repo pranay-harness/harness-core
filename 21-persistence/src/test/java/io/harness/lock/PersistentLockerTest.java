@@ -1,6 +1,5 @@
-package software.wings.lock;
+package io.harness.lock;
 
-import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
@@ -16,7 +15,7 @@ import com.google.inject.Inject;
 import com.deftlabs.lock.mongo.DistributedLock;
 import com.deftlabs.lock.mongo.DistributedLockOptions;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
-import io.harness.MockableTest;
+import io.harness.PersistenceTest;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import org.junit.Ignore;
@@ -26,14 +25,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.internal.util.reflection.Whitebox;
 import org.slf4j.Logger;
-import software.wings.exception.WingsExceptionMapper;
 
 import java.time.Duration;
 
 /**
  * The Class PersistentLockerTest.
  */
-public class PersistentLockerTest extends MockableTest {
+public class PersistentLockerTest extends PersistenceTest {
   @Mock private DistributedLockSvc distributedLockSvc;
 
   @Inject @InjectMocks private PersistentLocker persistentLocker;
@@ -129,11 +127,11 @@ public class PersistentLockerTest extends MockableTest {
     when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
     Logger mockLogger = mock(Logger.class);
-    MockableTest.setStaticFieldValue(MessageManager.class, "logger", mockLogger);
+    setStaticFieldValue(MessageManager.class, "logger", mockLogger);
 
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", Duration.ofMinutes(1))) {
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, mockLogger);
+      mockLogger.error("", exception);
     }
 
     verify(mockLogger, times(0)).error(any());
@@ -153,15 +151,16 @@ public class PersistentLockerTest extends MockableTest {
     when(distributedLock.tryLock()).thenReturn(true);
     when(distributedLockSvc.create(matches(AcquiredLock.class.getName() + "-cba"), any())).thenReturn(distributedLock);
 
-    Logger logger = mock(Logger.class);
+    Logger mockLogger = mock(Logger.class);
 
     try (AcquiredLock lock = persistentLocker.acquireLock(AcquiredLock.class, "cba", timeout)) {
       Thread.sleep(10);
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      mockLogger.error("", exception);
     }
 
-    verify(logger).error(matches(
-        "The distributed lock abc-cba was not released on time. THIS IS VERY BAD!!!, elapsed: \\d+, timeout 1"));
+    verify(mockLogger)
+        .error(matches(
+            "The distributed lock abc-cba was not released on time. THIS IS VERY BAD!!!, elapsed: \\d+, timeout 1"));
   }
 }

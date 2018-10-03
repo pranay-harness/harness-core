@@ -19,6 +19,8 @@ import com.google.inject.Inject;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -27,8 +29,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.WingsPersistence;
-import software.wings.lock.AcquiredLock;
-import software.wings.lock.PersistentLocker;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutor;
 

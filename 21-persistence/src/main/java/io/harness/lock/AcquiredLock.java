@@ -1,6 +1,4 @@
-package software.wings.lock;
-
-import static java.lang.String.format;
+package io.harness.lock;
 
 import com.deftlabs.lock.mongo.DistributedLock;
 import lombok.Builder;
@@ -44,7 +42,7 @@ public class AcquiredLock implements Closeable {
     final long elapsed = monotonicTimestamp() - startTimestamp;
     final int timeout = lock.getOptions().getInactiveLockTimeout();
     if (elapsed > timeout) {
-      logger.error(format("The distributed lock %s was not released on time. "
+      logger.error(String.format("The distributed lock %s was not released on time. "
               + "THIS IS VERY BAD!!!, elapsed: %d, timeout %d",
           lock.getName(), elapsed, timeout));
 

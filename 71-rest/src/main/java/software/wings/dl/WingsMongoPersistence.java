@@ -22,7 +22,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.mongodb.DBCollection;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
@@ -456,11 +455,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   @Override
   public void close() {
     primaryDatastore.getMongo().close();
-  }
-
-  @Override
-  public DBCollection getCollection(String collectionName) {
-    return primaryDatastore.getDB().getCollection(collectionName);
   }
 
   @Override

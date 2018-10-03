@@ -12,7 +12,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import io.harness.MockableTest;
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
 import org.junit.Test;
@@ -45,7 +44,7 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    MockableTest.setStaticFieldValue(MessageManager.class, "logger", mockLogger);
+    setStaticFieldValue(MessageManager.class, "logger", mockLogger);
 
     mapper.toResponse(exception);
     verify(mockLogger, times(2))
@@ -59,8 +58,8 @@ public class WingsExceptionMapperTest extends WingsBaseTest {
     final WingsExceptionMapper mapper = new WingsExceptionMapper();
 
     Logger mockLogger = mock(Logger.class);
-    MockableTest.setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
-    MockableTest.setStaticFieldValue(MessageManager.class, "logger", mockLogger);
+    setStaticFieldValue(WingsExceptionMapper.class, "logger", mockLogger);
+    setStaticFieldValue(MessageManager.class, "logger", mockLogger);
 
     mapper.toResponse(exception);
 

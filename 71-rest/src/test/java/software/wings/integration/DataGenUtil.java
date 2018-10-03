@@ -44,6 +44,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.MongoCommandException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.mongo.MongoModule;
 import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Rule;
@@ -57,7 +58,6 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.mapping.MappedField;
 import org.mongodb.morphia.query.UpdateOperations;
-import software.wings.app.DatabaseModule;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -303,7 +303,7 @@ public class DataGenUtil extends BaseIntegrationTest {
         List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
         if (indexesAnnotations != null) {
           indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-            DatabaseModule.reportDeprecatedUnique(index);
+            MongoModule.reportDeprecatedUnique(index);
 
             BasicDBObject keys = new BasicDBObject();
             for (Field field : index.fields()) {
@@ -318,7 +318,7 @@ public class DataGenUtil extends BaseIntegrationTest {
         for (final MappedField mf : mc.getPersistenceFields()) {
           if (mf.hasAnnotation(Indexed.class)) {
             final Indexed indexed = mf.getAnnotation(Indexed.class);
-            DatabaseModule.reportDeprecatedUnique(indexed);
+            MongoModule.reportDeprecatedUnique(indexed);
 
             try {
               primaryDatastore.getCollection(mc.getClazz())

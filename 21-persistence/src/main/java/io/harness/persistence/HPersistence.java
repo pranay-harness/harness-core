@@ -1,3 +1,13 @@
 package io.harness.persistence;
 
-public interface HPersistence {}
+import com.mongodb.DBCollection;
+
+public interface HPersistence {
+  /**
+   * Gets the collection.
+   *
+   * @param collectionName the collection name
+   * @return the collection
+   */
+  DBCollection getCollection(String collectionName);
+}

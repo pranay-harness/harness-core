@@ -86,15 +86,29 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
+
     <repositories>
+        <repository>
+            <id>localrepository</id>
+            <url>file://${basedir}/../repo</url>
+        </repository>
+
+        <repository>
+            <id>harness</id>
+            <name>harness-releases</name>
+            <url>https://harness.jfrog.io/harness/harness-maven</url>
+        </repository>
+
         <repository>
             <id>spring-io</id>
             <url>http://repo.spring.io/plugins-release/</url>
         </repository>
+
         <repository>
             <id>michaelklishin</id>
             <url>https://dl.bintray.com/michaelklishin/maven/</url>
         </repository>
+
         <repository>
             <snapshots>
                 <enabled>false</enabled>
@@ -103,15 +117,18 @@
             <name>bintray</name>
             <url>http://palantir.bintray.com/releases</url>
         </repository>
+
         <repository>
             <id>sonatype-nexus-releases</id>
             <name>Sonatype Nexus releases</name>
             <url>http://oss.sonatype.org/content/repositories/releases</url>
         </repository>
+
         <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
+
         <repository>
             <snapshots>
                 <enabled>false</enabled>

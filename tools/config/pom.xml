@@ -11,12 +11,5 @@
         <version>0.0.1-SNAPSHOT</version>
     </parent>
 
-    <repositories>
-        <repository>
-            <id>localrepository</id>
-            <url>file://${basedir}/../repo</url>
-        </repository>
-    </repositories>
-
 </project>
 
