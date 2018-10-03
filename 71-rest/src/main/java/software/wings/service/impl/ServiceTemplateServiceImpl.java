@@ -390,7 +390,10 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
    */
   @Override
   public List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId,
-      String workflowExecutionId, EncryptedFieldMode encryptedFieldMode) {
+      String workflowExecutionId, EncryptedFieldComputeMode encryptedFieldComputeMode) {
+    EncryptedFieldMode encryptedFieldMode =
+        encryptedFieldComputeMode == EncryptedFieldComputeMode.MASKED ? MASKED : OBTAIN_VALUE;
+
     ServiceTemplate serviceTemplate = get(appId, envId, templateId, false, encryptedFieldMode);
     if (serviceTemplate == null) {
       return new ArrayList<>();
@@ -403,9 +406,15 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
     List<ServiceVariable> templateServiceVariables =
         serviceVariableService.getServiceVariablesForEntity(appId, serviceTemplate.getUuid(), encryptedFieldMode);
 
-    return overrideServiceSettings(
+    final List<ServiceVariable> mergedVariables = overrideServiceSettings(
         overrideServiceSettings(serviceVariables, allServiceVariables, appId, workflowExecutionId, encryptedFieldMode),
         templateServiceVariables, appId, workflowExecutionId, encryptedFieldMode);
+
+    if (encryptedFieldComputeMode == EncryptedFieldComputeMode.OBTAIN_VALUE) {
+      obtainEncryptedValues(appId, workflowExecutionId, mergedVariables);
+    }
+
+    return mergedVariables;
   }
 
   @Override
@@ -482,28 +491,35 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
       EncryptedFieldMode encryptedFieldMode) {
     List<ServiceVariable> mergedServiceSettings = existingServiceVariables;
     if (!existingServiceVariables.isEmpty() || !newServiceVariables.isEmpty()) {
-      logger.debug("Service variables before overrides [{}]", existingServiceVariables.toString());
-      logger.debug(
-          "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);
+      if (logger.isDebugEnabled()) {
+        logger.debug("Service variables before overrides [{}]", existingServiceVariables.toString());
+        logger.debug(
+            "New override service variables [{}]", newServiceVariables != null ? newServiceVariables.toString() : null);
+      }
+
       if (isNotEmpty(newServiceVariables)) {
         mergedServiceSettings = concat(newServiceVariables.stream(), existingServiceVariables.stream())
                                     .filter(new TreeSet<>(comparing(ServiceVariable::getName))::add)
                                     .collect(toList());
       }
     }
-    logger.debug("Service variables after overrides [{}]", mergedServiceSettings.toString());
-    String accountId = appService.get(appId).getAccountId();
-    if (encryptedFieldMode == OBTAIN_VALUE) {
-      mergedServiceSettings.forEach(serviceVariable -> {
-        if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
-          if (isEmpty(serviceVariable.getAccountId())) {
-            serviceVariable.setAccountId(accountId);
-          }
-          managerDecryptionService.decrypt(
-              serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
-        }
-      });
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("Service variables after overrides [{}]", mergedServiceSettings.toString());
     }
     return mergedServiceSettings;
+  }
+
+  private void obtainEncryptedValues(String appId, String workflowExecutionId, List<ServiceVariable> serviceVariables) {
+    String accountId = appService.get(appId).getAccountId();
+    serviceVariables.forEach(serviceVariable -> {
+      if (serviceVariable.getType() == Type.ENCRYPTED_TEXT) {
+        if (isEmpty(serviceVariable.getAccountId())) {
+          serviceVariable.setAccountId(accountId);
+        }
+        managerDecryptionService.decrypt(
+            serviceVariable, secretManager.getEncryptionDetails(serviceVariable, appId, workflowExecutionId));
+      }
+    });
   }
 }

@@ -10,7 +10,7 @@ import static software.wings.api.ServiceElement.Builder.aServiceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
+import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_META;
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -39,6 +39,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SweepingOutput;
 import software.wings.beans.SweepingOutput.Scope;
 import software.wings.beans.artifact.Artifact;
@@ -162,11 +163,12 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .serviceId(svc.getUuid())
+                                          .type(Type.TEXT)
                                           .name("REV")
                                           .value("${artifact.buildNo}".toCharArray())
                                           .build();
     when(serviceTemplateService.computeServiceVariables(context.getAppId(), context.getEnv().getUuid(), st.getUuid(),
-             context.getWorkflowExecutionId(), OBTAIN_VALUE))
+             context.getWorkflowExecutionId(), OBTAIN_META))
         .thenReturn(asList(serviceVariable));
     when(serviceTemplateService.getTemplateRefKeysByService(
              context.getAppId(), svc.getUuid(), context.getEnv().getUuid()))
@@ -227,10 +229,14 @@ public class ExecutionContextImplTest extends WingsBaseTest {
     ServiceTemplateElement st = context.getContextElement(ContextElementType.SERVICE_TEMPLATE);
     ServiceElement svc1 = context.getContextElement(ContextElementType.SERVICE);
 
-    ServiceVariable serviceVariable =
-        ServiceVariable.builder().serviceId(svc1.getUuid()).name(svcVarName).value(svcVarValue.toCharArray()).build();
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .serviceId(svc1.getUuid())
+                                          .type(Type.TEXT)
+                                          .name(svcVarName)
+                                          .value(svcVarValue.toCharArray())
+                                          .build();
     when(serviceTemplateService.computeServiceVariables(context.getAppId(), context.getEnv().getUuid(), st.getUuid(),
-             context.getWorkflowExecutionId(), OBTAIN_VALUE))
+             context.getWorkflowExecutionId(), OBTAIN_META))
         .thenReturn(asList(serviceVariable));
     when(serviceTemplateService.getTemplateRefKeysByService(
              context.getAppId(), svc1.getUuid(), context.getEnv().getUuid()))

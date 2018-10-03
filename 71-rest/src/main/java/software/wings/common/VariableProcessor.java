@@ -4,7 +4,7 @@
 
 package software.wings.common;
 
-import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
+import static software.wings.service.intfc.ServiceTemplateService.EncryptedFieldComputeMode.OBTAIN_VALUE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

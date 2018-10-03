@@ -49,6 +49,12 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    */
   @ValidationGroups(Update.class) ServiceTemplate update(@Valid ServiceTemplate serviceTemplate);
 
+  enum EncryptedFieldComputeMode {
+    OBTAIN_VALUE,
+    OBTAIN_META,
+    MASKED,
+  }
+
   /**
    * Compute service variables map.
    *
@@ -57,8 +63,8 @@ public interface ServiceTemplateService extends OwnedByEnvironment, OwnedByServi
    * @param templateId the template id
    * @return the map
    */
-  List<ServiceVariable> computeServiceVariables(
-      String appId, String envId, String templateId, String workflowExecutionId, EncryptedFieldMode encryptedFieldMode);
+  List<ServiceVariable> computeServiceVariables(String appId, String envId, String templateId,
+      String workflowExecutionId, EncryptedFieldComputeMode encryptedFieldComputeMode);
 
   String computeConfigMapYaml(String appId, String envId, String templateId);
 

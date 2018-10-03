@@ -7,6 +7,7 @@ import software.wings.utils.KryoUtils;
 
 @Builder
 public class SweepingOutputValue implements LateBindingValue {
+  private String name;
   private String appId;
   private String pipelineExecutionId;
   private String workflowExecutionId;
@@ -15,9 +16,9 @@ public class SweepingOutputValue implements LateBindingValue {
   private SweepingOutputService sweepingOutputService;
 
   @Override
-  public Object bind(String key) {
+  public Object bind() {
     SweepingOutput sweepingOutput =
-        sweepingOutputService.find(appId, key, pipelineExecutionId, workflowExecutionId, phaseExecutionId);
+        sweepingOutputService.find(appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId);
     if (sweepingOutput == null) {
       return null;
     }
