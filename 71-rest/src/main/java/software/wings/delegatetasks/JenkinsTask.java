@@ -1,6 +1,5 @@
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
 import static io.harness.threading.Morpheus.sleep;
@@ -120,14 +119,9 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
       case POLL_TASK:
         jenkinsExecutionResponse.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
         try {
-          if (isEmpty(jenkinsTaskParams.getQueuedBuildUrl())) {
-            // Queued build URL is empty, jenkins start failed
-            jenkinsExecutionResponse.setExecutionStatus(ExecutionStatus.FAILED);
-            logger.info("Jenkins job is not started or queued build URL is empty");
-            return jenkinsExecutionResponse;
-          }
-
           // Get jenkins build from queued URL
+          logger.info(
+              "The Jenkins queued url {} and retrieving build information", jenkinsTaskParams.getQueuedBuildUrl());
           Build jenkinsBuild = jenkins.getBuild(new QueueReference(jenkinsTaskParams.getQueuedBuildUrl()));
           jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
           jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
