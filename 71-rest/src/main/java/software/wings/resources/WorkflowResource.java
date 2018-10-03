@@ -32,13 +32,16 @@ import software.wings.beans.PhaseStep;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
+import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.stats.CloneMetadata;
+import software.wings.common.VerificationConstants;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
@@ -535,5 +538,30 @@ public class WorkflowResource {
   public RestResponse<List<EntityType>> requiredEntities(
       @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
     return new RestResponse<>(workflowService.getRequiredEntities(appId, workflowId));
+  }
+
+  @GET
+  @Path(VerificationConstants.LAST_SUCCESSFUL_WORKFLOW_IDS)
+  @Timed
+  @LearningEngineAuth
+  public RestResponse<List<String>> getLastSuccessfulWorkflowExecutionIds(@QueryParam("appId") String appId,
+      @QueryParam("workflowId") String workflowId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(workflowService.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId));
+  }
+  @GET
+  @Path(VerificationConstants.CHECK_STATE_VALID)
+  @Timed
+  @LearningEngineAuth
+  public RestResponse<Boolean> isStateValid(
+      @QueryParam("appId") String appId, @QueryParam("stateExecutionId") String stateExecutionId) {
+    return new RestResponse<>(workflowService.isStateValid(appId, stateExecutionId));
+  }
+  @GET
+  @Path(VerificationConstants.WORKFLOW_FOR_STATE_EXEC)
+  @Timed
+  @LearningEngineAuth
+  public RestResponse<WorkflowExecution> getWorkflowExecutionForStateExecution(
+      @QueryParam("appId") String appId, @QueryParam("stateExecutionId") String stateExecutionId) {
+    return new RestResponse<>(workflowService.getWorkflowExecutionForStateExecutionId(appId, stateExecutionId));
   }
 }

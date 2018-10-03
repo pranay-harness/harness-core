@@ -4,12 +4,18 @@ import software.wings.sm.StateType;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class VerificationConstants {
   /*
   New Relic constants
    */
   private static final String NEWRELIC_METRICS_YAML_URL = "/apm/newrelic_metrics.yml";
+
+  public static final long VERIFICATION_TASK_TIMEOUT = TimeUnit.MINUTES.toMillis(3);
+  public static final String LAST_SUCCESSFUL_WORKFLOW_IDS = "/last-successful-workflow-ids";
+  public static final String CHECK_STATE_VALID = "/state-valid";
+  public static final String WORKFLOW_FOR_STATE_EXEC = "/workflow-execution-for-state-execution";
 
   private VerificationConstants() {}
 
