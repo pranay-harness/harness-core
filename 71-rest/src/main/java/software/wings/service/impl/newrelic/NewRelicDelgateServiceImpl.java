@@ -21,6 +21,8 @@ import io.harness.exception.WingsException.ReportTarget;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -81,6 +83,74 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DelegateLogService delegateLogService;
 
+  public static List<Set<String>> batchMetricsToCollect(Collection<NewRelicMetric> metrics) {
+    List<Set<String>> rv = new ArrayList<>();
+
+    Set<String> batchedNonSpecialCharMetrics = new HashSet<>();
+    Set<String> batchedSpecialCharMetrics = new HashSet<>();
+    for (NewRelicMetric metric : metrics) {
+      if (containsNotAllowedChars(metric.getName())) {
+        logger.info("metric {} contains not allowed characters {}. This will skip analysis", metric.getName(),
+            NOT_ALLOWED_STRINGS);
+        continue;
+      }
+      if (METRIC_NAME_PATTERN_NO_SPECIAL_CHAR.matcher(metric.getName()).matches()) {
+        batchedNonSpecialCharMetrics.add(metric.getName());
+      } else {
+        batchedSpecialCharMetrics.add(metric.getName());
+      }
+
+      if (batchedNonSpecialCharMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
+        rv.add(batchedNonSpecialCharMetrics);
+        batchedNonSpecialCharMetrics = new HashSet<>();
+      }
+
+      if (batchedSpecialCharMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
+        rv.add(batchedSpecialCharMetrics);
+        batchedSpecialCharMetrics = new HashSet<>();
+      }
+    }
+
+    if (!batchedNonSpecialCharMetrics.isEmpty()) {
+      rv.add(batchedNonSpecialCharMetrics);
+    }
+
+    if (!batchedSpecialCharMetrics.isEmpty()) {
+      rv.add(batchedSpecialCharMetrics);
+    }
+
+    return rv;
+  }
+
+  private static boolean containsNotAllowedChars(String name) {
+    for (String str : NOT_ALLOWED_STRINGS) {
+      if (name.contains(str)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public static Set<String> getApdexMetricNames(Collection<String> metricNames) {
+    final Set<String> rv = new HashSet<>();
+    for (String metricName : metricNames) {
+      if (metricName.startsWith("WebTransaction/")) {
+        rv.add(metricName.replace("WebTransaction", "Apdex"));
+      }
+    }
+
+    return rv;
+  }
+
+  public static Set<String> getErrorMetricNames(Collection<String> metricNames) {
+    final Set<String> rv = new HashSet<>();
+    for (String metricName : metricNames) {
+      rv.add("Errors/" + metricName);
+    }
+
+    return rv;
+  }
+
   @Override
   public boolean validateConfig(NewRelicConfig newRelicConfig) throws IOException, CloneNotSupportedException {
     getAllApplications(newRelicConfig, Collections.emptyList(), null);
@@ -107,7 +177,17 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                                        .value(request.request().url().toString())
                                        .type(FieldType.URL)
                                        .build());
-      final Response<NewRelicApplicationsResponse> response = request.execute();
+
+      Response<NewRelicApplicationsResponse> response;
+      try {
+        response = request.execute();
+      } catch (Exception e) {
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+        throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
+            + e.getMessage() + " Request: " + request.request().url().toString());
+      }
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       if (response.isSuccessful()) {
         apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
@@ -152,7 +232,16 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                                        .value(request.request().url().toString())
                                        .type(FieldType.URL)
                                        .build());
-      final Response<NewRelicApplicationInstancesResponse> response = request.execute();
+      Response<NewRelicApplicationInstancesResponse> response;
+      try {
+        response = request.execute();
+      } catch (Exception e) {
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+        delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+        throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
+            + e.getMessage() + " Request: " + request.request().url().toString());
+      }
       apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       if (response.isSuccessful()) {
         apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
@@ -207,7 +296,16 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                                            .value(request.request().url().toString())
                                            .type(FieldType.URL)
                                            .build());
-          final Response<NewRelicMetricResponse> response = request.execute();
+          Response<NewRelicMetricResponse> response;
+          try {
+            response = request.execute();
+          } catch (Exception e) {
+            apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+            apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+            delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+            throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
+                + e.getMessage() + " Request: " + request.request().url().toString());
+          }
           apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
           if (response.isSuccessful()) {
             apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
@@ -226,7 +324,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
           }
         }
         return newRelicMetrics;
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         if (retry < NUM_OF_RETRIES) {
           logger.warn(format("txn name fetch failed. trial num: %d", retry), e);
           sleep(ofMillis(1000));
@@ -367,7 +465,16 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                                      .value(request.request().url().toString())
                                      .type(FieldType.URL)
                                      .build());
-    final Response<NewRelicMetricDataResponse> response = request.execute();
+    Response<NewRelicMetricDataResponse> response;
+    try {
+      response = request.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(newRelicConfig.getAccountId(), apiCallLog);
+      throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
+          + e.getMessage() + " Request: " + request.request().url().toString());
+    }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
@@ -399,7 +506,17 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
         ThirdPartyApiCallField.builder().name(PAYLOAD).value(JsonUtils.asJson(body)).type(FieldType.JSON).build());
     apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final Call<Object> request = getNewRelicRestClient(config, encryptedDataDetails).postDeploymentMarker(url, body);
-    final Response<Object> response = request.execute();
+
+    Response<Object> response;
+    try {
+      response = request.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(config.getAccountId(), apiCallLog);
+      throw new WingsException("Unsuccessful response while fetching data from NewRelic. Error message: "
+          + e.getMessage() + " Request: " + url);
+    }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
@@ -467,73 +584,5 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
                                   .client(httpClient.build())
                                   .build();
     return retrofit.create(NewRelicRestClient.class);
-  }
-
-  public static List<Set<String>> batchMetricsToCollect(Collection<NewRelicMetric> metrics) {
-    List<Set<String>> rv = new ArrayList<>();
-
-    Set<String> batchedNonSpecialCharMetrics = new HashSet<>();
-    Set<String> batchedSpecialCharMetrics = new HashSet<>();
-    for (NewRelicMetric metric : metrics) {
-      if (containsNotAllowedChars(metric.getName())) {
-        logger.info("metric {} contains not allowed characters {}. This will skip analysis", metric.getName(),
-            NOT_ALLOWED_STRINGS);
-        continue;
-      }
-      if (METRIC_NAME_PATTERN_NO_SPECIAL_CHAR.matcher(metric.getName()).matches()) {
-        batchedNonSpecialCharMetrics.add(metric.getName());
-      } else {
-        batchedSpecialCharMetrics.add(metric.getName());
-      }
-
-      if (batchedNonSpecialCharMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
-        rv.add(batchedNonSpecialCharMetrics);
-        batchedNonSpecialCharMetrics = new HashSet<>();
-      }
-
-      if (batchedSpecialCharMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
-        rv.add(batchedSpecialCharMetrics);
-        batchedSpecialCharMetrics = new HashSet<>();
-      }
-    }
-
-    if (!batchedNonSpecialCharMetrics.isEmpty()) {
-      rv.add(batchedNonSpecialCharMetrics);
-    }
-
-    if (!batchedSpecialCharMetrics.isEmpty()) {
-      rv.add(batchedSpecialCharMetrics);
-    }
-
-    return rv;
-  }
-
-  private static boolean containsNotAllowedChars(String name) {
-    for (String str : NOT_ALLOWED_STRINGS) {
-      if (name.contains(str)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  public static Set<String> getApdexMetricNames(Collection<String> metricNames) {
-    final Set<String> rv = new HashSet<>();
-    for (String metricName : metricNames) {
-      if (metricName.startsWith("WebTransaction/")) {
-        rv.add(metricName.replace("WebTransaction", "Apdex"));
-      }
-    }
-
-    return rv;
-  }
-
-  public static Set<String> getErrorMetricNames(Collection<String> metricNames) {
-    final Set<String> rv = new HashSet<>();
-    for (String metricName : metricNames) {
-      rv.add("Errors/" + metricName);
-    }
-
-    return rv;
   }
 }

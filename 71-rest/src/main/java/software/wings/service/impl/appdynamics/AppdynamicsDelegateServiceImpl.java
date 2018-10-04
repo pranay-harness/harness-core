@@ -13,6 +13,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -223,7 +224,19 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierBTsPath);
 
-    final Response<List<AppdynamicsMetric>> tierBTResponse = tierBTMetricRequest.execute();
+    Response<List<AppdynamicsMetric>> tierBTResponse;
+
+    try {
+      tierBTResponse = tierBTMetricRequest.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason",
+              "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
+                  + " Request: " + tierBTsPath);
+    }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (!tierBTResponse.isSuccessful()) {
       apiCallLog.addFieldToResponse(tierBTResponse.code(), tierBTResponse.errorBody().string(), FieldType.TEXT);
@@ -268,7 +281,19 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             .getMetricData(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, metricPath,
                 durantionInMinutes);
 
-    final Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
+    Response<List<AppdynamicsMetricData>> tierBTMResponse;
+
+    try {
+      tierBTMResponse = tierBTMetricRequest.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason",
+              "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
+                  + " Request: " + metricPath);
+    }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (tierBTMResponse.isSuccessful()) {
       apiCallLog.addFieldToResponse(tierBTMResponse.code(), tierBTMResponse.body(), FieldType.JSON);
@@ -332,7 +357,19 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), applicationId, childMetricPath);
-    final Response<List<AppdynamicsMetric>> response = request.execute();
+    Response<List<AppdynamicsMetric>> response;
+
+    try {
+      response = request.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason",
+              "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
+                  + " Request: " + childMetricPath);
+    }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
@@ -389,7 +426,19 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         getAppdynamicsRestClient(appDynamicsConfig)
             .listMetrices(
                 getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), applicationId, childMetricPath);
-    final Response<List<AppdynamicsMetric>> response = request.execute();
+    final Response<List<AppdynamicsMetric>> response;
+    try {
+      response = request.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason",
+              "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
+                  + " Request: " + childMetricPath);
+    }
+
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
