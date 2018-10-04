@@ -15,6 +15,8 @@ import com.splunk.SSLSecurityProtocol;
 import com.splunk.Service;
 import com.splunk.ServiceArgs;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SplunkConfig;
@@ -109,7 +111,16 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     JobResultsArgs resultsArgs = new JobResultsArgs();
     resultsArgs.setOutputMode(JobResultsArgs.OutputMode.JSON);
 
-    InputStream results = job.getResults(resultsArgs);
+    InputStream results;
+    try {
+      results = job.getResults(resultsArgs);
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
+      logger.warn("Failed to get job results from Splunk Server.");
+      throw new WingsException(e.getMessage());
+    }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.addFieldToResponse(200, "splunk query done. Num of events: " + job.getEventCount(), FieldType.TEXT);
     delegateLogService.save(splunkConfig.getAccountId(), apiCallLog);
