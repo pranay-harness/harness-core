@@ -29,6 +29,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.health.VerificationServiceHealthCheck;
 import io.harness.lock.AcquiredLock;
+import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.mongo.MongoModule;
@@ -184,7 +185,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
-    environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
+    environment.lifecycle().manage(new ManageDistributedLockSvc(injector.getInstance(DistributedLockSvc.class)));
   }
 
   private void registerJerseyProviders(Environment environment) {

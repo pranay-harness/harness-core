@@ -4,15 +4,14 @@ import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 
+import com.deftlabs.lock.mongo.DistributedLockSvc;
 import io.dropwizard.Configuration;
-import io.dropwizard.lifecycle.Managed;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.VerificationTestModule;
 import io.harness.app.VerificationQueueModule;
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.app.VerificationServiceModule;
 import io.harness.mongo.MongoModule;
-import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
 import software.wings.rules.WingsRule;
 
@@ -42,7 +41,7 @@ public class VerificationTestRule extends WingsRule {
   }
 
   @Override
-  protected List<Module> getRequiredModules(Configuration configuration) {
+  protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
     return Lists.newArrayList(new MongoModule(datastore, datastore, distributedLockSvc),
         new VerificationServiceModule((VerificationServiceConfiguration) configuration), new VerificationTestModule());
   }
@@ -64,24 +63,6 @@ public class VerificationTestRule extends WingsRule {
 
   @Override
   protected void after(List<Annotation> annotations) {
-    try {
-      log().info("Stopping distributed lock service...");
-      if (distributedLockSvc instanceof Managed) {
-        ((Managed) distributedLockSvc).stop();
-      }
-      log().info("Stopped distributed lock service...");
-    } catch (Exception ex) {
-      log().error("", ex);
-    }
-
-    try {
-      log().info("Stopping WingsPersistence...");
-      ((Managed) injector.getInstance(WingsPersistence.class)).stop();
-      log().info("Stopped WingsPersistence...");
-    } catch (Exception ex) {
-      log().error("", ex);
-    }
-
     log().info("Stopping servers...");
     closingFactory.stopServers();
 

@@ -74,6 +74,10 @@
             <artifactId>mongo-java-server-memory-backend</artifactId>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>com.deftlabs</groupId>
+            <artifactId>mongo-java-distributed-lock</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

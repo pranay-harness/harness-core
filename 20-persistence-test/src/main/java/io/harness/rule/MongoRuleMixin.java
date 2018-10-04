@@ -40,6 +40,9 @@ public interface MongoRuleMixin {
 
     mongoServer.bind("localhost", port);
     InetSocketAddress serverAddress = mongoServer.getLocalAddress();
-    return new MongoClient(new ServerAddress(serverAddress));
+    MongoClient client = new MongoClient(new ServerAddress(serverAddress));
+
+    closingFactory.addServer(client);
+    return client;
   }
 }

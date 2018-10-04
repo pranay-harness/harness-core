@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class PersistentLocker implements Locker {
   private static final Logger logger = LoggerFactory.getLogger(PersistentLocker.class);
+
   @Inject private DistributedLockSvc distributedLockSvc;
   @Inject private HPersistence persistence;
   @Inject private TimeLimiter timeLimiter;
