@@ -60,8 +60,11 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
 
       HCLParser hclParser = new HCLParser();
       Set<NameValuePair> variablesList = new HashSet<>();
+
+      boolean noTerraformFilesFound = true;
       for (GitFile file : gitFetchFilesResult.getFiles()) {
         if (file.getFilePath().endsWith(".tf")) {
+          noTerraformFilesFound = false;
           Map<String, Object> parsedContents;
           try {
             parsedContents = hclParser.parse(file.getFileContent());
@@ -71,11 +74,18 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
                 ErrorCode.GENERAL_ERROR, "Invalid Terraform File [" + file.getFilePath() + "] : " + e.getMessage());
           }
           LinkedHashMap<String, Object> variables = (LinkedHashMap) parsedContents.get("variable");
-          variables.keySet()
-              .stream()
-              .map(variable -> NameValuePair.builder().name(variable).valueType(Type.TEXT.name()).build())
-              .forEach(variablesList::add);
+          if (variables != null) {
+            variables.keySet()
+                .stream()
+                .map(variable -> NameValuePair.builder().name(variable).valueType(Type.TEXT.name()).build())
+                .forEach(variablesList::add);
+          }
         }
+      }
+      if (noTerraformFilesFound) {
+        throw new WingsException(ErrorCode.GENERAL_ERROR, "No Terraform Files Found");
+      } else if (variablesList.isEmpty()) {
+        throw new WingsException(ErrorCode.GENERAL_ERROR, "No Variables Found");
       }
       return TerraformInputVariablesTaskResponse.builder()
           .variablesList(new ArrayList<>(variablesList))

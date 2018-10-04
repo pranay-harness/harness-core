@@ -1,11 +1,12 @@
 package software.wings.delegatetasks.terraform;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -34,18 +35,24 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
   @Mock GitService gitService;
   @Mock EncryptionService encryptionService;
 
+  private TerraformProvisionParameters parameters;
+
   @InjectMocks
   TerraformInputVariablesObtainTask delegateRunnableTask =
       (TerraformInputVariablesObtainTask) TaskType.TERRAFORM_INPUT_VARIABLES_OBTAIN_TASK.getDelegateRunnableTask(
           WingsTestConstants.DELEGATE_ID, Builder.aDelegateTask().build(), notifyResponseData -> {}, () -> true);
 
+  @Before
+  public void setup() {
+    parameters = TerraformProvisionParameters.builder()
+                     .sourceRepo(GitConfig.builder().branch("master").build())
+                     .scriptPath("")
+                     .build();
+    when(encryptionService.decrypt(any(), any())).thenReturn(null);
+  }
+
   @Test
   public void testRun() {
-    TerraformProvisionParameters parameters = TerraformProvisionParameters.builder()
-                                                  .sourceRepo(GitConfig.builder().branch("master").build())
-                                                  .scriptPath("")
-                                                  .build();
-
     List<GitFile> gitFiles = new ArrayList<>();
     gitFiles.add(GitFile.builder()
                      .filePath("main.tf")
@@ -66,17 +73,19 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
                          + "}")
                      .build());
 
-    when(encryptionService.decrypt(any(), any())).thenReturn(null);
     when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
         .thenReturn(GitFetchFilesResult.builder().files(gitFiles).build());
 
     TerraformInputVariablesTaskResponse inputVariables = delegateRunnableTask.run(new Object[] {parameters});
     assertFalse(inputVariables.getVariablesList().isEmpty());
+  }
 
+  @Test
+  public void testNoTerraformFilesFound() {
     when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
         .thenReturn(GitFetchFilesResult.builder().files(Collections.EMPTY_LIST).build());
 
-    inputVariables = delegateRunnableTask.run(new Object[] {parameters});
-    assertTrue(inputVariables.getVariablesList().isEmpty());
+    TerraformInputVariablesTaskResponse response = delegateRunnableTask.run(new Object[] {parameters});
+    assertEquals("No Terraform Files Found", response.getTerraformExecutionData().getErrorMessage());
   }
 }
