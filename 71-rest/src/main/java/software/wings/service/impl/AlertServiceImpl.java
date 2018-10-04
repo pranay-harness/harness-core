@@ -12,7 +12,6 @@ import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
 import static software.wings.beans.alert.AlertType.NoActiveDelegates;
 import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
 
-import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
@@ -20,8 +19,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.lock.AcquiredLock;
-import io.harness.lock.PersistentLocker;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -37,7 +34,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 
-import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -51,9 +47,7 @@ public class AlertServiceImpl implements AlertService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
   @Inject private AssignDelegateService assignDelegateService;
-  @Inject private PersistentLocker persistentLocker;
   @Inject private Injector injector;
-  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public PageResponse<Alert> list(PageRequest<Alert> pageRequest) {
@@ -104,25 +98,22 @@ public class AlertServiceImpl implements AlertService {
     alertData.forEach(data -> openInternal(accountId, appId, alertType, data));
   }
   private void openInternal(String accountId, String appId, AlertType alertType, AlertData alertData) {
-    String lockName = alertType.name() + "-" + (appId == null || appId.equals(GLOBAL_APP_ID) ? accountId : appId);
-    try (AcquiredLock ignore = persistentLocker.acquireLock(AlertType.class, lockName, Duration.ofMinutes(1))) {
-      if (findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
-        return;
-      }
-      injector.injectMembers(alertData);
-      Alert persistedAlert = wingsPersistence.saveAndGet(Alert.class,
-          anAlert()
-              .withAppId(appId)
-              .withAccountId(accountId)
-              .withType(alertType)
-              .withStatus(Open)
-              .withAlertData(alertData)
-              .withTitle(alertData.buildTitle())
-              .withCategory(alertType.getCategory())
-              .withSeverity(alertType.getSeverity())
-              .build());
-      logger.info("Alert opened: {}", persistedAlert);
+    if (findExistingAlert(accountId, appId, alertType, alertData).isPresent()) {
+      return;
     }
+    injector.injectMembers(alertData);
+    Alert persistedAlert = wingsPersistence.saveAndGet(Alert.class,
+        anAlert()
+            .withAppId(appId)
+            .withAccountId(accountId)
+            .withType(alertType)
+            .withStatus(Open)
+            .withAlertData(alertData)
+            .withTitle(alertData.buildTitle())
+            .withCategory(alertType.getCategory())
+            .withSeverity(alertType.getSeverity())
+            .build());
+    logger.info("Alert opened: {}", persistedAlert);
   }
 
   private void activeDelegateUpdatedInternal(String accountId, String delegateId) {
