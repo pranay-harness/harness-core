@@ -35,9 +35,9 @@ public class VerificationTokenGenerator {
       return JWT.create()
           .withIssuer("Harness Inc")
           .withIssuedAt(new Date())
-          .withExpiresAt(new Date(System.currentTimeMillis() + 4 * 60 * 60 * 1000)) // 4 hrs
-          .withNotBefore(new Date(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(5)))
-          .withIssuedAt(new Date())
+          .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(4)))
+          .withNotBefore(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
+          .withIssuedAt(new Date(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10)))
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");
