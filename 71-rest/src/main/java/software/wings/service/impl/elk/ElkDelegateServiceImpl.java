@@ -17,6 +17,8 @@ import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -115,7 +117,15 @@ public class ElkDelegateServiceImpl implements ElkDelegateService {
                   KibanaRestClient.searchMethod, logFetchRequest.toElasticSearchJsonObject())
         : getElkRestClient(elkConfig, encryptedDataDetails)
               .search(logFetchRequest.getIndices(), logFetchRequest.toElasticSearchJsonObject(), maxRecords);
-    final Response<Object> response = request.execute();
+    final Response<Object> response;
+    try {
+      response = request.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(elkConfig.getAccountId(), apiCallLog);
+      throw new WingsException(e.getMessage());
+    }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
