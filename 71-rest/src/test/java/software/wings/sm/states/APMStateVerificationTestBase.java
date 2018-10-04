@@ -12,6 +12,7 @@ import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aW
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.version.VersionInfoManager;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mockito.Mock;
@@ -84,6 +85,7 @@ public class APMStateVerificationTestBase extends WingsBaseTest {
   @Mock protected Artifact artifact;
   @Mock protected StateExecutionInstance stateExecutionInstance;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
+  @Inject protected VersionInfoManager versionInfoManager;
 
   protected void setupCommon() {
     accountId = UUID.randomUUID().toString();

@@ -9,7 +9,10 @@ import com.google.inject.Inject;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.APMFetchConfig;
+import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.Base;
@@ -21,6 +24,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.APMVerificationService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.Misc;
+import software.wings.waitnotify.WaitNotifyEngine;
 
 /**
  * @author Praveen 9/6/18
@@ -30,6 +34,9 @@ public class APMVerificationServiceImpl implements APMVerificationService {
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
+  @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  private static final Logger logger = LoggerFactory.getLogger(APMVerificationServiceImpl.class);
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(
@@ -65,6 +72,17 @@ public class APMVerificationServiceImpl implements APMVerificationService {
     } catch (Exception e) {
       String errorMsg = e.getCause() != null ? Misc.getMessage(e.getCause()) : Misc.getMessage(e);
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
+    }
+  }
+
+  @Override
+  public boolean sendNotifyForMetricAnalysis(String correlationId, MetricDataAnalysisResponse response) {
+    try {
+      waitNotifyEngine.notify(correlationId, response);
+      return true;
+    } catch (Exception ex) {
+      logger.error("Exception while notifying correlationId {}", correlationId, ex);
+      return false;
     }
   }
 }

@@ -5,6 +5,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,8 +29,9 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MetricAnalysisExecutionData extends StateExecutionData {
-  @Inject private MetricDataAnalysisService metricDataAnalysisService;
+  @JsonIgnore @Inject private MetricDataAnalysisService metricDataAnalysisService;
 
   private String appId;
   private String correlationId;
@@ -42,6 +45,7 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
   private String delegateTaskId;
 
   @Override
+  @JsonIgnore
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = getExecutionDetails();
     putNotNull(executionDetails, "stateExecutionInstanceId",
@@ -52,6 +56,7 @@ public class MetricAnalysisExecutionData extends StateExecutionData {
   }
 
   @Override
+  @JsonIgnore
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(

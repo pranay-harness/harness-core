@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.jobs.LogAnalysisManagerJob.LogAnalysisTask;
 import io.harness.jobs.LogMLClusterGenerator;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.apache.http.HttpStatus;
@@ -71,7 +72,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.AbstractLogAnalysisState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.utils.JsonUtils;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -102,7 +102,7 @@ import javax.ws.rs.core.Response;
 public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private Set<String> hosts = new HashSet<>();
   @Inject private LogAnalysisService analysisService;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private VerificationManagerClient managerClient;
   @Inject private LearningEngineService learningEngineService;
   @Inject private FeatureFlagService featureFlagService;
 
@@ -650,8 +650,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new LogAnalysisTask(analysisService, waitNotifyEngine, analysisContext, jobExecutionContext, delegateTaskId,
-        learningEngineService, featureFlagService)
+    new LogAnalysisTask(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
+        featureFlagService, managerClient)
         .run();
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisSummary logMLAnalysisSummary =
@@ -767,8 +767,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new LogAnalysisTestJob(analysisService, waitNotifyEngine, analysisContext, jobExecutionContext, delegateTaskId,
-        learningEngineService, featureFlagService)
+    new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
+        featureFlagService, managerClient)
         .run();
     Thread.sleep(TimeUnit.SECONDS.toMillis(30));
     LogMLAnalysisSummary logMLAnalysisSummary =
@@ -899,8 +899,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new LogAnalysisTask(analysisService, waitNotifyEngine, analysisContext, jobExecutionContext, delegateTaskId,
-        learningEngineService, featureFlagService)
+    new LogAnalysisTask(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
+        featureFlagService, managerClient)
         .run();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
@@ -1029,8 +1029,8 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     for (int i = 0; i < 5; ++i) {
-      new LogAnalysisTestJob(analysisService, waitNotifyEngine, analysisContext, jobExecutionContext, delegateTaskId,
-          learningEngineService, featureFlagService)
+      new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId,
+          learningEngineService, featureFlagService, managerClient)
           .run();
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
     }
@@ -1229,11 +1229,11 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   private static class LogAnalysisTestJob extends LogAnalysisTask {
-    LogAnalysisTestJob(LogAnalysisService analysisService, WaitNotifyEngine waitNotifyEngine, AnalysisContext context,
+    LogAnalysisTestJob(LogAnalysisService analysisService, AnalysisContext context,
         JobExecutionContext jobExecutionContext, String delegateTaskId, LearningEngineService learningEngineService,
-        FeatureFlagService featureFlagService) {
-      super(analysisService, waitNotifyEngine, context, jobExecutionContext, delegateTaskId, learningEngineService,
-          featureFlagService);
+        FeatureFlagService featureFlagService, VerificationManagerClient managerClient) {
+      super(analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService, featureFlagService,
+          managerClient);
     }
 
     @Override

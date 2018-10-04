@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -48,6 +49,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
   protected String query;
 
   @Transient @Inject @SchemaIgnore protected AnalysisService analysisService;
+  @Transient @Inject @SchemaIgnore protected VersionInfoManager versionInfoManager;
 
   public AbstractLogAnalysisState(String name, String stateType) {
     super(name, stateType);
@@ -356,6 +358,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         .stateType(StateType.valueOf(getStateType()))
         .analysisServerConfigId(getAnalysisServerConfigId())
         .correlationId(correlationId)
+        .managerVersion(versionInfoManager.getVersionInfo().getVersion())
         .build();
   }
 

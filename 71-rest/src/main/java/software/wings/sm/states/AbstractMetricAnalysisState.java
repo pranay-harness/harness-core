@@ -11,6 +11,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.api.PcfInstanceElement;
@@ -53,6 +54,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   public static final int CANARY_DAYS_TO_COLLECT = 7;
 
   @Transient @Inject protected MetricDataAnalysisService metricAnalysisService;
+  @Transient @Inject protected VersionInfoManager versionInfoManager;
 
   public AbstractMetricAnalysisState(String name, StateType stateType) {
     super(name, stateType.name());
@@ -379,6 +381,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         .minimumRequestsPerMinute(MIN_REQUESTS_PER_MINUTE)
         .comparisonWindow(COMPARISON_WINDOW)
         .parallelProcesses(PARALLEL_PROCESSES)
+        .managerVersion(versionInfoManager.getVersionInfo().getVersion())
         .build();
   }
 

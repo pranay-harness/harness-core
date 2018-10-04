@@ -6,6 +6,9 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
+import software.wings.common.VerificationConstants;
+import software.wings.security.annotations.LearningEngineAuth;
+import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.bugsnag.BugsnagApplication;
 import software.wings.service.intfc.analysis.LogVerificationService;
 import software.wings.sm.StateType;
@@ -13,6 +16,7 @@ import software.wings.sm.StateType;
 import java.io.IOException;
 import java.util.Set;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -46,5 +50,14 @@ public class BugsnagResource {
       @QueryParam("accountId") String accountId, @QueryParam("settingId") final String settingId) throws IOException {
     return new RestResponse<>(
         apmVerificationService.getOrgProjectListBugsnag(settingId, "", StateType.BUG_SNAG, false));
+  }
+
+  @POST
+  @Path(VerificationConstants.NOTIFY_LOG_STATE)
+  @Timed
+  @LearningEngineAuth
+  public RestResponse<Boolean> sendNotifyForLogAnalysis(
+      @QueryParam("correlationId") String correlationId, LogAnalysisResponse response) {
+    return new RestResponse<>(apmVerificationService.sendNotifyForLogAnalysis(correlationId, response));
   }
 }

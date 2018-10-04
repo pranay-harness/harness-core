@@ -250,6 +250,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   @Override
+  public List<String> getAvailableVersions(String accountId) {
+    DelegateStatus status = getDelegateStatus(accountId);
+    return status.getPublishedVersions();
+  }
+
+  @Override
   public DelegateStatus getDelegateStatus(String accountId) {
     DelegateConfiguration delegateConfiguration = accountService.getDelegateConfiguration(accountId);
     List<Delegate> delegates = wingsPersistence.createQuery(Delegate.class).filter("accountId", accountId).asList();

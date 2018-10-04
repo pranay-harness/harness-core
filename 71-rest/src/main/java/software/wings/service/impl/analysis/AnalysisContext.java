@@ -74,6 +74,8 @@ public class AnalysisContext extends Base {
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
 
+  private String managerVersion;
+
   @Builder
   private AnalysisContext(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, List<String> keywords, String entityYamlPath, boolean syncFromGit, String accountId,
@@ -83,7 +85,7 @@ public class AnalysisContext extends Base {
       String analysisServerConfigId, String correlationId, int smooth_window, int tolerance,
       String prevWorkflowExecutionId, int minimumRequestsPerMinute, int comparisonWindow, int parallelProcesses,
       Map<String, List<TimeSeries>> timeSeriesToCollect, boolean runTillConvergence, String delegateTaskId,
-      MLAnalysisType analysisType, ExecutionStatus executionStatus) {
+      MLAnalysisType analysisType, ExecutionStatus executionStatus, String managerVersion) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, syncFromGit);
     this.accountId = accountId;
     this.workflowId = workflowId;
@@ -114,6 +116,7 @@ public class AnalysisContext extends Base {
     this.validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
     this.version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
     this.retry = 0;
+    this.managerVersion = managerVersion;
   }
 
   public LogClusterContext getClusterContext() {

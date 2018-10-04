@@ -11,6 +11,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.LogService;
+import software.wings.service.intfc.analysis.LogVerificationService;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -26,6 +27,7 @@ import javax.ws.rs.Produces;
 @Scope(ResourceType.APPLICATION)
 public class LogResource {
   @Inject private LogService logService;
+  @Inject private LogVerificationService logVerificationService;
 
   @DelegateAuth
   @POST

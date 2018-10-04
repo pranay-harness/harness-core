@@ -5,12 +5,19 @@ import static software.wings.common.VerificationConstants.LAST_SUCCESSFUL_WORKFL
 import static software.wings.common.VerificationConstants.WORKFLOW_FOR_STATE_EXEC;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.HeaderMap;
+import retrofit2.http.POST;
 import retrofit2.http.Query;
+import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
+import software.wings.common.VerificationConstants;
+import software.wings.service.impl.analysis.LogAnalysisResponse;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Interface containing API's to interact with manager.
@@ -28,4 +35,15 @@ public interface VerificationManagerClient {
   @GET("workflows" + WORKFLOW_FOR_STATE_EXEC)
   Call<RestResponse<WorkflowExecution>> getWorkflowExecution(
       @Query("appId") String appId, @Query("stateExecutionId") String stateExecutionId);
+
+  @GET("delegates/available-versions-for-verification")
+  Call<RestResponse<List<String>>> getListOfPublishedVersions(@Query("accountId") String accountId);
+
+  @POST("apm" + VerificationConstants.NOTIFY_METRIC_STATE)
+  Call<RestResponse<Boolean>> sendNotifyForMetricState(@HeaderMap Map<String, Object> headers,
+      @Query("correlationId") String correlationId, @Body MetricDataAnalysisResponse metricAnalysisResponse);
+
+  @POST("log-verification" + VerificationConstants.NOTIFY_LOG_STATE)
+  Call<RestResponse<Boolean>> sendNotifyForLogState(@HeaderMap Map<String, Object> headers,
+      @Query("correlationId") String correlationId, @Body LogAnalysisResponse logAnalysisResponse);
 }

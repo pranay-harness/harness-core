@@ -72,6 +72,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     setInternalState(dynatraceState, "continuousVerificationService", continuousVerificationService);
     setInternalState(dynatraceState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
     setInternalState(dynatraceState, "featureFlagService", featureFlagService);
+    setInternalState(dynatraceState, "versionInfoManager", versionInfoManager);
   }
 
   @Test

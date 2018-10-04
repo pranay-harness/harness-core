@@ -90,6 +90,7 @@ public class AppDynamicsStateTest extends APMStateVerificationTestBase {
     setInternalState(appDynamicsState, "appdynamicsService", appdynamicsService);
     setInternalState(appDynamicsState, "featureFlagService", featureFlagService);
     setInternalState(appDynamicsState, "infraMappingService", infraMappingService);
+    setInternalState(appDynamicsState, "versionInfoManager", versionInfoManager);
     when(executionContext.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM)).thenReturn(phaseElement);
     when(phaseElement.getInfraMappingId()).thenReturn(infraMappingId);
     when(executionContext.getAppId()).thenReturn(appId);

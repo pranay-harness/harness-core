@@ -1,6 +1,7 @@
 package software.wings.service.intfc.analysis;
 
 import software.wings.APMFetchConfig;
+import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 
 /**
@@ -9,4 +10,5 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 public interface APMVerificationService {
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(
       String accountId, String serverConfigId, APMFetchConfig url);
+  boolean sendNotifyForMetricAnalysis(String correlationId, MetricDataAnalysisResponse response);
 }
