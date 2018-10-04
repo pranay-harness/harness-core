@@ -24,9 +24,9 @@ import software.wings.yaml.setting.CloudProviderYaml;
 @Builder
 @ToString(exclude = "key")
 public class AzureConfig extends SettingValue implements Encryptable {
-  @Attributes(title = "Client ID", required = true) @NotEmpty private String clientId;
+  @Attributes(title = "Client ID [Application ID]", required = true) @NotEmpty private String clientId;
 
-  @Attributes(title = "Tenant ID", required = true) @NotEmpty private String tenantId;
+  @Attributes(title = "Tenant ID [Directory ID]", required = true) @NotEmpty private String tenantId;
 
   @Attributes(title = "Key", required = true) @Encrypted private char[] key;
 
