@@ -2,9 +2,11 @@ package io.harness.managerclient;
 
 import com.google.inject.Inject;
 
+import io.harness.exception.WingsException;
 import io.harness.network.SafeHttpCall;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import retrofit2.Call;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
@@ -20,8 +22,7 @@ public class VerificationManagerClientHelper {
 
   public Map<String, Object> getManagerHeader(String accountId, String analysisVersion) {
     try {
-      List<String> versions = SafeHttpCall.execute(managerClient.getListOfPublishedVersions(accountId)).getResource();
-
+      List<String> versions = callManagerWithRetry(managerClient.getListOfPublishedVersions(accountId)).getResource();
       Map<String, Object> headers = new HashMap<>();
       if (versions != null) {
         logger.info("List of available versions is : {} and the analysisVersion is {}", versions, analysisVersion);
@@ -37,32 +38,27 @@ public class VerificationManagerClientHelper {
   }
 
   public void notifyManagerForLogAnalysis(AnalysisContext context, LogAnalysisResponse response) {
-    int retryCount = 0;
-    while (retryCount < MAX_RETRY) {
-      try {
-        Map<String, Object> headers = getManagerHeader(context.getAccountId(), context.getManagerVersion());
-        SafeHttpCall.execute(managerClient.sendNotifyForLogState(headers, context.getCorrelationId(), response));
-        break;
-      } catch (Exception e) {
-        retryCount++;
-        logger.error("Exception while sending notify to manager for stateExecutionId {}. correlationId {}",
-            context.getStateExecutionId(), context.getCorrelationId());
-      }
-    }
+    Map<String, Object> headers = getManagerHeader(context.getAccountId(), context.getManagerVersion());
+    callManagerWithRetry(managerClient.sendNotifyForLogState(headers, context.getCorrelationId(), response));
   }
 
   public void notifyManagerForMetricAnalysis(AnalysisContext context, MetricDataAnalysisResponse response) {
+    Map<String, Object> headers = getManagerHeader(context.getAccountId(), context.getManagerVersion());
+    callManagerWithRetry(managerClient.sendNotifyForMetricState(headers, context.getCorrelationId(), response));
+  }
+
+  public <T> T callManagerWithRetry(Call<T> call) {
     int retryCount = 0;
     while (retryCount < MAX_RETRY) {
       try {
-        Map<String, Object> headers = getManagerHeader(context.getAccountId(), context.getManagerVersion());
-        SafeHttpCall.execute(managerClient.sendNotifyForMetricState(headers, context.getCorrelationId(), response));
-        break;
+        return SafeHttpCall.execute(call);
       } catch (Exception ex) {
         retryCount++;
-        logger.error("Error while notifying manager for stateExecutionId {}, correlationId {}",
-            context.getStateExecutionId(), context.getCorrelationId(), ex);
+        logger.error(
+            "Error while calling manager for call {}, retryCount: {}", call.request().toString(), retryCount, ex);
       }
     }
+    throw new WingsException(
+        "Exception occurred while calling manager from verification service. Call: " + call.request().toString());
   }
 }

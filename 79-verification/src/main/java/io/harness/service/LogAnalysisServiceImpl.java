@@ -8,7 +8,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
@@ -24,6 +23,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.persistence.HIterator;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -95,6 +95,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
 
   @Override
@@ -410,7 +411,11 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   public String getLastSuccessfulWorkflowExecutionIdWithLogs(
       StateType stateType, String appId, String serviceId, String workflowId) {
     // TODO should we limit the number of executions to search in ??
-    List<String> successfulExecutions = getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId);
+    List<String> successfulExecutions =
+        managerClientHelper
+            .callManagerWithRetry(managerClient.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId))
+            .getResource();
+
     for (String successfulExecution : successfulExecutions) {
       if (wingsPersistence.createQuery(LogDataRecord.class)
               .filter("appId", appId)
@@ -426,14 +431,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     }
     logger.warn("Could not get a successful workflow to find control nodes");
     return null;
-  }
-
-  private List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId) {
-    try {
-      return execute(managerClient.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId)).getResource();
-    } catch (IOException e) {
-      throw new WingsException(e);
-    }
   }
 
   @Override
@@ -1057,11 +1054,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
 
   @Override
   public boolean isStateValid(String appId, String stateExecutionId) {
-    try {
-      return execute(managerClient.isStateValid(appId, stateExecutionId)).getResource();
-    } catch (IOException e) {
-      throw new WingsException(e);
-    }
+    return managerClientHelper.callManagerWithRetry(managerClient.isStateValid(appId, stateExecutionId)).getResource();
   }
 
   @Override

@@ -3,7 +3,6 @@ package io.harness.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.network.SafeHttpCall.execute;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.util.Arrays.asList;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
@@ -16,6 +15,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.mongodb.morphia.query.CountOptions;
@@ -72,6 +72,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private LearningEngineService learningEngineService;
   @Inject private VerificationManagerClient managerClient;
+  @Inject private VerificationManagerClientHelper managerClientHelper;
 
   @Override
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
@@ -334,11 +335,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public List<String> getLastSuccessfulWorkflowExecutionIds(String appId, String workflowId, String serviceId) {
-    try {
-      return execute(managerClient.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId)).getResource();
-    } catch (IOException e) {
-      throw new WingsException(e);
-    }
+    return managerClientHelper
+        .callManagerWithRetry(managerClient.getLastSuccessfulWorkflowExecutionIds(appId, workflowId, serviceId))
+        .getResource();
   }
 
   private RiskLevel getRiskLevel(int risk) {
@@ -569,11 +568,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public boolean isStateValid(String appId, String stateExecutionId) {
-    try {
-      return execute(managerClient.isStateValid(appId, stateExecutionId)).getResource();
-    } catch (IOException e) {
-      throw new WingsException(e);
-    }
+    return managerClientHelper.callManagerWithRetry(managerClient.isStateValid(appId, stateExecutionId)).getResource();
   }
 
   @Override
