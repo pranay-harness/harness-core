@@ -93,6 +93,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -379,7 +380,8 @@ public class AuthServiceImpl implements AuthService {
     }
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtLearningEngineServiceSecret);
-      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      JWTVerifier verifier =
+          JWT.require(algorithm).withIssuer("Harness Inc").acceptIssuedAt(TimeUnit.MINUTES.toSeconds(10)).build();
       verifier.verify(learningEngineServiceToken);
       JWT decode = JWT.decode(learningEngineServiceToken);
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
