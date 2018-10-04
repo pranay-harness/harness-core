@@ -1243,7 +1243,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           wingsPersistence.update(taskQuery,
               wingsPersistence.createUpdateOperations(DelegateTask.class)
                   .unset("delegateId")
-                  .set("alreadyTriedDelegates", alreadyTriedDelegates));
+                  .unset("validationStartedAt")
+                  .unset("lastBroadcastAt")
+                  .unset("validatingDelegateIds")
+                  .unset("validationCompleteDelegateIds")
+                  .set("broadcastCount", 1)
+                  .set("status", QUEUED)
+                  .addToSet("alreadyTriedDelegates", delegateId));
           return;
         } else {
           logger.info("Task {} has been tried on all the connected delegates. Proceeding with error.", taskId);
