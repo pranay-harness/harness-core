@@ -329,6 +329,10 @@ public class ExpressionEvaluatorTest extends WingsBaseTest {
 
     assertThat(expressionEvaluator.substitute("${context.output(\"jenkins\").foo}", context)).isEqualTo("bar");
     assertThat(expressionEvaluator.substitute("${context.jenkins.foo}", context)).isEqualTo("bar");
+
+    // Test that the first pass did not break the functionality
+    assertThat(expressionEvaluator.substitute("${context.output(\"jenkins\").foo}", context)).isEqualTo("bar");
+    assertThat(expressionEvaluator.substitute("${context.jenkins.foo}", context)).isEqualTo("bar");
   }
 
   @Test
