@@ -353,10 +353,13 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     Delegate delegate = get(accountId, delegateId, false);
 
-    if (AccountStatus.DELETED.equals(accountService.get(accountId).getLicenseInfo().getAccountStatus())) {
-      delegate.setStatus(Status.DELETED);
+    Account account = accountService.get(accountId);
+    if (account != null) {
+      LicenseInfo licenseInfo = account.getLicenseInfo();
+      if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
+        delegate.setStatus(Status.DELETED);
+      }
     }
-
     return delegate;
   }
 
