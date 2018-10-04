@@ -17,8 +17,6 @@ import com.google.inject.name.Names;
 
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
-import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
-import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.pool.KryoPool;
 import com.esotericsoftware.kryo.serializers.FieldSerializer;
@@ -58,10 +56,10 @@ import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
-import io.harness.lock.ManagedDistributedLockSvc;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
+import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.rule.RealMongo;
 import org.atmosphere.cpr.BroadcasterFactory;
@@ -89,7 +87,6 @@ import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
-import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.EventEmitter;
 import software.wings.utils.KryoUtils;
@@ -109,10 +106,7 @@ import javax.cache.Caching;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
-/**
- * Created by peeyushaggarwal on 4/5/16.
- */
-public class WingsRule implements MethodRule, MongoRuleMixin {
+public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRuleMixin {
   private static final Logger logger = LoggerFactory.getLogger(WingsRule.class);
 
   private static IRuntimeConfig runtimeConfig =
@@ -132,7 +126,6 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
   protected MongodExecutable mongodExecutable;
   protected Injector injector;
   protected AdvancedDatastore datastore;
-  protected DistributedLockSvc distributedLockSvc;
   private int port;
   private ExecutorService executorService = new CurrentThreadExecutor();
   protected boolean fakeMongo;
@@ -148,13 +141,13 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
       public void evaluate() throws Throwable {
         List<Annotation> annotations = Lists.newArrayList(asList(frameworkMethod.getAnnotations()));
         annotations.addAll(asList(target.getClass().getAnnotations()));
-        WingsRule.this.before(annotations, isIntegrationTest(target),
+        before(annotations, isIntegrationTest(target),
             target.getClass().getSimpleName() + "." + frameworkMethod.getName());
         injector.injectMembers(target);
         try {
           statement.evaluate();
         } finally {
-          WingsRule.this.after(annotations);
+          after(annotations);
         }
       }
     };
@@ -190,6 +183,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
     String dbName = System.getProperty("dbName", "harness");
     if (annotations.stream().anyMatch(RealMongo.class ::isInstance)) {
       mongoClient = getRandomPortMongoClient();
+      closingFactory.addServer(mongoClient);
     } else if (annotations.stream().anyMatch(Integration.class ::isInstance) || doesExtendBaseIntegrationTest) {
       try {
         MongoClientURI clientUri = new MongoClientURI(
@@ -204,9 +198,11 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
         }
         dbName = clientUri.getDatabase();
         mongoClient = new MongoClient(clientUri);
+        closingFactory.addServer(mongoClient);
       } catch (NumberFormatException ex) {
         port = 27017;
         mongoClient = new MongoClient("localhost", port);
+        closingFactory.addServer(mongoClient);
       }
     } else {
       fakeMongo = true;
@@ -217,19 +213,14 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
     datastore.setQueryFactory(new QueryFactory());
-    DistributedLockSvcOptions distributedLockSvcOptions = new DistributedLockSvcOptions(mongoClient, dbName, "locks");
-    distributedLockSvcOptions.setEnableHistory(false);
-    distributedLockSvc =
-        new ManagedDistributedLockSvc(new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc());
-    if (!distributedLockSvc.isRunning()) {
-      distributedLockSvc.startup();
-    }
+
+    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, dbName, closingFactory);
 
     Configuration configuration = getConfiguration(annotations, dbName);
 
     HazelcastInstance hazelcastInstance = mock(HazelcastInstance.class);
 
-    List<Module> modules = getRequiredModules(configuration);
+    List<Module> modules = getRequiredModules(configuration, distributedLockSvc);
     addQueueModules(modules);
 
     if (annotations.stream().filter(annotation -> Cache.class.isInstance(annotation)).findFirst().isPresent()) {
@@ -295,7 +286,7 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
     return configuration;
   }
 
-  protected List<Module> getRequiredModules(Configuration configuration) {
+  protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()
                                             .parameterNameProvider(new ReflectionParameterNameProvider())
@@ -411,24 +402,6 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
       logger.error("", ex);
     }
 
-    try {
-      log().info("Stopping distributed lock service...");
-      if (distributedLockSvc instanceof Managed) {
-        ((Managed) distributedLockSvc).stop();
-      }
-      log().info("Stopped distributed lock service...");
-    } catch (Exception ex) {
-      logger.error("", ex);
-    }
-
-    try {
-      log().info("Stopping WingsPersistence...");
-      ((Managed) injector.getInstance(WingsPersistence.class)).stop();
-      log().info("Stopped WingsPersistence...");
-    } catch (Exception ex) {
-      logger.error("", ex);
-    }
-
     log().info("Stopping servers...");
     closingFactory.stopServers();
 
@@ -440,8 +413,6 @@ public class WingsRule implements MethodRule, MongoRuleMixin {
       // we are   swallowing this - couldn't kill the embedded mongod process, but we don't care
       log().info("Had issues stopping embedded mongod: {}", ise.getMessage());
     }
-
-    log().info("Stopped Mongo server...");
   }
 
   protected void registerScheduledJobs(Injector injector) {

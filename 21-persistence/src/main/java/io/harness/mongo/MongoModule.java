@@ -26,7 +26,6 @@ import com.mongodb.MongoClientURI;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
-import io.harness.lock.ManagedDistributedLockSvc;
 import io.harness.logging.MorphiaLoggerFactory;
 import io.harness.persistence.HPersistence;
 import lombok.AllArgsConstructor;
@@ -85,8 +84,7 @@ public class MongoModule extends AbstractModule {
     DistributedLockSvcOptions distributedLockSvcOptions =
         new DistributedLockSvcOptions(mongoClient, uri.getDatabase(), "locks");
     distributedLockSvcOptions.setEnableHistory(false);
-    distributedLockSvc =
-        new ManagedDistributedLockSvc(new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc());
+    distributedLockSvc = new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc();
 
     if (uri.getHosts().size() > 1) {
       this.secondaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());

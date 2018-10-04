@@ -36,6 +36,7 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
+import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
 import io.harness.mongo.MongoModule;
 import org.apache.commons.lang3.StringUtils;
@@ -353,7 +354,7 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerManagedBeans(Environment environment, Injector injector) {
     environment.lifecycle().manage((Managed) injector.getInstance(WingsPersistence.class));
-    environment.lifecycle().manage((Managed) injector.getInstance(DistributedLockSvc.class));
+    environment.lifecycle().manage(new ManageDistributedLockSvc(injector.getInstance(DistributedLockSvc.class)));
     environment.lifecycle().manage(injector.getInstance(QueueListenerController.class));
     environment.lifecycle().manage(injector.getInstance(MaintenanceController.class));
     environment.lifecycle().manage(injector.getInstance(ConfigurationController.class));

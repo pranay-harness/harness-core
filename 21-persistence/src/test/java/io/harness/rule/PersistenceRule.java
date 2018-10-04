@@ -3,11 +3,9 @@ package io.harness.rule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 
-import com.deftlabs.lock.mongo.DistributedLockSvcFactory;
-import com.deftlabs.lock.mongo.DistributedLockSvcOptions;
+import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
 import io.harness.factory.ClosingFactory;
-import io.harness.lock.ManagedDistributedLockSvc;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
@@ -22,10 +20,7 @@ import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.Closeable;
-import java.io.IOException;
-
-public class PersistenceRule implements MethodRule, MongoRuleMixin {
+public class PersistenceRule implements MethodRule, MongoRuleMixin, DistributedLockRuleMixin {
   private static final Logger logger = LoggerFactory.getLogger(PersistenceRule.class);
 
   private Injector injector;
@@ -35,28 +30,15 @@ public class PersistenceRule implements MethodRule, MongoRuleMixin {
   @Getter private AdvancedDatastore datastore;
 
   protected void before() {
+    String databaseName = databaseName();
     MongoClient mongoClient = fakeMongoClient(0, closingFactory);
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
-    datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, databaseName());
+    datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, databaseName);
     datastore.setQueryFactory(new QueryFactory());
 
-    DistributedLockSvcOptions distributedLockSvcOptions =
-        new DistributedLockSvcOptions(mongoClient, databaseName(), "locks");
-    distributedLockSvcOptions.setEnableHistory(false);
-    ManagedDistributedLockSvc distributedLockSvc =
-        new ManagedDistributedLockSvc(new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc());
-    if (!distributedLockSvc.isRunning()) {
-      distributedLockSvc.startup();
-    }
-
-    closingFactory.addServer(new Closeable() {
-      @Override
-      public void close() throws IOException {
-        distributedLockSvc.shutdown();
-      }
-    });
+    DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, databaseName, closingFactory);
 
     injector = Guice.createInjector(
         new VersionModule(), new TimeModule(), new MongoModule(datastore, datastore, distributedLockSvc));
