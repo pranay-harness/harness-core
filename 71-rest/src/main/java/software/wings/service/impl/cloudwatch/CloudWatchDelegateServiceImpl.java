@@ -18,6 +18,8 @@ import com.amazonaws.services.cloudwatch.model.Dimension;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsRequest;
 import com.amazonaws.services.cloudwatch.model.GetMetricStatisticsResult;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -190,7 +192,18 @@ public class CloudWatchDelegateServiceImpl implements CloudWatchDelegateService 
                                      .value(JsonUtils.asJson(metricStatisticsRequest))
                                      .type(FieldType.JSON)
                                      .build());
-    GetMetricStatisticsResult metricStatistics = cloudWatchClient.getMetricStatistics(metricStatisticsRequest);
+
+    GetMetricStatisticsResult metricStatistics;
+    try {
+      metricStatistics = cloudWatchClient.getMetricStatistics(metricStatisticsRequest);
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(dataCollectionInfo.getAwsConfig().getAccountId(), apiCallLog);
+      throw new WingsException(
+          "Unsuccessful response while fetching data from cloud watch. Error message: " + e.getMessage());
+    }
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     apiCallLog.addFieldToResponse(
         metricStatistics.getSdkHttpMetadata().getHttpStatusCode(), metricStatistics, FieldType.JSON);
     delegateLogService.save(dataCollectionInfo.getAwsConfig().getAccountId(), apiCallLog);

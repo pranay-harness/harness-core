@@ -18,6 +18,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.time.Timestamp;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -247,7 +249,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     }
 
     private String collect(Call<Object> request, String urlToLog) {
-      final Response<Object> response;
+      Response<Object> response;
       try {
         if (urlToLog.contains("api_key")) {
           Pattern batchPattern = Pattern.compile(DATADOG_API_MASK);
@@ -264,7 +266,15 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
         apiCallLog.addFieldToRequest(
             ThirdPartyApiCallField.builder().name(URL_STRING).value(urlToLog).type(FieldType.URL).build());
         apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-        response = request.execute();
+        try {
+          response = request.execute();
+        } catch (Exception e) {
+          apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+          apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+          delegateLogService.save(getAccountId(), apiCallLog);
+          throw new WingsException("Unsuccessful response while fetching data from APM Provider. Error message: "
+              + e.getMessage() + " Request: " + urlToLog);
+        }
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
         if (response.isSuccessful()) {
           apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);

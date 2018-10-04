@@ -6,6 +6,8 @@ import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -77,7 +79,16 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
     final Call<DynaTraceMetricDataResponse> request =
         getDynaTraceRestClient(dynaTraceConfig)
             .fetchMetricData(getHeaderWithCredentials(dynaTraceConfig, encryptedDataDetails), dataRequest);
-    final Response<DynaTraceMetricDataResponse> response = request.execute();
+    final Response<DynaTraceMetricDataResponse> response;
+    try {
+      response = request.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(dynaTraceConfig.getAccountId(), apiCallLog);
+      throw new WingsException("Unsuccessful response while fetching data from DynaTrace. Error message: "
+          + e.getMessage() + " Request: " + dynaTraceConfig.getDynaTraceUrl());
+    }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
