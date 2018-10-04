@@ -14,6 +14,7 @@ import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import io.harness.time.Timestamp;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -137,11 +138,13 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
     }
 
     logger.info("Search query to be used in sumoLogic : " + searchQuery);
+
+    Long requestTimeStamp = 0L;
     try {
       // Gets a sumologic client
       SumoLogicClient sumoClient = getSumoClient(config, encryptedDataDetails, encryptionService);
 
-      Long requestTimeStamp = OffsetDateTime.now().toInstant().toEpochMilli();
+      requestTimeStamp = OffsetDateTime.now().toInstant().toEpochMilli();
 
       // Creates a search job based on given query
       String searchJobId =
@@ -152,7 +155,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
 
       // SaveLogs is called for given job response.
       saveThirdPartyCallLogs(apiCallLog, config, searchQuery, String.valueOf(startTime), String.valueOf(endTime),
-          searchJobStatusResponse, requestTimeStamp, responseTimeStamp);
+          searchJobStatusResponse, requestTimeStamp, responseTimeStamp, HttpStatus.SC_OK, FieldType.JSON);
 
       // SumoLogic may end up resulting lot of records that we may not need, so we have a maxMessageCount limit defined.
       // based on the max count. MessageCount value is set.
@@ -165,6 +168,11 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           query, hostName, messageCount, sumoClient, searchJobId, 0, 0, Math.min(messageCount, 5), logCollectionMinute);
     } catch (InterruptedException e) {
       throw new WingsException("Unable to get client for given config");
+    } catch (Exception e) {
+      saveThirdPartyCallLogs(apiCallLog, config, query, String.valueOf(startTime), String.valueOf(endTime),
+          ExceptionUtils.getStackTrace(e), requestTimeStamp, OffsetDateTime.now().toInstant().toEpochMilli(),
+          HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
+      throw e;
     }
   }
 
@@ -269,8 +277,8 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
    * @param searchJobStatusResponse
    */
   private void saveThirdPartyCallLogs(ThirdPartyApiCallLog apiCallLog, SumoConfig config, String query,
-      String collectionStartTime, String collectionEndTime, GetSearchJobStatusResponse searchJobStatusResponse,
-      Long requestTimeStamp, Long responseTimeStamp) {
+      String collectionStartTime, String collectionEndTime, Object searchJobStatusResponse, Long requestTimeStamp,
+      Long responseTimeStamp, int httpStatus, FieldType responseFieldType) {
     if (apiCallLog == null) {
       apiCallLog = apiCallLogWithDummyStateExecution(config.getAccountId());
     }
@@ -291,7 +299,7 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
 
     apiCallLog.setResponseTimeStamp(responseTimeStamp);
 
-    apiCallLog.addFieldToResponse(HttpStatus.SC_OK, searchJobStatusResponse, FieldType.JSON);
+    apiCallLog.addFieldToResponse(httpStatus, searchJobStatusResponse, responseFieldType);
     delegateLogService.save(config.getAccountId(), apiCallLog);
   }
 }
