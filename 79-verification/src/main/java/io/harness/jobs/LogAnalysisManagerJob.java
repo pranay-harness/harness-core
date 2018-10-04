@@ -6,8 +6,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
-import io.harness.managerclient.VerificationManagerClient;
-import io.harness.network.SafeHttpCall;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
@@ -30,11 +29,7 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 
-import java.io.IOException;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -45,15 +40,13 @@ import java.util.Set;
 public class LogAnalysisManagerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LogAnalysisManagerJob.class);
 
-  //@Transient @Inject private WaitNotifyEngine waitNotifyEngine;
-
   @Transient @Inject private LogAnalysisService analysisService;
 
   @Transient @Inject private LearningEngineService learningEngineService;
 
   @Transient @Inject private FeatureFlagService featureFlagService;
 
-  @Transient @Inject private VerificationManagerClient managerClient;
+  @Transient @Inject private VerificationManagerClientHelper managerClientHelper;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
@@ -64,7 +57,7 @@ public class LogAnalysisManagerJob implements Job {
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
       new LogAnalysisTask(analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService,
-          featureFlagService, managerClient)
+          featureFlagService, managerClientHelper)
           .run();
       logger.info("Finish log analysis cron " + context.getStateExecutionId());
     } catch (Exception ex) {
@@ -80,6 +73,7 @@ public class LogAnalysisManagerJob implements Job {
   @AllArgsConstructor
   public static class LogAnalysisTask implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(LogAnalysisTask.class);
+    private static final int MAX_RETRY = 3;
     private LogAnalysisService analysisService;
 
     private AnalysisContext context;
@@ -87,7 +81,7 @@ public class LogAnalysisManagerJob implements Job {
     private String delegateTaskId;
     private LearningEngineService learningEngineService;
     private FeatureFlagService featureFlagService;
-    private VerificationManagerClient managerClient;
+    private VerificationManagerClientHelper managerClientHelper;
 
     protected void preProcess(int logAnalysisMinute, String query, Set<String> nodes) {
       if (context.getTestNodes() == null) {
@@ -255,24 +249,7 @@ public class LogAnalysisManagerJob implements Job {
                                                  .withExecutionStatus(status)
                                                  .build();
         logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
-        try {
-          List<String> versions =
-              SafeHttpCall.execute(managerClient.getListOfPublishedVersions(context.getAccountId())).getResource();
-
-          Map<String, Object> headers = new HashMap<>();
-          if (versions != null) {
-            String analysisVersion = context.getManagerVersion();
-            logger.info("List of available versions is : {} and the analysisVersion is {}", versions, analysisVersion);
-            if (analysisVersion != null && versions.contains(analysisVersion)) {
-              logger.info("Setting the version info in the manager call to {}", analysisVersion);
-              headers.put("Version", analysisVersion);
-            }
-          }
-          SafeHttpCall.execute(managerClient.sendNotifyForLogState(headers, context.getCorrelationId(), response));
-        } catch (IOException e) {
-          logger.error("Exception while sending notify to manager for stateExecutionId {}. correlationId {}",
-              context.getStateExecutionId(), context.getCorrelationId());
-        }
+        managerClientHelper.notifyManagerForLogAnalysis(context, response);
       }
     }
   }

@@ -12,8 +12,7 @@ import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
-import io.harness.managerclient.VerificationManagerClient;
-import io.harness.network.SafeHttpCall;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
@@ -70,15 +69,15 @@ public class MetricAnalysisJob implements Job {
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
 
-  @Inject private VerificationManagerClient managerClient;
+  @Inject private VerificationManagerClientHelper managerClientHelper;
 
   @VisibleForTesting
   @Inject
   public MetricAnalysisJob(TimeSeriesAnalysisService timeSeriesAnalysisService,
-      LearningEngineService learningEngineService, VerificationManagerClient managerClient) {
+      LearningEngineService learningEngineService, VerificationManagerClientHelper managerClientHelper) {
     this.timeSeriesAnalysisService = timeSeriesAnalysisService;
     this.learningEngineService = learningEngineService;
-    this.managerClient = managerClient;
+    this.managerClientHelper = managerClientHelper;
   }
 
   @Override
@@ -88,8 +87,8 @@ public class MetricAnalysisJob implements Job {
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      new MetricAnalysisGenerator(
-          timeSeriesAnalysisService, learningEngineService, managerClient, context, jobExecutionContext, delegateTaskId)
+      new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClientHelper, context,
+          jobExecutionContext, delegateTaskId)
           .run();
       logger.info("Triggering scheduled job with params {} and delegateTaskId {}", params, delegateTaskId);
     } catch (Exception ex) {
@@ -110,16 +109,16 @@ public class MetricAnalysisJob implements Job {
     private final Map<String, String> controlNodes;
     private final TimeSeriesAnalysisService analysisService;
     private final LearningEngineService learningEngineService;
-    private VerificationManagerClient managerClient;
+    private VerificationManagerClientHelper managerClientHelper;
     private final int analysisDuration;
     private AnalysisContext context;
 
     public MetricAnalysisGenerator(TimeSeriesAnalysisService service, LearningEngineService learningEngineService,
-        VerificationManagerClient managerClient, AnalysisContext context, JobExecutionContext jobExecutionContext,
-        String delegateTaskId) {
+        VerificationManagerClientHelper managerClientHelper, AnalysisContext context,
+        JobExecutionContext jobExecutionContext, String delegateTaskId) {
       this.analysisService = service;
       this.learningEngineService = learningEngineService;
-      this.managerClient = managerClient;
+      this.managerClientHelper = managerClientHelper;
       this.context = context;
       this.jobExecutionContext = jobExecutionContext;
       this.delegateTaskId = delegateTaskId;
@@ -593,30 +592,8 @@ public class MetricAnalysisJob implements Job {
         response.setExecutionStatus(status);
         logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
 
-        notifyManager(context, response);
+        managerClientHelper.notifyManagerForMetricAnalysis(context, response);
       }
-    }
-
-    private void notifyManager(AnalysisContext context, MetricDataAnalysisResponse response) {
-      try {
-        List<String> versions =
-            SafeHttpCall.execute(managerClient.getListOfPublishedVersions(context.getAccountId())).getResource();
-
-        Map<String, Object> headers = new HashMap<>();
-        if (versions != null) {
-          String analysisVersion = context.getManagerVersion();
-          logger.info("List of available versions is : {} and the analysisVersion is {}", versions, analysisVersion);
-          if (analysisVersion != null && versions.contains(analysisVersion)) {
-            logger.info("Setting the version info in the manager call to {}", analysisVersion);
-            headers.put("Version", analysisVersion);
-          }
-        }
-        SafeHttpCall.execute(managerClient.sendNotifyForMetricState(headers, context.getCorrelationId(), response));
-      } catch (IOException ex) {
-        logger.error("Error while notifying manager for stateExecutionId {}, correlationId {}",
-            context.getStateExecutionId(), context.getCorrelationId(), ex);
-      }
-      // waitNotifyEngine.notify(context.getCorrelationId(), response);
     }
 
     private Set<String> getNodesForGroup(String groupName, Map<String, String> nodes) {

@@ -34,7 +34,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.jobs.MetricAnalysisJob.MetricAnalysisGenerator;
-import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.service.intfc.LearningEngineService;
@@ -109,7 +109,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private MetricUtilHelper metricUtilHelper;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
-  @Inject private VerificationManagerClient managerClient;
+  @Inject private VerificationManagerClientHelper managerClient;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
