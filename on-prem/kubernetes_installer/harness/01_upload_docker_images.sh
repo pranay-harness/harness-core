@@ -3,10 +3,12 @@
 set -e
 
 source scripts/utils.sh
+[ ! -e values.internal.yaml ] || rm values.internal.yaml
+cp values.yaml values.internal.yaml
 
-docker_registry_username=$(yq r values.yaml privatedockerrepo.docker_registry_username)
-docker_registry_password=$(yq r values.yaml privatedockerrepo.docker_registry_password)
-docker_registry_url=$(yq r values.yaml privatedockerrepo.docker_registry_url)
+docker_registry_username=$(yq r values.internal.yaml privatedockerrepo.docker_registry_username)
+docker_registry_password=$(yq r values.internal.yaml privatedockerrepo.docker_registry_password)
+docker_registry_url=$(yq r values.internal.yaml privatedockerrepo.docker_registry_url)
 
 VERSION_PROPERTY_FILE=version.properties
 
@@ -35,13 +37,13 @@ function loadDockerImages(){
 }
 
 echo "# Reading versions from $VERSION_PROPERTY_FILE"
-leimage=$(yq r values.yaml images.le)
-managerimage=$(yq r values.yaml images.manager)
-mongoimage=$(yq r values.yaml images.mongo)
-nginximage=$(yq r values.yaml images.nginx)
-uiimage=$(yq r values.yaml images.ui)
-defaultbackendimage=$(yq r values.yaml images.defaultBackend)
-ingresscontrollerimage=$(yq r values.yaml images.ingressController)
+leimage=$(yq r values.internal.yaml images.le)
+managerimage=$(yq r values.internal.yaml images.manager)
+mongoimage=$(yq r values.internal.yaml images.mongo)
+nginximage=$(yq r values.internal.yaml images.nginx)
+uiimage=$(yq r values.internal.yaml images.ui)
+defaultbackendimage=$(yq r values.internal.yaml images.defaultBackend)
+ingresscontrollerimage=$(yq r values.internal.yaml images.ingressController)
 
 
 
@@ -61,7 +63,7 @@ printf "\n"
 function prepareandUploadImage(){
     image=$1 ## images.le
 
-    if [[ $image != $(yq r values.yaml privatedockerrepo.docker_registry_url)* ]]; then
+    if [[ $image != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
         docker tag $image $docker_registry_url/$image
         docker push $docker_registry_url/$image
     else
