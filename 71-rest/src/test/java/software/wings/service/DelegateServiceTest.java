@@ -22,6 +22,7 @@ import static software.wings.beans.Event.Builder.anEvent;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
+import static software.wings.common.Constants.SELF_DESTRUCT;
 import static software.wings.sm.ExecutionStatusData.Builder.anExecutionStatusData;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -48,6 +49,8 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
+import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.Base;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
@@ -62,6 +65,7 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.TaskType;
 import software.wings.dl.WingsPersistence;
@@ -118,6 +122,9 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   private String verificationServiceSecret;
+  private Account account =
+      anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.ACTIVE).build()).build();
+
   @Before
   public void setUp() {
     verificationServiceSecret = generateUuid();
@@ -125,6 +132,7 @@ public class DelegateServiceTest extends WingsBaseTest {
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList("0.0.0")).build());
+    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
     when(infraDownloadService.getDownloadUrlForDelegate(anyString()))
         .thenReturn("http://localhost:8888/builds/9/delegate.jar");
     when(learningEngineService.getServiceSecretKey(ServiceType.LEARNING_ENGINE)).thenReturn(verificationServiceSecret);
@@ -219,6 +227,44 @@ public class DelegateServiceTest extends WingsBaseTest {
     Delegate delegate = delegateService.add(BUILDER.but().build());
     delegateService.register(delegate);
     assertThat(delegateService.get(ACCOUNT_ID, delegate.getUuid(), true)).isEqualTo(delegate);
+  }
+
+  @Test
+  public void shouldNotRegisterExistingDelegateForDeletedAccount() {
+    Delegate delegate = delegateService.add(aDelegate()
+                                                .withAppId(Base.GLOBAL_APP_ID)
+                                                .withAccountId("DELETED_ACCOUNT")
+                                                .withIp("127.0.0.1")
+                                                .withHostName("localhost")
+                                                .withVersion("1.0.0")
+                                                .withStatus(Status.ENABLED)
+                                                .withLastHeartBeat(System.currentTimeMillis())
+                                                .build());
+    Account deletedAccount =
+        anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.DELETED).build()).build();
+    when(accountService.get("DELETED_ACCOUNT")).thenReturn(deletedAccount);
+
+    Delegate registered = delegateService.register(delegate);
+    assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);
+  }
+
+  @Test
+  public void shouldNotRegisterNewDelegateForDeletedAccount() {
+    Delegate delegate = aDelegate()
+                            .withAppId(Base.GLOBAL_APP_ID)
+                            .withAccountId("DELETED_ACCOUNT")
+                            .withIp("127.0.0.1")
+                            .withHostName("localhost")
+                            .withVersion("1.0.0")
+                            .withStatus(Status.ENABLED)
+                            .withLastHeartBeat(System.currentTimeMillis())
+                            .build();
+    Account deletedAccount =
+        anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.DELETED).build()).build();
+    when(accountService.get("DELETED_ACCOUNT")).thenReturn(deletedAccount);
+
+    Delegate registered = delegateService.register(delegate);
+    assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);
   }
 
   @Test

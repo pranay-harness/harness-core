@@ -20,6 +20,7 @@ import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.Delegate.HOST_NAME_KEY;
 import static software.wings.beans.DelegateConnection.defaultExpiryTimeInMinutes;
 import static software.wings.beans.DelegateTask.Status.ABORTED;
@@ -40,6 +41,7 @@ import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
 import static software.wings.common.Constants.MAX_DELEGATE_LAST_HEARTBEAT;
+import static software.wings.common.Constants.SELF_DESTRUCT;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.ALL_DELEGATE_DOWN_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.DELEGATE_STATE_NOTIFICATION;
 import static software.wings.delegatetasks.RemoteMethodReturnValueData.Builder.aRemoteMethodReturnValueData;
@@ -82,7 +84,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
 import software.wings.beans.Delegate;
+import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.DelegateConnection;
 import software.wings.beans.DelegateConnectionHeartbeat;
@@ -96,6 +100,7 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.TaskType;
@@ -345,7 +350,14 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         wingsPersistence.createUpdateOperations(Delegate.class)
             .set("lastHeartBeat", System.currentTimeMillis())
             .set("connected", true));
-    return get(accountId, delegateId, false);
+
+    Delegate delegate = get(accountId, delegateId, false);
+
+    if (AccountStatus.DELETED.equals(accountService.get(accountId).getLicenseInfo().getAccountStatus())) {
+      delegate.setStatus(Status.DELETED);
+    }
+
+    return delegate;
   }
 
   @Override
@@ -822,6 +834,15 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public Delegate register(Delegate delegate) {
+    Account account = accountService.get(delegate.getAccountId());
+    if (account != null) {
+      LicenseInfo licenseInfo = account.getLicenseInfo();
+      if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
+        broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
+        return aDelegate().withUuid(SELF_DESTRUCT).build();
+      }
+    }
+
     logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
         delegate.getHostName(), delegate.getIp());
     Query<Delegate> delegateQuery = wingsPersistence.createQuery(Delegate.class)
@@ -845,6 +866,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       delegate.setStatus(existingDelegate.getStatus());
       delegate.setDelegateProfileId(existingDelegate.getDelegateProfileId());
       registeredDelegate = update(delegate);
+
       broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true)
           .broadcast("[X]" + delegate.getUuid());
     }

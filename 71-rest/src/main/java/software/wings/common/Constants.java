@@ -466,6 +466,8 @@ public interface Constants {
   String DOCKER_DELEGATE = "harness-delegate-docker";
   String KUBERNETES_DELEGATE = "harness-delegate-kubernetes";
 
+  String SELF_DESTRUCT = "[SELF_DESTRUCT]";
+
   /**
    * The constant MAX_DELEGATE_LAST_HEARTBEAT.
    */

@@ -24,6 +24,8 @@ public interface MessageService {
   Runnable getMessageCheckingRunnableForChannel(
       MessengerType sourceType, String sourceProcessId, long readTimeout, Consumer<Message> messageHandler);
 
+  void shutdown();
+
   Message waitForMessage(String messageName, long timeout);
 
   List<Message> waitForMessages(String messageName, long timeout, long minWaitTime);

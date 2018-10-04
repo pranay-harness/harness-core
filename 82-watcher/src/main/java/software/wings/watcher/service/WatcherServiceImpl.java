@@ -8,11 +8,16 @@ import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.synchronizedList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
+import static org.apache.commons.io.filefilter.FileFilterUtils.nameFileFilter;
+import static org.apache.commons.io.filefilter.FileFilterUtils.or;
+import static org.apache.commons.io.filefilter.FileFilterUtils.prefixFileFilter;
+import static org.apache.commons.io.filefilter.FileFilterUtils.suffixFileFilter;
 import static org.apache.commons.io.filefilter.FileFilterUtils.trueFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
@@ -24,6 +29,7 @@ import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static software.wings.utils.message.MessageConstants.DELEGATE_IS_NEW;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESUME;
+import static software.wings.utils.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
@@ -65,7 +71,7 @@ import io.harness.exception.WingsException;
 import io.harness.network.Http;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.LineIterator;
-import org.apache.commons.io.filefilter.FileFilterUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.slf4j.Logger;
@@ -332,6 +338,11 @@ public class WatcherServiceImpl implements WatcherService {
               if (clock.millis() - startTime > WATCHER_STARTUP_GRACE) {
                 obsolete.add(delegateProcess);
               }
+            } else if (delegateData.containsKey(DELEGATE_SELF_DESTRUCT)
+                && (Boolean) delegateData.get(DELEGATE_SELF_DESTRUCT)) {
+              working.set(true);
+              messageService.shutdown();
+              selfDestruct();
             } else {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
               runningVersions.put(delegateVersion, delegateProcess);
@@ -901,7 +912,7 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void cleanup(File dir, Set<String> keepVersions, String pattern) {
-    FileUtils.listFilesAndDirs(dir, falseFileFilter(), FileFilterUtils.prefixFileFilter(pattern)).forEach(file -> {
+    FileUtils.listFilesAndDirs(dir, falseFileFilter(), prefixFileFilter(pattern)).forEach(file -> {
       if (!dir.equals(file) && keepVersions.stream().noneMatch(version -> file.getName().contains(version))) {
         logger.info("Deleting directory matching [^{}.*] = {}", pattern, file.getAbsolutePath());
         FileUtils.deleteQuietly(file);
@@ -921,5 +932,52 @@ public class WatcherServiceImpl implements WatcherService {
 
   private String getVersion() {
     return System.getProperty("version", "1.0.0-DEV");
+  }
+
+  @SuppressFBWarnings({"DM_EXIT"})
+  private void selfDestruct() {
+    logger.info("Self destructing now...");
+
+    runningDelegates.forEach(delegateProcess -> {
+      try {
+        new ProcessExecutor().command("kill", "-9", delegateProcess).execute();
+      } catch (Exception e) {
+        // Ignore
+      }
+    });
+
+    try {
+      File workingDir = new File(System.getProperty("user.dir"));
+      logger.info("Cleaning {}", workingDir.getCanonicalPath());
+      logger.info("Goodbye");
+
+      cleanupVersionFolders(workingDir, emptySet());
+
+      IOFileFilter fileFilter = or(prefixFileFilter("delegate"), prefixFileFilter("watcher"),
+          prefixFileFilter("config-"), nameFileFilter("proxy.config"), nameFileFilter("profile"),
+          nameFileFilter("mygclogfilename.gc"), nameFileFilter("nohup-watcher.out"), suffixFileFilter(".sh"));
+
+      IOFileFilter dirFilter = or(prefixFileFilter("jre"), prefixFileFilter("backup."), nameFileFilter(".cache"),
+          nameFileFilter("msg"), nameFileFilter("repository"));
+
+      FileUtils.listFilesAndDirs(workingDir, fileFilter, dirFilter).forEach(file -> {
+        try {
+          FileUtils.forceDelete(file);
+        } catch (IOException e) {
+          // Ignore
+        }
+      });
+    } catch (Exception e) {
+      // Ignore
+    }
+
+    try {
+      FileUtils.touch(new File("__deleted__"));
+      Thread.sleep(5000L);
+    } catch (Exception e) {
+      // Ignore
+    }
+
+    System.exit(0);
   }
 }
