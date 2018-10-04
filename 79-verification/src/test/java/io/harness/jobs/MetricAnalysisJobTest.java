@@ -12,7 +12,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.VerificationBaseTest;
-import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
@@ -50,7 +50,7 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
   private AnalysisContext analysisContext;
   MetricAnalysisJob metricAnalysisJob;
 
-  @Mock VerificationManagerClient managerClient;
+  @Mock VerificationManagerClientHelper managerClient;
   @Mock LearningEngineService learningEngineService;
   @Mock TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Mock JobExecutionContext jobExecutionContext;

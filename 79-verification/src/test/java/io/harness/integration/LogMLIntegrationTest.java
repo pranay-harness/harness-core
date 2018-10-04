@@ -27,7 +27,7 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.jobs.LogAnalysisManagerJob.LogAnalysisTask;
 import io.harness.jobs.LogMLClusterGenerator;
-import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.apache.http.HttpStatus;
@@ -102,7 +102,7 @@ import javax.ws.rs.core.Response;
 public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private Set<String> hosts = new HashSet<>();
   @Inject private LogAnalysisService analysisService;
-  @Inject private VerificationManagerClient managerClient;
+  @Inject private VerificationManagerClientHelper managerClient;
   @Inject private LearningEngineService learningEngineService;
   @Inject private FeatureFlagService featureFlagService;
 
@@ -1231,7 +1231,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private static class LogAnalysisTestJob extends LogAnalysisTask {
     LogAnalysisTestJob(LogAnalysisService analysisService, AnalysisContext context,
         JobExecutionContext jobExecutionContext, String delegateTaskId, LearningEngineService learningEngineService,
-        FeatureFlagService featureFlagService, VerificationManagerClient managerClient) {
+        FeatureFlagService featureFlagService, VerificationManagerClientHelper managerClient) {
       super(analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService, featureFlagService,
           managerClient);
     }
