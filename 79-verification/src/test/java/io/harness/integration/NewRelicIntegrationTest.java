@@ -185,6 +185,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void getNewRelicTxnsWithData() throws Exception {
     WebTarget target = client.target(API_BASE + "/newrelic/txns-with-data?settingId=" + newRelicConfigId
         + "&accountId=" + accountId + "&applicationId=" + 107019083);
