@@ -167,11 +167,11 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
           getControllerInternal(kubernetesConfig, encryptedDataDetails, name), 10, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
       logger.error(format("Timed out getting controller %s", name), e);
+      throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Timed out while getting controller");
     } catch (Exception e) {
       logger.error(format("Error while getting controller %s", name), e);
       throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Error while getting controller");
     }
-    return null;
   }
 
   @SuppressFBWarnings("DE_MIGHT_IGNORE")
