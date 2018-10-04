@@ -37,7 +37,7 @@ public class VerificationTokenGenerator {
           .withIssuedAt(new Date())
           .withExpiresAt(new Date(System.currentTimeMillis() + TimeUnit.HOURS.toMillis(4)))
           .withNotBefore(new Date(System.currentTimeMillis() - TimeUnit.HOURS.toMillis(1)))
-          .withIssuedAt(new Date(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10)))
+          .withIssuedAt(new Date())
           .sign(algorithm);
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(GENERAL_ERROR).addParam("message", "reset password link could not be generated");

@@ -29,6 +29,7 @@ import software.wings.security.annotations.PublicApi;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.concurrent.TimeUnit;
 import javax.annotation.Priority;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
@@ -98,7 +99,8 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     }
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtLearningEngineServiceSecret);
-      JWTVerifier verifier = JWT.require(algorithm).withIssuer("Harness Inc").build();
+      JWTVerifier verifier =
+          JWT.require(algorithm).withIssuer("Harness Inc").acceptIssuedAt(TimeUnit.MINUTES.toSeconds(10)).build();
       verifier.verify(learningEngineServiceToken);
       JWT decode = JWT.decode(learningEngineServiceToken);
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
