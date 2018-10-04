@@ -10,6 +10,8 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.http.HttpStatus;
 import retrofit2.Call;
 import retrofit2.Response;
 import retrofit2.Retrofit;
@@ -74,7 +76,15 @@ public class LogzDelegateServiceImpl implements LogzDelegateService {
                                      .build());
     final Call<Object> request =
         getLogzRestClient(logzConfig, encryptedDataDetails).search(logFetchRequest.toElasticSearchJsonObject());
-    final Response<Object> response = request.execute();
+    final Response<Object> response;
+    try {
+      response = request.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(logzConfig.getAccountId(), apiCallLog);
+      throw new WingsException(e.getMessage());
+    }
     apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
       apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
