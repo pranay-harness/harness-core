@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-source harness/utils.sh
+set -e
+
+source harness/scripts/utils.sh
 
 VERSION_PROPERTY_FILE=version.yaml
 
@@ -16,6 +18,7 @@ ingresscontrollerimage=$(yq r version.yaml images.ingressController)
 
 INSTALLER_DIR=harness-kubernetes
 ARTIFACT_DIR=$INSTALLER_DIR/artifacts
+SCRIPTS_DIR=$INSTALLER_DIR/scripts
 JREVERSION=8u131
 SOLARIS_JRE=jre-8u131-solaris-x64.tar.gz
 MACOS_JRE=jre-8u131-macosx-x64.tar.gz
@@ -54,7 +57,7 @@ function prepareInstaller(){
     mkdir -p $ARTIFACT_DIR
     cp -r harness/* $INSTALLER_DIR
     chmod +x $INSTALLER_DIR/*.sh
-    replace MANAGER_VERSION $managerversion "$INSTALLER_DIR/init_delegate.sh"
+    replace MANAGER_VERSION $managerversion "$SCRIPTS_DIR/init_delegate.sh"
     downloadImages
     yq m -i $INSTALLER_DIR/values.yaml version.yaml
 

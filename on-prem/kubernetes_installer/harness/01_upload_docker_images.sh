@@ -2,7 +2,7 @@
 
 set -e
 
-source utils.sh
+source scripts/utils.sh
 
 docker_registry_username=$(yq r values.yaml privatedockerrepo.docker_registry_username)
 docker_registry_password=$(yq r values.yaml privatedockerrepo.docker_registry_password)
