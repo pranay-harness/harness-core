@@ -79,6 +79,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
     setInternalState(elkAnalysisState, "continuousVerificationService", continuousVerificationService);
     setInternalState(elkAnalysisState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
     setInternalState(elkAnalysisState, "featureFlagService", featureFlagService);
+    setInternalState(elkAnalysisState, "versionInfoManager", versionInfoManager);
   }
 
   @Test

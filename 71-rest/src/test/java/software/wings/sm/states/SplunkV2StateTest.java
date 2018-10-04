@@ -73,6 +73,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
     setInternalState(splunkState, "continuousVerificationService", continuousVerificationService);
     setInternalState(splunkState, "workflowExecutionBaselineService", workflowExecutionBaselineService);
     setInternalState(splunkState, "featureFlagService", featureFlagService);
+    setInternalState(splunkState, "versionInfoManager", versionInfoManager);
   }
 
   @Test

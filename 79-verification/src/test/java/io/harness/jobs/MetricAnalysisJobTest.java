@@ -12,6 +12,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.ImmutableMap;
 
 import io.harness.VerificationBaseTest;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.junit.Before;
@@ -26,7 +27,6 @@ import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +50,7 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
   private AnalysisContext analysisContext;
   MetricAnalysisJob metricAnalysisJob;
 
-  @Mock WaitNotifyEngine waitNotifyEngine;
+  @Mock VerificationManagerClient managerClient;
   @Mock LearningEngineService learningEngineService;
   @Mock TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Mock JobExecutionContext jobExecutionContext;
@@ -100,7 +100,7 @@ public class MetricAnalysisJobTest extends VerificationBaseTest {
     jobDataMap.put("delegateTaskId", delegateTaskId);
     when(jobExecutionContext.getMergedJobDataMap()).thenReturn(jobDataMap);
 
-    metricAnalysisJob = new MetricAnalysisJob(timeSeriesAnalysisService, learningEngineService, waitNotifyEngine);
+    metricAnalysisJob = new MetricAnalysisJob(timeSeriesAnalysisService, learningEngineService, managerClient);
 
     setInternalState(metricAnalysisJob, "timeSeriesAnalysisService", timeSeriesAnalysisService);
     setInternalState(metricAnalysisJob, "learningEngineService", learningEngineService);

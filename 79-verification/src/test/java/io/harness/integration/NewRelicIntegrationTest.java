@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.jobs.MetricAnalysisJob.MetricAnalysisGenerator;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.service.intfc.LearningEngineService;
@@ -84,7 +85,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.states.APMVerificationStateTest;
 import software.wings.sm.states.DatadogState;
 import software.wings.utils.JsonUtils;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -109,7 +109,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private MetricUtilHelper metricUtilHelper;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
+  @Inject private VerificationManagerClient managerClient;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
@@ -684,8 +684,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, analysisContext, jobExecutionContext,
-        delegateTaskId, waitNotifyEngine)
+    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+        jobExecutionContext, delegateTaskId)
         .run();
 
     List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -816,8 +816,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, analysisContext, jobExecutionContext,
-        delegateTaskId, waitNotifyEngine)
+    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+        jobExecutionContext, delegateTaskId)
         .run();
 
     List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -951,8 +951,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, analysisContext, jobExecutionContext,
-        delegateTaskId, waitNotifyEngine)
+    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+        jobExecutionContext, delegateTaskId)
         .run();
 
     List<NewRelicMetricAnalysisRecord> metricAnalysisRecords =
@@ -1110,8 +1110,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, analysisContext, jobExecutionContext,
-        delegateTaskId, waitNotifyEngine)
+    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+        jobExecutionContext, delegateTaskId)
         .run();
 
     // TODO I know....
@@ -1334,8 +1334,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getScheduler()).thenReturn(mock(Scheduler.class));
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
-    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, analysisContext, jobExecutionContext,
-        delegateTaskId, waitNotifyEngine)
+    new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, managerClient, analysisContext,
+        jobExecutionContext, delegateTaskId)
         .run();
 
     // TODO I know....

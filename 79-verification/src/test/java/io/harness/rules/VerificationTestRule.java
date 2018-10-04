@@ -49,7 +49,7 @@ public class VerificationTestRule extends WingsRule {
 
   @Override
   protected void addQueueModules(List<Module> modules) {
-    modules.add(new VerificationQueueModule(datastore, true));
+    modules.add(new VerificationQueueModule());
   }
 
   @Override

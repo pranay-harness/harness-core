@@ -37,6 +37,7 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -120,6 +121,15 @@ public class DelegateResource {
   @ExceptionMetered
   public RestResponse<DelegateStatus> listDelegateStatus(@QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(delegateService.getDelegateStatus(accountId));
+  }
+
+  @GET
+  @Path("available-versions-for-verification")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<List<String>> getAvailableVersions(@QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(delegateService.getAvailableVersions(accountId));
   }
 
   @GET

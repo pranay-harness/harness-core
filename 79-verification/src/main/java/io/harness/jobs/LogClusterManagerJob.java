@@ -6,6 +6,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.managerclient.VerificationManagerClient;
+import io.harness.network.SafeHttpCall;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import lombok.AllArgsConstructor;
@@ -24,9 +26,11 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -36,7 +40,7 @@ import java.util.Set;
 public class LogClusterManagerJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LogClusterManagerJob.class);
 
-  @org.simpleframework.xml.Transient @Inject private WaitNotifyEngine waitNotifyEngine;
+  @org.simpleframework.xml.Transient @Inject private VerificationManagerClient managerClient;
 
   @org.simpleframework.xml.Transient @Inject private LogAnalysisService analysisService;
 
@@ -50,7 +54,7 @@ public class LogClusterManagerJob implements Job {
       long timestamp = jobExecutionContext.getMergedJobDataMap().getLong("timestamp");
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      new LogClusterTask(analysisService, waitNotifyEngine, jobExecutionContext, context, learningEngineService).run();
+      new LogClusterTask(analysisService, managerClient, jobExecutionContext, context, learningEngineService).run();
     } catch (Exception ex) {
       logger.warn("Log cluster cron failed with error", ex);
       try {
@@ -65,7 +69,7 @@ public class LogClusterManagerJob implements Job {
   public static class LogClusterTask implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(LogClusterTask.class);
     private LogAnalysisService analysisService;
-    private WaitNotifyEngine waitNotifyEngine;
+    private VerificationManagerClient managerClient;
     private JobExecutionContext jobExecutionContext;
     private AnalysisContext context;
     private LearningEngineService learningEngineService;
@@ -175,11 +179,24 @@ public class LogClusterManagerJob implements Job {
             executionData.setErrorMsg(ex.getMessage());
             logger.info(
                 "Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
-            waitNotifyEngine.notify(context.getCorrelationId(),
+            List<String> versions =
+                SafeHttpCall.execute(managerClient.getListOfPublishedVersions(context.getAccountId())).getResource();
+
+            Map<String, Object> headers = new HashMap<>();
+            if (versions != null) {
+              String analysisVersion = context.getManagerVersion();
+              logger.info(
+                  "List of available versions is : {} and the analysisVersion is {}", versions, analysisVersion);
+              if (analysisVersion != null && versions.contains(analysisVersion)) {
+                logger.info("Setting the version info in the manager call to {}", analysisVersion);
+                headers.put("Version", analysisVersion);
+              }
+            }
+            SafeHttpCall.execute(managerClient.sendNotifyForLogState(headers, context.getCorrelationId(),
                 aLogAnalysisResponse()
                     .withLogAnalysisExecutionData(executionData)
                     .withExecutionStatus(ExecutionStatus.ERROR)
-                    .build());
+                    .build()));
           }
         } catch (Exception e) {
           logger.error("Verification cluster manager cleanup failed", e);

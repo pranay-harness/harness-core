@@ -12,6 +12,8 @@ import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
+import io.harness.managerclient.VerificationManagerClient;
+import io.harness.network.SafeHttpCall;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
@@ -46,7 +48,6 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -68,15 +69,16 @@ public class MetricAnalysisJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(MetricAnalysisJob.class);
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
+
+  @Inject private VerificationManagerClient managerClient;
 
   @VisibleForTesting
   @Inject
   public MetricAnalysisJob(TimeSeriesAnalysisService timeSeriesAnalysisService,
-      LearningEngineService learningEngineService, WaitNotifyEngine waitNotifyEngine) {
+      LearningEngineService learningEngineService, VerificationManagerClient managerClient) {
     this.timeSeriesAnalysisService = timeSeriesAnalysisService;
     this.learningEngineService = learningEngineService;
-    this.waitNotifyEngine = waitNotifyEngine;
+    this.managerClient = managerClient;
   }
 
   @Override
@@ -86,8 +88,8 @@ public class MetricAnalysisJob implements Job {
       String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
 
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
-      new MetricAnalysisGenerator(timeSeriesAnalysisService, learningEngineService, context, jobExecutionContext,
-          delegateTaskId, waitNotifyEngine)
+      new MetricAnalysisGenerator(
+          timeSeriesAnalysisService, learningEngineService, managerClient, context, jobExecutionContext, delegateTaskId)
           .run();
       logger.info("Triggering scheduled job with params {} and delegateTaskId {}", params, delegateTaskId);
     } catch (Exception ex) {
@@ -108,21 +110,21 @@ public class MetricAnalysisJob implements Job {
     private final Map<String, String> controlNodes;
     private final TimeSeriesAnalysisService analysisService;
     private final LearningEngineService learningEngineService;
-    private final WaitNotifyEngine waitNotifyEngine;
+    private VerificationManagerClient managerClient;
     private final int analysisDuration;
     private AnalysisContext context;
 
     public MetricAnalysisGenerator(TimeSeriesAnalysisService service, LearningEngineService learningEngineService,
-        AnalysisContext context, JobExecutionContext jobExecutionContext, String delegateTaskId,
-        WaitNotifyEngine waitNotifyEngine) {
+        VerificationManagerClient managerClient, AnalysisContext context, JobExecutionContext jobExecutionContext,
+        String delegateTaskId) {
       this.analysisService = service;
       this.learningEngineService = learningEngineService;
+      this.managerClient = managerClient;
       this.context = context;
       this.jobExecutionContext = jobExecutionContext;
       this.delegateTaskId = delegateTaskId;
       this.testNodes = context.getTestNodes();
       this.controlNodes = context.getControlNodes();
-      this.waitNotifyEngine = waitNotifyEngine;
 
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         this.testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
@@ -591,12 +593,30 @@ public class MetricAnalysisJob implements Job {
         response.setExecutionStatus(status);
         logger.info("Notifying state id: {} , corr id: {}", context.getStateExecutionId(), context.getCorrelationId());
 
-        notifyManager(context.getCorrelationId(), response);
+        notifyManager(context, response);
       }
     }
 
-    private void notifyManager(String correlationId, MetricDataAnalysisResponse response) {
-      waitNotifyEngine.notify(context.getCorrelationId(), response);
+    private void notifyManager(AnalysisContext context, MetricDataAnalysisResponse response) {
+      try {
+        List<String> versions =
+            SafeHttpCall.execute(managerClient.getListOfPublishedVersions(context.getAccountId())).getResource();
+
+        Map<String, Object> headers = new HashMap<>();
+        if (versions != null) {
+          String analysisVersion = context.getManagerVersion();
+          logger.info("List of available versions is : {} and the analysisVersion is {}", versions, analysisVersion);
+          if (analysisVersion != null && versions.contains(analysisVersion)) {
+            logger.info("Setting the version info in the manager call to {}", analysisVersion);
+            headers.put("Version", analysisVersion);
+          }
+        }
+        SafeHttpCall.execute(managerClient.sendNotifyForMetricState(headers, context.getCorrelationId(), response));
+      } catch (IOException ex) {
+        logger.error("Error while notifying manager for stateExecutionId {}, correlationId {}",
+            context.getStateExecutionId(), context.getCorrelationId(), ex);
+      }
+      // waitNotifyEngine.notify(context.getCorrelationId(), response);
     }
 
     private Set<String> getNodesForGroup(String groupName, Map<String, String> nodes) {

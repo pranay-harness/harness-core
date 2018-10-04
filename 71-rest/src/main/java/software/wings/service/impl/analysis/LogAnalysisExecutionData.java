@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,6 +31,7 @@ public class LogAnalysisExecutionData extends StateExecutionData {
   private String delegateTaskId;
 
   @Override
+  @JsonIgnore
   public Map<String, ExecutionDataValue> getExecutionSummary() {
     Map<String, ExecutionDataValue> executionDetails = getExecutionDetails();
     putNotNull(executionDetails, "stateExecutionInstanceId",
@@ -40,6 +42,7 @@ public class LogAnalysisExecutionData extends StateExecutionData {
   }
 
   @Override
+  @JsonIgnore
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(
