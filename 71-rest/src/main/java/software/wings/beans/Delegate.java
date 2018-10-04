@@ -45,7 +45,7 @@ public class Delegate extends Base {
   private List<DelegateScope> excludeScopes;
   private List<String> tags;
 
-  public enum Status { ENABLED, DISABLED }
+  public enum Status { ENABLED, DISABLED, DELETED }
 
   public static final class Builder {
     private String accountId;

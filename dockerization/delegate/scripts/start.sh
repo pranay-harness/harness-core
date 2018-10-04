@@ -51,6 +51,13 @@ then
 fi
 
 echo $PROXY_SYS_PROPS
+
+ACCOUNT_STATUS=$(curl $PROXY_CURL -#k _managerHostAndPort_/api/account/_accountId_/status)
+if [[ $ACCOUNT_STATUS == "DELETED" ]]
+then
+  while true; do sleep 60s; done
+fi
+
 if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
 then
   echo "Downloading JRE packages..."

@@ -36,6 +36,7 @@ import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
@@ -62,6 +63,7 @@ public class MessageServiceImpl implements MessageService {
   private final TimeLimiter timeLimiter = new SimpleTimeLimiter();
   private final Map<File, Long> messageTimestamps = new HashMap<>();
   private final Map<File, BlockingQueue<Message>> messageQueues = new HashMap<>();
+  private final AtomicBoolean running = new AtomicBoolean(true);
 
   public MessageServiceImpl(Clock clock, MessengerType messengerType, String processId) {
     this.clock = clock;
@@ -188,22 +190,29 @@ public class MessageServiceImpl implements MessageService {
       logger.error("Couldn't get message channel for {} {}", sourceType, sourceProcessId);
     }
     return () -> {
-      try {
-        Message message = readMessageFromChannel(sourceType, sourceProcessId, readTimeout);
-        if (message != null) {
-          if (messageHandler != null) {
-            messageHandler.accept(message);
+      if (running.get()) {
+        try {
+          Message message = readMessageFromChannel(sourceType, sourceProcessId, readTimeout);
+          if (message != null) {
+            if (messageHandler != null) {
+              messageHandler.accept(message);
+            }
+            try {
+              messageQueues.get(getMessageChannel(sourceType, sourceProcessId)).put(message);
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+            }
           }
-          try {
-            messageQueues.get(getMessageChannel(sourceType, sourceProcessId)).put(message);
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
+        } catch (Exception e) {
+          logger.error("Error while checking for message from channel {} {}", sourceType, sourceProcessId, e);
         }
-      } catch (Exception e) {
-        logger.error("Error while checking for message from channel {} {}", sourceType, sourceProcessId, e);
       }
     };
+  }
+
+  @Override
+  public void shutdown() {
+    this.running.set(false);
   }
 
   @Override

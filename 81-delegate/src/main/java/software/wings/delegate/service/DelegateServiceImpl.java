@@ -21,6 +21,7 @@ import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Delegate.Builder.aDelegate;
+import static software.wings.common.Constants.SELF_DESTRUCT;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.utils.Misc.getDurationString;
@@ -30,6 +31,7 @@ import static software.wings.utils.message.MessageConstants.DELEGATE_HEARTBEAT;
 import static software.wings.utils.message.MessageConstants.DELEGATE_IS_NEW;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static software.wings.utils.message.MessageConstants.DELEGATE_RESUME;
+import static software.wings.utils.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static software.wings.utils.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
@@ -215,6 +217,7 @@ public class DelegateServiceImpl implements DelegateService {
   private final AtomicBoolean restartNeeded = new AtomicBoolean(false);
   private final AtomicBoolean acquireTasks = new AtomicBoolean(true);
   private final AtomicBoolean initializing = new AtomicBoolean(false);
+  private final AtomicBoolean selfDestruct = new AtomicBoolean(false);
   private final AtomicBoolean multiVersionWatcherStarted = new AtomicBoolean(false);
   private final AtomicBoolean pollingForTasks = new AtomicBoolean(false);
 
@@ -482,6 +485,8 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         logger.info("Heartbeat response for another delegate received: {}", receivedId);
       }
+    } else if (StringUtils.equals(message, SELF_DESTRUCT)) {
+      initiateSelfDestruct();
     } else if (!StringUtils.equals(message, "X")) {
       logger.info("Executing: Event:{}, message:[{}]", Event.MESSAGE.name(), message);
       try {
@@ -554,6 +559,11 @@ public class DelegateServiceImpl implements DelegateService {
         continue;
       }
       String delegateId = delegateResponse.getResource().getUuid();
+      if (StringUtils.equals(delegateId, SELF_DESTRUCT)) {
+        initiateSelfDestruct();
+        sleep(ofMinutes(1));
+        continue;
+      }
       builder.withUuid(delegateId).withStatus(delegateResponse.getResource().getStatus());
       System.setProperty(VERIFICATION_SERVICE_SECRET, delegateResponse.getResource().getVerificationServiceSecret());
       logger.info(
@@ -822,18 +832,22 @@ public class DelegateServiceImpl implements DelegateService {
       try {
         systemExecutorService.submit(() -> {
           Map<String, Object> statusData = new HashMap<>();
-          statusData.put(DELEGATE_HEARTBEAT, clock.millis());
-          statusData.put(DELEGATE_VERSION, getVersion());
-          statusData.put(DELEGATE_IS_NEW, false);
-          statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
-          statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
-          statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
-          statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
-          if (upgradePending.get()) {
-            statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
-          }
-          if (!acquireTasks.get()) {
-            statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+          if (selfDestruct.get()) {
+            statusData.put(DELEGATE_SELF_DESTRUCT, true);
+          } else {
+            statusData.put(DELEGATE_HEARTBEAT, clock.millis());
+            statusData.put(DELEGATE_VERSION, getVersion());
+            statusData.put(DELEGATE_IS_NEW, false);
+            statusData.put(DELEGATE_RESTART_NEEDED, doRestartDelegate());
+            statusData.put(DELEGATE_UPGRADE_NEEDED, upgradeNeeded.get());
+            statusData.put(DELEGATE_UPGRADE_PENDING, upgradePending.get());
+            statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
+            if (upgradePending.get()) {
+              statusData.put(DELEGATE_UPGRADE_STARTED, upgradeStartedAt);
+            }
+            if (!acquireTasks.get()) {
+              statusData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
+            }
           }
           messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
           watchWatcher();
@@ -951,6 +965,9 @@ public class DelegateServiceImpl implements DelegateService {
       Delegate response = timeLimiter.callWithTimeout(
           () -> execute(managerClient.delegateHeartbeat(delegateId, accountId)), 15L, TimeUnit.SECONDS, true);
       if (delegateId.equals(response.getUuid())) {
+        if (Status.DELETED.equals(response.getStatus())) {
+          initiateSelfDestruct();
+        }
         lastHeartbeatSentAt.set(clock.millis());
         lastHeartbeatReceivedAt.set(clock.millis());
       }
@@ -1254,5 +1271,14 @@ public class DelegateServiceImpl implements DelegateService {
 
   private String getVersion() {
     return versionInfoManager.getVersionInfo().getVersion();
+  }
+
+  private void initiateSelfDestruct() {
+    logger.info("Self destruct sequence initiated...");
+    acquireTasks.set(false);
+    upgradePending.set(false);
+    upgradeNeeded.set(false);
+    restartNeeded.set(false);
+    selfDestruct.set(true);
   }
 }
