@@ -1,12 +1,6 @@
 #!/usr/bin/env bash
 set -e
 
-apt-get update
-apt-get install -y curl
-curl -fsSL https://get.docker.com -o get-docker.sh
-sh get-docker.sh
-rm get-docker.sh
-
 INSTALLER_DIR=harness_installer
 INSTALLER_COMPRESSED_FILE=harness_installer.tar.gz
 INSTALLER_TEMPLATE_DIR=harness_disconnected_on_prem_pov_final
