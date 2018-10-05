@@ -32,3 +32,14 @@ function replace() {
                 find $3 -exec sed -i "s|$1|$2|g" {} +
         fi
 }
+
+function confirm() {
+    while true; do
+        read -p "Do you wish to continue? [y/n]" yn
+        case $yn in
+            [Yy]* ) break;;
+            [Nn]* ) exit;;
+            * ) echo "Please answer y or n.";;
+        esac
+    done
+}

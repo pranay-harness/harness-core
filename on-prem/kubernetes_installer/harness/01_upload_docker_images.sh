@@ -3,6 +3,14 @@
 set -e
 
 source scripts/utils.sh
+
+echo "Fetching kubernetes cluster information..."
+K8S_CLUSTER_NAMESPACE=$(yq r values.yaml kubernetes-cluster-namespace)
+echo "Kubernetes cluster namespace: $K8S_CLUSTER_NAMESPACE"
+kubectl cluster-info
+echo "Above kubernetes cluster and namespace will be used for harness installation"
+confirm
+
 [ ! -e values.internal.yaml ] || rm values.internal.yaml
 cp values.yaml values.internal.yaml
 
