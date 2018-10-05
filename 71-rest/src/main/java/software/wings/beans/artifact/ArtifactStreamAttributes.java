@@ -35,6 +35,7 @@ public class ArtifactStreamAttributes {
   private Map<String, String> filters;
   private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
   private Map<String, String> metadata = Maps.newHashMap();
+  private boolean copyArtifactEnabledForArtifactory;
 
   /**
    * Gets job name.
@@ -283,6 +284,14 @@ public class ArtifactStreamAttributes {
     this.metadata = metadata;
   }
 
+  public boolean isCopyArtifactEnabledForArtifactory() {
+    return copyArtifactEnabledForArtifactory;
+  }
+
+  public void setCopyArtifactEnabledForArtifactory(boolean copyArtifactEnabledForArtifactory) {
+    this.copyArtifactEnabledForArtifactory = copyArtifactEnabledForArtifactory;
+  }
+
   /**
    * The type Builder.
    */
@@ -308,6 +317,7 @@ public class ArtifactStreamAttributes {
     private String platform;
     private List<EncryptedDataDetail> artifactServerEncryptedDataDetails;
     private Map<String, String> metadata = Maps.newHashMap();
+    private boolean copyArtifactEnabledForArtifactory;
 
     private Builder() {}
 
@@ -471,6 +481,11 @@ public class ArtifactStreamAttributes {
       return this;
     }
 
+    public Builder withCopyArtifactEnabledForArtifactory(boolean copyArtifactEnabledForArtifactory) {
+      this.copyArtifactEnabledForArtifactory = copyArtifactEnabledForArtifactory;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -498,7 +513,8 @@ public class ArtifactStreamAttributes {
           .withPlatform(platform)
           .withFilters(filters)
           .withArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails)
-          .withMetadata(metadata);
+          .withMetadata(metadata)
+          .withCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory);
     }
 
     /**
@@ -529,6 +545,7 @@ public class ArtifactStreamAttributes {
       artifactStreamAttributes.setFilters(filters);
       artifactStreamAttributes.setArtifactServerEncryptedDataDetails(artifactServerEncryptedDataDetails);
       artifactStreamAttributes.setMetadata(metadata);
+      artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(copyArtifactEnabledForArtifactory);
       return artifactStreamAttributes;
     }
   }

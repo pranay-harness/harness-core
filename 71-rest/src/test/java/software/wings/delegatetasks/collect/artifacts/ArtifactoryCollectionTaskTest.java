@@ -3,7 +3,6 @@ package software.wings.delegatetasks.collect.artifacts;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyList;
 import static org.mockito.Mockito.anyMap;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.when;
@@ -55,8 +54,8 @@ public class ArtifactoryCollectionTaskTest {
   @Test
   public void shouldCollectNoMavenStyleFiles() {
     ListNotifyResponseData res = ListNotifyResponseData.Builder.aListNotifyResponseData().build();
-    when(artifactoryService.downloadArtifacts(any(ArtifactoryConfig.class), any(), anyString(), anyString(), anyList(),
-             anyString(), anyMap(), anyString(), anyString(), anyString()))
+    when(artifactoryService.downloadArtifacts(
+             any(ArtifactoryConfig.class), any(), anyString(), anyMap(), anyString(), anyString(), anyString()))
         .thenReturn(res);
     res = artifactoryCollectionTask.run(collectionTask.getParameters());
     assertThat(res).isNotNull();

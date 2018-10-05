@@ -60,6 +60,9 @@ public class ArtifactCollectionUtil {
         metadata.put(ARTIFACT_PATH, buildDetails.getArtifactPath());
         metadata.put(
             ARTIFACT_FILE_NAME, buildDetails.getNumber().substring(buildDetails.getNumber().lastIndexOf('/') + 1));
+        if (buildDetails.getArtifactFileSize() != null) {
+          metadata.put(ARTIFACT_FILE_SIZE, buildDetails.getArtifactFileSize());
+        }
       }
       metadata.put(BUILD_NO, buildDetails.getNumber());
       return metadata;

@@ -1,11 +1,8 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.network.Http.connectableHttpUrl;
-import static java.util.stream.Collectors.toList;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.Validator.equalCheck;
 
@@ -27,7 +24,7 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.utils.ArtifactType;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -78,34 +75,14 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, jobName);
       logger.info("Retrieved {} repo paths.", repoPaths.size());
       return repoPaths;
-    } else {
-      return artifactoryService.getArtifactIds(config, encryptionDetails, jobName, groupId);
     }
+    return new ArrayList<>();
   }
 
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
-    String[] artifactPaths = artifactStreamAttributes.getArtifactPattern().split("/");
-    if (artifactPaths.length < 4) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER_ADMIN)
-          .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/.*/myservice*.war");
-    }
-    String groupId = getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(toList()));
-    String artifactId = artifactPaths[artifactPaths.length - 3];
-    return artifactoryService.getLatestVersion(
-        artifactoryConfig, encryptionDetails, artifactStreamAttributes.getJobName(), groupId, artifactId);
-  }
-
-  private String getGroupId(List<String> pathElems) {
-    StringBuilder groupIdBuilder = new StringBuilder();
-    for (int i = 0; i < pathElems.size(); i++) {
-      groupIdBuilder.append(pathElems.get(i));
-      if (i != pathElems.size() - 1) {
-        groupIdBuilder.append('.');
-      }
-    }
-    return groupIdBuilder.toString();
+    return null;
   }
 
   @Override

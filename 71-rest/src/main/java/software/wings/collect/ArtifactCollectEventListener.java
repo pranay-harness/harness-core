@@ -155,9 +155,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
             .withWaitId(waitId)
             .withParameters(
                 new Object[] {artifactoryConfig, secretManager.getEncryptionDetails(artifactoryConfig, null, null),
-                    artifactoryArtifactStream.getJobname(), artifactoryArtifactStream.getGroupId(),
-                    artifactoryArtifactStream.getArtifactPaths(), artifactoryArtifactStream.getArtifactPattern(),
-                    artifact.getMetadata()})
+                    artifactoryArtifactStream.getJobname(), artifact.getMetadata()})
             .build();
       }
       case AMAZON_S3: {

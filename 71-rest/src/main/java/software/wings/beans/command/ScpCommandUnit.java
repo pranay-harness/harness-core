@@ -15,13 +15,17 @@ import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.AppContainer;
+import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.stencils.DataProvider;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.ArtifactType;
 
 import java.util.List;
 import java.util.Map;
@@ -33,6 +37,8 @@ import java.util.stream.Stream;
  */
 @JsonTypeName("SCP")
 public class ScpCommandUnit extends SshCommandUnit {
+  private static final Logger logger = LoggerFactory.getLogger(ScpCommandUnit.class);
+
   @Attributes(title = "Source")
   @EnumData(enumDataProvider = ScpCommandDataProvider.class)
   private ScpFileCategory fileCategory;
@@ -54,12 +60,29 @@ public class ScpCommandUnit extends SshCommandUnit {
       case ARTIFACTS:
         fileBucket = FileBucket.ARTIFACTS;
         // TODO: remove artifactStreamType check once code path added for all artifact stream types.
-        if (context.getArtifactStreamAttributes().isMetadataOnly()
-            && context.getArtifactStreamAttributes().getArtifactStreamType().equalsIgnoreCase(
-                   ArtifactStreamType.AMAZON_S3.name())) {
-          return context.copyFiles(destinationDirectoryPath, context.getArtifactStreamAttributes(),
-              context.getAccountId(), context.getAppId(), context.getActivityId(), getName(),
-              context.getHost() == null ? null : context.getHost().getPublicDns());
+        final ArtifactStreamAttributes artifactStreamAttributes = context.getArtifactStreamAttributes();
+        final String artifactStreamType = artifactStreamAttributes.getArtifactStreamType();
+        if (artifactStreamAttributes.isMetadataOnly()) {
+          if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.AMAZON_S3.name())) {
+            return context.copyFiles(destinationDirectoryPath, artifactStreamAttributes, context.getAccountId(),
+                context.getAppId(), context.getActivityId(), getName(),
+                context.getHost() == null ? null : context.getHost().getPublicDns());
+          } else if (artifactStreamType.equalsIgnoreCase(ArtifactStreamType.ARTIFACTORY.name())) {
+            if (isArtifactTypeAllowedForArtifactory(artifactStreamAttributes.getArtifactType())) {
+              if (artifactStreamAttributes.isCopyArtifactEnabledForArtifactory()) {
+                return context.copyFiles(destinationDirectoryPath, artifactStreamAttributes, context.getAccountId(),
+                    context.getAppId(), context.getActivityId(), getName(),
+                    context.getHost() == null ? null : context.getHost().getPublicDns());
+              } else {
+                logger.info("Feature flag for copy artifact for artifactory not enabled.");
+                return CommandExecutionStatus.SUCCESS;
+              }
+            } else {
+              logger.info("Copy Artifact is not supported for artifact stream type: " + artifactStreamType
+                  + " and artifact type: " + artifactStreamAttributes.getArtifactType());
+              return CommandExecutionStatus.SUCCESS;
+            }
+          }
         } else {
           context.getArtifactFiles().forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
         }
@@ -73,6 +96,16 @@ public class ScpCommandUnit extends SshCommandUnit {
         throw new InvalidRequestException("Unsupported file category for copy step");
     }
     return context.copyGridFsFiles(destinationDirectoryPath, fileBucket, fileIds);
+  }
+
+  private boolean isArtifactTypeAllowedForArtifactory(ArtifactType artifactType) {
+    if (ArtifactType.JAR.equals(artifactType) || ArtifactType.TAR.equals(artifactType)
+        || ArtifactType.WAR.equals(artifactType) || ArtifactType.ZIP.equals(artifactType)
+        || ArtifactType.IIS.equals(artifactType) || ArtifactType.IIS_APP.equals(artifactType)
+        || ArtifactType.IIS_VirtualDirectory.equals(artifactType) || ArtifactType.OTHER.equals(artifactType)) {
+      return true;
+    }
+    return false;
   }
 
   @SchemaIgnore

@@ -41,6 +41,7 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
+import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -73,6 +74,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceInstanceService;
@@ -126,6 +128,7 @@ public class CommandState extends State {
   @Inject @Transient private transient ServiceTemplateService serviceTemplateService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
+  @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   @Inject @Transient private transient WingsPersistence wingsPersistence;
 
@@ -354,6 +357,10 @@ public class CommandState extends State {
         artifactStreamAttributes.setArtifactServerEncryptedDataDetails(
             secretManager.getEncryptionDetails((Encryptable) artifactStreamAttributes.getServerSetting().getValue(),
                 context.getAppId(), context.getWorkflowExecutionId()));
+        if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
+          artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(true);
+        }
+        artifactStreamAttributes.setArtifactType(service.getArtifactType());
         commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
         commandExecutionContextBuilder.withArtifactServerEncryptedDataDetails(
             secretManager.getEncryptionDetails((Encryptable) artifactStreamAttributes.getServerSetting().getValue(),

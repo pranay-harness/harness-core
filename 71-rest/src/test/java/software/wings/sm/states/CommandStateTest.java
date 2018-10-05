@@ -99,6 +99,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
@@ -220,6 +221,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private DelegateService delegateService;
   @Mock private SecretManager secretManager;
   @Mock private InfrastructureMappingService infrastructureMappingService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
