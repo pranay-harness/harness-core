@@ -52,7 +52,7 @@ fi
 
 echo $PROXY_SYS_PROPS
 
-ACCOUNT_STATUS=$(curl $PROXY_CURL -#k _managerHostAndPort_/api/account/_accountId_/status)
+ACCOUNT_STATUS=$(curl $PROXY_CURL -#k _managerHostAndPort_/api/account/_accountId_/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
 if [[ $ACCOUNT_STATUS == "DELETED" ]]
 then
   while true; do sleep 60s; done
