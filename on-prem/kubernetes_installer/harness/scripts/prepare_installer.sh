@@ -4,25 +4,15 @@ set -e
 
 source utils.sh
 
-learningengine_secret=$(generateRandomStringOfLength 32)
-account_secret=$(generateRandomString)
-jwtPasswordSecret=$(generateRandomStringOfLength 80)
-jwtAuthSecret=$(generateRandomStringOfLength 80)
-jwtExternalServiceSecret=$(generateRandomStringOfLength 80)
-jwtZendeskSecret=$(generateRandomStringOfLength 80)
-jwtMultiAuthSecret=$(generateRandomStringOfLength 80)
-jwtSsoRedirectSecret=$(generateRandomStringOfLength 80)
-accountId=$(generateRandomStringOfLength 22)
-
-replace LEARNING_ENGINE_SECRET $learningengine_secret values.internal.yaml
-replace JWT_PASSWORD_SECRET $jwtPasswordSecret values.internal.yaml
-replace JWT_EXTERNAL_SECRET $jwtExternalServiceSecret values.internal.yaml
-replace JWT_ZENDESK_SECRET $jwtZendeskSecret values.internal.yaml
-replace JWT_SSO_SECRET $jwtSsoRedirectSecret values.internal.yaml
-replace JWT_MULTI_AUTH_SECRET $jwtMultiAuthSecret values.internal.yaml
-replace ACCOUNTID $accountId values.internal.yaml
-replace ACCOUNTSECRET $account_secret values.internal.yaml
-replace JWT_AUTH_SECRET $jwtAuthSecret values.internal.yaml
+yq w -i values.internal.yaml appSecrets.learningEngineSecret $(generateRandomStringOfLength 32)
+yq w -i values.internal.yaml secrets.jwtAuthSecret $(generateRandomStringOfLength 80)
+yq w -i values.internal.yaml secrets.jwtExternalServiceSecret $(generateRandomStringOfLength 80)
+yq w -i values.internal.yaml secrets.jwtMultiAuthSecret $(generateRandomStringOfLength 80)
+yq w -i values.internal.yaml secrets.jwtPasswordSecret $(generateRandomStringOfLength 80)
+yq w -i values.internal.yaml secrets.jwtSsoRedirectSecret $(generateRandomStringOfLength 80)
+yq w -i values.internal.yaml secrets.jwtZendeskSecret $(generateRandomStringOfLength 80)
+yq w -i values.internal.yaml accounts.accountId $(generateRandomStringOfLength 22)
+yq w -i values.internal.yaml accounts.accountSecret $(generateRandomString)
 
 private_docker_repo=$(yq r values.internal.yaml privatedockerrepo.docker_registry_url)
 
