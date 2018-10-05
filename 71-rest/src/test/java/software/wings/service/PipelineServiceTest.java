@@ -14,7 +14,6 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
-import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.BuildWorkflow.BuildOrchestrationWorkflowBuilder.aBuildOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
@@ -30,6 +29,7 @@ import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
+import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
@@ -67,7 +67,6 @@ import software.wings.WingsBaseTest;
 import software.wings.api.DeploymentType;
 import software.wings.beans.EntityType;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStage;
@@ -665,10 +664,6 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipelines.get(1).isValid()).isEqualTo(false);
     assertThat(pipelines.get(1).getValidationMessage()).isNotEmpty();
     assertThat(pipelines.get(1).isHasSshInfraMapping()).isEqualTo(false);
-
-    verify(workflowService)
-        .getResolvedInfraMappings(
-            workflow, ImmutableMap.of("Environment", ENV_ID, "Service", SERVICE_ID, "ServiceInfra", INFRA_MAPPING_ID));
     verify(workflowExecutionService, times(2)).listExecutions(workflowExecutionPageRequest, false, false, false, false);
   }
 
@@ -760,10 +755,6 @@ public class PipelineServiceTest extends WingsBaseTest {
         .extracting(Variable::getName)
         .doesNotContain(SERVICE_NAME, ENV_NAME, INFRA_NAME);
     assertThat(pipelines.get(1).isHasSshInfraMapping()).isEqualTo(false);
-
-    verify(workflowService)
-        .getResolvedInfraMappings(
-            workflow, ImmutableMap.of(ENV_NAME, ENV_ID, SERVICE_NAME, SERVICE_ID, INFRA_NAME, INFRA_MAPPING_ID));
   }
 
   @Test
@@ -790,13 +781,13 @@ public class PipelineServiceTest extends WingsBaseTest {
     when(wingsPersistence.query(Pipeline.class, aPageRequest().build()))
         .thenReturn(aPageResponse().withResponse(asList(pipeline)).build());
 
-    Workflow workflow = aWorkflow().withOrchestrationWorkflow(aCanaryOrchestrationWorkflow().build()).build();
+    Workflow workflow = aWorkflow()
+                            .withOrchestrationWorkflow(
+                                aCanaryOrchestrationWorkflow()
+                                    .addWorkflowPhase(aWorkflowPhase().withDeploymentType(DeploymentType.SSH).build())
+                                    .build())
+                            .build();
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
-    when(workflowService.getResolvedInfraMappings(workflow, null))
-        .thenReturn(asList(anAwsInfrastructureMapping()
-                               .withInfraMappingType(InfrastructureMappingType.AWS_SSH.name())
-                               .withDeploymentType(DeploymentType.SSH.name())
-                               .build()));
 
     PageRequest<WorkflowExecution> workflowExecutionPageRequest = aPageRequest()
                                                                       .withLimit("2")
@@ -814,7 +805,6 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipelines.get(0).isValid()).isEqualTo(true);
     assertThat(pipelines.get(0).isHasSshInfraMapping()).isEqualTo(true);
 
-    verify(workflowService).getResolvedInfraMappings(workflow, null);
     verify(workflowExecutionService, times(1)).listExecutions(workflowExecutionPageRequest, false, false, false, false);
   }
 

@@ -519,7 +519,7 @@ public class WorkflowResource {
   @Timed
   public RestResponse<Boolean> workflowHasSSHInfraMapping(
       @QueryParam("appId") String appId, @PathParam("workflowId") String workflowId) {
-    return new RestResponse(workflowService.workflowHasSshInfraMapping(appId, workflowId));
+    return new RestResponse(workflowService.workflowHasSshDeploymentPhase(appId, workflowId));
   }
 
   @GET

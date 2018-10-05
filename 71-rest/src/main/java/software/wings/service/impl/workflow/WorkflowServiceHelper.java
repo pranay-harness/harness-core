@@ -175,18 +175,11 @@ public class WorkflowServiceHelper {
     }
   }
 
-  public boolean workflowHasSshInfraMapping(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
+  public boolean workflowHasSshDeploymentPhase(CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
     List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
-    if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
-      List<String> infraMappingIds = workflowPhases.stream()
-                                         .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
-                                         .map(WorkflowPhase::getInfraMappingId)
-                                         .collect(toList());
-      return infrastructureMappingService.getInfraStructureMappingsByUuids(appId, infraMappingIds)
-          .stream()
-          .anyMatch((InfrastructureMapping infra)
-                        -> AWS_SSH.name().equals(infra.getInfraMappingType())
-                  || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType()));
+    if (isNotEmpty(workflowPhases)) {
+      return workflowPhases.stream().anyMatch(
+          workflowPhase -> DeploymentType.SSH.equals(workflowPhase.getDeploymentType()));
     }
     return false;
   }

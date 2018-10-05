@@ -126,7 +126,7 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   void pruneDescendingEntities(@org.hibernate.validator.constraints.NotEmpty String appId,
       @org.hibernate.validator.constraints.NotEmpty String workflowId);
 
-  boolean workflowHasSshInfraMapping(String appId, String workflowId);
+  boolean workflowHasSshDeploymentPhase(String appId, String workflowId);
 
   String getHPAYamlStringWithCustomMetric(
       Integer minAutoscaleInstances, Integer maxAutoscaleInstances, Integer targetCpuUtilizationPercentage);
