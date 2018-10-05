@@ -59,6 +59,8 @@ public class VerificationServiceExecutorJob implements Job {
       default:
         throw new IllegalStateException("invalid analysis type " + verificationAnalysisTask.getAnalysisType());
     }
+
+    learningEngineService.markJobScheduled(verificationAnalysisTask);
   }
 
   private void scheduleTimeSeriesAnalysisCronJob(AnalysisContext context) {
@@ -84,7 +86,6 @@ public class VerificationServiceExecutorJob implements Job {
                           .build();
 
     jobScheduler.scheduleJob(job, trigger);
-    learningEngineService.markJobScheduled(context);
     logger.info("Scheduled TimeSeries Analysis Cron Job with details : {}", job);
   }
 
