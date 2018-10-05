@@ -36,7 +36,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -182,12 +181,6 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   }
 
   @Override
-  public void markCompleted(
-      String workflowExecutionId, String stateExecutionId, int analysisMinute, MLAnalysisType type) {
-    markCompleted(workflowExecutionId, stateExecutionId, analysisMinute, type, getDefaultClusterLevel());
-  }
-
-  @Override
   public void markCompleted(String workflowExecutionId, String stateExecutionId, int analysisMinute,
       MLAnalysisType type, ClusterLevel level) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
@@ -202,23 +195,6 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .set("executionStatus", ExecutionStatus.SUCCESS);
 
     wingsPersistence.update(query, updateOperations);
-  }
-
-  @Override
-  public Optional<LearningEngineAnalysisTask> earliestQueued() {
-    LearningEngineAnalysisTask task = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
-                                          .filter("executionStatus", ExecutionStatus.QUEUED)
-                                          .order("-createdAt")
-                                          .get();
-
-    return task == null ? Optional.empty() : Optional.of(task);
-  }
-
-  @Override
-  public void cleanup(long keepAfterTimeMillis) {
-    Query<LearningEngineAnalysisTask> query =
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).field("createdAt").lessThan(keepAfterTimeMillis);
-    wingsPersistence.delete(query);
   }
 
   @Override

@@ -11,7 +11,6 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by rsingh on 1/9/18.
@@ -33,16 +32,11 @@ public interface LearningEngineService {
 
   void markStatus(
       String workflowExecutionId, String stateExecutionId, int analysisMinute, ExecutionStatus executionStatus);
-  void markCompleted(String workflowExecutionId, String stateExecutionId, int analysisMinute, MLAnalysisType type);
   void markCompleted(
       String workflowExecutionId, String stateExecutionId, int analysisMinute, MLAnalysisType type, ClusterLevel level);
   void initializeServiceSecretKeys();
 
   String getServiceSecretKey(ServiceType serviceType);
-
-  void cleanup(long keepAfterTimeMillis);
-
-  Optional<LearningEngineAnalysisTask> earliestQueued();
 
   AnalysisContext getNextVerificationAnalysisTask(ServiceApiVersion serviceApiVersion);
 
