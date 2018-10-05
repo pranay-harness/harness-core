@@ -147,10 +147,8 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     if (getService(appId, artifactStream).getArtifactType().equals(ArtifactType.DOCKER)) {
       collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
     } else if (artifactStream.getArtifactStreamAttributes().getRepositoryType() == null
-        || !artifactStream.getArtifactStreamAttributes().getRepositoryType().equals("maven")) {
+        || artifactStream.getArtifactStreamAttributes().getRepositoryType().equals("any")) {
       collectGenericArtifacts(appId, artifactStream, newArtifacts);
-    } else {
-      collectMavenArtifacts(appId, artifactStream, newArtifacts);
     }
   }
 
@@ -172,27 +170,6 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
           newArtifacts.add(artifactService.create(getArtifact(artifactStream, buildDetails)));
         }
       });
-    }
-  }
-
-  private void collectMavenArtifacts(String appId, ArtifactStream artifactStream, List<Artifact> newArtifacts) {
-    String artifactStreamId = artifactStream.getUuid();
-    BuildDetails latestVersion = getLastSuccessfulBuild(appId, artifactStream, artifactStreamId);
-    if (latestVersion == null) {
-      return;
-    }
-    logger.info("Latest version in artifactory server {}", latestVersion);
-    Artifact lastCollectedArtifact =
-        artifactService.fetchLatestArtifactForArtifactStream(appId, artifactStreamId, artifactStream.getSourceName());
-    String buildNo = (lastCollectedArtifact != null && lastCollectedArtifact.getMetadata().get(BUILD_NO) != null)
-        ? lastCollectedArtifact.getMetadata().get(BUILD_NO)
-        : "";
-    logger.info("Last collected artifactory maven artifact version {} ", buildNo);
-    if (buildNo.isEmpty() || versionCompare(latestVersion.getNumber(), buildNo) > 0) {
-      logger.info(
-          "Existing version no {} is older than new version number {}. Collect new Artifact for ArtifactStream {}",
-          buildNo, latestVersion.getNumber(), artifactStreamId);
-      newArtifacts.add(artifactService.create(getArtifact(artifactStream, latestVersion)));
     }
   }
 

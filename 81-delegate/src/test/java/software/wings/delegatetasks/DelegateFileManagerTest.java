@@ -22,6 +22,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
+import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.Constants;
 import software.wings.delegate.app.DelegateConfiguration;
 import software.wings.delegate.service.DelegateFileManagerImpl;
@@ -53,7 +54,8 @@ public class DelegateFileManagerTest {
   private static final String ACTIVITY_ID = "ACTIVITY_ID";
   private static final String APP_ID = "APP_ID";
   private static final String ARTIFACT_FILE_NAME = "ARTIFACT_FILE_NAME";
-  private static final String ARTIFACT_STREAM_ID = "ARTIFACT_STREAM_ID";
+  private static final String ARTIFACT_STREAM_ID_S3 = "ARTIFACT_STREAM_ID_S3";
+  private static final String ARTIFACT_STREAM_ID_ARTIFACTORY = "ARTIFACT_STREAM_ID_ARTIFACTORY";
   private static final String ARTIFACT_PATH = "ARTIFACT_PATH";
   private static final String BUCKET_NAME = "BUCKET_NAME";
   private static final String BUILD_NO = "BUILD_NO";
@@ -64,54 +66,101 @@ public class DelegateFileManagerTest {
   private static final String SETTING_ID = "SETTING_ID";
   private static final Long MY_SIZE = 3433L;
   private static final String ARTIFACT_REPO_BASE_DIR = "./repository/artifacts/";
+  private static final String ARTIFACTORY_URL = "ARTIFACTORY_URL";
 
   private SettingAttribute awsSetting =
       aSettingAttribute()
           .withUuid(SETTING_ID)
           .withValue(AwsConfig.builder().secretKey(SECRET_KEY).accessKey(ACCESS_KEY).build())
           .build();
-  private Map<String, String> map = mockMetadata();
-  private ArtifactStreamAttributes artifactStreamAttributes =
+  private ArtifactStreamAttributes artifactStreamAttributesForS3 =
       anArtifactStreamAttributes()
           .withArtifactStreamType(ArtifactStreamType.AMAZON_S3.name())
           .withMetadataOnly(true)
-          .withMetadata(map)
+          .withMetadata(mockMetadata(ArtifactStreamType.AMAZON_S3))
           .withServerSetting(awsSetting)
-          .withArtifactStreamId(ARTIFACT_STREAM_ID)
+          .withArtifactStreamId(ARTIFACT_STREAM_ID_S3)
+          .withArtifactServerEncryptedDataDetails(Collections.emptyList())
+          .build();
+
+  private SettingAttribute artifactorySetting = aSettingAttribute()
+                                                    .withUuid(SETTING_ID)
+                                                    .withValue(ArtifactoryConfig.builder()
+                                                                   .artifactoryUrl(ARTIFACTORY_URL)
+                                                                   .username("admin")
+                                                                   .password("dummy123!".toCharArray())
+                                                                   .build())
+                                                    .build();
+  private ArtifactStreamAttributes artifactStreamAttributesForArtifactory =
+      anArtifactStreamAttributes()
+          .withArtifactStreamType(ArtifactStreamType.ARTIFACTORY.name())
+          .withMetadataOnly(true)
+          .withMetadata(mockMetadata(ArtifactStreamType.ARTIFACTORY))
+          .withServerSetting(artifactorySetting)
+          .withArtifactStreamId(ARTIFACT_STREAM_ID_ARTIFACTORY)
           .withArtifactServerEncryptedDataDetails(Collections.emptyList())
           .build();
 
   @Test
-  public void testDownloadArtifactAtRuntime() throws IOException, ExecutionException {
+  public void testDownloadArtifactAtRuntimeForS3() throws IOException, ExecutionException {
     String fileContent = "test";
     InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
     Pair<String, InputStream> pair = new ImmutablePair<>(fileContent, is);
     when(artifactCollectionTaskHelper.downloadArtifactAtRuntime(
-             artifactStreamAttributes, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME))
+             artifactStreamAttributesForS3, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME))
         .thenReturn(pair);
     delegateFileManager.downloadArtifactAtRuntime(
-        artifactStreamAttributes, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME);
-    String text = Files.toString(new File(ARTIFACT_REPO_BASE_DIR + "_ARTIFACT_STREAM_ID-BUILD_NO"), Charsets.UTF_8);
+        artifactStreamAttributesForS3, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME);
+    String text =
+        Files.toString(new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_S3 + "-" + BUILD_NO), Charsets.UTF_8);
     assertThat(text).isEqualTo(fileContent);
-    FileUtils.deleteQuietly(new File(ARTIFACT_REPO_BASE_DIR + "_ARTIFACT_STREAM_ID-BUILD_NO"));
+    FileUtils.deleteQuietly(new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_S3 + "-" + BUILD_NO));
+  }
+
+  @Test
+  public void testDownloadArtifactAtRuntimeForArtifactory() throws IOException, ExecutionException {
+    String fileContent = "test";
+    InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
+    Pair<String, InputStream> pair = new ImmutablePair<>(fileContent, is);
+    when(artifactCollectionTaskHelper.downloadArtifactAtRuntime(
+             artifactStreamAttributesForArtifactory, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME))
+        .thenReturn(pair);
+    delegateFileManager.downloadArtifactAtRuntime(
+        artifactStreamAttributesForArtifactory, ACCOUNT_ID, APP_ID, ACTIVITY_ID, COMMAND_UNIT_NAME, HOST_NAME);
+    String text = Files.toString(
+        new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_ARTIFACTORY + "-" + BUILD_NO), Charsets.UTF_8);
+    assertThat(text).isEqualTo(fileContent);
+    FileUtils.deleteQuietly(new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_ARTIFACTORY + "-" + BUILD_NO));
   }
 
   @Test
   public void testGetArtifactFileSize() {
     when(artifactCollectionTaskHelper.getArtifactFileSize(any(ArtifactStreamAttributes.class))).thenReturn(1234L);
-    Long size = delegateFileManager.getArtifactFileSize(artifactStreamAttributes);
+    Long size = delegateFileManager.getArtifactFileSize(artifactStreamAttributesForS3);
     assertThat(size.longValue()).isEqualTo(1234L);
   }
 
-  private Map<String, String> mockMetadata() {
+  private Map<String, String> mockMetadata(ArtifactStreamType artifactStreamType) {
     Map<String, String> map = new HashMap<>();
-    map.put(Constants.BUCKET_NAME, BUCKET_NAME);
-    map.put(Constants.ARTIFACT_FILE_NAME, ARTIFACT_FILE_NAME);
-    map.put(Constants.ARTIFACT_PATH, ARTIFACT_PATH);
-    map.put(Constants.BUILD_NO, BUILD_NO);
-    map.put(Constants.ARTIFACT_FILE_SIZE, String.valueOf(MY_SIZE));
-    map.put(Constants.KEY, ACCESS_KEY);
-    map.put(Constants.URL, S3_URL);
+    switch (artifactStreamType) {
+      case AMAZON_S3:
+        map.put(Constants.BUCKET_NAME, BUCKET_NAME);
+        map.put(Constants.ARTIFACT_FILE_NAME, ARTIFACT_FILE_NAME);
+        map.put(Constants.ARTIFACT_PATH, ARTIFACT_PATH);
+        map.put(Constants.BUILD_NO, BUILD_NO);
+        map.put(Constants.ARTIFACT_FILE_SIZE, String.valueOf(MY_SIZE));
+        map.put(Constants.KEY, ACCESS_KEY);
+        map.put(Constants.URL, S3_URL);
+        break;
+      case ARTIFACTORY:
+        map.put(Constants.ARTIFACT_FILE_NAME, ARTIFACT_FILE_NAME);
+        map.put(Constants.ARTIFACT_PATH, ARTIFACT_PATH);
+        map.put(Constants.BUILD_NO, BUILD_NO);
+        map.put(Constants.ARTIFACT_FILE_SIZE, String.valueOf(MY_SIZE));
+        break;
+      default:
+        break;
+    }
     return map;
   }
 }

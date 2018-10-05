@@ -21,7 +21,6 @@ import static org.jfrog.artifactory.client.model.PackageType.docker;
 import static org.jfrog.artifactory.client.model.PackageType.maven;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
-import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.common.util.concurrent.TimeLimiter;
@@ -37,6 +36,7 @@ import io.harness.exception.WingsException.ReportTarget;
 import io.harness.network.Http;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.HttpHost;
 import org.jfrog.artifactory.client.Artifactory;
 import org.jfrog.artifactory.client.ArtifactoryClient.ProxyConfig;
@@ -51,6 +51,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.AlphanumComparator;
+import software.wings.common.Constants;
 import software.wings.delegatetasks.collect.artifacts.ArtifactCollectionTaskHelper;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -236,10 +237,11 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   @Override
   public List<BuildDetails> getFilePaths(ArtifactoryConfig artifactoryConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoKey, String artifactPath, String repositoryType,
+      List<EncryptedDataDetail> encryptionDetails, String repositoryName, String artifactPath, String repositoryType,
       int maxVersions) {
-    logger.info("Retrieving file paths for repoKey {} arthifactPath {}", repoKey, artifactPath);
+    logger.info("Retrieving file paths for repositoryName {} artifactPath {}", repositoryName, artifactPath);
     List<String> artifactPaths = new ArrayList<>();
+    LinkedHashMap<String, String> map = new LinkedHashMap<>();
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     String artifactName;
     try {
@@ -257,12 +259,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           if (!artifactName.contains("?") && !artifactName.contains("*")) {
             artifactName = artifactName + "*";
           }
-          requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"path\": {\"$match\":\"" + subPath
+          requestBody = "items.find({\"repo\":\"" + repositoryName + "\"}, {\"path\": {\"$match\":\"" + subPath
               + "\"}}, {\"name\": {\"$match\": \"" + artifactName + "\"}}).sort({\"$desc\" : [\"created\"]}).limit("
               + maxVersions + ")";
         } else {
           artifactPath = artifactPath + "*";
-          requestBody = "items.find({\"repo\":\"" + repoKey + "\"}, {\"depth\": 1}, {\"name\": {\"$match\": \""
+          requestBody = "items.find({\"repo\":\"" + repositoryName + "\"}, {\"depth\": 1}, {\"name\": {\"$match\": \""
               + artifactPath + "\"}}).sort({\"$desc\" : [\"created\"]}).limit(" + maxVersions + ")";
         }
         ArtifactoryRequest repositoryRequest = new ArtifactoryRequestImpl()
@@ -280,10 +282,13 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
               if (created_by == null || !created_by.equals("_system_")) {
                 String path = result.get("path");
                 String name = result.get("name");
+                String size = String.valueOf(result.get("size"));
                 if (path != null && !path.equals(".")) {
-                  artifactPaths.add(repoKey + "/" + path + "/" + name);
+                  artifactPaths.add(repositoryName + "/" + path + "/" + name);
+                  map.put(repositoryName + "/" + path + "/" + name, size);
                 } else {
-                  artifactPaths.add(repoKey + "/" + name);
+                  artifactPaths.add(repositoryName + "/" + name);
+                  map.put(repositoryName + "/" + name, size);
                 }
               }
             }
@@ -298,6 +303,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                        .withNumber(constructBuildNumber(finalArtifactPath, path.substring(path.indexOf('/') + 1)))
                        .withArtifactPath(path)
                        .withBuildUrl(getBaseUrl(artifactoryConfig) + path)
+                       .withArtifactFileSize(map.get(path))
                        .build())
             .collect(toList());
       } else {
@@ -308,7 +314,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         HttpResponseException httpResponseException = (HttpResponseException) e;
         if (httpResponseException.getStatusCode() == 403) {
           logger.warn("User not authorized to perform deep level search. Trying with different search api");
-          artifactPaths = getFilePathsForAnonymousUser(artifactory, repoKey, artifactPath, maxVersions);
+          artifactPaths = getFilePathsForAnonymousUser(artifactory, repositoryName, artifactPath, maxVersions);
           String finalArtifactPath = artifactPath;
           return artifactPaths.stream()
               .map(path
@@ -339,7 +345,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
   private List<String> getFilePathsForAnonymousUser(
       Artifactory artifactory, String repoKey, String artifactPath, int maxVersions) {
-    logger.info("Retrieving file paths for repoKey {} arthifactPath {}", repoKey, artifactPath);
+    logger.info("Retrieving file paths for repoKey {} artifactPath {}", repoKey, artifactPath);
     List<String> artifactPaths = new ArrayList<>();
 
     List<FolderPath> folderPaths;
@@ -566,270 +572,66 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return folderPaths;
   }
 
-  /**
-   * Gets the latest version of the given artifact
-   *
-   * @param artifactoryConfig
-   * @param repoId
-   * @param groupId
-   * @param artifactId
-   * @return
-   */
-  @Override
-  public BuildDetails getLatestVersion(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoId, String groupId, String artifactId) {
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
-    try {
-      String msg = "latest version for artifactory server [" + artifactoryConfig.getArtifactoryUrl() + "] repoId ["
-          + repoId + "] groupId [" + groupId + "] artifactId [" + artifactId + "]";
-      logger.info("Fetching the  {}", msg);
-      String latestVersion = artifactory.searches()
-                                 .artifactsLatestVersion()
-                                 .groupId(groupId)
-                                 .artifactId(artifactId)
-                                 .repositories(repoId)
-                                 .doRawSearch();
-      if (isBlank(latestVersion)) {
-        // Fetch all the versions
-        logger.info("No latest release or integration version found for artifactory server ["
-            + artifactoryConfig.getArtifactoryUrl() + "] repoId [" + repoId + "] groupId [" + groupId + "] artifactId ["
-            + artifactId + "]");
-        logger.info("Retrieving all versions to find the latest version ");
-        BuildDetails buildDetails = getLatestSnapshotVersion(artifactory, repoId, groupId, artifactId);
-        if (buildDetails == null || isBlank(buildDetails.getNumber())) {
-          latestVersion = null;
-        } else {
-          logger.info("Latest integration version {} found", buildDetails.getNumber());
-          return buildDetails;
-        }
-      }
-      if (isEmpty(latestVersion)) {
-        logger.error("Failed to {}", msg);
-        return null;
-      }
-      logger.info("Latest version {} found", latestVersion);
-      return aBuildDetails().withNumber(latestVersion).withRevision(latestVersion).build();
-    } catch (Exception e) {
-      prepareException(e, ADMIN);
-    }
-    return null;
-  }
-
-  private BuildDetails getLatestSnapshotVersion(
-      Artifactory artifactory, String repoId, String groupId, String artifactId) {
-    try {
-      String apiVersionQuery = "api/search/versions/";
-      ArtifactoryRequest versionRequest = new ArtifactoryRequestImpl()
-                                              .apiUrl(apiVersionQuery)
-                                              .method(GET)
-                                              .responseType(JSON)
-                                              .addQueryParam("g", groupId)
-                                              .addQueryParam("a", artifactId)
-                                              .addQueryParam("repos", repoId);
-      Map<String, Object> response = artifactory.restCall(versionRequest);
-      if (response != null) {
-        List<Map<String, String>> results = (List<Map<String, String>>) response.get("results");
-        for (Map<String, String> result : results) {
-          String version = result.get("version");
-          logger.info("Latest version {}", version);
-          if (version == null) {
-            return null;
-          }
-          if (version.contains("-")) {
-            version = version.split("-")[0] + "-SNAPSHOT";
-          }
-          logger.info("Appending snapshot to the latest version ");
-          return aBuildDetails().withNumber(version).withRevision(version).build();
-        }
-      }
-    } catch (Exception e) {
-      throw new WingsException(
-          format("Failed to fetch the latest snap version for url %s repoId %s groupId %s and artifactId %s",
-              artifactory.getUri(), repoId, groupId, artifactId));
-    }
-    return null;
-  }
-
-  @Override
-  public List<String> getArtifactIds(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoKey, String groupId) {
-    logger.info("Retrieving Artifact Ids from artifactory url {} repoKey {} groupId {}",
-        artifactoryConfig.getArtifactoryUrl(), repoKey, groupId);
-    List<String> artifactIds = new ArrayList<>();
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
-    try {
-      List<RepoPath> results =
-          artifactory.searches().artifactsByGavc().groupId(groupId).repositories(repoKey).doSearch();
-      Set<String> artifactIdSet = new HashSet<>();
-      String groupIdPath = getGroupId(groupId);
-      if (results == null) {
-        return artifactIds;
-      }
-      for (RepoPath searchItem : results) {
-        String itemPath = searchItem.getItemPath();
-        // strip out the file
-        String artifactId = itemPath.replace(groupIdPath.substring(1), "");
-        // strip out the artifact id
-        if (artifactId.contains("/")) {
-          artifactId = artifactId.split("/")[0];
-        }
-        if (artifactIdSet.add(artifactId)) {
-          artifactIds.add(artifactId);
-        }
-      }
-    } catch (Exception e) {
-      logger.error("Error occurred while Retrieving Artifact Ids from artifactory url {} repoKey {} groupId {} ",
-          artifactoryConfig.getArtifactoryUrl(), repoKey, groupId, e);
-      prepareException(e, USER);
-    }
-    logger.info("Retrieving Artifact Ids from artifactory url {} repoKey {} groupId {} success",
-        artifactoryConfig.getArtifactoryUrl(), repoKey, groupId);
-    return artifactIds;
-  }
-
   @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   @Override
   public ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, List<String> artifactPaths,
-      String artifactPattern, Map<String, String> metadata, String delegateId, String taskId, String accountId) {
+      List<EncryptedDataDetail> encryptionDetails, String repositoryName, Map<String, String> metadata,
+      String delegateId, String taskId, String accountId) {
     ListNotifyResponseData res = new ListNotifyResponseData();
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
+    String artifactPath = metadata.get(ARTIFACT_PATH).replaceFirst(repositoryName, "").substring(1);
+    String artifactName = metadata.get(ARTIFACT_FILE_NAME);
     try {
-      if (metadata.get(ARTIFACT_PATH) != null) {
-        logger.info("Downloading the file for generic repo");
-        return downloadArtifacts(
-            artifactoryConfig, encryptionDetails, repoType, metadata, delegateId, taskId, accountId);
-      }
-      if (artifactPattern == null) {
-        throw new WingsException(ARTIFACT_SERVER_ERROR).addParam("message", "Artifact pattern is Empty");
-      }
-      logger.info("Downloading artifact file maven repo style");
-      Pattern pattern = Pattern.compile(artifactPattern.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-      String[] paths = artifactPattern.split("/");
-      groupId = getGroupId(Arrays.stream(paths).limit(paths.length - 3).collect(toList()));
-      String artifactId = paths[paths.length - 3];
-      Set<String> artifactNames = new HashSet<>();
-      String latestVersion;
-      if (metadata.get(BUILD_NO) == null) {
-        latestVersion = artifactory.searches()
-                            .artifactsLatestVersion()
-                            .groupId(groupId)
-                            .artifactId(artifactId)
-                            .repositories(repoType)
-                            .doRawSearch();
-      } else {
-        latestVersion = metadata.get("buildNo");
-      }
-      if (latestVersion != null) {
-        logger.info("Downloading artifacts from artifactory for repoType {}, groupId {}, artifactId {} and version {}",
-            repoType, groupId, artifactId, latestVersion);
-        downloadMavenArtifacts(repoType, groupId, artifactPattern, delegateId, taskId, accountId, res, artifactory,
-            pattern, artifactId, artifactNames, latestVersion);
-        logger.info(
-            "Downloading artifacts from artifactory for repoType {}, groupId {}, artifactId {} and version {} success",
-            repoType, groupId, artifactId, latestVersion);
-      } else {
-        logger.error("No version found so not collecting any artifacts");
-      }
+      logger.info("Downloading the file for generic repo");
+      InputStream inputStream = downloadArtifacts(artifactoryConfig, encryptionDetails, repositoryName, metadata);
+      artifactCollectionTaskHelper.addDataToResponse(
+          new ImmutablePair<>(artifactName, inputStream), artifactPath, res, delegateId, taskId, accountId);
+      return res;
     } catch (Exception e) {
-      String msg = "Failed to download the latest artifacts  of repo [" + repoType + "] groupId [" + groupId;
+      String msg =
+          "Failed to download the latest artifacts  of repo [" + repositoryName + "] artifactPath [" + artifactPath;
       prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ADMIN, e);
     }
     return res;
   }
 
-  private void downloadMavenArtifacts(String repoType, String groupId, String artifactPattern, String delegateId,
-      String taskId, String accountId, ListNotifyResponseData res, Artifactory artifactory, Pattern pattern,
-      String artifactId, Set<String> artifactNames, String latestVersion) {
-    List<RepoPath> results = artifactory.searches()
-                                 .artifactsByGavc()
-                                 .groupId(groupId)
-                                 .artifactId(artifactId)
-                                 .version(latestVersion)
-                                 .repositories(repoType)
-                                 .doSearch();
-    for (RepoPath searchItem : results) {
-      String repoKey = searchItem.getRepoKey();
-      String itemPath = searchItem.getItemPath();
-      String artifactName = itemPath.substring(itemPath.lastIndexOf('/') + 1);
-      try {
-        if (pattern.matcher(itemPath).find()) {
-          logger.info("Artifact name {}", artifactName);
-          if (artifactName.endsWith("pom") || artifactName.equals("maven-metadata.xml")) {
-            continue;
-          }
-
-          if (artifactNames.add(artifactName)) {
-            logger.info("Downloading file {} ", searchItem.getItemPath());
-            InputStream inputStream = artifactory.repository(repoKey).download(itemPath).doDownload();
-            logger.info("Downloading file {} success", searchItem.getItemPath());
-            artifactCollectionTaskHelper.addDataToResponse(
-                new ImmutablePair<>(artifactName, inputStream), itemPath, res, delegateId, taskId, accountId);
-          }
-        } else {
-          logger.info("Repo path {} not matching with the artifact pattern {}", itemPath, artifactPattern);
-        }
-
-      } catch (Exception e) {
-        logger.error(format("Failed to download the artifact from path %s", itemPath), e);
-      }
+  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
+  @Override
+  public Pair<String, InputStream> downloadArtifact(ArtifactoryConfig artifactoryConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repositoryName, Map<String, String> metadata) {
+    Pair<String, InputStream> pair = null;
+    String artifactPath = metadata.get(ARTIFACT_PATH).replaceFirst(repositoryName, "").substring(1);
+    String artifactName = metadata.get(ARTIFACT_FILE_NAME);
+    try {
+      logger.info("Downloading the file for generic repo");
+      InputStream inputStream = downloadArtifacts(artifactoryConfig, encryptionDetails, repositoryName, metadata);
+      pair = new ImmutablePair<>(artifactName, inputStream);
+    } catch (Exception e) {
+      String msg =
+          "Failed to download the latest artifacts  of repo [" + repositoryName + "] artifactPath [" + artifactPath;
+      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ADMIN, e);
     }
+    return pair;
   }
 
   @Override
   public boolean validateArtifactPath(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoType, String artifactPath, String repositoryType) {
-    logger.info(
-        "Validating artifact path {} for repository {} and repositoryType {}", artifactPath, repoType, repositoryType);
+      String repositoryName, String artifactPath, String repositoryType) {
+    logger.info("Validating artifact path {} for repository {} and repositoryType {}", artifactPath, repositoryName,
+        repositoryType);
     if (isBlank(artifactPath)) {
       throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", "Artifact Pattern  can not be empty");
     }
     List<BuildDetails> filePaths = null;
-    if (!repositoryType.equals(maven.name())) {
-      try {
-        filePaths = getFilePaths(artifactoryConfig, encryptionDetails, repoType, artifactPath, repositoryType, 1);
-      } catch (Exception e) {
-        prepareAndThrowException("Invalid artifact path", USER, null);
-      }
-      if (isEmpty(filePaths)) {
-        prepareAndThrowException(
-            "No artifact files matching with the artifact path [" + artifactPath + "]", USER, null);
-      }
-      logger.info("Validating whether directory exists or not for Generic repository type by fetching file paths");
-    } else {
-      // First get the groupId
-      String[] artifactPaths = artifactPath.split("/");
-      if (isEmpty(artifactPaths)) {
-        prepareAndThrowException("Invalid artifact path", USER, null);
-      }
-      if (artifactPaths.length < 4) {
-        prepareAndThrowException(
-            "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war", USER, null);
-        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-            .addParam("message", "Not in maven style format. Sample format: com/mycompany/myservice/*/myservice*.war");
-      }
-      String groupId = getGroupId(Arrays.stream(artifactPaths).limit(artifactPaths.length - 3).collect(toList()));
-      String artifactId = artifactPaths[artifactPaths.length - 3];
-      if (groupId.contains("*") || groupId.contains("?")) {
-        prepareAndThrowException(
-            "GroupId path can not contain wild chars. Sample format. e.g. com/mycompany/myservice/*/myservice*.war",
-            USER, null);
-      }
-      if (artifactId.contains("*") || artifactId.contains("?")) {
-        prepareAndThrowException(
-            "Artifact Id can not contain wild chars. Sample format. e.g. com/mycompany/myservice/*/myservice*.war",
-            USER, null);
-      }
-      try {
-        logger.info("Validating maven style repo by fetching the version");
-        BuildDetails buildDetails =
-            getLatestVersion(artifactoryConfig, encryptionDetails, repoType, groupId, artifactId);
-        logger.info("Validation success. Version {}", buildDetails.getNumber());
-      } catch (Exception e) {
-        prepareAndThrowException(
-            "Invalid artifact path. Please verify that artifact published as maven standard", ADMIN, e);
-      }
+
+    try {
+      filePaths = getFilePaths(artifactoryConfig, encryptionDetails, repositoryName, artifactPath, repositoryType, 1);
+    } catch (Exception e) {
+      prepareAndThrowException("Invalid artifact path", USER, null);
     }
+    if (isEmpty(filePaths)) {
+      prepareAndThrowException("No artifact files matching with the artifact path [" + artifactPath + "]", USER, null);
+    }
+    logger.info("Validating whether directory exists or not for Generic repository type by fetching file paths");
     return true;
   }
 
@@ -837,10 +639,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e).addParam("message", message);
   }
 
-  private ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoKey, Map<String, String> metadata, String delegateId,
-      String taskId, String accountId) {
-    ListNotifyResponseData res = new ListNotifyResponseData();
+  private InputStream downloadArtifacts(ArtifactoryConfig artifactoryConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoKey, Map<String, String> metadata) {
     Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
     Set<String> artifactNames = new HashSet<>();
     String artifactPath = metadata.get(ARTIFACT_PATH).replaceFirst(repoKey, "").substring(1);
@@ -849,11 +649,13 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     try {
       logger.info("Artifact name {}", artifactName);
       if (artifactNames.add(artifactName)) {
-        logger.info("Downloading file {} ", artifactPath);
-        InputStream inputStream = artifactory.repository(repoKey).download(artifactPath).doDownload();
-        logger.info("Downloading file {} success", artifactPath);
-        artifactCollectionTaskHelper.addDataToResponse(
-            new ImmutablePair<>(artifactName, inputStream), artifactPath, res, delegateId, taskId, accountId);
+        if (metadata.get(ARTIFACT_PATH) != null) {
+          logger.info("Downloading the file for generic repo");
+          logger.info("Downloading file {} ", artifactPath);
+          InputStream inputStream = artifactory.repository(repoKey).download(artifactPath).doDownload();
+          logger.info("Downloading file {} success", artifactPath);
+          return inputStream;
+        }
       }
     } catch (Exception e) {
       logger.error("Failed to download the artifact of repository {} from path {}", repoKey, artifactPath, e);
@@ -864,12 +666,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     }
     logger.info(
         "Downloading artifacts from artifactory for repository  {} and file path {} success", repoKey, artifactPath);
-    return res;
-  }
-
-  @Override
-  public BuildDetails getLastSuccessfulBuild(
-      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, String repositoryPath) {
     return null;
   }
 
@@ -916,10 +712,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                                                : artifactoryConfig.getArtifactoryUrl() + "/";
   }
 
-  private String getGroupId(String path) {
-    return "/" + path.replace(".", "/") + "/";
-  }
-
   private void prepareException(Exception e, EnumSet<ReportTarget> reportTargets) throws WingsException {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
@@ -941,5 +733,30 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       throw(WingsException) e;
     }
     throw new WingsException(ARTIFACT_SERVER_ERROR, reportTargets, e).addParam("message", Misc.getMessage(e));
+  }
+
+  public Long getFileSize(
+      ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata) {
+    String artifactPath = metadata.get(Constants.ARTIFACT_PATH);
+    logger.info("Retrieving file paths for artifactPath {}", artifactPath);
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
+    try {
+      String apiStorageQuery = "api/storage/" + artifactPath;
+
+      ArtifactoryRequest repositoryRequest =
+          new ArtifactoryRequestImpl().apiUrl(apiStorageQuery).method(GET).requestType(TEXT).responseType(JSON);
+      LinkedHashMap<String, String> response = artifactory.restCall(repositoryRequest);
+      if (response != null) {
+        return Long.valueOf(response.get("size"));
+      } else {
+        throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
+            .addParam("message", "Unable to get artifact file size ");
+      }
+    } catch (Exception e) {
+      logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
+          artifactoryConfig.getArtifactoryUrl(), e);
+      prepareException(e, ADMIN);
+    }
+    return 0L;
   }
 }

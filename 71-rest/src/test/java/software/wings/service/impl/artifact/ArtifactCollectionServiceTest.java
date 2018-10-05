@@ -8,7 +8,6 @@ import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.RPM;
-import static software.wings.utils.ArtifactType.WAR;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
@@ -325,28 +324,6 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
     assertThat(collectedArtifact).isNotNull();
     assertThat(collectedArtifact.getBuildNo()).isEqualTo("todolist.rpm");
     assertThat(collectedArtifact.getArtifactPath()).isEqualTo("harness-rpm/todolist.rpm");
-  }
-
-  @Test
-  public void shouldCollectNewArtifactsArtifactoryMaven() {
-    BuildDetails artifactoryBuilds = aBuildDetails().withNumber("1.1").build();
-    ArtifactoryArtifactStream artifactoryArtifactStream = getArtifactoryArtifactStream();
-    artifactoryArtifactStream.setRepositoryType("maven");
-    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(artifactoryArtifactStream);
-
-    when(serviceResourceService.get(APP_ID, artifactoryArtifactStream.getServiceId(), false))
-        .thenReturn(Service.builder().uuid(SERVICE_ID).artifactType(WAR).build());
-
-    Artifact newArtifact = ArtifactCollectionUtil.getArtifact(artifactoryArtifactStream, artifactoryBuilds);
-    when(artifactService.create(any(Artifact.class))).thenReturn(newArtifact);
-    when(buildSourceService.getLastSuccessfulBuild(APP_ID, ARTIFACT_STREAM_ID, SETTING_ID))
-        .thenReturn(artifactoryBuilds);
-
-    List<Artifact> collectedArtifacts = artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
-    assertThat(collectedArtifacts).isNotNull().size().isEqualTo(1);
-    Artifact collectedArtifact = collectedArtifacts.get(0);
-    assertThat(collectedArtifact).isNotNull();
-    assertThat(collectedArtifact.getBuildNo()).isEqualTo("1.1");
   }
 
   @Test

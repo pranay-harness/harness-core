@@ -14,6 +14,7 @@ public class BuildDetails {
   private String buildUrl;
   private String buildDisplayName;
   private String buildFullDisplayName;
+  private String artifactFileSize;
   private Map<String, String> buildParameters = new HashMap<>();
 
   public String getBuildDisplayName() {
@@ -91,6 +92,14 @@ public class BuildDetails {
 
   public void setBuildUrl(String buildUrl) {
     this.buildUrl = buildUrl;
+  }
+
+  public String getArtifactFileSize() {
+    return artifactFileSize;
+  }
+
+  public void setArtifactFileSize(String artifactFileSize) {
+    this.artifactFileSize = artifactFileSize;
   }
 
   @Override
@@ -281,6 +290,7 @@ public class BuildDetails {
       buildDetails.setBuildUrl(buildUrl);
       buildDetails.setBuildDisplayName(buildDisplayName);
       buildDetails.setBuildFullDisplayName(buildFullDisplayName);
+      buildDetails.setArtifactFileSize(artifactFileSize);
       return buildDetails;
     }
   }

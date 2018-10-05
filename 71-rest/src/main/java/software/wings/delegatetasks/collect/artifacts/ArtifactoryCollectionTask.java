@@ -35,8 +35,7 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
   public ListNotifyResponseData run(Object[] parameters) {
     try {
       return run((ArtifactoryConfig) parameters[0], (List<EncryptedDataDetail>) parameters[1], (String) parameters[2],
-          (String) parameters[3], (List<String>) parameters[4], (String) parameters[5],
-          (Map<String, String>) parameters[6]);
+          (Map<String, String>) parameters[3]);
     } catch (Exception e) {
       logger.error("Exception occurred while collecting artifact", e);
       return new ListNotifyResponseData();
@@ -44,11 +43,10 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
   }
 
   public ListNotifyResponseData run(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String repoType, String groupId, List<String> artifactPaths, String artifactPattern,
-      Map<String, String> metadata) {
+      String repositoryName, Map<String, String> metadata) {
     try {
-      return artifactoryService.downloadArtifacts(artifactoryConfig, encryptedDataDetails, repoType, groupId,
-          artifactPaths, artifactPattern, metadata, getDelegateId(), getTaskId(), getAccountId());
+      return artifactoryService.downloadArtifacts(artifactoryConfig, encryptedDataDetails, repositoryName, metadata,
+          getDelegateId(), getTaskId(), getAccountId());
     } catch (Exception e) {
       logger.warn("Exception occurred while collecting artifact for artifact server {} : {}",
           artifactoryConfig.getArtifactoryUrl(), Misc.getMessage(e), e);

@@ -5,7 +5,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.containing;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
@@ -17,6 +16,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -24,10 +24,13 @@ import org.mockito.InjectMocks;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 import software.wings.beans.config.ArtifactoryConfig;
+import software.wings.common.Constants;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
 import software.wings.waitnotify.ListNotifyResponseData;
 
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -165,45 +168,13 @@ public class ArtifactoryServiceTest {
     //  assertThat(groupIds).contains("io.harness");
   }
 
-  @Test
-  public void shouldGetArtifactIds() {
-    List<String> groupIds =
-        artifactoryService.getArtifactIds(artifactoryConfig, null, "harness-maven-snapshots", "io.harness");
-    assertThat(groupIds).isEmpty();
-  }
-
-  @Test
-  public void shouldGetLatestVersion() {
-    BuildDetails buildDetails = artifactoryService.getLatestVersion(
-        artifactoryConfig, null, "harness-maven", "io.harness.todolist", "todolist");
-    assertThat(buildDetails).isNotNull();
-    assertThat(buildDetails.getNumber()).isEqualTo("1.1");
-  }
-
-  @Test
-  public void shouldGetLatestSnapshotVersion() {
-    BuildDetails buildDetails = artifactoryService.getLatestVersion(
-        artifactoryConfig, null, "harness-maven-snapshots", "io.harness.todolist", "snapshot");
-    assertThat(buildDetails).isNotNull();
-    assertThat(buildDetails.getNumber()).isEqualTo("1.1");
-  }
-
-  @Test
-  public void shouldDownloadArtifacts() {
-    ListNotifyResponseData listNotifyResponseData = artifactoryService.downloadArtifacts(artifactoryConfig, null,
-        "harness-maven-snapshots", "io.harness.todolist", asList("todolist"), "io/harness/todolist",
-        ImmutableMap.of("buildNo", "1.1"), "delegateId", "taskId", "ACCOUNT_ID");
-
-    assertThat(listNotifyResponseData).isNotNull();
-  }
-
   @Test(expected = WingsException.class)
   public void shouldDownloadRpmArtifacts() {
-    ListNotifyResponseData listNotifyResponseData = artifactoryService.downloadArtifacts(artifactoryConfig, null,
-        "harness-rpm", "io.harness.todolist", asList("todolist"), "io/harness/todolist",
-        ImmutableMap.of(
-            ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm", ARTIFACT_FILE_NAME, "todolist-1.0-2.x86_64.rpm"),
-        "delegateId", "taskId", "ACCOUNT_ID");
+    ListNotifyResponseData listNotifyResponseData =
+        artifactoryService.downloadArtifacts(artifactoryConfig, null, "harness-rpm",
+            ImmutableMap.of(ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm", ARTIFACT_FILE_NAME,
+                "todolist-1.0-2.x86_64.rpm"),
+            "delegateId", "taskId", "ACCOUNT_ID");
     assertThat(listNotifyResponseData).isNotNull();
   }
 
@@ -221,5 +192,21 @@ public class ArtifactoryServiceTest {
   public void shouldValidateArtifactPathMaven() {
     artifactoryService.validateArtifactPath(
         artifactoryConfig, null, "harness-rpm", "io/harness/todolist/*/todolist", "maven");
+  }
+
+  @Test(expected = WingsException.class)
+  public void shouldDownloadRpmArtifact() {
+    Pair<String, InputStream> pair = artifactoryService.downloadArtifact(artifactoryConfig, null, "harness-rpm",
+        ImmutableMap.of(
+            ARTIFACT_PATH, "harness-rpm/todolist-1.0-2.x86_64.rpm", ARTIFACT_FILE_NAME, "todolist-1.0-2.x86_64.rpm"));
+    assertThat(pair).isNotNull();
+  }
+
+  @Test
+  public void shouldGetFileSize() {
+    Map<String, String> metadata = new HashMap<>();
+    metadata.put(Constants.ARTIFACT_PATH, "harness-maven/io/harness/todolist/todolist/1.1/todolist-1.1.war");
+    Long size = artifactoryService.getFileSize(artifactoryConfig, null, metadata);
+    assertThat(size).isEqualTo(1776799L);
   }
 }
