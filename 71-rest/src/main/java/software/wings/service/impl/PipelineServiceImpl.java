@@ -17,8 +17,6 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
-import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
-import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
@@ -45,10 +43,10 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.FailureStrategy;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.OrchestrationWorkflow;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineExecution;
@@ -62,6 +60,7 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.TriggerService;
@@ -98,6 +97,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private WorkflowService workflowService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private YamlPushService yamlPushService;
+  @Inject private WorkflowServiceHelper workflowServiceHelper;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -436,14 +436,8 @@ public class PipelineServiceImpl implements PipelineService {
               Validator.notNullCheck("Workflow does not exist", workflow, USER);
               Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow());
               if (!hasSshInfraMapping) {
-                List<InfrastructureMapping> infrastructureMappings =
-                    workflowService.getResolvedInfraMappings(workflow, pse.getWorkflowVariables());
-                if (isNotEmpty(infrastructureMappings)) {
-                  hasSshInfraMapping =
-                      infrastructureMappings.stream().anyMatch((InfrastructureMapping infra)
-                                                                   -> AWS_SSH.name().equals(infra.getInfraMappingType())
-                              || PHYSICAL_DATA_CENTER_SSH.name().equals(infra.getInfraMappingType()));
-                }
+                hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
+                    (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
               }
               if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
                 templatized = true;

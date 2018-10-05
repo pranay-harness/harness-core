@@ -2616,7 +2616,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     Workflow workflow2 = workflowService.readWorkflow(workflow1.getAppId(), workflow1.getUuid());
     assertThat(workflow2).isNotNull();
 
-    assertThat(workflowService.workflowHasSshInfraMapping(workflow2.getAppId(), workflow2.getUuid())).isFalse();
+    assertThat(workflowService.workflowHasSshDeploymentPhase(workflow2.getAppId(), workflow2.getUuid())).isTrue();
   }
 
   @Test

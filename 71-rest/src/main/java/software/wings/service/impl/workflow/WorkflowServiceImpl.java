@@ -1153,14 +1153,14 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public boolean workflowHasSshInfraMapping(String appId, String workflowId) {
+  public boolean workflowHasSshDeploymentPhase(String appId, String workflowId) {
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow", workflow, USER);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     notNullCheck("OrchestrationWorkflow", orchestrationWorkflow, USER);
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      return workflowServiceHelper.workflowHasSshInfraMapping(appId, canaryOrchestrationWorkflow);
+      return workflowServiceHelper.workflowHasSshDeploymentPhase(canaryOrchestrationWorkflow);
     }
     return false;
   }
