@@ -4,6 +4,7 @@ import static software.wings.common.Constants.RESPONSE_BODY;
 import static software.wings.common.Constants.STATUS_CODE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Builder;
 import lombok.Builder.Default;
@@ -11,12 +12,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.apache.http.HttpStatus;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.beans.EmbeddedUser;
+import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 
 import java.time.OffsetDateTime;
@@ -32,6 +35,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @NoArgsConstructor
 @ToString(exclude = {"validUntil"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ThirdPartyApiCallLog extends Base {
   private static final String NO_STATE_EXECUTION_ID = "NO_STATE_EXECUTION";
   private static final int MAX_JSON_RESPONSE_LENGTH = 16384;
@@ -117,5 +121,25 @@ public class ThirdPartyApiCallLog extends Base {
     private String value;
     @Default private FieldType type = FieldType.TEXT;
   }
+
   public enum FieldType { JSON, XML, NUMBER, URL, TEXT, TIMESTAMP }
+
+  public ExecutionStatus getStatus() {
+    /*
+     In an unexpected scenario where the response is an empty list of fields,
+     we report it as a failed API Call
+     This can only happen if the addFieldToResponse(...) method was never invoked
+     on this instance.
+     This is also for preventing NPE while getting 0th index of response
+     */
+    if (this.response.isEmpty()) {
+      return ExecutionStatus.FAILED;
+    }
+    if (this.response.stream().anyMatch(
+            obj -> obj.getName().equals(STATUS_CODE) && !obj.getValue().equals(String.valueOf(HttpStatus.SC_OK)))) {
+      return ExecutionStatus.FAILED;
+    }
+
+    return ExecutionStatus.SUCCESS;
+  }
 }
