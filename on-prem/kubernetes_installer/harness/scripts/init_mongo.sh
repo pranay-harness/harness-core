@@ -4,8 +4,7 @@ set -e
 
 
 function seedData(){
-	kubectl exec -it -n harness mongo-0 -- bash -c "mongo  mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/harness --eval 'rs.status();'" | grep NotYetInitialized 
-	if [[ "$?" == "0" ]];then
+	if [[ $(kubectl exec -it -n harness mongo-0 -- bash -c "mongo  mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/harness --eval 'rs.status();'" | grep NotYetInitialized ) ]];then
 		echo "Replica sets are not initialized, initializing replica sets..."
 		kubectl exec -it -n harness mongo-0 -- bash -c "mongo mongodb://mongo-0.mongo:27017/ < /scripts/initialize_replicaset.js"
 		echo "Sleeping for 30 seconds..."
@@ -18,9 +17,8 @@ function seedData(){
 echo "######################### Mongo Start ##############################"
 kubectl apply -f output/harness-mongo.yaml
 
-kubectl get configmaps -n harness scripts-configmap
 
-if [[ $? == 1 ]]; then
+if [[ !$(kubectl get configmaps -n harness scripts-configmap) ]]; then
     echo "No configs found setting config"
     kubectl apply -f output/harness-configs.yaml
 fi
@@ -37,9 +35,7 @@ done
 if [[ $i -eq 3 ]]; then
 	echo "All mongos are up and running"
 
-	kubectl exec -it -n harness mongo-0 -- bash -c "mongo  mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/harness --eval 'rs.status();'" | grep NotYetInitialized 
-
-	if [[ "$?" == "0" ]];then
+	if [[ $(kubectl exec -it -n harness mongo-0 -- bash -c "mongo  mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/harness --eval 'rs.status();'" | grep NotYetInitialized ) ]];then
 		echo "Replica sets are not initialized, initializing replica sets..."
 		kubectl exec -it -n harness mongo-0 -- bash -c "mongo mongodb://mongo-0.mongo:27017/ < /scripts/initialize_replicaset.js"
 		echo "Sleeping for 30 seconds..."

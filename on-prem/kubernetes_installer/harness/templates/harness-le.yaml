@@ -7,7 +7,7 @@ metadata:
     harness-app: harness
     harness-service: learning-engine
   name: harness-learning-engine
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   replicas: 1
   revisionHistoryLimit: 10

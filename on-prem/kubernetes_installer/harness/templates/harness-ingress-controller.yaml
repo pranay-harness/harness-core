@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nginx-default-backend
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   ports:
   - name: http
@@ -23,7 +23,7 @@ metadata:
   labels:
     harness-service: ingress-controller-default-backend
   name: nginx-default-backend
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   replicas: 1
   selector:
@@ -78,7 +78,7 @@ metadata:
     harness-app: harness
     harness-service: nginx-ingress-controller
   name: nginx-ingress-controller
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   ports:
   - name: http
@@ -100,7 +100,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: default
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 roleRef:
   kind: ClusterRole
   name: cluster-admin
@@ -115,7 +115,7 @@ metadata:
     harness-app: harness
     harness-service: nginx-ingress-controller
   name: nginx-ingress-controller
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   replicas: 1
   selector:

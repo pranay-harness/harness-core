@@ -5,7 +5,7 @@ data:
 kind: ConfigMap
 metadata:
   name: nginx-default-backend
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 
 ---
 
@@ -22,7 +22,7 @@ metadata:
     harness-app: harness
     harness-service: nginx-ingress-controller
   name: nginx-ingress-controller
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 ---
 
 ### Learning Engine configs and secrets ###
@@ -41,7 +41,7 @@ metadata:
     harness-app: harness
     harness-service: learning-engine
   name: harness-learning-engine
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 ---
 
 apiVersion: v1
@@ -50,7 +50,7 @@ stringData:
 kind: Secret
 metadata:
   name: harness-learning-engine
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 
 
 ---
@@ -82,7 +82,7 @@ metadata:
     haress-app: harness
     harness-service: manager
   name: harness-manager
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 ---
 
 apiVersion: v1
@@ -99,7 +99,7 @@ stringData:
 kind: Secret
 metadata:
   name: harness-manager
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 
 ---
 
@@ -424,7 +424,7 @@ data:
 kind: ConfigMap
 metadata:
   name: scripts-configmap
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 
 ---
 
@@ -439,6 +439,6 @@ metadata:
     harness-app: harness
     harness-service: ui
   name: harness-ui
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 
 ---

@@ -7,7 +7,7 @@ metadata:
     harness-app: harness
     harness-service: ui
   name: harness-ui
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   ports:
   - name: http
@@ -33,7 +33,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 
   name: harness-ui
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   rules:
   - http:
@@ -52,7 +52,7 @@ metadata:
     harness-app: harness
     harness-service: ui
   name: harness-ui
-  namespace: {{ .Values.kubernetes-cluster-namespace }}
+  namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   progressDeadlineSeconds: 600
   replicas: 1

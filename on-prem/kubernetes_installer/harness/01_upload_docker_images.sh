@@ -5,7 +5,7 @@ set -e
 source scripts/utils.sh
 
 echo "Fetching kubernetes cluster information..."
-K8S_CLUSTER_NAMESPACE=$(yq r values.yaml kubernetes-cluster-namespace)
+K8S_CLUSTER_NAMESPACE=$(yq r values.yaml kubernetesClusterNamespace)
 echo "Kubernetes cluster namespace: $K8S_CLUSTER_NAMESPACE"
 kubectl cluster-info
 echo "Above kubernetes cluster and namespace will be used for harness installation"
@@ -20,15 +20,15 @@ docker_registry_url=$(yq r values.internal.yaml privatedockerrepo.docker_registr
 
 VERSION_PROPERTY_FILE=version.properties
 
-if [[ $docker_registry_username == "" ]] || [[ $docker_registry_password == "" ]] || [[ $docker_registry_url == "" ]] ; then
+if [[ $docker_registry_username == "" ]] || [[ $docker_registry_password == "" ]] || [[ $docker_registry_url == "" ]] || [[ $docker_registry_username == "null" ]] || [[ $docker_registry_password == "null" ]] || [[ $docker_registry_url == "null" ]] ; then
     echo "Docker credentials incomplete"
     cat config.properties
     exit 1
 fi
 
-echo $docker_registry_password | docker login $docker_registry_url -u $docker_registry_username --password-stdin
+echo
 
-if [[ $? -eq 1 ]]; then
+if [[ $($docker_registry_password | docker login $docker_registry_url -u $docker_registry_username --password-stdin) ]]; then
     echo "Docker login failed";
     cat config.properties
     exit 1
