@@ -160,21 +160,23 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       validateVaultConfig(accountId, vaultConfig);
     }
 
+    Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
+    List<KmsConfig> kmsConfigs = kmsConfigQuery.asList();
+
     // update without token or url changes
     if (!shouldVerify) {
       VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
       savedVaultConfig.setName(vaultConfig.getName());
       savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
       savedVaultConfig.setDefault(vaultConfig.isDefault());
-      return wingsPersistence.save(savedVaultConfig);
+      String parentId = wingsPersistence.save(savedVaultConfig);
+      updateKMSConfig(kmsConfigs, !vaultConfig.isDefault());
+      return parentId;
     }
 
     vaultConfig.setAccountId(accountId);
     Query<VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId);
     List<VaultConfig> savedConfigs = query.asList();
-
-    Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
-    List<KmsConfig> kmsConfigs = kmsConfigQuery.asList();
 
     EncryptedData encryptedData =
         kmsService.encrypt(vaultConfig.getAuthToken().toCharArray(), accountId, kmsService.getSecretConfig(accountId));
@@ -215,15 +217,8 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           wingsPersistence.save(savedConfig);
         }
       }
-
-      for (KmsConfig kmsConfig : kmsConfigs) {
-        if (kmsConfig.isDefault()) {
-          kmsConfig.setDefault(false);
-          wingsPersistence.save(kmsConfig);
-        }
-      }
+      updateKMSConfig(kmsConfigs, false);
     }
-
     return vaultConfigId;
   }
 
@@ -342,6 +337,15 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       String message =
           "Was not able to reach vault using given credentials. Please check your credentials and try again";
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam("reason", message);
+    }
+  }
+
+  private void updateKMSConfig(List<KmsConfig> kmsConfigs, boolean isDefault) {
+    for (KmsConfig kmsConfig : kmsConfigs) {
+      if (kmsConfig.isDefault()) {
+        kmsConfig.setDefault(isDefault);
+        wingsPersistence.save(kmsConfig);
+      }
     }
   }
 }
