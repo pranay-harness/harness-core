@@ -1,6 +1,6 @@
 
 ## Harness application will be installed in this namespace in the given cluster
-kubernetes-cluster-namespace: harness
+kubernetesClusterNamespace: harness
 
 accounts:
   accountName: Demo-Account
