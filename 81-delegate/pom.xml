@@ -176,10 +176,6 @@
                 <directory>../rest/src/main/resources/mailtemplates</directory>
                 <targetPath>mailtemplates/</targetPath>
             </resource>
-            <resource>
-                <directory>src/main/resources-filtered</directory>
-                <filtering>true</filtering>
-            </resource>
         </resources>
     </build>
 
