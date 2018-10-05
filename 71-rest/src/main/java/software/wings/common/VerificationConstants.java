@@ -27,8 +27,8 @@ public class VerificationConstants {
   }
 
   public static List<StateType> getLogAnalysisStates() {
-    return Arrays.asList(
-        StateType.ELK, StateType.SUMO, StateType.LOGZ, StateType.SPLUNK, StateType.SPLUNKV2, StateType.CLOUD_WATCH);
+    return Arrays.asList(StateType.ELK, StateType.SUMO, StateType.LOGZ, StateType.SPLUNK, StateType.SPLUNKV2,
+        StateType.CLOUD_WATCH, StateType.BUG_SNAG);
   }
 
   public static String getNewRelicMetricsYamlUrl() {

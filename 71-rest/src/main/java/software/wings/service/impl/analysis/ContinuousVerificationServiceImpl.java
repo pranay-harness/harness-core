@@ -180,11 +180,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(final String accountId,
       long beginEpochTs, long endEpochTs, boolean isTimeSeries,
-      PageRequest<ContinuousVerificationExecutionMetaData> pageRequest) {
+      PageRequest<ContinuousVerificationExecutionMetaData> pageRequestFromUI) {
     // TODO: Move this accountId check to Rbac
     if (!featureFlagService.isEnabled(FeatureName.GLOBAL_CV_DASH, accountId)) {
       return new PageResponse<>();
     }
+    PageRequest<ContinuousVerificationExecutionMetaData> pageRequest =
+        PageRequestBuilder.aPageRequest().withOffset(pageRequestFromUI.getOffset()).build();
     if (beginEpochTs < 0 || endEpochTs < 0) {
       // if there's no start/end, we will default to 7 days
       beginEpochTs = Timestamp.currentMinuteBoundary() - TimeUnit.DAYS.toMillis(7);
