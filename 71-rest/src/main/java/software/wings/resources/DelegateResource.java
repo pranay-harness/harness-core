@@ -288,8 +288,9 @@ public class DelegateResource {
   public RestResponse<DelegateProfileParams> checkForProfile(@QueryParam("accountId") @NotEmpty String accountId,
       @PathParam("delegateId") String delegateId, @QueryParam("profileId") String profileId,
       @QueryParam("lastUpdatedAt") Long lastUpdatedAt) {
-    DelegateProfileParams init = delegateService.checkForProfile(accountId, delegateId, profileId, lastUpdatedAt);
-    return new RestResponse<>(init);
+    DelegateProfileParams profileParams =
+        delegateService.checkForProfile(accountId, delegateId, profileId, lastUpdatedAt);
+    return new RestResponse<>(profileParams);
   }
 
   @DelegateAuth
