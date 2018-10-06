@@ -213,10 +213,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
               .kmsId(vaultConfig.getUuid())
               .build();
         } else {
-          String errorMsg =
-              new StringBuilder().append("Request not successful. Reason: {").append(response).append("}").toString();
+          String errorMsg = "Request not successful. Reason: {" + response + "}";
           logger.error(errorMsg);
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, errorMsg, USER);
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
         }
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
@@ -224,8 +223,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(1000));
         } else {
           logger.error(format("encryption failed after %d retries ", retry), e);
-          throw new WingsException(
-              ErrorCode.VAULT_OPERATION_ERROR, "encryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
+              .addParam("reason", "encryption failed after " + NUM_OF_RETRIES + " retries");
         }
       }
     }
@@ -249,10 +248,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         if (response.isSuccessful()) {
           return response.body().getData().getValue().toCharArray();
         } else {
-          String errorMsg =
-              new StringBuilder().append("Request not successful. Reason: {").append(response).append("}").toString();
+          String errorMsg = "Request not successful. Reason: {" + response + "}";
           logger.error(errorMsg);
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, errorMsg, USER);
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
         }
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
@@ -260,8 +258,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(1000));
         } else {
           logger.error("decryption failed after {} retries for {}", retry, data, e);
-          throw new WingsException(
-              ErrorCode.VAULT_OPERATION_ERROR, "Decryption failed after " + NUM_OF_RETRIES + " retries", USER, e);
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
+              .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
         }
       }
     }
@@ -273,7 +271,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     try {
       getVaultRestClient(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path).execute();
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, "Deletion of secret failed ", USER, e);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
+          .addParam("reason", "Deletion of secret failed");
     }
   }
 
@@ -288,8 +287,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         if (response.isSuccessful()) {
           return true;
         }
-        String errorMsg =
-            new StringBuilder().append("Request not successful. Reason: {").append(response).append("}").toString();
+        String errorMsg = "Request not successful. Reason: {" + response + "}";
         logger.error(errorMsg);
         throw new IOException(errorMsg);
       } catch (Exception e) {
@@ -298,8 +296,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
           sleep(ofMillis(1000));
         } else {
           logger.error("renewal failed after {} retries for {}", retry, vaultConfig, e);
-          throw new WingsException(
-              ErrorCode.VAULT_OPERATION_ERROR, "renewal failed after " + NUM_OF_RETRIES + " retries", USER, e);
+          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
+              .addParam("reason", "renewal failed after " + NUM_OF_RETRIES + " retries");
         }
       }
     }

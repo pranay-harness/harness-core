@@ -193,8 +193,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     try {
       vaultConfigId = wingsPersistence.save(vaultConfig);
     } catch (DuplicateKeyException e) {
-      throw new WingsException(
-          ErrorCode.VAULT_OPERATION_ERROR, "Another configuration with the same name exists", USER_SRE)
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
           .addParam("reason", "Another configuration with the same name exists");
     }
 
