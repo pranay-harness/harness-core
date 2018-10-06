@@ -1,11 +1,11 @@
 ### Dockerization of Manager ####### Doc
 
-mkdir -p dist/manager ;
+mkdir -p dist ;
+cd dist
+cp -R ../scripts/jenkins/ .
+cd ..
 
-#mkdir -p dist/temp ;
-#cd dist/temp
-#tar -xvf ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz
-#cd ../..
+mkdir -p dist/manager ;
 
 cd dist/manager
 
