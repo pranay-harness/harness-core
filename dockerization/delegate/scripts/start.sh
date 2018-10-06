@@ -56,6 +56,7 @@ ACCOUNT_STATUS=$(curl $PROXY_CURL -#k _managerHostAndPort_/api/account/_accountI
 if [[ $ACCOUNT_STATUS == "DELETED" ]]
 then
   rm *
+  touch __deleted__
   while true; do sleep 60s; done
 fi
 

@@ -39,6 +39,8 @@ public interface AccountService {
 
   Account get(String accountId);
 
+  String getAccountStatus(String accountId);
+
   Account decryptLicenseInfo(Account account, boolean setExpiryTime);
 
   void delete(String accountId);
@@ -52,6 +54,8 @@ public interface AccountService {
   String suggestAccountName(@NotNull String accountName);
 
   boolean exists(String accountName);
+
+  boolean isAccountDeleted(String accountId);
 
   boolean isAccountExpired(String accountId);
 
