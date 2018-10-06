@@ -212,8 +212,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(new QueueModule(databaseModule.getPrimaryDatastore(),
-        StringUtils.contains(configuration.getFeatureNames(), MONGO_QUEUE_VERSIONING.toString())));
+    modules.add(
+        new QueueModule(StringUtils.contains(configuration.getFeatureNames(), MONGO_QUEUE_VERSIONING.toString())));
     modules.add(new ExecutorModule());
     modules.add(new TemplateModule());
 

@@ -5,7 +5,6 @@ import com.google.inject.TypeLiteral;
 
 import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queue;
-import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.collect.ArtifactCollectEventListener;
@@ -26,7 +25,6 @@ import software.wings.waitnotify.NotifyEventListener;
  * Created by peeyushaggarwal on 5/25/16.
  */
 public class QueueModule extends AbstractModule {
-  private AdvancedDatastore datastore;
   private boolean filterWithVersion;
 
   /**
@@ -34,8 +32,7 @@ public class QueueModule extends AbstractModule {
    *
    * @param datastore datastore for queues
    */
-  public QueueModule(AdvancedDatastore datastore, boolean filterWithVersion) {
-    this.datastore = datastore;
+  public QueueModule(boolean filterWithVersion) {
     this.filterWithVersion = filterWithVersion;
   }
 
@@ -44,18 +41,16 @@ public class QueueModule extends AbstractModule {
    */
   @Override
   protected void configure() {
-    bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueue<>(EmailData.class, datastore));
-    bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueue<>(CollectEvent.class, datastore));
+    bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueue<>(EmailData.class));
+    bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueue<>(CollectEvent.class));
     bind(new TypeLiteral<Queue<NotifyEvent>>() {})
-        .toInstance(new MongoQueue<>(NotifyEvent.class, datastore, 5, filterWithVersion));
+        .toInstance(new MongoQueue<>(NotifyEvent.class, 5, filterWithVersion));
     bind(new TypeLiteral<Queue<DeploymentEvent>>() {})
-        .toInstance(new MongoQueue<>(DeploymentEvent.class, datastore, 60, filterWithVersion));
-    bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {})
-        .toInstance(new MongoQueue<>(KmsTransitionEvent.class, datastore, 30));
+        .toInstance(new MongoQueue<>(DeploymentEvent.class, 60, filterWithVersion));
+    bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {}).toInstance(new MongoQueue<>(KmsTransitionEvent.class, 30));
     bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
-        .toInstance(new MongoQueue<>(ExecutionEvent.class, datastore, 30, filterWithVersion));
-    bind(new TypeLiteral<Queue<DelayEvent>>() {})
-        .toInstance(new MongoQueue<>(DelayEvent.class, datastore, 5, filterWithVersion));
+        .toInstance(new MongoQueue<>(ExecutionEvent.class, 30, filterWithVersion));
+    bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, 5, filterWithVersion));
 
     bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);

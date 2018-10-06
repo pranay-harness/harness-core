@@ -49,7 +49,8 @@ public class QueueListenerTest extends WingsBaseTest {
    */
   @Before
   public void setup() throws UnknownHostException {
-    queue = spy(new MongoQueue<>(QueuableObject.class, datastore));
+    queue = spy(new MongoQueue<>(QueuableObject.class));
+    on(queue).set("datastore", datastore);
     on(queue).set("versionInfoManager", versionInfoManager);
     listener = new QueuableObjectListener();
     listener.setQueue(queue);
