@@ -20,7 +20,7 @@ cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8 ./Dockerfile
 cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr ./Dockerfile-gcr
 cp -r ../../dockerization/manager/scripts/ .
 cp -r ../../dockerization/common-resources/ .
-echo ${BUILD_NUMBER} > build_number.txt
+echo ${VERSION} > version.txt
 cd ../..
 
 mkdir -p dist/verification ;
@@ -35,7 +35,7 @@ cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8 ./Dockerf
 cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-gcr ./Dockerfile-gcr
 cp -R ../../dockerization/verification/scripts/ .
 cp -r ../../dockerization/common-resources/ .
-echo ${BUILD_NUMBER} > build_number.txt
+echo ${VERSION} > version.txt
 cd ../..
 
 
@@ -43,13 +43,13 @@ mkdir -p dist/delegate
 cd dist/delegate
 cp ../../81-delegate/target/delegate-capsule.jar .
 cd ../..
-cp 81-delegate/target/delegate-capsule.jar delegate-${BUILD_NUMBER}.jar
+cp 81-delegate/target/delegate-capsule.jar delegate-${VERSION}.jar
 
 mkdir -p dist/watcher
 cd dist/watcher
 cp ../../82-watcher/target/watcher-capsule.jar .
 cd ../..
-cp 82-watcher/target/watcher-capsule.jar watcher-${BUILD_NUMBER}.jar
+cp 82-watcher/target/watcher-capsule.jar watcher-${VERSION}.jar
 
 mkdir -p dist/disconnected_on_prem_pov
 cd dist/disconnected_on_prem_pov
