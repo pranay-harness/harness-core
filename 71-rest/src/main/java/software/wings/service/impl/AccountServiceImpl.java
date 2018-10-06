@@ -9,6 +9,7 @@ import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Account.ACCOUNT_NAME_KEY;
 import static software.wings.beans.Account.COMPANY_NAME_KEY;
@@ -246,7 +247,7 @@ public class AccountServiceImpl implements AccountService {
     Account account = wingsPersistence.get(Account.class, accountId);
     notNullCheck("Account is null for the given id:" + accountId, account, USER);
 
-    decryptLicenseInfo(asList(account));
+    decryptLicenseInfo(singletonList(account));
     return account;
   }
 
@@ -573,6 +574,11 @@ public class AccountServiceImpl implements AccountService {
       throw new InvalidRequestException("Invalid AccountId: " + accountId);
     }
 
+    LicenseInfo licenseInfo = specificAccount.get().getLicenseInfo();
+    if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
+      throw new InvalidRequestException("Deleted AccountId: " + accountId);
+    }
+
     if (specificAccount.get().getDelegateConfiguration() != null
         && !isBlank(specificAccount.get().getDelegateConfiguration().getWatcherVersion())) {
       return specificAccount.get().getDelegateConfiguration();
@@ -580,6 +586,10 @@ public class AccountServiceImpl implements AccountService {
 
     Optional<Account> fallbackAccount =
         accounts.stream().filter(account -> StringUtils.equals(GLOBAL_ACCOUNT_ID, account.getUuid())).findFirst();
+
+    if (!fallbackAccount.isPresent()) {
+      throw new InvalidRequestException("Global account ID is missing");
+    }
 
     return fallbackAccount.get().getDelegateConfiguration();
   }

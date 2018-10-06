@@ -260,6 +260,8 @@ public class WatcherServiceImpl implements WatcherService {
 
   private void watchDelegate() {
     try {
+      checkAccountStatus();
+
       if (!multiVersion) {
         logger.info("Watching delegate processes: {}", runningDelegates);
       }
@@ -340,8 +342,6 @@ public class WatcherServiceImpl implements WatcherService {
               }
             } else if (delegateData.containsKey(DELEGATE_SELF_DESTRUCT)
                 && (Boolean) delegateData.get(DELEGATE_SELF_DESTRUCT)) {
-              working.set(true);
-              messageService.shutdown();
               selfDestruct();
             } else {
               String delegateVersion = (String) delegateData.get(DELEGATE_VERSION);
@@ -508,6 +508,20 @@ public class WatcherServiceImpl implements WatcherService {
       }
     } catch (Exception e) {
       logger.error(format("Error processing delegate stream: %s", e.getMessage()), e);
+    }
+  }
+
+  private void checkAccountStatus() {
+    try {
+      RestResponse<String> restResponse = timeLimiter.callWithTimeout(
+          ()
+              -> execute(managerClient.getAccountStatus(watcherConfiguration.getAccountId())),
+          5L, TimeUnit.SECONDS, true);
+      if ("DELETED".equals(restResponse.getResource())) {
+        selfDestruct();
+      }
+    } catch (Exception e) {
+      // Ignore
     }
   }
 
@@ -803,7 +817,8 @@ public class WatcherServiceImpl implements WatcherService {
       if (configWatcher.exists()) {
         LineIterator reader = FileUtils.lineIterator(configWatcher);
         while (reader.hasNext()) {
-          logger.warn("   " + reader.nextLine());
+          String line = reader.nextLine();
+          logger.warn("   " + (StringUtils.containsIgnoreCase("secret", line) ? "<redacted>" : line));
         }
       }
     } catch (IOException ex) {
@@ -912,32 +927,38 @@ public class WatcherServiceImpl implements WatcherService {
   }
 
   private void cleanup(File dir, Set<String> keepVersions, String pattern) {
-    FileUtils.listFilesAndDirs(dir, falseFileFilter(), prefixFileFilter(pattern)).forEach(file -> {
-      if (!dir.equals(file) && keepVersions.stream().noneMatch(version -> file.getName().contains(version))) {
-        logger.info("Deleting directory matching [^{}.*] = {}", pattern, file.getAbsolutePath());
-        FileUtils.deleteQuietly(file);
-      }
-    });
+    FileUtils.listFilesAndDirs(dir, falseFileFilter(), prefixFileFilter(pattern))
+        .stream()
+        .filter(file -> !dir.equals(file))
+        .filter(file -> keepVersions.stream().noneMatch(version -> file.getName().contains(version)))
+        .forEach(file -> {
+          logger.info("Deleting directory matching [^{}.*] = {}", pattern, file.getAbsolutePath());
+          FileUtils.deleteQuietly(file);
+        });
   }
 
   private void cleanupVersionFolders(File dir, Set<String> keepVersions) {
-    FileUtils.listFilesAndDirs(dir, falseFileFilter(), trueFileFilter()).forEach(file -> {
-      if (VERSION_PATTERN.matcher(file.getName()).matches()
-          && keepVersions.stream().noneMatch(version -> file.getName().equals(version))) {
-        logger.info("Deleting version folder matching [{}] = {}", VERSION_PATTERN.pattern(), file.getAbsolutePath());
-        FileUtils.deleteQuietly(file);
-      }
-    });
+    FileUtils.listFilesAndDirs(dir, falseFileFilter(), trueFileFilter())
+        .stream()
+        .filter(file -> !dir.equals(file))
+        .filter(file -> VERSION_PATTERN.matcher(file.getName()).matches())
+        .filter(file -> keepVersions.stream().noneMatch(version -> file.getName().equals(version)))
+        .forEach(file -> {
+          logger.info("Deleting version folder matching [{}] = {}", VERSION_PATTERN.pattern(), file.getAbsolutePath());
+          FileUtils.deleteQuietly(file);
+        });
   }
 
   private String getVersion() {
     return System.getProperty("version", "1.0.0-DEV");
   }
 
-  @SuppressFBWarnings({"DM_EXIT"})
+  @SuppressFBWarnings({"DM_EXIT", "DE_MIGHT_IGNORE"})
   private void selfDestruct() {
     logger.info("Self destructing now...");
 
+    working.set(true);
+    messageService.shutdown();
     runningDelegates.forEach(delegateProcess -> {
       try {
         new ProcessExecutor().command("kill", "-9", delegateProcess).execute();
@@ -960,13 +981,16 @@ public class WatcherServiceImpl implements WatcherService {
       IOFileFilter dirFilter = or(prefixFileFilter("jre"), prefixFileFilter("backup."), nameFileFilter(".cache"),
           nameFileFilter("msg"), nameFileFilter("repository"));
 
-      FileUtils.listFilesAndDirs(workingDir, fileFilter, dirFilter).forEach(file -> {
-        try {
-          FileUtils.forceDelete(file);
-        } catch (IOException e) {
-          // Ignore
-        }
-      });
+      FileUtils.listFilesAndDirs(workingDir, fileFilter, dirFilter)
+          .stream()
+          .filter(file -> !workingDir.equals(file))
+          .forEach(file -> {
+            try {
+              FileUtils.forceDelete(file);
+            } catch (IOException e) {
+              // Ignore
+            }
+          });
     } catch (Exception e) {
       // Ignore
     }

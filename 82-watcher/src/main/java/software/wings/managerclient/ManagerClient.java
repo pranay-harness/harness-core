@@ -23,4 +23,6 @@ public interface ManagerClient {
   @GET("infra-download/delegate-auth/watcher/{version}")
   Call<RestResponse<String>> getWatcherDownloadUrl(
       @Path("version") String version, @Query("accountId") String accountId);
+
+  @GET("account/{accountId}/status") Call<RestResponse<String>> getAccountStatus(@Path("accountId") String accountId);
 }
