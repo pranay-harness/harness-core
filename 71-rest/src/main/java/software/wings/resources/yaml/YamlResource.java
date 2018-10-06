@@ -516,8 +516,24 @@ public class YamlResource {
   @Path("/directory")
   @Timed
   @ExceptionMetered
-  public RestResponse<DirectoryNode> getDirectory(@QueryParam("accountId") String accountId) {
-    return new RestResponse<>(yamlDirectoryService.getDirectory(accountId));
+  public RestResponse<DirectoryNode> getDirectory(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
+    return new RestResponse<>(yamlDirectoryService.getDirectory(accountId, appId));
+  }
+
+  /**
+   * Gets the Application config as code by AppId
+   *
+   * @param accountId the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("/application")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<DirectoryNode> getApplication(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
+    return new RestResponse<>(yamlDirectoryService.getApplicationYamlFolderNode(accountId, appId));
   }
 
   /**

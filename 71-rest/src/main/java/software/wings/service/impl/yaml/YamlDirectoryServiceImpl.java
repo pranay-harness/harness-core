@@ -324,24 +324,33 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
-  public DirectoryNode getDirectory(@NotEmpty String accountId) {
+  public DirectoryNode getDirectory(@NotEmpty String accountId, String appId) {
     boolean enabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
-    UserPermissionInfo userPermissionInfo = null;
-    if (enabled) {
-      User user = UserThreadLocal.get();
-      if (user != null) {
-        UserRequestContext userRequestContext = user.getUserRequestContext();
-        if (userRequestContext != null) {
-          userPermissionInfo = userRequestContext.getUserPermissionInfo();
-        }
-      }
-    }
-    return getDirectory(accountId, accountId, enabled, userPermissionInfo);
+    return getDirectory(YamlDirectoryFetchPayload.builder()
+                            .accountId(accountId)
+                            .entityId(accountId)
+                            .applyPermissions(enabled)
+                            .userPermissionInfo(getUserPermissionInfo(accountId))
+                            .appLevelYamlTreeOnly(true)
+                            .appId(appId)
+                            .build());
   }
 
   @Override
   public FolderNode getDirectory(
       @NotEmpty String accountId, String entityId, boolean applyPermissions, UserPermissionInfo userPermissionInfo) {
+    return getDirectory(YamlDirectoryFetchPayload.builder()
+                            .accountId(accountId)
+                            .entityId(entityId)
+                            .applyPermissions(applyPermissions)
+                            .userPermissionInfo(userPermissionInfo)
+                            .appLevelYamlTreeOnly(false)
+                            .appId(null)
+                            .build());
+  }
+
+  private FolderNode getDirectory(YamlDirectoryFetchPayload yamlDirectoryFetchPayload) {
+    String accountId = yamlDirectoryFetchPayload.getAccountId();
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
 
     FolderNode configFolder = new FolderNode(accountId, SETUP_FOLDER, Account.class, directoryPath, yamlGitSyncService);
@@ -352,15 +361,18 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         directoryPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.ACCOUNT_DEFAULTS));
 
     Map<String, AppPermissionSummary> appPermissionMap = null;
-    if (applyPermissions && userPermissionInfo != null) {
-      appPermissionMap = userPermissionInfo.getAppPermissionMapInternal();
+    if (yamlDirectoryFetchPayload.isApplyPermissions() && yamlDirectoryFetchPayload.getUserPermissionInfo() != null) {
+      appPermissionMap = yamlDirectoryFetchPayload.getUserPermissionInfo().getAppPermissionMapInternal();
     }
 
     Map<String, AppPermissionSummary> appPermissionMapFinal = appPermissionMap;
 
     List<Future<FolderNode>> futureList = new ArrayList<>();
     futureList.add(executorService.submit(
-        () -> doApplications(accountId, directoryPath.clone(), applyPermissions, appPermissionMapFinal)));
+        ()
+            -> doApplicationsYamlTree(accountId, directoryPath.clone(), yamlDirectoryFetchPayload.isApplyPermissions(),
+                appPermissionMapFinal, yamlDirectoryFetchPayload.isAppLevelYamlTreeOnly(),
+                yamlDirectoryFetchPayload.getAppId())));
 
     futureList.add(executorService.submit(() -> doCloudProviders(accountId, directoryPath.clone())));
 
@@ -411,8 +423,42 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     return configFolder;
   }
 
-  private FolderNode doApplications(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
-      Map<String, AppPermissionSummary> appPermissionSummaryMap) {
+  @Override
+  public DirectoryNode getApplicationYamlFolderNode(@NotEmpty String accountId, @NotEmpty String applicationId) {
+    boolean enabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
+    UserPermissionInfo userPermissionInfo = getUserPermissionInfo(accountId);
+    Map<String, AppPermissionSummary> appPermissionSummaryMap = null;
+    if (enabled && userPermissionInfo != null) {
+      appPermissionSummaryMap = userPermissionInfo.getAppPermissionMapInternal();
+    }
+
+    DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
+    directoryPath.add(APPLICATIONS_FOLDER);
+
+    FolderNode applicationsFolder = new FolderNode(
+        accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
+
+    return doApplication(applicationId, enabled, appPermissionSummaryMap, applicationsFolder, directoryPath);
+  }
+
+  private UserPermissionInfo getUserPermissionInfo(@NotEmpty String accountId) {
+    boolean enabled = featureFlagService.isEnabled(FeatureName.RBAC, accountId);
+    UserPermissionInfo userPermissionInfo = null;
+    if (enabled) {
+      User user = UserThreadLocal.get();
+      if (user != null) {
+        UserRequestContext userRequestContext = user.getUserRequestContext();
+        if (userRequestContext != null) {
+          userPermissionInfo = userRequestContext.getUserPermissionInfo();
+        }
+      }
+    }
+    return userPermissionInfo;
+  }
+
+  private FolderNode doApplicationLevelOnly(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
+      Map<String, AppPermissionSummary> appPermissionSummaryMap, String appId) {
+    logger.info("Inside doApplicationLevelOnly");
     FolderNode applicationsFolder = new FolderNode(
         accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
 
@@ -435,115 +481,184 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         continue;
       }
 
-      DirectoryPath appPath = directoryPath.clone();
-      FolderNode appFolder = new FolderNode(
-          accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid(), yamlGitSyncService);
-      applicationsFolder.addChild(appFolder);
-      String yamlFileName = INDEX_YAML;
-      appFolder.addChild(new YamlNode(accountId, app.getUuid(), yamlFileName, Application.class,
-          appPath.clone().add(yamlFileName), yamlGitSyncService, Type.APP));
-
-      String defaultVarsYamlFileName = DEFAULTS_YAML;
-      appFolder.addChild(new AppLevelYamlNode(accountId, app.getUuid(), app.getUuid(), defaultVarsYamlFileName,
-          Defaults.class, appPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.APPLICATION_DEFAULTS));
-
-      AppPermissionSummary appPermissionSummary =
-          appPermissionSummaryMap != null ? appPermissionSummaryMap.get(app.getUuid()) : null;
-
-      Set<String> serviceSet = null;
-      Set<String> provisionerSet = null;
-      Set<String> envSet = null;
-      Set<String> workflowSet = null;
-      Set<String> pipelineSet = null;
-
-      if (applyPermissions && appPermissionSummary != null) {
-        Map<Action, Set<String>> servicePermissions = appPermissionSummary.getServicePermissions();
-        if (servicePermissions != null) {
-          serviceSet = servicePermissions.get(Action.READ);
-        }
-
-        Map<Action, Set<String>> provisionerPermissions = appPermissionSummary.getProvisionerPermissions();
-        if (provisionerPermissions != null) {
-          provisionerSet = provisionerPermissions.get(Action.READ);
-        }
-
-        Map<Action, Set<EnvInfo>> envPermissions = appPermissionSummary.getEnvPermissions();
-
-        if (envPermissions != null) {
-          Set<EnvInfo> envInfos = envPermissions.get(Action.READ);
-          if (isEmpty(envInfos)) {
-            envSet = emptySet();
-          } else {
-            envSet = envInfos.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
-          }
-        }
-
-        Map<Action, Set<String>> workflowPermissions = appPermissionSummary.getWorkflowPermissions();
-        if (workflowPermissions != null) {
-          workflowSet = workflowPermissions.get(Action.READ);
-        }
-
-        Map<Action, Set<String>> pipelinePermissions = appPermissionSummary.getPipelinePermissions();
-        if (pipelinePermissions != null) {
-          pipelineSet = pipelinePermissions.get(Action.READ);
-        }
+      if (isNotEmpty(appId) && app.getUuid().equals(appId)) {
+        doApplication(appId, applyPermissions, appPermissionSummaryMap, applicationsFolder, directoryPath);
+      } else {
+        DirectoryPath appPath = directoryPath.clone();
+        FolderNode appFolder = new FolderNode(
+            accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid(), yamlGitSyncService);
+        applicationsFolder.addChild(appFolder);
       }
-
-      Set<String> allowedServices = serviceSet;
-      Set<String> allowedProvisioners = provisionerSet;
-      Set<String> allowedEnvs = envSet;
-      Set<String> allowedWorkflows = workflowSet;
-      Set<String> allowedPipelines = pipelineSet;
-
-      //--------------------------------------
-      // parallelization using CompletionService (part 2)
-      List<Future<FolderNode>> futureResponseList = new ArrayList<>();
-      futureResponseList.add(
-          executorService.submit(() -> doServices(app, appPath.clone(), applyPermissions, allowedServices)));
-
-      futureResponseList.add(
-          executorService.submit(() -> doEnvironments(app, appPath.clone(), applyPermissions, allowedEnvs)));
-
-      futureResponseList.add(
-          executorService.submit(() -> doWorkflows(app, appPath.clone(), applyPermissions, allowedWorkflows)));
-
-      futureResponseList.add(
-          executorService.submit(() -> doPipelines(app, appPath.clone(), applyPermissions, allowedPipelines)));
-
-      futureResponseList.add(
-          executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
-
-      //      completionService.submit(() -> doTriggers(app, appPath.clone()));
-
-      // collect results to this map so we can rebuild the correct order
-      Map<String, FolderNode> map = new HashMap<>();
-
-      for (Future<FolderNode> future : futureResponseList) {
-        try {
-          final FolderNode fn = future.get();
-
-          if (fn == null) {
-            logger.info("********* failure in completionService");
-          } else {
-            map.put(fn.getName(), fn);
-          }
-        } catch (InterruptedException e) {
-          Thread.currentThread().interrupt();
-        } catch (ExecutionException e) {
-          logger.error(Misc.getMessage(e), e);
-        }
-      }
-
-      // this controls the returned order
-      appFolder.addChild(map.get(SERVICES_FOLDER));
-      appFolder.addChild(map.get(ENVIRONMENTS_FOLDER));
-      appFolder.addChild(map.get(WORKFLOWS_FOLDER));
-      appFolder.addChild(map.get(PIPELINES_FOLDER));
-      appFolder.addChild(map.get(PROVISIONERS_FOLDER));
-      //      appFolder.addChild(map.get(TRIGGERS_FOLDER));
-      //--------------------------------------
     }
 
+    return applicationsFolder;
+  }
+
+  /**
+   * Get YamlTreeNode for a single application
+   * @param applicationId
+   * @param applyPermissions
+   * @param appPermissionSummaryMap
+   * @return
+   */
+  private FolderNode doApplication(String applicationId, boolean applyPermissions,
+      final Map<String, AppPermissionSummary> appPermissionSummaryMap, FolderNode applicationsFolder,
+      DirectoryPath directoryPath) {
+    Application app = appService.get(applicationId);
+    String accountId = app.getAccountId();
+    Set<String> allowedAppIds = null;
+    if (applyPermissions) {
+      if (appPermissionSummaryMap != null) {
+        allowedAppIds = appPermissionSummaryMap.keySet();
+      }
+
+      if (isEmpty(allowedAppIds) || !allowedAppIds.contains(applicationId)) {
+        return applicationsFolder;
+      }
+    }
+
+    DirectoryPath appPath = directoryPath.clone();
+    FolderNode appFolder = new FolderNode(
+        accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid(), yamlGitSyncService);
+
+    applicationsFolder.addChild(appFolder);
+    String yamlFileName = INDEX_YAML;
+    appFolder.addChild(new YamlNode(accountId, app.getUuid(), yamlFileName, Application.class,
+        appPath.clone().add(yamlFileName), yamlGitSyncService, Type.APP));
+
+    String defaultVarsYamlFileName = DEFAULTS_YAML;
+    appFolder.addChild(new AppLevelYamlNode(accountId, app.getUuid(), app.getUuid(), defaultVarsYamlFileName,
+        Defaults.class, appPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.APPLICATION_DEFAULTS));
+
+    AppPermissionSummary appPermissionSummary =
+        appPermissionSummaryMap != null ? appPermissionSummaryMap.get(app.getUuid()) : null;
+
+    Set<String> serviceSet = null;
+    Set<String> provisionerSet = null;
+    Set<String> envSet = null;
+    Set<String> workflowSet = null;
+    Set<String> pipelineSet = null;
+
+    if (applyPermissions && appPermissionSummary != null) {
+      Map<Action, Set<String>> servicePermissions = appPermissionSummary.getServicePermissions();
+      if (servicePermissions != null) {
+        serviceSet = servicePermissions.get(Action.READ);
+      }
+
+      Map<Action, Set<String>> provisionerPermissions = appPermissionSummary.getProvisionerPermissions();
+      if (provisionerPermissions != null) {
+        provisionerSet = provisionerPermissions.get(Action.READ);
+      }
+
+      Map<Action, Set<EnvInfo>> envPermissions = appPermissionSummary.getEnvPermissions();
+
+      if (envPermissions != null) {
+        Set<EnvInfo> envInfos = envPermissions.get(Action.READ);
+        if (isEmpty(envInfos)) {
+          envSet = emptySet();
+        } else {
+          envSet = envInfos.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
+        }
+      }
+
+      Map<Action, Set<String>> workflowPermissions = appPermissionSummary.getWorkflowPermissions();
+      if (workflowPermissions != null) {
+        workflowSet = workflowPermissions.get(Action.READ);
+      }
+
+      Map<Action, Set<String>> pipelinePermissions = appPermissionSummary.getPipelinePermissions();
+      if (pipelinePermissions != null) {
+        pipelineSet = pipelinePermissions.get(Action.READ);
+      }
+    }
+
+    Set<String> allowedServices = serviceSet;
+    Set<String> allowedProvisioners = provisionerSet;
+    Set<String> allowedEnvs = envSet;
+    Set<String> allowedWorkflows = workflowSet;
+    Set<String> allowedPipelines = pipelineSet;
+
+    //--------------------------------------
+    // parallelization using CompletionService (part 2)
+    List<Future<FolderNode>> futureResponseList = new ArrayList<>();
+    futureResponseList.add(
+        executorService.submit(() -> doServices(app, appPath.clone(), applyPermissions, allowedServices)));
+
+    futureResponseList.add(
+        executorService.submit(() -> doEnvironments(app, appPath.clone(), applyPermissions, allowedEnvs)));
+
+    futureResponseList.add(
+        executorService.submit(() -> doWorkflows(app, appPath.clone(), applyPermissions, allowedWorkflows)));
+
+    futureResponseList.add(
+        executorService.submit(() -> doPipelines(app, appPath.clone(), applyPermissions, allowedPipelines)));
+
+    futureResponseList.add(
+        executorService.submit(() -> doProvisioners(app, appPath.clone(), applyPermissions, allowedProvisioners)));
+
+    //      completionService.submit(() -> doTriggers(app, appPath.clone()));
+
+    // collect results to this map so we can rebuild the correct order
+    Map<String, FolderNode> map = new HashMap<>();
+
+    for (Future<FolderNode> future : futureResponseList) {
+      try {
+        final FolderNode fn = future.get();
+
+        if (fn == null) {
+          logger.info("********* failure in completionService");
+        } else {
+          map.put(fn.getName(), fn);
+        }
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      } catch (ExecutionException e) {
+        logger.error(Misc.getMessage(e), e);
+      }
+    }
+
+    // this controls the returned order
+    appFolder.addChild(map.get(SERVICES_FOLDER));
+    appFolder.addChild(map.get(ENVIRONMENTS_FOLDER));
+    appFolder.addChild(map.get(WORKFLOWS_FOLDER));
+    appFolder.addChild(map.get(PIPELINES_FOLDER));
+    appFolder.addChild(map.get(PROVISIONERS_FOLDER));
+    //      appFolder.addChild(map.get(TRIGGERS_FOLDER));
+    //--------------------------------------
+
+    return applicationsFolder;
+  }
+
+  private FolderNode doApplicationsYamlTree(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
+      Map<String, AppPermissionSummary> appPermissionSummaryMap, boolean appLevelYamlTreeOnly, String appId) {
+    if (appLevelYamlTreeOnly) {
+      return doApplicationLevelOnly(accountId, directoryPath, applyPermissions, appPermissionSummaryMap, appId);
+    } else {
+      return doApplications(accountId, directoryPath, applyPermissions, appPermissionSummaryMap);
+    }
+  }
+  private FolderNode doApplications(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
+      Map<String, AppPermissionSummary> appPermissionSummaryMap) {
+    FolderNode applicationsFolder = new FolderNode(
+        accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
+
+    List<Application> apps = appService.getAppsByAccountId(accountId);
+
+    Set<String> allowedAppIds = null;
+    if (applyPermissions) {
+      if (appPermissionSummaryMap != null) {
+        allowedAppIds = appPermissionSummaryMap.keySet();
+      }
+
+      if (isEmpty(allowedAppIds)) {
+        return applicationsFolder;
+      }
+    }
+
+    // iterate over applications
+    for (Application app : apps) {
+      doApplication(app.getUuid(), applyPermissions, appPermissionSummaryMap, applicationsFolder, directoryPath);
+    }
     return applicationsFolder;
   }
 

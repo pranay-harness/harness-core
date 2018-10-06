@@ -39,7 +39,7 @@ public interface YamlDirectoryService {
    * @param accountId the account id
    * @return the directory node (the full account setup/"config-as-code" directory)
    */
-  DirectoryNode getDirectory(@NotEmpty String accountId);
+  DirectoryNode getDirectory(@NotEmpty String accountId, String appId);
 
   /**
    * Get Directory (tree/sub-tree structure) by entityId, optionally filtered by nodes ("branches") that have custom git
@@ -108,4 +108,6 @@ public interface YamlDirectoryService {
       boolean gitSyncPath);
 
   <R, T> String obtainEntityRootPath(R helperEntity, T entity);
+
+  DirectoryNode getApplicationYamlFolderNode(@NotEmpty String accountId, @NotEmpty String applicationId);
 }
