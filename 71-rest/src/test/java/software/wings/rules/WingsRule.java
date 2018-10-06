@@ -262,9 +262,9 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
 
   protected void addQueueModules(List<Module> modules) {
     if (fakeMongo) {
-      modules.add(new QueueModuleTest(datastore));
+      modules.add(new QueueModuleTest());
     } else {
-      modules.add(new QueueModule(datastore, false));
+      modules.add(new QueueModule(false));
     }
   }
 

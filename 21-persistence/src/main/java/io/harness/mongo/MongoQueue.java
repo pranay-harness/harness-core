@@ -4,12 +4,13 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
 import io.harness.version.VersionInfoManager;
 import org.joor.Reflect;
-import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -28,12 +29,12 @@ import java.util.concurrent.TimeUnit;
 public class MongoQueue<T extends Queuable> implements Queue<T> {
   private static final Logger logger = LoggerFactory.getLogger(MongoQueue.class);
 
-  private final Datastore datastore;
   private final Class<T> klass;
   private int resetDurationInSeconds;
   private final boolean filterWithVersion;
 
-  @Inject VersionInfoManager versionInfoManager;
+  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
+  @Inject private VersionInfoManager versionInfoManager;
 
   /**
    * Instantiates a new mongo queue impl.
@@ -41,33 +42,29 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
    * @param klass     the klass
    * @param datastore the datastore
    */
-  public MongoQueue(Class<T> klass, final Datastore datastore) {
-    this(klass, datastore, 5);
+  public MongoQueue(Class<T> klass) {
+    this(klass, 5);
   }
 
   /**
    * Instantiates a new mongo queue impl.
    *
    * @param klass                  the klass
-   * @param datastore              the datastore
    * @param resetDurationInSeconds the reset duration in seconds
    */
-  public MongoQueue(Class<T> klass, final Datastore datastore, int resetDurationInSeconds) {
-    this(klass, datastore, resetDurationInSeconds, false);
+  public MongoQueue(Class<T> klass, int resetDurationInSeconds) {
+    this(klass, resetDurationInSeconds, false);
   }
 
   /**
    * Instantiates a new mongo queue impl.
    *
    * @param klass                  the klass
-   * @param datastore              the datastore
    * @param resetDurationInSeconds the reset duration in seconds
    * @param filterWithVersion      the filterWithVersion
    */
-  public MongoQueue(Class<T> klass, final Datastore datastore, int resetDurationInSeconds, boolean filterWithVersion) {
-    Objects.requireNonNull(datastore);
+  public MongoQueue(Class<T> klass, int resetDurationInSeconds, boolean filterWithVersion) {
     Objects.requireNonNull(klass);
-    this.datastore = datastore;
     this.klass = klass;
     this.resetDurationInSeconds = resetDurationInSeconds;
     this.filterWithVersion = filterWithVersion;
