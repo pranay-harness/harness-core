@@ -353,12 +353,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     Delegate delegate = get(accountId, delegateId, false);
 
-    Account account = accountService.get(accountId);
-    if (account != null) {
-      LicenseInfo licenseInfo = account.getLicenseInfo();
-      if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
-        delegate.setStatus(Status.DELETED);
-      }
+    LicenseInfo licenseInfo = accountService.get(accountId).getLicenseInfo();
+    if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
+      delegate.setStatus(Status.DELETED);
     }
     return delegate;
   }
@@ -837,13 +834,10 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public Delegate register(Delegate delegate) {
-    Account account = accountService.get(delegate.getAccountId());
-    if (account != null) {
-      LicenseInfo licenseInfo = account.getLicenseInfo();
-      if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
-        broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
-        return aDelegate().withUuid(SELF_DESTRUCT).build();
-      }
+    LicenseInfo licenseInfo = accountService.get(delegate.getAccountId()).getLicenseInfo();
+    if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
+      broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
+      return aDelegate().withUuid(SELF_DESTRUCT).build();
     }
 
     logger.info("Registering delegate for account {}: Hostname: {} IP: {}", delegate.getAccountId(),
