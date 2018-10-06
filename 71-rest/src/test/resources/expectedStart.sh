@@ -83,6 +83,15 @@ then
 fi
 
 echo $PROXY_SYS_PROPS
+
+ACCOUNT_STATUS=$(curl $PROXY_CURL -#k https://localhost:9090/api/account/ACCOUNT_ID/status | cut -d ":" -f 3 | cut -d "," -f 1 | cut -d "\"" -f 2)
+if [[ $ACCOUNT_STATUS == "DELETED" ]]
+then
+  rm README.txt delegate.sh proxy.config start.sh stop.sh
+  touch __deleted__
+  exit 0
+fi
+
 if [ ! -d $JRE_DIR  -o ! -d jre -o ! -e $JRE_BINARY ]
 then
   echo "Downloading JRE packages..."

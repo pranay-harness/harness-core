@@ -240,9 +240,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                 .withStatus(Status.ENABLED)
                                                 .withLastHeartBeat(System.currentTimeMillis())
                                                 .build());
-    Account deletedAccount =
-        anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.DELETED).build()).build();
-    when(accountService.get("DELETED_ACCOUNT")).thenReturn(deletedAccount);
+    when(accountService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
 
     Delegate registered = delegateService.register(delegate);
     assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);
@@ -259,9 +257,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .withStatus(Status.ENABLED)
                             .withLastHeartBeat(System.currentTimeMillis())
                             .build();
-    Account deletedAccount =
-        anAccount().withLicenseInfo(LicenseInfo.builder().accountStatus(AccountStatus.DELETED).build()).build();
-    when(accountService.get("DELETED_ACCOUNT")).thenReturn(deletedAccount);
+    when(accountService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
 
     Delegate registered = delegateService.register(delegate);
     assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);

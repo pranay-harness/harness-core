@@ -5,8 +5,6 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.AccountStatus;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AccountService;
@@ -29,12 +27,6 @@ public class AccountResource {
   @ExceptionMetered
   @PublicApi
   public RestResponse<String> getStatus(@PathParam("accountId") String accountId) {
-    LicenseInfo licenseInfo = accountService.get(accountId).getLicenseInfo();
-
-    if (licenseInfo == null) {
-      return new RestResponse<>(AccountStatus.ACTIVE);
-    }
-
-    return new RestResponse<>(licenseInfo.getAccountStatus());
+    return new RestResponse<>(accountService.getAccountStatus(accountId));
   }
 }

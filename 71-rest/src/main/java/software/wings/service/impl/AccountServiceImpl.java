@@ -29,6 +29,9 @@ import static software.wings.common.Constants.SUPPORT_EMAIL;
 import static software.wings.utils.Misc.generateSecretKey;
 import static software.wings.utils.Validator.notNullCheck;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -93,7 +96,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -124,6 +129,17 @@ public class AccountServiceImpl implements AccountService {
   @Inject private FeatureFlagService featureFlagService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+
+  private LoadingCache<String, String> accountStatusCache =
+      CacheBuilder.newBuilder()
+          .maximumSize(10000)
+          .expireAfterWrite(1, TimeUnit.HOURS)
+          .build(new CacheLoader<String, String>() {
+            public String load(String accountId) {
+              LicenseInfo licenseInfo = get(accountId).getLicenseInfo();
+              return licenseInfo == null ? AccountStatus.ACTIVE : licenseInfo.getAccountStatus();
+            }
+          });
 
   @Override
   public Account save(@Valid Account account) {
@@ -251,6 +267,16 @@ public class AccountServiceImpl implements AccountService {
     return account;
   }
 
+  @Override
+  public String getAccountStatus(String accountId) {
+    try {
+      return accountStatusCache.get(accountId);
+    } catch (ExecutionException e) {
+      logger.error("Execution exception", e);
+    }
+    return AccountStatus.ACTIVE;
+  }
+
   private void decryptLicenseInfo(List<Account> accounts) {
     if (isEmpty(accounts)) {
       return;
@@ -262,7 +288,7 @@ public class AccountServiceImpl implements AccountService {
   @Override
   public Account decryptLicenseInfo(Account account, boolean setExpiry) {
     if (account == null) {
-      return account;
+      return null;
     }
 
     if (!featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, account.getUuid())) {
@@ -346,6 +372,11 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  public boolean isAccountDeleted(String accountId) {
+    return AccountStatus.DELETED.equals(getAccountStatus(accountId));
+  }
+
+  @Override
   public boolean isAccountExpired(String accountId) {
     Account account = dbCache.get(Account.class, accountId);
     Validator.notNullCheck("Invalid account with id: " + accountId, account);
@@ -359,11 +390,7 @@ public class AccountServiceImpl implements AccountService {
     LicenseInfo licenseInfo = account.getLicenseInfo();
 
     if (licenseInfo == null) {
-      if (DeployMode.isOnPrem(deployMode)) {
-        return true;
-      } else {
-        return false;
-      }
+      return DeployMode.isOnPrem(deployMode);
     }
 
     String accountType = licenseInfo.getAccountType();
@@ -561,6 +588,10 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public DelegateConfiguration getDelegateConfiguration(String accountId) {
+    if (isAccountDeleted(accountId)) {
+      throw new InvalidRequestException("Deleted AccountId: " + accountId);
+    }
+
     List<Account> accounts = wingsPersistence.createQuery(Account.class, excludeAuthority)
                                  .field(Mapper.ID_KEY)
                                  .in(asList(accountId, GLOBAL_ACCOUNT_ID))
@@ -572,11 +603,6 @@ public class AccountServiceImpl implements AccountService {
 
     if (!specificAccount.isPresent()) {
       throw new InvalidRequestException("Invalid AccountId: " + accountId);
-    }
-
-    LicenseInfo licenseInfo = specificAccount.get().getLicenseInfo();
-    if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
-      throw new InvalidRequestException("Deleted AccountId: " + accountId);
     }
 
     if (specificAccount.get().getDelegateConfiguration() != null

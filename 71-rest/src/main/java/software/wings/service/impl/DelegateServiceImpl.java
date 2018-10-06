@@ -84,7 +84,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.DeployMode;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
-import software.wings.beans.AccountStatus;
 import software.wings.beans.Delegate;
 import software.wings.beans.Delegate.Status;
 import software.wings.beans.DelegateConfiguration;
@@ -100,7 +99,6 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.TaskType;
@@ -353,8 +351,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     Delegate delegate = get(accountId, delegateId, false);
 
-    LicenseInfo licenseInfo = accountService.get(accountId).getLicenseInfo();
-    if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
+    if (accountService.isAccountDeleted(accountId)) {
       delegate.setStatus(Status.DELETED);
     }
     return delegate;
@@ -834,8 +831,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public Delegate register(Delegate delegate) {
-    LicenseInfo licenseInfo = accountService.get(delegate.getAccountId()).getLicenseInfo();
-    if (licenseInfo != null && AccountStatus.DELETED.equals(licenseInfo.getAccountStatus())) {
+    if (accountService.isAccountDeleted(delegate.getAccountId())) {
       broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
       return aDelegate().withUuid(SELF_DESTRUCT).build();
     }
