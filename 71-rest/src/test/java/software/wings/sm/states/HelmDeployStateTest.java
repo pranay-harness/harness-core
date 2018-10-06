@@ -230,7 +230,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     assertThat(helmDeployStateExecutionData.getActivityId()).isEqualTo(ACTIVITY_ID);
     assertThat(helmDeployStateExecutionData.getChartName()).isEqualTo(CHART_NAME);
     assertThat(helmDeployStateExecutionData.getChartRepositoryUrl()).isEqualTo(CHART_URL);
-    assertThat(helmDeployStateExecutionData.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX + "-harness-infrazm");
+    assertThat(helmDeployStateExecutionData.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
     assertThat(helmDeployStateExecutionData.getReleaseOldVersion()).isEqualTo(0);
     assertThat(helmDeployStateExecutionData.getReleaseNewVersion()).isEqualTo(1);
 
@@ -240,7 +240,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
 
     HelmInstallCommandRequest helmInstallCommandRequest = (HelmInstallCommandRequest) delegateTask.getParameters()[0];
     assertThat(helmInstallCommandRequest.getHelmCommandType()).isEqualTo(HelmCommandType.INSTALL);
-    assertThat(helmInstallCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX + "-harness-infrazm");
+    assertThat(helmInstallCommandRequest.getReleaseName()).isEqualTo(HELM_RELEASE_NAME_PREFIX);
     assertThat(helmInstallCommandRequest.getRepoName()).isEqualTo("app-name-service-name");
 
     verify(delegateService).executeTask(any());

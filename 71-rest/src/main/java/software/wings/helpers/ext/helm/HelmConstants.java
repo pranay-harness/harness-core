@@ -39,8 +39,11 @@ public class HelmConstants {
       "KUBECONFIG=${KUBECONFIG_PATH} helm install ${CHART_REFERENCE} ${OVERRIDE_VALUES} ${RELEASE_NAME} ${NAMESPACE}";
   public static final String HELM_UPGRADE_COMMAND_TEMPLATE =
       "KUBECONFIG=${KUBECONFIG_PATH} helm upgrade ${RELEASE_NAME} ${CHART_REFERENCE} ${OVERRIDE_VALUES}";
+
+  // The reason we are using ^ and $ before and after ${RELEASE_NAME} is because helm list doesn't take releaseName as a
+  // param and release name becomes a regex
   public static final String HELM_LIST_RELEASE_COMMAND_TEMPLATE =
-      "KUBECONFIG=${KUBECONFIG_PATH} helm list ${RELEASE_NAME}";
+      "KUBECONFIG=${KUBECONFIG_PATH} helm list ^${RELEASE_NAME}$";
   public static final String HELM_RELEASE_HIST_COMMAND_TEMPLATE =
       "KUBECONFIG=${KUBECONFIG_PATH} helm hist ${RELEASE_NAME} ${FLAGS}";
   public static final String HELM_VERSION_COMMAND_TEMPLATE = "KUBECONFIG=${KUBECONFIG_PATH} helm version";

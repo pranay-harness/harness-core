@@ -231,6 +231,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     on(workflowStandardParams).set("appService", appService);
     on(workflowStandardParams).set("environmentService", environmentService);
     on(workflowStandardParams).set("artifactService", artifactService);
+    on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
     on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);

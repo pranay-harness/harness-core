@@ -231,6 +231,7 @@ public class EcsServiceSetupTest extends WingsBaseTest {
     on(workflowStandardParams).set("serviceTemplateService", serviceTemplateService);
     on(workflowStandardParams).set("configuration", configuration);
     on(workflowStandardParams).set("artifactStreamService", artifactStreamService);
+    on(workflowStandardParams).set("infrastructureMappingService", infrastructureMappingService);
 
     when(artifactService.get(any(), any())).thenReturn(artifact);
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
