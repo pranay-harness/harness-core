@@ -193,6 +193,7 @@ public class WatcherServiceImpl implements WatcherService {
         logger.info("No proxy settings. Configure in proxy.config if needed");
       }
 
+      checkAccountStatus();
       startUpgradeCheck();
       startCommandCheck();
       startWatching();
