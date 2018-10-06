@@ -33,6 +33,7 @@ import migrations.all.FixInstanceDataForAwsSSH;
 import migrations.all.GcsArtifactProjectIdMigration;
 import migrations.all.GitSyncToAllAccounts;
 import migrations.all.HelmReleaseNamePrefixMigration;
+import migrations.all.HelmReleaseNameSuffixMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
@@ -126,6 +127,7 @@ public class MigrationList {
         .add(Pair.of(188, FixCVDashboardStatusMigration.class))
         .add(Pair.of(189, RemoveServiceVariablesFromActivity.class))
         .add(Pair.of(190, DeleteLETaskDelCronMigration.class))
+        .add(Pair.of(191, HelmReleaseNameSuffixMigration.class))
         .build();
   }
 }

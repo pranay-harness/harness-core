@@ -15,7 +15,6 @@ import static software.wings.sm.StateType.HELM_DEPLOY;
 
 import com.google.inject.Inject;
 
-import com.github.reinert.jjschema.Attributes;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -25,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
+import software.wings.api.InfraMappingElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
@@ -110,11 +110,10 @@ public class HelmDeployState extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient SecretManager secretManager;
 
-  @Attributes(title = "Deployment steady state timeout (in minutes).")
-  @DefaultValue("10")
-  private int steadyStateTimeout; // Minutes
+  @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
-  @Attributes(title = "Helm release name prefix", required = true) @Getter @Setter private String helmReleaseNamePrefix;
+  // This field is in fact representing helmReleaseName. We will change it later on
+  @Getter @Setter private String helmReleaseNamePrefix;
   @Getter @Setter private GitFileConfig gitFileConfig;
 
   public static final String HELM_COMMAND_NAME = "Helm Deploy";
@@ -161,7 +160,9 @@ public class HelmDeployState extends State {
 
     Activity activity = createActivity(context);
 
-    String releaseName = obtainHelmReleaseNamePrefix(context, containerInfraMapping);
+    String releaseName = obtainHelmReleaseNamePrefix(context);
+    updateHelmReleaseNameInInfraMappingElement(context, releaseName);
+
     ContainerServiceParams containerServiceParams =
         containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName);
 
@@ -488,15 +489,12 @@ public class HelmDeployState extends State {
     }
   }
 
-  private String obtainHelmReleaseNamePrefix(
-      ExecutionContext context, ContainerInfrastructureMapping containerInfraMapping) {
+  private String obtainHelmReleaseNamePrefix(ExecutionContext context) {
     if (getStateType().equals(HELM_DEPLOY.name())) {
       if (isBlank(getHelmReleaseNamePrefix())) {
-        throw new InvalidRequestException("Helm release name prefix cannot be empty");
+        throw new InvalidRequestException("Helm release name cannot be empty");
       }
-      String helmReleaseNamePrefixEvaluated =
-          KubernetesConvention.normalize(context.renderExpression(getHelmReleaseNamePrefix()));
-      return KubernetesConvention.getHelmReleaseName(helmReleaseNamePrefixEvaluated, containerInfraMapping.getUuid());
+      return KubernetesConvention.normalize(context.renderExpression(getHelmReleaseNamePrefix()));
     } else {
       HelmDeployContextElement contextElement = context.getContextElement(ContextElementType.HELM_DEPLOY);
       if (contextElement == null || isBlank(contextElement.getReleaseName())) {
@@ -570,5 +568,19 @@ public class HelmDeployState extends State {
     }
 
     return (HelmCommandExecutionResponse) notifyResponseData;
+  }
+
+  public void updateHelmReleaseNameInInfraMappingElement(ExecutionContext context, String helmReleaseName) {
+    if (getStateType().equals(HELM_DEPLOY.name())) {
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      if (workflowStandardParams == null) {
+        return;
+      }
+
+      InfraMappingElement infraMappingElement = workflowStandardParams.getInfraMappingElement(context);
+      if (infraMappingElement != null && infraMappingElement.getHelm() != null) {
+        infraMappingElement.getHelm().setReleaseName(helmReleaseName);
+      }
+    }
   }
 }

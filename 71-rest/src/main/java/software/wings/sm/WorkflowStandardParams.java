@@ -2,8 +2,10 @@ package software.wings.sm;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.RandomUtils.nextInt;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.PHASE_PARAM;
@@ -17,6 +19,9 @@ import org.apache.http.client.utils.URIBuilder;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.api.InfraMappingElement;
+import software.wings.api.InfraMappingElement.Helm;
+import software.wings.api.InfraMappingElement.InfraMappingElementBuilder;
+import software.wings.api.InfraMappingElement.Kubernetes;
 import software.wings.api.InfraMappingElement.Pcf;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -26,10 +31,14 @@ import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionCredential;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
@@ -166,23 +175,69 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   public InfraMappingElement fetchInfraMappingElement(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
 
-    if (phaseElement != null && DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
-      PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMappingService.get(
-          context.getAppId(), phaseElement.getInfraMappingId());
-
-      if (pcfInfrastructureMapping != null) {
-        String route = isNotEmpty(pcfInfrastructureMapping.getRouteMaps())
-            ? pcfInfrastructureMapping.getRouteMaps().get(0)
-            : StringUtils.EMPTY;
-        String tempRoute = isNotEmpty(pcfInfrastructureMapping.getTempRouteMap())
-            ? pcfInfrastructureMapping.getTempRouteMap().get(0)
-            : StringUtils.EMPTY;
-
-        return InfraMappingElement.builder().pcf(Pcf.builder().route(route).tempRoute(tempRoute).build()).build();
-      }
+    if (phaseElement == null) {
+      return null;
     }
 
-    return null;
+    String appId = context.getAppId();
+    String infraMappingId = phaseElement.getInfraMappingId();
+
+    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+    if (infrastructureMapping == null) {
+      return null;
+    }
+
+    InfraMappingElementBuilder builder = InfraMappingElement.builder();
+    populateNamespaceInInfraMappingElement(infrastructureMapping, builder);
+    populateDeploymentSpecificInfoInInfraMappingElement(infrastructureMapping, phaseElement, builder);
+
+    return builder.build();
+  }
+
+  private void populateNamespaceInInfraMappingElement(
+      InfrastructureMapping infrastructureMapping, InfraMappingElementBuilder builder) {
+    if ((DeploymentType.KUBERNETES.name().equals(infrastructureMapping.getDeploymentType()))
+        || (DeploymentType.HELM.name().equals(infrastructureMapping.getDeploymentType()))) {
+      String namespace = null;
+
+      if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
+        namespace = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
+        namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
+        namespace = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else {
+        unhandled(infrastructureMapping.getInfraMappingType());
+      }
+
+      if (isBlank(namespace)) {
+        namespace = "default";
+      }
+
+      builder.kubernetes(Kubernetes.builder().namespace(namespace).build());
+    }
+  }
+
+  private void populateDeploymentSpecificInfoInInfraMappingElement(
+      InfrastructureMapping infrastructureMapping, PhaseElement phaseElement, InfraMappingElementBuilder builder) {
+    String infraMappingId = phaseElement.getInfraMappingId();
+
+    if (DeploymentType.PCF.name().equals(phaseElement.getDeploymentType())) {
+      PcfInfrastructureMapping pcfInfrastructureMapping = (PcfInfrastructureMapping) infrastructureMapping;
+
+      String route = isNotEmpty(pcfInfrastructureMapping.getRouteMaps())
+          ? pcfInfrastructureMapping.getRouteMaps().get(0)
+          : StringUtils.EMPTY;
+      String tempRoute = isNotEmpty(pcfInfrastructureMapping.getTempRouteMap())
+          ? pcfInfrastructureMapping.getTempRouteMap().get(0)
+          : StringUtils.EMPTY;
+
+      builder.pcf(Pcf.builder().route(route).tempRoute(tempRoute).build());
+    } else if (DeploymentType.HELM.name().equals(phaseElement.getDeploymentType())) {
+      builder.helm(Helm.builder()
+                       .shortId(infraMappingId.substring(0, 7).toLowerCase().replace('-', 'z').replace('_', 'z'))
+                       .build());
+    }
   }
 
   private ServiceElement fetchServiceElement(ExecutionContext context) {

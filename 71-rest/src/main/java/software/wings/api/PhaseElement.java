@@ -4,21 +4,13 @@
 
 package software.wings.api;
 
-import static io.harness.govern.Switch.unhandled;
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import com.google.inject.Inject;
 
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.AzureKubernetesInfrastructureMapping;
-import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
-import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -34,7 +26,6 @@ import java.util.Map;
  * @author Rishi
  */
 public class PhaseElement implements ContextElement {
-  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private transient ArtifactService artifactService;
 
   private String uuid;
@@ -91,30 +82,7 @@ public class PhaseElement implements ContextElement {
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     map.put(SERVICE, serviceElement);
-    InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
-    if (infrastructureMapping != null
-        && ((DeploymentType.KUBERNETES.name().equals(infrastructureMapping.getDeploymentType()))
-               || (DeploymentType.HELM.name().equals(infrastructureMapping.getDeploymentType())))) {
-      String namespace = null;
-      if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping) {
-        namespace = ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
-      } else if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping) {
-        namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
-      } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
-        namespace = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
-      } else {
-        unhandled(infrastructureMapping.getInfraMappingType());
-      }
-      if (isBlank(namespace)) {
-        namespace = "default";
-      }
-      Map<String, Object> namespaceMap = new HashMap<>();
-      namespaceMap.put(NAMESPACE, namespace);
 
-      Map<String, Object> kubernetesMap = new HashMap<>();
-      kubernetesMap.put(KUBERNETES, namespaceMap);
-      map.put(INFRA, kubernetesMap);
-    }
     if (rollbackArtifactId != null) {
       Artifact artifact = artifactService.get(appId, rollbackArtifactId);
       map.put(ARTIFACT, artifact);
