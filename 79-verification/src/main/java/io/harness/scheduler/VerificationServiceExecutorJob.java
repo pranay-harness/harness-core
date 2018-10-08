@@ -48,6 +48,7 @@ public class VerificationServiceExecutorJob implements Job {
       return;
     }
 
+    logger.info("pulled analysis task {}", context);
     switch (verificationAnalysisTask.getAnalysisType()) {
       case TIME_SERIES:
         scheduleTimeSeriesAnalysisCronJob(verificationAnalysisTask);
@@ -134,6 +135,7 @@ public class VerificationServiceExecutorJob implements Job {
                           .build();
 
     jobScheduler.scheduleJob(job, trigger);
+    logger.info("Scheduled Log Analysis cluster Job with details : {}", job);
   }
 
   public static void addJob(QuartzScheduler jobScheduler) {
