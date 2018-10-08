@@ -3,6 +3,8 @@ package software.wings.service.impl.appdynamics;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.validUrl;
+import static io.harness.threading.Morpheus.sleep;
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.RETRIES;
 import static software.wings.delegatetasks.AppdynamicsDataCollectionTask.DURATION_TO_ASK_MINUTES;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
@@ -39,6 +41,7 @@ import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -260,58 +263,63 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
       String tierName, String btName, String hostName, int durantionInMinutes,
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
-    logger.info("getting AppDynamics metric data for host {}, app {}, tier {}, bt {}", hostName, appdynamicsAppId,
-        tierName, btName);
-    String metricPath = BT_PERFORMANCE_PATH_PREFIX + tierName + "|" + btName + "|";
+    for (int i = 1; i <= RETRIES; i++) {
+      apiCallLog = apiCallLog.copy();
+      logger.info("getting AppDynamics metric data for state {}  host {}, app {}, tier {}, bt {}",
+          apiCallLog.getStateExecutionId(), hostName, appdynamicsAppId, tierName, btName);
+      String metricPath = BT_PERFORMANCE_PATH_PREFIX + tierName + "|" + btName + "|";
 
-    metricPath += isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*";
-    logger.info("fetching metrics for path {} ", metricPath);
-    apiCallLog.addFieldToRequest(
-        ThirdPartyApiCallField.builder()
-            .name("url")
-            .value(appDynamicsConfig.getControllerUrl() + "/rest/applications/" + appdynamicsAppId
-                + "/metric-data?output=JSON&time-range-type=BEFORE_NOW&rollup=false&duration-in-mins="
-                + durantionInMinutes + "&metric-path=" + metricPath)
-            .type(FieldType.URL)
-            .build());
-    apiCallLog.setTitle("Fetching metric data for " + metricPath);
-    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
-        getAppdynamicsRestClient(appDynamicsConfig)
-            .getMetricData(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, metricPath,
-                durantionInMinutes);
+      metricPath += isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*";
+      logger.info("fetching metrics for path {} ", metricPath);
+      apiCallLog.addFieldToRequest(
+          ThirdPartyApiCallField.builder()
+              .name("url")
+              .value(appDynamicsConfig.getControllerUrl() + "/rest/applications/" + appdynamicsAppId
+                  + "/metric-data?output=JSON&time-range-type=BEFORE_NOW&rollup=false&duration-in-mins="
+                  + durantionInMinutes + "&metric-path=" + metricPath)
+              .type(FieldType.URL)
+              .build());
+      apiCallLog.setTitle("Fetching metric data for " + metricPath);
+      apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      try {
+        Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
+            getAppdynamicsRestClient(appDynamicsConfig)
+                .getMetricData(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId,
+                    metricPath, durantionInMinutes);
 
-    Response<List<AppdynamicsMetricData>> tierBTMResponse;
-
-    try {
-      tierBTMResponse = tierBTMetricRequest.execute();
-    } catch (Exception e) {
-      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
-                  + " Request: " + metricPath);
-    }
-    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
-    if (tierBTMResponse.isSuccessful()) {
-      apiCallLog.addFieldToResponse(tierBTMResponse.code(), tierBTMResponse.body(), FieldType.JSON);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      if (logger.isDebugEnabled()) {
-        logger.debug("AppDynamics metric data found: " + tierBTMResponse.body().size() + " records.");
+        Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        if (tierBTMResponse.isSuccessful()) {
+          apiCallLog.addFieldToResponse(tierBTMResponse.code(), tierBTMResponse.body(), FieldType.JSON);
+          delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+          logger.info("for {} got {} metrics for path {}", apiCallLog.getStateExecutionId(),
+              tierBTMResponse.body().size(), metricPath);
+          return tierBTMResponse.body();
+        } else {
+          logger.info(
+              "Request not successful for state {}. Reason: {}", apiCallLog.getStateExecutionId(), tierBTMResponse);
+          apiCallLog.addFieldToResponse(tierBTMResponse.code(), tierBTMResponse.errorBody().string(), FieldType.TEXT);
+          delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+          throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+              .addParam("reason",
+                  "Unsuccessful response while fetching data from AppDynamics. Error code: " + tierBTMResponse.code()
+                      + ". Error message: " + tierBTMResponse.errorBody());
+        }
+      } catch (Exception e) {
+        apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+        apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+        delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+        if (i >= RETRIES) {
+          throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+              .addParam("reason",
+                  "Unsuccessful response while fetching data from AppDynamics. Error message: " + e.getMessage()
+                      + " Request: " + metricPath);
+        } else {
+          sleep(Duration.ofSeconds(2));
+        }
       }
-      logger.info("got {} metrics for path {}", tierBTMResponse.body().size(), metricPath);
-      return tierBTMResponse.body();
-    } else {
-      logger.info("Request not successful. Reason: {}", tierBTMResponse);
-      apiCallLog.addFieldToResponse(tierBTMResponse.code(), tierBTMResponse.errorBody().string(), FieldType.TEXT);
-      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
-      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason",
-              "Unsuccessful response while fetching data from AppDynamics. Error code: " + tierBTMResponse.code()
-                  + ". Error message: " + tierBTMResponse.errorBody());
     }
+    throw new IllegalStateException("This state for " + apiCallLog.getStateExecutionId() + " should never reach");
   }
 
   public AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
