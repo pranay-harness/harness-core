@@ -1,18 +1,15 @@
 package io.harness.scheduler;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.jobs.LogAnalysisManagerJob;
 import io.harness.jobs.LogClusterManagerJob;
 import io.harness.jobs.MetricAnalysisJob;
 import io.harness.service.intfc.LearningEngineService;
-import org.quartz.DisallowConcurrentExecution;
-import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
-import org.quartz.JobExecutionContext;
-import org.quartz.PersistJobDataAfterExecution;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
@@ -25,43 +22,50 @@ import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.utils.JsonUtils;
 
 import java.util.Date;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Delete all learning engine tasks in queue older than 7 days.
  */
-@PersistJobDataAfterExecution
-@DisallowConcurrentExecution
-public class VerificationServiceExecutorJob implements Job {
+@Singleton
+public class VerificationServiceExecutorService {
   private static final String VERIFICATION_CRON_NAME = "VERIFICATION_SERVICE_EXECUTOR_CRON_NAME";
   private static final String VERIFICATION_CRON_GROUP = "VERIFICATION_SERVICE_EXECUTOR_CRON_GROUP";
+  private static final Logger logger = LoggerFactory.getLogger(VerificationServiceExecutorService.class);
+
+  @Inject @Named("verificationServiceExecutor") protected ScheduledExecutorService taskPollService;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
-  private static final Logger logger = LoggerFactory.getLogger(VerificationServiceExecutorJob.class);
 
   @Inject private LearningEngineService learningEngineService;
 
-  @Override
-  public void execute(JobExecutionContext context) {
-    AnalysisContext verificationAnalysisTask =
-        learningEngineService.getNextVerificationAnalysisTask(ServiceApiVersion.V1);
-    if (verificationAnalysisTask == null) {
-      return;
-    }
+  public void scheduleTaskPoll() {
+    taskPollService.scheduleAtFixedRate(() -> {
+      AnalysisContext verificationAnalysisTask = null;
+      do {
+        try {
+          verificationAnalysisTask = learningEngineService.getNextVerificationAnalysisTask(ServiceApiVersion.V1);
+          if (verificationAnalysisTask != null) {
+            logger.info("pulled analysis task {}", verificationAnalysisTask);
+            switch (verificationAnalysisTask.getAnalysisType()) {
+              case TIME_SERIES:
+                scheduleTimeSeriesAnalysisCronJob(verificationAnalysisTask);
+                break;
+              case LOG_ML:
+                scheduleLogAnalysisCronJob(verificationAnalysisTask);
+                scheduleClusterCronJob(verificationAnalysisTask);
+                break;
+              default:
+                throw new IllegalStateException("invalid analysis type " + verificationAnalysisTask.getAnalysisType());
+            }
 
-    logger.info("pulled analysis task {}", context);
-    switch (verificationAnalysisTask.getAnalysisType()) {
-      case TIME_SERIES:
-        scheduleTimeSeriesAnalysisCronJob(verificationAnalysisTask);
-        break;
-      case LOG_ML:
-        scheduleLogAnalysisCronJob(verificationAnalysisTask);
-        scheduleClusterCronJob(verificationAnalysisTask);
-        break;
-      default:
-        throw new IllegalStateException("invalid analysis type " + verificationAnalysisTask.getAnalysisType());
-    }
-
-    learningEngineService.markJobScheduled(verificationAnalysisTask);
+            learningEngineService.markJobScheduled(verificationAnalysisTask);
+          }
+        } catch (Exception e) {
+          logger.error("error scheduling verification crons", e);
+        }
+      } while (verificationAnalysisTask != null);
+    }, 5, 5, TimeUnit.SECONDS);
   }
 
   private void scheduleTimeSeriesAnalysisCronJob(AnalysisContext context) {
@@ -140,17 +144,5 @@ public class VerificationServiceExecutorJob implements Job {
 
   public static void addJob(QuartzScheduler jobScheduler) {
     jobScheduler.deleteJob(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP);
-    JobDetail job = JobBuilder.newJob(VerificationServiceExecutorJob.class)
-                        .withIdentity(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP)
-                        .withDescription("Verification executor job ")
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP)
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(5).repeatForever())
-                          .build();
-
-    jobScheduler.scheduleJob(job, trigger);
-    logger.info("Added job with details : {}", job);
   }
 }

@@ -1,8 +1,10 @@
 package io.harness.app;
 
 import com.google.common.util.concurrent.SimpleTimeLimiter;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 import io.harness.security.NoOpSecretManagerImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
@@ -24,6 +26,8 @@ import software.wings.service.intfc.security.SecretManager;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Guice Module for initializing all beans.
@@ -57,6 +61,14 @@ public class VerificationServiceModule extends AbstractModule {
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
+
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("verificationServiceExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder()
+                .setNameFormat("Verification-service-Thread-%d")
+                .setPriority(Thread.NORM_PRIORITY)
+                .build()));
 
     try {
       VersionInfoManager versionInfoManager = new VersionInfoManager(IOUtils.toString(
