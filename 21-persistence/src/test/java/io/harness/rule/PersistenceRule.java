@@ -1,7 +1,8 @@
 package io.harness.rule;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import static java.util.Arrays.asList;
+
+import com.google.inject.Module;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
@@ -20,16 +21,14 @@ import org.mongodb.morphia.Morphia;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PersistenceRule implements MethodRule, MongoRuleMixin, DistributedLockRuleMixin {
+import java.util.List;
+
+public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
   private static final Logger logger = LoggerFactory.getLogger(PersistenceRule.class);
-
-  private Injector injector;
-
-  private ClosingFactory closingFactory = new ClosingFactory();
 
   @Getter private AdvancedDatastore datastore;
 
-  protected void before() {
+  public List<Module> modules(ClosingFactory closingFactory) {
     String databaseName = databaseName();
     MongoClient mongoClient = fakeMongoClient(0, closingFactory);
 
@@ -40,28 +39,10 @@ public class PersistenceRule implements MethodRule, MongoRuleMixin, DistributedL
 
     DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, databaseName, closingFactory);
 
-    injector = Guice.createInjector(
-        new VersionModule(), new TimeModule(), new MongoModule(datastore, datastore, distributedLockSvc));
+    return asList(new VersionModule(), new TimeModule(), new MongoModule(datastore, datastore, distributedLockSvc));
   }
-
-  protected void after() {
-    logger.info("Stopping server...");
-    closingFactory.stopServers();
-  }
-
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        PersistenceRule.this.before();
-        injector.injectMembers(target);
-        try {
-          statement.evaluate();
-        } finally {
-          PersistenceRule.this.after();
-        }
-      }
-    };
+    return applyInjector(statement, target);
   }
 }
