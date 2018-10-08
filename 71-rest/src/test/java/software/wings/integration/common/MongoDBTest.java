@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
 
-import io.harness.rule.BypassRule.Bypass;
+import io.harness.rule.BypassRuleMixin.Bypass;
 import io.harness.threading.Concurrent;
 import lombok.Getter;
 import lombok.Setter;
