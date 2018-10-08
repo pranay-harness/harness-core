@@ -11,6 +11,7 @@ import retrofit2.http.HeaderMap;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 import software.wings.api.MetricDataAnalysisResponse;
+import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
@@ -46,4 +47,8 @@ public interface VerificationManagerClient {
   @POST("log-verification" + VerificationConstants.NOTIFY_LOG_STATE)
   Call<RestResponse<Boolean>> sendNotifyForLogState(@HeaderMap Map<String, Object> headers,
       @Query("correlationId") String correlationId, @Body LogAnalysisResponse logAnalysisResponse);
+
+  @GET("account/feature-flag-enabled")
+  Call<RestResponse<Boolean>> isFeatureEnabled(
+      @Query("featureName") FeatureName featureName, @Query("accountId") String accountId);
 }

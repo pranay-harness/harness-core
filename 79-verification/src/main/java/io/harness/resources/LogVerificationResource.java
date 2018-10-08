@@ -22,7 +22,6 @@ import software.wings.service.impl.analysis.LogMLAnalysisRequest;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogRequest;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
@@ -44,8 +43,6 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(PermissionAttribute.ResourceType.SETTING)
 public class LogVerificationResource {
-  @Inject private FeatureFlagService featureFlagService;
-
   @Inject private LogAnalysisService analysisService;
 
   @Produces({"application/json", "application/v1+json"})

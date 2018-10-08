@@ -20,7 +20,6 @@ import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.StateType;
 
 import java.io.IOException;
@@ -58,7 +57,6 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   private String metricName;
   private TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds;
 
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private TimeSeriesAnalysisService timeSeriesAnalysisService;
 
   private TimeSeriesResource timeSeriesResource;
@@ -81,7 +79,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     transactionName = UUID.randomUUID().toString();
     metricName = UUID.randomUUID().toString();
 
-    timeSeriesResource = new TimeSeriesResource(featureFlagService, timeSeriesAnalysisService);
+    timeSeriesResource = new TimeSeriesResource(timeSeriesAnalysisService);
 
     tsRequest = new TSRequest(applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, nodes, 0, 0);
     timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
