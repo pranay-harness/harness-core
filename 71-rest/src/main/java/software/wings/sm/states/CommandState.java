@@ -25,7 +25,7 @@ import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.DeploymentType;
 import software.wings.api.InstanceElement;
@@ -314,14 +314,16 @@ public class CommandState extends State {
       if (isNotEmpty(host.getHostConnAttr())) {
         SettingAttribute hostConnectionAttribute = settingsService.get(host.getHostConnAttr());
         commandExecutionContextBuilder.withHostConnectionAttributes(hostConnectionAttribute);
-        commandExecutionContextBuilder.withHostConnectionCredentials(secretManager.getEncryptionDetails(
-            (Encryptable) hostConnectionAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId()));
+        commandExecutionContextBuilder.withHostConnectionCredentials(
+            secretManager.getEncryptionDetails((EncryptableSetting) hostConnectionAttribute.getValue(),
+                context.getAppId(), context.getWorkflowExecutionId()));
       }
       if (isNotEmpty(host.getBastionConnAttr())) {
         SettingAttribute bastionConnectionAttribute = settingsService.get(host.getBastionConnAttr());
         commandExecutionContextBuilder.withBastionConnectionAttributes(bastionConnectionAttribute);
-        commandExecutionContextBuilder.withBastionConnectionCredentials(secretManager.getEncryptionDetails(
-            (Encryptable) bastionConnectionAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId()));
+        commandExecutionContextBuilder.withBastionConnectionCredentials(
+            secretManager.getEncryptionDetails((EncryptableSetting) bastionConnectionAttribute.getValue(),
+                context.getAppId(), context.getWorkflowExecutionId()));
       }
       if (isNotEmpty(host.getWinrmConnAttr())) {
         WinRmConnectionAttributes winrmConnectionAttribute =
@@ -354,17 +356,17 @@ public class CommandState extends State {
         artifactStreamAttributes.setServerSetting(settingAttribute);
         artifactStreamAttributes.setMedatadataOnly(artifactStream.isMetadataOnly());
         artifactStreamAttributes.setMetadata(artifact.getMetadata());
-        artifactStreamAttributes.setArtifactServerEncryptedDataDetails(
-            secretManager.getEncryptionDetails((Encryptable) artifactStreamAttributes.getServerSetting().getValue(),
-                context.getAppId(), context.getWorkflowExecutionId()));
+        artifactStreamAttributes.setArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
+            (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
+            context.getWorkflowExecutionId()));
         if (featureFlagService.isEnabled(FeatureName.COPY_ARTIFACT, accountId)) {
           artifactStreamAttributes.setCopyArtifactEnabledForArtifactory(true);
         }
         artifactStreamAttributes.setArtifactType(service.getArtifactType());
         commandExecutionContextBuilder.withArtifactStreamAttributes(artifactStreamAttributes);
-        commandExecutionContextBuilder.withArtifactServerEncryptedDataDetails(
-            secretManager.getEncryptionDetails((Encryptable) artifactStreamAttributes.getServerSetting().getValue(),
-                context.getAppId(), context.getWorkflowExecutionId()));
+        commandExecutionContextBuilder.withArtifactServerEncryptedDataDetails(secretManager.getEncryptionDetails(
+            (EncryptableSetting) artifactStreamAttributes.getServerSetting().getValue(), context.getAppId(),
+            context.getWorkflowExecutionId()));
 
         activityBuilder.artifactStreamId(artifactStream.getUuid())
             .artifactStreamName(artifactStream.getSourceName())

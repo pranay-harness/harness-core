@@ -4,14 +4,14 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.ElkValidationType;
@@ -30,7 +30,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
 @Builder
-public class ElkConfig extends SettingValue implements Encryptable {
+public class ElkConfig extends SettingValue implements EncryptableSetting {
   @Attributes(required = true, title = "Connector type")
   @DefaultValue("ELASTIC_SEARCH_SERVER")
   private ElkConnector elkConnector;

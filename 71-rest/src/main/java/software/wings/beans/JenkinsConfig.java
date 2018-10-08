@@ -9,14 +9,14 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
@@ -31,7 +31,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"password", "token"})
-public class JenkinsConfig extends SettingValue implements Encryptable, ArtifactSourceable {
+public class JenkinsConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Jenkins URL", required = true) @NotEmpty private String jenkinsUrl;
   @Attributes(title = "Authentication Mechanism", required = true, enums = {USERNAME_PASSWORD_FIELD, TOKEN_FIELD})
   @NotEmpty

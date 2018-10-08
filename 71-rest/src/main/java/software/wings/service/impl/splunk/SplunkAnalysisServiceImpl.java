@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
@@ -53,7 +53,7 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
     ThirdPartyApiCallLog apiCallLog = apiCallLogWithDummyStateExecution(accountId);
 
     List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     SyncTaskContext taskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     List<LogElement> responseWithoutHost =
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)

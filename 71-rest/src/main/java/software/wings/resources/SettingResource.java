@@ -24,7 +24,7 @@ import io.swagger.annotations.Api;
 import org.apache.commons.io.IOUtils;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.RestResponse;
@@ -109,8 +109,8 @@ public class SettingResource {
 
   private void maskEncryptedFields(SettingAttribute settingAttribute) {
     SettingValue settingValue = settingAttribute.getValue();
-    if (settingValue instanceof Encryptable) {
-      secretManager.maskEncryptedFields((Encryptable) settingValue);
+    if (settingValue instanceof EncryptableSetting) {
+      secretManager.maskEncryptedFields((EncryptableSetting) settingValue);
     }
   }
 
@@ -120,8 +120,8 @@ public class SettingResource {
       variable.setAccountId(accountId);
     }
     if (variable.getValue() != null) {
-      if (variable.getValue() instanceof Encryptable) {
-        ((Encryptable) variable.getValue()).setAccountId(variable.getAccountId());
+      if (variable.getValue() instanceof EncryptableSetting) {
+        ((EncryptableSetting) variable.getValue()).setAccountId(variable.getAccountId());
       }
     }
     variable.setCategory(Category.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
@@ -187,8 +187,8 @@ public class SettingResource {
                   .build();
     }
     if (null != value) {
-      if (value instanceof Encryptable) {
-        ((Encryptable) value).setAccountId(accountId);
+      if (value instanceof EncryptableSetting) {
+        ((EncryptableSetting) value).setAccountId(accountId);
       }
     }
     return new RestResponse<>(
@@ -236,8 +236,8 @@ public class SettingResource {
     variable.setUuid(attrId);
     variable.setAppId(appId);
     if (variable.getValue() != null) {
-      if (variable.getValue() instanceof Encryptable) {
-        ((Encryptable) variable.getValue()).setAccountId(variable.getAccountId());
+      if (variable.getValue() instanceof EncryptableSetting) {
+        ((EncryptableSetting) variable.getValue()).setAccountId(variable.getAccountId());
       }
     }
     return new RestResponse<>(settingsService.update(variable));
@@ -272,8 +272,8 @@ public class SettingResource {
         aSettingAttribute().withUuid(attrId).withName(name).withAccountId(accountId).withAppId(appId).withCategory(
             Category.getCategory(SettingVariableTypes.valueOf(type)));
     if (value != null) {
-      if (value instanceof Encryptable) {
-        ((Encryptable) value).setAccountId(accountId);
+      if (value instanceof EncryptableSetting) {
+        ((EncryptableSetting) value).setAccountId(accountId);
       }
       settingAttribute.withValue(value);
     }

@@ -52,7 +52,7 @@ import io.harness.validation.Create;
 import lombok.Getter;
 import org.mongodb.morphia.annotations.Transient;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
@@ -192,8 +192,8 @@ public class SettingsServiceImpl implements SettingsService {
         settingAttribute.getAccountId(), settingAttribute.getUsageRestrictions());
 
     if (settingAttribute.getValue() != null) {
-      if (settingAttribute.getValue() instanceof Encryptable) {
-        ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
+      if (settingAttribute.getValue() instanceof EncryptableSetting) {
+        ((EncryptableSetting) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
       }
     }
 
@@ -310,9 +310,9 @@ public class SettingsServiceImpl implements SettingsService {
 
   private void resetUnchangedEncryptedFields(
       SettingAttribute existingSettingAttribute, SettingAttribute newSettingAttribute) {
-    if (existingSettingAttribute.getValue() instanceof Encryptable) {
-      secretManager.resetUnchangedEncryptedFields(
-          (Encryptable) existingSettingAttribute.getValue(), (Encryptable) newSettingAttribute.getValue());
+    if (existingSettingAttribute.getValue() instanceof EncryptableSetting) {
+      secretManager.resetUnchangedEncryptedFields((EncryptableSetting) existingSettingAttribute.getValue(),
+          (EncryptableSetting) newSettingAttribute.getValue());
     }
   }
 
@@ -330,8 +330,8 @@ public class SettingsServiceImpl implements SettingsService {
     settingAttribute.setAccountId(existingSetting.getAccountId());
     settingAttribute.setAppId(existingSetting.getAppId());
 
-    if (Encryptable.class.isInstance(existingSetting.getValue())) {
-      Encryptable object = (Encryptable) existingSetting.getValue();
+    if (EncryptableSetting.class.isInstance(existingSetting.getValue())) {
+      EncryptableSetting object = (EncryptableSetting) existingSetting.getValue();
       object.setDecrypted(false);
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails(object, settingAttribute.getAppId(), null);
@@ -353,8 +353,8 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     if (settingAttribute.getValue() != null) {
-      if (settingAttribute.getValue() instanceof Encryptable) {
-        ((Encryptable) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
+      if (settingAttribute.getValue() instanceof EncryptableSetting) {
+        ((EncryptableSetting) settingAttribute.getValue()).setAccountId(settingAttribute.getAccountId());
       }
       fields.put("value", settingAttribute.getValue());
     }

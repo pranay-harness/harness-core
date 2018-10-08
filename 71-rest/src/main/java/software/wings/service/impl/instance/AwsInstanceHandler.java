@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.commons.lang3.StringUtils;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.DeploymentInfo;
 import software.wings.api.DeploymentSummary;
@@ -80,7 +80,7 @@ public class AwsInstanceHandler extends InstanceHandler {
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
     List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) cloudProviderSetting.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) cloudProviderSetting.getValue(), null, null);
 
     String region = awsInfraMapping.getRegion();
 

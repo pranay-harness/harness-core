@@ -5,7 +5,9 @@ import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVIC
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.Encrypted;
 import io.harness.data.validator.EntityName;
+import io.harness.reflection.ReflectUtils;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,11 +21,9 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.WingsReflectionUtils;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +45,7 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ServiceVariable extends Base implements Encryptable {
+public class ServiceVariable extends Base implements EncryptableSetting {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
    */
@@ -108,7 +108,7 @@ public class ServiceVariable extends Base implements Encryptable {
       return Collections.emptyList();
     }
 
-    return WingsReflectionUtils.getEncryptedFields(this.getClass());
+    return ReflectUtils.getEncryptedFields(this.getClass());
   }
 
   /**

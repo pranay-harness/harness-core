@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
@@ -47,7 +47,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
     }
 
     List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     final ElkConfig elkConfig = (ElkConfig) settingAttribute.getValue();
     SyncTaskContext elkTaskContext =
@@ -91,7 +91,7 @@ public class ElkAnalysisServiceImpl extends AnalysisServiceImpl implements ElkAn
             .queryType(elkSetupTestNodeData.getQueryType())
             .build();
     List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     SyncTaskContext elkTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     Object responseWithoutHost;
     try {

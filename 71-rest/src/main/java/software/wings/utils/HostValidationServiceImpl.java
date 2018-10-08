@@ -17,7 +17,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.ResponseMessage;
@@ -48,7 +48,7 @@ public class HostValidationServiceImpl implements HostValidationService {
       List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential) {
     List<HostValidationResponse> hostValidationResponses = new ArrayList<>();
 
-    encryptionService.decrypt((Encryptable) connectionSetting.getValue(), encryptionDetails);
+    encryptionService.decrypt((EncryptableSetting) connectionSetting.getValue(), encryptionDetails);
     try {
       timeLimiter.callWithTimeout(() -> {
         hostNames.forEach(hostName -> {

@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
@@ -31,7 +31,7 @@ import software.wings.stencils.EnumData;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "secretKey")
-public class EcrConfig extends SettingValue implements Encryptable {
+public class EcrConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Amazon ECR Registry URL", required = true) @NotEmpty private String ecrUrl;
   @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
   @Attributes(title = "Secret Key", required = true) @Encrypted private char[] secretKey;

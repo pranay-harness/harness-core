@@ -23,7 +23,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.CommandStateExecutionData.Builder;
 import software.wings.api.HostElement;
@@ -152,7 +152,7 @@ public class AwsCodeDeployState extends State {
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
-        (Encryptable) cloudProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+        (EncryptableSetting) cloudProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
     Activity act = Activity.builder()
                        .applicationName(app.getName())

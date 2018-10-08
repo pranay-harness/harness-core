@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -38,7 +38,7 @@ public class LogVerificationServiceImpl implements LogVerificationService {
       String settingId, String orgId, StateType stateType, boolean shouldGetProjects) {
     final SettingAttribute settingAttribute = settingsService.get(settingId);
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     SyncTaskContext syncTaskContext =
         aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
 

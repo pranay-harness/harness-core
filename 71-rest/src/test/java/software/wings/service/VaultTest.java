@@ -41,7 +41,7 @@ import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
@@ -567,8 +567,8 @@ public class VaultTest extends WingsBaseTest {
     query = wingsPersistence.createQuery(EncryptedData.class);
     assertEquals(numOfEncRecords + 1, query.count());
 
-    encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
-        secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowExecutionId, appId));
+    encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
+        secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId));
 
     AppDynamicsConfig value = (AppDynamicsConfig) savedAttribute.getValue();
     assertEquals(password, String.valueOf(value.getPassword()));

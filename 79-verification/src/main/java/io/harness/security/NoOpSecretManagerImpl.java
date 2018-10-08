@@ -3,7 +3,7 @@ package io.harness.security;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.UuidAware;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -36,12 +36,12 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public void maskEncryptedFields(Encryptable object) {
+  public void maskEncryptedFields(EncryptableSetting object) {
     throw new UnsupportedOperationException();
   }
 
   @Override
-  public void resetUnchangedEncryptedFields(Encryptable sourceObject, Encryptable destinationObject) {
+  public void resetUnchangedEncryptedFields(EncryptableSetting sourceObject, EncryptableSetting destinationObject) {
     throw new UnsupportedOperationException();
   }
 
@@ -79,7 +79,8 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String appId, String workflowExecutionId) {
+  public List<EncryptedDataDetail> getEncryptionDetails(
+      EncryptableSetting object, String appId, String workflowExecutionId) {
     throw new UnsupportedOperationException();
   }
 
@@ -99,7 +100,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String getEncryptedYamlRef(Encryptable object, String... fieldName) throws IllegalAccessException {
+  public String getEncryptedYamlRef(EncryptableSetting object, String... fieldName) throws IllegalAccessException {
     throw new UnsupportedOperationException();
   }
 

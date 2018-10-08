@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,8 +16,7 @@ import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
@@ -33,7 +33,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class YamlGitConfig extends Base implements Encryptable {
+public class YamlGitConfig extends Base implements EncryptableSetting {
   @NotEmpty private String url;
   @NotEmpty private String branchName;
   private String username;

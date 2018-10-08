@@ -32,7 +32,7 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.app.MainConfiguration;
@@ -774,7 +774,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
     }
     List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     ErrorCode errorCode = null;
     try {
       switch (stateType) {
@@ -811,7 +811,7 @@ public class AnalysisServiceImpl implements AnalysisService {
       throw new WingsException("No " + stateType + " setting with id: " + analysisServerConfigId + " found");
     }
     List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     ErrorCode errorCode = null;
     final ElkLogFetchRequest elkFetchRequest =
         ElkLogFetchRequest.builder()

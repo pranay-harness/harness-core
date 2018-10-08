@@ -2,23 +2,20 @@ package software.wings.core.ssh.executors;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.Encrypted;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.WingsReflectionUtils;
 
-import java.lang.reflect.Field;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 2/8/16.
  */
 @Data
-public class SshSessionConfig implements Encryptable {
+public class SshSessionConfig implements EncryptableSetting {
   @NotEmpty private String accountId;
   @NotEmpty private String appId;
   @NotEmpty private ExecutorType executorType;
@@ -52,11 +49,6 @@ public class SshSessionConfig implements Encryptable {
   @Override
   public SettingVariableTypes getSettingType() {
     return SettingVariableTypes.SSH_SESSION_CONFIG;
-  }
-
-  @Override
-  public List<Field> getEncryptedFields() {
-    return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }
 
   @Override

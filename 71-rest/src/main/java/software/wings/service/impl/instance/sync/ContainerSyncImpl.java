@@ -10,7 +10,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -97,7 +97,7 @@ public class ContainerSyncImpl implements ContainerSync {
         Validator.notNullCheck("SettingAttribute", settingAttribute);
 
         List<EncryptedDataDetail> encryptionDetails =
-            secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(),
+            secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(),
                 infrastructureMapping.getAppId(), containerDeploymentInfo.getWorkflowExecutionId());
 
         Application app = appService.get(infrastructureMapping.getAppId());
@@ -223,7 +223,7 @@ public class ContainerSyncImpl implements ContainerSync {
     Validator.notNullCheck("SettingAttribute", settingAttribute);
 
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-        (Encryptable) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
+        (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
 
     return ContainerServiceParams.builder()
         .settingAttribute(settingAttribute)

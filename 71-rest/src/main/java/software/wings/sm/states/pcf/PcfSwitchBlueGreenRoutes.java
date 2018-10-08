@@ -12,7 +12,7 @@ import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.pcf.PcfRouteUpdateStateExecutionData;
 import software.wings.api.pcf.PcfSetupContextElement;
@@ -118,7 +118,7 @@ public class PcfSwitchBlueGreenRoutes extends State {
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
 
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
-        (Encryptable) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
+        (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     PcfRouteUpdateRequestConfigData requestConfigData = null;
     if (isRollback()) {

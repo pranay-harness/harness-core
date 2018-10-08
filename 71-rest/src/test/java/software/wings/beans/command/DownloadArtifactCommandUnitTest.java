@@ -29,7 +29,7 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ScriptType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.HostConnectionAttributes.AccessType;
@@ -161,8 +161,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     }
     downloadArtifactCommandUnit.setScriptType(ScriptType.POWERSHELL);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(Encryptable.class), anyListOf(EncryptedDataDetail.class)))
-        .thenReturn((Encryptable) hostConnectionAttributes.getValue());
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     when(awsHelperService.getBucketRegion(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString()))
         .thenReturn("us-west-1");
     when(executor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
@@ -187,8 +187,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
     }
     downloadArtifactCommandUnit.setScriptType(ScriptType.BASH);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(Encryptable.class), anyListOf(EncryptedDataDetail.class)))
-        .thenReturn((Encryptable) hostConnectionAttributes.getValue());
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     when(awsHelperService.getBucketRegion(any(AwsConfig.class), anyListOf(EncryptedDataDetail.class), anyString()))
         .thenReturn("us-west-1");
     when(executor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
@@ -202,8 +202,8 @@ public class DownloadArtifactCommandUnitTest extends WingsBaseTest {
   public void shouldDownloadFromArtifactoryAsAnonymous(ScriptType scriptType) {
     downloadArtifactCommandUnit.setScriptType(scriptType);
     downloadArtifactCommandUnit.setCommandPath(WingsTestConstants.DESTINATION_DIR_PATH);
-    when(encryptionService.decrypt(any(Encryptable.class), anyListOf(EncryptedDataDetail.class)))
-        .thenReturn((Encryptable) hostConnectionAttributes.getValue());
+    when(encryptionService.decrypt(any(EncryptableSetting.class), anyListOf(EncryptedDataDetail.class)))
+        .thenReturn((EncryptableSetting) hostConnectionAttributes.getValue());
     when(executor.executeCommandString(anyString(), anyBoolean())).thenReturn(CommandExecutionStatus.SUCCESS);
     CommandExecutionStatus status = downloadArtifactCommandUnit.executeInternal(artifactoryContextAnon);
     assertThat(status).isEqualTo(CommandExecutionStatus.SUCCESS);

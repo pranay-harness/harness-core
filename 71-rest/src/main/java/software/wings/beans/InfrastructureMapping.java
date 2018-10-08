@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.BaseEntityYaml;
@@ -40,7 +40,7 @@ import javax.annotation.Nullable;
     fields = { @Field("appId")
                , @Field("envId"), @Field("name") }))
 @JsonIgnoreProperties(ignoreUnknown = true)
-public abstract class InfrastructureMapping extends Base implements Encryptable {
+public abstract class InfrastructureMapping extends Base implements EncryptableSetting {
   public static final String ENV_ID_KEY = "envId";
   public static final String NAME_KEY = "name";
   public static final String PROVISIONER_ID_KEY = "provisionerId";

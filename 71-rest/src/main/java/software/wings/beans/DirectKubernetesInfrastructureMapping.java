@@ -11,12 +11,12 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.Encrypted;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.beans.KubernetesConfig.KubernetesConfigBuilder;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -34,7 +34,8 @@ import java.util.Optional;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class DirectKubernetesInfrastructureMapping extends ContainerInfrastructureMapping implements Encryptable {
+public class DirectKubernetesInfrastructureMapping
+    extends ContainerInfrastructureMapping implements EncryptableSetting {
   @Attributes(title = "Master URL") private String masterUrl;
   @Attributes(title = "User Name") private String username;
   @Encrypted @Attributes(title = "Password") private char[] password;

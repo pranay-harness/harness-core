@@ -11,7 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.AwsAutoScalingGroupDeploymentInfo;
 import software.wings.api.ContainerServiceData;
@@ -74,7 +74,7 @@ public class AwsAmiInstanceHandler extends AwsInstanceHandler {
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
     List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) cloudProviderSetting.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) cloudProviderSetting.getValue(), null, null);
 
     AwsAmiInfrastructureMapping amiInfraMapping = (AwsAmiInfrastructureMapping) infrastructureMapping;
     String region = amiInfraMapping.getRegion();

@@ -4,11 +4,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.reflection.ReflectUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import ro.fortsoft.pf4j.ExtensionPoint;
-import software.wings.utils.WingsReflectionUtils;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.lang.reflect.Field;
@@ -86,7 +86,7 @@ public abstract class SettingValue implements ExtensionPoint {
   @SchemaIgnore
   @JsonIgnore
   public List<Field> getEncryptedFields() {
-    return WingsReflectionUtils.getEncryptedFields(this.getClass());
+    return ReflectUtils.getEncryptedFields(this.getClass());
   }
 
   /**

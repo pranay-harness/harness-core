@@ -1,9 +1,10 @@
 package software.wings.service.impl;
 
 import static io.harness.exception.WingsException.USER;
+import static io.harness.reflection.ReflectUtils.getEncryptedFields;
+import static io.harness.reflection.ReflectUtils.getEncryptedRefField;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -15,7 +16,7 @@ import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.AwsConfig;
@@ -160,9 +161,9 @@ public class SettingValidationService {
       newRelicService.validateConfig(settingAttribute, StateType.PROMETHEUS);
     }
 
-    if (Encryptable.class.isInstance(settingValue)) {
-      Encryptable encryptable = (Encryptable) settingValue;
-      List<Field> encryptedFields = WingsReflectionUtils.getEncryptedFields(settingValue.getClass());
+    if (EncryptableSetting.class.isInstance(settingValue)) {
+      EncryptableSetting encryptable = (EncryptableSetting) settingValue;
+      List<Field> encryptedFields = getEncryptedFields(settingValue.getClass());
       encryptedFields.forEach(encryptedField -> {
         Field encryptedFieldRef = getEncryptedRefField(encryptedField, encryptable);
         try {

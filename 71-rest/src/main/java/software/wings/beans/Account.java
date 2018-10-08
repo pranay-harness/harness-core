@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.annotation.Encrypted;
 import io.harness.validation.Create;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,7 +10,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.Encrypted;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.security.encryption.EncryptionInterface;
 import software.wings.security.encryption.SimpleEncryption;

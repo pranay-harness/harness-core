@@ -1,17 +1,17 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.reflection.ReflectUtils.getFieldByName;
 import static java.lang.String.format;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
-import static software.wings.utils.WingsReflectionUtils.getFieldByName;
 
 import com.google.inject.Inject;
 
 import io.harness.exception.KmsOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -33,7 +33,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
   @Inject private DelegateProxyFactory delegateProxyFactory;
 
   @Override
-  public void decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails) {
+  public void decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails) {
     if (isEmpty(encryptedDataDetails)) {
       return;
     }
@@ -71,7 +71,7 @@ public class ManagerDecryptionServiceImpl implements ManagerDecryptionService {
                                           .withTimeout(DEFAULT_ASYNC_CALL_TIMEOUT)
                                           .build();
     try {
-      Encryptable decrypted =
+      EncryptableSetting decrypted =
           delegateProxyFactory.get(EncryptionService.class, syncTaskContext).decrypt(object, nonLocalEncryptedDetails);
       for (EncryptedDataDetail encryptedDataDetail : nonLocalEncryptedDetails) {
         Field f = getFieldByName(object.getClass(), encryptedDataDetail.getFieldName());

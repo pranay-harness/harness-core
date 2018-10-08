@@ -17,7 +17,7 @@ import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AwsAmiSetupExecutionData;
 import software.wings.api.PhaseElement;
@@ -163,7 +163,7 @@ public class AwsAmiServiceSetup extends State {
 
     SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-        (Encryptable) cloudProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+        (EncryptableSetting) cloudProviderSetting.getValue(), context.getAppId(), context.getWorkflowExecutionId());
     String region = infrastructureMapping.getRegion();
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 

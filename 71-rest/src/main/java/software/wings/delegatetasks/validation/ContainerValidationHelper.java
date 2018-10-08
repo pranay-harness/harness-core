@@ -12,7 +12,7 @@ import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.GcpConfig;
@@ -41,9 +41,9 @@ public class ContainerValidationHelper {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
 
     // see if we can decrypt from this delegate
-    if (Encryptable.class.isInstance(value) && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
+    if (EncryptableSetting.class.isInstance(value) && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
       try {
-        encryptionService.decrypt((Encryptable) value, containerServiceParams.getEncryptionDetails());
+        encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails());
       } catch (Exception e) {
         logger.info("failed to decrypt " + value, e);
         return false;

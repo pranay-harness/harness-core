@@ -21,7 +21,7 @@ import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
@@ -326,7 +326,7 @@ public abstract class ContainerServiceDeploy extends State {
                 .build()
           : containerServiceDeploy.settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       encryptedDataDetails = containerServiceDeploy.secretManager.getEncryptionDetails(
-          (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+          (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
       region = infrastructureMapping instanceof EcsInfrastructureMapping
           ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
           : "";

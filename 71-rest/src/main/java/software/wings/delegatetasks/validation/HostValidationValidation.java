@@ -11,7 +11,7 @@ import com.google.inject.Inject;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.ExecutionCredential;
 import software.wings.beans.SettingAttribute;
@@ -54,7 +54,7 @@ public class HostValidationValidation extends AbstractDelegateValidateTask {
   private List<DelegateConnectionResult> validateHosts(List<String> hostNames, SettingAttribute connectionSetting,
       List<EncryptedDataDetail> encryptionDetails, ExecutionCredential executionCredential) {
     List<DelegateConnectionResult> results = new ArrayList<>();
-    encryptionService.decrypt((Encryptable) connectionSetting.getValue(), encryptionDetails);
+    encryptionService.decrypt((EncryptableSetting) connectionSetting.getValue(), encryptionDetails);
     try {
       timeLimiter.callWithTimeout(() -> {
         for (String hostName : hostNames) {

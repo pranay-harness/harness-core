@@ -2,8 +2,8 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
-import static software.wings.utils.WingsReflectionUtils.getFieldByName;
+import static io.harness.reflection.ReflectUtils.getEncryptedRefField;
+import static io.harness.reflection.ReflectUtils.getFieldByName;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -12,7 +12,7 @@ import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.KmsOperationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -33,7 +33,7 @@ public class EncryptionServiceImpl implements EncryptionService {
   @Inject private SecretManagementDelegateService secretManagementDelegateService;
 
   @Override
-  public Encryptable decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails) {
+  public EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails) {
     if (isEmpty(encryptedDataDetails)) {
       return object;
     }

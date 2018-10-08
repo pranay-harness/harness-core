@@ -17,7 +17,7 @@ import io.harness.serializer.YamlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.APMFetchConfig;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
@@ -154,7 +154,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       switch (stateType) {
@@ -200,7 +200,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = aContext()
                                             .withAccountId(settingAttribute.getAccountId())
                                             .withAppId(Base.GLOBAL_APP_ID)
@@ -227,7 +227,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = aContext()
                                             .withAccountId(settingAttribute.getAccountId())
                                             .withAppId(Base.GLOBAL_APP_ID)
@@ -247,7 +247,7 @@ public class NewRelicServiceImpl implements NewRelicService {
     try {
       final SettingAttribute settingAttribute = settingsService.get(settingId);
       List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = aContext()
                                             .withAccountId(settingAttribute.getAccountId())
                                             .withAppId(Base.GLOBAL_APP_ID)

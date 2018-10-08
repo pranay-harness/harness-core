@@ -1,22 +1,19 @@
 package software.wings.core.winrm.executors;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.WinRmConnectionAttributes.AuthenticationScheme;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.utils.WingsReflectionUtils;
 
-import java.lang.reflect.Field;
-import java.util.List;
 import java.util.Map;
 
 @Data
 @Builder
-public class WinRmSessionConfig implements Encryptable {
+public class WinRmSessionConfig implements EncryptableSetting {
   @NotEmpty private String accountId;
   @NotEmpty private String appId;
   @NotEmpty private String executionId;
@@ -37,11 +34,6 @@ public class WinRmSessionConfig implements Encryptable {
   @Override
   public SettingVariableTypes getSettingType() {
     return SettingVariableTypes.WINRM_SESSION_CONFIG;
-  }
-
-  @Override
-  public List<Field> getEncryptedFields() {
-    return WingsReflectionUtils.getEncryptedFields(this.getClass());
   }
 
   @Override

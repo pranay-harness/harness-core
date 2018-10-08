@@ -1,6 +1,6 @@
 package software.wings.service.intfc.security;
 
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateTaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -13,7 +13,7 @@ import java.util.List;
  */
 public interface EncryptionService {
   @DelegateTaskType(TaskType.SECRET_DECRYPT)
-  Encryptable decrypt(Encryptable object, List<EncryptedDataDetail> encryptedDataDetails);
+  EncryptableSetting decrypt(EncryptableSetting object, List<EncryptedDataDetail> encryptedDataDetails);
 
   @DelegateTaskType(TaskType.SECRET_DECRYPT_REF)
   char[] getDecryptedValue(EncryptedDataDetail encryptedDataDetail) throws IOException;
