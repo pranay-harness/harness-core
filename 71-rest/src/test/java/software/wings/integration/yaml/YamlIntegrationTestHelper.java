@@ -2,36 +2,56 @@ package software.wings.integration.yaml;
 
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.govern.Switch.unhandled;
+import static java.util.Arrays.asList;
+import static org.junit.Assert.fail;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.CloudFormationSourceType.TEMPLATE_BODY;
+import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
-import static software.wings.integration.yaml.YamlIntegrationTestConstants.RANDOM_TEXT;
+import static software.wings.integration.yaml.YamlIntegrationTestConstants.DESCRIPTION;
+import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 
 import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GitConfig;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.beans.HostConnectionAttributes.ConnectionType;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.ServiceTemplate.Builder;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
+import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretName;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -43,9 +63,12 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class YamlIntegrationTestHelper {
+  protected static final Logger logger = LoggerFactory.getLogger(YamlIntegrationTestHelper.class);
+
   public static final String URL_FOR_GIT_SYNC = "https://github.com/wings-software/yamlIntegrationTest.git";
 
   public Application createApplication(String appName, String accountId, AppService appService) {
@@ -125,9 +148,10 @@ public class YamlIntegrationTestHelper {
     }
   }
 
-  public SettingAttribute createSettingAttribute(String name, String appId, String accountId,
+  public SettingAttribute createSettingAttribute(String name, String accountId, String appId, String envId,
       SettingVariableTypes settingVariableTypes, SettingsService settingsService) {
-    SettingAttribute.Builder builder = aSettingAttribute().withAppId(appId).withAccountId(accountId).withName(name);
+    SettingAttribute.Builder builder =
+        aSettingAttribute().withAppId(appId).withAccountId(accountId).withName(name).withEnvId(envId);
 
     SettingValue settingValue = null;
     switch (settingVariableTypes) {
@@ -135,6 +159,14 @@ public class YamlIntegrationTestHelper {
         settingValue =
             PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig().withType(settingVariableTypes.name()).build();
         break;
+      case HOST_CONNECTION_ATTRIBUTES:
+        settingValue = HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                           .withAccessType(AccessType.USER_PASSWORD)
+                           .withAccountId(accountId)
+                           .withConnectionType(ConnectionType.SSH)
+                           .build();
+        break;
+
       default:
         unhandled(settingVariableTypes);
     }
@@ -158,10 +190,9 @@ public class YamlIntegrationTestHelper {
                                         .name(name)
                                         .appId(appId)
                                         .sourceType(TEMPLATE_BODY.name())
-                                        .description(RANDOM_TEXT)
+                                        .description(DESCRIPTION)
                                         .build();
         break;
-
       default:
         unhandled(provisionerType);
     }
@@ -213,5 +244,86 @@ public class YamlIntegrationTestHelper {
         .append("/")
         .append(application.getName())
         .toString();
+  }
+
+  public Environment createEnvironment(String envName, String appId, EnvironmentService environmentService) {
+    Environment.Builder builder = anEnvironment()
+                                      .withName(envName)
+                                      .withAppId(appId)
+                                      .withEnvironmentType(EnvironmentType.PROD)
+                                      .withDescription(DESCRIPTION);
+
+    return environmentService.save(builder.build());
+  }
+
+  public String getEnvironmentYamlPath(Application application, Environment environment) {
+    return new StringBuilder()
+        .append(YamlConstants.SETUP_FOLDER)
+        .append("/")
+        .append(YamlConstants.APPLICATIONS_FOLDER)
+        .append("/")
+        .append(application.getName())
+        .append("/")
+        .append(YamlConstants.ENVIRONMENTS_FOLDER)
+        .append("/")
+        .append(environment.getName())
+        .toString();
+  }
+
+  public InfrastructureMapping getInfrastructureMapping(String accountId, String appId, String serviceId, String envId,
+      InfrastructureMappingType infrastructureMappingType, String computeProviderName, String serviceTemplateId,
+      String settingAttributeId, String computeProviderSettingId,
+      InfrastructureMappingService infrastructureMappingService) {
+    InfrastructureMapping infrastructureMapping = getInfrastructureMapping(infrastructureMappingType,
+        computeProviderName, serviceTemplateId, settingAttributeId, computeProviderSettingId);
+
+    infrastructureMapping.setAccountId(accountId);
+    infrastructureMapping.setAppId(appId);
+    infrastructureMapping.setServiceId(serviceId);
+    infrastructureMapping.setEnvId(envId);
+
+    return infrastructureMappingService.save(infrastructureMapping);
+  }
+
+  private InfrastructureMapping getInfrastructureMapping(InfrastructureMappingType infrastructureMappingType,
+      String computeProviderName, String serviceTemplateId, String settingAttributeId, String computeProvideSettingId) {
+    InfrastructureMapping infrastructureMapping = null;
+
+    switch (infrastructureMappingType) {
+      case PHYSICAL_DATA_CENTER_SSH:
+        infrastructureMapping = aPhysicalInfrastructureMapping()
+                                    .withDeploymentType(DeploymentType.SSH.name())
+                                    .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+                                    .withComputeProviderSettingId(computeProvideSettingId)
+                                    .withInfraMappingType(infrastructureMappingType.getName())
+                                    .withComputeProviderName(computeProviderName)
+                                    .withHostNames(asList(YamlIntegrationTestConstants.HOST))
+                                    .withHostConnectionAttrs(settingAttributeId)
+                                    .withServiceTemplateId(serviceTemplateId)
+                                    .build();
+        break;
+
+      default:
+        unhandled(infrastructureMappingType);
+    }
+
+    return infrastructureMapping;
+  }
+
+  public ServiceTemplate createServiceTemplate(
+      String name, String appId, String serviceId, String envId, ServiceTemplateService serviceTemplateService) {
+    ServiceTemplate serviceTemplate =
+        Builder.aServiceTemplate().withAppId(appId).withServiceId(serviceId).withEnvId(envId).withName(name).build();
+
+    return serviceTemplateService.save(serviceTemplate);
+  }
+
+  public void verifyResultFromGit(Map<String, String> expectedFiles, GitFetchFilesResult gitFetchFilesResult) {
+    gitFetchFilesResult.getFiles().forEach(gitFile -> {
+      String filePath = gitFile.getFilePath();
+      if (!(expectedFiles.containsKey(filePath) && expectedFiles.get(filePath).equals(gitFile.getFileContent()))) {
+        fail();
+      }
+    });
   }
 }
