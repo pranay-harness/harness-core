@@ -49,7 +49,7 @@ import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.dl.WingsPersistence;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
@@ -83,7 +83,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class InfrastructureProvisionerServiceImpl implements InfrastructureProvisionerService {
   private static final Logger logger = LoggerFactory.getLogger(InfrastructureProvisionerServiceImpl.class);
 
-  @Inject private ExpressionEvaluator evaluator;
+  @Inject private ManagerExpressionEvaluator evaluator;
 
   @Inject InfrastructureMappingService infrastructureMappingService;
   @Inject ServiceResourceService serviceResourceService;

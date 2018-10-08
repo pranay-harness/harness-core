@@ -7,7 +7,7 @@ import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.INFRASTRUCTURE_MAPPING;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.PipelineStage.Yaml;
-import static software.wings.expression.ExpressionEvaluator.matchesVariablePattern;
+import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;

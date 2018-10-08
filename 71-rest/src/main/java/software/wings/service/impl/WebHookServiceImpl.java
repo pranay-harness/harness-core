@@ -25,7 +25,7 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.WingsPersistence;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WebHookService;
@@ -45,7 +45,7 @@ public class WebHookServiceImpl implements WebHookService {
   @Inject private AppService appService;
   @Inject private MainConfiguration configuration;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ExpressionEvaluator expressionEvaluator;
+  @Inject private ManagerExpressionEvaluator expressionEvaluator;
 
   private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
 

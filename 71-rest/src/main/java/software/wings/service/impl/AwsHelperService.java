@@ -224,7 +224,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.LogCallback;
 import software.wings.common.Constants;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
@@ -251,7 +251,7 @@ public class AwsHelperService {
       "http://169.254.169.254/latest/meta-data/placement/availability-zone";
   @Inject private EncryptionService encryptionService;
   @Inject private TimeLimiter timeLimiter;
-  @Inject private ExpressionEvaluator expressionEvaluator;
+  @Inject private ManagerExpressionEvaluator expressionEvaluator;
   @Inject private AwsUtils awsUtils;
 
   private static final long AUTOSCALING_REQUEST_STATUS_CHECK_INTERVAL = TimeUnit.SECONDS.toSeconds(15);

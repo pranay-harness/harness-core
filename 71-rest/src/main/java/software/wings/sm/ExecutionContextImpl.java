@@ -16,6 +16,8 @@ import com.google.common.base.Splitter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.expression.LateBindingMap;
+import io.harness.expression.LateBindingValue;
 import lombok.Builder;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -37,9 +39,7 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
-import software.wings.expression.ExpressionEvaluator;
-import software.wings.expression.LateBindingMap;
-import software.wings.expression.LateBindingValue;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.expression.SweepingOutputFunctor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -75,7 +75,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   private static final Pattern argsCharPattern = Pattern.compile("[(|)|\"|\']");
   private static final Logger logger = LoggerFactory.getLogger(ExecutionContextImpl.class);
 
-  @Inject @Transient private ExpressionEvaluator evaluator;
+  @Inject @Transient private ManagerExpressionEvaluator evaluator;
   @Inject @Transient private ExpressionProcessorFactory expressionProcessorFactory;
   @Inject @Transient private VariableProcessor variableProcessor;
   @Inject @Transient private SettingsService settingsService;
@@ -358,7 +358,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       return null;
     }
     List<ExpressionProcessor> expressionProcessors = new ArrayList<>();
-    Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
+    Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(expression);
 
     StringBuffer sb = new StringBuffer();
 
@@ -434,7 +434,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       Object val = evaluator.evaluate(normalizedExpressionMap.get(key), context);
       if (val instanceof String) {
         String valStr = (String) val;
-        Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(valStr);
+        Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(valStr);
         if (matcher.find()) {
           val = normalizeAndEvaluate(valStr, context, defaultObjectPrefix);
         }

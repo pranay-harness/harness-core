@@ -20,8 +20,8 @@ import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.PipelineExecution.PIPELINE_ID_KEY;
 import static software.wings.common.Constants.PIPELINE_ENV_STATE_VALIDATION_MESSAGE;
-import static software.wings.expression.ExpressionEvaluator.getName;
-import static software.wings.expression.ExpressionEvaluator.matchesVariablePattern;
+import static software.wings.expression.ManagerExpressionEvaluator.getName;
+import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
 import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
 

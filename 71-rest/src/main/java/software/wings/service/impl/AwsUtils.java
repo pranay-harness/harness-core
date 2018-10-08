@@ -15,7 +15,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
 import software.wings.common.Constants;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.Map;
 
 @Singleton
 public class AwsUtils {
-  @Inject private ExpressionEvaluator expressionEvaluator;
+  @Inject private ManagerExpressionEvaluator expressionEvaluator;
 
   public String getHostnameFromPrivateDnsName(String dnsName) {
     return isNotEmpty(dnsName) ? dnsName.split("\\.")[0] : "";

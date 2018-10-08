@@ -1,10 +1,8 @@
-package software.wings.expression;
+package io.harness.expression;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
-
-import com.google.inject.Singleton;
 
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.exception.WingsException;
@@ -18,32 +16,31 @@ import org.apache.commons.text.StrSubstitutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * The Class ExpressionEvaluator.
- *
- * @author Rishi
  */
-@Singleton
 public class ExpressionEvaluator {
   private static final Logger logger = LoggerFactory.getLogger(ExpressionEvaluator.class);
 
-  private JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
-  private RegexFunctor regexFunctor = new RegexFunctor();
-  private AwsFunctor awsFunctor = new AwsFunctor();
+  public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
+  public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
 
   private static int EXPANSION_LIMIT = 100 * 1024;
   private static int EXPANSION_MULTIPLIER_LIMIT = 10;
   private static int DEPTH_LIMIT = 10;
 
-  /**
-   * The constant wingsVariablePattern.
-   */
-  public static final Pattern wingsVariablePattern = Pattern.compile("\\$\\{[^{}]*}");
-  public static final Pattern variableNamePattern = Pattern.compile("^[-_a-zA-Z][-_\\w]*$");
+  private Map<String, Object> expressionFunctorMap = new HashMap<>();
+
+  private JexlEngine engine = new JexlBuilder().logger(new NoOpLog()).create();
+
+  public void addFunctor(String name, ExpressionFunctor functor) {
+    expressionFunctorMap.put(name, functor);
+  }
 
   public Object evaluate(String expression, String name, Object value) {
     Map<String, Object> context = new SingletonMap(name, value);
@@ -187,10 +184,9 @@ public class ExpressionEvaluator {
     return ExpressionEvaluator.wingsVariablePattern.matcher(expression).matches();
   }
 
-  private JexlContext prepareContext(Map<String, Object> context) {
-    JexlContext jc = new LateBindingContext(context);
-    jc.set("regex", regexFunctor);
-    jc.set("aws", awsFunctor);
-    return jc;
+  protected JexlContext prepareContext(Map<String, Object> context) {
+    final LateBindingContext lateBindingContext = new LateBindingContext(context);
+    lateBindingContext.putAll(expressionFunctorMap);
+    return lateBindingContext;
   }
 }

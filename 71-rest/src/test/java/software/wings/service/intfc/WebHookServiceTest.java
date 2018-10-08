@@ -45,7 +45,7 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.WingsPersistence;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.utils.CryptoUtil;
 import software.wings.utils.JsonUtils;
 
@@ -62,7 +62,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock(answer = Answers.RETURNS_DEEP_STUBS) private MainConfiguration configuration;
   @Mock HttpHeaders httpHeaders;
-  @Inject ExpressionEvaluator expressionEvaluator;
+  @Inject ManagerExpressionEvaluator expressionEvaluator;
 
   @Inject @InjectMocks private WebHookService webHookService;
   @Inject WingsPersistence wingsPersistence;

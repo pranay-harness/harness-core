@@ -75,7 +75,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.common.VariableProcessor;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
@@ -123,7 +123,7 @@ public class PcfSetupStateTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private EncryptionService encryptionService;
   @Mock private VariableProcessor variableProcessor;
-  @Mock private ExpressionEvaluator evaluator;
+  @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
 
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();

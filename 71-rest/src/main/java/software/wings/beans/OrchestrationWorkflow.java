@@ -22,7 +22,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import software.wings.beans.Variable.VariableBuilder;
 import software.wings.common.Constants;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.sm.State;
 
@@ -186,9 +186,9 @@ public abstract class OrchestrationWorkflow {
         }
       }
       String expression = templateExpression.getExpression();
-      Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(expression);
+      Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(expression);
       if (relatedField != null) {
-        Matcher relatedFieldMatcher = ExpressionEvaluator.wingsVariablePattern.matcher(relatedField);
+        Matcher relatedFieldMatcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(relatedField);
         if (relatedFieldMatcher.matches()) {
           relatedField = relatedField.substring(2, relatedField.length() - 1);
         }

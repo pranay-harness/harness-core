@@ -2,6 +2,7 @@ package software.wings.expression;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.expression.RegexFunctor;
 import org.junit.Test;
 
 public class RegexFunctorTest {

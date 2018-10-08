@@ -62,7 +62,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandDeployRequest;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -100,7 +100,7 @@ public class PcfDeployStateTest extends WingsBaseTest {
   @Mock private PortalConfig portalConfig;
   @Mock private ArtifactService artifactService;
   @Mock private VariableProcessor variableProcessor;
-  @Mock private ExpressionEvaluator evaluator;
+  @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private EncryptionService encryptionService;
   private PcfStateTestHelper pcfStateTestHelper = new PcfStateTestHelper();
   public static final String ORG = "ORG";

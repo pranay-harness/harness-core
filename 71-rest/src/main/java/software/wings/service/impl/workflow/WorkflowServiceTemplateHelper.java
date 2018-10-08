@@ -44,7 +44,7 @@ import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.beans.template.TemplateHelper;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.StateType;
 import software.wings.utils.Validator;
@@ -350,14 +350,14 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static String getName(String expression, EntityType entityType) {
-    return validatetAndGetVariable(ExpressionEvaluator.getName(expression), entityType);
+    return validatetAndGetVariable(ManagerExpressionEvaluator.getName(expression), entityType);
   }
 
   public static String validatetAndGetVariable(String variable, EntityType entityType) {
     if (variable.startsWith("workflow.variables.")) {
       variable = variable.replace("workflow.variables.", "");
     }
-    Matcher matcher = ExpressionEvaluator.variableNamePattern.matcher(variable);
+    Matcher matcher = ManagerExpressionEvaluator.variableNamePattern.matcher(variable);
     if (entityType != null) {
       if (!matcher.matches()) {
         throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)

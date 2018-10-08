@@ -6,9 +6,9 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
 import io.harness.exception.WingsException;
+import io.harness.expression.RegexFunctor;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import software.wings.expression.RegexFunctor;
 
 import java.util.ArrayList;
 import java.util.Collections;

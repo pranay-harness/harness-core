@@ -32,7 +32,7 @@ import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.command.HttpTemplate;
 import software.wings.dl.WingsPersistence;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.rules.Integration;
 import software.wings.rules.SetupScheduler;
 import software.wings.service.intfc.AccountService;
@@ -146,7 +146,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Test
   public void shouldTestExpression() {
     String content = "${F5_URL}/abdcc/";
-    Matcher matcher = ExpressionEvaluator.wingsVariablePattern.matcher(content);
+    Matcher matcher = ManagerExpressionEvaluator.wingsVariablePattern.matcher(content);
     while (matcher.find()) {
       String name = matcher.group(0);
       assertThat(name).isEqualTo(content);

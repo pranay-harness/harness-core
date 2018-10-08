@@ -72,7 +72,7 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandType;
@@ -110,7 +110,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private DelegateService delegateService;
   @Mock private EnvironmentService environmentService;
-  @Mock private ExpressionEvaluator evaluator;
+  @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private MainConfiguration configuration;
   @Mock private PortalConfig portalConfig;
