@@ -59,6 +59,7 @@ import io.harness.factory.ClosingFactory;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
+import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.rule.RealMongo;
@@ -106,7 +107,7 @@ import javax.cache.Caching;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
-public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRuleMixin {
+public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, DistributedLockRuleMixin {
   private static final Logger logger = LoggerFactory.getLogger(WingsRule.class);
 
   private static IRuntimeConfig runtimeConfig =
@@ -136,7 +137,11 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
    */
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return new Statement() {
+    if (bypass(frameworkMethod)) {
+      return noopStatement();
+    }
+
+    Statement wingsStatement = new Statement() {
       @Override
       public void evaluate() throws Throwable {
         List<Annotation> annotations = Lists.newArrayList(asList(frameworkMethod.getAnnotations()));
@@ -151,6 +156,8 @@ public class WingsRule implements MethodRule, MongoRuleMixin, DistributedLockRul
         }
       }
     };
+
+    return wingsStatement;
   }
 
   protected boolean isIntegrationTest(Object target) {
