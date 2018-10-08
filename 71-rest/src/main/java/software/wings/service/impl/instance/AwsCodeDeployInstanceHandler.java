@@ -9,7 +9,7 @@ import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.DeploymentInfo;
@@ -126,7 +126,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
 
     List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) cloudProviderSetting.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) cloudProviderSetting.getValue(), null, null);
 
     CodeDeployInfrastructureMapping codeDeployInfraMapping = (CodeDeployInfrastructureMapping) infrastructureMapping;
     String region = codeDeployInfraMapping.getRegion();

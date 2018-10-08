@@ -5,14 +5,14 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 @Builder
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"apiKey", "applicationKey"})
-public class DatadogConfig extends SettingValue implements Encryptable {
+public class DatadogConfig extends SettingValue implements EncryptableSetting {
   public static final String validationUrl = "metrics";
 
   @Attributes(title = "URL", required = true) @NotEmpty private String url;

@@ -16,7 +16,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.pcf.PcfSetupContextElement;
@@ -193,7 +193,7 @@ public class PcfSetupState extends State {
     SettingAttribute settingAttribute = settingsService.get(pcfInfrastructureMapping.getComputeProviderSettingId());
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
-        (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+        (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
     PcfServiceSpecification pcfServiceSpecification =
         serviceResourceService.getPcfServiceSpecification(context.getAppId(), serviceElement.getUuid());

@@ -21,7 +21,7 @@ import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.HostElement;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
@@ -176,7 +176,7 @@ public class ContainerDeploymentManagerHelper {
     Validator.notNullCheck("SettingAttribute", settingAttribute);
 
     List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-        (Encryptable) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
+        (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
     return ContainerServiceParams.builder()
         .settingAttribute(settingAttribute)
         .containerServiceName(containerServiceName)

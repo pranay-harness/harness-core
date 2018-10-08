@@ -30,7 +30,7 @@ import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import software.wings.WingsBaseTest;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 import software.wings.beans.JenkinsConfig;
@@ -590,8 +590,8 @@ public class WingsPersistenceTest extends WingsBaseTest {
           .isFalse();
 
       // decrypt and compare
-      encryptionService.decrypt((Encryptable) result.getValue(),
-          secretManager.getEncryptionDetails((Encryptable) result.getValue(), null, null));
+      encryptionService.decrypt((EncryptableSetting) result.getValue(),
+          secretManager.getEncryptionDetails((EncryptableSetting) result.getValue(), null, null));
       assertEquals(password, new String(((JenkinsConfig) result.getValue()).getPassword()));
     }
   }
@@ -624,8 +624,8 @@ public class WingsPersistenceTest extends WingsBaseTest {
     assertThat(undecryptedResult).isNotNull();
     assertThat(Arrays.equals(newPassword, ((JenkinsConfig) undecryptedResult.getValue()).getPassword())).isFalse();
 
-    encryptionService.decrypt((Encryptable) result.getValue(),
-        secretManager.getEncryptionDetails((Encryptable) result.getValue(), null, null));
+    encryptionService.decrypt((EncryptableSetting) result.getValue(),
+        secretManager.getEncryptionDetails((EncryptableSetting) result.getValue(), null, null));
     assertTrue(Arrays.equals(newPassword, ((JenkinsConfig) result.getValue()).getPassword()));
   }
 

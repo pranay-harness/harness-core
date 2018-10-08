@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,8 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
@@ -23,7 +23,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
-public class GitConfig extends SettingValue implements Encryptable {
+public class GitConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Username", required = true) private String username;
 
   @Attributes(title = "Password", required = true) @Encrypted private char[] password;

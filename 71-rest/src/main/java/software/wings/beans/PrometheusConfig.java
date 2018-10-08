@@ -9,7 +9,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.settings.SettingValue;
 import software.wings.settings.UsageRestrictions;
 import software.wings.sm.StateType;
@@ -23,7 +23,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @JsonTypeName("PROMETHEUS")
 @EqualsAndHashCode(callSuper = false)
 @Builder
-public class PrometheusConfig extends SettingValue implements Encryptable {
+public class PrometheusConfig extends SettingValue implements EncryptableSetting {
   @SchemaIgnore @NotEmpty private String accountId;
 
   @Attributes(title = "URL", required = true) private String url;

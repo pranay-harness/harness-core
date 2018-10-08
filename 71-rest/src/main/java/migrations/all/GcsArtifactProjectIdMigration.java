@@ -10,7 +10,7 @@ import migrations.Migration;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.ArtifactStream;
@@ -32,7 +32,7 @@ public class GcsArtifactProjectIdMigration implements Migration {
   @Inject private SecretManager secretManager;
   @Inject private GcsService gcsService;
 
-  private List<EncryptedDataDetail> getEncryptedDataDetails(Encryptable settingValue) {
+  private List<EncryptedDataDetail> getEncryptedDataDetails(EncryptableSetting settingValue) {
     return secretManager.getEncryptionDetails(settingValue, null, null);
   }
 
@@ -53,7 +53,7 @@ public class GcsArtifactProjectIdMigration implements Migration {
           } else {
             // Get project Id from GCP Config and service account
             SettingValue settingValue = settingAttribute.getValue();
-            List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+            List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
             GcpConfig gcpConfig = (GcpConfig) settingValue;
             String projectId = gcsService.getProject(gcpConfig, encryptedDataDetails);
 

@@ -15,7 +15,7 @@ import io.harness.exception.WingsException;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.DelegateTask;
@@ -158,12 +158,12 @@ public class CommandValidation extends AbstractDelegateValidateTask {
 
   private void decryptCredentials(CommandExecutionContext context) {
     if (context.getHostConnectionAttributes() != null) {
-      encryptionService.decrypt(
-          (Encryptable) context.getHostConnectionAttributes().getValue(), context.getHostConnectionCredentials());
+      encryptionService.decrypt((EncryptableSetting) context.getHostConnectionAttributes().getValue(),
+          context.getHostConnectionCredentials());
     }
     if (context.getBastionConnectionAttributes() != null) {
-      encryptionService.decrypt(
-          (Encryptable) context.getBastionConnectionAttributes().getValue(), context.getBastionConnectionCredentials());
+      encryptionService.decrypt((EncryptableSetting) context.getBastionConnectionAttributes().getValue(),
+          context.getBastionConnectionCredentials());
     }
     if (context.getWinrmConnectionAttributes() != null) {
       encryptionService.decrypt(

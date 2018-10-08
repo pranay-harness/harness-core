@@ -3,7 +3,7 @@ package software.wings.service.intfc.security;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.UuidAware;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -27,9 +27,9 @@ public interface SecretManager {
 
   EncryptionType getEncryptionType(String accountId);
 
-  void maskEncryptedFields(Encryptable object);
+  void maskEncryptedFields(EncryptableSetting object);
 
-  void resetUnchangedEncryptedFields(Encryptable sourceObject, Encryptable destinationObject);
+  void resetUnchangedEncryptedFields(EncryptableSetting sourceObject, EncryptableSetting destinationObject);
 
   PageResponse<SecretUsageLog> getUsageLogs(PageRequest<SecretUsageLog> pageRequest, String accountId, String entityId,
       SettingVariableTypes variableType) throws IllegalAccessException;
@@ -46,7 +46,7 @@ public interface SecretManager {
 
   Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
 
-  List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String appId, String workflowExecutionId);
+  List<EncryptedDataDetail> getEncryptionDetails(EncryptableSetting object, String appId, String workflowExecutionId);
 
   EncryptionConfig getEncryptionConfig(String accountId, String entityId, EncryptionType encryptionType);
 
@@ -54,7 +54,7 @@ public interface SecretManager {
 
   PageResponse<UuidAware> listEncryptedValues(String accountId, PageRequest<EncryptedData> pageRequest);
 
-  String getEncryptedYamlRef(Encryptable object, String... fieldName) throws IllegalAccessException;
+  String getEncryptedYamlRef(EncryptableSetting object, String... fieldName) throws IllegalAccessException;
 
   EncryptedData getEncryptedDataFromYamlRef(String encryptedYamlRef) throws IllegalAccessException;
 

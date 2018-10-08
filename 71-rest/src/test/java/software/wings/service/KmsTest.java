@@ -45,7 +45,7 @@ import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Activity;
 import software.wings.beans.AppDynamicsConfig;
@@ -351,8 +351,8 @@ public class KmsTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertNotNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
     assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
-    encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
-        secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowExecutionId, appId));
+    encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
+        secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId));
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
     assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword());
     assertEquals(password, new String(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()));
@@ -382,8 +382,8 @@ public class KmsTest extends WingsBaseTest {
     SettingAttribute savedAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     assertNotNull(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword());
     assertNull(((ArtifactoryConfig) savedAttribute.getValue()).getPassword());
-    encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
-        secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowExecutionId, appId));
+    encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
+        secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId));
     artifactoryConfig.setEncryptedPassword(null);
     assertEquals(artifactoryConfig, savedAttribute.getValue());
     assertNull(((ArtifactoryConfig) savedAttribute.getValue()).getEncryptedPassword());
@@ -455,8 +455,8 @@ public class KmsTest extends WingsBaseTest {
     assertNull(((AppDynamicsConfig) savedAttribute.getValue()).getPassword());
     assertEquals(appDynamicsConfig, savedAttribute.getValue());
     assertFalse(isBlank(((AppDynamicsConfig) savedAttribute.getValue()).getEncryptedPassword()));
-    encryptionService.decrypt((Encryptable) savedAttribute.getValue(),
-        secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), workflowExecutionId, appId));
+    encryptionService.decrypt((EncryptableSetting) savedAttribute.getValue(),
+        secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), workflowExecutionId, appId));
     assertEquals(password, new String(((AppDynamicsConfig) savedAttribute.getValue()).getPassword()));
   }
 
@@ -538,7 +538,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(1, encryptedDataQuery.count());
     EncryptedData encryptedData = encryptedDataQuery.get();
 
-    secretManager.getEncryptionDetails((Encryptable) savedAttribute.getValue(), appId, workflowExecutionId);
+    secretManager.getEncryptionDetails((EncryptableSetting) savedAttribute.getValue(), appId, workflowExecutionId);
     Query<SecretUsageLog> query = wingsPersistence.createQuery(SecretUsageLog.class);
     assertEquals(1, query.count());
     SecretUsageLog usageLog = query.get();
@@ -3018,7 +3018,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(0, usageLogs.size());
     int numOfAccess = 13;
     for (int i = 0; i < numOfAccess; i++) {
-      secretManager.getEncryptionDetails((Encryptable) appDAttribute.getValue(), appId, workflowExecutionId);
+      secretManager.getEncryptionDetails((EncryptableSetting) appDAttribute.getValue(), appId, workflowExecutionId);
     }
     usageLogs = (List<SecretUsageLog>) secretManagementResource
                     .getUsageLogs(aPageRequest().build(), accountId, appDAttributeId, SettingVariableTypes.APP_DYNAMICS)

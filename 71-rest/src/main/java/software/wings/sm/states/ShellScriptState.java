@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.api.ScriptStateExecutionData;
@@ -241,7 +241,7 @@ public class ShellScriptState extends State {
         HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
         username = hostConnectionAttributes.getUserName();
         keyEncryptionDetails = secretManager.getEncryptionDetails(
-            (Encryptable) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+            (EncryptableSetting) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
       } else if (connectionType == ConnectionType.WINRM) {
         winRmConnectionAttributes = (WinRmConnectionAttributes) settingsService.get(connectionAttributes).getValue();

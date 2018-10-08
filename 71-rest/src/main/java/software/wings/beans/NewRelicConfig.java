@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,8 +13,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import ro.fortsoft.pf4j.Extension;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
 import software.wings.service.impl.newrelic.NewRelicUrlProvider;
 import software.wings.settings.SettingValue;
@@ -32,7 +32,7 @@ import software.wings.yaml.setting.VerificationProviderYaml;
 @EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "apiKey")
-public class NewRelicConfig extends SettingValue implements Encryptable {
+public class NewRelicConfig extends SettingValue implements EncryptableSetting {
   @EnumData(enumDataProvider = NewRelicUrlProvider.class)
   @Attributes(title = "URL")
   @NotEmpty

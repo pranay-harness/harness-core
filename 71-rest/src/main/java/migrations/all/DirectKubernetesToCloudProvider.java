@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
@@ -80,8 +80,8 @@ public class DirectKubernetesToCloudProvider implements Migration {
               try {
                 logger.info("Migrating for Env: [{}], Infra: [{}]", env.getName(), directInfra.getName());
                 List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-                    (Encryptable) infrastructureMapping, infrastructureMapping.getAppId(), null);
-                encryptionService.decrypt((Encryptable) infrastructureMapping, encryptionDetails);
+                    (EncryptableSetting) infrastructureMapping, infrastructureMapping.getAppId(), null);
+                encryptionService.decrypt((EncryptableSetting) infrastructureMapping, encryptionDetails);
                 KubernetesClusterConfig kubernetesClusterConfig = new KubernetesClusterConfig();
                 kubernetesClusterConfig.setMasterUrl(
                     ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getMasterUrl());

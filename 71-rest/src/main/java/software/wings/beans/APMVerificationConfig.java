@@ -14,7 +14,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"headers", "options"})
-public class APMVerificationConfig extends SettingValue implements Encryptable {
+public class APMVerificationConfig extends SettingValue implements EncryptableSetting {
   @Transient @SchemaIgnore private static final Logger logger = LoggerFactory.getLogger(APMVerificationConfig.class);
   @Transient @SchemaIgnore private static final String MASKED_STRING = "*****";
 

@@ -216,7 +216,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.EcrConfig;
@@ -650,7 +650,7 @@ public class AwsHelperService {
         || !(connectorConfig.getValue() instanceof AwsConfig)) {
       throw new InvalidRequestException("connectorConfig is not of type AwsConfig");
     }
-    encryptionService.decrypt((Encryptable) connectorConfig.getValue(), encryptedDataDetails);
+    encryptionService.decrypt((EncryptableSetting) connectorConfig.getValue(), encryptedDataDetails);
     return (AwsConfig) connectorConfig.getValue();
   }
 

@@ -8,7 +8,7 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.yaml.ChangeContext;
@@ -52,7 +52,7 @@ public abstract class SettingValueYamlHandler<Y extends SettingValue.Yaml, B ext
   protected abstract SettingAttribute toBean(SettingAttribute previous, ChangeContext<Y> changeContext,
       List<ChangeContext> changeSetContext) throws HarnessException;
 
-  protected String getEncryptedValue(Encryptable settingValue, String fieldName, boolean encryptMultipleFields)
+  protected String getEncryptedValue(EncryptableSetting settingValue, String fieldName, boolean encryptMultipleFields)
       throws WingsException {
     try {
       return encryptMultipleFields ? secretManager.getEncryptedYamlRef(settingValue, fieldName)

@@ -9,7 +9,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DynaTraceConfig;
@@ -40,7 +40,7 @@ public class DynaTraceServiceImpl implements DynaTraceService {
     try {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = aContext()
                                             .withAccountId(settingAttribute.getAccountId())
                                             .withAppId(Base.GLOBAL_APP_ID)

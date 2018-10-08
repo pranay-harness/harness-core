@@ -6,14 +6,14 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.LoadBalancerConfig;
 import software.wings.beans.AwsInfrastructureMapping.AwsRegionDataProvider;
 import software.wings.jersey.JsonViews;
@@ -30,7 +30,7 @@ import software.wings.yaml.setting.LoadBalancerProviderYaml;
 @EqualsAndHashCode(callSuper = false)
 @Builder
 @ToString(exclude = "secretKey")
-public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Encryptable {
+public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements EncryptableSetting {
   @Attributes(title = "Region", required = true)
   @DefaultValue("us-east-1")
   @EnumData(enumDataProvider = AwsRegionDataProvider.class)

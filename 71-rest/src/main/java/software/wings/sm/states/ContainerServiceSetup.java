@@ -22,7 +22,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ClusterElement;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerServiceElement;
@@ -162,7 +162,7 @@ public abstract class ContainerServiceSetup extends State {
       }
 
       List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
-          (Encryptable) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
+          (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
       ContainerSetupParams containerSetupParams = buildContainerSetupParams(context, service.getName(), imageDetails,
           app, env, service, containerInfrastructureMapping, containerTask, clusterName);

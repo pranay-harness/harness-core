@@ -2,13 +2,13 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.annotation.Encryptable;
-import software.wings.annotation.Encrypted;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.settings.SettingValue;
 
 /**
@@ -19,7 +19,7 @@ import software.wings.settings.SettingValue;
 @EqualsAndHashCode(callSuper = true)
 @Builder
 @ToString(exclude = {"password", "caCert", "clientCert", "clientKey", "clientKeyPassphrase", "serviceAccountToken"})
-public class KubernetesConfig extends SettingValue implements Encryptable {
+public class KubernetesConfig extends SettingValue implements EncryptableSetting {
   @NotEmpty private String masterUrl;
   private String username;
   @Encrypted private char[] password;

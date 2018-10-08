@@ -9,7 +9,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.InvalidRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
 import software.wings.api.PhaseElement;
@@ -157,7 +157,7 @@ public class PcfDeployState extends State {
     PcfConfig pcfConfig = (PcfConfig) settingAttribute.getValue();
 
     List<EncryptedDataDetail> encryptedDataDetails = secretManager.getEncryptionDetails(
-        (Encryptable) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
+        (EncryptableSetting) pcfConfig, context.getAppId(), context.getWorkflowExecutionId());
 
     Integer upsizeUpdateCount = getUpsizeUpdateCount(pcfSetupContextElement);
     Integer downsizeUpdateCount = getDownsizeUpdateCount(upsizeUpdateCount, pcfSetupContextElement);

@@ -18,7 +18,7 @@ import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -129,7 +129,7 @@ public class CloudWatchServiceImpl implements CloudWatchService {
     try {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = aContext()
                                             .withAccountId(settingAttribute.getAccountId())
                                             .withAppId(Base.GLOBAL_APP_ID)

@@ -21,7 +21,7 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.yaml.YamlType;
 import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -51,7 +51,7 @@ import javax.ws.rs.DefaultValue;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ConfigFile extends BaseFile implements Encryptable {
+public class ConfigFile extends BaseFile implements EncryptableSetting {
   /**
    * The constant DEFAULT_TEMPLATE_ID.
    */

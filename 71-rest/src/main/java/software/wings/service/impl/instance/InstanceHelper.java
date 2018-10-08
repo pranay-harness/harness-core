@@ -26,7 +26,7 @@ import io.harness.queue.Queue;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
 import software.wings.api.HostElement;
@@ -270,8 +270,9 @@ public class InstanceHelper {
       } else if (host.getInstanceId() != null && region != null) {
         // TODO:: Avoid sequential fetch for Instance
         SettingAttribute cloudProviderSetting = settingsService.get(infraMapping.getComputeProviderSettingId());
-        List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
-            (Encryptable) cloudProviderSetting.getValue(), workflowExecution.getAppId(), workflowExecution.getUuid());
+        List<EncryptedDataDetail> encryptionDetails =
+            secretManager.getEncryptionDetails((EncryptableSetting) cloudProviderSetting.getValue(),
+                workflowExecution.getAppId(), workflowExecution.getUuid());
         AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
         com.amazonaws.services.ec2.model.Instance instance =
             awsHelperService

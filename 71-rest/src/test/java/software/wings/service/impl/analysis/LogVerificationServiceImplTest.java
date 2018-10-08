@@ -11,7 +11,7 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -51,7 +51,8 @@ public class LogVerificationServiceImplTest {
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockBugsnagDelegateService);
-    when(mockSecretManager.getEncryptionDetails(any(Encryptable.class), anyString(), anyString())).thenReturn(null);
+    when(mockSecretManager.getEncryptionDetails(any(EncryptableSetting.class), anyString(), anyString()))
+        .thenReturn(null);
     when(mockBugsnagDelegateService.getOrganizations(config, null, null))
         .thenReturn(new TreeSet<>(Arrays.asList(application)));
 
@@ -74,7 +75,8 @@ public class LogVerificationServiceImplTest {
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockBugsnagDelegateService);
-    when(mockSecretManager.getEncryptionDetails(any(Encryptable.class), anyString(), anyString())).thenReturn(null);
+    when(mockSecretManager.getEncryptionDetails(any(EncryptableSetting.class), anyString(), anyString()))
+        .thenReturn(null);
     when(mockBugsnagDelegateService.getProjects(config, "orgId", null, null))
         .thenReturn(new TreeSet<>(Arrays.asList(application)));
 
@@ -97,7 +99,8 @@ public class LogVerificationServiceImplTest {
     // setup
     when(mockSettingsService.get(anyString())).thenReturn(attribute);
     when(mockDelegateProxyFactory.get(any(), any())).thenReturn(mockBugsnagDelegateService);
-    when(mockSecretManager.getEncryptionDetails(any(Encryptable.class), anyString(), anyString())).thenReturn(null);
+    when(mockSecretManager.getEncryptionDetails(any(EncryptableSetting.class), anyString(), anyString()))
+        .thenReturn(null);
     when(mockBugsnagDelegateService.getOrganizations(config, null, null))
         .thenReturn(new TreeSet<>(Arrays.asList(application)));
 

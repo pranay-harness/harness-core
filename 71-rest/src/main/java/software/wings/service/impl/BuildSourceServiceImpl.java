@@ -17,7 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.Service;
@@ -70,7 +70,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public Set<JobDetails> getJobs(String appId, String settingId, String parentJobName) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     List<JobDetails> jobs = getBuildService(settingAttribute, appId)
                                 .getJobs(settingValue, encryptedDataDetails, Optional.ofNullable(parentJobName));
     // Sorting the job details by name before returning
@@ -88,7 +88,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
           .addParam("message", "GCP Cloud provider Settings Attribute is null");
     }
     SettingValue settingValue = settingAttribute.getValue();
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     GcpConfig gcpConfig = (GcpConfig) settingValue;
     return gcsService.getProject(gcpConfig, encryptedDataDetails);
@@ -99,7 +99,8 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     return getBuildService(settingAttribute, appId, ArtifactStreamType.GCS.name())
-        .getBuckets(getSettingValue(settingAttribute), projectId, getEncryptedDataDetails((Encryptable) settingValue));
+        .getBuckets(
+            getSettingValue(settingAttribute), projectId, getEncryptedDataDetails((EncryptableSetting) settingValue));
   }
 
   @Override
@@ -107,7 +108,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
     return getBuildService(settingAttribute, appId, artifactStreamType)
-        .getPlans(getSettingValue(settingAttribute), getEncryptedDataDetails((Encryptable) settingValue));
+        .getPlans(getSettingValue(settingAttribute), getEncryptedDataDetails((EncryptableSetting) settingValue));
   }
 
   @Override
@@ -117,7 +118,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     SettingValue value = getSettingValue(settingAttribute);
     Service service = serviceResourceService.get(appId, serviceId, false);
     notNullCheck("Service", service);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) value);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
     return getBuildService(settingAttribute, appId)
         .getPlans(value, encryptedDataDetails, service.getArtifactType(), repositoryType);
   }
@@ -127,7 +128,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       String appId, String jobName, String settingId, String groupId, String artifactStreamType) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue value = getSettingValue(settingAttribute);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) value);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) value);
     return Sets.newTreeSet(getBuildService(settingAttribute, appId, artifactStreamType)
                                .getArtifactPaths(jobName, groupId, value, encryptedDataDetails));
   }
@@ -140,7 +141,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       return new ArrayList<>();
     }
     SettingValue settingValue = getSettingValue(settingAttribute);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
     Service service = getService(appId, artifactStream);
@@ -162,7 +163,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public List<BuildDetails> getBuilds(String appId, String artifactStreamId, String settingId, int limit) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
     Service service = getService(appId, artifactStream);
@@ -188,7 +189,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public BuildDetails getLastSuccessfulBuild(String appId, String artifactStreamId, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
 
     ArtifactStream artifactStream = getArtifactStream(appId, artifactStreamId);
 
@@ -221,7 +222,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public Set<String> getGroupIds(String appId, String repoType, String settingId) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return Sets.newTreeSet(
         getBuildService(settingAttribute, appId).getGroupIds(repoType, settingValue, encryptedDataDetails));
   }
@@ -231,7 +232,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
       String appId, String settingId, ArtifactStreamAttributes artifactStreamAttributes) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return getBuildService(settingAttribute, appId)
         .validateArtifactSource(settingValue, encryptedDataDetails, artifactStreamAttributes);
   }
@@ -240,7 +241,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   public JobDetails getJob(String appId, String settingId, String jobName) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);
-    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((Encryptable) settingValue);
+    List<EncryptedDataDetail> encryptedDataDetails = getEncryptedDataDetails((EncryptableSetting) settingValue);
     return getBuildService(settingAttribute, appId).getJob(jobName, settingValue, encryptedDataDetails);
   }
 
@@ -280,7 +281,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     return delegateProxyFactory.get(buildServiceClass, syncTaskContext);
   }
 
-  private List<EncryptedDataDetail> getEncryptedDataDetails(Encryptable settingValue) {
+  private List<EncryptedDataDetail> getEncryptedDataDetails(EncryptableSetting settingValue) {
     return secretManager.getEncryptionDetails(settingValue, null, null);
   }
 }

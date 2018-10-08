@@ -9,7 +9,7 @@ import com.google.inject.Singleton;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.api.ScriptType;
 import software.wings.beans.command.CleanupPowerShellCommandUnit;
@@ -129,12 +129,12 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
 
   private void decryptCredentials(CommandExecutionContext context) {
     if (context.getHostConnectionAttributes() != null) {
-      encryptionService.decrypt(
-          (Encryptable) context.getHostConnectionAttributes().getValue(), context.getHostConnectionCredentials());
+      encryptionService.decrypt((EncryptableSetting) context.getHostConnectionAttributes().getValue(),
+          context.getHostConnectionCredentials());
     }
     if (context.getBastionConnectionAttributes() != null) {
-      encryptionService.decrypt(
-          (Encryptable) context.getBastionConnectionAttributes().getValue(), context.getBastionConnectionCredentials());
+      encryptionService.decrypt((EncryptableSetting) context.getBastionConnectionAttributes().getValue(),
+          context.getBastionConnectionCredentials());
     }
     if (context.getWinrmConnectionAttributes() != null) {
       encryptionService.decrypt(
@@ -142,7 +142,7 @@ public class ServiceCommandExecutorServiceImpl implements ServiceCommandExecutor
     }
     if (context.getCloudProviderSetting() != null) {
       encryptionService.decrypt(
-          (Encryptable) context.getCloudProviderSetting().getValue(), context.getCloudProviderCredentials());
+          (EncryptableSetting) context.getCloudProviderSetting().getValue(), context.getCloudProviderCredentials());
     }
   }
 }

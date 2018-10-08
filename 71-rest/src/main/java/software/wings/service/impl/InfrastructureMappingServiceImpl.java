@@ -64,7 +64,7 @@ import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.AwsAmiInfrastructureMapping;
@@ -587,7 +587,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     String region = infraMapping.getRegion();
 
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
     SyncTaskContext syncTaskContext = aContext()
@@ -618,7 +618,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
     SyncTaskContext syncTaskContext = aContext()
@@ -659,7 +659,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
     SyncTaskContext syncTaskContext = aContext()
@@ -695,7 +695,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     List<EncryptedDataDetail> encryptionDetails =
         (infraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
         ? emptyList()
-        : secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        : secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
     SyncTaskContext syncTaskContext = aContext()
@@ -988,7 +988,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       notNullCheck("Compute Provider", computeProviderSetting);
       return infrastructureProvider
           .listHosts(awsInfraMapping, computeProviderSetting,
-              secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null),
+              secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null),
               new PageRequest<>())
           .getResponse();
     } else {
@@ -1030,7 +1030,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       GcpInfrastructureProvider infrastructureProvider =
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
       return infrastructureProvider.listClusterNames(computeProviderSetting,
-          secretManager.getEncryptionDetails((Encryptable) computeProviderSetting.getValue(), null, null));
+          secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null));
     }
     return emptyList();
   }
@@ -1336,7 +1336,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     SettingAttribute hostConnectionSetting = settingsService.get(validationRequest.getHostConnectionAttrs());
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((Encryptable) hostConnectionSetting.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) hostConnectionSetting.getValue(), null, null);
     SyncTaskContext syncTaskContext = aContext()
                                           .withAccountId(hostConnectionSetting.getAccountId())
                                           .withAppId(validationRequest.getAppId())
@@ -1427,12 +1427,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       SettingAttribute computeProviderSetting =
           settingsService.get(awsInfrastructureMapping.getComputeProviderSettingId());
       notNullCheck("Compute Provider", computeProviderSetting);
-      List<Host> hosts = infrastructureProvider
-                             .listHosts(awsInfrastructureMapping, computeProviderSetting,
-                                 secretManager.getEncryptionDetails(
-                                     (Encryptable) computeProviderSetting.getValue(), appId, workflowExecutionId),
-                                 new PageRequest<>())
-                             .getResponse();
+      List<Host> hosts =
+          infrastructureProvider
+              .listHosts(awsInfrastructureMapping, computeProviderSetting,
+                  secretManager.getEncryptionDetails(
+                      (EncryptableSetting) computeProviderSetting.getValue(), appId, workflowExecutionId),
+                  new PageRequest<>())
+              .getResponse();
       List<String> hostDisplayNames = new ArrayList<>();
       for (Host host : hosts) {
         String displayName = host.getPublicDns();
@@ -1530,7 +1531,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     notNullCheck("SettingAttribute", settingAttribute);
 
     List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     SyncTaskContext syncTaskContext = aContext()
                                           .withAccountId(app.getAccountId())

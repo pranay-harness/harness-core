@@ -3,7 +3,7 @@ package software.wings.service.impl.sumo;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import io.harness.exception.WingsException;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.SettingAttribute;
@@ -28,7 +28,7 @@ public class SumoLogicAnalysisServiceImpl extends AnalysisServiceImpl implements
       throw new WingsException("No setting with id: " + sumoLogicSetupTestNodedata.getSettingId() + " found");
     }
     List<EncryptedDataDetail> encryptedDataDetails =
-        secretManager.getEncryptionDetails((Encryptable) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
     SyncTaskContext sumoTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
     return delegateProxyFactory.get(SumoDelegateService.class, sumoTaskContext)
         .getLogDataByHost(accountId, (SumoConfig) settingAttribute.getValue(), sumoLogicSetupTestNodedata.getQuery(),

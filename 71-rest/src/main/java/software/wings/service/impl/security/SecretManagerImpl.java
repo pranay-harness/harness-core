@@ -10,13 +10,13 @@ import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeCount;
+import static io.harness.reflection.ReflectUtils.getEncryptedFields;
+import static io.harness.reflection.ReflectUtils.getEncryptedRefField;
 import static java.util.stream.Collectors.joining;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.security.EncryptionType.LOCAL;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
-import static software.wings.utils.WingsReflectionUtils.getEncryptedFields;
-import static software.wings.utils.WingsReflectionUtils.getEncryptedRefField;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -42,7 +42,7 @@ import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.annotation.Encryptable;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.beans.Account;
 import software.wings.beans.Base;
@@ -225,7 +225,8 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public List<EncryptedDataDetail> getEncryptionDetails(Encryptable object, String appId, String workflowExecutionId) {
+  public List<EncryptedDataDetail> getEncryptionDetails(
+      EncryptableSetting object, String appId, String workflowExecutionId) {
     if (object.isDecrypted()) {
       return Collections.emptyList();
     }
@@ -292,7 +293,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public void maskEncryptedFields(Encryptable object) {
+  public void maskEncryptedFields(EncryptableSetting object) {
     List<Field> encryptedFields = object.getEncryptedFields();
     try {
       for (Field f : encryptedFields) {
@@ -305,7 +306,7 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public void resetUnchangedEncryptedFields(Encryptable sourceObject, Encryptable destinationObject) {
+  public void resetUnchangedEncryptedFields(EncryptableSetting sourceObject, EncryptableSetting destinationObject) {
     Validator.equalCheck(sourceObject.getClass().getName(), destinationObject.getClass().getName());
 
     List<Field> encryptedFields = sourceObject.getEncryptedFields();
@@ -419,7 +420,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @SuppressFBWarnings("DMI_INVOKING_TOSTRING_ON_ARRAY")
   @Override
-  public String getEncryptedYamlRef(Encryptable object, String... fieldNames) throws IllegalAccessException {
+  public String getEncryptedYamlRef(EncryptableSetting object, String... fieldNames) throws IllegalAccessException {
     if (object.getSettingType() == SettingVariableTypes.CONFIG_FILE) {
       String encryptedFieldRefId = ((ConfigFile) object).getEncryptedFileId();
       EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, encryptedFieldRefId);
@@ -1134,7 +1135,7 @@ public class SecretManagerImpl implements SecretManager {
           List<Field> encryptedFields = getEncryptedFields(settingAttribute.getValue().getClass());
 
           for (Field field : encryptedFields) {
-            Field encryptedRefField = getEncryptedRefField(field, (Encryptable) settingAttribute.getValue());
+            Field encryptedRefField = getEncryptedRefField(field, (EncryptableSetting) settingAttribute.getValue());
             encryptedRefField.setAccessible(true);
             secretIds.add((String) encryptedRefField.get(settingAttribute.getValue()));
           }
