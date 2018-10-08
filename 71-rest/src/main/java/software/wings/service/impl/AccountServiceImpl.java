@@ -29,9 +29,6 @@ import static software.wings.common.Constants.SUPPORT_EMAIL;
 import static software.wings.utils.Misc.generateSecretKey;
 import static software.wings.utils.Validator.notNullCheck;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -96,9 +93,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
@@ -129,17 +124,6 @@ public class AccountServiceImpl implements AccountService {
   @Inject private FeatureFlagService featureFlagService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
-
-  private LoadingCache<String, String> accountStatusCache =
-      CacheBuilder.newBuilder()
-          .maximumSize(10000)
-          .expireAfterWrite(1, TimeUnit.HOURS)
-          .build(new CacheLoader<String, String>() {
-            public String load(String accountId) {
-              LicenseInfo licenseInfo = get(accountId).getLicenseInfo();
-              return licenseInfo == null ? AccountStatus.ACTIVE : licenseInfo.getAccountStatus();
-            }
-          });
 
   @Override
   public Account save(@Valid Account account) {
@@ -269,12 +253,13 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public String getAccountStatus(String accountId) {
-    try {
-      return accountStatusCache.get(accountId);
-    } catch (ExecutionException e) {
-      logger.error("Execution exception", e);
+    LicenseInfo licenseInfo = dbCache.get(Account.class, accountId).getLicenseInfo();
+
+    if (licenseInfo == null) {
+      return AccountStatus.ACTIVE;
     }
-    return AccountStatus.ACTIVE;
+
+    return licenseInfo.getAccountStatus();
   }
 
   private void decryptLicenseInfo(List<Account> accounts) {
