@@ -30,6 +30,7 @@ cd dist/verification
 cp ../../79-verification/target/verification-capsule.jar .
 cp ../../79-verification/keystore.jks .
 cp ../../79-verification/verification-config.yml .
+cp ../../tools/apm/appdynamics/AppServerAgent-4.5.0.23604.tar.gz .
 
 cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8 ./Dockerfile
 cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-gcr ./Dockerfile-gcr
