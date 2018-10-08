@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
+import static software.wings.beans.Base.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
 
@@ -11,10 +12,14 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
+import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.YamlConstants;
@@ -22,8 +27,11 @@ import software.wings.generator.ScmSecret;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.impl.yaml.GitClientImpl;
+import software.wings.service.intfc.EnvironmentService;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -32,6 +40,8 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 @Ignore
 public class YamlIntegrationTest extends BaseIntegrationTest {
@@ -47,6 +57,9 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   @Inject private GitIntegrationTestUtil gitIntegrationTestUtil;
   @Inject private ScmSecret scmSecret;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private EnvironmentService environmentService;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
+  @Inject private ServiceTemplateService serviceTemplateService;
 
   @Before
   public void setUp() throws Exception {
@@ -85,7 +98,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     Application application = yamlIntegrationTestHelper.createApplication(appName, accountId, appService);
     logger.info("Created Application : " + application.getName());
 
-    GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath, false);
+    GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
     assertEquals(1, gitFetchFilesResult.getFiles().size());
     assertEquals("Index.yaml", gitFetchFilesResult.getFiles().get(0).getFilePath());
   }
@@ -109,14 +122,20 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     Service service = yamlIntegrationTestHelper.createService(serviceName, application, serviceResourceService);
     logger.info("Created Service : " + service.getName());
 
-    getGitFetchFilesResult(yamlPath, false);
+    getGitFetchFilesResultByCount(yamlPath, 2);
   }
 
   private GitFetchFilesResult getGitFetchFilesResult(String yamlPath) throws Exception {
-    return getGitFetchFilesResult(yamlPath, false);
+    return getGitFetchFilesResult(yamlPath, false, 1);
   }
 
-  private GitFetchFilesResult getGitFetchFilesResult(String yamlPath, boolean isFailureExpected) throws Exception {
+  private GitFetchFilesResult getGitFetchFilesResultByCount(String yamlPath, int expectedCountOfFiles)
+      throws Exception {
+    return getGitFetchFilesResult(yamlPath, false, expectedCountOfFiles);
+  }
+
+  private GitFetchFilesResult getGitFetchFilesResult(
+      String yamlPath, boolean isFailureExpected, int expectedCountOfFiles) throws Exception {
     logger.info("Executing  YamlIntegrationTest.getGitFetchFilesResult()");
     GitFetchFilesResult gitFetchFilesResult = null;
     for (int count = 0; count < 18; count++) {
@@ -129,8 +148,11 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
         gitFetchFilesResult =
             gitIntegrationTestUtil.fetchFromGitUsingUsingBranch(gitConnector, "test", logger, Arrays.asList(yamlPath));
         // No exception means we got files from git
-        logger.info("Retrieved files from git successfully");
-        break;
+
+        if (expectedCountOfFiles == gitFetchFilesResult.getFiles().size()) {
+          logger.info("Retrieved files from git successfully");
+          break;
+        }
       } catch (Exception e) {
         if (!isFailureExpected) {
           logger.warn("Failed to retrieve files those were expected to be in Git repo");
@@ -147,7 +169,7 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
 
   private void makeSureFileDoesntExistInRepo(String yamlPath) {
     try {
-      getGitFetchFilesResult(yamlPath, true);
+      getGitFetchFilesResult(yamlPath, true, 0);
       throw new RuntimeException();
     } catch (Exception e) {
       assertTrue(true);
@@ -155,7 +177,6 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Ignore
   public void testGitSyncCloudProviderCreatedOnHarness() throws Exception {
     if (application == null) {
       application = yamlIntegrationTestHelper.createApplication(
@@ -163,8 +184,8 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     }
 
     String cloudProviderName = YamlIntegrationTestConstants.PHYSICAL_CLOUD_PROVIDER + System.currentTimeMillis();
-    SettingAttribute settingAttribute = yamlIntegrationTestHelper.createSettingAttribute(cloudProviderName,
-        application.getAppId(), accountId, SettingVariableTypes.PHYSICAL_DATA_CENTER, settingsService);
+    SettingAttribute settingAttribute = yamlIntegrationTestHelper.createSettingAttribute(cloudProviderName, accountId,
+        application.getAppId(), GLOBAL_ENV_ID, SettingVariableTypes.PHYSICAL_DATA_CENTER, settingsService);
 
     String yamlPath = yamlIntegrationTestHelper.getCloudProviderYamlPath(cloudProviderName);
 
@@ -190,5 +211,66 @@ public class YamlIntegrationTest extends BaseIntegrationTest {
     assertEquals(1, gitFetchFilesResult.getFiles().size());
     assertEquals(
         infraProvisionerName + YamlConstants.YAML_EXTENSION, gitFetchFilesResult.getFiles().get(0).getFilePath());
+  }
+
+  @Test
+  public void testGitSyncEnvironmentCreatedOnHarness() throws Exception {
+    if (application == null) {
+      application = yamlIntegrationTestHelper.createApplication(
+          YamlIntegrationTestConstants.APP + System.currentTimeMillis(), accountId, appService);
+    }
+
+    String envName = YamlIntegrationTestConstants.ENVIRONMENT + System.currentTimeMillis();
+    Environment environment =
+        yamlIntegrationTestHelper.createEnvironment(envName, application.getAppId(), environmentService);
+
+    String yamlPath = yamlIntegrationTestHelper.getEnvironmentYamlPath(application, environment);
+    GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResult(yamlPath);
+    assertEquals(1, gitFetchFilesResult.getFiles().size());
+    assertEquals(YamlConstants.INDEX_YAML, gitFetchFilesResult.getFiles().get(0).getFilePath());
+  }
+
+  // Environment with Physical Service Infra
+  @Test
+  public void testGitSyncEnvironment1CreatedOnHarness() throws Exception {
+    if (application == null) {
+      application = yamlIntegrationTestHelper.createApplication(
+          YamlIntegrationTestConstants.APP + System.currentTimeMillis(), accountId, appService);
+    }
+
+    String serviceName = YamlIntegrationTestConstants.SERVICE;
+    Service service = yamlIntegrationTestHelper.createService(serviceName, application, serviceResourceService);
+
+    String envName = YamlIntegrationTestConstants.ENVIRONMENT;
+    Environment environment =
+        yamlIntegrationTestHelper.createEnvironment(envName, application.getAppId(), environmentService);
+
+    String serviceTemplateName = YamlIntegrationTestConstants.SERVICE_TEMPLATE;
+    ServiceTemplate serviceTemplate = yamlIntegrationTestHelper.createServiceTemplate(
+        serviceTemplateName, application.getAppId(), service.getUuid(), environment.getUuid(), serviceTemplateService);
+
+    String settingAttributeName = YamlIntegrationTestConstants.CONNECTION_NAME;
+    SettingAttribute settingAttribute =
+        yamlIntegrationTestHelper.createSettingAttribute(settingAttributeName, accountId, application.getAppId(),
+            environment.getUuid(), SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES, settingsService);
+
+    String computeProviderName = YamlIntegrationTestConstants.COMPUTE_PROVIDER_PHYSICAL;
+    SettingAttribute computeProviderSetting =
+        yamlIntegrationTestHelper.createSettingAttribute(computeProviderName, accountId, application.getAppId(),
+            environment.getUuid(), SettingVariableTypes.PHYSICAL_DATA_CENTER, settingsService);
+
+    InfrastructureMapping infrastructureMapping = yamlIntegrationTestHelper.getInfrastructureMapping(accountId,
+        application.getAppId(), service.getUuid(), environment.getUuid(),
+        InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH, computeProviderName, serviceTemplate.getUuid(),
+        settingAttribute.getUuid(), computeProviderSetting.getUuid(), infrastructureMappingService);
+
+    String yamlPath = yamlIntegrationTestHelper.getEnvironmentYamlPath(application, environment);
+    GitFetchFilesResult gitFetchFilesResult = getGitFetchFilesResultByCount(yamlPath, 2);
+
+    Map<String, String> expectedFiles = new HashMap<>();
+    expectedFiles.put(YamlConstants.INDEX_YAML, YamlIntegrationTestEnvironmentConstants.ENVIRONMENT_1);
+    expectedFiles.put(infrastructureMapping.getName() + YamlConstants.YAML_EXTENSION,
+        YamlIntegrationTestEnvironmentConstants.ENVIRONMENT_1_SERVICE_INFRA);
+    yamlIntegrationTestHelper.verifyResultFromGit(expectedFiles, gitFetchFilesResult);
   }
 }
