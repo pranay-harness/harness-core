@@ -5,7 +5,9 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
+import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
+import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AccountService;
 
@@ -13,6 +15,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
 @Api("account")
@@ -28,5 +31,15 @@ public class AccountResource {
   @PublicApi
   public RestResponse<String> getStatus(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.getAccountStatus(accountId));
+  }
+
+  @GET
+  @Path("feature-flag-enabled")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Boolean> isFeatureEnabled(
+      @QueryParam("featureName") FeatureName featureName, @QueryParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.isFeatureFlagEnabled(featureName, accountId));
   }
 }

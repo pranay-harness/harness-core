@@ -717,4 +717,8 @@ public class AccountServiceImpl implements AccountService {
       }
     }
   }
+
+  public boolean isFeatureFlagEnabled(FeatureName featureName, String accountId) {
+    return featureFlagService.isEnabled(featureName, accountId);
+  }
 }

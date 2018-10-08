@@ -7,6 +7,8 @@ import static software.wings.beans.FeatureName.LOGML_NEURAL_NET;
 import com.google.common.collect.Lists;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.managerclient.VerificationManagerClient;
+import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.mongodb.morphia.annotations.Transient;
@@ -20,7 +22,6 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask.LearningE
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask.LearningEngineExperimentalAnalysisTaskBuilder;
 import software.wings.service.impl.newrelic.MLExperiments;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.utils.Misc;
@@ -46,11 +47,12 @@ public class LogMLAnalysisGenerator implements Runnable {
   private int logAnalysisMinute;
   private LogAnalysisService analysisService;
   private LearningEngineService learningEngineService;
-  private FeatureFlagService featureFlagService;
+  private VerificationManagerClient managerClient;
+  private VerificationManagerClientHelper managerClientHelper;
 
   public LogMLAnalysisGenerator(AnalysisContext context, int logAnalysisMinute, boolean createExperiment,
       LogAnalysisService analysisService, LearningEngineService learningEngineService,
-      FeatureFlagService featureFlagService) {
+      VerificationManagerClient managerClient, VerificationManagerClientHelper managerClientHelper) {
     this.context = context;
     this.analysisService = analysisService;
     this.applicationId = context.getAppId();
@@ -63,7 +65,8 @@ public class LogMLAnalysisGenerator implements Runnable {
     this.logAnalysisMinute = logAnalysisMinute;
     this.learningEngineService = learningEngineService;
     this.createExperiment = createExperiment;
-    this.featureFlagService = featureFlagService;
+    this.managerClient = managerClient;
+    this.managerClientHelper = managerClientHelper;
   }
 
   @Override
@@ -179,7 +182,10 @@ public class LogMLAnalysisGenerator implements Runnable {
         }
       }
 
-      String featureName = featureFlagService.isEnabled(LOGML_NEURAL_NET, accountId) ? null : "NEURAL_NET";
+      boolean isFlagEnabled =
+          managerClientHelper.callManagerWithRetry(managerClient.isFeatureEnabled(LOGML_NEURAL_NET, accountId))
+              .getResource();
+      String featureName = isFlagEnabled ? null : "NEURAL_NET";
 
       LearningEngineAnalysisTaskBuilder analysisTaskBuilder =
           LearningEngineAnalysisTask.builder()

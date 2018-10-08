@@ -9,6 +9,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.FeatureFlag;
+import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.User;
 
@@ -84,4 +85,6 @@ public interface AccountService {
    * @return list of feature flags
    */
   Collection<FeatureFlag> getFeatureFlags(@NotBlank String accountId);
+
+  boolean isFeatureFlagEnabled(FeatureName featureName, String accountId);
 }

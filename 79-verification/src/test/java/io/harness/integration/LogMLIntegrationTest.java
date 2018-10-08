@@ -27,6 +27,7 @@ import com.google.inject.Inject;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.jobs.LogAnalysisManagerJob.LogAnalysisTask;
 import io.harness.jobs.LogMLClusterGenerator;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -61,7 +62,6 @@ import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
@@ -102,9 +102,9 @@ import javax.ws.rs.core.Response;
 public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private Set<String> hosts = new HashSet<>();
   @Inject private LogAnalysisService analysisService;
-  @Inject private VerificationManagerClientHelper managerClient;
+  @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Inject private VerificationManagerClient managerClient;
   @Inject private LearningEngineService learningEngineService;
-  @Inject private FeatureFlagService featureFlagService;
 
   private Random r;
 
@@ -651,7 +651,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new LogAnalysisTask(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
-        featureFlagService, managerClient)
+        managerClient, managerClientHelper)
         .run();
     Thread.sleep(TimeUnit.SECONDS.toMillis(20));
     LogMLAnalysisSummary logMLAnalysisSummary =
@@ -768,7 +768,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
-        featureFlagService, managerClient)
+        managerClient, managerClientHelper)
         .run();
     Thread.sleep(TimeUnit.SECONDS.toMillis(30));
     LogMLAnalysisSummary logMLAnalysisSummary =
@@ -900,7 +900,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     when(jobExecutionContext.getJobDetail()).thenReturn(mock(JobDetail.class));
 
     new LogAnalysisTask(analysisService, analysisContext, jobExecutionContext, delegateTaskId, learningEngineService,
-        featureFlagService, managerClient)
+        managerClient, managerClientHelper)
         .run();
     LogMLAnalysisSummary logMLAnalysisSummary =
         analysisService.getAnalysisSummary(stateExecutionId, appId, StateType.ELK);
@@ -1030,7 +1030,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
 
     for (int i = 0; i < 5; ++i) {
       new LogAnalysisTestJob(analysisService, analysisContext, jobExecutionContext, delegateTaskId,
-          learningEngineService, featureFlagService, managerClient)
+          learningEngineService, managerClient, managerClientHelper)
           .run();
       Thread.sleep(TimeUnit.SECONDS.toMillis(10));
     }
@@ -1231,9 +1231,9 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   private static class LogAnalysisTestJob extends LogAnalysisTask {
     LogAnalysisTestJob(LogAnalysisService analysisService, AnalysisContext context,
         JobExecutionContext jobExecutionContext, String delegateTaskId, LearningEngineService learningEngineService,
-        FeatureFlagService featureFlagService, VerificationManagerClientHelper managerClient) {
-      super(analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService, featureFlagService,
-          managerClient);
+        VerificationManagerClient client, VerificationManagerClientHelper managerClient) {
+      super(
+          analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService, client, managerClient);
     }
 
     @Override

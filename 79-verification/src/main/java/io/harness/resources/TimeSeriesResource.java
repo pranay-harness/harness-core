@@ -17,7 +17,6 @@ import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 
@@ -39,14 +38,11 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.SETTING)
 public class TimeSeriesResource {
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
 
   @VisibleForTesting
   @Inject
-  public TimeSeriesResource(
-      FeatureFlagService featureFlagService, TimeSeriesAnalysisService timeSeriesAnalysisService) {
-    this.featureFlagService = featureFlagService;
+  public TimeSeriesResource(TimeSeriesAnalysisService timeSeriesAnalysisService) {
     this.timeSeriesAnalysisService = timeSeriesAnalysisService;
   }
 

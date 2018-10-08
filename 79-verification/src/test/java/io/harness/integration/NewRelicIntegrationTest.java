@@ -34,6 +34,7 @@ import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.jobs.MetricAnalysisJob.MetricAnalysisGenerator;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
@@ -53,7 +54,6 @@ import software.wings.api.HostElement;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.FeatureFlag;
-import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
@@ -76,7 +76,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
@@ -109,8 +108,9 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private MetricUtilHelper metricUtilHelper;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private VerificationManagerClient mgrClient;
   @Inject private VerificationManagerClientHelper managerClient;
-  @Inject private FeatureFlagService featureFlagService;
+
   @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
 
@@ -395,7 +395,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
 
     wingsPersistence.update(wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", "CV_DEMO"),
         wingsPersistence.createUpdateOperations(FeatureFlag.class).addToSet("accountIds", accountId));
-    assertTrue(featureFlagService.isEnabled(FeatureName.CV_DEMO, accountId));
+
     restResponse = getRequestBuilderWithAuthHeader(target).get(
         new GenericType<RestResponse<List<NewRelicMetricAnalysisRecord>>>() {});
     savedRecords = restResponse.getResource();

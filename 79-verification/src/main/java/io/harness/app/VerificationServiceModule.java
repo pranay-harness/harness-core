@@ -18,8 +18,6 @@ import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.FeatureFlagServiceImpl;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.security.SecretManager;
 
@@ -52,7 +50,6 @@ public class VerificationServiceModule extends AbstractModule {
     bind(VerificationServiceConfiguration.class).toInstance(configuration);
     bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
-    bind(FeatureFlagService.class).to(FeatureFlagServiceImpl.class);
     bind(LearningEngineService.class).to(LearningEngineAnalysisServiceImpl.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
     bind(MigrationService.class).to(VerificationMigrationServiceImpl.class);

@@ -6,6 +6,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -24,7 +25,6 @@ import software.wings.service.impl.analysis.LogAnalysisExecutionData;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogRequest;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
@@ -44,9 +44,8 @@ public class LogAnalysisManagerJob implements Job {
 
   @Transient @Inject private LearningEngineService learningEngineService;
 
-  @Transient @Inject private FeatureFlagService featureFlagService;
-
   @Transient @Inject private VerificationManagerClientHelper managerClientHelper;
+  @Transient @Inject private VerificationManagerClient managerClient;
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
@@ -57,7 +56,7 @@ public class LogAnalysisManagerJob implements Job {
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       logger.info("Starting log analysis cron " + JsonUtils.asJson(context));
       new LogAnalysisTask(analysisService, context, jobExecutionContext, delegateTaskId, learningEngineService,
-          featureFlagService, managerClientHelper)
+          managerClient, managerClientHelper)
           .run();
       logger.info("Finish log analysis cron " + context.getStateExecutionId());
     } catch (Exception ex) {
@@ -73,14 +72,13 @@ public class LogAnalysisManagerJob implements Job {
   @AllArgsConstructor
   public static class LogAnalysisTask implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(LogAnalysisTask.class);
-    private static final int MAX_RETRY = 3;
     private LogAnalysisService analysisService;
 
     private AnalysisContext context;
     private JobExecutionContext jobExecutionContext;
     private String delegateTaskId;
     private LearningEngineService learningEngineService;
-    private FeatureFlagService featureFlagService;
+    private VerificationManagerClient managerClient;
     private VerificationManagerClientHelper managerClientHelper;
 
     protected void preProcess(int logAnalysisMinute, String query, Set<String> nodes) {
@@ -176,7 +174,7 @@ public class LogAnalysisManagerJob implements Job {
              */
             createExperiment = logAnalysisMinute >= context.getTimeDuration() - 1;
             new LogMLAnalysisGenerator(context, logAnalysisMinute, createExperiment, analysisService,
-                learningEngineService, featureFlagService)
+                learningEngineService, managerClient, managerClientHelper)
                 .run();
 
           } else {

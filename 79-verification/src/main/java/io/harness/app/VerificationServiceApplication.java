@@ -55,7 +55,6 @@ import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.MigrationService;
 import software.wings.utils.JsonSubtypeResolver;
 
@@ -164,8 +163,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     startPlugins(injector);
 
-    initializeFeatureFlags(injector);
-
     initializeServiceSecretKeys(injector);
 
     runMigrations(injector);
@@ -226,10 +223,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
         VerificationServiceExecutorJob.addJob(jobScheduler);
       }
     }
-  }
-
-  private void initializeFeatureFlags(Injector injector) {
-    injector.getInstance(FeatureFlagService.class).initializeFeatureFlags();
   }
 
   private void initializeServiceSecretKeys(Injector injector) {
