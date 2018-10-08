@@ -40,7 +40,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.beans.Variable;
 import software.wings.common.Constants;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
@@ -94,7 +94,7 @@ public class HttpState extends State {
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject protected ManagerDecryptionService managerDecryptionService;
   @Inject protected SecretManager secretManager;
-  @Inject protected ExpressionEvaluator expressionEvaluator;
+  @Inject protected ManagerExpressionEvaluator expressionEvaluator;
 
   @Inject @Transient private transient ActivityService activityService;
 
@@ -254,7 +254,7 @@ public class HttpState extends State {
   }
 
   private String fetchTemplatedValue(String fieldName) {
-    String templatedField = ExpressionEvaluator.getName(fieldName);
+    String templatedField = ManagerExpressionEvaluator.getName(fieldName);
     Map<String, Object> templatedVariables = convertToVariableMap(getTemplateVariables());
     return templatedVariables.containsKey(templatedField) ? (String) templatedVariables.get(templatedField) : fieldName;
   }

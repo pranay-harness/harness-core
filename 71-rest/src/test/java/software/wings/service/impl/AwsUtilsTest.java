@@ -17,13 +17,13 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsInstanceFilter;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 
 import java.util.Collections;
 import java.util.List;
 
 public class AwsUtilsTest extends WingsBaseTest {
-  @Mock private ExpressionEvaluator mockExpressionEvaluator;
+  @Mock private ManagerExpressionEvaluator mockExpressionEvaluator;
 
   @InjectMocks @Inject private AwsUtils utils;
 

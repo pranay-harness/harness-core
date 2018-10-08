@@ -1,9 +1,9 @@
-package software.wings.expression;
+package io.harness.expression;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class RegexFunctor {
+public class RegexFunctor implements ExpressionFunctor {
   public String extract(String pattern, String source) {
     final Pattern compiled = Pattern.compile(pattern);
     final Matcher matcher = compiled.matcher(source);

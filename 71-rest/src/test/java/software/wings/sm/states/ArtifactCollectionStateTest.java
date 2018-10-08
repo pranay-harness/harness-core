@@ -39,7 +39,7 @@ import software.wings.beans.Application;
 import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.VariableProcessor;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.AccountService;
@@ -69,7 +69,7 @@ public class ArtifactCollectionStateTest {
   @Mock DelayEventHelper delayEventHelper;
   @Mock AccountService accountService;
 
-  private ExpressionEvaluator expressionEvaluator = new ExpressionEvaluator();
+  private ManagerExpressionEvaluator expressionEvaluator = new ManagerExpressionEvaluator();
 
   @InjectMocks
   private ArtifactCollectionState artifactCollectionState = new ArtifactCollectionState("Collect Artifact");

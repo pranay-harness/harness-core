@@ -1,7 +1,7 @@
 package software.wings.common;
 
-import static software.wings.expression.ExpressionEvaluator.matchesVariablePattern;
-import static software.wings.expression.ExpressionEvaluator.wingsVariablePattern;
+import static software.wings.expression.ManagerExpressionEvaluator.matchesVariablePattern;
+import static software.wings.expression.ManagerExpressionEvaluator.wingsVariablePattern;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;

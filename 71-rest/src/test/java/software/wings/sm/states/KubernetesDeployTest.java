@@ -83,7 +83,7 @@ import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -129,7 +129,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private PortalConfig portalConfig;
   @Mock private ArtifactService artifactService;
   @Mock private VariableProcessor variableProcessor;
-  @Mock private ExpressionEvaluator evaluator;
+  @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks

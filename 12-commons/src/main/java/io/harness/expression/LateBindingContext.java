@@ -1,4 +1,4 @@
-package software.wings.expression;
+package io.harness.expression;
 
 import org.apache.commons.jexl3.JexlContext;
 
@@ -11,6 +11,10 @@ public class LateBindingContext implements JexlContext {
   public LateBindingContext() {}
 
   public LateBindingContext(Map<String, Object> vars) {
+    map.putAll(vars);
+  }
+
+  public void putAll(Map<String, Object> vars) {
     map.putAll(vars);
   }
 

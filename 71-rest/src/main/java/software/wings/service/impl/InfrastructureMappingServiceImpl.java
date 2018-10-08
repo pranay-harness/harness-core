@@ -104,7 +104,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -173,7 +173,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private WorkflowService workflowService;
   @Inject private SecretManager secretManager;
-  @Inject private ExpressionEvaluator evaluator;
+  @Inject private ManagerExpressionEvaluator evaluator;
   @Inject private PcfHelperService pcfHelperService;
   @Inject private AwsEcsHelperServiceManager awsEcsHelperServiceManager;
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;

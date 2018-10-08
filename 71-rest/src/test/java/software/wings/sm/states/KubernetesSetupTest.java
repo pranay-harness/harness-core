@@ -93,7 +93,7 @@ import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.common.VariableProcessor;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -138,7 +138,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private EncryptionService encryptionService;
   @Mock private VariableProcessor variableProcessor;
-  @Mock private ExpressionEvaluator evaluator;
+  @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ConfigService configService;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Mock private FeatureFlagService featureFlagService;

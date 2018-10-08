@@ -44,7 +44,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.VariableProcessor;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandRollbackRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
@@ -59,7 +59,7 @@ import java.util.Arrays;
 
 public class PcfRollbackStateTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
-  @Mock private ExpressionEvaluator evaluator;
+  @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private SecretManager secretManager;
   public static final String ORG = "ORG";
   public static final String SPACE = "SPACE";

@@ -128,7 +128,7 @@ import software.wings.beans.stats.CloneMetadata;
 import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.ServiceClassLocator;
@@ -1515,7 +1515,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Override
   public List<Variable> updateUserVariables(String appId, String workflowId, List<Variable> userVariables) {
     if (userVariables != null) {
-      userVariables.forEach(variable -> ExpressionEvaluator.isValidVariableName(variable.getName()));
+      userVariables.forEach(variable -> ManagerExpressionEvaluator.isValidVariableName(variable.getName()));
     }
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow was deleted", workflow, USER);

@@ -78,7 +78,7 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
-import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest.CloudFormationCommandType;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationCreateStackRequest;
 import software.wings.helpers.ext.cloudformation.request.CloudFormationDeleteStackRequest;
@@ -128,7 +128,7 @@ public class CloudFormationStateTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private VariableProcessor variableProcessor;
-  @Mock private ExpressionEvaluator evaluator;
+  @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private ServiceHelper serviceHelper;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
   @Mock private AccountService accountService;
