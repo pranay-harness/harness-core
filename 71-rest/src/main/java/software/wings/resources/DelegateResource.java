@@ -6,6 +6,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
+import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 import static software.wings.security.PermissionAttribute.ResourceType.DELEGATE;
 
 import com.google.common.collect.ImmutableMap;
@@ -36,6 +37,7 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
@@ -175,6 +177,7 @@ public class DelegateResource {
   @Path("{delegateId}/description")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Delegate> updateDescription(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, @Trimmed String newDescription) {
     return new RestResponse<>(delegateService.updateDescription(accountId, delegateId, newDescription));
@@ -184,17 +187,18 @@ public class DelegateResource {
   @Path("{delegateId}")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Void> delete(
       @PathParam("delegateId") @NotEmpty String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
     delegateService.delete(accountId, delegateId);
     return new RestResponse<>();
   }
 
-  @DelegateAuth
   @PUT
   @Path("{delegateId}/scopes")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Delegate> updateScopes(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateScopes delegateScopes) {
     Delegate delegate = delegateService.get(accountId, delegateId, true);
@@ -243,11 +247,11 @@ public class DelegateResource {
     }
   }
 
-  @DelegateAuth
   @PUT
   @Path("{delegateId}/tags")
   @Timed
   @ExceptionMetered
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<Delegate> updateTags(@PathParam("delegateId") @NotEmpty String delegateId,
       @QueryParam("accountId") @NotEmpty String accountId, DelegateTags delegateTags) {
     Delegate delegate = delegateService.get(accountId, delegateId, true);
