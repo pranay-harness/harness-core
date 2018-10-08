@@ -34,7 +34,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.mongo.MongoModule;
 import io.harness.resources.LogVerificationResource;
-import io.harness.scheduler.VerificationServiceExecutorJob;
+import io.harness.scheduler.VerificationServiceExecutorService;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.service.intfc.LearningEngineService;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
@@ -55,7 +55,6 @@ import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
 import software.wings.scheduler.QuartzScheduler;
-import software.wings.service.intfc.MigrationService;
 import software.wings.utils.JsonSubtypeResolver;
 
 import java.util.Set;
@@ -165,7 +164,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     initializeServiceSecretKeys(injector);
 
-    runMigrations(injector);
+    initializeServiceTaskPoll(injector);
+
     logger.info("Starting app done");
   }
 
@@ -220,7 +220,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
       // If we do not get the lock, that's not critical - that's most likely because other managers took it
       // and they will initialize the jobs.
       if (acquiredLock != null) {
-        VerificationServiceExecutorJob.addJob(jobScheduler);
+        VerificationServiceExecutorService.addJob(jobScheduler);
       }
     }
   }
@@ -231,7 +231,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
         injector.getInstance(LearningEngineService.class).getServiceSecretKey(LEARNING_ENGINE));
   }
 
-  private void runMigrations(Injector injector) {
-    injector.getInstance(MigrationService.class).runMigrations();
+  private void initializeServiceTaskPoll(Injector injector) {
+    injector.getInstance(VerificationServiceExecutorService.class).scheduleTaskPoll();
   }
 }
