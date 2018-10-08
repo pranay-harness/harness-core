@@ -4,9 +4,6 @@
 
 package software.wings.resources;
 
-import static software.wings.security.PermissionAttribute.Action.CREATE;
-import static software.wings.security.PermissionAttribute.Action.READ;
-import static software.wings.security.PermissionAttribute.Action.UPDATE;
 import static software.wings.security.PermissionAttribute.PermissionType.ACCOUNT_MANAGEMENT;
 
 import com.google.inject.Inject;
@@ -20,7 +17,6 @@ import io.swagger.annotations.Api;
 import software.wings.beans.ResourceConstraint;
 import software.wings.beans.ResourceConstraintUsage;
 import software.wings.beans.RestResponse;
-import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
@@ -52,7 +48,7 @@ public class ResourceConstraintResource {
   @Timed
   @ExceptionMetered
   @ListAPI(ResourceType.SETTING)
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT, action = READ)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<PageResponse<ResourceConstraint>> list(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<ResourceConstraint> pageRequest) {
     return new RestResponse<>(resourceConstraintService.list(pageRequest));
@@ -61,7 +57,7 @@ public class ResourceConstraintResource {
   @POST
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT, action = CREATE)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<ResourceConstraint> save(
       @QueryParam("accountId") String accountId, ResourceConstraint resourceConstraint) {
     resourceConstraint.setAccountId(accountId);
@@ -76,7 +72,7 @@ public class ResourceConstraintResource {
   @Path("{resourceConstraintId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT, action = UPDATE)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<ResourceConstraint> update(@QueryParam("accountId") String accountId,
       @PathParam("resourceConstraintId") String resourceConstraintId, ResourceConstraint resourceConstraint) {
     resourceConstraint.setUuid(resourceConstraintId);
@@ -89,7 +85,7 @@ public class ResourceConstraintResource {
   @Path("{resourceConstraintId}")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT, action = Action.DELETE)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse delete(
       @QueryParam("accountId") String accountId, @PathParam("resourceConstraintId") String resourceConstraintId) {
     resourceConstraintService.delete(accountId, resourceConstraintId);
@@ -101,7 +97,7 @@ public class ResourceConstraintResource {
   @Timed
   @ExceptionMetered
   @ListAPI(ResourceType.SETTING)
-  @AuthRule(permissionType = ACCOUNT_MANAGEMENT, action = READ)
+  @AuthRule(permissionType = ACCOUNT_MANAGEMENT)
   public RestResponse<List<ResourceConstraintUsage>> usage(
       @QueryParam("accountId") String accountId, List<String> resourceConstraintIds) {
     return new RestResponse<>(resourceConstraintService.usage(accountId, resourceConstraintIds));
