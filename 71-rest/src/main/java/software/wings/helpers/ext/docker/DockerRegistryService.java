@@ -10,6 +10,7 @@ import java.util.List;
  * Created by anubhaw on 1/6/17.
  */
 public interface DockerRegistryService {
+  int MAX_NO_OF_TAGS_PER_IMAGE = 10000;
   /**
    * Gets builds.
    *

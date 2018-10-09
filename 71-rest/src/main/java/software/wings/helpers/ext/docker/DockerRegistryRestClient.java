@@ -9,9 +9,6 @@ import retrofit2.http.Url;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl.DockerImageTagResponse;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl.DockerRegistryToken;
 
-/**
- * Created by anubhaw on 1/6/17.
- */
 public interface DockerRegistryRestClient {
   //  https://auth.docker.io/token?service=registry.docker.io&scope=repository:samalba/my-app:pull,push
 
@@ -24,4 +21,7 @@ public interface DockerRegistryRestClient {
       @Header("Authorization") String bearerAuthHeader, @Path(value = "imageName", encoded = true) String imageName);
 
   @GET("/v2") Call<Object> getApiVersion(@Header("Authorization") String bearerAuthHeader);
+
+  @GET
+  Call<DockerImageTagResponse> listImageTagsByUrl(@Header("Authorization") String bearerAuthHeader, @Url String url);
 }
