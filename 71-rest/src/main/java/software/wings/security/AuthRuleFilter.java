@@ -170,7 +170,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     List<String> appIdsOfAccount = getValidAppsFromAccount(accountId, appIdsFromRequest, emptyAppIdsInReq);
     if (user != null) {
       if (!userService.isUserAssignedToAccount(user, accountId)) {
-        if (!httpMethod.equals(HttpMethod.GET.name())) {
+        if (!httpMethod.equals(HttpMethod.GET.name()) && !uriPath.startsWith("users/license/account")) {
           throw new InvalidRequestException("User not authorized", USER);
         }
 
