@@ -284,7 +284,9 @@ public enum ErrorCode {
 
   STATE_EXECUTION_INSTANCE_NOT_FOUND("State Execution Instance not found"),
 
-  DELEGATE_TASK_RETRY;
+  DELEGATE_TASK_RETRY,
+
+  KUBERNETES_YAML_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;
