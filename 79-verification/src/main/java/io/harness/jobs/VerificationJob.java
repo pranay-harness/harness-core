@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
+import software.wings.beans.FeatureName;
 import software.wings.scheduler.QuartzScheduler;
 
 import java.util.ArrayList;
@@ -115,8 +116,12 @@ public class VerificationJob implements Job {
   public void triggerDataProcessorCron(List<Account> enabledAccounts, JobExecutionContext jobExecutionContext) {
     logger.info("Triggering crons for " + enabledAccounts.size() + " enabled accounts");
     enabledAccounts.forEach(account -> {
-      scheduleAPMDataProcessorCronJob(account.getUuid(), jobExecutionContext);
-      scheduleLogDataProcessorCronJob(account.getUuid(), jobExecutionContext);
+      if (verificationManagerClientHelper
+              .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(FeatureName.CV_24X7, account.getUuid()))
+              .getResource()) {
+        scheduleAPMDataProcessorCronJob(account.getUuid(), jobExecutionContext);
+        scheduleLogDataProcessorCronJob(account.getUuid(), jobExecutionContext);
+      }
     });
   }
 
