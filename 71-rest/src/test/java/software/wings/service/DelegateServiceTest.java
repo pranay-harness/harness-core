@@ -12,6 +12,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -19,6 +21,7 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Event.Builder.anEvent;
+import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 import static software.wings.common.Constants.DELEGATE_DIR;
 import static software.wings.common.Constants.DOCKER_DELEGATE;
 import static software.wings.common.Constants.KUBERNETES_DELEGATE;
@@ -29,6 +32,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 
@@ -67,9 +71,12 @@ import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceSecretKey.ServiceType;
+import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Cache;
+import software.wings.security.encryption.EncryptedData;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
@@ -78,6 +85,8 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
@@ -114,6 +123,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private DelegateProfileService delegateProfileService;
   @Mock private InfraDownloadService infraDownloadService;
   @Mock private LearningEngineService learningEngineService;
+  @Mock private SecretManager secretManager;
+  @Mock private ManagerDecryptionService managerDecryptionService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -708,5 +719,48 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "profile1", 100L);
     assertThat(init).isNull();
+  }
+
+  @Test
+  public void shouldCheckForProfileWithSecrets() {
+    EncryptedData encryptedData = EncryptedData.builder().build();
+    encryptedData.setUuid(generateUuid());
+    List<EncryptedDataDetail> encryptionDetails =
+        ImmutableList.of(EncryptedDataDetail.builder().encryptedData(encryptedData).build());
+    ServiceVariable serviceVariable = ServiceVariable.builder()
+                                          .accountId(ACCOUNT_ID)
+                                          .type(ENCRYPTED_TEXT)
+                                          .encryptedValue(encryptedData.getUuid())
+                                          .secretTextName("My Secret")
+                                          .build();
+    when(secretManager.getEncryptedDataByName(ACCOUNT_ID, "My Secret")).thenReturn(encryptedData);
+    when(secretManager.getEncryptionDetails(eq(serviceVariable), eq(null), eq(null))).thenReturn(encryptionDetails);
+
+    Delegate delegate =
+        aDelegate().withUuid(DELEGATE_ID).withAccountId(ACCOUNT_ID).withDelegateProfileId("profileSecret").build();
+    wingsPersistence.save(delegate);
+    DelegateProfile profile = DelegateProfile.builder()
+                                  .accountId(ACCOUNT_ID)
+                                  .name("A Secret Profile")
+                                  .startupScript("A secret: ${secrets.getValue(\"My Secret\")}")
+                                  .build();
+    profile.setUuid("profileSecret");
+    profile.setLastUpdatedAt(100L);
+    when(delegateProfileService.get(ACCOUNT_ID, "profileSecret")).thenReturn(profile);
+
+    doAnswer(invocation -> {
+      ((ServiceVariable) invocation.getArguments()[0]).setValue("Shhh! This is a secret!".toCharArray());
+      return null;
+    })
+        .when(managerDecryptionService)
+        .decrypt(eq(serviceVariable), eq(encryptionDetails));
+
+    DelegateProfileParams init = delegateService.checkForProfile(ACCOUNT_ID, DELEGATE_ID, "", 0);
+
+    assertThat(init).isNotNull();
+    assertThat(init.getProfileId()).isEqualTo("profileSecret");
+    assertThat(init.getName()).isEqualTo("A Secret Profile");
+    assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
+    assertThat(init.getScriptContent()).isEqualTo("A secret: Shhh! This is a secret!");
   }
 }

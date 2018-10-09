@@ -108,6 +108,8 @@ import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
+import software.wings.expression.ExpressionEvaluator;
+import software.wings.expression.SecretFunctor;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
@@ -119,6 +121,8 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
+import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.DelegateMetaInfo;
 import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
@@ -137,6 +141,7 @@ import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -183,6 +188,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private InfraDownloadService infraDownloadService;
   @Inject private DelegateProfileService delegateProfileService;
   @Inject private LearningEngineService learningEngineService;
+  @Inject private ManagerDecryptionService managerDecryptionService;
+  @Inject private SecretManager secretManager;
+  @Inject private ExpressionEvaluator evaluator;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -882,11 +890,19 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     if (isNotBlank(delegate.getDelegateProfileId())) {
       DelegateProfile profile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
       if (profile != null && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt)) {
+        Map<String, Object> context = new HashMap<>();
+        context.put("secrets",
+            SecretFunctor.builder()
+                .managerDecryptionService(managerDecryptionService)
+                .secretManager(secretManager)
+                .accountId(accountId)
+                .build());
+        String scriptContent = evaluator.substitute(profile.getStartupScript(), context);
         return DelegateProfileParams.builder()
             .profileId(profile.getUuid())
             .name(profile.getName())
             .profileLastUpdatedAt(profile.getLastUpdatedAt())
-            .scriptContent(profile.getStartupScript())
+            .scriptContent(scriptContent)
             .build();
       }
     }
