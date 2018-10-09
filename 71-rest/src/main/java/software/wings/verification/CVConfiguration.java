@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
+import software.wings.sm.StateType;
 
 import javax.validation.constraints.NotNull;
 
@@ -18,14 +19,10 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 public class CVConfiguration extends Base {
+  @NotNull private String accountId;
+  @NotNull private String connectorId;
   @NotNull private String envId;
   @NotNull private String serviceId;
+  @NotNull private StateType stateType;
   private boolean enabled24x7;
-
-  public CVConfiguration(@NotNull String appId, @NotNull String envId, @NotNull String serviceId, boolean enabled24x7) {
-    this.appId = appId;
-    this.envId = envId;
-    this.serviceId = serviceId;
-    this.enabled24x7 = enabled24x7;
-  }
 }
