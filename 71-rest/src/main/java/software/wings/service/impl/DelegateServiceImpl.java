@@ -485,6 +485,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     String delegateCheckLocation = null;
     boolean jarFileExists = false;
     boolean versionChanged = false;
+    String delegateDockerImage = "harness/delegate:latest";
 
     try {
       String delegateMetadataUrl = mainConfiguration.getDelegateMetadataUrl().trim();
@@ -534,6 +535,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
       Account account = accountService.get(accountId);
       ImmutableMap.Builder<String, String> params = ImmutableMap.<String, String>builder()
+                                                        .put("delegateDockerImage", delegateDockerImage)
                                                         .put("accountId", accountId)
                                                         .put("accountSecret", account.getAccountKey())
                                                         .put("upgradeVersion", latestVersion)
@@ -550,6 +552,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
       if (delegateProfile != null) {
         params.put("delegateProfile", delegateProfile);
+      }
+      if (mainConfiguration.getDeployMode().equals(DeployMode.KUBERNETES_ONPREM)) {
+        params.put("delegateDockerImage", mainConfiguration.getPortal().getDelegateDockerImage());
       }
 
       return params.build();

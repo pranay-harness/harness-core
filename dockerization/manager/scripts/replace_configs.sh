@@ -104,3 +104,7 @@ fi
 if [[ -v "SMTP_PASSWORD" ]]; then
     sed -i "s|smtp_password_placeholder|${SMTP_PASSWORD}|" /opt/harness/config.yml
 fi
+
+if [[ -v "DELEGATE_DOCKER_IMAGE" ]]; then
+    sed -i "s|delegateDockerImage:.*|delegateDockerImage: ${DELEGATE_DOCKER_IMAGE}|" /opt/harness/config.yml
+fi

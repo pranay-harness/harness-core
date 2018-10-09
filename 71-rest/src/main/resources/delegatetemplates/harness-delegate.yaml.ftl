@@ -45,7 +45,7 @@ spec:
         harness.io/name: ${delegateName}
     spec:
       containers:
-      - image: harness/delegate:latest
+      - image: ${delegateDockerImage}
         imagePullPolicy: Always
         name: harness-delegate-instance
         resources:

@@ -22,16 +22,16 @@ VERSION_PROPERTY_FILE=version.properties
 
 if [[ $docker_registry_username == "" ]] || [[ $docker_registry_password == "" ]] || [[ $docker_registry_url == "" ]] || [[ $docker_registry_username == "null" ]] || [[ $docker_registry_password == "null" ]] || [[ $docker_registry_url == "null" ]] ; then
     echo "Docker credentials incomplete"
-    cat config.properties
+    cat values.yaml
     exit 1
 fi
 
-echo
-
-if [[ $($docker_registry_password | docker login $docker_registry_url -u $docker_registry_username --password-stdin) ]]; then
+if [[ $(echo $docker_registry_password | docker login $docker_registry_url -u $docker_registry_username --password-stdin) ]]; then
+    echo "Docker login successful";
+else
     echo "Docker login failed";
-    cat config.properties
-    exit 1
+    cat values.yaml;
+    exit 1;
 fi
 
 function loadDockerImages(){
@@ -42,6 +42,7 @@ function loadDockerImages(){
     docker load --input artifacts/mongo.tar
     docker load --input artifacts/nginx.tar
     docker load --input artifacts/ui.tar
+    docker load --input artifacts/delegate.tar
 }
 
 echo "# Reading versions from $VERSION_PROPERTY_FILE"
@@ -52,7 +53,7 @@ nginximage=$(yq r values.internal.yaml images.nginx)
 uiimage=$(yq r values.internal.yaml images.ui)
 defaultbackendimage=$(yq r values.internal.yaml images.defaultBackend)
 ingresscontrollerimage=$(yq r values.internal.yaml images.ingressController)
-
+delegateimage=$(yq r values.internal.yaml images.delegate)
 
 
 echo "#######Version details start #############"
@@ -63,6 +64,7 @@ echo "nginximage="$nginximage
 echo "uiimage="$uiimage
 echo "ingresscontrollerimage="$ingresscontrollerimage
 echo "defaultbackendimage="$defaultbackendimage
+echo "delegateimage="$delegateimage
 
 echo "#######Version details end #############"
 printf "\n"
@@ -89,6 +91,7 @@ function uploadDockerImages(){
     prepareandUploadImage $nginximage
     prepareandUploadImage $ingresscontrollerimage
     prepareandUploadImage $defaultbackendimage
+    prepareandUploadImage $delegateimage
 }
 
 
