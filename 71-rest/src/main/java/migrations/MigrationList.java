@@ -48,6 +48,7 @@ import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SecretTextNameKeyWordsMigration;
+import migrations.all.SetIsDeletedFlagForInstances;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.SweepingPhaseMigration;
 import migrations.all.SystemTemplateGalleryMigration;
@@ -128,6 +129,7 @@ public class MigrationList {
         .add(Pair.of(189, RemoveServiceVariablesFromActivity.class))
         .add(Pair.of(190, DeleteLETaskDelCronMigration.class))
         .add(Pair.of(191, HelmReleaseNameSuffixMigration.class))
+        .add(Pair.of(192, SetIsDeletedFlagForInstances.class))
         .build();
   }
 }

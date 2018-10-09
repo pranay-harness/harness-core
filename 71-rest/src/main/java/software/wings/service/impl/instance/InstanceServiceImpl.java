@@ -2,6 +2,7 @@ package software.wings.service.impl.instance;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.mongo.MongoUtils.setUnset;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -10,11 +11,13 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
@@ -85,7 +88,14 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public Instance get(String instanceId) {
-    return wingsPersistence.get(Instance.class, instanceId);
+    Instance instance = wingsPersistence.get(Instance.class, instanceId);
+    if (instance != null) {
+      if (instance.isDeleted()) {
+        return null;
+      }
+    }
+
+    return instance;
   }
 
   @Override
@@ -128,13 +138,24 @@ public class InstanceServiceImpl implements InstanceService {
   private void pruneByEntity(String fieldName, String value) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
     query.filter(fieldName, value);
-    wingsPersistence.delete(query);
+
+    UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
+    setUnset(updateOperations, "deletedAt", System.currentTimeMillis());
+    setUnset(updateOperations, "isDeleted", true);
+
+    wingsPersistence.update(query, updateOperations);
   }
 
   private void pruneByEntity(Map<String, String> inputs) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    long timeMillis = System.currentTimeMillis();
     inputs.forEach((key, value) -> query.filter(key, value));
-    wingsPersistence.delete(query);
+
+    UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
+    setUnset(updateOperations, "deletedAt", timeMillis);
+    setUnset(updateOperations, "isDeleted", true);
+
+    wingsPersistence.update(query, updateOperations);
   }
 
   @Override
@@ -175,7 +196,14 @@ public class InstanceServiceImpl implements InstanceService {
   public boolean delete(Set<String> instanceIdSet) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
     query.field("_id").in(instanceIdSet);
-    return wingsPersistence.delete(query);
+
+    long timeMillis = System.currentTimeMillis();
+    UpdateOperations<Instance> updateOperations = wingsPersistence.createUpdateOperations(Instance.class);
+    setUnset(updateOperations, "deletedAt", timeMillis);
+    setUnset(updateOperations, "isDeleted", true);
+
+    wingsPersistence.update(query, updateOperations);
+    return true;
   }
 
   @Override
@@ -192,6 +220,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public PageResponse<Instance> list(PageRequest<Instance> pageRequest) {
+    pageRequest.addFilter("isDeleted", Operator.EQ, false);
     return wingsPersistence.query(Instance.class, pageRequest);
   }
 

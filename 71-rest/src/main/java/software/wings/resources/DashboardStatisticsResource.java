@@ -46,8 +46,9 @@ public class DashboardStatisticsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<InstanceSummaryStats> getAppInstanceSummaryStats(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") List<String> appIds, @QueryParam("groupBy") List<String> groupByEntityTypes) {
-    return new RestResponse<>(dashboardStatsService.getAppInstanceSummaryStats(appIds, groupByEntityTypes));
+      @QueryParam("appId") List<String> appIds, @QueryParam("groupBy") List<String> groupByEntityTypes,
+      @QueryParam("timestamp") long timestamp) {
+    return new RestResponse<>(dashboardStatsService.getAppInstanceSummaryStats(appIds, groupByEntityTypes, timestamp));
   }
 
   /**
@@ -60,8 +61,10 @@ public class DashboardStatisticsResource {
   @Timed
   @ExceptionMetered
   public RestResponse<InstanceSummaryStats> getServiceInstanceSummaryStats(@QueryParam("accountId") String accountId,
-      @QueryParam("serviceId") String serviceId, @QueryParam("groupBy") List<String> groupByEntityTypes) {
-    return new RestResponse<>(dashboardStatsService.getServiceInstanceSummaryStats(serviceId, groupByEntityTypes));
+      @QueryParam("serviceId") String serviceId, @QueryParam("groupBy") List<String> groupByEntityTypes,
+      @QueryParam("timestamp") long timestamp) {
+    return new RestResponse<>(
+        dashboardStatsService.getServiceInstanceSummaryStats(serviceId, groupByEntityTypes, timestamp));
   }
 
   /**
@@ -73,9 +76,9 @@ public class DashboardStatisticsResource {
   @Path("app-instance-stats")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<InstanceStatsByService>> getAppInstanceStats(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") List<String> appIds) {
-    return new RestResponse<>(dashboardStatsService.getAppInstanceStats(appIds));
+  public RestResponse<List<InstanceStatsByService>> getAppInstanceStats(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") List<String> appIds, @QueryParam("timestamp") long timestamp) {
+    return new RestResponse<>(dashboardStatsService.getAppInstanceStatsByService(appIds, timestamp));
   }
 
   /**

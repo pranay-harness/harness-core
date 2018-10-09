@@ -14,6 +14,8 @@ import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.beans.infrastructure.instance.key.PcfInstanceKey;
 
+import java.util.List;
+
 /**
  * Represents the instance that the service get deployed onto.
  * We enforce unique constraint in code based on the instance key sub class.
@@ -59,17 +61,21 @@ public class Instance extends Base {
 
   private InstanceInfo instanceInfo;
 
+  private boolean isDeleted;
+  private long deletedAt;
+
   @Builder
   public Instance(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
-      long lastUpdatedAt, String entityYamlPath, InstanceType instanceType, HostInstanceKey hostInstanceKey,
-      ContainerInstanceKey containerInstanceKey, PcfInstanceKey pcfInstanceKey, String envId, String envName,
-      EnvironmentType envType, String accountId, String serviceId, String serviceName, String appName,
-      String infraMappingId, String infraMappingType, String computeProviderId, String computeProviderName,
-      String lastArtifactStreamId, String lastArtifactId, String lastArtifactName, String lastArtifactSourceName,
-      String lastArtifactBuildNum, String lastDeployedById, String lastDeployedByName, long lastDeployedAt,
-      String lastWorkflowExecutionId, String lastWorkflowExecutionName, String lastPipelineExecutionId,
-      String lastPipelineExecutionName, InstanceInfo instanceInfo) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, null, entityYamlPath);
+      long lastUpdatedAt, List<String> keywords, String entityYamlPath, InstanceType instanceType,
+      HostInstanceKey hostInstanceKey, ContainerInstanceKey containerInstanceKey, PcfInstanceKey pcfInstanceKey,
+      String envId, String envName, EnvironmentType envType, String accountId, String serviceId, String serviceName,
+      String appName, String infraMappingId, String infraMappingType, String computeProviderId,
+      String computeProviderName, String lastArtifactStreamId, String lastArtifactId, String lastArtifactName,
+      String lastArtifactSourceName, String lastArtifactBuildNum, String lastDeployedById, String lastDeployedByName,
+      long lastDeployedAt, String lastWorkflowExecutionId, String lastWorkflowExecutionName,
+      String lastPipelineExecutionId, String lastPipelineExecutionName, InstanceInfo instanceInfo, boolean isDeleted,
+      long deletedAt) {
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.instanceType = instanceType;
     this.hostInstanceKey = hostInstanceKey;
     this.containerInstanceKey = containerInstanceKey;
@@ -98,5 +104,7 @@ public class Instance extends Base {
     this.lastPipelineExecutionId = lastPipelineExecutionId;
     this.lastPipelineExecutionName = lastPipelineExecutionName;
     this.instanceInfo = instanceInfo;
+    this.isDeleted = isDeleted;
+    this.deletedAt = deletedAt;
   }
 }
