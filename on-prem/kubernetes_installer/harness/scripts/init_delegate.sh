@@ -8,6 +8,7 @@ wait=0
 while [ $harness_manager_nginx_status != "Running"  ] && [ $wait -lt 30 ]
 do
 	sleep 3
+    wait=$(($wait+1))
 	echo "Waiting for pods to come up, harness_manager_nginx_status=$harness_manager_nginx_status"
 	harness_manager_nginx_status=$(kubectl get pods -n harness harness-manager-nginx-0 -o jsonpath="{.status.phase}")
 done
