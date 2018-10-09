@@ -28,6 +28,7 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.health.VerificationServiceHealthCheck;
+import io.harness.jobs.VerificationJob;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
@@ -58,6 +59,7 @@ import software.wings.scheduler.QuartzScheduler;
 import software.wings.utils.JsonSubtypeResolver;
 
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 import javax.ws.rs.Path;
@@ -68,12 +70,12 @@ import javax.ws.rs.Path;
  * @author Raghu
  */
 public class VerificationServiceApplication extends Application<VerificationServiceConfiguration> {
+  // pool interval at which the job will schedule. But here in verificationJob it will schedule at POLL_INTERVAL / 2
+  public static final int CRON_POLL_INTERVAL = (int) TimeUnit.MINUTES.toSeconds(10); // in seconds
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceApplication.class);
-
   private static String APPLICATION_NAME = "Verification Service Application";
-
-  private WingsPersistence wingsPersistence;
   private final MetricRegistry metricRegistry = new MetricRegistry();
+  private WingsPersistence wingsPersistence;
 
   /**
    * The entry point of application.
@@ -147,8 +149,6 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     registerResources(environment, injector);
 
-    registerCronJobs(injector);
-
     registerManagedBeans(environment, injector);
 
     registerJerseyProviders(environment);
@@ -163,6 +163,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
     startPlugins(injector);
 
     initializeServiceSecretKeys(injector);
+
+    registerCronJobs(injector);
 
     initializeServiceTaskPoll(injector);
 
@@ -221,6 +223,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
       // and they will initialize the jobs.
       if (acquiredLock != null) {
         VerificationServiceExecutorService.addJob(jobScheduler);
+        VerificationJob.addJob(jobScheduler);
       }
     }
   }

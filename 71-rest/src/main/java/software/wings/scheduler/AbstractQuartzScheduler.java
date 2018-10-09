@@ -193,6 +193,22 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
   }
 
   @Override
+  public Boolean checkExists(String jobName, String groupName) {
+    if (scheduler == null) {
+      return true;
+    }
+    if (groupName != null && jobName != null) {
+      JobKey jobKey = new JobKey(jobName, groupName);
+      try {
+        return scheduler.checkExists(jobKey);
+      } catch (SchedulerException e) {
+        logger.error("Couldn't check for cron for trigger {}", jobKey);
+      }
+    }
+    return false;
+  }
+
+  @Override
   public void onEnterMaintenance() {
     if (scheduler != null) {
       try {

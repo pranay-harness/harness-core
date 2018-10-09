@@ -49,7 +49,6 @@ import software.wings.utils.JsonSubtypeResolver;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.io.UnsupportedEncodingException;
-import java.net.UnknownHostException;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
@@ -140,7 +139,7 @@ public abstract class VerificationBaseIntegrationTest
     return target.request().header("Authorization", "Bearer " + userToken);
   }
 
-  protected Builder getRequestBuilderWithLearningAuthHeader(WebTarget target) throws UnknownHostException {
+  protected Builder getRequestBuilderWithLearningAuthHeader(WebTarget target) {
     return target.request().header("Authorization", "LearningEngine " + getLearningToken());
   }
 
@@ -162,7 +161,7 @@ public abstract class VerificationBaseIntegrationTest
     }
   }
 
-  protected Builder getDelegateRequestBuilderWithAuthHeader(WebTarget target) throws UnknownHostException {
+  protected Builder getDelegateRequestBuilderWithAuthHeader(WebTarget target) {
     return target.request().header("Authorization", "Delegate " + getDelegateToken());
   }
 

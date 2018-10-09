@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotBlank;
@@ -73,6 +74,8 @@ public interface AccountService {
   DelegateConfiguration getDelegateConfiguration(String accountId);
 
   List<Account> listAllAccounts();
+
+  PageResponse<Account> getAccounts(PageRequest<Account> pageRequest);
 
   Account getByAccountName(String accountName);
 

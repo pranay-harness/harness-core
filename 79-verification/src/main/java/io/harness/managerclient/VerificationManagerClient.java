@@ -4,6 +4,7 @@ import static software.wings.common.VerificationConstants.CHECK_STATE_VALID;
 import static software.wings.common.VerificationConstants.LAST_SUCCESSFUL_WORKFLOW_IDS;
 import static software.wings.common.VerificationConstants.WORKFLOW_FOR_STATE_EXEC;
 
+import io.harness.beans.PageResponse;
 import retrofit2.Call;
 import retrofit2.http.Body;
 import retrofit2.http.GET;
@@ -11,6 +12,7 @@ import retrofit2.http.HeaderMap;
 import retrofit2.http.POST;
 import retrofit2.http.Query;
 import software.wings.api.MetricDataAnalysisResponse;
+import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
@@ -47,6 +49,8 @@ public interface VerificationManagerClient {
   @POST("log-verification" + VerificationConstants.NOTIFY_LOG_STATE)
   Call<RestResponse<Boolean>> sendNotifyForLogState(@HeaderMap Map<String, Object> headers,
       @Query("correlationId") String correlationId, @Body LogAnalysisResponse logAnalysisResponse);
+
+  @GET("account") Call<RestResponse<PageResponse<Account>>> getAccounts(@Query("offset") String offset);
 
   @GET("account/feature-flag-enabled")
   Call<RestResponse<Boolean>> isFeatureEnabled(
