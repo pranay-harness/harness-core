@@ -442,6 +442,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Test
   public void shouldSavePipelineWebhookTriggerNoArtifactSelections() {
     setPipelineStages(pipeline);
+    pipeline.getPipelineVariables().add(aVariable().withName("MyVar").build());
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
 
     Trigger trigger = triggerService.save(webhookConditionTrigger);
@@ -463,6 +464,9 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Test
   public void shouldSavePipelineWebhookTriggerWithArtifactSelections() {
     setPipelineStages(pipeline);
+    pipeline.getPipelineVariables().add(aVariable().withName("MyVar").build());
+
+    pipeline.getPipelineVariables().add(aVariable().withName("MyVar").build());
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
     setWebhookArtifactSelections();
 

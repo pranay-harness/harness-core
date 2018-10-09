@@ -553,7 +553,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private WorkflowExecution triggerExecution(
       List<Artifact> artifacts, Trigger trigger, Map<String, String> parameters) {
-    WorkflowExecution workflowExecution = null;
+    WorkflowExecution workflowExecution;
     ExecutionArgs executionArgs = new ExecutionArgs();
     prepareExecutionArgs(artifacts, trigger, parameters, executionArgs);
     if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
@@ -561,7 +561,6 @@ public class TriggerServiceImpl implements TriggerService {
     } else {
       logger.info(
           "Triggering  execution of appId {} with  pipeline id {}", trigger.getAppId(), trigger.getWorkflowId());
-
       resolveTriggerPipelineVariables(trigger, executionArgs);
       workflowExecution =
           workflowExecutionService.triggerPipelineExecution(trigger.getAppId(), trigger.getWorkflowId(), executionArgs);
@@ -588,26 +587,30 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   private void resolveTriggerPipelineVariables(Trigger trigger, ExecutionArgs executionArgs) {
-    if (isNotEmpty(trigger.getWorkflowVariables())) {
-      Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
-      notNullCheck("Pipeline was deleted or does not exist", pipeline, USER_ADMIN);
-
-      Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(trigger, executionArgs);
-      List<Variable> pipelineVariables = pipeline.getPipelineVariables();
-
-      String envId = null;
-      String templatizedEnvName = getTemplatizedEnvVariableName(pipelineVariables);
-      if (templatizedEnvName != null) {
-        logger.info("One of the environment is parameterized in the pipeline");
-        envId = resolveEnvId(trigger, triggerWorkflowVariableValues.get(templatizedEnvName), templatizedEnvName);
-        triggerWorkflowVariableValues.put(templatizedEnvName, envId);
+    Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
+    notNullCheck("Pipeline was deleted or does not exist", pipeline, USER_ADMIN);
+    Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(trigger, executionArgs);
+    List<Variable> pipelineVariables = pipeline.getPipelineVariables();
+    String envId = null;
+    String templatizedEnvName = getTemplatizedEnvVariableName(pipelineVariables);
+    if (templatizedEnvName != null) {
+      logger.info("One of the environment is parameterized in the pipeline and Variable name {}", templatizedEnvName);
+      String envNameOrId = triggerWorkflowVariableValues.get(templatizedEnvName);
+      if (envNameOrId == null) {
+        String msg = "Pipeline contains environment as variable [" + templatizedEnvName
+            + "]. However, there is no mapping associated in the trigger."
+            + " Please update the trigger";
+        logger.warn(msg);
+        throw new WingsException(msg, USER);
       }
-
-      resolveServices(trigger, triggerWorkflowVariableValues, pipelineVariables);
-      resolveServiceInfrastructures(trigger, triggerWorkflowVariableValues, envId, pipelineVariables);
-
-      executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
+      envId = resolveEnvId(trigger, envNameOrId);
+      triggerWorkflowVariableValues.put(templatizedEnvName, envId);
     }
+
+    resolveServices(trigger, triggerWorkflowVariableValues, pipelineVariables);
+    resolveServiceInfrastructures(trigger, triggerWorkflowVariableValues, envId, pipelineVariables);
+
+    executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
   }
 
   private void resolveServices(
@@ -627,21 +630,18 @@ public class TriggerServiceImpl implements TriggerService {
     }
   }
 
-  private String resolveEnvId(Trigger trigger, String envNameOrId, String templatizedEnvName) {
+  private String resolveEnvId(Trigger trigger, String envNameOrId) {
     Environment environment;
-    if (envNameOrId != null) {
-      logger.info("Checking  environment {} can be found by id first.", envNameOrId);
-      environment = environmentService.get(trigger.getAppId(), envNameOrId);
-      if (environment == null) {
-        logger.info("Environment does not exist by Id, checking if environment {} can be found by name.", envNameOrId);
-        environment = environmentService.getEnvironmentByName(trigger.getAppId(), envNameOrId, false);
-      }
-      notNullCheck("Environment [" + envNameOrId + "] does not exist", environment);
-    } else {
-      String msg = "Environment name [" + templatizedEnvName + "] not present in the trigger variables";
-      logger.warn(msg);
-      throw new WingsException(msg, USER);
+    logger.info("Checking  environment {} can be found by id first.", envNameOrId);
+    environment = environmentService.get(trigger.getAppId(), envNameOrId);
+    if (environment == null) {
+      logger.info("Environment does not exist by Id, checking if environment {} can be found by name.", envNameOrId);
+      environment = environmentService.getEnvironmentByName(trigger.getAppId(), envNameOrId, false);
     }
+    notNullCheck("Resolved environment [" + envNameOrId
+            + "] does not exist. Please ensure the environment variable mapped to the right payload value in the trigger",
+        environment);
+
     return environment.getUuid();
   }
 
@@ -680,20 +680,21 @@ public class TriggerServiceImpl implements TriggerService {
     String envId = null;
     if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
       List<Variable> workflowVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-
       if (workflow.checkEnvironmentTemplatized()) {
         String templatizedEnvName = getTemplatizedEnvVariableName(workflowVariables);
-        notNullCheck("There is no corresponding Workflow Variable associated to environment", templatizedEnvName);
         String envNameOrId = triggerWorkflowVariableValues.get(templatizedEnvName);
-        envId = resolveEnvId(trigger, envNameOrId, templatizedEnvName);
+        notNullCheck(
+            "Workflow Environment is templatized. However, there is no corresponding mapping associated in the trigger. "
+                + " Please update the trigger",
+            envNameOrId);
+        envId = resolveEnvId(trigger, envNameOrId);
         triggerWorkflowVariableValues.put(templatizedEnvName, envId);
       } else {
         envId = workflow.getEnvId();
       }
-      notNullCheck("Environment  [" + envId + "] might have been deleted", envId, USER_ADMIN);
+      notNullCheck("Environment  [" + envId + "] might have been deleted", envId, USER);
 
       resolveServices(trigger, triggerWorkflowVariableValues, workflowVariables);
-
       resolveServiceInfrastructures(trigger, triggerWorkflowVariableValues, envId, workflowVariables);
     }
 
@@ -965,7 +966,7 @@ public class TriggerServiceImpl implements TriggerService {
             if (BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
               artifactNeeded = false;
             }
-            addVariables(parameters, workflow);
+            addVariables(parameters, pipeline.getPipelineVariables());
           }
         }
       }
@@ -982,15 +983,14 @@ public class TriggerServiceImpl implements TriggerService {
           artifactNeeded = false;
         }
       }
-      addVariables(parameters, workflow);
+      addVariables(parameters, workflow.getOrchestrationWorkflow().getUserVariables());
     }
     return constructWebhookToken(trigger, existingToken, services, artifactNeeded, parameters);
   }
 
-  private void addVariables(Map<String, String> parameters, Workflow workflow) {
-    List<Variable> userVariables = workflow.getOrchestrationWorkflow().getUserVariables();
-    if (isNotEmpty(userVariables)) {
-      userVariables.forEach(variable -> { parameters.put(variable.getName(), variable.getName() + "_placeholder"); });
+  private void addVariables(Map<String, String> parameters, List<Variable> variables) {
+    if (isNotEmpty(variables)) {
+      variables.forEach(variable -> { parameters.put(variable.getName(), variable.getName() + "_placeholder"); });
     }
   }
 
