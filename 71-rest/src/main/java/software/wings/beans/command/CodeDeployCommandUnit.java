@@ -108,9 +108,9 @@ public class CodeDeployCommandUnit extends AbstractCommandUnit {
                                                  .withEvents(autoRollbackConfigurations))
               .withFileExistsBehavior(fileExistsBehavior);
 
-      CodeDeployDeploymentInfo codeDeployDeploymentInfo =
-          awsCodeDeployService.deployApplication(codeDeployParams.getRegion(), cloudProviderSetting,
-              context.getCloudProviderCredentials(), createDeploymentRequest, executionLogCallback);
+      CodeDeployDeploymentInfo codeDeployDeploymentInfo = awsCodeDeployService.deployApplication(
+          codeDeployParams.getRegion(), cloudProviderSetting, context.getCloudProviderCredentials(),
+          createDeploymentRequest, executionLogCallback, codeDeployParams.getTimeout());
       commandExecutionStatus = codeDeployDeploymentInfo.getStatus();
       // go over instance data in command execution data and prepare execution data
       context.setCommandExecutionData(aCodeDeployCommandExecutionData()

@@ -75,6 +75,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by brett on 6/22/17
@@ -84,6 +85,7 @@ public class AwsCodeDeployState extends State {
 
   @Attributes(title = "Bucket", required = true) private String bucket;
   @Attributes(title = "Key", required = true) private String key;
+  @Attributes(title = "Steady State Timeout") @DefaultValue("10") private int steadyStateTimeout = 10;
 
   @EnumData(enumDataProvider = CodeDeployBundleTypeProvider.class)
   @Attributes(title = "Bundle Type", required = true)
@@ -205,6 +207,7 @@ public class AwsCodeDeployState extends State {
                                       .withAppId(app.getAppId())
                                       .withTaskType(TaskType.COMMAND)
                                       .withWaitId(activity.getUuid())
+                                      .withTimeout(getTaskTimeout())
                                       .withParameters(new Object[] {command, commandExecutionContext})
                                       .withEnvId(envId)
                                       .withInfrastructureMappingId(infrastructureMapping.getUuid())
@@ -233,6 +236,7 @@ public class AwsCodeDeployState extends State {
                                             .autoRollbackConfigurations(autoRollbackConfigurations)
                                             .fileExistsBehavior(fileExistsBehavior)
                                             .ignoreApplicationStopFailures(ignoreApplicationStopFailures)
+                                            .timeout(getTimeOut())
                                             .build();
     executionDataBuilder.withCodeDeployParams(codeDeployParams);
 
@@ -253,10 +257,21 @@ public class AwsCodeDeployState extends State {
               .autoRollbackConfigurations(autoRollbackConfigurations)
               .fileExistsBehavior(fileExistsBehavior)
               .ignoreApplicationStopFailures(ignoreApplicationStopFailures)
+              .timeout(getTimeOut())
               .build();
       executionDataBuilder.withOldCodeDeployParams(oldCodeDeployParams);
     }
     return codeDeployParams;
+  }
+
+  private int getTimeOut() {
+    return (steadyStateTimeout == 0) ? 10 : steadyStateTimeout;
+  }
+
+  private long getTaskTimeout() {
+    long l1 = TimeUnit.HOURS.toMillis(1);
+    long l2 = TimeUnit.MINUTES.toMillis(getTimeOut());
+    return Math.max(l1, l2);
   }
 
   @Override
@@ -422,6 +437,14 @@ public class AwsCodeDeployState extends State {
 
   public void setAutoRollbackConfigurations(List<String> autoRollbackConfigurations) {
     this.autoRollbackConfigurations = autoRollbackConfigurations;
+  }
+
+  public int getSteadyStateTimeout() {
+    return steadyStateTimeout;
+  }
+
+  public void setSteadyStateTimeout(int steadyStateTimeout) {
+    this.steadyStateTimeout = steadyStateTimeout;
   }
 
   public static class CodeDeployAutoRollbackConfigurationProvider implements DataProvider {

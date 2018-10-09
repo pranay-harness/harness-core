@@ -26,4 +26,5 @@ public class CodeDeployParams {
   private boolean enableAutoRollback;
   private List<String> autoRollbackConfigurations;
   private String fileExistsBehavior;
+  private int timeout;
 }
