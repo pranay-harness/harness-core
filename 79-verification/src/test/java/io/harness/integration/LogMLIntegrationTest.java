@@ -39,7 +39,6 @@ import org.mongodb.morphia.query.Query;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 import org.quartz.Scheduler;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
@@ -75,7 +74,6 @@ import software.wings.utils.JsonUtils;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -100,22 +98,19 @@ import javax.ws.rs.core.Response;
  * Created by rsingh on 8/17/17.
  */
 public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
+  private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
   private Set<String> hosts = new HashSet<>();
   @Inject private LogAnalysisService analysisService;
   @Inject private VerificationManagerClientHelper managerClientHelper;
   @Inject private VerificationManagerClient managerClient;
   @Inject private LearningEngineService learningEngineService;
-
   private Random r;
-
   private String appId;
   private String stateExecutionId;
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
   private String delegateTaskId;
-
-  private static final StateType[] logAnalysisStates = new StateType[] {StateType.SPLUNKV2, StateType.ELK};
 
   @Before
   public void setUp() throws Exception {
@@ -229,7 +224,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  public void testFeatureflagDemoSuccess() throws Exception {
+  public void testFeatureflagDemoSuccess() {
     loginAdminUser();
     wingsPersistence.delete(
         wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", FeatureName.CV_DEMO.name()));
@@ -299,7 +294,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  public void testFeatureflagDemoFail() throws Exception {
+  public void testFeatureflagDemoFail() {
     loginAdminUser();
     wingsPersistence.delete(
         wingsPersistence.createQuery(FeatureFlag.class, excludeAuthority).filter("name", FeatureName.CV_DEMO.name()));
@@ -450,7 +445,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   private List<LogDataRecord> readLogDataRecordsFromFile(File file, String appId, String workflowId,
-      String workflowExecutionId, String stateExecutionId) throws IOException, FileNotFoundException {
+      String workflowExecutionId, String stateExecutionId) throws IOException {
     final Gson gson = new Gson();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       Type type = new TypeToken<List<LogDataRecord>>() {}.getType();
@@ -545,7 +540,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  public void controlButNoTestData() throws IOException, JobExecutionException, InterruptedException {
+  public void controlButNoTestData() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
     stateExecutionInstance.setAppId(appId);
@@ -663,7 +658,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  public void testButNoControlData() throws IOException, JobExecutionException, InterruptedException {
+  public void testButNoControlData() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
     stateExecutionInstance.setAppId(appId);
@@ -803,7 +798,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  public void noControlandTestData() throws IOException, JobExecutionException, InterruptedException {
+  public void noControlandTestData() throws IOException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
     stateExecutionInstance.setAppId(appId);
@@ -911,7 +906,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  public void withControlAndTest() throws IOException, JobExecutionException, InterruptedException {
+  public void withControlAndTest() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
     stateExecutionInstance.setAppId(appId);

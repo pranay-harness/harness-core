@@ -1,10 +1,15 @@
 package software.wings.resources;
 
+import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
+import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.security.annotations.LearningEngineAuth;
@@ -31,6 +36,16 @@ public class AccountResource {
   @PublicApi
   public RestResponse<String> getStatus(@PathParam("accountId") String accountId) {
     return new RestResponse<>(accountService.getAccountStatus(accountId));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<PageResponse<Account>> getAccounts(@QueryParam("offset") String offset) {
+    PageRequest<Account> accountPageRequest =
+        aPageRequest().withOffset(offset).withLimit(String.valueOf(PageRequest.DEFAULT_PAGE_SIZE)).build();
+    return new RestResponse<>(accountService.getAccounts(accountPageRequest));
   }
 
   @GET

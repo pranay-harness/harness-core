@@ -35,6 +35,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
@@ -610,6 +611,14 @@ public class AccountServiceImpl implements AccountService {
     List<Account> accountList = wingsPersistence.createQuery(Account.class).filter(APP_ID_KEY, GLOBAL_APP_ID).asList();
     decryptLicenseInfo(accountList);
     return accountList;
+  }
+
+  @Override
+  public PageResponse<Account> getAccounts(PageRequest pageRequest) {
+    PageResponse<Account> responses = wingsPersistence.query(Account.class, pageRequest);
+    List<Account> accounts = responses.getResponse();
+    decryptLicenseInfo(accounts);
+    return responses;
   }
 
   @Override
