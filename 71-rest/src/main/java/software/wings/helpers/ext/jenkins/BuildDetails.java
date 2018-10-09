@@ -121,7 +121,7 @@ public class BuildDetails {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add("number", number).add("revision", revision).toString();
+    return MoreObjects.toStringHelper(this).add("number", number).toString();
   }
 
   /**

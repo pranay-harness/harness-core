@@ -1,10 +1,9 @@
 package software.wings.helpers.ext.docker;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
@@ -31,6 +30,8 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
+import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -65,16 +66,53 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     try {
       DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
       String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
-
+      List<BuildDetails> buildDetails = new ArrayList<>();
+      String token = null;
       Response<DockerImageTagResponse> response =
           registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
-
       if (response.code() == 401) { // unauthorized
-        String token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
+        token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
         response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
       }
       checkValidImage(imageName, response);
-      return processBuildResponse(response.body(), dockerConfig, imageName);
+      DockerImageTagResponse dockerImageTagResponse = response.body();
+      if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
+        logger.warn("There are no tags available for the imageName {}", imageName);
+        return buildDetails;
+      }
+      buildDetails.addAll(processBuildResponse(dockerImageTagResponse, dockerConfig, imageName));
+      // TODO: Limit the no of tags
+      while (true) {
+        String nextLink = findNextLink(response.headers());
+        if (nextLink == null) {
+          return buildDetails;
+        } else {
+          logger.info(
+              "Using pagination to fetch all the builds. The no of builds fetched so far {}", buildDetails.size());
+        }
+        String baseUrl = response.raw().request().url().toString();
+        int queryParamIndex = nextLink.indexOf('?');
+        String nextPageUrl =
+            queryParamIndex == -1 ? baseUrl.concat(nextLink) : baseUrl.concat(nextLink.substring(queryParamIndex));
+        response = registryRestClient.listImageTagsByUrl("Bearer " + token, nextPageUrl).execute();
+        if (response.code() == 401) { // unauthorized
+          token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
+          response = registryRestClient.listImageTagsByUrl("Bearer " + token, nextPageUrl).execute();
+        }
+        dockerImageTagResponse = response.body();
+        if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
+          logger.info("There are no more tags available for the imageName {}", imageName);
+          return buildDetails;
+        }
+        buildDetails.addAll(processBuildResponse(dockerImageTagResponse, dockerConfig, imageName));
+        if (buildDetails.size() > MAX_NO_OF_TAGS_PER_IMAGE) {
+          logger.warn(
+              "Image name {} has more than {} tags. We might miss some new tags", imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+          break;
+        }
+      }
+      logger.info("The complete list  of the the tags {}", buildDetails);
+      return buildDetails;
     } catch (IOException e) {
       throw new WingsException(GENERAL_ERROR, WingsException.ADMIN_SRE).addParam("message", Misc.getMessage(e));
     }
@@ -83,7 +121,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private void checkValidImage(String imageName, Response<DockerImageTagResponse> response) {
     if (response.code() == 404) { // Page not found
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-          .addParam("args", "Image name [" + imageName + "] does not exist in Google Container Registry.");
+          .addParam("args", "Image name [" + imageName + "] does not exist in Docker Registry.");
     }
   }
 
@@ -92,19 +130,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     String tagUrl = dockerConfig.getDockerRegistryUrl().endsWith("/")
         ? dockerConfig.getDockerRegistryUrl() + imageName + "/tags/"
         : dockerConfig.getDockerRegistryUrl() + "/" + imageName + "/tags/";
-    if (dockerImageTagResponse != null && isNotEmpty(dockerImageTagResponse.getTags())) {
-      return dockerImageTagResponse.getTags()
-          .stream()
-          .map(tag -> aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).build())
-          .collect(toList());
-    } else {
-      if (dockerImageTagResponse == null) {
-        logger.warn("Docker image tag response was null.");
-      } else {
-        logger.warn("Docker image tag response had an empty or missing tag list.");
-      }
-      return emptyList();
-    }
+    return dockerImageTagResponse.getTags()
+        .stream()
+        .map(tag -> aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).build())
+        .collect(toList());
   }
 
   @Override
@@ -234,12 +263,63 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return true;
   }
 
+  public static String parseLink(String headerLink) {
+    /**
+     * Traversing with the pagination e.g.
+     * Link:
+     * "</v2/myAccount/myfirstrepo/tags/list?next_page=gAAAAABbuZsLNl9W6tAycol_oLvcYeti2w53XnoV3FYyFBkd-TQV3OBiWNJLqp2m8isy3SWusAqA4Y32dHJ7tGi0br18kXEt6nTW306QUFexaXrAGq8KeSc%3D&n=25>;
+     * rel="next""
+     */
+    if (headerLink == null) {
+      return null;
+    }
+    List<String> links = Arrays.stream(headerLink.split(";")).map(s -> s.trim()).collect(toList());
+
+    // Replace space with empty string
+    links.stream().map(s -> s.replace(" ", "")).collect(toList());
+    if (!links.contains("rel=\"next\"")) {
+      return null;
+    }
+    String path = null;
+    for (String s : links) {
+      if (s.charAt(0) == '<' && s.charAt(s.length() - 1) == '>') {
+        path = s;
+        break;
+      }
+    }
+    if (path == null || path.length() <= 1) {
+      return path;
+    }
+
+    String link = path.substring(1, path.length() - 1);
+
+    try {
+      URL url = new URL(link);
+      link = url.getFile().substring(1);
+    } catch (Exception e) {
+      // In the case where the link isn't a valid URL, we were passed with the just relative path
+    }
+    return link.charAt(0) == '/' ? link.replaceFirst("/", "") : link;
+  }
+
+  public static String findNextLink(Headers headers) {
+    if (headers == null || headers.size() == 0) {
+      return null;
+    }
+    if (headers.get("link") == null) {
+      return null;
+    }
+
+    return parseLink(headers.get("link"));
+  }
+
   /**
    * The type Docker image tag response.
    */
   public static class DockerImageTagResponse {
     private String name;
     private List<String> tags;
+    private String link;
 
     /**
      * Gets name.
@@ -275,6 +355,14 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
      */
     public void setTags(List<String> tags) {
       this.tags = tags;
+    }
+
+    public String getLink() {
+      return link;
+    }
+
+    public void setLink(String link) {
+      this.link = link;
     }
   }
 
