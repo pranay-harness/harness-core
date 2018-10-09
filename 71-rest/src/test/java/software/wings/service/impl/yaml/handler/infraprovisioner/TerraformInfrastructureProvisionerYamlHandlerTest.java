@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml.handler.infraprovisioner;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
@@ -18,6 +19,7 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMappingBlueprint;
 import software.wings.beans.InfrastructureMappingBlueprint.CloudProviderType;
 import software.wings.beans.NameValuePair;
@@ -30,6 +32,7 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
@@ -43,6 +46,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
   @Mock private InfrastructureProvisionerService mockInfrastructureProvisionerService;
   @Mock private ServiceResourceService mockServiceResourceService;
   @Mock private SettingsService mockSettingsService;
+  @Mock private AppService appService;
 
   @InjectMocks @Inject private TerraformInfrastructureProvisionerYamlHandler handler;
   private String validYamlFilePath = "Setup/Applications/APP_NAME/Infrastructure Provisioners/TF_Name.yaml";
@@ -76,6 +80,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
         SettingAttribute.Builder.aSettingAttribute().withUuid(SETTING_ID).withName("Name").build();
     doReturn(settingAttribute).when(mockSettingsService).getSettingAttributeByName(anyString(), anyString());
     doReturn(settingAttribute).when(mockSettingsService).get(anyString(), anyString());
+    doReturn(Application.Builder.anApplication().withUuid(APP_ID).build()).when(appService).get(any());
     handler.upsertFromYaml(changeContext, asList(changeContext));
     ArgumentCaptor<TerraformInfrastructureProvisioner> captor =
         ArgumentCaptor.forClass(TerraformInfrastructureProvisioner.class);
