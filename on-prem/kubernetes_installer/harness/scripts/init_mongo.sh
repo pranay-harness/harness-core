@@ -28,6 +28,7 @@ wait=0
 while [ $i -lt 3  ] && [ $wait -lt 30 ]
 do
 	sleep 3
+    wait=$(($wait+1))
 	echo "Waiting for pods to come up, number of pods : $i"
 	i=$(kubectl get pods --selector=role=mongo -n harness | grep Running | wc -l )
 done
