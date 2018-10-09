@@ -8,10 +8,13 @@ GENERATE_SCRIPT_FILE=generate.sh
 
 docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
 docker pull "${HELPER_IMAGE}"
-docker run --rm \
+docker run --rm -it\
            -v "${PWD}":"${INSTALLER_WORKING_DIR}" \
            -v /var/run/docker.sock:/var/run/docker.sock \
            -w "${INSTALLER_WORKING_DIR}" \
            -e DOCKERHUB_USERNAME \
            -e DOCKERHUB_PASSWORD \
            "${HELPER_IMAGE}" ./${GENERATE_SCRIPT_FILE}
+
+echo ""
+echo "Installer generated."

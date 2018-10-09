@@ -35,7 +35,7 @@ function replace() {
 
 function confirm() {
     while true; do
-        read -p "Do you wish to continue? [y/n]" yn
+        read -p "Do you wish to continue? [y/n]: " yn
         case $yn in
             [Yy]* ) break;;
             [Nn]* ) exit;;
