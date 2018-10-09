@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-sudo docker pull harness/delegate:latest
+sudo docker pull ${delegateDockerImage}
 
 sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e ACCOUNT_ID=${accountId} \
@@ -17,4 +17,4 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f) \
 -e NO_PROXY= \
 -e POLL_FOR_TASKS=false \
 -e HELM_DESIRED_VERSION= \
-harness/delegate:latest
+${delegateDockerImage}

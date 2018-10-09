@@ -15,6 +15,7 @@ nginximage=$(yq r version.yaml images.nginx)
 uiimage=$(yq r version.yaml images.ui)
 defaultbackendimage=$(yq r version.yaml images.defaultBackend)
 ingresscontrollerimage=$(yq r version.yaml images.ingressController)
+delegateimage=$(yq r version.yaml images.delegate)
 
 INSTALLER_DIR=harness-kubernetes
 ARTIFACT_DIR=$INSTALLER_DIR/artifacts
@@ -41,6 +42,7 @@ function downloadImages(){
    saveImage $nginximage $ARTIFACT_DIR/nginx.tar
    saveImage $ingresscontrollerimage $ARTIFACT_DIR/ingress.tar
    saveImage $defaultbackendimage $ARTIFACT_DIR/defaultbackend.tar
+   saveImage $delegateimage $ARTIFACT_DIR/delegate.tar
 
 
    curl https://app.harness.io/storage/wingsdelegates/jre/$JREVERSION/$SOLARIS_JRE > $ARTIFACT_DIR/$SOLARIS_JRE
@@ -58,6 +60,7 @@ function prepareInstaller(){
     mkdir -p $ARTIFACT_DIR
     cp -r harness/* $INSTALLER_DIR
     chmod +x $INSTALLER_DIR/*.sh
+    chmod +x $INSTALLER_DIR/scripts/*.sh
     replace MANAGER_VERSION $managerversion "$SCRIPTS_DIR/init_delegate.sh"
     downloadImages
     yq m -i $INSTALLER_DIR/values.yaml version.yaml

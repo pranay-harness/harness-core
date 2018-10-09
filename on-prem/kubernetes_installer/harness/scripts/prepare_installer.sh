@@ -2,7 +2,7 @@
 
 set -e
 
-source utils.sh
+source scripts/utils.sh
 
 yq w -i values.internal.yaml appSecrets.learningEngineSecret $(generateRandomStringOfLength 32)
 yq w -i values.internal.yaml secrets.jwtAuthSecret $(generateRandomStringOfLength 80)
@@ -38,6 +38,9 @@ if [[ $private_docker_repo != "" ]] ; then
     fi
     if [[ $(yq r values.internal.yaml images.nginx) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
         yq w -i values.internal.yaml images.nginx $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.nginx)
+    fi
+    if [[ $(yq r values.internal.yaml images.delegate) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
+        yq w -i values.internal.yaml images.delegate $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.delegate)
     fi
 fi
 

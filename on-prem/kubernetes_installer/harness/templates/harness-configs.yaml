@@ -76,6 +76,7 @@ data:
   VERSION: "5919"
   WATCHER_METADATA_URL: {{ .Values.inframapping.lbUrl }}/storage/wingswatchers/watcherprod.txt
   FEATURES: RBAC,HELM,LDAP_SSO_PROVIDER
+  DELEGATE_DOCKER_IMAGE: {{ .Values.images.delegate }}
 kind: ConfigMap
 metadata:
   labels:
