@@ -59,7 +59,7 @@ public interface AwsCodeDeployService {
    */
   CodeDeployDeploymentInfo deployApplication(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, CreateDeploymentRequest createDeploymentRequest,
-      ExecutionLogCallback executionLogCallback);
+      ExecutionLogCallback executionLogCallback, int timout);
 
   /**
    * Get all the instances from the given codeDeploy deployment group

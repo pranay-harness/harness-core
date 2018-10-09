@@ -120,7 +120,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
   @Override
   public CodeDeployDeploymentInfo deployApplication(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, CreateDeploymentRequest createDeploymentRequest,
-      ExecutionLogCallback executionLogCallback) {
+      ExecutionLogCallback executionLogCallback, int timout) {
     try {
       AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(cloudProviderSetting, encryptedDataDetails);
 
@@ -129,7 +129,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
 
       executionLogCallback.saveExecutionLog(
           format("Deployment started deployment id: [%s]", deploymentResult.getDeploymentId()), LogLevel.INFO);
-      waitForDeploymentToComplete(awsConfig, encryptedDataDetails, region, deploymentResult.getDeploymentId());
+      waitForDeploymentToComplete(awsConfig, encryptedDataDetails, region, deploymentResult.getDeploymentId(), timout);
       DeploymentInfo deploymentInfo =
           awsHelperService
               .getCodeDeployDeployment(awsConfig, encryptedDataDetails, region,
@@ -223,8 +223,8 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
     return instances;
   }
 
-  private void waitForDeploymentToComplete(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String deploymentId) {
+  private void waitForDeploymentToComplete(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String region, String deploymentId, int timeout) {
     try {
       Set<String> finalDeploymentStatus = Sets.newHashSet(Succeeded.name(), Failed.name(), Stopped.name());
       timeLimiter.callWithTimeout(() -> {
@@ -232,7 +232,7 @@ public class AwsCodeDeployServiceImpl implements AwsCodeDeployService {
           sleep(ofSeconds(10));
         }
         return true;
-      }, 10L, TimeUnit.MINUTES, true);
+      }, timeout, TimeUnit.MINUTES, true);
     } catch (UncheckedTimeoutException e) {
       throw new WingsException(INIT_TIMEOUT).addParam("message", "Timed out waiting for deployment to complete");
     } catch (WingsException e) {

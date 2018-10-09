@@ -89,7 +89,7 @@ public class AwsCodeDeployServiceTest extends WingsBaseTest {
                     .withKey("todolist_war/19/codedeploysample.zip")));
     CodeDeployDeploymentInfo codeDeployDeploymentInfo =
         awsCodeDeployService.deployApplication(Regions.US_EAST_1.getName(), cloudProvider, Collections.emptyList(),
-            createDeploymentRequest, new ExecutionLogCallback());
+            createDeploymentRequest, new ExecutionLogCallback(), 10);
     logger.info(codeDeployDeploymentInfo.toString());
   }
 
