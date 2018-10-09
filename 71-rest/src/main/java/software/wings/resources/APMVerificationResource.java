@@ -13,6 +13,7 @@ import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.intfc.analysis.APMVerificationService;
+import software.wings.sm.StateType;
 
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -50,5 +51,16 @@ public class APMVerificationResource {
   public RestResponse<Boolean> sendNotifyForMetricAnalysis(
       @QueryParam("correlationId") String correlationId, MetricDataAnalysisResponse response) {
     return new RestResponse<>(apmVerificationService.sendNotifyForMetricAnalysis(correlationId, response));
+  }
+
+  @POST
+  @Path(VerificationConstants.COLLECT_24_7_DATA)
+  @Timed
+  @LearningEngineAuth
+  public RestResponse<Boolean> collect247CVData(String cvConfigId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime,
+      @QueryParam("lastDataCollectionMin") int lastDatacollectionMin) {
+    return new RestResponse<>(
+        apmVerificationService.collect247Data(cvConfigId, stateType, startTime, endTime, lastDatacollectionMin));
   }
 }
