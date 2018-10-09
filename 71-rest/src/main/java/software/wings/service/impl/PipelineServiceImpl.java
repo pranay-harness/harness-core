@@ -372,20 +372,22 @@ public class PipelineServiceImpl implements PipelineService {
             Map<String, String> resolvedWorkflowVariables = new LinkedHashMap<>();
             if (isNotEmpty(workflowVariables)) {
               for (Entry<String, String> variableEntry : workflowVariables.entrySet()) {
-                String key = variableEntry.getKey();
-                String value = getName(workflowVariables.get(key));
+                String variableName = variableEntry.getKey();
+                String variableValue = getName(workflowVariables.get(variableName));
                 if (isNotEmpty(inputPipelineVariables)) {
-                  if (inputPipelineVariables.containsKey(value)) {
-                    resolvedPipelineVariables.put(key, inputPipelineVariables.get(value));
-                    resolvedWorkflowVariables.put(key, inputPipelineVariables.get(value));
-                    reducedPipelineVariables.remove(value);
-                  } else if (inputPipelineVariables.containsKey(key)) {
-                    resolvedPipelineVariables.put(key, inputPipelineVariables.get(key));
-                    resolvedWorkflowVariables.put(key, inputPipelineVariables.get(key));
-                    reducedPipelineVariables.remove(key);
+                  if (inputPipelineVariables.containsKey(variableValue)) {
+                    resolvedPipelineVariables.put(variableName, inputPipelineVariables.get(variableValue));
+                    resolvedWorkflowVariables.put(variableName, inputPipelineVariables.get(variableValue));
+                    reducedPipelineVariables.remove(variableValue);
+                  } else if (inputPipelineVariables.containsKey(variableName)) {
+                    resolvedPipelineVariables.put(variableName, inputPipelineVariables.get(variableName));
+                    resolvedWorkflowVariables.put(variableName, inputPipelineVariables.get(variableName));
+                    reducedPipelineVariables.remove(variableName);
                   }
                 } else {
-                  resolvedWorkflowVariables.put(key, value);
+                  if (!matchesVariablePattern(variableEntry.getValue())) {
+                    resolvedWorkflowVariables.put(variableName, variableValue);
+                  }
                 }
               }
             }
