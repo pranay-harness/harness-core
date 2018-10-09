@@ -5,12 +5,14 @@ import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
+import software.wings.beans.Application;
 import software.wings.beans.InfrastructureProvisionerType;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInfrastructureProvisioner.Yaml;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.SettingsService;
 
 import java.util.List;
@@ -18,10 +20,13 @@ import java.util.List;
 public class TerraformInfrastructureProvisionerYamlHandler
     extends InfrastructureProvisionerYamlHandler<Yaml, TerraformInfrastructureProvisioner> {
   @Inject SettingsService settingsService;
+  @Inject AppService appService;
 
   protected String getSourceRepoSettingId(String appId, String sourceRepoSettingName) {
+    Application application = appService.get(appId);
+
     SettingAttribute settingAttribute =
-        settingsService.getSettingAttributeByName(SettingAttribute.GLOBAL_APP_ID, sourceRepoSettingName);
+        settingsService.getSettingAttributeByName(application.getAccountId(), sourceRepoSettingName);
     notNullCheck("Invalid Source Repo Setting:" + sourceRepoSettingName, settingAttribute, USER);
     return settingAttribute.getUuid();
   }
