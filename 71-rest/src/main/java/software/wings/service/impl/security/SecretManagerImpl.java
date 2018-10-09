@@ -76,7 +76,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.KmsService;
-import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.settings.RestrictionsAndAppEnvMap;
@@ -113,7 +112,6 @@ public class SecretManagerImpl implements SecretManager {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private KmsService kmsService;
   @Inject private VaultService vaultService;
-  @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private AlertService alertService;
   @Inject private FileService fileService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
