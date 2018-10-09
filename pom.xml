@@ -15,7 +15,7 @@
         <module>11-commons-test</module>
         <module>12-commons</module>
 
-        <module>20-kubectl-wrapper</module>
+        <module>20-k8s-helpers</module>
         <module>20-persistence-test</module>
         <module>21-persistence</module>
 
@@ -1071,6 +1071,13 @@
                 <version>1.8.0</version>
                 <scope>compile</scope>
             </dependency>
+
+            <dependency>
+                <groupId>com.esotericsoftware.yamlbeans</groupId>
+                <artifactId>yamlbeans</artifactId>
+                <version>1.13</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
     <build>
