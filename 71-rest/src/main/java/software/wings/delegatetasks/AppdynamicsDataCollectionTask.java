@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.TaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
@@ -74,6 +75,15 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
   }
 
   @Override
+  protected int getInitialDelayMinutes() {
+    if (this.getTaskType().equals(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name())) {
+      // if it's a 24-7 collection task, we dont want to wait.
+      return 0;
+    }
+    return SplunkDataCollectionTask.DELAY_MINUTES;
+  }
+
+  @Override
   protected StateType getStateType() {
     return StateType.APP_DYNAMICS;
   }
@@ -85,7 +95,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
   @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new AppdynamicsMetricCollector(dataCollectionInfo, taskResult);
+    return new AppdynamicsMetricCollector(dataCollectionInfo, taskResult,
+        this.getTaskType().equals(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name()));
   }
 
   private class AppdynamicsMetricCollector implements Runnable {
@@ -94,9 +105,10 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
     private int dataCollectionMinute;
     private final DataCollectionTaskResult taskResult;
     private AppDynamicsConfig appDynamicsConfig;
+    boolean is247Task;
 
     private AppdynamicsMetricCollector(
-        AppdynamicsDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
+        AppdynamicsDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult, boolean is247Task) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime())
           - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES);
@@ -104,6 +116,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       this.taskResult = taskResult;
       appDynamicsConfig = dataCollectionInfo.getAppDynamicsConfig();
       encryptionService.decrypt(appDynamicsConfig, dataCollectionInfo.getEncryptedDataDetails());
+      this.is247Task = is247Task;
     }
 
     private List<AppdynamicsMetricData> getMetricsData() throws IOException, CloneNotSupportedException {
@@ -128,11 +141,12 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             }
             break;
           case PREDICTIVE:
-            callables.add(
-                ()
-                    -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tier.getName(),
-                        appdynamicsMetric.getName(), null, PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES,
-                        encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+            final int periodToCollect = is247Task ? dataCollectionInfo.getCollectionTime()
+                                                  : PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
+            callables.add(()
+                              -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId,
+                                  tier.getName(), appdynamicsMetric.getName(), null, periodToCollect, encryptionDetails,
+                                  createApiCallLog(dataCollectionInfo.getStateExecutionId())));
             break;
 
           default:
@@ -208,7 +222,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                              .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                              .serviceId(dataCollectionInfo.getServiceId())
                              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                             .dataCollectionMinute(getCollectionMinute(metricTimeStamp))
+                             .dataCollectionMinute(getCollectionMinute(metricTimeStamp, false))
                              .timeStamp(metricTimeStamp)
                              .host(nodeName)
                              .groupName(tierName)
@@ -228,13 +242,31 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       return records;
     }
 
-    private int getCollectionMinute(final long metricTimeStamp) {
-      long collectionStartTime =
-          dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.COMPARATIVE)
+    private int getCollectionMinute(final long metricTimeStamp, boolean isHeartbeat) {
+      boolean isPredictiveAnalysis =
+          dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE);
+      long collectionStartTime = !isPredictiveAnalysis || is247Task
           ? dataCollectionInfo.getStartTime()
           : dataCollectionInfo.getStartTime() - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
 
-      return (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
+      int collectionMinute;
+      if (isHeartbeat) {
+        if (is247Task) {
+          collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
+              + dataCollectionInfo.getCollectionTime();
+        } else if (isPredictiveAnalysis) {
+          collectionMinute = dataCollectionMinute + PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
+        } else {
+          collectionMinute = dataCollectionMinute;
+        }
+      } else {
+        if (is247Task) {
+          collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp);
+        } else {
+          collectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
+        }
+      }
+      return collectionMinute;
     }
 
     @SuppressFBWarnings({"DMI_ARGUMENTS_WRONG_ORDER", "REC_CATCH_EXCEPTION"})
@@ -268,10 +300,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                         .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                         .serviceId(dataCollectionInfo.getServiceId())
                         .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                        .dataCollectionMinute(
-                            dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE)
-                                ? dataCollectionMinute + PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES
-                                : dataCollectionMinute)
+                        .dataCollectionMinute(getCollectionMinute(System.currentTimeMillis(), true))
                         .timeStamp(collectionStartTime)
                         .level(ClusterLevel.H0)
                         .groupName(appdynamicsTier.getName())
@@ -289,7 +318,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
             dataCollectionInfo.setCollectionTime(dataCollectionInfo.getCollectionTime() - 1);
-            if (dataCollectionInfo.getCollectionTime() <= 0) {
+            if (dataCollectionInfo.getCollectionTime() <= 0 || is247Task) {
               // We are done with all data collection, so setting task status to success and quitting.
               logger.info("Completed AppDynamics collection task. So setting task status to success and quitting");
               completed.set(true);

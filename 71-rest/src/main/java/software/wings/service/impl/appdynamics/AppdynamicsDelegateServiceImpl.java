@@ -260,8 +260,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      String tierName, String btName, String hostName, int durantionInMinutes,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      String tierName, String btName, String hostName, int durationInMins, List<EncryptedDataDetail> encryptionDetails,
+      ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
     for (int i = 1; i <= RETRIES; i++) {
       apiCallLog = apiCallLog.copy();
@@ -276,7 +276,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
               .name("url")
               .value(appDynamicsConfig.getControllerUrl() + "/rest/applications/" + appdynamicsAppId
                   + "/metric-data?output=JSON&time-range-type=BEFORE_NOW&rollup=false&duration-in-mins="
-                  + durantionInMinutes + "&metric-path=" + metricPath)
+                  + durationInMins + "&metric-path=" + metricPath)
               .type(FieldType.URL)
               .build());
       apiCallLog.setTitle("Fetching metric data for " + metricPath);
@@ -285,7 +285,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
         Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
             getAppdynamicsRestClient(appDynamicsConfig)
                 .getMetricData(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId,
-                    metricPath, durantionInMinutes);
+                    metricPath, durationInMins);
 
         Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
