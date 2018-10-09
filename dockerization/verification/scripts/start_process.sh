@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 mkdir -p /opt/harness/logs
-touch /opt/harness/logs/portal.log
+touch /opt/harness/logs/verification.log
 
 if [[ -v "{hostname}" ]]; then
    export HOSTNAME=$(hostname)
@@ -29,7 +29,5 @@ fi
 if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_ONPREM" ]]; then
     java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/verification-config.yml
 else
-#    mkdir -p /opt/harness/logs
-#    touch /opt/harness/logs/verification.log
-    java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/verification-config.yml
+    java $JAVA_OPTS -jar $CAPSULE_JAR /opt/harness/verification-config.yml > /opt/harness/logs/verification.log 2>&1
 fi
