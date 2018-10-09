@@ -127,11 +127,15 @@ $(replace "MONGODB_PORT" $mongodb_port)
 proxyPort=$(getProperty "config_template/proxy/proxyconfig.properties" "proxy_port")
 managerport=$(getProperty "config_template/manager/manager.properties" "manager_port")
 uiport=$(getProperty "config_template/ui/ui.properties" "ui_port")
+verificationport=$(getProperty "config_template/verification/verification_service.properties" "verification_port")
 MANAGER1=$host1:$managerport
+VERIFICATION1=$host1:$verificationport
 UI1=$host1:$uiport
 WWW_DIR_LOCATION=$runtime_dir/data/proxy/www
 STORAGE_DIR_LOCATION=$WWW_DIR_LOCATION/data/storage
 PROXY_VERSION=$(getProperty "version.properties" "PROXY_VERSION")
+LOAD_BALANCER_URL=http://$host1:$proxyPort
+MONGO_URI=mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/harness?authSource=admin
 mkdir -p $STORAGE_DIR_LOCATION
 
 
@@ -190,7 +194,7 @@ function seedMongoDB(){
 function setUpProxy(){
     echo "################################Setting up proxy ################################"
 
-    docker run -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www  harness/proxy:$PROXY_VERSION
+    docker run -d --name harness-proxy --rm -p $proxyPort:7143 -e MANAGER1=$MANAGER1 -e VERIFICATION1=$VERIFICATION1 -e UI1=$UI1 -v  $WWW_DIR_LOCATION:/www  harness/proxy:$PROXY_VERSION
     sleep 5
 
     if [[ $(checkDockerImageRunning "harness-proxy") -eq 1 ]]; then
@@ -201,10 +205,8 @@ function setUpProxy(){
 function setupManager(){
     echo "################################Setting up Manager ################################"
 
-    LOAD_BALANCER_URL=http://$host1:$proxyPort
     ALLOWED_ORIGINS=$LOAD_BALANCER_URL
     DELEGATE_METADATA_URL=$LOAD_BALANCER_URL/storage/wingsdelegates/delegateprod.txt
-    MONGO_URI=mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/harness?authSource=admin
     SERVER_PORT=$managerport
     TCP_HOSTS_DETAILS=$host1:$(getProperty "config_template/manager/manager.properties" "HAZELCAST_PORT")
     FEATURES=$(getProperty "config_template/manager/manager.properties" "FEATURES")
@@ -244,6 +246,18 @@ function setupManager(){
  if [[ $(checkDockerImageRunning "harnessManager") -eq 1 ]]; then
       echo "Harness Manager is not running"
  fi
+
+}
+
+function setUpVerificationService(){
+   echo "################################Setting up Verification Service ################################"
+   verificationServiceVersion=$(getProperty "version.properties" "VERIFICATION_SERVICE_VERSION")
+   env=$(getProperty "version.properties" "ENV")
+   docker run -d --rm --name verificationService -e MANAGER_URL=$LOAD_BALANCER_URL/api/ -e MONGO_URI="$MONGO_URI" -e ENV=$env -e VERIFICATION_PORT=$verificationport -v $runtime_dir/verification/logs:/opt/harness/logs harness/verification-service:$verificationServiceVersion
+
+    if [[ $(checkDockerImageRunning "verificationService") -eq 1 ]]; then
+        echo "Verification service is not running"
+    fi
 
 }
 
@@ -301,6 +315,7 @@ function setupDelegateJars(){
 function loadDockerImages(){
     docker load --input images/proxy.tar
     docker load --input images/manager.tar
+    docker load --input images/verification_service.tar
     docker load --input images/ui.tar
     docker load --input images/mongo.tar
     docker load --input images/learning_engine.tar
@@ -317,6 +332,7 @@ function startUp(){
 
     setUpProxy
     setupManager
+    setUpVerificationService
     setupUI
     setUpLearningEngine
     setupDelegateJars

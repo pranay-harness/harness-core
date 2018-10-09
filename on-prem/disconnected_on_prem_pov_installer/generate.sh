@@ -12,11 +12,13 @@ VERSION_PROPERTIES_FILE=version.properties
 
 IMAGES_DIR="${INSTALLER_DIR}/${INSTALLER_TEMPLATE_DIR}/images"
 MANAGER_IMAGE="harness/manager:${MANAGER_VERSION}"
+VERIFICATION_SERVICE_IMAGE="harness/verification-service:${VERIFICATION_SERVICE_VERSION}"
 LEARNING_ENGINE_IMAGE="harness/learning-engine:${LEARNING_ENGINE_VERSION}"
 UI_IMAGE="harness/ui:${UI_VERSION}"
 PROXY_IMAGE="harness/proxy:${PROXY_VERSION}"
 
 MANAGER_IMAGE_TAR="${IMAGES_DIR}/manager.tar"
+VERIFICATION_SERVICE_IMAGE_TAR="${IMAGES_DIR}/verification_service.tar"
 LEARNING_ENGINE_IMAGE_TAR="${IMAGES_DIR}/learning_engine.tar"
 UI_IMAGE_TAR="${IMAGES_DIR}/ui.tar"
 PROXY_IMAGE_TAR="${IMAGES_DIR}/proxy.tar"
@@ -36,6 +38,7 @@ cp README.txt "${INSTALLER_DIR}"
 
 echo "Manager version is ${MANAGER_VERSION}"
 echo "Mongo version is ${MONGO_VERSION}"
+echo "Verification Service version is ${VERIFICATION_SERVICE_VERSION}"
 echo "Delegate version is ${DELEGATE_VERSION}"
 echo "Watcher version is ${WATCHER_VERSION}"
 echo "Proxy version is ${PROXY_VERSION}"
@@ -57,11 +60,13 @@ fi
 
 docker login -u ${DOCKERHUB_USERNAME} -p ${DOCKERHUB_PASSWORD}
 docker pull "${MANAGER_IMAGE}"
+docker pull "${VERIFICATION_SERVICE_IMAGE}"
 docker pull "${LEARNING_ENGINE_IMAGE}"
 docker pull "${UI_IMAGE}"
 docker pull "${PROXY_IMAGE}"
 
 docker save "${MANAGER_IMAGE}" > "${MANAGER_IMAGE_TAR}"
+docker save "${VERIFICATION_SERVICE_IMAGE}" > "${VERIFICATION_SERVICE_IMAGE_TAR}"
 docker save "${LEARNING_ENGINE_IMAGE}" > "${LEARNING_ENGINE_IMAGE_TAR}"
 docker save "${UI_IMAGE}" > "${UI_IMAGE_TAR}"
 docker save "${PROXY_IMAGE}" > "${PROXY_IMAGE_TAR}"
@@ -77,4 +82,4 @@ mv "${JRE_MACOSX}" "${IMAGES_DIR}/"
 mv "${JRE_LINUX}" "${IMAGES_DIR}/"
 
 tar -cvzf "${INSTALLER_COMPRESSED_FILE}" "${INSTALLER_DIR}"
-rm -rf "${INSTALLER_DIR}"
+#rm -rf "${INSTALLER_DIR}"

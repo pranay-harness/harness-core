@@ -37,6 +37,7 @@ function stopContainers(){
    echo "################################Stopping services ################################"
 
     stopDockerContainer "mongoContainer"
+    stopDockerContainer "verificationService"
     stopDockerContainer "harness-proxy"
     stopDockerContainer "harnessManager"
     stopDockerContainer "harness_ui"
