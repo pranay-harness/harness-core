@@ -13,6 +13,8 @@ import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 
+import java.util.List;
+import javax.validation.Valid;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -24,28 +26,37 @@ import javax.ws.rs.QueryParam;
  * 08/Oct/2018
  */
 
-@Api("cv")
-@Path("/cv")
+@Api("cv-configuration")
+@Path("/cv-configuration")
 @Produces("application/json")
-@Scope(ResourceType.SETTING) // <- is this correct? do i need to add anything to PermissionAttribute?
+@Scope(ResourceType.SETTING)
 public class CVConfigurationResource {
   @Inject CVConfigurationService cvConfigurationService;
 
   @GET
-  @Path("/get-configuration")
+  @Path("{serviceConfigurationId}")
   @Timed
   @ExceptionMetered
-  public <T extends CVConfiguration> RestResponse<T> getConfiguration(@QueryParam("accountId") final String accountId,
+  public <T extends CVConfiguration> RestResponse<T> getConfiguration(
+      @QueryParam("accountId") @Valid final String accountId,
       @QueryParam("serviceConfigurationId") String serviceConfigurationId) {
     return new RestResponse<>(cvConfigurationService.getConfiguration(serviceConfigurationId));
   }
 
   @POST
-  @Path("/configure")
   @Timed
   @ExceptionMetered
-  public RestResponse<String> saveCVConfiguration(@QueryParam("accountId") final String accountId,
-      @QueryParam("stateType") StateType stateType, @Body Object params) {
-    return new RestResponse<>(cvConfigurationService.saveConfiguration(stateType, params));
+  public RestResponse<String> saveCVConfiguration(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("appId") @Valid final String appId, @QueryParam("stateType") StateType stateType,
+      @Body Object params) {
+    return new RestResponse<>(cvConfigurationService.saveConfiguration(accountId, appId, stateType, params));
+  }
+
+  @GET
+  @Timed
+  @ExceptionMetered
+  public <T extends CVConfiguration> RestResponse<List<T>> listConfigurations(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("appId") @Valid final String appId) {
+    return new RestResponse<>(cvConfigurationService.listConfigurations(accountId, appId));
   }
 }
