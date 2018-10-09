@@ -66,6 +66,10 @@ public class InstanceSyncTestConstants {
   public static final String INSTANCE_6_ID = "instance6_Id";
   public static final String INSTANCE_7_ID = "instance7_Id";
   public static final String INSTANCE_8_ID = "instance8_Id";
+  public static final String INSTANCE_9_ID = "instance9_Id";
+  public static final String INSTANCE_10_ID = "instance10_Id";
+  public static final String INSTANCE_11_ID = "instance11_Id";
+  public static final String INSTANCE_12_ID = "instance12_Id";
   public static final String SERVICE_NAME = "serviceName";
   public static final String SERVICE_ID = "serviceId";
   public static final String SERVICE_1_ID = "service1_id";

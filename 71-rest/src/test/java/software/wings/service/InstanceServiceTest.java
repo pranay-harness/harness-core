@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
@@ -28,6 +27,7 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;
+import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -43,6 +43,7 @@ public class InstanceServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private Account account;
 
+  @Inject private WingsPersistence wingsPersistence;
   @InjectMocks @Inject private InstanceService instanceService;
 
   private String instanceId = UUIDGenerator.generateUuid();
@@ -148,8 +149,7 @@ public class InstanceServiceTest extends WingsBaseTest {
     Instance instance = buildInstance();
     instanceService.save(instance);
 
-    boolean delete = instanceService.delete(Sets.newHashSet(instanceId));
-    assertTrue(delete);
+    instanceService.delete(Sets.newHashSet(instanceId));
 
     Instance instanceAfterDelete = instanceService.get(instanceId);
     assertNull(instanceAfterDelete);

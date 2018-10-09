@@ -84,8 +84,10 @@ import software.wings.sm.PipelineSummary;
 import software.wings.utils.Validator;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -106,14 +108,19 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private InfrastructureMappingService infraMappingService;
 
   @Override
-  public InstanceSummaryStats getAppInstanceSummaryStats(List<String> appIds, List<String> groupByEntityTypes) {
-    long instanceCount = 0;
-    try {
-      instanceCount = getInstanceCount(getQuery(appIds));
-    } catch (Exception exception) {
-      handleException(exception);
-      return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(instanceCount).build();
+  public InstanceSummaryStats getAppInstanceSummaryStats(
+      List<String> appIds, List<String> groupByEntityTypes, long timestamp) {
+    if (timestamp == 0) {
+      timestamp = System.currentTimeMillis();
     }
+
+    Query<Instance> query = getInstanceQueryAtTime(appIds, timestamp);
+    if (query == null) {
+      logger.error("Error while compiling query for getting app instance summary stats");
+      return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
+    }
+
+    long instanceCount = getInstanceCount(query);
 
     Map<String, List<EntitySummaryStats>> instanceSummaryMap = new HashMap<>();
     for (String groupByEntityType : groupByEntityTypes) {
@@ -123,14 +130,14 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       if (EntityType.SERVICE.name().equals(groupByEntityType)) {
         entityIdColumn = "serviceId";
         entityNameColumn = "serviceName";
-        entitySummaryStatsList = getEntitySummaryStats(appIds, entityIdColumn, entityNameColumn, groupByEntityType);
+        entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
       } else if (EntityType.ENVIRONMENT.name().equals(groupByEntityType)) {
         // TODO: Make UI pass ENVIRONMENT_TYPE instead of ENVIRONMENT since that's what are we are really displaying
-        entitySummaryStatsList = getEnvironmentTypeSummaryStats(appIds);
+        entitySummaryStatsList = getEnvironmentTypeSummaryStats(query);
       } else if (Category.CLOUD_PROVIDER.name().equals(groupByEntityType)) {
         entityIdColumn = "computeProviderId";
         entityNameColumn = "computeProviderName";
-        entitySummaryStatsList = getEntitySummaryStats(appIds, entityIdColumn, entityNameColumn, groupByEntityType);
+        entitySummaryStatsList = getEntitySummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
       } else {
         throw new WingsException("Unsupported groupBy entity type:" + groupByEntityType);
       }
@@ -145,16 +152,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   private List<EntitySummaryStats> getEntitySummaryStats(
-      List<String> appIds, String entityIdColumn, String entityNameColumn, String groupByEntityType) {
+      String entityIdColumn, String entityNameColumn, String groupByEntityType, Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
-    Query<Instance> query;
-    try {
-      query = getQuery(appIds);
-    } catch (Exception exception) {
-      handleException(exception);
-      return Lists.newArrayList();
-    }
-
     wingsPersistence.getDatastore()
         .createAggregation(Instance.class)
         .match(query)
@@ -178,20 +177,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .match(query)
         .group("_id", grouping("count", accumulator("$sum", 1)))
         .aggregate(InstanceCount.class)
-        .forEachRemaining(instanceCount -> { totalCount.addAndGet(instanceCount.getCount()); });
+        .forEachRemaining(instanceCount -> totalCount.addAndGet(instanceCount.getCount()));
     return totalCount.get();
   }
 
   private List<EntitySummaryStats> getServiceSummaryStats(
-      String serviceId, String entityIdColumn, String entityNameColumn, String groupByEntityType) {
+      String entityIdColumn, String entityNameColumn, String groupByEntityType, Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
-    Query<Instance> query = null;
-    try {
-      query = getQuery(null).filter("serviceId", serviceId);
-    } catch (Exception exception) {
-      handleException(exception);
-      return Lists.newArrayList();
-    }
     wingsPersistence.getDatastore()
         .createAggregation(Instance.class)
         .match(query)
@@ -208,15 +200,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return entitySummaryStatsList;
   }
 
-  private List<EntitySummaryStats> getEnvironmentTypeSummaryStats(List<String> appIds) {
+  private List<EntitySummaryStats> getEnvironmentTypeSummaryStats(Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = Lists.newArrayList();
-    Query<Instance> query;
-    try {
-      query = getQuery(appIds);
-    } catch (Exception exception) {
-      handleException(exception);
-      return Lists.newArrayList();
-    }
     wingsPersistence.getDatastore()
         .createAggregation(Instance.class)
         .match(query)
@@ -251,14 +236,18 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public InstanceSummaryStats getServiceInstanceSummaryStats(String serviceId, List<String> groupByEntityTypes) {
-    Query<Instance> query;
-    try {
-      query = getQuery(null).filter("serviceId", serviceId);
-    } catch (Exception exception) {
-      handleException(exception);
+  public InstanceSummaryStats getServiceInstanceSummaryStats(
+      String serviceId, List<String> groupByEntityTypes, long timestamp) {
+    if (timestamp == 0) {
+      timestamp = System.currentTimeMillis();
+    }
+
+    Query<Instance> query = getInstanceQueryAtTime(null, timestamp);
+    if (query == null) {
+      logger.error("Error while compiling query for getting app instance summary stats");
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     }
+    query.filter("serviceId", serviceId);
 
     long instanceCount = getInstanceCount(query);
     Map<String, List<EntitySummaryStats>> instanceSummaryMap = new HashMap<>();
@@ -279,7 +268,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         throw new WingsException("Unsupported groupBy entity type:" + groupByEntityType);
       }
 
-      entitySummaryStatsList = getServiceSummaryStats(serviceId, entityIdColumn, entityNameColumn, groupByEntityType);
+      entitySummaryStatsList = getServiceSummaryStats(entityIdColumn, entityNameColumn, groupByEntityType, query);
       instanceSummaryMap.put(groupByEntityType, entitySummaryStatsList);
     }
 
@@ -308,13 +297,31 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public List<InstanceStatsByService> getAppInstanceStats(List<String> appIds) {
-    Query<Instance> query;
-    try {
-      query = getQuery(appIds);
-    } catch (Exception exception) {
-      handleException(exception);
-      return Lists.newArrayList();
+  public Set<Instance> getAppInstancesForAccount(String accountId, long timestamp) {
+    if (timestamp == 0) {
+      timestamp = System.currentTimeMillis();
+    }
+
+    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    query.field("createdAt").lessThanOrEq(timestamp);
+
+    query.and(
+        query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+
+    List<Instance> instanceList = query.asList();
+    return new HashSet<>(instanceList);
+  }
+
+  @Override
+  public List<InstanceStatsByService> getAppInstanceStatsByService(List<String> appIds, long timestamp) {
+    if (timestamp == 0) {
+      timestamp = System.currentTimeMillis();
+    }
+
+    Query<Instance> query = getInstanceQueryAtTime(appIds, timestamp);
+    if (query == null) {
+      logger.error("Error while compiling query for instance stats by service");
+      return Collections.emptyList();
     }
 
     List<AggregationInfo> instanceInfoList = new ArrayList<>();
@@ -343,6 +350,22 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         });
 
     return constructInstanceStatsByService(instanceInfoList);
+  }
+
+  private Query<Instance> getInstanceQueryAtTime(List<String> appIds, long timestamp) {
+    Query<Instance> query;
+    try {
+      query = getInstanceQuery(appIds, true);
+      query.field("createdAt").lessThanOrEq(timestamp);
+
+      query.and(
+          query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+
+    } catch (Exception exception) {
+      handleException(exception);
+      return null;
+    }
+    return query;
   }
 
   private List<InstanceStatsByService> constructInstanceStatsByService(List<AggregationInfo> aggregationInfoList) {
@@ -498,7 +521,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<CurrentActiveInstances> getCurrentActiveInstances(String appId, String serviceId) {
     Query<Instance> query;
     try {
-      query = getQuery(null).filter("serviceId", serviceId);
+      query = getInstanceQuery(null, false).filter("serviceId", serviceId);
     } catch (Exception exception) {
       handleException(exception);
       return Lists.newArrayList();
@@ -738,8 +761,11 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return builder.type(ARTIFACT.name()).id(id).name(name).build();
   }
 
-  private Query<Instance> getQuery(List<String> appIds) throws HarnessException {
+  private Query<Instance> getInstanceQuery(List<String> appIds, boolean includeDeleted) throws HarnessException {
     Query query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    if (!includeDeleted) {
+      query.filter("isDeleted", false);
+    }
     if (isNotEmpty(appIds)) {
       query.field("appId").in(appIds);
     } else {
