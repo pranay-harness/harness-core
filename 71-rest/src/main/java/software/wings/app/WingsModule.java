@@ -183,6 +183,7 @@ import software.wings.service.impl.security.VaultServiceImpl;
 import software.wings.service.impl.splunk.SplunkAnalysisServiceImpl;
 import software.wings.service.impl.sumo.SumoLogicAnalysisServiceImpl;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
+import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.EntityUpdateServiceImpl;
@@ -305,6 +306,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.splunk.SplunkAnalysisService;
 import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -523,6 +525,7 @@ public class WingsModule extends DependencyModule {
 
     bind(APMVerificationService.class).to(APMVerificationServiceImpl.class);
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
+    bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
   }
 
   @Override
