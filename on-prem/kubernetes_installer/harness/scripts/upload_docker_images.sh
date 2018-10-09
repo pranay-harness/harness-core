@@ -2,17 +2,8 @@
 
 set -e
 
-source scripts/utils.sh
-
-echo "Fetching kubernetes cluster information..."
-K8S_CLUSTER_NAMESPACE=$(yq r values.yaml kubernetesClusterNamespace)
-echo "Kubernetes cluster namespace: $K8S_CLUSTER_NAMESPACE"
-kubectl cluster-info
-echo "Above kubernetes cluster and namespace will be used for harness installation"
-confirm
-
-[ ! -e values.internal.yaml ] || rm values.internal.yaml
-cp values.yaml values.internal.yaml
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${SCRIPT_DIR}/utils.sh
 
 docker_registry_username=$(yq r values.internal.yaml privatedockerrepo.docker_registry_username)
 docker_registry_password=$(yq r values.internal.yaml privatedockerrepo.docker_registry_password)
