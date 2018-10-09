@@ -32,6 +32,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
@@ -73,7 +74,13 @@ public class ArtifactCollectionState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     ArtifactStream artifactStream = artifactStreamService.get(context.getAppId(), artifactStreamId);
-    notNullCheck("ArtifactStream", artifactStream);
+    if (artifactStream == null) {
+      logger.info("Artifact Stream {} might have been deleted", artifactStreamId);
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.FAILED)
+          .withErrorMessage("Artifact source might have been deleted. Please update with the right artifact source.")
+          .build();
+    }
 
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
     ArtifactCollectionExecutionData artifactCollectionExecutionData =

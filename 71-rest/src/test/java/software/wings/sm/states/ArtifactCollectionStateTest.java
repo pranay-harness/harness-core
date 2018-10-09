@@ -49,6 +49,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
@@ -121,6 +122,15 @@ public class ArtifactCollectionStateTest {
              APP_ID, ARTIFACT_STREAM_ID, ARTIFACT_SOURCE_NAME))
         .thenReturn(anArtifact().withAppId(APP_ID).withStatus(Status.APPROVED).build());
     when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
+  }
+
+  @Test
+  public void shouldFailOnNoArtifactStream() {
+    when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(null);
+    ExecutionResponse executionResponse = artifactCollectionState.execute(executionContext);
+    assertThat(executionResponse).isNotNull();
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
+    verify(artifactStreamService).get(APP_ID, ARTIFACT_STREAM_ID);
   }
 
   @Test
