@@ -15,6 +15,7 @@ import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.intfc.analysis.APMVerificationService;
 import software.wings.sm.StateType;
 
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -53,13 +54,13 @@ public class APMVerificationResource {
     return new RestResponse<>(apmVerificationService.sendNotifyForMetricAnalysis(correlationId, response));
   }
 
-  @POST
+  @GET
   @Path(VerificationConstants.COLLECT_24_7_DATA)
   @Timed
   @LearningEngineAuth
-  public RestResponse<Boolean> collect247CVData(String cvConfigId, @QueryParam("stateType") StateType stateType,
-      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime,
-      @QueryParam("lastDataCollectionMin") int lastDatacollectionMin) {
+  public RestResponse<Boolean> collect247CVData(@QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("stateType") StateType stateType, @QueryParam("startTime") long startTime,
+      @QueryParam("endTime") long endTime, @QueryParam("lastDataCollectionMin") int lastDatacollectionMin) {
     return new RestResponse<>(
         apmVerificationService.collect247Data(cvConfigId, stateType, startTime, endTime, lastDatacollectionMin));
   }

@@ -89,4 +89,6 @@ public interface TimeSeriesAnalysisService {
 
   void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId,
       Map<String, TimeSeriesMetricDefinition> metricTemplates);
+
+  int getMaxCVCollectionMinute(String appId, String cvConfigId);
 }

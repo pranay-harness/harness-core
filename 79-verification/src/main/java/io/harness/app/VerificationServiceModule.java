@@ -7,10 +7,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
 import io.harness.security.NoOpSecretManagerImpl;
+import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
 import io.harness.service.LogAnalysisServiceImpl;
 import io.harness.service.TimeSeriesAnalysisServiceImpl;
 import io.harness.service.VerificationMigrationServiceImpl;
+import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
@@ -20,8 +22,10 @@ import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.service.intfc.verification.CVConfigurationService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -61,6 +65,8 @@ public class VerificationServiceModule extends AbstractModule {
     bind(TimeLimiter.class).toInstance(new SimpleTimeLimiter());
     bind(TimeSeriesAnalysisService.class).to(TimeSeriesAnalysisServiceImpl.class);
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
+    bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
+    bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("verificationServiceExecutor"))

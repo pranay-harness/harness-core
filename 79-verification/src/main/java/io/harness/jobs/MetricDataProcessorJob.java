@@ -1,14 +1,16 @@
 package io.harness.jobs;
 
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+
+import io.harness.service.intfc.ContinuousVerificationService;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.scheduler.QuartzScheduler;
 
 /**
  *  Handles scheduling jobs related to APM
@@ -16,12 +18,16 @@ import software.wings.scheduler.QuartzScheduler;
  */
 public class MetricDataProcessorJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(MetricDataProcessorJob.class);
-
   public static final String METRIC_DATA_PROCESSOR_CRON_GROUP = "METRIC_DATA_PROCESSOR_CRON_GROUP";
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+
+  @Inject private ContinuousVerificationService continuousVerificationService;
+
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
-    logger.info("Executing APM Data Processor Job");
-    logger.info("Completed APM Data Processor Job");
+    final String accountId = jobExecutionContext.getMergedJobDataMap().getString("accountId");
+    Preconditions.checkState(isNotEmpty(accountId), "account Id not found for " + jobExecutionContext);
+
+    logger.info("Executing APM Data Processor Job for {}", accountId);
+    continuousVerificationService.triggerDataCollection(accountId);
   }
 }

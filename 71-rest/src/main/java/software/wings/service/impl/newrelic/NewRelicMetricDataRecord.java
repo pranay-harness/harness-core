@@ -53,6 +53,8 @@ public class NewRelicMetricDataRecord extends Base {
 
   @Indexed private String serviceId;
 
+  @Indexed private String cvConfigId;
+
   @Indexed private String stateExecutionId;
 
   @NotEmpty @Indexed private long timeStamp;
@@ -73,15 +75,16 @@ public class NewRelicMetricDataRecord extends Base {
   @Builder
   public NewRelicMetricDataRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
-      String name, String workflowId, String workflowExecutionId, String serviceId, String stateExecutionId,
-      long timeStamp, int dataCollectionMinute, String host, ClusterLevel level, String tag, String groupName,
-      Map<String, Double> values) {
+      String name, String workflowId, String workflowExecutionId, String serviceId, String cvConfigId,
+      String stateExecutionId, long timeStamp, int dataCollectionMinute, String host, ClusterLevel level, String tag,
+      String groupName, Map<String, Double> values) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.stateType = stateType;
     this.name = name;
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;
     this.serviceId = serviceId;
+    this.cvConfigId = cvConfigId;
     this.stateExecutionId = stateExecutionId;
     this.timeStamp = timeStamp;
     this.dataCollectionMinute = dataCollectionMinute;
