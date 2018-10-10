@@ -29,6 +29,7 @@ import io.harness.jobs.LogAnalysisManagerJob.LogAnalysisTask;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.apache.http.HttpStatus;
@@ -906,6 +907,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = {"sriram@harness.io", "raghu@harness.io"}, intermittent = true)
   public void withControlAndTest() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();
