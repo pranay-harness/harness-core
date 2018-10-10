@@ -1040,7 +1040,7 @@ public class TriggerServiceImpl implements TriggerService {
   private Artifact fetchMatchedArtifact(Trigger trigger, ArtifactSelection artifactSelection, String buildNumber) {
     Artifact artifact;
     ArtifactStream artifactStream = validateArtifactStream(trigger.getAppId(), artifactSelection.getArtifactStreamId());
-    notNullCheck("Artifact stream was deleted", artifactStream, USER_ADMIN);
+    notNullCheck("Artifact stream was deleted", artifactStream, USER);
     artifact = artifactService.getArtifactByBuildNumber(trigger.getAppId(), artifactSelection.getArtifactStreamId(),
         artifactStream.getSourceName(), buildNumber, artifactSelection.isRegex());
     return artifact;
@@ -1095,16 +1095,19 @@ public class TriggerServiceImpl implements TriggerService {
       Trigger trigger, List<Artifact> artifacts, ArtifactSelection artifactSelection, String buildNumber) {
     // Initiate the artifact collection. Right now, it is sync call. If changed to async
     artifactCollectionService.collectNewArtifacts(trigger.getAppId(), artifactSelection.getArtifactStreamId());
-
     Artifact artifact = fetchMatchedArtifact(trigger, artifactSelection, buildNumber);
     if (artifact != null) {
       artifacts.add(artifact);
       logger.info("Artifact collected for the build number {} of stream id {}", buildNumber,
           artifactSelection.getArtifactStreamId());
     } else {
-      logger.warn(
+      logger.info(
           "Artifact collection invoked. However, Artifact not yet collected for the build number {} of stream id {}",
           buildNumber, artifactSelection.getArtifactStreamId());
+      throw new WingsException("Artifact [" + buildNumber + "] does not exist for the artifact source + ["
+              + artifactSelection.getArtifactSourceName()
+              + "]. Please make sure artifact exists in the artifact server",
+          USER);
     }
   }
 }
