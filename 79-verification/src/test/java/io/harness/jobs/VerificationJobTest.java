@@ -45,7 +45,7 @@ public class VerificationJobTest extends VerificationBaseTest {
     List<Account> accounts = new ArrayList<>();
     accounts.add(account);
     job.setQuartzScheduler(jobScheduler);
-    job.triggerDataProcessorCron(accounts, jobExecutionContext);
+    job.triggerDataProcessorCron(accounts);
 
     // Will be called twice 1 for each APM and log
     verify(jobScheduler, times(2)).scheduleJob(any(JobDetail.class), any(Trigger.class));

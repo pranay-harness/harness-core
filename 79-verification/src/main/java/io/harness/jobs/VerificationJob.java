@@ -1,6 +1,8 @@
 package io.harness.jobs;
 
 import static io.harness.app.VerificationServiceApplication.CRON_POLL_INTERVAL;
+import static io.harness.jobs.LogDataProcessorJob.LOG_DATA_PROCESSOR_CRON_GROUP;
+import static io.harness.jobs.MetricDataProcessorJob.METRIC_DATA_PROCESSOR_CRON_GROUP;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
@@ -85,7 +87,7 @@ public class VerificationJob implements Job {
       deleteCrons(accounts);
 
       // schedule APM and log cron's
-      triggerDataProcessorCron(enabledAccounts, JobExecutionContext);
+      triggerDataProcessorCron(enabledAccounts);
       logger.info("Completed scheduling APM and Log processing jobs");
       offSet = offSet + PageRequest.DEFAULT_PAGE_SIZE;
     } while (accounts.size() >= PageRequest.DEFAULT_PAGE_SIZE);
@@ -113,28 +115,35 @@ public class VerificationJob implements Job {
     }
   }
 
-  public void triggerDataProcessorCron(List<Account> enabledAccounts, JobExecutionContext jobExecutionContext) {
+  public void triggerDataProcessorCron(List<Account> enabledAccounts) {
     logger.info("Triggering crons for " + enabledAccounts.size() + " enabled accounts");
     enabledAccounts.forEach(account -> {
       if (verificationManagerClientHelper
               .callManagerWithRetry(verificationManagerClient.isFeatureEnabled(FeatureName.CV_24X7, account.getUuid()))
               .getResource()) {
-        scheduleAPMDataProcessorCronJob(account.getUuid(), jobExecutionContext);
-        scheduleLogDataProcessorCronJob(account.getUuid(), jobExecutionContext);
+        scheduleAPMDataProcessorCronJob(account.getUuid());
+        scheduleLogDataProcessorCronJob(account.getUuid());
       }
     });
   }
 
-  private void scheduleAPMDataProcessorCronJob(String accountId, JobExecutionContext jobExecutionContext) {
+  private void scheduleAPMDataProcessorCronJob(String accountId) {
+    if (jobScheduler.checkExists(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)) {
+      return;
+    }
     Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(1));
-    JobDetail job =
-        JobBuilder.newJob(MetricDataProcessorJob.class).usingJobData("timestamp", System.currentTimeMillis()).build();
+    JobDetail job = JobBuilder.newJob(MetricDataProcessorJob.class)
+                        .withIdentity(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)
+                        .usingJobData("timestamp", System.currentTimeMillis())
+                        .usingJobData("accountId", accountId)
+                        .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(accountId, MetricDataProcessorJob.METRIC_DATA_PROCESSOR_CRON_GROUP)
+                          .withIdentity(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                             .withIntervalInSeconds(CRON_POLL_INTERVAL / 2)
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
+                                            .withMisfireHandlingInstructionNowWithExistingCount()
+                                            .repeatForever())
                           .startAt(startDate)
                           .build();
 
@@ -142,16 +151,23 @@ public class VerificationJob implements Job {
     logger.info("Scheduled APM data collection Cron Job for Account : {}, with details : {}", accountId, job);
   }
 
-  private void scheduleLogDataProcessorCronJob(String accountId, JobExecutionContext jobExecutionContext) {
+  private void scheduleLogDataProcessorCronJob(String accountId) {
+    if (jobScheduler.checkExists(accountId, LOG_DATA_PROCESSOR_CRON_GROUP)) {
+      return;
+    }
     Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(1));
-    JobDetail job =
-        JobBuilder.newJob(LogDataProcessorJob.class).usingJobData("timestamp", System.currentTimeMillis()).build();
+    JobDetail job = JobBuilder.newJob(LogDataProcessorJob.class)
+                        .withIdentity(accountId, LOG_DATA_PROCESSOR_CRON_GROUP)
+                        .usingJobData("timestamp", System.currentTimeMillis())
+                        .usingJobData("accountId", accountId)
+                        .build();
 
     Trigger trigger = TriggerBuilder.newTrigger()
-                          .withIdentity(accountId, LogDataProcessorJob.LOG_DATA_PROCESSOR_CRON_GROUP)
+                          .withIdentity(accountId, LOG_DATA_PROCESSOR_CRON_GROUP)
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
                                             .withIntervalInSeconds(CRON_POLL_INTERVAL / 2)
-                                            .withMisfireHandlingInstructionNowWithExistingCount())
+                                            .withMisfireHandlingInstructionNowWithExistingCount()
+                                            .repeatForever())
                           .startAt(startDate)
                           .build();
 
@@ -162,12 +178,12 @@ public class VerificationJob implements Job {
   public void deleteCrons(List<Account> disabledAccounts) {
     logger.info("Deleting crons for " + disabledAccounts.size() + " accounts");
     disabledAccounts.forEach(account -> {
-      if (jobScheduler.checkExists(account.getUuid(), MetricDataProcessorJob.METRIC_DATA_PROCESSOR_CRON_GROUP)) {
-        jobScheduler.deleteJob(account.getUuid(), MetricDataProcessorJob.METRIC_DATA_PROCESSOR_CRON_GROUP);
+      if (jobScheduler.checkExists(account.getUuid(), METRIC_DATA_PROCESSOR_CRON_GROUP)) {
+        jobScheduler.deleteJob(account.getUuid(), METRIC_DATA_PROCESSOR_CRON_GROUP);
       }
 
-      if (jobScheduler.checkExists(account.getUuid(), LogDataProcessorJob.LOG_DATA_PROCESSOR_CRON_GROUP)) {
-        jobScheduler.deleteJob(account.getUuid(), LogDataProcessorJob.LOG_DATA_PROCESSOR_CRON_GROUP);
+      if (jobScheduler.checkExists(account.getUuid(), LOG_DATA_PROCESSOR_CRON_GROUP)) {
+        jobScheduler.deleteJob(account.getUuid(), LOG_DATA_PROCESSOR_CRON_GROUP);
       }
     });
   }

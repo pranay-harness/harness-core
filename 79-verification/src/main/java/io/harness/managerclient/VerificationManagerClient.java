@@ -18,6 +18,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.service.impl.analysis.LogAnalysisResponse;
+import software.wings.sm.StateType;
 
 import java.util.List;
 import java.util.Map;
@@ -55,4 +56,9 @@ public interface VerificationManagerClient {
   @GET("account/feature-flag-enabled")
   Call<RestResponse<Boolean>> isFeatureEnabled(
       @Query("featureName") FeatureName featureName, @Query("accountId") String accountId);
+
+  @GET("apm" + VerificationConstants.COLLECT_24_7_DATA)
+  Call<RestResponse<Boolean>> triggerAPMDataCollection(@Query("cvConfigId") String cvConfigId,
+      @Query("stateType") StateType stateType, @Query("startTime") long startTime, @Query("endTime") long endTime,
+      @Query("lastDataCollectionMin") int lastDatacollectionMin);
 }

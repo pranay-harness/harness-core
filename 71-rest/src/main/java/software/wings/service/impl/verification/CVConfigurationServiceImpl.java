@@ -45,4 +45,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         .filter("appId", appId)
         .asList();
   }
+
+  @Override
+  public <T extends CVConfiguration> List<T> listConfigurations(String accountId) {
+    return (List<T>) wingsPersistence.createQuery(CVConfiguration.class).filter("accountId", accountId).asList();
+  }
 }

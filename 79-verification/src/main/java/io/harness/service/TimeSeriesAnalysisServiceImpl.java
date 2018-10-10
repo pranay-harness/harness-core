@@ -731,4 +731,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     metricTemplate.setAppId(appId);
     wingsPersistence.save(metricTemplate);
   }
+
+  @Override
+  public int getMaxCVCollectionMinute(String appId, String cvConfigId) {
+    NewRelicMetricDataRecord newRelicMetricDataRecord = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
+                                                            .filter("appId", appId)
+                                                            .filter("cvConfigId", cvConfigId)
+                                                            .order("-dataCollectionMinute")
+                                                            .get();
+
+    return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
+  }
 }
