@@ -19,6 +19,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
 public class CVConfiguration extends Base {
+  @NotNull private String name;
   @NotNull private String accountId;
   @NotNull private String connectorId;
   @NotNull private String envId;

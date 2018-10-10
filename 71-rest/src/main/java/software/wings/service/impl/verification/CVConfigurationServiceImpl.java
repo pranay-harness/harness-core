@@ -3,8 +3,12 @@ package software.wings.service.impl.verification;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import org.mongodb.morphia.query.UpdateOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.verification.NewRelicCVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
@@ -18,7 +22,10 @@ import java.util.List;
  */
 
 public class CVConfigurationServiceImpl implements CVConfigurationService {
+  private static final Logger logger = LoggerFactory.getLogger(CVConfigurationServiceImpl.class);
+
   @Inject WingsPersistence wingsPersistence;
+  @Inject NewRelicCVConfigurationService newRelicCVConfigurationService;
 
   public String saveConfiguration(String accountId, String appId, StateType stateType, Object params) {
     switch (stateType) {
@@ -30,7 +37,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         obj.setStateType(stateType);
         return wingsPersistence.save(obj);
       default:
-        throw new WingsException("No matching state type found");
+        throw new WingsException("No matching state type found - " + stateType)
+            .addParam("accountId", accountId)
+            .addParam("appId", appId)
+            .addParam("stateType", String.valueOf(stateType));
     }
   }
 
@@ -44,6 +54,37 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         .filter("accountId", accountId)
         .filter("appId", appId)
         .asList();
+  }
+
+  public String updateConfiguration(
+      String accountId, String appId, StateType stateType, Object params, String serviceConfigurationId) {
+    logger.info("Updating CV service configuration id " + serviceConfigurationId);
+    switch (stateType) {
+      case NEW_RELIC:
+        NewRelicCVServiceConfiguration savedConfiguration =
+            (NewRelicCVServiceConfiguration) wingsPersistence.get(CVConfiguration.class, appId, serviceConfigurationId);
+        NewRelicCVServiceConfiguration obj =
+            JsonUtils.asObject(JsonUtils.asJson(params), NewRelicCVServiceConfiguration.class);
+        UpdateOperations<CVConfiguration> updateOperations = newRelicCVConfigurationService.getUpdateOperations(obj);
+        wingsPersistence.update(savedConfiguration, updateOperations);
+        return savedConfiguration.getUuid();
+      default:
+        throw new WingsException("No matching state type found - " + stateType)
+            .addParam("accountId", accountId)
+            .addParam("appId", appId)
+            .addParam("serviceConfigurationId", serviceConfigurationId)
+            .addParam("stateType", String.valueOf(stateType));
+    }
+  }
+
+  public boolean deleteConfiguration(String accountId, String appId, String serviceConfigurationId) {
+    Object savedConfig;
+    savedConfig = wingsPersistence.get(CVConfiguration.class, serviceConfigurationId);
+    if (savedConfig == null) {
+      return false;
+    }
+    wingsPersistence.delete(CVConfiguration.class, serviceConfigurationId);
+    return true;
   }
 
   @Override
