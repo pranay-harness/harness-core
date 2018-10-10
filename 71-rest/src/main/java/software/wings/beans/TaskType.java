@@ -49,7 +49,7 @@ import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.helm.HelmCommandTask;
 import software.wings.delegatetasks.pcf.PcfCommandTask;
 import software.wings.delegatetasks.validation.APMValidation;
-import software.wings.delegatetasks.validation.AlwaysTrueValidation;
+import software.wings.delegatetasks.validation.AcrValidation;
 import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.AwsConnectionValidation;
@@ -122,10 +122,10 @@ public enum TaskType {
   GCR_GET_BUILDS(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
   GCR_VALIDATE_ARTIFACT_STREAM(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
   GCR_GET_PLANS(TaskGroup.GCR, ServiceImplDelegateTask.class, GcrValidation.class),
-  ACR_GET_BUILDS(TaskGroup.ACR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  ACR_VALIDATE_ARTIFACT_STREAM(TaskGroup.ACR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  ACR_GET_PLANS(TaskGroup.ACR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
-  ACR_GET_ARTIFACT_PATHS(TaskGroup.ACR, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  ACR_GET_BUILDS(TaskGroup.ACR, ServiceImplDelegateTask.class, AcrValidation.class),
+  ACR_VALIDATE_ARTIFACT_STREAM(TaskGroup.ACR, ServiceImplDelegateTask.class, AcrValidation.class),
+  ACR_GET_PLANS(TaskGroup.ACR, ServiceImplDelegateTask.class, AcrValidation.class),
+  ACR_GET_ARTIFACT_PATHS(TaskGroup.ACR, ServiceImplDelegateTask.class, AcrValidation.class),
   NEXUS_GET_JOBS(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
   NEXUS_GET_PLANS(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
   NEXUS_GET_ARTIFACT_PATHS(TaskGroup.NEXUS, ServiceImplDelegateTask.class, NexusValidation.class),
