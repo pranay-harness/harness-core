@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import static software.wings.beans.ManagerConfiguration.Builder.aManagerConfiguration;
 
 import io.harness.persistence.HQuery;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import org.junit.After;
@@ -63,6 +64,7 @@ public class ConfigurationControllerTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "puneet.saraswat@harness.io", intermittent = true)
   public void primaryIsNotSet() {
     when(query.get()).thenReturn(aManagerConfiguration().withPrimaryVersion("2.0.0").build());
     assertEventually(10000, () -> assertThat(configurationController.isPrimary()).isFalse());
