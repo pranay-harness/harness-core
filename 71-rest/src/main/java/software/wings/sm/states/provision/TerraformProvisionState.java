@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformExecutionData;
+import software.wings.api.TerraformOutputInfoElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
@@ -62,6 +63,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -181,10 +183,21 @@ public abstract class TerraformProvisionState extends State {
                    .build();
     }
 
+    TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
+    if (outputInfoElement == null) {
+      outputInfoElement = TerraformOutputInfoElement.builder().build();
+    }
     if (terraformExecutionData.getExecutionStatus() == SUCCESS && terraformExecutionData.getOutputs() != null) {
       fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
           terraformExecutionData.getStateFileId(), others, FileBucket.TERRAFORM_STATE);
       Map<String, Object> outputs = parseOutputs(terraformExecutionData.getOutputs());
+      Map<String, Object> contextOutputs = new HashMap<>();
+      for (Map.Entry<String, Object> entry : outputs.entrySet()) {
+        if (!(entry.getValue() instanceof List || entry.getValue() instanceof Map)) {
+          contextOutputs.put(entry.getKey(), entry.getValue());
+        }
+      }
+      outputInfoElement.addOutPuts(contextOutputs);
       infrastructureProvisionerService.regenerateInfrastructureMappings(provisionerId, context, outputs);
     }
 
@@ -193,6 +206,8 @@ public abstract class TerraformProvisionState extends State {
     // subsequent execution
     return anExecutionResponse()
         .withStateExecutionData(terraformExecutionData)
+        .addContextElement(outputInfoElement)
+        .addNotifyElement(outputInfoElement)
         .withExecutionStatus(terraformExecutionData.getExecutionStatus())
         .withErrorMessage(terraformExecutionData.getErrorMessage())
         .build();
