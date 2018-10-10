@@ -15,6 +15,7 @@ import com.google.inject.Singleton;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
@@ -51,6 +52,7 @@ import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.RestrictionsAndAppEnvMap.RestrictionsAndAppEnvMapBuilder;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
+import software.wings.utils.JsonUtils;
 
 import java.util.HashSet;
 import java.util.List;
@@ -614,6 +616,19 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
     return appEnvRestrictions.stream().anyMatch(appEnvRestriction
         -> appEnvRestriction.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.ALL));
+  }
+
+  @Override
+  public UsageRestrictions getUsageRestrictionsFromJson(String usageRestrictionsString) {
+    // TODO use a bean param instead. It wasn't working for some reason.
+    if (EmptyPredicate.isNotEmpty(usageRestrictionsString)) {
+      try {
+        return JsonUtils.asObject(usageRestrictionsString, UsageRestrictions.class);
+      } catch (Exception ex) {
+        throw new WingsException("Invalid usage restrictions", ex);
+      }
+    }
+    return null;
   }
 
   @Override

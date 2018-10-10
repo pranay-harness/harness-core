@@ -34,9 +34,11 @@ import software.wings.beans.ValidationResult;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -65,6 +67,7 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class SettingResource {
   @Inject private SettingsService settingsService;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private SecretManager secretManager;
 
   /**
@@ -174,7 +177,8 @@ public class SettingResource {
   public RestResponse<SettingAttribute> saveUpload(@DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId,
       @QueryParam("accountId") String accountId, @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
+      @FormDataParam("file") FormDataContentDisposition fileDetail,
+      @FormDataParam("usageRestrictions") final String usageRestrictionsString) throws IOException {
     if (uploadedInputStream == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Missing file.");
     }
@@ -191,6 +195,10 @@ public class SettingResource {
         ((EncryptableSetting) value).setAccountId(accountId);
       }
     }
+
+    UsageRestrictions usageRestrictionsFromJson =
+        usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
+
     return new RestResponse<>(
         settingsService.save(aSettingAttribute()
                                  .withAccountId(accountId)
@@ -198,6 +206,7 @@ public class SettingResource {
                                  .withName(name)
                                  .withValue(value)
                                  .withCategory(Category.getCategory(SettingVariableTypes.valueOf(value.getType())))
+                                 .withUsageRestrictions(usageRestrictionsFromJson)
                                  .build()));
   }
 
@@ -258,7 +267,8 @@ public class SettingResource {
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       @FormDataParam("type") String type, @FormDataParam("name") String name,
       @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail) throws IOException {
+      @FormDataParam("file") FormDataContentDisposition fileDetail,
+      @FormDataParam("usageRestrictions") final String usageRestrictionsString) throws IOException {
     char[] credentials = IOUtils.toString(uploadedInputStream, Charset.defaultCharset()).toCharArray();
     SettingValue value = null;
     if (GCP.name().equals(type)) {
@@ -268,9 +278,18 @@ public class SettingResource {
         value = GcpConfig.builder().serviceAccountKeyFileContent(ENCRYPTED_FIELD_MASK).build();
       }
     }
+
+    UsageRestrictions usageRestrictionsFromJson =
+        usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
+
     SettingAttribute.Builder settingAttribute =
-        aSettingAttribute().withUuid(attrId).withName(name).withAccountId(accountId).withAppId(appId).withCategory(
-            Category.getCategory(SettingVariableTypes.valueOf(type)));
+        aSettingAttribute()
+            .withUuid(attrId)
+            .withName(name)
+            .withAccountId(accountId)
+            .withAppId(appId)
+            .withCategory(Category.getCategory(SettingVariableTypes.valueOf(type)))
+            .withUsageRestrictions(usageRestrictionsFromJson);
     if (value != null) {
       if (value instanceof EncryptableSetting) {
         ((EncryptableSetting) value).setAccountId(accountId);

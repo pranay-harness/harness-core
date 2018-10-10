@@ -61,6 +61,8 @@ public interface UsageRestrictionsService {
    */
   RestrictionsSummary listAppsWithEnvUpdatePermissions(String accountId);
 
+  UsageRestrictions getUsageRestrictionsFromJson(String usageRestrictionsString);
+
   /**
    * Gets the default usage restrictions based on user permissions and the current app env context.
    * @param accountId account id

@@ -9,7 +9,6 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAware;
 import io.swagger.annotations.Api;
@@ -26,12 +25,11 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.security.SecretText;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
-import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
-import software.wings.utils.JsonUtils;
 
 import java.io.InputStream;
 import java.util.Collection;
@@ -56,6 +54,7 @@ import javax.ws.rs.QueryParam;
 @Scope(ResourceType.SETTING)
 public class SecretManagementResource {
   @Inject private SecretManager secretManager;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private MainConfiguration configuration;
 
   @GET
@@ -163,21 +162,9 @@ public class SecretManagementResource {
   public RestResponse<String> saveFile(@QueryParam("accountId") final String accountId,
       @FormDataParam("name") final String name, @FormDataParam("file") InputStream uploadedInputStream,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString) {
-    return new RestResponse<>(
-        secretManager.saveFile(accountId, name, getUsageRestrictionsFromJson(usageRestrictionsString),
-            new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
-  }
-
-  private UsageRestrictions getUsageRestrictionsFromJson(String usageRestrictionsString) {
-    // TODO use a bean param instead. It wasn't working for some reason.
-    if (EmptyPredicate.isNotEmpty(usageRestrictionsString)) {
-      try {
-        return JsonUtils.asObject(usageRestrictionsString, UsageRestrictions.class);
-      } catch (Exception ex) {
-        throw new WingsException("Invalid usage restrictions");
-      }
-    }
-    return null;
+    return new RestResponse<>(secretManager.saveFile(accountId, name,
+        usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
   }
 
   @POST
@@ -189,9 +176,9 @@ public class SecretManagementResource {
       @FormDataParam("name") final String name,
       @FormDataParam("usageRestrictions") final String usageRestrictionsString,
       @FormDataParam("uuid") final String fileId, @FormDataParam("file") InputStream uploadedInputStream) {
-    return new RestResponse<>(
-        secretManager.updateFile(accountId, name, fileId, getUsageRestrictionsFromJson(usageRestrictionsString),
-            new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
+    return new RestResponse<>(secretManager.updateFile(accountId, name, fileId,
+        usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString),
+        new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getConfigFileLimit())));
   }
 
   @DELETE
