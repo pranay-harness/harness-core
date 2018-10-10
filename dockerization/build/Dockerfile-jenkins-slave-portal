@@ -1,6 +1,8 @@
 FROM harness/serverjre_8:131
 
 RUN yum install -y git-core hostname
+RUN curl -o gsutil.tar.gz https://storage.googleapis.com/pub/gsutil.tar.gz
+RUN tar -xzf gsutil.tar.gz -C /opt
 
 ENV LC_ALL en_US.UTF-8
 
@@ -34,4 +36,5 @@ COPY dockerization/common-resources/US_export_policy.jar /usr/java/jdk1.8.0_131/
 COPY dockerization/build/jenkins-slave /usr/local/bin/jenkins-slave
 
 USER root
+ENV PATH ${PATH}:/opt/gsutil
 ENTRYPOINT ["jenkins-slave"]
