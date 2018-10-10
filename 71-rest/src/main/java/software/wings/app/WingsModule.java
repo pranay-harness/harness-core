@@ -8,6 +8,10 @@ import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
 import io.harness.govern.DependencyModule;
+import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.LimitCheckerFactoryImpl;
+import io.harness.limits.configuration.LimitConfigurationService;
+import io.harness.limits.configuration.LimitConfigurationServiceMongo;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import ro.fortsoft.pf4j.DefaultPluginManager;
@@ -526,6 +530,9 @@ public class WingsModule extends DependencyModule {
     bind(APMVerificationService.class).to(APMVerificationServiceImpl.class);
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
+
+    bind(LimitCheckerFactory.class).to(LimitCheckerFactoryImpl.class);
+    bind(LimitConfigurationService.class).to(LimitConfigurationServiceMongo.class);
   }
 
   @Override
