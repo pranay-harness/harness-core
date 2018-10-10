@@ -17,6 +17,7 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Reference;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.annotations.Version;
+import software.wings.api.DeploymentType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.utils.ArtifactType;
@@ -44,6 +45,7 @@ public class Service extends Base {
   @Trimmed @EntityName private String name;
   private String description;
   private ArtifactType artifactType;
+  private DeploymentType deploymentType;
   private String configMapYaml;
   private String helmValueYaml;
 
@@ -63,14 +65,15 @@ public class Service extends Base {
   @Builder
   public Service(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
       long lastUpdatedAt, List<String> keywords, String entityYamlPath, String name, String description,
-      ArtifactType artifactType, String configMapYaml, String helmValueYaml, long version, AppContainer appContainer,
-      List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables, List<ArtifactStream> artifactStreams,
-      List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity, Activity lastProdDeploymentActivity,
-      Setup setup) {
+      ArtifactType artifactType, DeploymentType deploymentType, String configMapYaml, String helmValueYaml,
+      long version, AppContainer appContainer, List<ConfigFile> configFiles, List<ServiceVariable> serviceVariables,
+      List<ArtifactStream> artifactStreams, List<ServiceCommand> serviceCommands, Activity lastDeploymentActivity,
+      Activity lastProdDeploymentActivity, Setup setup) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.name = name;
     this.description = description;
     this.artifactType = artifactType;
+    this.deploymentType = deploymentType;
     this.configMapYaml = configMapYaml;
     this.helmValueYaml = helmValueYaml;
     this.version = version;
@@ -110,17 +113,19 @@ public class Service extends Base {
   public static final class Yaml extends BaseEntityYaml {
     private String description;
     private String artifactType;
+    private String deploymentType;
     private String configMapYaml;
     private String helmValueYaml;
     private String applicationStack;
     private List<NameValuePair.Yaml> configVariables = new ArrayList<>();
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String description, String artifactType, String configMapYaml,
-        String helmValueYaml, String applicationStack, List<NameValuePair.Yaml> configVariables) {
+    public Yaml(String harnessApiVersion, String description, String artifactType, String deploymentType,
+        String configMapYaml, String helmValueYaml, String applicationStack, List<NameValuePair.Yaml> configVariables) {
       super(EntityType.SERVICE.name(), harnessApiVersion);
       this.description = description;
       this.artifactType = artifactType;
+      this.deploymentType = deploymentType;
       this.configMapYaml = configMapYaml;
       this.helmValueYaml = helmValueYaml;
       this.applicationStack = applicationStack;
