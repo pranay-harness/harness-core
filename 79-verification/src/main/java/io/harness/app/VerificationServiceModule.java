@@ -22,10 +22,12 @@ import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.NewRelicCVConfigurationServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.verification.CVConfigurationService;
+import software.wings.service.intfc.verification.NewRelicCVConfigurationService;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -67,6 +69,7 @@ public class VerificationServiceModule extends AbstractModule {
     bind(LogAnalysisService.class).to(LogAnalysisServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
     bind(ContinuousVerificationService.class).to(ContinuousVerificationServiceImpl.class);
+    bind(NewRelicCVConfigurationService.class).to(NewRelicCVConfigurationServiceImpl.class);
 
     bind(ScheduledExecutorService.class)
         .annotatedWith(Names.named("verificationServiceExecutor"))

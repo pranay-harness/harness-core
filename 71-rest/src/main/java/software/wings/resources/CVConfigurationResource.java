@@ -15,9 +15,12 @@ import software.wings.verification.CVConfiguration;
 
 import java.util.List;
 import javax.validation.Valid;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
@@ -58,5 +61,25 @@ public class CVConfigurationResource {
   public <T extends CVConfiguration> RestResponse<List<T>> listConfigurations(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("appId") @Valid final String appId) {
     return new RestResponse<>(cvConfigurationService.listConfigurations(accountId, appId));
+  }
+
+  @PUT
+  @Path("{serviceConfigurationId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> updateCVConfiguration(@PathParam("serviceConfigurationId") String serviceConfigurationId,
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("appId") @Valid final String appId,
+      @QueryParam("stateType") StateType stateType, @Body Object params) {
+    return new RestResponse<>(
+        cvConfigurationService.updateConfiguration(accountId, appId, stateType, params, serviceConfigurationId));
+  }
+
+  @DELETE
+  @Path("{serviceConfigurationId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> deleteCVConfiguration(@PathParam("serviceConfigurationId") String serviceConfigurationId,
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("appId") @Valid final String appId) {
+    return new RestResponse<>(cvConfigurationService.deleteConfiguration(accountId, appId, serviceConfigurationId));
   }
 }
