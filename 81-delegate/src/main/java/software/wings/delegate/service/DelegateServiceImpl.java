@@ -125,6 +125,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -1212,8 +1213,10 @@ public class DelegateServiceImpl implements DelegateService {
         timeLimiter.callWithTimeout(taskFuture::get, 5L, TimeUnit.SECONDS, true);
       } catch (UncheckedTimeoutException e) {
         logger.error("Timed out getting task future");
+      } catch (CancellationException e) {
+        logger.error("Task {} was cancelled", delegateTask.getUuid());
       } catch (Exception e) {
-        logger.error(format("Error from task future %s", delegateTask.getUuid()), e);
+        logger.error("Error from task future {}", delegateTask.getUuid(), e);
       }
     }
     currentlyExecutingTasks.remove(delegateTask.getUuid());
