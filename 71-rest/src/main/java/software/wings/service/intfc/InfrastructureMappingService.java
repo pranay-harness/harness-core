@@ -113,6 +113,8 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   Map<String, String> listAwsIamRoles(String appId, String infraMappingId);
 
   Set<String> listTags(String appId, String computeProviderId, String region);
+  Set<String> listAzureTags(String appId, String computeProviderId, String subscriptionId);
+  Set<String> listAzureResourceGroups(String appId, String computeProviderId, String subscriptionId);
 
   List<String> listAutoScalingGroups(String appId, String computeProviderId, String region);
 

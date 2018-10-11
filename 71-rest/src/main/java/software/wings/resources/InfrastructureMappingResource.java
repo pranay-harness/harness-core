@@ -256,6 +256,27 @@ public class InfrastructureMappingResource {
   }
 
   @GET
+  @Path("compute-providers/{computeProviderId}/azure-tags")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Set<String>> listAzureTags(@QueryParam("appId") String appId,
+      @QueryParam("subscriptionId") String subscriptionId, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(infrastructureMappingService.listAzureTags(appId, computeProviderId, subscriptionId));
+  }
+
+  @GET
+  @Path("compute-providers/{computeProviderId}/resource-groups")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Set<String>> listAzureResourceGroups(@QueryParam("appId") String appId,
+      @QueryParam("subscriptionId") String subscriptionId, @PathParam("computeProviderId") String computeProviderId) {
+    return new RestResponse<>(
+        infrastructureMappingService.listAzureResourceGroups(appId, computeProviderId, subscriptionId));
+  }
+
+  @GET
   @Path("compute-providers/{computeProviderId}/auto-scaling-groups")
   @Timed
   @ExceptionMetered
