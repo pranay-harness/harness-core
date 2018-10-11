@@ -49,6 +49,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.collect.Lists;
 
 import com.amazonaws.regions.Regions;
+import io.harness.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -92,7 +93,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -230,7 +230,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   public void shouldExecuteAsync() {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
 
     stateExecutionInstance.getStateExecutionMap().put(
@@ -247,7 +247,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   public void shouldExecuteAsyncWithOldServiceWithNoInstance() {
     on(context).set("variableProcessor", variableProcessor);
     on(context).set("evaluator", evaluator);
-    Map<String, NotifyResponseData> notifyResponse = new HashMap<>();
+    Map<String, ResponseData> notifyResponse = new HashMap<>();
     notifyResponse.put("key", aCommandExecutionResult().withStatus(CommandExecutionStatus.SUCCESS).build());
     stateExecutionInstance.getStateExecutionMap().put(
         stateExecutionInstance.getDisplayName(), aCommandStateExecutionData().build());

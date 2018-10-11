@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.InstanceElement;
@@ -55,7 +56,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.List;
@@ -133,7 +133,7 @@ public class EcsSteadyStateCheck extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       String appId = workflowStandardParams.getAppId();

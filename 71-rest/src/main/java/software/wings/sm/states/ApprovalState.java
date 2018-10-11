@@ -22,6 +22,7 @@ import static software.wings.sm.ExecutionStatus.SKIPPED;
 import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ApprovalStateExecutionData;
@@ -53,7 +54,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -130,7 +130,7 @@ public class ApprovalState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ApprovalStateExecutionData approvalNotifyResponse =
         (ApprovalStateExecutionData) response.values().iterator().next();
 

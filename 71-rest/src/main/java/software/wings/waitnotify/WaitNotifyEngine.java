@@ -17,6 +17,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
+import io.harness.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
@@ -84,7 +85,7 @@ public class WaitNotifyEngine {
    * @param response      response object for the task.
    * @return id of notification response object.
    */
-  public <T extends NotifyResponseData> String notify(String correlationId, T response) {
+  public <T extends ResponseData> String notify(String correlationId, T response) {
     return notify(correlationId, response, response instanceof ErrorNotifyResponseData);
   }
 
@@ -93,7 +94,7 @@ public class WaitNotifyEngine {
   // If more are observed that's alarming.
   static RateLimiter duplicateKeyExceptionRateLimiter = RateLimiter.create(8.0 / Duration.ofHours(1).getSeconds());
 
-  private <T extends NotifyResponseData> String notify(String correlationId, T response, boolean error) {
+  private <T extends ResponseData> String notify(String correlationId, T response, boolean error) {
     Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
     if (logger.isDebugEnabled()) {

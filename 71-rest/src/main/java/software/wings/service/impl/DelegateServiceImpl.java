@@ -68,6 +68,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.task.protocol.ResponseData;
 import io.harness.version.VersionInfoManager;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
@@ -127,7 +128,6 @@ import software.wings.sm.DelegateMetaInfo;
 import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.BufferedWriter;
@@ -947,7 +947,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <T extends NotifyResponseData> T executeTask(DelegateTask task) {
+  public <T extends ResponseData> T executeTask(DelegateTask task) {
     List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
     if (isEmpty(eligibleDelegateIds)) {
       throw new WingsException(UNAVAILABLE_DELEGATES, USER_ADMIN);
@@ -978,7 +978,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
           .addParam("args", "Task was deleted while waiting for completion");
     }
 
-    NotifyResponseData responseData = completedTask.getNotifyResponse();
+    ResponseData responseData = completedTask.getNotifyResponse();
     if (responseData == null || !TASK_COMPLETED_STATUSES.contains(completedTask.getStatus())) {
       throw new WingsException(ErrorCode.REQUEST_TIMEOUT, WingsException.USER_ADMIN)
           .addParam("name", "Harness delegate");
@@ -1119,7 +1119,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         List<String> criteria = TaskType.valueOf(delegateTask.getTaskType()).getCriteria(delegateTask, injector);
         String errorMessage = "No delegates could reach the resource. " + criteria;
         logger.info("Task {}: {}", taskId, errorMessage);
-        NotifyResponseData response;
+        ResponseData response;
         if (delegateTask.isAsync()) {
           response = ErrorNotifyResponseData.builder().errorMessage(errorMessage).build();
         } else {

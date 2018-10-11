@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.EnumData;
 import software.wings.stencils.Expand;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -200,7 +200,7 @@ public class EnvState extends State {
     }
   }
 
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     EnvExecutionResponseData responseData = (EnvExecutionResponseData) response.values().iterator().next();
     ExecutionResponse executionResponse = anExecutionResponse().withExecutionStatus(responseData.getStatus()).build();
 
@@ -277,7 +277,7 @@ public class EnvState extends State {
   /**
    * The type Env execution response data.
    */
-  public static class EnvExecutionResponseData implements NotifyResponseData {
+  public static class EnvExecutionResponseData implements ResponseData {
     private String workflowExecutionId;
     private ExecutionStatus status;
 

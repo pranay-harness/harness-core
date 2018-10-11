@@ -13,6 +13,7 @@ import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -39,7 +40,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.text.ParseException;
 import java.util.Collections;
@@ -268,7 +268,7 @@ public class ELKAnalysisStateTest extends APMStateVerificationTestBase {
                                                   .withExecutionStatus(ExecutionStatus.ERROR)
                                                   .withLogAnalysisExecutionData(logAnalysisExecutionData)
                                                   .build();
-    Map<String, NotifyResponseData> responseMap = new HashMap<>();
+    Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", logAnalysisResponse);
     elkAnalysisState.handleAsyncResponse(executionContext, responseMap);
 

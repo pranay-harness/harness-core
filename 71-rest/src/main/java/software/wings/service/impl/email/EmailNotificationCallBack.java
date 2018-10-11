@@ -5,6 +5,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.service.intfc.AlertService;
 import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -24,9 +24,9 @@ public class EmailNotificationCallBack implements NotifyCallback {
   @Inject private AlertService alertService;
 
   @Override
-  public void notify(Map<String, NotifyResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     try {
-      NotifyResponseData data = response.entrySet().iterator().next().getValue();
+      ResponseData data = response.entrySet().iterator().next().getValue();
       CollaborationProviderResponse collaborationProviderResponse = (CollaborationProviderResponse) data;
       if (collaborationProviderResponse.getStatus().equals(CommandExecutionStatus.SUCCESS)) {
         logger.info("Email sending succeeded. Response : [{}]", data);
@@ -43,9 +43,9 @@ public class EmailNotificationCallBack implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, NotifyResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     try {
-      NotifyResponseData data = response.entrySet().iterator().next().getValue();
+      ResponseData data = response.entrySet().iterator().next().getValue();
       if (data instanceof CollaborationProviderResponse) {
         CollaborationProviderResponse collaborationProviderResponse = (CollaborationProviderResponse) data;
         openEmailNotSentAlert(data, collaborationProviderResponse);
@@ -57,8 +57,7 @@ public class EmailNotificationCallBack implements NotifyCallback {
     }
   }
 
-  private void openEmailNotSentAlert(
-      NotifyResponseData data, CollaborationProviderResponse collaborationProviderResponse) {
+  private void openEmailNotSentAlert(ResponseData data, CollaborationProviderResponse collaborationProviderResponse) {
     alertService.openAlert(collaborationProviderResponse.getAccountId(), GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT,
         EmailSendingFailedAlert.builder().emailAlertData(collaborationProviderResponse.getErrorMessage()).build());
     logger.warn("Email Sending failed : Delegate Response : [{}]", data);

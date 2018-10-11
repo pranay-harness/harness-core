@@ -22,6 +22,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.task.protocol.ResponseData;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -68,7 +69,6 @@ import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.HashMap;
 import java.util.List;
@@ -414,7 +414,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .withAsync(false)
             .build();
     try {
-      NotifyResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
       }

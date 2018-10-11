@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;
@@ -24,7 +25,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -69,7 +69,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
                                     .withParameters(new Object[] {request})
                                     .build();
     try {
-      NotifyResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
       }

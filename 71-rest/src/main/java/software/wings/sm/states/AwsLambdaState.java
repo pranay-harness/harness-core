@@ -18,6 +18,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AwsLambdaContextElement;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
@@ -75,7 +76,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.LambdaConvention;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -166,7 +166,7 @@ public class AwsLambdaState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       return handleAsyncResponseInternal(context, response);
     } catch (WingsException e) {
@@ -176,8 +176,7 @@ public class AwsLambdaState extends State {
     }
   }
 
-  private ExecutionResponse handleAsyncResponseInternal(
-      ExecutionContext context, Map<String, NotifyResponseData> response) {
+  private ExecutionResponse handleAsyncResponseInternal(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
 
     AwsLambdaExecuteWfResponse wfResponse = (AwsLambdaExecuteWfResponse) response.values().iterator().next();

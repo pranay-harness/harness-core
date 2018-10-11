@@ -10,6 +10,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -19,7 +20,6 @@ import software.wings.beans.yaml.GitCommandExecutionResponse;
 import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -36,15 +36,15 @@ public class GitCommandCallbackTest {
 
   @Test
   public void testCallbackForGitConnectionFailure() throws Exception {
-    NotifyResponseData notifyResponseData = GitCommandExecutionResponse.builder()
-                                                .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
-                                                .gitCommandStatus(GitCommandStatus.FAILURE)
-                                                .errorMessage("cant connect ot git")
-                                                .build();
+    ResponseData notifyResponseData = GitCommandExecutionResponse.builder()
+                                          .errorCode(ErrorCode.GIT_CONNECTION_ERROR)
+                                          .gitCommandStatus(GitCommandStatus.FAILURE)
+                                          .errorMessage("cant connect ot git")
+                                          .build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
     doNothing().when(yamlGitService).raiseAlertForGitFailure(anyString(), anyString(), any(), anyString());
-    Map<String, NotifyResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     commandCallback.notify(map);
@@ -53,14 +53,14 @@ public class GitCommandCallbackTest {
 
   @Test
   public void testCallbackForGitConnectionSuccess() throws Exception {
-    NotifyResponseData notifyResponseData =
+    ResponseData notifyResponseData =
         GitCommandExecutionResponse.builder().gitCommandStatus(GitCommandStatus.SUCCESS).build();
 
     doReturn(true).when(yamlChangeSetService).updateStatus(anyString(), anyString(), any());
     doThrow(new RuntimeException())
         .when(yamlGitService)
         .closeAlertForGitFailureIfOpen(anyString(), anyString(), any(), any());
-    Map<String, NotifyResponseData> map = new HashMap<>();
+    Map<String, ResponseData> map = new HashMap<>();
     map.put("key", notifyResponseData);
 
     try {

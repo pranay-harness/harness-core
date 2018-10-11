@@ -6,6 +6,7 @@ import static software.wings.api.ForkElement.Builder.aForkElement;
 import com.google.common.base.Joiner;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ExecutionDataValue;
@@ -21,7 +22,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.KryoUtils;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,7 +103,7 @@ public class ForkState extends State {
    * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     for (Object status : response.values()) {
       ExecutionStatus executionStatus = ((ExecutionStatusData) status).getExecutionStatus();

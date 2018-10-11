@@ -4,7 +4,7 @@
 
 package software.wings.sm.states;
 
-import software.wings.waitnotify.NotifyResponseData;
+import io.harness.task.protocol.ResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 /**
@@ -15,7 +15,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
 public class SimpleNotifier implements Runnable {
   private WaitNotifyEngine waitNotifyEngine;
   private String correlationId;
-  private NotifyResponseData response;
+  private ResponseData response;
 
   /**
    * Instantiates a new Simple notifier.
@@ -24,7 +24,7 @@ public class SimpleNotifier implements Runnable {
    * @param correlationId    the correlation id
    * @param response         the response
    */
-  public SimpleNotifier(WaitNotifyEngine waitNotifyEngine, String correlationId, NotifyResponseData response) {
+  public SimpleNotifier(WaitNotifyEngine waitNotifyEngine, String correlationId, ResponseData response) {
     this.waitNotifyEngine = waitNotifyEngine;
     this.correlationId = correlationId;
     this.response = response;

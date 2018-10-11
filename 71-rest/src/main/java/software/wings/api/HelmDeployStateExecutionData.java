@@ -2,6 +2,7 @@ package software.wings.api;
 
 import com.google.common.collect.Maps;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +10,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class HelmDeployStateExecutionData extends StateExecutionData implements NotifyResponseData {
+public class HelmDeployStateExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private String commandName;
   private String chartRepositoryUrl;

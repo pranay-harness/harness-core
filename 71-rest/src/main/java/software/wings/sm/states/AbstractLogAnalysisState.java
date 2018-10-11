@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.task.protocol.ResponseData;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.metrics.RiskLevel;
@@ -30,7 +31,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -203,8 +203,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts);
 
   @Override
-  public ExecutionResponse handleAsyncResponse(
-      ExecutionContext executionContext, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext executionContext, Map<String, ResponseData> response) {
     LogAnalysisResponse executionResponse = (LogAnalysisResponse) response.values().iterator().next();
 
     if (ExecutionStatus.isBrokeStatus(executionResponse.getExecutionStatus())) {

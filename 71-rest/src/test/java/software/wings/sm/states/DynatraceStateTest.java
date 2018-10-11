@@ -11,6 +11,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
@@ -30,7 +31,6 @@ import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.text.ParseException;
 import java.util.Collections;
@@ -180,7 +180,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     MetricDataAnalysisResponse metricDataAnalysisResponse =
         MetricDataAnalysisResponse.builder().stateExecutionData(metricAnalysisExecutionData).build();
     metricDataAnalysisResponse.setExecutionStatus(ExecutionStatus.FAILED);
-    Map<String, NotifyResponseData> responseMap = new HashMap<>();
+    Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", metricDataAnalysisResponse);
     dynatraceState.handleAsyncResponse(executionContext, responseMap);
 

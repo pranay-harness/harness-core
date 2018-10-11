@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.AmiServiceSetupElement;
 import software.wings.api.AmiStepExecutionSummary;
@@ -66,7 +67,6 @@ import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.sm.StepExecutionSummary;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -397,7 +397,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     if (phaseStepType == PhaseStepType.PRE_DEPLOYMENT || phaseStepType == PhaseStepType.POST_DEPLOYMENT) {
       ExecutionStatus executionStatus =
@@ -405,7 +405,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       if (executionStatus != ExecutionStatus.SUCCESS) {
         executionResponse.setExecutionStatus(executionStatus);
       }
-      NotifyResponseData notifiedResponseData = response.values().iterator().next();
+      ResponseData notifiedResponseData = response.values().iterator().next();
       if (notifiedResponseData instanceof ElementNotifyResponseData) {
         ElementNotifyResponseData elementNotifyResponseData = (ElementNotifyResponseData) notifiedResponseData;
         List<ContextElement> elements = elementNotifyResponseData.getContextElements();
@@ -429,11 +429,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
   }
 
   private void handleElementNotifyResponseData(
-      PhaseElement phaseElement, Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
+      PhaseElement phaseElement, Map<String, ResponseData> response, ExecutionResponse executionResponse) {
     if (isEmpty(response)) {
       throw new InvalidRequestException("Missing response");
     }
-    NotifyResponseData notifiedResponseData = response.values().iterator().next();
+    ResponseData notifiedResponseData = response.values().iterator().next();
     if (!(notifiedResponseData instanceof ElementNotifyResponseData)) {
       throw new InvalidRequestException("Response data has wrong type");
     }

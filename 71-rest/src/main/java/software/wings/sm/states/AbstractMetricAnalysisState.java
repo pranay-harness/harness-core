@@ -11,6 +11,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.MetricDataAnalysisResponse;
@@ -33,7 +34,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -228,7 +228,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     MetricDataAnalysisResponse executionResponse = (MetricDataAnalysisResponse) response.values().iterator().next();
 

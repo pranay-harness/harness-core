@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -70,7 +71,6 @@ import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -186,7 +186,7 @@ public abstract class ContainerServiceDeploy extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       logger.info("Received async response");
       CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
@@ -268,8 +268,8 @@ public abstract class ContainerServiceDeploy extends State {
         .build();
   }
 
-  private List<InstanceStatusSummary> buildInstanceStatusSummaries(String appId, String serviceId, String envId,
-      ServiceElement serviceElement, Map<String, NotifyResponseData> response) {
+  private List<InstanceStatusSummary> buildInstanceStatusSummaries(
+      String appId, String serviceId, String envId, ServiceElement serviceElement, Map<String, ResponseData> response) {
     Key<ServiceTemplate> serviceTemplateKey =
         serviceTemplateService.getTemplateRefKeysByService(appId, serviceId, envId).get(0);
     CommandExecutionData commandExecutionData =

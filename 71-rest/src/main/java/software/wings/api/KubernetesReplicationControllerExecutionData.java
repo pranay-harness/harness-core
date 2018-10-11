@@ -1,11 +1,11 @@
 package software.wings.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.task.protocol.ResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -15,7 +15,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class KubernetesReplicationControllerExecutionData extends StateExecutionData implements NotifyResponseData {
+public class KubernetesReplicationControllerExecutionData extends StateExecutionData implements ResponseData {
   private String gkeClusterName;
   private String kubernetesReplicationControllerName;
   private String kubernetesServiceName;

@@ -5,6 +5,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,6 @@ import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyResponseData;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 
@@ -60,9 +60,9 @@ public class GitCommandCallback implements NotifyCallback {
   @Transient @Inject private FeatureFlagService featureFlagService;
 
   @Override
-  public void notify(Map<String, NotifyResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     logger.info("Git command response [{}] for changeSetId [{}] for account {}", response, changeSetId, accountId);
-    NotifyResponseData notifyResponseData = response.values().iterator().next();
+    ResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof GitCommandExecutionResponse) {
       GitCommandExecutionResponse gitCommandExecutionResponse = (GitCommandExecutionResponse) notifyResponseData;
       GitCommandResult gitCommandResult = gitCommandExecutionResponse.getGitCommandResult();
@@ -161,7 +161,7 @@ public class GitCommandCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, NotifyResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     logger.warn("Git request failed [{}] for changeSetId [{}] for account {}", response, changeSetId, accountId);
     yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
   }

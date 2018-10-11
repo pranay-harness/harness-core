@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import freemarker.template.TemplateException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.task.protocol.ResponseData;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Delegate;
@@ -15,7 +16,6 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.File;
 import java.io.IOException;
@@ -70,7 +70,7 @@ public interface DelegateService {
 
   @ValidationGroups(Create.class) String queueTask(@Valid DelegateTask task);
 
-  <T extends NotifyResponseData> T executeTask(DelegateTask task) throws InterruptedException;
+  <T extends ResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
   DelegateTask acquireDelegateTask(String accountId, String delegateId, String taskId);
 

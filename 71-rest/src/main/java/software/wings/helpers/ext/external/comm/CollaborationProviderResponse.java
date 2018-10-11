@@ -1,13 +1,13 @@
 package software.wings.helpers.ext.external.comm;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.waitnotify.NotifyResponseData;
 
 @Data
 @Builder
-public class CollaborationProviderResponse implements NotifyResponseData {
+public class CollaborationProviderResponse implements ResponseData {
   private String output;
   private CommandExecutionStatus status;
   private String errorMessage;

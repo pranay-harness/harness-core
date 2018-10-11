@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +16,6 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -23,7 +23,7 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
-public class ApprovalStateExecutionData extends StateExecutionData implements NotifyResponseData {
+public class ApprovalStateExecutionData extends StateExecutionData implements ResponseData {
   public static final String USER_GROUP_NAMES = "userGroupNames";
   public static final String USER_GROUPS_DISPLAY_NAME = "Approval User Groups";
   public static final String AUTHORIZATION_STATUS = "authorizationStatus";

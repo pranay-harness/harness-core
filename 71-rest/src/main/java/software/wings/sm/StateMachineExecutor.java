@@ -62,6 +62,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Subject;
+import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -103,7 +104,6 @@ import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.time.Duration;
@@ -1146,7 +1146,7 @@ public class StateMachineExecutor {
    * @param response                 map of responses from state machine instances this state was waiting on.
    */
   public void resume(String appId, String executionUuid, String stateExecutionInstanceId,
-      Map<String, NotifyResponseData> response, boolean asyncError) {
+      Map<String, ResponseData> response, boolean asyncError) {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     StateMachine sm =
@@ -1584,7 +1584,7 @@ public class StateMachineExecutor {
     private ExecutionContextImpl context;
     private StateMachineExecutor stateMachineExecutor;
     private State state;
-    private Map<String, NotifyResponseData> response;
+    private Map<String, ResponseData> response;
     private boolean asyncError;
 
     /**
@@ -1595,7 +1595,7 @@ public class StateMachineExecutor {
      * @param response             the response
      * @param stateMachineExecutor the state machine executor
      */
-    SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, NotifyResponseData> response,
+    SmExecutionAsyncResumer(ExecutionContextImpl context, State state, Map<String, ResponseData> response,
         StateMachineExecutor stateMachineExecutor, boolean asyncError) {
       this.context = context;
       this.state = state;

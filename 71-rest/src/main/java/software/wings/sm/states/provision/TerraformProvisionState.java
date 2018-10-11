@@ -25,6 +25,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.InvalidRequestException;
+import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
@@ -77,7 +78,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Validator;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -166,7 +166,7 @@ public abstract class TerraformProvisionState extends State {
 
   @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) response.get(activityId);
     terraformExecutionData.setActivityId(activityId);

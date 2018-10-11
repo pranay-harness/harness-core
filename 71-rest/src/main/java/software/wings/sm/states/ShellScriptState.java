@@ -14,6 +14,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -64,7 +65,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.List;
@@ -146,10 +146,10 @@ public class ShellScriptState extends State {
   public void handleAbortEvent(ExecutionContext context) {}
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
 
-    NotifyResponseData data = response.values().iterator().next();
+    ResponseData data = response.values().iterator().next();
 
     if (data instanceof CommandExecutionResult) {
       CommandExecutionResult commandExecutionResult = (CommandExecutionResult) data;
@@ -181,7 +181,7 @@ public class ShellScriptState extends State {
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);
       executionResponse.setErrorMessage(((ErrorNotifyResponseData) data).getErrorMessage());
     } else {
-      logger.error("Unhandled NotifyResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
+      logger.error("Unhandled ResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
 
     String activityId = null;

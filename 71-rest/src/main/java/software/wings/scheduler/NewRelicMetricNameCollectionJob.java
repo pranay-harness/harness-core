@@ -1,10 +1,10 @@
 package software.wings.scheduler;
 
+import io.harness.task.protocol.ResponseData;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
 import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -19,9 +19,9 @@ public class NewRelicMetricNameCollectionJob implements Job {
 
   private static class DelegateCallbackHandler implements NotifyCallback {
     @Override
-    public void notify(Map<String, NotifyResponseData> response) {}
+    public void notify(Map<String, ResponseData> response) {}
 
     @Override
-    public void notifyError(Map<String, NotifyResponseData> response) {}
+    public void notifyError(Map<String, ResponseData> response) {}
   }
 }

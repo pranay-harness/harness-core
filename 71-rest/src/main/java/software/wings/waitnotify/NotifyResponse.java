@@ -1,5 +1,6 @@
 package software.wings.waitnotify;
 
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
@@ -15,7 +16,7 @@ import java.util.Objects;
  * @author Rishi
  */
 @Entity(value = "notifyResponses", noClassnameStored = true)
-public class NotifyResponse<T extends NotifyResponseData> extends Base {
+public class NotifyResponse<T extends ResponseData> extends Base {
   public static final String STATUS_KEY = "status";
 
   private T response;

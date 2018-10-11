@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -57,7 +58,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.UnsupportedEncodingException;
@@ -368,8 +368,8 @@ public class HttpState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    NotifyResponseData notifyResponseData = response.values().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    ResponseData notifyResponseData = response.values().iterator().next();
     ExecutionResponse executionResponse = new ExecutionResponse();
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       executionResponse.setExecutionStatus(ExecutionStatus.FAILED);

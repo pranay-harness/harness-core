@@ -1,12 +1,12 @@
 package software.wings.api;
 
+import io.harness.task.protocol.ResponseData;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.states.ElementStateExecutionData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import java.util.Map;
 /**
  * Created by rishi on 1/19/17.
  */
-public class PhaseStepExecutionData extends ElementStateExecutionData implements NotifyResponseData {
+public class PhaseStepExecutionData extends ElementStateExecutionData implements ResponseData {
   private PhaseStepType phaseStepType;
   private boolean stepsInParallel;
   private boolean defaultFailureStrategy;

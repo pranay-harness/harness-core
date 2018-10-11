@@ -8,6 +8,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.query.Query;
@@ -27,7 +28,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.Iterator;
@@ -139,8 +139,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
-    Entry<String, NotifyResponseData> entry = response.entrySet().iterator().next();
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
+    Entry<String, ResponseData> entry = response.entrySet().iterator().next();
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) entry.getValue();
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 

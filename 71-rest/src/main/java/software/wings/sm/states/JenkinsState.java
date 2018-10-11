@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -61,7 +62,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -297,7 +297,7 @@ public class JenkinsState extends State {
         .build();
   }
 
-  public ExecutionResponse startJenkinsPollTask(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse startJenkinsPollTask(ExecutionContext context, Map<String, ResponseData> response) {
     JenkinsExecutionResponse jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
 
     if (isEmpty(jenkinsExecutionResponse.queuedBuildUrl)) {
@@ -362,9 +362,9 @@ public class JenkinsState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
-    NotifyResponseData notifyResponseData = response.values().iterator().next();
+    ResponseData notifyResponseData = response.values().iterator().next();
     JenkinsExecutionResponse jenkinsExecutionResponse;
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       updateActivityStatus(activityId, ((ExecutionContextImpl) context).getApp().getUuid(), FAILED);

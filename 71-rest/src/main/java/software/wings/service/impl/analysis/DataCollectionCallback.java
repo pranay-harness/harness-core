@@ -5,6 +5,7 @@ import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.a
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.MetricDataAnalysisResponse;
@@ -14,7 +15,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Map;
@@ -40,7 +40,7 @@ public class DataCollectionCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, NotifyResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     final DataCollectionTaskResult result = (DataCollectionTaskResult) response.values().iterator().next();
     logger.info("data collection result for app " + appId + " is: " + result);
     if (result.getStatus() == DataCollectionTaskStatus.FAILURE) {
@@ -50,7 +50,7 @@ public class DataCollectionCallback implements NotifyCallback {
 
   // TODO what is this used for
   @Override
-  public void notifyError(Map<String, NotifyResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     logger.info("notify error for {} ", response.values().iterator().next());
     if (response.values().iterator().next() instanceof ErrorNotifyResponseData) {
       final ErrorNotifyResponseData result = (ErrorNotifyResponseData) response.values().iterator().next();

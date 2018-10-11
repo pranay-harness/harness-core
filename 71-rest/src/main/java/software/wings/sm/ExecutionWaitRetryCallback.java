@@ -5,8 +5,8 @@ import static software.wings.sm.ExecutionInterruptType.RETRY;
 
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -40,7 +40,7 @@ public class ExecutionWaitRetryCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, NotifyResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     executionInterruptManager.registerExecutionInterrupt(anExecutionInterrupt()
                                                              .withAppId(appId)
                                                              .withExecutionUuid(executionUuid)
@@ -50,7 +50,7 @@ public class ExecutionWaitRetryCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, NotifyResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     // Do nothing.
   }
 }

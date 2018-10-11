@@ -1,14 +1,14 @@
 package software.wings.api;
 
+import io.harness.task.protocol.ResponseData;
 import software.wings.sm.StateExecutionData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
 /**
  * Created by brett on 4/13/17
  */
-public class AwsClusterExecutionData extends StateExecutionData implements NotifyResponseData {
+public class AwsClusterExecutionData extends StateExecutionData implements ResponseData {
   private String clusterName;
   private String region;
   private int nodeCount;

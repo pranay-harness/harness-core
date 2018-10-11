@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.KryoUtils;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -154,7 +154,7 @@ public class RepeatState extends State {
    * {@inheritDoc}
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionStatus executionStatus = ExecutionStatus.SUCCESS;
     for (Object status : response.values()) {
       ExecutionStatus responseStatus = ((ElementNotifyResponseData) status).getExecutionStatus();

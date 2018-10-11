@@ -2,6 +2,7 @@ package software.wings.api.pcf;
 
 import com.google.common.collect.Maps;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,7 +11,6 @@ import lombok.NoArgsConstructor;
 import software.wings.api.ExecutionDataValue;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -20,7 +20,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PcfDeployStateExecutionData extends StateExecutionData implements NotifyResponseData {
+public class PcfDeployStateExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private String releaseName;
   private String commandName;

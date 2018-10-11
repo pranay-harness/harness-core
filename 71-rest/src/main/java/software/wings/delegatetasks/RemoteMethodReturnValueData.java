@@ -4,7 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import com.esotericsoftware.kryo.serializers.FieldSerializer.Bind;
 import com.esotericsoftware.kryo.serializers.JavaSerializer;
-import software.wings.waitnotify.NotifyResponseData;
+import io.harness.task.protocol.ResponseData;
 
 import java.util.Objects;
 
@@ -12,7 +12,7 @@ import java.util.Objects;
  * Created by peeyushaggarwal on 1/12/17.
  */
 
-public class RemoteMethodReturnValueData implements NotifyResponseData {
+public class RemoteMethodReturnValueData implements ResponseData {
   private Object returnValue;
 
   @Bind(JavaSerializer.class) private Throwable exception;

@@ -11,6 +11,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -36,7 +37,6 @@ import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Set;
@@ -135,7 +135,7 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
                                     .withParameters(new Object[] {request})
                                     .build();
     try {
-      NotifyResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
       }

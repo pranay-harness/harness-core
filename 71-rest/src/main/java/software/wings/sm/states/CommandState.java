@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +95,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.Expand;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.List;
@@ -511,7 +511,7 @@ public class CommandState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     if (response.size() != 1) {
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.FAILED)
@@ -519,7 +519,7 @@ public class CommandState extends State {
           .build();
     }
 
-    NotifyResponseData notifyResponseData = response.values().iterator().next();
+    ResponseData notifyResponseData = response.values().iterator().next();
 
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
       return anExecutionResponse()
