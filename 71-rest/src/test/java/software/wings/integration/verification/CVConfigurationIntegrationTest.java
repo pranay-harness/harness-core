@@ -6,6 +6,7 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.sm.StateType.APP_DYNAMICS;
 import static software.wings.sm.StateType.NEW_RELIC;
 
 import com.google.inject.Inject;
@@ -17,6 +18,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.intfc.AppService;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.util.Collections;
@@ -30,12 +32,13 @@ import javax.ws.rs.core.GenericType;
  * 05/Oct/2018
  */
 public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
-  private String appId, envId, serviceId;
+  private String appId, envId, serviceId, appDynamicsApplicationId;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
 
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
+  private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
 
   @Before
   public void setUp() {
@@ -43,8 +46,13 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appId = appService.save(anApplication().withName(generateUuid()).withAccountId(accountId).build()).getUuid();
     envId = generateUuid();
     serviceId = generateUuid();
-    boolean enabled24x7 = true;
+    appDynamicsApplicationId = generateUuid();
 
+    createNewRelicConfig(true);
+    createAppDynamicsConfig();
+  }
+
+  private void createNewRelicConfig(boolean enabled24x7) {
     String newRelicApplicationId = generateUuid();
     String newRelicServerSettingId = generateUuid();
 
@@ -55,6 +63,18 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     newRelicCVServiceConfiguration.setApplicationId(newRelicApplicationId);
     newRelicCVServiceConfiguration.setConnectorId(newRelicServerSettingId);
     newRelicCVServiceConfiguration.setMetrics(Collections.singletonList(generateUuid()));
+  }
+
+  private void createAppDynamicsConfig() {
+    appDynamicsCVServiceConfiguration = new AppDynamicsCVServiceConfiguration();
+    appDynamicsCVServiceConfiguration.setAppId(appId);
+    appDynamicsCVServiceConfiguration.setEnvId(envId);
+    appDynamicsCVServiceConfiguration.setServiceId(serviceId);
+    appDynamicsCVServiceConfiguration.setEnabled24x7(true);
+    appDynamicsCVServiceConfiguration.setAppDynamicsApplicationId(appDynamicsApplicationId);
+    appDynamicsCVServiceConfiguration.setTierId(generateUuid());
+    appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
+    appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
   }
 
   @Test
@@ -127,5 +147,34 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     target = client.target(delete_url);
     response = getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse>() {});
     assertEquals(false, response.getResource());
+  }
+
+  @Test
+  public <T extends CVConfiguration> void testAppDynamicsConfiguration() {
+    String url =
+        API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APP_DYNAMICS;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(appDynamicsCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<T> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
+    T fetchedObject = getRequestResponse.getResource();
+    if (fetchedObject instanceof AppDynamicsCVServiceConfiguration) {
+      AppDynamicsCVServiceConfiguration obj = (AppDynamicsCVServiceConfiguration) fetchedObject;
+      assertEquals(savedObjectUuid, obj.getUuid());
+      assertEquals(accountId, obj.getAccountId());
+      assertEquals(appId, obj.getAppId());
+      assertEquals(envId, obj.getEnvId());
+      assertEquals(serviceId, obj.getServiceId());
+      assertEquals(APP_DYNAMICS, obj.getStateType());
+      assertEquals(appDynamicsApplicationId, obj.getAppDynamicsApplicationId());
+    }
   }
 }

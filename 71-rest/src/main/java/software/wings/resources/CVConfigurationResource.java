@@ -42,7 +42,7 @@ public class CVConfigurationResource {
   @ExceptionMetered
   public <T extends CVConfiguration> RestResponse<T> getConfiguration(
       @QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("serviceConfigurationId") String serviceConfigurationId) {
+      @PathParam("serviceConfigurationId") String serviceConfigurationId) {
     return new RestResponse<>(cvConfigurationService.getConfiguration(serviceConfigurationId));
   }
 
