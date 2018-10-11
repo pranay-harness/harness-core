@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 
 import com.google.inject.Inject;
 
@@ -131,7 +132,9 @@ public class APMVerificationServiceImpl implements APMVerificationService {
         AppdynamicsDataCollectionInfo.builder()
             .appDynamicsConfig(appDynamicsConfig)
             .applicationId(request.getAppId())
-            .stateExecutionId("CV_24x7_EXECUTION")
+            .serviceId(request.getServiceId())
+            .cvConfigId(request.getUuid())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION)
             .startTime(startTime)
             .collectionTime(timeDuration)
             .appId(Long.parseLong(request.getAppDynamicsApplicationId()))

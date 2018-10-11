@@ -12,6 +12,7 @@ import software.wings.service.intfc.verification.NewRelicCVConfigurationService;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
+import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.util.List;
@@ -28,20 +29,24 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   @Inject NewRelicCVConfigurationService newRelicCVConfigurationService;
 
   public String saveConfiguration(String accountId, String appId, StateType stateType, Object params) {
+    CVConfiguration cvConfiguration = null;
     switch (stateType) {
       case NEW_RELIC:
-        NewRelicCVServiceConfiguration obj =
-            JsonUtils.asObject(JsonUtils.asJson(params), NewRelicCVServiceConfiguration.class);
-        obj.setAccountId(accountId);
-        obj.setAppId(appId);
-        obj.setStateType(stateType);
-        return wingsPersistence.save(obj);
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), NewRelicCVServiceConfiguration.class);
+        break;
+
+      case APP_DYNAMICS:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), AppDynamicsCVServiceConfiguration.class);
+        break;
+
       default:
-        throw new WingsException("No matching state type found - " + stateType)
-            .addParam("accountId", accountId)
-            .addParam("appId", appId)
-            .addParam("stateType", String.valueOf(stateType));
+        throw new WingsException("No matching state type found " + stateType);
     }
+
+    cvConfiguration.setAccountId(accountId);
+    cvConfiguration.setAppId(appId);
+    cvConfiguration.setStateType(stateType);
+    return wingsPersistence.save(cvConfiguration);
   }
 
   public <T extends CVConfiguration> T getConfiguration(String serviceConfigurationId) {

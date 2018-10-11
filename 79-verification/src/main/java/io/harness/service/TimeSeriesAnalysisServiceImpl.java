@@ -5,6 +5,7 @@ import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.util.Arrays.asList;
+import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
@@ -568,6 +569,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public boolean isStateValid(String appId, String stateExecutionId) {
+    if (stateExecutionId.contains(CV_24x7_STATE_EXECUTION)) {
+      return true;
+    }
     return managerClientHelper.callManagerWithRetry(managerClient.isStateValid(appId, stateExecutionId)).getResource();
   }
 
