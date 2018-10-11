@@ -104,7 +104,8 @@ public class AwsAmiHelperServiceDelegateImpl
     }
     if (resizeNewFirst) {
       if (isNotBlank(newAutoScalingGroupName)) {
-        executionLogCallback.saveExecutionLog(format("Resizing AutoScaling Group [%s]", newAutoScalingGroupName));
+        executionLogCallback.saveExecutionLog(
+            format("Resizing AutoScaling Group: [%s] to [%d]", newAutoScalingGroupName, newAsgFinalDesiredCount));
         awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(awsConfig, encryptionDetails, region,
             newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
@@ -117,7 +118,8 @@ public class AwsAmiHelperServiceDelegateImpl
       }
       if (isNotEmpty(oldAsgsDesiredCounts)) {
         oldAsgsDesiredCounts.forEach(count -> {
-          executionLogCallback.saveExecutionLog(format("Resizing AutoScaling Group [%s]", count.getAsgName()));
+          executionLogCallback.saveExecutionLog(
+              format("Resizing AutoScaling Group: [%s] to [%d]", count.getAsgName(), count.getDesiredCount()));
           awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
               awsConfig, encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback);
           awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
@@ -132,7 +134,8 @@ public class AwsAmiHelperServiceDelegateImpl
     } else {
       if (isNotEmpty(oldAsgsDesiredCounts)) {
         oldAsgsDesiredCounts.forEach(count -> {
-          executionLogCallback.saveExecutionLog(format("Resizing AutoScaling Group [%s]", count.getAsgName()));
+          executionLogCallback.saveExecutionLog(
+              format("Resizing AutoScaling Group: [%s] to [%d]", count.getAsgName(), count.getDesiredCount()));
           awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
               awsConfig, encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback);
           awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
@@ -145,7 +148,8 @@ public class AwsAmiHelperServiceDelegateImpl
         });
       }
       if (isNotBlank(newAutoScalingGroupName)) {
-        executionLogCallback.saveExecutionLog(format("Resizing AutoScaling Group [%s]", newAutoScalingGroupName));
+        executionLogCallback.saveExecutionLog(
+            format("Resizing AutoScaling Group: [%s] to [%d]", newAutoScalingGroupName, newAsgFinalDesiredCount));
         awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(awsConfig, encryptionDetails, region,
             newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
         awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
