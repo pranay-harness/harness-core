@@ -670,8 +670,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
             .project("stateType", true)
             .project("experiment_name", true)
             .project("createdAt", true)
-            .project("envId", true)
-            .project("workflowExecutionId", true)
             .asList(new FindOptions().limit(limit));
 
     List<LogMLExpAnalysisInfo> result = new ArrayList<>();
@@ -682,8 +680,7 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
                      .stateType(record.getStateType())
                      .createdAt(record.getCreatedAt())
                      .expName(record.getExperiment_name())
-                     .envId(record.getEnvId())
-                     .workflowExecutionId(record.getWorkflowExecutionId())
+                     .expName(record.getExperiment_name())
                      .build());
     });
 

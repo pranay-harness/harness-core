@@ -1,7 +1,5 @@
 package io.harness.resources;
 
-import static io.harness.network.SafeHttpCall.execute;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 
@@ -13,7 +11,6 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
-import software.wings.beans.WorkflowExecution;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.Scope;
@@ -66,15 +63,6 @@ public class ExperimentalLogAnalysisResourceImpl implements ExperimentalLogAnaly
       learningEngineService.markExpTaskCompleted(taskId);
       return new RestResponse<>(true);
     } else {
-      WorkflowExecution workflowExecution =
-          execute(managerClient.getWorkflowExecution(applicationId, stateExecutionId)).getResource();
-      mlAnalysisResponse.setWorkflowExecutionId(workflowExecution.getUuid());
-      if (workflowExecution.getEnvId() == null) {
-        mlAnalysisResponse.setEnvId("build-workflow");
-      } else {
-        mlAnalysisResponse.setEnvId(workflowExecution.getEnvId());
-      }
-
       mlAnalysisResponse.setAppId(applicationId);
       mlAnalysisResponse.setStateExecutionId(stateExecutionId);
       mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
