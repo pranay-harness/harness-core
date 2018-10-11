@@ -1,5 +1,6 @@
 package software.wings.api;
 
+import io.harness.serializer.XmlUtils;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,7 +14,6 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.utils.JsonUtils;
-import software.wings.utils.XmlUtils;
 import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;

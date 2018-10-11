@@ -2,7 +2,7 @@
  *
  */
 
-package software.wings.utils;
+package io.harness.serializer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
