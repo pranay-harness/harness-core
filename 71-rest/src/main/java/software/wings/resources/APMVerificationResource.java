@@ -60,8 +60,7 @@ public class APMVerificationResource {
   @LearningEngineAuth
   public RestResponse<Boolean> collect247CVData(@QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("stateType") StateType stateType, @QueryParam("startTime") long startTime,
-      @QueryParam("endTime") long endTime, @QueryParam("lastDataCollectionMin") int lastDatacollectionMin) {
-    return new RestResponse<>(
-        apmVerificationService.collect247Data(cvConfigId, stateType, startTime, endTime, lastDatacollectionMin));
+      @QueryParam("endTime") long endTime) {
+    return new RestResponse<>(apmVerificationService.collect247Data(cvConfigId, stateType, startTime, endTime));
   }
 }

@@ -34,4 +34,5 @@ public class NewRelicDataCollectionInfo {
   private String settingAttributeId;
   private String deploymentMarker;
   private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType;
+  private String cvConfigId;
 }
