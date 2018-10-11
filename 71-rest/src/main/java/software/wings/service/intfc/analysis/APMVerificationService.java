@@ -12,6 +12,5 @@ public interface APMVerificationService {
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(
       String accountId, String serverConfigId, APMFetchConfig url);
   boolean sendNotifyForMetricAnalysis(String correlationId, MetricDataAnalysisResponse response);
-  boolean collect247Data(
-      String cvConfigId, StateType stateType, long startTime, long endTime, int lastDataCollectionMinute);
+  boolean collect247Data(String cvConfigId, StateType stateType, long startTime, long endTime);
 }

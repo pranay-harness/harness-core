@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.TaskType;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
@@ -72,6 +73,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   @Inject private NewRelicDelegateService newRelicDelegateService;
   @Inject private MetricDataStoreService metricStoreService;
   private NewRelicDataCollectionInfo dataCollectionInfo;
+  private boolean is247Task;
 
   public NewRelicDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -81,6 +83,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
   @Override
   protected DataCollectionTaskResult initDataCollection(Object[] parameters) {
     dataCollectionInfo = (NewRelicDataCollectionInfo) parameters[0];
+    is247Task = this.getTaskType().equals(TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA.name());
     logger.info("metric collection - dataCollectionInfo: {}", dataCollectionInfo);
     return DataCollectionTaskResult.builder()
         .status(DataCollectionTaskStatus.SUCCESS)
@@ -100,11 +103,15 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
   @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new NewRelicMetricCollector(dataCollectionInfo, taskResult);
+    return new NewRelicMetricCollector(dataCollectionInfo, taskResult, is247Task);
   }
 
   @Override
   protected int getInitialDelayMinutes() {
+    if (is247Task) {
+      // we're not going to wait before collection for 24x7 tasks
+      return 0;
+    }
     return Math.min(dataCollectionInfo.getCollectionTime(), INITIAL_DELAY_MINUTES);
   }
 
@@ -121,13 +128,15 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private final Set<NewRelicMetric> allTxns;
     private long managerAnalysisStartTime;
     private TimeSeriesMlAnalysisType analysisType;
+    private boolean is247Task;
 
-    private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult)
-        throws IOException {
+    private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult,
+        boolean is247Task) throws IOException {
       this.dataCollectionInfo = dataCollectionInfo;
       this.managerAnalysisStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.windowStartTimeManager = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.dataCollectionMinute = 0;
+      this.is247Task = is247Task;
       this.taskResult = taskResult;
       this.allTxns = newRelicDelegateService.getTxnNameToCollect(dataCollectionInfo.getNewRelicConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(),
@@ -155,6 +164,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private int getCollectionMinute(long timeStamp) {
+      if (is247Task) {
+        return (int) TimeUnit.MILLISECONDS.toMinutes(timeStamp);
+      }
       long analysisStartTime = isPredictiveAnalysis()
           ? managerAnalysisStartTime - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES)
           : managerAnalysisStartTime;
@@ -163,7 +175,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
     private long getStartTime() {
       long startTime = windowStartTimeManager;
-      if (isPredictiveAnalysis() && dataCollectionMinute == 0) {
+      if (isPredictiveAnalysis() && dataCollectionMinute == 0 && !is247Task) {
         startTime = windowStartTimeManager - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
       }
       return startTime;
@@ -373,9 +385,13 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             List<Callable<Boolean>> callables = new ArrayList<>();
             if (isPredictiveAnalysis()) {
+              final long endTimeForCollection = is247Task
+                  ? startTime + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime())
+                  : windowEndTimeManager;
+
               logger.info(
                   "AnalysisType is Predictive. So we're collecting metrics by application instead of host/node");
-              callables.add(() -> fetchAndSaveMetricsForNode(instances.get(0), metricBatches, windowEndTimeManager));
+              callables.add(() -> fetchAndSaveMetricsForNode(instances.get(0), metricBatches, endTimeForCollection));
             } else {
               for (NewRelicApplicationInstance node : instances) {
                 if (!dataCollectionInfo.getHosts().keySet().contains(node.getHost())) {
@@ -398,7 +414,12 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               }
             }
 
-            if (!saveHeartBeats(dataCollectionMinuteEnd)) {
+            int dataCollectionMinForHeartbeat = dataCollectionMinuteEnd;
+            if (is247Task) {
+              dataCollectionMinForHeartbeat = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+            }
+
+            if (!saveHeartBeats(dataCollectionMinForHeartbeat)) {
               logger.error("Error saving heartbeat to the database. DatacollectionMin: {} StateexecutionId: {}",
                   dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
             }
@@ -408,7 +429,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             dataCollectionMinute = dataCollectionMinuteEnd + 1;
 
-            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+            if (is247Task || dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
               // We are done with all data collection, so setting task status to success and quitting.
               logger.info("Completed NewRelic collection task. So setting task status to success and quitting");
               completed.set(true);
