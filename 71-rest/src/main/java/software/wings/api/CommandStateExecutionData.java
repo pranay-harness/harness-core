@@ -17,7 +17,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
-import software.wings.beans.command.KubernetesYamlConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
@@ -53,7 +52,6 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
-  private KubernetesYamlConfig previousYamlConfig;
   private boolean downsize;
   private String clusterName;
 
@@ -138,9 +136,6 @@ public class CommandStateExecutionData extends StateExecutionData {
     if (containerSetupParams instanceof KubernetesSetupParams) {
       KubernetesSetupParams kubernetesSetupParams = (KubernetesSetupParams) containerSetupParams;
       commandStepExecutionSummary.setControllerNamePrefix(kubernetesSetupParams.getControllerNamePrefix());
-      if (previousYamlConfig != null) {
-        commandStepExecutionSummary.setPreviousYamlConfig(previousYamlConfig);
-      }
     }
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);

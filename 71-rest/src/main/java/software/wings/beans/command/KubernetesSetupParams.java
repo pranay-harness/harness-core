@@ -29,7 +29,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
   private String serviceYaml;
   private String namespace;
   private String controllerNamePrefix;
-  private KubernetesYamlConfig previousYamlConfig;
   private boolean rollback;
   private boolean useFixedInstances;
   private int maxInstances;
@@ -73,7 +72,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
     private String serviceYaml;
     private String namespace;
     private String controllerNamePrefix;
-    private KubernetesYamlConfig previousYamlConfig;
     private boolean rollback;
     private boolean useFixedInstances;
     private int maxInstances;
@@ -200,11 +198,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
 
     public KubernetesSetupParamsBuilder withControllerNamePrefix(String controllerNamePrefix) {
       this.controllerNamePrefix = controllerNamePrefix;
-      return this;
-    }
-
-    public KubernetesSetupParamsBuilder withPreviousYamlConfig(KubernetesYamlConfig previousYamlConfig) {
-      this.previousYamlConfig = previousYamlConfig;
       return this;
     }
 
@@ -340,7 +333,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
           .withServiceYaml(serviceYaml)
           .withNamespace(namespace)
           .withControllerNamePrefix(controllerNamePrefix)
-          .withPreviousYamlConfig(previousYamlConfig)
           .withRollback(rollback)
           .withUseFixedInstances(useFixedInstances)
           .withMaxInstances(maxInstances)
@@ -387,7 +379,6 @@ public class KubernetesSetupParams extends ContainerSetupParams {
       kubernetesSetupParams.setServiceYaml(serviceYaml);
       kubernetesSetupParams.setNamespace(namespace);
       kubernetesSetupParams.setControllerNamePrefix(controllerNamePrefix);
-      kubernetesSetupParams.setPreviousYamlConfig(previousYamlConfig);
       kubernetesSetupParams.setRollback(rollback);
       kubernetesSetupParams.setUseFixedInstances(useFixedInstances);
       kubernetesSetupParams.setMaxInstances(maxInstances);

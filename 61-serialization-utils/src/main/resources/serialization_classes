@@ -381,7 +381,7 @@ software.wings.helpers.ext.cloudformation.response.CloudFormationListStacksRespo
 software.wings.helpers.ext.cloudformation.response.StackSummaryInfo, 5341
 software.wings.beans.delegation.TerraformProvisionParameters, 5342
 software.wings.api.TerraformExecutionData, 5343
-software.wings.beans.command.KubernetesYamlConfig, 5344
+# Retired: 5344
 software.wings.beans.container.Label, 5345
 software.wings.api.ScriptStateExecutionSummary, 5346
 software.wings.service.impl.analysis.TimeSeriesMlAnalysisType, 5347
