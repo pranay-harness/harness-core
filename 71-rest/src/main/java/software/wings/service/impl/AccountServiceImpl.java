@@ -615,7 +615,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public PageResponse<Account> getAccounts(PageRequest pageRequest) {
-    PageResponse<Account> responses = wingsPersistence.query(Account.class, pageRequest);
+    PageResponse<Account> responses = wingsPersistence.query(Account.class, pageRequest, excludeAuthority);
     List<Account> accounts = responses.getResponse();
     decryptLicenseInfo(accounts);
     return responses;
