@@ -337,6 +337,7 @@ public class DataGenUtil extends BaseIntegrationTest {
     final Seed seed = new Seed(0);
 
     License license = licenseGenerator.ensurePredefined(seed, Licenses.TRIAL);
+    enableTrialSupportForDefaultAccount();
 
     Account account = wingsPersistence.createQuery(Account.class).get();
     boolean oldAccountExists = false;
@@ -395,6 +396,25 @@ public class DataGenUtil extends BaseIntegrationTest {
     //    loginAdminUser();
 
     return account;
+  }
+
+  private void enableTrialSupportForDefaultAccount() {
+    FeatureFlag featureFlag =
+        wingsPersistence.createQuery(FeatureFlag.class).filter("name", FeatureName.TRIAL_SUPPORT.name()).get();
+
+    if (featureFlag == null) {
+      featureFlag = FeatureFlag.builder()
+                        .name(FeatureName.TRIAL_SUPPORT.name())
+                        .enabled(true)
+                        .obsolete(false)
+                        .accountIds(Sets.newHashSet(defaultAccountId))
+                        .build();
+    } else {
+      featureFlag.setEnabled(true);
+      featureFlag.setObsolete(false);
+      featureFlag.getAccountIds().add(defaultAccountId);
+    }
+    wingsPersistence.save(featureFlag);
   }
 
   private void addUserToUserGroup(User user, String accountId, String userGroupName) {
