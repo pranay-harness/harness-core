@@ -907,7 +907,7 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = {"sriram@harness.io", "raghu@harness.io"}, intermittent = true)
+  @Owner(emails = {"sriram@harness.io"}, intermittent = true)
   public void withControlAndTest() throws IOException, InterruptedException {
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     String prevStateExecutionId = UUID.randomUUID().toString();

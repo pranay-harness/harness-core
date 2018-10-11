@@ -26,6 +26,7 @@ public class AppdynamicsDataCollectionInfo {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
+  private String cvConfigId;
   private long startTime;
   private long appId;
   private long tierId;
