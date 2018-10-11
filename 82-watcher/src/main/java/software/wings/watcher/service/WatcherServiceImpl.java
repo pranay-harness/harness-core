@@ -818,7 +818,7 @@ public class WatcherServiceImpl implements WatcherService {
         LineIterator reader = FileUtils.lineIterator(configWatcher);
         while (reader.hasNext()) {
           String line = reader.nextLine();
-          logger.warn("   " + (StringUtils.containsIgnoreCase("secret", line) ? "<redacted>" : line));
+          logger.warn("   " + (StringUtils.containsIgnoreCase(line, "secret") ? "<redacted>" : line));
         }
       }
     } catch (IOException ex) {
