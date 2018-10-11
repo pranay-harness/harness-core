@@ -72,7 +72,10 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
       StencilCategory.OTHERS, 9, Lists.newArrayList(DeploymentType.WINRM)),
 
   PCF_PCF(
-      PcfInfrastructureMapping.class, "PCF_PCF", StencilCategory.OTHERS, 10, Lists.newArrayList(DeploymentType.PCF));
+      PcfInfrastructureMapping.class, "PCF_PCF", StencilCategory.OTHERS, 10, Lists.newArrayList(DeploymentType.PCF)),
+
+  AZURE_INFRA(AzureInfrastructureMapping.class, "AZURE", StencilCategory.OTHERS, 11,
+      Lists.newArrayList(DeploymentType.SSH, DeploymentType.WINRM));
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";

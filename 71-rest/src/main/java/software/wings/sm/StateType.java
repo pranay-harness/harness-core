@@ -84,6 +84,7 @@ import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsLambdaRollback;
 import software.wings.sm.states.AwsLambdaState;
 import software.wings.sm.states.AwsNodeSelectState;
+import software.wings.sm.states.AzureNodeSelectState;
 import software.wings.sm.states.BambooState;
 import software.wings.sm.states.BarrierState;
 import software.wings.sm.states.BugsnagState;
@@ -298,7 +299,7 @@ public enum StateType implements StateTypeDescriptor {
    */
   COMMAND(CommandState.class, COMMANDS,
       Lists.newArrayList(InfrastructureMappingType.AWS_SSH, InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH,
-          InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM),
+          InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM, InfrastructureMappingType.AZURE_INFRA),
       asList(START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE, DISABLE_SERVICE), ORCHESTRATION_STENCILS),
 
   /**
@@ -333,6 +334,10 @@ public enum StateType implements StateTypeDescriptor {
    * Artifact Collection state type.
    */
   ARTIFACT_CHECK(ArtifactCheckState.class, OTHERS, 4, "Artifact Check", asList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
+
+  AZURE_NODE_SELECT(AzureNodeSelectState.class, CLOUD, SELECT_NODE_NAME,
+      Lists.newArrayList(InfrastructureMappingType.AZURE_INFRA), asList(INFRASTRUCTURE_NODE, SELECT_NODE),
+      ORCHESTRATION_STENCILS),
 
   /**
    * AWS Node Select state.

@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageRequest.UNLIMITED;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
@@ -29,6 +30,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.KubernetesConvention.DASH;
@@ -45,6 +47,7 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.Tag;
+import com.microsoft.azure.management.compute.VirtualMachine;
 import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -71,6 +74,8 @@ import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.AwsLambdaInfraStructureMapping;
+import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CodeDeployInfrastructureMapping;
@@ -105,6 +110,7 @@ import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -147,6 +153,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.executable.ValidateOnExecution;
 
@@ -181,6 +188,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
   @Inject private YamlPushService yamlPushService;
+  @Inject private AzureHelperService azureHelperService;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -244,7 +252,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infraMapping instanceof AzureKubernetesInfrastructureMapping) {
       AzureKubernetesInfrastructureMapping azureKubernetesInfrastructureMapping =
           (AzureKubernetesInfrastructureMapping) infraMapping;
-      validateAzureInfraMapping(azureKubernetesInfrastructureMapping);
+      validateAzureKubernetesInfraMapping(azureKubernetesInfrastructureMapping);
+    }
+
+    if (infraMapping instanceof AzureInfrastructureMapping) {
+      AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infraMapping;
+      validateAzureInfraMapping(azureInfrastructureMapping);
     }
 
     if (infraMapping instanceof DirectKubernetesInfrastructureMapping) {
@@ -419,6 +432,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           isNotBlank(azureKubernetesInfrastructureMapping.getNamespace())
               ? azureKubernetesInfrastructureMapping.getNamespace()
               : "default");
+    } else if (infrastructureMapping instanceof AzureInfrastructureMapping) {
+      AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
+      validateAzureInfraMapping(azureInfrastructureMapping);
+      keyValuePairs.put("subscriptionId", azureInfrastructureMapping.getSubscriptionId());
+      keyValuePairs.put("resourceGroup", azureInfrastructureMapping.getResourceGroup());
+      keyValuePairs.put("winRmConnectionAttributes", azureInfrastructureMapping.getWinRmConnectionAttributes());
+      keyValuePairs.put("tags", azureInfrastructureMapping.getTags());
+      keyValuePairs.put("usePublicDns", azureInfrastructureMapping.isUsePublicDns());
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(awsInfrastructureMapping, fromYaml);
@@ -641,6 +662,30 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
+  private void validateAzureInfraMapping(AzureInfrastructureMapping infraMapping) {
+    if (isEmpty(infraMapping.getComputeProviderType()) || !infraMapping.getComputeProviderType().equals(AZURE.name())) {
+      throw new WingsException(INVALID_ARGUMENT)
+          .addParam("args", "Compute Provider type is empty or not correct for Azure Infra mapping.");
+    }
+
+    if (isEmpty(infraMapping.getSubscriptionId())) {
+      throw new WingsException(INVALID_ARGUMENT)
+          .addParam("args", "Subscription Id must not be empty for Azure Infra mapping.");
+    }
+
+    if (isEmpty(infraMapping.getDeploymentType())
+        || (!infraMapping.getDeploymentType().equals(SSH.name())
+               && !infraMapping.getDeploymentType().equals(WINRM.name()))) {
+      throw new WingsException(INVALID_ARGUMENT)
+          .addParam("args", "Deployment type must not be empty and must be one of SSH/WINRM for Azure Infra mapping.");
+    }
+
+    if (isEmpty(infraMapping.getInfraMappingType())) {
+      throw new WingsException(INVALID_ARGUMENT)
+          .addParam("args", "Infra mapping type must not be empty for Azure Infra mapping.");
+    }
+  }
+
   private void validateNamespace(String namespace) {
     try {
       new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
@@ -649,7 +694,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     }
   }
 
-  private void validateAzureInfraMapping(AzureKubernetesInfrastructureMapping infraMapping) {
+  private void validateAzureKubernetesInfraMapping(AzureKubernetesInfrastructureMapping infraMapping) {
     SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     notNullCheck("SettingAttribute", settingAttribute, USER);
     String clusterName = infraMapping.getClusterName();
@@ -991,6 +1036,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
               secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null),
               new PageRequest<>())
           .getResponse();
+    } else if (infrastructureMapping instanceof AzureInfrastructureMapping) {
+      AzureInfrastructureMapping azureInfraMapping = (AzureInfrastructureMapping) infrastructureMapping;
+      SettingAttribute computeProviderSetting = settingsService.get(azureInfraMapping.getComputeProviderSettingId());
+      notNullCheck("Compute Provider", computeProviderSetting);
+      return azureHelperService.listHosts(azureInfraMapping, computeProviderSetting,
+          secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null),
+          new PageRequest<>());
     } else {
       throw new InvalidRequestException(
           "Unsupported infrastructure mapping: " + infrastructureMapping.getClass().getName());
@@ -1005,7 +1057,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         serviceTemplateService.get(infrastructureMapping.getAppId(), infrastructureMapping.getServiceTemplateId());
 
     List<Host> savedHosts = hosts.stream().map(infrastructureProvider::saveHost).collect(toList());
-
     return serviceInstanceService.updateInstanceMappings(serviceTemplate, infrastructureMapping, savedHosts);
   }
 
@@ -1014,6 +1065,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
     }
     return (AwsConfig) computeProviderSetting.getValue();
+  }
+
+  private AzureConfig validateAndGetAzureConfig(SettingAttribute computeProviderSetting) {
+    if (computeProviderSetting == null || !(computeProviderSetting.getValue() instanceof AzureConfig)) {
+      throw new WingsException(INVALID_ARGUMENT).addParam("args", "No cloud provider exist or not of type Azure");
+    }
+    return (AzureConfig) computeProviderSetting.getValue();
   }
 
   @Override
@@ -1096,6 +1154,42 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
         return awsEc2HelperServiceManager.listTags(
             awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+      } catch (Exception e) {
+        logger.warn(Misc.getMessage(e), e);
+        throw new InvalidRequestException(Misc.getMessage(e), USER);
+      }
+    }
+    return Collections.emptySet();
+  }
+
+  @Override
+  public Set<String> listAzureTags(String appId, String computeProviderId, String subscriptionId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AZURE.name().equals(computeProviderSetting.getValue().getType())) {
+      try {
+        AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderSetting);
+        return azureHelperService.listTagsBySubscription(
+            subscriptionId, azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null));
+      } catch (Exception e) {
+        logger.warn(Misc.getMessage(e), e);
+        throw new InvalidRequestException(Misc.getMessage(e), USER);
+      }
+    }
+    return Collections.emptySet();
+  }
+
+  @Override
+  public Set<String> listAzureResourceGroups(String appId, String computeProviderId, String subscriptionId) {
+    SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (AZURE.name().equals(computeProviderSetting.getValue().getType())) {
+      try {
+        AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderSetting);
+        return azureHelperService.listResourceGroups(
+            azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -1418,6 +1512,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private List<String> getInfrastructureMappingHostDisplayNames(
       InfrastructureMapping infrastructureMapping, String appId, String workflowExecutionId) {
+    List<String> hostDisplayNames = new ArrayList<>();
     if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
       return ((PhysicalInfrastructureMappingBase) infrastructureMapping).getHostNames();
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
@@ -1434,7 +1529,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                       (EncryptableSetting) computeProviderSetting.getValue(), appId, workflowExecutionId),
                   new PageRequest<>())
               .getResponse();
-      List<String> hostDisplayNames = new ArrayList<>();
       for (Host host : hosts) {
         String displayName = host.getPublicDns();
         if (host.getEc2Instance() != null) {
@@ -1448,6 +1542,17 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
         }
         hostDisplayNames.add(displayName);
       }
+      return hostDisplayNames;
+    } else if (infrastructureMapping instanceof AzureInfrastructureMapping) {
+      AzureInfrastructureMapping azureInfrastructureMapping = (AzureInfrastructureMapping) infrastructureMapping;
+      SettingAttribute computeProviderSetting =
+          settingsService.get(azureInfrastructureMapping.getComputeProviderSettingId());
+      notNullCheck("Compute Provider", computeProviderSetting);
+
+      // Get VMs
+      List<VirtualMachine> vms = azureHelperService.listVms(azureInfrastructureMapping, computeProviderSetting,
+          secretManager.getEncryptionDetails((EncryptableSetting) computeProviderSetting.getValue(), null, null), null);
+      hostDisplayNames = vms.stream().map(vm -> vm.name()).collect(Collectors.toList());
       return hostDisplayNames;
     }
     return emptyList();
@@ -1618,11 +1723,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       infraTypes.put(AMI, asList(SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.IIS || artifactType == ArtifactType.IIS_APP
         || artifactType == ArtifactType.IIS_VirtualDirectory) {
-      infraTypes.put(WINRM, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
+      infraTypes.put(WINRM,
+          asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS, SettingVariableTypes.AZURE));
     } else if (artifactType == ArtifactType.PCF) {
       infraTypes.put(PCF, asList(SettingVariableTypes.PCF));
     } else {
-      infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
+      infraTypes.put(
+          SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS, SettingVariableTypes.AZURE));
     }
 
     return infraTypes;

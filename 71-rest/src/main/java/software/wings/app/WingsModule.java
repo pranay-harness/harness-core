@@ -87,6 +87,7 @@ import software.wings.service.impl.AuditServiceImpl;
 import software.wings.service.impl.AuthServiceImpl;
 import software.wings.service.impl.AwsHelperResourceServiceImpl;
 import software.wings.service.impl.AwsInfrastructureProvider;
+import software.wings.service.impl.AzureInfrastructureProvider;
 import software.wings.service.impl.AzureResourceServiceImpl;
 import software.wings.service.impl.BambooBuildServiceImpl;
 import software.wings.service.impl.BarrierServiceImpl;
@@ -497,6 +498,7 @@ public class WingsModule extends DependencyModule {
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.AWS.name()).to(AwsInfrastructureProvider.class);
+    infrastructureProviderMapBinder.addBinding(SettingVariableTypes.AZURE.name()).to(AzureInfrastructureProvider.class);
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.GCP.name()).to(GcpInfrastructureProvider.class);
     infrastructureProviderMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
         .to(StaticInfrastructureProvider.class);

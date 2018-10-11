@@ -5,6 +5,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
+import com.microsoft.azure.management.compute.VirtualMachine;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -13,7 +14,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
-import software.wings.beans.AzureTagDetails;
 import software.wings.beans.AzureVirtualMachineScaleSet;
 import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretName;
@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Integration
 public class AzureIntegrationTest extends WingsBaseTest {
@@ -112,12 +113,48 @@ public class AzureIntegrationTest extends WingsBaseTest {
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
       logger.info("Subscription: " + subscriptionId);
-      List<AzureTagDetails> tags = azureHelperService.listTags(config, Collections.emptyList(), subscriptionId);
+      Set<String> tags = azureHelperService.listTagsBySubscription(subscriptionId, config, Collections.emptyList());
       assertThat(tags).isNotEmpty();
-      for (AzureTagDetails tag : tags) {
-        logger.info("Tag: " + tag.getTagName());
-        for (String value : tag.getValues()) {
-          logger.info("Value: " + value);
+      for (String tag : tags) {
+        logger.info("Tag: " + tag);
+      }
+    }
+  }
+
+  @Test
+  public void getResourceGroups() {
+    AzureConfig config = getAzureConfig();
+    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
+      String subscriptionId = entry.getKey();
+      logger.info("Subscription: " + subscriptionId);
+      Set<String> resourceGroups =
+          azureHelperService.listResourceGroups(config, Collections.EMPTY_LIST, subscriptionId);
+      assertThat(resourceGroups).isNotEmpty();
+      for (String rg : resourceGroups) {
+        logger.info("Resource group : " + rg);
+      }
+    }
+  }
+
+  @Test
+  public void getVmsByResourceGroupAndTag() {
+    AzureConfig config = getAzureConfig();
+    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
+      String subscriptionId = entry.getKey();
+      logger.info("Subscription: " + subscriptionId);
+      Set<String> resourceGroups =
+          azureHelperService.listResourceGroups(config, Collections.EMPTY_LIST, subscriptionId);
+      assertThat(resourceGroups).isNotEmpty();
+
+      for (String rg : resourceGroups) {
+        List<VirtualMachine> vms = azureHelperService.listVmsByTagsAndResourceGroup(
+            config, Collections.EMPTY_LIST, subscriptionId, rg, Collections.EMPTY_MAP);
+        for (VirtualMachine vm : vms) {
+          logger.info("Resource group :" + rg + " VM :" + vm.name());
         }
       }
     }
