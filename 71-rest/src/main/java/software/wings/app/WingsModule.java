@@ -118,7 +118,6 @@ import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.MigrationServiceImpl;
-import software.wings.service.impl.NewRelicCVConfigurationServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
@@ -314,7 +313,6 @@ import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.splunk.SplunkAnalysisService;
 import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.service.intfc.verification.NewRelicCVConfigurationService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.GitClient;
@@ -535,7 +533,6 @@ public class WingsModule extends DependencyModule {
     bind(APMVerificationService.class).to(APMVerificationServiceImpl.class);
     bind(LogVerificationService.class).to(LogVerificationServiceImpl.class);
     bind(CVConfigurationService.class).to(CVConfigurationServiceImpl.class);
-    bind(NewRelicCVConfigurationService.class).to(NewRelicCVConfigurationServiceImpl.class);
 
     bind(LimitCheckerFactory.class).to(LimitCheckerFactoryImpl.class);
     bind(LimitConfigurationService.class).to(LimitConfigurationServiceMongo.class);
