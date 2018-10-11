@@ -278,7 +278,6 @@ public class KubernetesSetup extends ContainerServiceSetup {
       if (setupExecutionData != null) {
         containerServiceElementBuilder.name(setupExecutionData.getContainerServiceName())
             .lookupLabels(setupExecutionData.getLookupLabels())
-            .previousYamlConfig(setupExecutionData.getPreviousYamlConfig())
             .autoscalerYaml(setupExecutionData.getAutoscalerYaml())
             .activeServiceCounts(setupExecutionData.getActiveServiceCounts())
             .trafficWeights(setupExecutionData.getTrafficWeights());

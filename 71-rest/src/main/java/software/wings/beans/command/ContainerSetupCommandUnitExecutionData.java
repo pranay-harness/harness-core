@@ -19,7 +19,6 @@ public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData
   private String containerServiceName;
   private List<String[]> activeServiceCounts;
   private List<String[]> trafficWeights;
-  private KubernetesYamlConfig previousYamlConfig;
   private String autoscalerYaml;
   private List<Label> lookupLabels;
 }

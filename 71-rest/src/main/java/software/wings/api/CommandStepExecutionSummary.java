@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.command.CodeDeployParams;
-import software.wings.beans.command.KubernetesYamlConfig;
 import software.wings.sm.StepExecutionSummary;
 
 import java.util.ArrayList;
@@ -21,7 +20,6 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private List<ContainerServiceData> newInstanceData = new ArrayList<>();
   private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
   private String controllerNamePrefix;
-  private KubernetesYamlConfig previousYamlConfig;
   private String clusterName;
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
