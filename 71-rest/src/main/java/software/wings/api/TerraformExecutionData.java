@@ -1,19 +1,19 @@
 package software.wings.api;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Builder
-public class TerraformExecutionData extends StateExecutionData implements NotifyResponseData {
+public class TerraformExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
 
   private ExecutionStatus executionStatus;

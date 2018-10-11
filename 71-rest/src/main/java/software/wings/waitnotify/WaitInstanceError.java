@@ -1,5 +1,6 @@
 package software.wings.waitnotify;
 
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 
@@ -15,7 +16,7 @@ import java.util.Objects;
 public class WaitInstanceError extends Base {
   private String waitInstanceId;
 
-  private Map<String, NotifyResponseData> responseMap;
+  private Map<String, ResponseData> responseMap;
 
   private String errorStackTrace;
 
@@ -42,7 +43,7 @@ public class WaitInstanceError extends Base {
    *
    * @return the response map
    */
-  public Map<String, NotifyResponseData> getResponseMap() {
+  public Map<String, ResponseData> getResponseMap() {
     return responseMap;
   }
 
@@ -51,7 +52,7 @@ public class WaitInstanceError extends Base {
    *
    * @param responseMap the response map
    */
-  public void setResponseMap(Map<String, NotifyResponseData> responseMap) {
+  public void setResponseMap(Map<String, ResponseData> responseMap) {
     this.responseMap = responseMap;
   }
 

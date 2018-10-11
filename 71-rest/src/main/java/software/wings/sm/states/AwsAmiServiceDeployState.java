@@ -25,6 +25,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -91,7 +92,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
-import software.wings.waitnotify.NotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Collections;
@@ -374,7 +374,7 @@ public class AwsAmiServiceDeployState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
         (AwsAmiDeployStateExecutionData) context.getStateExecutionData();
 

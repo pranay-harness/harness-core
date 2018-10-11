@@ -25,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.task.protocol.ResponseData;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -51,7 +52,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -115,7 +115,7 @@ public class CloudFormationRollbackStackStateTest extends WingsBaseTest {
         CloudFormationRollbackInfoElement.builder().stackExisted(true).provisionerId(PROVISIONER_ID).build();
     doReturn(stackElement).when(mockContext).getContextElement(any());
     doReturn(ScriptStateExecutionData.builder().build()).when(mockContext).getStateExecutionData();
-    Map<String, NotifyResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         CloudFormationCommandExecutionResponse.builder()
             .commandExecutionStatus(SUCCESS)
             .commandResponse(CloudFormationCreateStackResponse.builder()

@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
+import io.harness.task.protocol.ResponseData;
 import io.harness.threading.Concurrent;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,7 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Listeners(NotifyEventListener.class)
 public class WaitNotifyEngineTest extends WingsBaseTest {
   private static AtomicInteger callCount;
-  private static Map<String, NotifyResponseData> responseMap;
+  private static Map<String, ResponseData> responseMap;
 
   @Inject private WaitNotifyEngine waitNotifyEngine;
 
@@ -63,7 +64,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
         .containsExactly(tuple(waitInstanceId, "123"));
 
-    NotifyResponseData data = aStringNotifyResponseData().withData("response-123").build();
+    ResponseData data = aStringNotifyResponseData().withData("response-123").build();
     String id = waitNotifyEngine.notify("123", data);
 
     assertThat(wingsPersistence.get(NotifyResponse.class, id))
@@ -93,7 +94,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
           .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
           .containsExactly(tuple(waitInstanceId, "123"));
 
-      NotifyResponseData data = aStringNotifyResponseData().withData("response-123").build();
+      ResponseData data = aStringNotifyResponseData().withData("response-123").build();
       String id = waitNotifyEngine.notify("123", data);
 
       Concurrent.test(10, i -> { notifier.execute(); });
@@ -128,7 +129,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
         .containsExactly(tuple(waitInstanceId, "123"), tuple(waitInstanceId, "456"), tuple(waitInstanceId, "789"));
 
-    NotifyResponseData data1 = aStringNotifyResponseData().withData("response-123").build();
+    ResponseData data1 = aStringNotifyResponseData().withData("response-123").build();
 
     String id = waitNotifyEngine.notify("123", data1);
 
@@ -142,7 +143,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     }
 
     assertThat(responseMap).hasSize(0);
-    NotifyResponseData data2 = aStringNotifyResponseData().withData("response-456").build();
+    ResponseData data2 = aStringNotifyResponseData().withData("response-456").build();
 
     id = waitNotifyEngine.notify("456", data2);
 
@@ -156,7 +157,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     }
 
     assertThat(responseMap).hasSize(0);
-    NotifyResponseData data3 = aStringNotifyResponseData().withData("response-789").build();
+    ResponseData data3 = aStringNotifyResponseData().withData("response-789").build();
 
     id = waitNotifyEngine.notify("789", data3);
 
@@ -192,7 +193,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
         .containsExactly(tuple(waitInstanceId1, "123"), tuple(waitInstanceId2, "123"), tuple(waitInstanceId3, "123"));
 
-    NotifyResponseData data = aStringNotifyResponseData().withData("response-123").build();
+    ResponseData data = aStringNotifyResponseData().withData("response-123").build();
     String id = waitNotifyEngine.notify("123", data);
 
     assertThat(wingsPersistence.get(NotifyResponse.class, id))
@@ -213,13 +214,13 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
      * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
      */
     @Override
-    public void notify(Map<String, NotifyResponseData> response) {
+    public void notify(Map<String, ResponseData> response) {
       callCount.incrementAndGet();
       responseMap.putAll(response);
     }
 
     @Override
-    public void notifyError(Map<String, NotifyResponseData> response) {
+    public void notifyError(Map<String, ResponseData> response) {
       // Do Nothing.
     }
   }

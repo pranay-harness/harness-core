@@ -1,5 +1,7 @@
 package software.wings.waitnotify;
 
+import io.harness.task.protocol.ResponseData;
+
 import java.util.Map;
 
 /**
@@ -13,7 +15,7 @@ public interface NotifyCallback {
    *
    * @param response the response
    */
-  void notify(Map<String, NotifyResponseData> response);
+  void notify(Map<String, ResponseData> response);
 
-  void notifyError(Map<String, NotifyResponseData> response);
+  void notifyError(Map<String, ResponseData> response);
 }

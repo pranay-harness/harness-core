@@ -11,6 +11,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;
@@ -28,7 +29,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.CronUtil;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -115,7 +115,7 @@ public class ArtifactCheckState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     List<String> artifactNamesForDownload = new ArrayList<>();
     List<String> correlationIds = new ArrayList<>();
     List<Artifact> failedArtifacts = new ArrayList<>();

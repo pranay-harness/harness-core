@@ -21,6 +21,7 @@ import io.harness.distribution.constraint.ConstraintException;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.ConsumerId;
 import io.harness.exception.InvalidRequestException;
+import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ResourceConstraintExecutionData;
@@ -49,7 +50,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.HashMap;
 import java.util.List;
@@ -110,7 +110,7 @@ public class ResourceConstraintState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
     final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
 

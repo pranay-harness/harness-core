@@ -7,12 +7,12 @@ import static org.apache.commons.lang3.StringUtils.strip;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.task.protocol.ResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -22,7 +22,7 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class EcsServiceExecutionData extends StateExecutionData implements NotifyResponseData {
+public class EcsServiceExecutionData extends StateExecutionData implements ResponseData {
   private String ecsClusterName;
   private String ecsServiceName;
   private String dockerImageName;

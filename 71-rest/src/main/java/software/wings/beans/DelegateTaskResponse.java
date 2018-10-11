@@ -1,16 +1,16 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
-import software.wings.waitnotify.NotifyResponseData;
 
 @Data
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DelegateTaskResponse {
   private String accountId;
-  private NotifyResponseData response;
+  private ResponseData response;
   private ResponseCode responseCode;
 
   public enum ResponseCode {

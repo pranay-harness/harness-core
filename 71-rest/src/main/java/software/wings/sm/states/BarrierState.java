@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.distribution.barrier.Barrier;
+import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;
@@ -23,7 +24,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -88,11 +88,11 @@ public class BarrierState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     updateBarrier(context);
     final Builder executionResponseBuilder = executionResponseBuilder();
 
-    NotifyResponseData notifyResponseData = response.values().iterator().next();
+    ResponseData notifyResponseData = response.values().iterator().next();
     if (notifyResponseData instanceof BarrierStatusData && ((BarrierStatusData) notifyResponseData).isFailed()) {
       executionResponseBuilder.withExecutionStatus(ExecutionStatus.FAILED).withErrorMessage(errorMsg);
     }

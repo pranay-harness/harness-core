@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -46,7 +47,6 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -210,7 +210,7 @@ public class BambooState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
     BambooExecutionResponse bambooExecutionResponse = (BambooExecutionResponse) response.values().iterator().next();
     updateActivityStatus(

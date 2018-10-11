@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Maps;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,7 +16,6 @@ import software.wings.beans.ResizeStrategy;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AwsAmiDeployStateExecutionData extends StateExecutionData implements NotifyResponseData {
+public class AwsAmiDeployStateExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private String commandName;
   private String newAutoScalingGroupName;

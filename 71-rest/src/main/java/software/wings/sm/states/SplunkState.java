@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.task.protocol.ResponseData;
 import org.apache.commons.codec.binary.Base64;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -22,7 +23,6 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.StateType;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -65,7 +65,7 @@ public class SplunkState extends HttpState {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponse executionResponse = super.handleAsyncResponse(context, response);
 
     HttpStateExecutionData httpStateExecutionData = (HttpStateExecutionData) executionResponse.getStateExecutionData();

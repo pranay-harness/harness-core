@@ -10,6 +10,7 @@ import static software.wings.beans.artifact.Artifact.Status.ERROR;
 
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
@@ -21,7 +22,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.waitnotify.ListNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -47,7 +47,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, NotifyResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     ListNotifyResponseData responseData = (ListNotifyResponseData) response.values().iterator().next();
 
     if (isEmpty(responseData.getData())) { // Error in Downloading artifact file
@@ -77,7 +77,7 @@ public class ArtifactCollectionCallback implements NotifyCallback {
   }
 
   @Override
-  public void notifyError(Map<String, NotifyResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     logger.info("Error occurred while collecting content of artifact id {}", artifactId);
     Artifact artifact = artifactService.get(appId, artifactId);
     if (artifact == null) {

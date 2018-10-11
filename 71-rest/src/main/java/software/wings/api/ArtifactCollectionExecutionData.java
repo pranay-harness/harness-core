@@ -2,11 +2,11 @@ package software.wings.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.StateExecutionData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -16,7 +16,7 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
-public class ArtifactCollectionExecutionData extends StateExecutionData implements NotifyResponseData {
+public class ArtifactCollectionExecutionData extends StateExecutionData implements ResponseData {
   private String artifactSource;
   private String artifactStatus;
   private String jobName;

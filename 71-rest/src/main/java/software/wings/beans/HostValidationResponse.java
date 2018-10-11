@@ -1,11 +1,11 @@
 package software.wings.beans;
 
-import software.wings.waitnotify.NotifyResponseData;
+import io.harness.task.protocol.ResponseData;
 
 /**
  * Created by anubhaw on 2/22/17.
  */
-public class HostValidationResponse implements NotifyResponseData {
+public class HostValidationResponse implements ResponseData {
   private String hostName;
   private String status;
   private String errorCode;

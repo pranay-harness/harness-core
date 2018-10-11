@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.task.protocol.ResponseData;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
@@ -18,7 +19,6 @@ import org.mongodb.morphia.mapping.MappedField;
 import software.wings.beans.DelegateTask.Converter;
 import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -58,7 +58,7 @@ public class DelegateTask extends Base {
   private String preAssignedDelegateId;
   private Set<String> alreadyTriedDelegates = new HashSet<>();
 
-  @Transient private transient NotifyResponseData notifyResponse;
+  @Transient private transient ResponseData notifyResponse;
   @Transient private transient DelegateRunnableTask delegateRunnableTask;
 
   @SchemaIgnore
@@ -216,17 +216,17 @@ public class DelegateTask extends Base {
     this.validationCompleteDelegateIds = validationCompleteDelegateIds;
   }
 
-  public NotifyResponseData getNotifyResponse() {
+  public ResponseData getNotifyResponse() {
     if (notifyResponse != null) {
       return notifyResponse;
     }
     if (serializedNotifyResponseData != null) {
-      return (NotifyResponseData) KryoUtils.asObject(serializedNotifyResponseData);
+      return (ResponseData) KryoUtils.asObject(serializedNotifyResponseData);
     }
     return null;
   }
 
-  public void setNotifyResponse(NotifyResponseData notifyResponse) {
+  public void setNotifyResponse(ResponseData notifyResponse) {
     this.notifyResponse = notifyResponse;
     setSerializedNotifyResponseData(notifyResponse != null ? KryoUtils.asBytes(notifyResponse) : null);
   }
@@ -440,7 +440,7 @@ public class DelegateTask extends Base {
     private long createdAt;
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
-    private NotifyResponseData notifyResponse;
+    private ResponseData notifyResponse;
     private String preAssignedDelegateId;
 
     private Builder() {}
@@ -540,7 +540,7 @@ public class DelegateTask extends Base {
       return this;
     }
 
-    public Builder withNotifyResponse(NotifyResponseData notifyResponse) {
+    public Builder withNotifyResponse(ResponseData notifyResponse) {
       this.notifyResponse = notifyResponse;
       return this;
     }

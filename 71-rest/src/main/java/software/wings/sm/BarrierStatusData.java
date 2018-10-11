@@ -1,11 +1,11 @@
 package software.wings.sm;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Value;
-import software.wings.waitnotify.NotifyResponseData;
 
 @Value
 @Builder
-public class BarrierStatusData implements NotifyResponseData {
+public class BarrierStatusData implements ResponseData {
   boolean failed;
 }

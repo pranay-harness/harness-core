@@ -1,16 +1,16 @@
 package software.wings.service.impl;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
-public class DelayEventNotifyData implements NotifyResponseData {
+public class DelayEventNotifyData implements ResponseData {
   private Map<String, String> context;
 
   public DelayEventNotifyData(Map<String, String> context) {

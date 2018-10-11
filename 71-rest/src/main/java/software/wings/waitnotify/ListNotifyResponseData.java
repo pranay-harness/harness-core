@@ -1,5 +1,6 @@
 package software.wings.waitnotify;
 
+import io.harness.task.protocol.ResponseData;
 import software.wings.beans.Base;
 
 import java.util.ArrayList;
@@ -8,7 +9,7 @@ import java.util.List;
 /**
  * Created by rishi on 12/14/16.
  */
-public class ListNotifyResponseData implements NotifyResponseData {
+public class ListNotifyResponseData implements ResponseData {
   private List<Base> data = new ArrayList<>();
 
   public ListNotifyResponseData() {}

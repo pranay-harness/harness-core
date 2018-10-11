@@ -32,6 +32,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.regions.Regions;
+import io.harness.task.protocol.ResponseData;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
@@ -60,7 +61,6 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -127,7 +127,7 @@ public class EcsSteadyStateCheckTest extends WingsBaseTest {
     doReturn(APP_ID).when(mockParams).getAppId();
     ScriptStateExecutionData mockData = mock(ScriptStateExecutionData.class);
     doReturn(mockData).when(mockContext).getStateExecutionData();
-    Map<String, NotifyResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
+    Map<String, ResponseData> delegateResponse = ImmutableMap.of(ACTIVITY_ID,
         EcsSteadyStateCheckResponse.builder()
             .executionStatus(ExecutionStatus.SUCCESS)
             .containerInfoList(singletonList(ContainerInfo.builder().hostName("host").containerId("cid").build()))

@@ -15,6 +15,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.task.protocol.ResponseData;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -36,7 +37,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -102,7 +102,7 @@ public class ArtifactCollectionState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ArtifactStream artifactStream = artifactStreamService.get(context.getAppId(), artifactStreamId);
     notNullCheck("ArtifactStream was deleted", artifactStream);
 

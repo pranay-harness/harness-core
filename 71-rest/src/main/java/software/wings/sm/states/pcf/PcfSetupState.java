@@ -12,6 +12,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -68,7 +69,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -302,7 +302,7 @@ public class PcfSetupState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -313,7 +313,7 @@ public class PcfSetupState extends State {
   }
 
   @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED") // TODO
-  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
 
     PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();

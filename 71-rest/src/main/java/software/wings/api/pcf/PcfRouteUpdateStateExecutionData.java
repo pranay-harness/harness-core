@@ -3,6 +3,7 @@ package software.wings.api.pcf;
 import com.google.common.collect.Maps;
 
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,7 +13,6 @@ import software.wings.api.ExecutionDataValue;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfRouteUpdateRequestConfigData;
 import software.wings.sm.StateExecutionData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,7 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PcfRouteUpdateStateExecutionData extends StateExecutionData implements NotifyResponseData {
+public class PcfRouteUpdateStateExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private String accountId;
   private String appId;

@@ -2,8 +2,8 @@ package software.wings.sm;
 
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -76,12 +76,12 @@ public class StateMachineResumeCallback implements NotifyCallback {
    * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
    */
   @Override
-  public void notify(Map<String, NotifyResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     stateMachineExecutor.resume(appId, executionUuid, stateExecutionInstanceId, response, false);
   }
 
   @Override
-  public void notifyError(Map<String, NotifyResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     stateMachineExecutor.resume(appId, executionUuid, stateExecutionInstanceId, response, true);
   }
 }

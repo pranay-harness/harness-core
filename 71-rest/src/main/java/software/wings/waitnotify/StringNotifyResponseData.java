@@ -2,12 +2,14 @@ package software.wings.waitnotify;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.task.protocol.ResponseData;
+
 import java.util.Objects;
 
 /**
  * Created by peeyushaggarwal on 6/24/16.
  */
-public class StringNotifyResponseData implements NotifyResponseData {
+public class StringNotifyResponseData implements ResponseData {
   private String data;
 
   public StringNotifyResponseData() {}

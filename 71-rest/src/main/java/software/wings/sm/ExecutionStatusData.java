@@ -3,14 +3,15 @@ package software.wings.sm;
 /**
  * Created by rishi on 2/5/17.
  */
-import software.wings.waitnotify.NotifyResponseData;
+
+import io.harness.task.protocol.ResponseData;
 
 import java.util.Objects;
 
 /**
  * The type Execution status data.
  */
-public class ExecutionStatusData implements NotifyResponseData {
+public class ExecutionStatusData implements ResponseData {
   private ExecutionStatus executionStatus;
 
   /**

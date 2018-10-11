@@ -1,6 +1,7 @@
 package software.wings.api;
 
 import io.harness.serializer.XmlUtils;
+import io.harness.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,6 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.utils.JsonUtils;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.Map;
@@ -29,7 +29,7 @@ import javax.xml.parsers.ParserConfigurationException;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-public class HttpStateExecutionData extends StateExecutionData implements NotifyResponseData {
+public class HttpStateExecutionData extends StateExecutionData implements ResponseData {
   private String httpUrl;
   private String httpMethod;
   private int httpResponseCode;

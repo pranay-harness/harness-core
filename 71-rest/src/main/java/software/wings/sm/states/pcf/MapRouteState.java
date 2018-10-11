@@ -8,6 +8,7 @@ import com.github.reinert.jjschema.Attributes;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -200,7 +200,7 @@ public class MapRouteState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       String activityId = response.keySet().iterator().next();
       PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
@@ -228,7 +228,7 @@ public class MapRouteState extends State {
     }
   }
 
-  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
     PcfCommandExecutionResponse executionResponse = (PcfCommandExecutionResponse) response.values().iterator().next();
     ExecutionStatus executionStatus =

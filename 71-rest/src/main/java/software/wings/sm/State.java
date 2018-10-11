@@ -2,10 +2,10 @@ package software.wings.sm;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.task.protocol.ResponseData;
 import software.wings.beans.EntityType;
 import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -267,7 +267,7 @@ public abstract class State {
    * @param response map of responses this state was waiting on.
    * @return Response from handling this state.
    */
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     return new ExecutionResponse();
   }
 

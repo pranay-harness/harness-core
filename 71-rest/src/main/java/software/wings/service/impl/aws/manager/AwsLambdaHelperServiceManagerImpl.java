@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
@@ -19,7 +20,6 @@ import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -54,7 +54,7 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
                                     .withParameters(new Object[] {request})
                                     .build();
     try {
-      NotifyResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
         throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
       }

@@ -19,6 +19,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.ReadPref;
+import io.harness.task.protocol.ResponseData;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -127,7 +128,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
       return;
     }
 
-    Map<String, NotifyResponseData> responseMap = new HashMap<>();
+    Map<String, ResponseData> responseMap = new HashMap<>();
     Map<String, NotifyResponse> notifyResponseMap = new HashMap<>();
 
     notifyResponses.forEach(notifyResponse -> {

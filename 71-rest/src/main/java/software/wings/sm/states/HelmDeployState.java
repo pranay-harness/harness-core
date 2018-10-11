@@ -18,6 +18,7 @@ import com.google.inject.Inject;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -82,7 +83,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -326,7 +326,7 @@ public class HelmDeployState extends State {
             .encryptedDataDetails(encryptedDataDetails)
             .build();
 
-    NotifyResponseData notifyResponseData =
+    ResponseData notifyResponseData =
         delegateService.executeTask(aDelegateTask()
                                         .withTaskType(TaskType.HELM_COMMAND_TASK)
                                         .withParameters(new Object[] {helmReleaseHistoryCommandRequest})
@@ -352,7 +352,7 @@ public class HelmDeployState extends State {
   }
 
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
       return handleAsyncInternal(context, response);
     } catch (WingsException e) {
@@ -362,7 +362,7 @@ public class HelmDeployState extends State {
     }
   }
 
-  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
     HelmCommandExecutionResponse executionResponse =
         fetchHelmCommandExecutionResponse(response.values().iterator().next());
@@ -557,7 +557,7 @@ public class HelmDeployState extends State {
     return secretManager.getEncryptionDetails(gitConfig, context.getAppId(), context.getWorkflowExecutionId());
   }
 
-  private HelmCommandExecutionResponse fetchHelmCommandExecutionResponse(NotifyResponseData notifyResponseData) {
+  private HelmCommandExecutionResponse fetchHelmCommandExecutionResponse(ResponseData notifyResponseData) {
     if (!(notifyResponseData instanceof HelmCommandExecutionResponse)) {
       String msg = "Delegate returned error response. Could not convert delegate response to helm response. ";
 

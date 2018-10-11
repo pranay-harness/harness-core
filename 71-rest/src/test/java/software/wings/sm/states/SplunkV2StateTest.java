@@ -12,6 +12,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
@@ -33,7 +34,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.text.ParseException;
 import java.text.ParsePosition;
@@ -245,7 +245,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
                                                   .withExecutionStatus(ExecutionStatus.ERROR)
                                                   .withLogAnalysisExecutionData(logAnalysisExecutionData)
                                                   .build();
-    Map<String, NotifyResponseData> responseMap = new HashMap<>();
+    Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", logAnalysisResponse);
     splunkState.handleAsyncResponse(executionContext, responseMap);
 
@@ -282,7 +282,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
                                        .withLogAnalysisExecutionData(logAnalysisExecutionData)
                                        .build();
 
-    Map<String, NotifyResponseData> responseMap = new HashMap<>();
+    Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", response);
 
     ExecutionResponse executionResponse = splunkState.handleAsyncResponse(executionContext, responseMap);
@@ -311,7 +311,7 @@ public class SplunkV2StateTest extends APMStateVerificationTestBase {
                                        .withLogAnalysisExecutionData(logAnalysisExecutionData)
                                        .build();
 
-    Map<String, NotifyResponseData> responseMap = new HashMap<>();
+    Map<String, ResponseData> responseMap = new HashMap<>();
     responseMap.put("somekey", response);
 
     SplunkV2State spyState = spy(splunkState);

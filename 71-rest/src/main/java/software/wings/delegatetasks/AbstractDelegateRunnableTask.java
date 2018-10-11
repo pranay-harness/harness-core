@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -19,7 +20,6 @@ import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.io.IOException;
 import java.util.List;
@@ -68,7 +68,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
             DelegateTaskResponse.builder().accountId(accountId).responseCode(ResponseCode.OK);
         try {
           logger.info("Started executing task {}", taskId);
-          NotifyResponseData result = run(parameters);
+          ResponseData result = run(parameters);
           if (result != null) {
             taskResponse.response(result);
             if (result instanceof RemoteMethodReturnValueData) {

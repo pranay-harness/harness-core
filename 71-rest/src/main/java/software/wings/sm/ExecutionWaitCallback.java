@@ -2,10 +2,10 @@ package software.wings.sm;
 
 import com.google.inject.Inject;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.waitnotify.NotifyCallback;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.Map;
 
@@ -36,12 +36,12 @@ public class ExecutionWaitCallback implements NotifyCallback {
   }
 
   @Override
-  public void notify(Map<String, NotifyResponseData> response) {
+  public void notify(Map<String, ResponseData> response) {
     stateMachineExecutor.startStateExecution(appId, executionUuid, stateExecutionInstanceId);
   }
 
   @Override
-  public void notifyError(Map<String, NotifyResponseData> response) {
+  public void notifyError(Map<String, ResponseData> response) {
     // Do nothing.
   }
 }

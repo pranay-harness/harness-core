@@ -2,12 +2,12 @@ package software.wings.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.states.FilePathAssertionEntry;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
-public class JenkinsExecutionData extends StateExecutionData implements NotifyResponseData {
+public class JenkinsExecutionData extends StateExecutionData implements ResponseData {
   private String jobName;
   private String jobStatus;
   private String buildUrl;

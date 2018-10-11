@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -14,7 +15,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.helpers.ext.external.comm.CollaborationProviderRequest;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -29,7 +29,7 @@ public class CollaborationProviderTask extends AbstractDelegateRunnableTask {
   }
 
   @Override
-  public NotifyResponseData run(Object[] parameters) {
+  public ResponseData run(Object[] parameters) {
     CollaborationProviderRequest request = (CollaborationProviderRequest) parameters[0];
     try {
       switch (request.getCommunicationType()) {

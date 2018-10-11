@@ -8,6 +8,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.task.protocol.ResponseData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -26,7 +27,6 @@ import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.List;
 
@@ -54,7 +54,7 @@ public class CollaborationProviderTaskTest extends WingsBaseTest {
         .when(mailer)
         .send(any(SmtpConfig.class), any(List.class), any(EmailData.class));
     EmailRequest emailRequest = new EmailRequest();
-    NotifyResponseData response = collaborationProviderTask.run(new Object[] {emailRequest});
+    ResponseData response = collaborationProviderTask.run(new Object[] {emailRequest});
     assertThat(response).isInstanceOf(CollaborationProviderResponse.class);
     assertThat(((CollaborationProviderResponse) response).getStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
   }

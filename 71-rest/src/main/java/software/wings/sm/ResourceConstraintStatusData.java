@@ -1,9 +1,9 @@
 package software.wings.sm;
 
+import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Value;
-import software.wings.waitnotify.NotifyResponseData;
 
 @Value
 @Builder
-public class ResourceConstraintStatusData implements NotifyResponseData {}
+public class ResourceConstraintStatusData implements ResponseData {}

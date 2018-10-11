@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,6 @@ import software.wings.sm.State;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;
 import software.wings.utils.KryoUtils;
-import software.wings.waitnotify.NotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -97,14 +97,14 @@ public class SubWorkflowState extends State {
    * @see software.wings.sm.State#handleAsyncResponse(software.wings.sm.ExecutionContextImpl, java.util.Map)
    */
   @Override
-  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, NotifyResponseData> response) {
+  public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
     handleStatusSummary(workflowExecutionService, context, response, executionResponse);
     return executionResponse;
   }
 
   protected void handleStatusSummary(WorkflowExecutionService workflowExecutionService, ExecutionContext context,
-      Map<String, NotifyResponseData> response, ExecutionResponse executionResponse) {
+      Map<String, ResponseData> response, ExecutionResponse executionResponse) {
     ExecutionStatus executionStatus = ((ExecutionStatusData) response.values().iterator().next()).getExecutionStatus();
     if (executionStatus != ExecutionStatus.SUCCESS) {
       executionResponse.setExecutionStatus(executionStatus);
