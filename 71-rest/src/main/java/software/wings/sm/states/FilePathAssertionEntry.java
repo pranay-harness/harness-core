@@ -2,9 +2,9 @@ package software.wings.sm.states;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.serializer.XmlUtils;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-import software.wings.utils.XmlUtils;
 
 import java.io.IOException;
 import javax.xml.parsers.ParserConfigurationException;
