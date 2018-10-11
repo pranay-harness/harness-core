@@ -27,6 +27,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -55,7 +56,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionTask.class);
   private static final String TERRAFORM_STATE_FILE_NAME = "terraform.tfstate";
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform.tfvars";
-  private static final String TERRAFORM_OUTPUTS_FILE_NAME = "terraform.tfouts";
 
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
@@ -126,7 +126,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
           if (isNotEmpty(parameters.getEncryptedVariables())) {
             for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedVariables().entrySet()) {
-              String value = new String(encryptionService.getDecryptedValue(entry.getValue()));
+              String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
               saveVariable(writer, entry.getKey(), value);
             }
           }
@@ -138,13 +138,18 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       File tfOutputsFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
 
       String joinedCommands = null;
-      if ("Apply".equals(parameters.getCommandUnitName())) {
-        joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
-            "terraform refresh -input=false", "terraform plan -out=tfplan -input=false",
-            "terraform apply -input=false tfplan", "(terraform output --json > " + tfOutputsFile.toString() + ")"));
-      } else if ("Destroy".equals(parameters.getCommandUnitName())) {
-        joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
-            "terraform refresh -input=false", "terraform destroy -force"));
+      switch (parameters.getCommand()) {
+        case APPLY:
+          joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
+              "terraform refresh -input=false", "terraform plan -out=tfplan -input=false",
+              "terraform apply -input=false tfplan", "(terraform output --json > " + tfOutputsFile.toString() + ")"));
+          break;
+        case DESTROY:
+          joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
+              "terraform refresh -input=false", "terraform destroy -force"));
+          break;
+        default:
+          throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
       }
 
       List<Boolean> instances = asList(false);
@@ -203,10 +208,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           TerraformExecutionData.builder()
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
+              .terraformProvisionParameters(parameters)
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
 
-      if (!"Destroy".equals(parameters.getCommandUnitName())) {
+      if (parameters.getCommandUnit() != TerraformCommandUnit.Destroy) {
         terraformExecutionDataBuilder.outputs(new String(Files.readAllBytes(tfOutputsFile.toPath()), Charsets.UTF_8));
       }
 
@@ -237,7 +243,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             .withAppId(parameters.getAppId())
             .withActivityId(parameters.getActivityId())
             .withLogLevel(INFO)
-            .withCommandUnitName(parameters.getCommandUnitName())
+            .withCommandUnitName(parameters.getCommandUnit().name())
             .withLogLine(line)
             .withExecutionResult(commandExecutionStatus)
             .build());

@@ -463,8 +463,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
     if (!phaseSubWorkflow.isRollback()) {
       if (orchestrationWorkflow.getPreDeploymentSteps() != null
           && orchestrationWorkflow.getPreDeploymentSteps().getSteps() != null
-          && orchestrationWorkflow.getPreDeploymentSteps().getSteps().stream().anyMatch(
-                 step -> step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name()))) {
+          && orchestrationWorkflow.getPreDeploymentSteps().getSteps().stream().anyMatch(step -> {
+               return step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
+                   || step.getType().equals(StateType.TERRAFORM_PROVISION.getType());
+             })) {
         return anExecutionEventAdvice()
             .withNextStateName(Constants.ROLLBACK_PROVISIONERS)
             .withExecutionInterruptType(ROLLBACK)
