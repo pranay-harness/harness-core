@@ -33,7 +33,7 @@ public interface TimeSeriesAnalysisService {
   boolean saveAnalysisRecordsML(@NotNull StateType stateType, @NotNull String accountId, @NotNull String appId,
       @NotNull String stateExecutionId, @NotNull String workflowExecutionId, @NotNull String workflowId,
       @NotNull String serviceId, String groupName, @NotNull Integer analysisMinute, @NotNull String taskId,
-      String baseLineExecutionId, @Valid MetricAnalysisRecord mlAnalysisResponse);
+      String baseLineExecutionId, String cvConfigId, @Valid MetricAnalysisRecord mlAnalysisResponse);
 
   @ValidationGroups(Create.class) void saveTimeSeriesMLScores(TimeSeriesMLScores scores);
 
@@ -91,4 +91,12 @@ public interface TimeSeriesAnalysisService {
       Map<String, TimeSeriesMetricDefinition> metricTemplates);
 
   int getMaxCVCollectionMinute(String appId, String cvConfigId);
+
+  long getLastCVAnalysisMinute(String appId, String cvConfigId);
+
+  List<NewRelicMetricDataRecord> getMetricRecords(StateType stateType, String appId, String serviceId,
+      String cvConfigId, int analysisStartMinute, int analysisEndMinute);
+
+  Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
+      String appId, StateType stateType, String serviceId, String groupName);
 }

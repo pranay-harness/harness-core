@@ -1,5 +1,6 @@
 package io.harness.resource;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.times;
@@ -46,6 +47,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   private String serviceId;
   private String groupName;
   private String baseLineExecutionId;
+  private String cvConfigId;
   private StateType stateType = StateType.APP_DYNAMICS;
   private TSRequest tsRequest;
   private Set<String> nodes;
@@ -64,14 +66,15 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   @Before
   public void setup() throws IOException {
     MockitoAnnotations.initMocks(this);
-    accountId = UUID.randomUUID().toString();
-    applicationId = UUID.randomUUID().toString();
-    stateExecutionId = UUID.randomUUID().toString();
-    delegateTaskId = UUID.randomUUID().toString();
-    workflowId = UUID.randomUUID().toString();
-    workflowExecutionId = UUID.randomUUID().toString();
-    baseLineExecutionId = UUID.randomUUID().toString();
-    serviceId = UUID.randomUUID().toString();
+    accountId = generateUuid();
+    applicationId = generateUuid();
+    stateExecutionId = generateUuid();
+    delegateTaskId = generateUuid();
+    workflowId = generateUuid();
+    workflowExecutionId = generateUuid();
+    baseLineExecutionId = generateUuid();
+    serviceId = generateUuid();
+    cvConfigId = generateUuid();
     groupName = "groupName-";
     nodes = new HashSet<String>();
     nodes.add("someNode");
@@ -132,12 +135,12 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   @Test
   public void testSaveMLAnalysisRecords() throws IOException {
     when(timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, accountId, applicationId, stateExecutionId,
-             workflowExecutionId, workflowId, serviceId, groupName, 0, delegateTaskId, baseLineExecutionId,
+             workflowExecutionId, workflowId, serviceId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId,
              timeSeriesMLAnalysisRecord))
         .thenReturn(true);
     RestResponse<Boolean> resp = timeSeriesResource.saveMLAnalysisRecords(accountId, applicationId, stateType,
         stateExecutionId, workflowExecutionId, workflowId, serviceId, groupName, 0, delegateTaskId, baseLineExecutionId,
-        timeSeriesMLAnalysisRecord);
+        cvConfigId, timeSeriesMLAnalysisRecord);
     assertTrue(resp.getResource());
   }
 

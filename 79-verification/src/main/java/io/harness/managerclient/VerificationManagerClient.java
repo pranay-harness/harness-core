@@ -59,6 +59,5 @@ public interface VerificationManagerClient {
 
   @GET("apm" + VerificationConstants.COLLECT_24_7_DATA)
   Call<RestResponse<Boolean>> triggerAPMDataCollection(@Query("cvConfigId") String cvConfigId,
-      @Query("stateType") StateType stateType, @Query("startTime") long startTime, @Query("endTime") long endTime,
-      @Query("lastDataCollectionMin") int lastDatacollectionMin);
+      @Query("stateType") StateType stateType, @Query("startTime") long startTime, @Query("endTime") long endTime);
 }

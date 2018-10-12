@@ -15,7 +15,6 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.sm.StateType;
 
-import java.io.IOException;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -50,7 +49,6 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
    * @param baseLineExecutionId
    * @param mlAnalysisResponse
    * @return {@link RestResponse}
-   * @throws IOException
    */
   @Produces({"application/json", "application/v1+json"})
   @POST
@@ -65,7 +63,7 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
       @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") final String serviceId,
       @QueryParam("groupName") final String groupName, @QueryParam("analysisMinute") Integer analysisMinute,
       @QueryParam("taskId") String taskId, @QueryParam("baseLineExecutionId") String baseLineExecutionId,
-      ExperimentalMetricAnalysisRecord mlAnalysisResponse) throws IOException {
+      @QueryParam("cvConfigId") String cvConfigId, ExperimentalMetricAnalysisRecord mlAnalysisResponse) {
     if (mlAnalysisResponse == null) {
       learningEngineService.markExpTaskCompleted(taskId);
       return new RestResponse<>(true);
@@ -80,6 +78,6 @@ public class ExperimentalTimeseriesAnalysisResourceImpl implements ExperimentalM
     }
     return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, accountId, applicationId,
         stateExecutionId, workflowExecutionId, workflowId, serviceId, groupName, analysisMinute, taskId,
-        baseLineExecutionId, mlAnalysisResponse));
+        baseLineExecutionId, cvConfigId, mlAnalysisResponse));
   }
 }

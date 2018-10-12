@@ -39,4 +39,6 @@ public class MetricAnalysisRecord extends Base {
   private Map<String, TimeSeriesMLTxnSummary> transactions;
 
   private String message;
+
+  private String cvConfigId;
 }

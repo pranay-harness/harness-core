@@ -29,5 +29,7 @@ public class MetricDataProcessorJob implements Job {
 
     logger.info("Executing APM Data Processor Job for {}", accountId);
     continuousVerificationService.triggerDataCollection(accountId);
+
+    continuousVerificationService.triggerDataAnalysis(accountId);
   }
 }
