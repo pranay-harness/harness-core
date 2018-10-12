@@ -55,6 +55,7 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.threading.Puller;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -2195,5 +2196,28 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     List<Artifact> artifacts =
         workflowExecutionService.obtainLastGoodDeployedArtifacts(workflow.getAppId(), workflow.getUuid());
     assertThat(artifacts).isNotEmpty();
+  }
+
+  @Test
+  @Owner(emails = {"srinivas@harness.io"})
+  public void shouldListWaitingOnDeployments() {
+    String appId = app.getUuid();
+    Workflow workflow = createExecutableWorkflow(appId, env);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
+
+    WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
+    WorkflowExecution firstExecution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
+        appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback, null);
+
+    assertThat(firstExecution).isNotNull();
+
+    WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
+        appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback, null);
+    assertThat(execution).isNotNull();
+
+    List<WorkflowExecution> waitingOnDeployments =
+        workflowExecutionService.listWaitingOnDeployments(appId, execution.getUuid());
+    assertThat(waitingOnDeployments).isNotEmpty().hasSize(1);
   }
 }

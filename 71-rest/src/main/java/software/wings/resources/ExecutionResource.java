@@ -406,4 +406,21 @@ public class ExecutionResource {
       @QueryParam("appId") String appId, @QueryParam("workflowId") String workflowId) {
     return new RestResponse<>(workflowExecutionService.obtainLastGoodDeployedArtifacts(appId, workflowId));
   }
+
+  /**
+   * Returns the list of either running or queued executions on the requested
+   * execution
+   * @param appId
+   * @param workflowExecutionId
+   * @return
+   */
+  @GET
+  @Path("{workflowExecutionId}/waitingOnDeployments")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = READ, skipAuth = true)
+  public RestResponse<List<WorkflowExecution>> getWaitingOnDeployments(
+      @QueryParam("appId") String appId, @PathParam("workflowExecutionId") String workflowExecutionId) {
+    return new RestResponse<>(workflowExecutionService.listWaitingOnDeployments(appId, workflowExecutionId));
+  }
 }
