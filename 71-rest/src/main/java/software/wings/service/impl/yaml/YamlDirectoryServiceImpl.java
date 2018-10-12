@@ -433,7 +433,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     DirectoryPath directoryPath = new DirectoryPath(SETUP_FOLDER);
-    directoryPath.add(APPLICATIONS_FOLDER);
 
     FolderNode applicationsFolder = new FolderNode(
         accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
