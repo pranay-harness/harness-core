@@ -76,7 +76,6 @@ public class AzureInfrastructureMapping extends InfrastructureMapping {
     parts.add(getDeploymentType());
     return Util.normalize(String.join(" - ", parts));
   }
-
   @Override
   public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
 }
