@@ -360,10 +360,8 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
                                      .appIds(Sets.newHashSet(APP_1_ID))
                                      .build());
 
-      PipelineSummary pipelineSummary = PipelineSummary.Builder.aPipelineSummary()
-                                            .withPipelineId(PIPELINE_EXECUTION_ID)
-                                            .withPipelineName(PIPELINE_NAME)
-                                            .build();
+      PipelineSummary pipelineSummary =
+          PipelineSummary.builder().pipelineId(PIPELINE_EXECUTION_ID).pipelineName(PIPELINE_NAME).build();
 
       ExecutionArgs executionArgs = new ExecutionArgs();
       executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact()

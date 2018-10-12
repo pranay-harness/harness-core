@@ -126,7 +126,7 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;
-import software.wings.beans.Environment;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -937,10 +937,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     PipelineExecution pipelineExecution =
         aPipelineExecution().withPipelineId(pipelineId).withPipeline(pipeline).build();
     workflowExecution.setPipelineExecution(pipelineExecution);
-    workflowExecution.setPipelineSummary(PipelineSummary.Builder.aPipelineSummary()
-                                             .withPipelineId(pipelineId)
-                                             .withPipelineName(pipeline.getName())
-                                             .build());
+    workflowExecution.setPipelineSummary(
+        PipelineSummary.builder().pipelineId(pipelineId).pipelineName(pipeline.getName()).build());
 
     WorkflowStandardParams stdParams = new WorkflowStandardParams();
     stdParams.setAppId(appId);
@@ -1139,10 +1137,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       if (executionArgs.getPipelineId() != null) {
         Pipeline pipeline =
             wingsPersistence.get(Pipeline.class, workflowExecution.getAppId(), executionArgs.getPipelineId());
-        workflowExecution.setPipelineSummary(PipelineSummary.Builder.aPipelineSummary()
-                                                 .withPipelineId(pipeline.getUuid())
-                                                 .withPipelineName(pipeline.getName())
-                                                 .build());
+        workflowExecution.setPipelineSummary(
+            PipelineSummary.builder().pipelineId(pipeline.getUuid()).pipelineName(pipeline.getName()).build());
         keywords.add(pipeline.getName());
       }
       if (workflowExecution.getPipelineExecutionId() != null) {
@@ -1166,13 +1162,21 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     workflowExecution.setAppName(app.getName());
     keywords.add(workflowExecution.getAppName());
 
-    if (workflowExecution.getEnvId() != null) {
-      Environment env = environmentService.get(workflowExecution.getAppId(), workflowExecution.getEnvId(), false);
-      workflowExecution.setEnvName(env.getName());
-      workflowExecution.setEnvType(env.getEnvironmentType());
+    if (isNotEmpty(workflowExecution.getEnvIds())) {
+      List<EnvSummary> environmentSummaries =
+          environmentService.obtainEnvironmentSummaries(workflowExecution.getAppId(), workflowExecution.getEnvIds());
+      if (isNotEmpty(environmentSummaries)) {
+        for (EnvSummary envSummary : environmentSummaries) {
+          workflowExecution.setEnvironments(environmentSummaries);
+          if (envSummary.getUuid().equals(workflowExecution.getEnvId())) {
+            workflowExecution.setEnvName(envSummary.getName());
+            workflowExecution.setEnvType(envSummary.getEnvironmentType());
+          }
+          keywords.add(workflowExecution.getEnvType());
+          keywords.add(workflowExecution.getEnvName());
+        }
+      }
     }
-    keywords.add(workflowExecution.getEnvType());
-    keywords.add(workflowExecution.getEnvName());
 
     User user = UserThreadLocal.get();
     if (user != null) {

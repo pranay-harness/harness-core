@@ -92,6 +92,8 @@ public class WorkflowExecution extends Base {
 
   private PipelineSummary pipelineSummary;
 
+  private List<EnvSummary> environments;
+
   private List<BuildExecutionSummary> buildExecutionSummaries;
 
   private OrchestrationWorkflowType orchestrationType;
@@ -142,6 +144,14 @@ public class WorkflowExecution extends Base {
 
   public void setDisplayName(String displayName) {
     this.displayName = displayName;
+  }
+
+  public List<EnvSummary> getEnvironments() {
+    return environments;
+  }
+
+  public void setEnvironments(List<EnvSummary> environments) {
+    this.environments = environments;
   }
 
   public String getReleaseNo() {
