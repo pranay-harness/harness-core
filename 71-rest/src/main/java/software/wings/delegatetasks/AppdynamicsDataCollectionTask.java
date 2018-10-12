@@ -227,6 +227,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                              .timeStamp(metricTimeStamp)
                              .host(nodeName)
                              .groupName(tierName)
+                             .cvConfigId(dataCollectionInfo.getCvConfigId())
                              .stateType(getStateType())
                              .values(new HashMap<>())
                              .build();
@@ -304,6 +305,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                         .stateExecutionId(dataCollectionInfo.getStateExecutionId())
                         .dataCollectionMinute(getCollectionMinute(System.currentTimeMillis(), true))
                         .timeStamp(collectionStartTime)
+                        .cvConfigId(dataCollectionInfo.getCvConfigId())
                         .level(ClusterLevel.H0)
                         .groupName(appdynamicsTier.getName())
                         .build());

@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.google.inject.Inject;
 
@@ -41,6 +42,7 @@ import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -152,6 +154,7 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .appId(Long.parseLong(config.getAppDynamicsApplicationId()))
             .tierId(Long.parseLong(config.getTierId()))
             .dataCollectionMinute(0)
+            .hosts(new HashMap<>())
             .encryptedDataDetails(secretManager.getEncryptionDetails(appDynamicsConfig, config.getAppId(), null))
             .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .build();
@@ -175,6 +178,9 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .newRelicAppId(Long.parseLong(config.getApplicationId()))
             .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .dataCollectionMinute(0)
+            .hosts(new HashMap<String, String>() {
+              { put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME); }
+            })
             .encryptedDataDetails(secretManager.getEncryptionDetails(newRelicConfig, config.getAppId(), null))
             .settingAttributeId(config.getConnectorId())
             .build();
