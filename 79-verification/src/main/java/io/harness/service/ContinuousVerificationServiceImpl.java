@@ -22,7 +22,6 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.MLAnalysisType;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.intfc.MetricDataAnalysisService;
@@ -157,7 +156,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .ml_analysis_type(MLAnalysisType.TIME_SERIES)
             .time_series_ml_analysis_type(PREDICTIVE)
             .smooth_window(SMOOTH_WINDOW)
-            .tolerance(AnalysisTolerance.LOW.tolerance())
+            .tolerance(cvConfiguration.getAnalysisTolerance().tolerance())
             .min_rpm(MIN_REQUESTS_PER_MINUTE)
             .comparison_unit_window(COMPARISON_WINDOW)
             .parallel_processes(PARALLEL_PROCESSES)

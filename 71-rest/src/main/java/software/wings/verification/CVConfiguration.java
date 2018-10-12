@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
+import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.sm.StateType;
 
 import javax.validation.constraints.NotNull;
@@ -25,5 +26,6 @@ public class CVConfiguration extends Base {
   @NotNull private String envId;
   @NotNull private String serviceId;
   @NotNull private StateType stateType;
+  @NotNull private AnalysisTolerance analysisTolerance;
   private boolean enabled24x7;
 }

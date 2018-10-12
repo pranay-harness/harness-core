@@ -16,6 +16,7 @@ import org.junit.Test;
 import software.wings.beans.RestResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.intfc.AppService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
@@ -63,6 +64,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     newRelicCVServiceConfiguration.setApplicationId(newRelicApplicationId);
     newRelicCVServiceConfiguration.setConnectorId(newRelicServerSettingId);
     newRelicCVServiceConfiguration.setMetrics(Collections.singletonList(generateUuid()));
+    newRelicCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
   }
 
   private void createAppDynamicsConfig() {
@@ -75,6 +77,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appDynamicsCVServiceConfiguration.setTierId(generateUuid());
     appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
+    appDynamicsCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
   }
 
   @Test
@@ -107,6 +110,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, fetchedObject.getEnvId());
     assertEquals(serviceId, fetchedObject.getServiceId());
     assertEquals(NEW_RELIC, fetchedObject.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
 
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
     target = client.target(url);
@@ -124,17 +128,20 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(envId, fetchedObject.getEnvId());
     assertEquals(serviceId, fetchedObject.getServiceId());
     assertEquals(NEW_RELIC, fetchedObject.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + NEW_RELIC + "&serviceConfigurationId=" + savedObjectUuid;
     target = client.target(url);
     newRelicCVServiceConfiguration.setEnabled24x7(false);
     newRelicCVServiceConfiguration.setMetrics(Collections.singletonList("requestsPerMinute"));
+    newRelicCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     getRequestBuilderWithAuthHeader(target).put(
         entity(newRelicCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
     getRequestResponse = getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
     fetchedObject = getRequestResponse.getResource();
     assertFalse(fetchedObject.isEnabled24x7());
+    assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
 
     String delete_url =
         API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
@@ -175,6 +182,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
       assertEquals(serviceId, obj.getServiceId());
       assertEquals(APP_DYNAMICS, obj.getStateType());
       assertEquals(appDynamicsApplicationId, obj.getAppDynamicsApplicationId());
+      assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
     }
   }
 }
