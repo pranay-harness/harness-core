@@ -745,6 +745,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     String envId = workflow.getEnvId();
     String inframappingId = workflow.getInfraMappingId();
     boolean isRename = !workflow.getName().equals(savedWorkflow.getName());
+    boolean isSyncFromGit = workflow.isSyncFromGit();
 
     if (orchestrationWorkflow == null) {
       workflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
@@ -795,8 +796,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     Workflow finalWorkflow = readWorkflow(workflow.getAppId(), workflow.getUuid(), workflow.getDefaultVersion());
 
     String accountId = appService.getAccountIdByAppId(finalWorkflow.getAppId());
-    yamlPushService.pushYamlChangeSet(
-        accountId, savedWorkflow, finalWorkflow, Type.UPDATE, workflow.isSyncFromGit(), isRename);
+    yamlPushService.pushYamlChangeSet(accountId, savedWorkflow, finalWorkflow, Type.UPDATE, isSyncFromGit, isRename);
 
     if (workflowName != null) {
       if (!workflowName.equals(finalWorkflow.getName())) {
