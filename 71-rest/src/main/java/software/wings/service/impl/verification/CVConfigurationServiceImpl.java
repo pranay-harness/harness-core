@@ -101,11 +101,13 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
   private UpdateOperations<CVConfiguration> getUpdateOperations(StateType stateType, CVConfiguration cvConfiguration) {
     logger.info("Updating CV Service Configuration {}", cvConfiguration);
-    UpdateOperations<CVConfiguration> updateOperations = wingsPersistence.createUpdateOperations(CVConfiguration.class)
-                                                             .set("connectorId", cvConfiguration.getConnectorId())
-                                                             .set("envId", cvConfiguration.getEnvId())
-                                                             .set("serviceId", cvConfiguration.getServiceId())
-                                                             .set("enabled24x7", cvConfiguration.isEnabled24x7());
+    UpdateOperations<CVConfiguration> updateOperations =
+        wingsPersistence.createUpdateOperations(CVConfiguration.class)
+            .set("connectorId", cvConfiguration.getConnectorId())
+            .set("envId", cvConfiguration.getEnvId())
+            .set("serviceId", cvConfiguration.getServiceId())
+            .set("enabled24x7", cvConfiguration.isEnabled24x7())
+            .set("analysisTolerance", cvConfiguration.getAnalysisTolerance());
     switch (stateType) {
       case NEW_RELIC:
         updateOperations.set("applicationId", ((NewRelicCVServiceConfiguration) cvConfiguration).getApplicationId())
