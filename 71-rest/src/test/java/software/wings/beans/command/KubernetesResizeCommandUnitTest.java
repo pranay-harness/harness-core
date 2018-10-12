@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anyMap;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -257,7 +258,7 @@ public class KubernetesResizeCommandUnitTest extends WingsBaseTest {
       int instanceCount, InstanceUnitType instanceUnitType) {
     when(kubernetesContainerService.getControllerPodCount(eq(kubernetesConfig), any(), anyString()))
         .thenReturn(Optional.of(controllerPodCount));
-    when(kubernetesContainerService.getActiveServiceCounts(eq(kubernetesConfig), any(), anyString()))
+    when(kubernetesContainerService.getActiveServiceCountsWithLabels(eq(kubernetesConfig), any(), anyMap()))
         .thenReturn(activeServiceCounts);
     KubernetesResizeParams resizeParams = resizeParamsBuilder.but()
                                               .withContainerServiceName(controllerName)

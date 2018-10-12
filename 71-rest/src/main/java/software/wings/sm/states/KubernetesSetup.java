@@ -28,7 +28,6 @@ import software.wings.beans.ConfigFile;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ResizeStrategy;
@@ -130,8 +129,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
       configMapYamlEvaluated = context.renderExpression(configMapYaml);
     }
 
-    boolean useNewLabelMechanism =
-        featureFlagService.isEnabled(FeatureName.USE_NEW_K8S_LABEL_MECHANISM, app.getAccountId());
+    boolean useNewLabelMechanism = true;
 
     if (containerTask != null) {
       KubernetesContainerTask kubernetesContainerTask = (KubernetesContainerTask) containerTask;
