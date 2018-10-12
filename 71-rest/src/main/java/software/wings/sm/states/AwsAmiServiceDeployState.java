@@ -383,6 +383,7 @@ public class AwsAmiServiceDeployState extends State {
     AwsAmiServiceDeployResponse amiServiceDeployResponse =
         (AwsAmiServiceDeployResponse) response.values().iterator().next();
 
+    awsAmiDeployStateExecutionData.setDelegateMetaInfo(amiServiceDeployResponse.getDelegateMetaInfo());
     Activity activity = activityService.get(awsAmiDeployStateExecutionData.getActivityId(), appId);
     Validator.notNullCheck("Activity", activity);
 
