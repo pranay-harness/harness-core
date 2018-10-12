@@ -179,7 +179,7 @@ public class ExecutionResource {
       }
     }
 
-    return new RestResponse<>(workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs));
+    return new RestResponse<>(workflowExecutionService.triggerEnvExecution(appId, envId, executionArgs, null));
   }
 
   /**

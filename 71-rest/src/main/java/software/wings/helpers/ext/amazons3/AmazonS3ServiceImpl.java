@@ -104,11 +104,8 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         buildDetailsList.addAll(buildDetailsListForArtifactPath);
       }
       return buildDetailsList;
-    } catch (WingsException e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
     } catch (Exception e) {
-      logger.error("Error occurred while retrieving artifacts from ", e);
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN, e).addParam("message", Misc.getMessage(e));
     }
   }
 

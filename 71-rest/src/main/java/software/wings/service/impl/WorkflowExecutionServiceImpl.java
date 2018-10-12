@@ -149,6 +149,7 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.common.cache.MongoStore;
 import software.wings.dl.WingsPersistence;
@@ -840,8 +841,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs) {
-    return triggerPipelineExecution(appId, pipelineId, executionArgs, null);
+  public WorkflowExecution triggerPipelineExecution(
+      String appId, String pipelineId, ExecutionArgs executionArgs, Trigger trigger) {
+    return triggerPipelineExecution(appId, pipelineId, executionArgs, null, trigger);
   }
 
   private void constructBarriers(Pipeline pipeline, String pipelineExecutionId) {
@@ -893,8 +895,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @param workflowExecutionUpdate the workflow execution update  @return the workflow execution
    * @return the workflow execution
    */
-  public WorkflowExecution triggerPipelineExecution(
-      String appId, String pipelineId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
+  public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
+      WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
     checkIfAccountExpired(appId);
     Pipeline pipeline =
         pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
@@ -969,7 +971,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setServiceIds(pipeline.getServices().stream().map(Service::getUuid).collect(toList()));
     }
     workflowExecution.setEnvIds(pipeline.getEnvIds());
-    return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams);
+    return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger);
   }
 
   private void checkIfAccountExpired(String appId) throws WingsException {
@@ -988,23 +990,24 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   @Override
   public WorkflowExecution triggerOrchestrationExecution(
-      String appId, String envId, String workflowId, ExecutionArgs executionArgs) {
-    return triggerOrchestrationWorkflowExecution(appId, envId, workflowId, null, executionArgs, null);
+      String appId, String envId, String workflowId, ExecutionArgs executionArgs, Trigger trigger) {
+    return triggerOrchestrationWorkflowExecution(appId, envId, workflowId, null, executionArgs, null, trigger);
   }
 
   /**
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution triggerOrchestrationExecution(
-      String appId, String envId, String workflowId, String pipelineExecutionId, ExecutionArgs executionArgs) {
-    return triggerOrchestrationWorkflowExecution(appId, envId, workflowId, pipelineExecutionId, executionArgs, null);
+  public WorkflowExecution triggerOrchestrationExecution(String appId, String envId, String workflowId,
+      String pipelineExecutionId, ExecutionArgs executionArgs, Trigger trigger) {
+    return triggerOrchestrationWorkflowExecution(
+        appId, envId, workflowId, pipelineExecutionId, executionArgs, null, trigger);
   }
 
   @Override
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
-      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs,
-      WorkflowExecutionUpdate workflowExecutionUpdate) {
+      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
+      Trigger trigger) {
     checkIfAccountExpired(appId);
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
@@ -1074,8 +1077,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
 
-    return triggerExecution(
-        workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(), workflowExecutionUpdate, stdParams);
+    return triggerExecution(workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(),
+        workflowExecutionUpdate, stdParams, trigger);
   }
 
   private Map<String, Object> getWorkflowVariables(
@@ -1117,17 +1120,47 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   }
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
-      WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams,
+      WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams, Trigger trigger,
       ContextElement... contextElements) {
-    return triggerExecution(workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, contextElements);
+    return triggerExecution(
+        workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, trigger, contextElements);
   }
 
   @SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
-      WorkflowStandardParams stdParams, ContextElement... contextElements) {
+      WorkflowStandardParams stdParams, Trigger trigger, ContextElement... contextElements) {
     List<Object> keywords = newArrayList(
         workflowExecution.getName(), workflowExecution.getWorkflowType(), workflowExecution.getOrchestrationType());
+
+    ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
+
+    if (executionArgs.isTriggeredFromPipeline()) {
+      if (executionArgs.getPipelineId() != null) {
+        Pipeline pipeline =
+            wingsPersistence.get(Pipeline.class, workflowExecution.getAppId(), executionArgs.getPipelineId());
+        workflowExecution.setPipelineSummary(PipelineSummary.Builder.aPipelineSummary()
+                                                 .withPipelineId(pipeline.getUuid())
+                                                 .withPipelineName(pipeline.getName())
+                                                 .build());
+        keywords.add(pipeline.getName());
+      }
+      if (workflowExecution.getPipelineExecutionId() != null) {
+        WorkflowExecution pipelineExecution =
+            wingsPersistence.createQuery(WorkflowExecution.class)
+                .project(WorkflowExecution.TRIGGERED_BY, true)
+                .project(WorkflowExecution.CREATED_BY_KEY, true)
+                .project(WorkflowExecution.DEPLOYMENT_TRIGGERED_ID_KEY, true)
+                .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
+                .filter(WorkflowExecution.ID_KEY, workflowExecution.getPipelineExecutionId())
+                .get();
+        if (pipelineExecution != null) {
+          workflowExecution.setTriggeredBy(pipelineExecution.getTriggeredBy());
+          workflowExecution.setDeploymentTriggerId(pipelineExecution.getDeploymentTriggerId());
+          workflowExecution.setCreatedBy(pipelineExecution.getCreatedBy());
+        }
+      }
+    }
 
     Application app = appService.get(workflowExecution.getAppId());
     workflowExecution.setAppName(app.getName());
@@ -1147,92 +1180,77 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           EmbeddedUser.builder().uuid(user.getUuid()).email(user.getEmail()).name(user.getName()).build();
       workflowExecution.setTriggeredBy(triggeredBy);
       workflowExecution.setCreatedBy(triggeredBy);
-    } else if (workflowExecution.getExecutionArgs() != null
-        && workflowExecution.getExecutionArgs().getTriggeredBy() != null) {
-      workflowExecution.setTriggeredBy(workflowExecution.getExecutionArgs().getTriggeredBy());
-      workflowExecution.setCreatedBy(workflowExecution.getExecutionArgs().getTriggeredBy());
-    } else {
+    } else if (trigger != null) {
       // Triggered by Auto Trigger
-      workflowExecution.setTriggeredBy(EmbeddedUser.builder().name("Deployment trigger").build());
-      workflowExecution.setCreatedBy(EmbeddedUser.builder().name("Deployment trigger").build());
+      workflowExecution.setTriggeredBy(
+          EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
+      workflowExecution.setCreatedBy(EmbeddedUser.builder().name(trigger.getName() + " (Deployment Trigger)").build());
+      workflowExecution.setDeploymentTriggerId(trigger.getUuid());
     }
-    keywords.add(workflowExecution.getCreatedBy().getName());
-    keywords.add(workflowExecution.getCreatedBy().getEmail());
+    if (workflowExecution.getCreatedBy() != null) {
+      keywords.add(workflowExecution.getCreatedBy().getName());
+      keywords.add(workflowExecution.getCreatedBy().getEmail());
+    }
     stdParams.setCurrentUser(workflowExecution.getCreatedBy());
 
-    ExecutionArgs executionArgs = workflowExecution.getExecutionArgs();
-    if (executionArgs != null) {
-      if (executionArgs.getServiceInstances() != null) {
-        List<String> serviceInstanceIds =
-            executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList());
-        PageRequest<ServiceInstance> pageRequest = aPageRequest()
-                                                       .addFilter("appId", EQ, workflowExecution.getAppId())
-                                                       .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
-                                                       .build();
-        List<ServiceInstance> serviceInstances = serviceInstanceService.list(pageRequest).getResponse();
+    if (executionArgs.getServiceInstances() != null) {
+      List<String> serviceInstanceIds =
+          executionArgs.getServiceInstances().stream().map(ServiceInstance::getUuid).collect(toList());
+      PageRequest<ServiceInstance> pageRequest = aPageRequest()
+                                                     .addFilter("appId", EQ, workflowExecution.getAppId())
+                                                     .addFilter("uuid", Operator.IN, serviceInstanceIds.toArray())
+                                                     .build();
+      List<ServiceInstance> serviceInstances = serviceInstanceService.list(pageRequest).getResponse();
 
-        if (serviceInstances == null || serviceInstances.size() != serviceInstanceIds.size()) {
-          logger.error("Service instances argument and valid service instance retrieved size not matching");
-          throw new InvalidRequestException("Invalid service instances");
-        }
-        executionArgs.setServiceInstanceIdNames(serviceInstances.stream().collect(toMap(ServiceInstance::getUuid,
-            serviceInstance -> serviceInstance.getHostName() + ":" + serviceInstance.getServiceName())));
-
-        keywords.addAll(serviceInstances.stream().map(ServiceInstance::getHostName).collect(toList()));
-        keywords.addAll(serviceInstances.stream().map(ServiceInstance::getServiceName).collect(toList()));
+      if (serviceInstances == null || serviceInstances.size() != serviceInstanceIds.size()) {
+        logger.error("Service instances argument and valid service instance retrieved size not matching");
+        throw new InvalidRequestException("Invalid service instances");
       }
+      executionArgs.setServiceInstanceIdNames(serviceInstances.stream().collect(toMap(ServiceInstance::getUuid,
+          serviceInstance -> serviceInstance.getHostName() + ":" + serviceInstance.getServiceName())));
 
-      if (isNotEmpty(executionArgs.getArtifacts())) {
-        List<String> artifactIds = executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList());
-        PageRequest<Artifact> pageRequest = aPageRequest()
-                                                .addFilter("appId", EQ, workflowExecution.getAppId())
-                                                .addFilter("uuid", Operator.IN, artifactIds.toArray())
-                                                .build();
-        List<Artifact> artifacts = artifactService.list(pageRequest, false).getResponse();
-
-        if (artifacts == null || artifacts.size() != artifactIds.size()) {
-          logger.error("Artifact argument and valid artifact retrieved size not matching");
-          throw new InvalidRequestException("Invalid artifact");
-        }
-
-        // TODO: get rid of artifactIdNames when UI moves to artifact list
-        executionArgs.setArtifactIdNames(
-            artifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
-        artifacts.forEach(artifact -> {
-          artifact.setArtifactFiles(null);
-          artifact.setCreatedBy(null);
-          artifact.setLastUpdatedBy(null);
-          keywords.add(artifact.getArtifactSourceName());
-          keywords.add(artifact.getDescription());
-          keywords.add(artifact.getRevision());
-          keywords.add(artifact.getMetadata());
-        });
-        executionArgs.setArtifacts(artifacts);
-        List<ServiceElement> services = new ArrayList<>();
-        artifacts.forEach(artifact -> {
-          artifact.getServiceIds().forEach(serviceId -> {
-            Service service = serviceResourceService.get(artifact.getAppId(), serviceId, false);
-            ServiceElement se = new ServiceElement();
-            MapperUtils.mapObject(service, se);
-            services.add(se);
-            keywords.add(se.getName());
-          });
-        });
-        stdParams.setServices(services);
-      }
-      workflowExecution.setErrorStrategy(executionArgs.getErrorStrategy());
+      keywords.addAll(serviceInstances.stream().map(ServiceInstance::getHostName).collect(toList()));
+      keywords.addAll(serviceInstances.stream().map(ServiceInstance::getServiceName).collect(toList()));
     }
-    if (executionArgs.isTriggeredFromPipeline()) {
-      if (executionArgs.getPipelineId() != null) {
-        Pipeline pipeline =
-            wingsPersistence.get(Pipeline.class, workflowExecution.getAppId(), executionArgs.getPipelineId());
-        workflowExecution.setPipelineSummary(PipelineSummary.Builder.aPipelineSummary()
-                                                 .withPipelineId(pipeline.getUuid())
-                                                 .withPipelineName(pipeline.getName())
-                                                 .build());
-        keywords.add(pipeline.getName());
+
+    if (isNotEmpty(executionArgs.getArtifacts())) {
+      List<String> artifactIds = executionArgs.getArtifacts().stream().map(Artifact::getUuid).collect(toList());
+      PageRequest<Artifact> pageRequest = aPageRequest()
+                                              .addFilter("appId", EQ, workflowExecution.getAppId())
+                                              .addFilter("uuid", Operator.IN, artifactIds.toArray())
+                                              .build();
+      List<Artifact> artifacts = artifactService.list(pageRequest, false).getResponse();
+
+      if (artifacts == null || artifacts.size() != artifactIds.size()) {
+        logger.error("Artifact argument and valid artifact retrieved size not matching");
+        throw new InvalidRequestException("Invalid artifact");
       }
+
+      // TODO: get rid of artifactIdNames when UI moves to artifact list
+      executionArgs.setArtifactIdNames(artifacts.stream().collect(toMap(Artifact::getUuid, Artifact::getDisplayName)));
+      artifacts.forEach(artifact -> {
+        artifact.setArtifactFiles(null);
+        artifact.setCreatedBy(null);
+        artifact.setLastUpdatedBy(null);
+        keywords.add(artifact.getArtifactSourceName());
+        keywords.add(artifact.getDescription());
+        keywords.add(artifact.getRevision());
+        keywords.add(artifact.getMetadata());
+      });
+      executionArgs.setArtifacts(artifacts);
+      List<ServiceElement> services = new ArrayList<>();
+      artifacts.forEach(artifact -> {
+        artifact.getServiceIds().forEach(serviceId -> {
+          Service service = serviceResourceService.get(artifact.getAppId(), serviceId, false);
+          ServiceElement se = new ServiceElement();
+          MapperUtils.mapObject(service, se);
+          services.add(se);
+          keywords.add(se.getName());
+        });
+      });
+      stdParams.setServices(services);
     }
+    workflowExecution.setErrorStrategy(executionArgs.getErrorStrategy());
 
     workflowExecution.setKeywords(trimList(keywords));
     workflowExecution.setStatus(QUEUED);
@@ -1340,8 +1358,9 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * {@inheritDoc}
    */
   @Override
-  public WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs) {
-    return triggerEnvExecution(appId, envId, executionArgs, null);
+  public WorkflowExecution triggerEnvExecution(
+      String appId, String envId, ExecutionArgs executionArgs, Trigger trigger) {
+    return triggerEnvExecution(appId, envId, executionArgs, null, trigger);
   }
 
   @Override
@@ -1385,8 +1404,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    * @param workflowExecutionUpdate the workflow execution update
    * @return the workflow execution
    */
-  WorkflowExecution triggerEnvExecution(
-      String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
+  WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs,
+      WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
     switch (executionArgs.getWorkflowType()) {
       case PIPELINE: {
         logger.debug("Received an pipeline execution request");
@@ -1394,7 +1413,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           logger.error("pipelineId is null for an pipeline execution");
           throw new InvalidRequestException("pipelineId is null for an pipeline execution");
         }
-        return triggerPipelineExecution(appId, executionArgs.getPipelineId(), executionArgs);
+        return triggerPipelineExecution(appId, executionArgs.getPipelineId(), executionArgs, trigger);
       }
 
       case ORCHESTRATION: {
@@ -1403,7 +1422,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           logger.error("workflowId is null for an orchestrated execution");
           throw new InvalidRequestException("workflowId is null for an orchestrated execution");
         }
-        return triggerOrchestrationExecution(appId, envId, executionArgs.getOrchestrationId(), executionArgs);
+        return triggerOrchestrationExecution(appId, envId, executionArgs.getOrchestrationId(), executionArgs, trigger);
       }
 
       case SIMPLE: {
@@ -1473,7 +1492,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
     simpleOrchestrationParams.setCommandName(executionArgs.getCommandName());
     return triggerExecution(
-        workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, simpleOrchestrationParams);
+        workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, null, simpleOrchestrationParams);
   }
 
   private List<WorkflowExecution> getRunningWorkflowExecutions(

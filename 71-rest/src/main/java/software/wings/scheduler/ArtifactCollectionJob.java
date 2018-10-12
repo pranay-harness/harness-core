@@ -16,6 +16,7 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.exception.WingsExceptionMapper;
@@ -86,8 +87,8 @@ public class ArtifactCollectionJob implements Job {
     try {
       artifacts = artifactCollectionService.collectNewArtifacts(appId, artifactStreamId);
     } catch (WingsException exception) {
-      logger.warn("Failed to collect artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
-          exception.getMessage());
+      exception.addContext(Application.class, appId);
+      exception.addContext(ArtifactStream.class, artifactStreamId);
       WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
       log(appId, artifactStreamId, new WingsException(e));
@@ -102,6 +103,7 @@ public class ArtifactCollectionJob implements Job {
   }
 
   private void log(String appId, String artifactStreamId, WingsException exception) {
-    logger.warn("Failed to collect artifacts for appId {}, artifact stream {}", appId, artifactStreamId, exception);
+    logger.warn("Failed to collect artifacts for appId {}, artifact stream {}. Reason {}", appId, artifactStreamId,
+        exception.getMessage());
   }
 }
