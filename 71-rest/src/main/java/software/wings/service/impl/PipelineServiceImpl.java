@@ -383,6 +383,8 @@ public class PipelineServiceImpl implements PipelineService {
                     resolvedPipelineVariables.put(variableName, inputPipelineVariables.get(variableName));
                     resolvedWorkflowVariables.put(variableName, inputPipelineVariables.get(variableName));
                     reducedPipelineVariables.remove(variableName);
+                  } else {
+                    resolvedWorkflowVariables.put(variableName, variableEntry.getValue());
                   }
                 } else {
                   if (!matchesVariablePattern(variableEntry.getValue())) {
