@@ -210,6 +210,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               long timeStamp = TimeUnit.SECONDS.toMillis(OffsetDateTime.parse(timeSlice.getFrom()).toEpochSecond());
 
               String hostname = isPredictiveAnalysis() ? DEFAULT_GROUP_NAME : node.getHost();
+              String groupName = isEmpty(dataCollectionInfo.getHosts().get(node.getHost()))
+                  ? DEFAULT_GROUP_NAME
+                  : dataCollectionInfo.getHosts().get(node.getHost());
               final NewRelicMetricDataRecord metricDataRecord =
                   NewRelicMetricDataRecord.builder()
                       .name(metric.getName())
@@ -220,9 +223,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                       .stateExecutionId(dataCollectionInfo.getStateExecutionId())
                       .stateType(getStateType())
                       .timeStamp(timeStamp)
+                      .cvConfigId(dataCollectionInfo.getCvConfigId())
                       .host(hostname)
                       .values(new HashMap<>())
-                      .groupName(dataCollectionInfo.getHosts().get(node.getHost()))
+                      .groupName(groupName)
                       .build();
 
               metricDataRecord.setDataCollectionMinute(getCollectionMinute(timeStamp));
@@ -489,6 +493,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                   .dataCollectionMinute(dataCollectionMinuteEnd)
                   .timeStamp(windowStartTimeManager)
                   .level(ClusterLevel.H0)
+                  .cvConfigId(dataCollectionInfo.getCvConfigId())
                   .groupName(entry.getValue())
                   .build());
           logger.info("adding heartbeat new relic metric record for group {} for minute {}", entry.getValue(),
