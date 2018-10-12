@@ -23,16 +23,12 @@ import static software.wings.beans.container.KubernetesContainerTask.CONFIG_MAP_
 import static software.wings.beans.container.KubernetesContainerTask.SECRET_MAP_NAME_PLACEHOLDER_REGEX;
 import static software.wings.beans.container.KubernetesServiceType.None;
 import static software.wings.beans.container.Label.Builder.aLabel;
-import static software.wings.common.Constants.HARNESS_APP;
-import static software.wings.common.Constants.HARNESS_ENV;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_APP_LABEL_KEY;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_ENV_LABEL_KEY;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_MANAGED_LABEL_KEY;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_SERVICE_LABEL_KEY;
-import static software.wings.common.Constants.HARNESS_REVISION;
-import static software.wings.common.Constants.HARNESS_SERVICE;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.service.impl.KubernetesHelperService.printVirtualServiceRouteWeights;
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
@@ -556,8 +552,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
           LogLevel.INFO);
     }
 
-    Map<String, String> selectors =
-        setupParams.isUseNewLabelMechanism() ? getNewLabelSelectors(setupParams) : getLabelSelectors(setupParams);
+    Map<String, String> selectors = getNewLabelSelectors(setupParams);
 
     Service service =
         prepareService(spec, kubernetesConfig, encryptedDataDetails, kubernetesServiceName, setupParams.getNamespace(),
@@ -589,9 +584,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     String stageServiceName = getStageServiceName(getKubernetesServiceName(setupParams.getControllerNamePrefix()));
     String ingressName = getBlueGreenIngressName(setupParams.getControllerNamePrefix());
     Map<String, String> labels = getLabels(setupParams);
-    Map<String, String> selectors = setupParams.isUseNewLabelMechanism()
-        ? getNewLabelSelectorsWithRevision(setupParams, revision)
-        : getLabelSelectorsWithRevision(setupParams, revision);
+    Map<String, String> selectors = getNewLabelSelectorsWithRevision(setupParams, revision);
 
     KubernetesServiceSpecification primaryServiceSpecification =
         (setupParams.isBlueGreen() && setupParams.getBlueGreenConfig() != null)
@@ -656,29 +649,14 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private String getRevisionFromService(Service service) {
-    String revision = service.getSpec().getSelector().get(HARNESS_REVISION);
-    if (revision == null) {
-      revision = service.getSpec().getSelector().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY);
-    }
-    return revision;
+    return service.getSpec().getSelector().get(HARNESS_KUBERNETES_REVISION_LABEL_KEY);
   }
 
   private ImmutableMap<String, String> getLabels(KubernetesSetupParams setupParams) {
     return ImmutableMap.<String, String>builder()
-        .put(HARNESS_APP, getLabelValue(setupParams.getAppName()))
-        .put(HARNESS_SERVICE, getLabelValue(setupParams.getServiceName()))
-        .put(HARNESS_ENV, getLabelValue(setupParams.getEnvName()))
         .put(HARNESS_KUBERNETES_MANAGED_LABEL_KEY, "true")
         .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
             getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
-        .build();
-  }
-
-  private ImmutableMap<String, String> getLabelSelectors(KubernetesSetupParams setupParams) {
-    return ImmutableMap.<String, String>builder()
-        .put(HARNESS_APP, getLabelValue(setupParams.getAppName()))
-        .put(HARNESS_SERVICE, getLabelValue(setupParams.getServiceName()))
-        .put(HARNESS_ENV, getLabelValue(setupParams.getEnvName()))
         .build();
   }
 
@@ -691,10 +669,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
   private ImmutableMap<String, String> getLabelsWithRevision(KubernetesSetupParams setupParams, String revision) {
     return ImmutableMap.<String, String>builder()
-        .put(HARNESS_APP, getLabelValue(setupParams.getAppName()))
-        .put(HARNESS_SERVICE, getLabelValue(setupParams.getServiceName()))
-        .put(HARNESS_ENV, getLabelValue(setupParams.getEnvName()))
-        .put(HARNESS_REVISION, revision)
         .put(HARNESS_KUBERNETES_MANAGED_LABEL_KEY, "true")
         .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
             getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
@@ -707,16 +681,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         .put(HARNESS_KUBERNETES_APP_LABEL_KEY, getLabelValue(setupParams.getAppName()))
         .put(HARNESS_KUBERNETES_SERVICE_LABEL_KEY, getLabelValue(setupParams.getServiceName()))
         .put(HARNESS_KUBERNETES_ENV_LABEL_KEY, getLabelValue(setupParams.getEnvName()))
-        .build();
-  }
-
-  private ImmutableMap<String, String> getLabelSelectorsWithRevision(
-      KubernetesSetupParams setupParams, String revision) {
-    return ImmutableMap.<String, String>builder()
-        .put(HARNESS_APP, getLabelValue(setupParams.getAppName()))
-        .put(HARNESS_SERVICE, getLabelValue(setupParams.getServiceName()))
-        .put(HARNESS_ENV, getLabelValue(setupParams.getEnvName()))
-        .put(HARNESS_REVISION, revision)
         .build();
   }
 
@@ -748,7 +712,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         || serviceSpecification.getServiceType() == None) {
       if (service != null) {
         try {
-          if (service.getSpec().getSelector().containsKey(HARNESS_APP)) {
+          if (service.getSpec().getSelector().containsKey(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY)) {
             executionLogCallback.saveExecutionLog("Deleting existing service " + kubernetesServiceName);
             kubernetesContainerService.deleteService(kubernetesConfig, encryptedDataDetails, kubernetesServiceName);
           }
@@ -885,7 +849,8 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
     } else {
       try {
         ingress = kubernetesContainerService.getIngress(kubernetesConfig, encryptedDataDetails, ingressName);
-        if (ingress != null && ingress.getMetadata().getLabels().containsKey(HARNESS_APP)) {
+        if (ingress != null
+            && ingress.getMetadata().getLabels().containsKey(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY)) {
           kubernetesContainerService.deleteIngress(kubernetesConfig, encryptedDataDetails, ingressName);
         }
       } catch (Exception e) {

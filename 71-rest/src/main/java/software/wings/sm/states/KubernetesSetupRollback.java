@@ -16,7 +16,6 @@ import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.Environment;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;
@@ -62,8 +61,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
 
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;
-    boolean useNewLabelMechanism =
-        featureFlagService.isEnabled(FeatureName.USE_NEW_K8S_LABEL_MECHANISM, app.getAccountId());
+    boolean useNewLabelMechanism = true;
 
     return aKubernetesSetupParams()
         .withAppName(app.getName())

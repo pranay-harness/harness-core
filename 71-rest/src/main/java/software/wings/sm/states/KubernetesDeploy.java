@@ -5,7 +5,6 @@ import static software.wings.beans.command.KubernetesResizeParams.KubernetesResi
 import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
 
 import org.apache.commons.lang3.StringUtils;
-import software.wings.beans.FeatureName;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerApiVersions;
 import software.wings.beans.command.ContainerResizeParams;
@@ -88,8 +87,7 @@ public class KubernetesDeploy extends ContainerServiceDeploy {
     Integer trafficPercent =
         isNotBlank(getTrafficPercent()) ? Integer.valueOf(context.renderExpression(getTrafficPercent())) : null;
 
-    boolean useNewLabelMechanism =
-        featureFlagService.isEnabled(FeatureName.USE_NEW_K8S_LABEL_MECHANISM, contextData.app.getAccountId());
+    boolean useNewLabelMechanism = true;
 
     Map<String, String> labelMap = (contextData.containerElement.getLookupLabels() != null)
         ? contextData.containerElement.getLookupLabels().stream().collect(

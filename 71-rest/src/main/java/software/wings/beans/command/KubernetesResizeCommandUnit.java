@@ -242,13 +242,8 @@ public class KubernetesResizeCommandUnit extends ContainerResizeCommandUnit {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     KubernetesConfig kubernetesConfig = getKubernetesConfig(contextData, encryptedDataDetails);
     KubernetesResizeParams resizeParams = (KubernetesResizeParams) contextData.resizeParams;
-    if (resizeParams.isUseNewLabelMechanism()) {
-      return kubernetesContainerService.getActiveServiceCountsWithLabels(
-          kubernetesConfig, encryptedDataDetails, resizeParams.getLookupLabels());
-    } else {
-      return kubernetesContainerService.getActiveServiceCounts(
-          kubernetesConfig, encryptedDataDetails, resizeParams.getContainerServiceName());
-    }
+    return kubernetesContainerService.getActiveServiceCountsWithLabels(
+        kubernetesConfig, encryptedDataDetails, resizeParams.getLookupLabels());
   }
 
   @Override
