@@ -13,7 +13,6 @@ import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
-import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.util.List;
 
@@ -38,9 +37,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), AppDynamicsCVServiceConfiguration.class);
         break;
 
-      case PROMETHEUS:
-        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), PrometheusCVServiceConfiguration.class);
-        break;
       default:
         throw new WingsException("No matching state type found " + stateType);
     }
@@ -74,9 +70,6 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case APP_DYNAMICS:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), AppDynamicsCVServiceConfiguration.class);
-        break;
-      case PROMETHEUS:
-        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), PrometheusCVServiceConfiguration.class);
         break;
       default:
         throw new WingsException("No matching state type found - " + stateType)
@@ -127,10 +120,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                 ((AppDynamicsCVServiceConfiguration) cvConfiguration).getAppDynamicsApplicationId())
             .set("tierId", ((AppDynamicsCVServiceConfiguration) cvConfiguration).getTierId());
         break;
-      case PROMETHEUS:
-        updateOperations.set(
-            "timeSeriesToAnalyze", ((PrometheusCVServiceConfiguration) cvConfiguration).getTimeSeriesToAnalyze());
-        break;
+
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);
     }

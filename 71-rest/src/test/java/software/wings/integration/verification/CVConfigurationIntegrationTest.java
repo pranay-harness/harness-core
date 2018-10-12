@@ -8,9 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateType.APP_DYNAMICS;
 import static software.wings.sm.StateType.NEW_RELIC;
-import static software.wings.sm.StateType.PROMETHEUS;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import org.junit.Before;
@@ -19,12 +17,10 @@ import software.wings.beans.RestResponse;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.AnalysisTolerance;
-import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.intfc.AppService;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
-import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.util.Collections;
 import java.util.List;
@@ -44,7 +40,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
   private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
-  private PrometheusCVServiceConfiguration prometheusCVServiceConfiguration;
 
   @Before
   public void setUp() {
@@ -56,7 +51,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     createNewRelicConfig(true);
     createAppDynamicsConfig();
-    createPrometheusConfig();
   }
 
   private void createNewRelicConfig(boolean enabled24x7) {
@@ -84,25 +78,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
     appDynamicsCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
-  }
-
-  private void createPrometheusConfig() {
-    List<TimeSeries> timeSeries = Lists.newArrayList(
-        TimeSeries.builder()
-            .txnName("Hardware")
-            .metricName("CPU")
-            .url(
-                "/api/v1/query_range?start=$startTime&end=$endTime&step=60s&query=container_cpu_usage_seconds_total{pod_name=\"$hostName\"}")
-            .build());
-
-    prometheusCVServiceConfiguration = new PrometheusCVServiceConfiguration();
-    prometheusCVServiceConfiguration.setAppId(appId);
-    prometheusCVServiceConfiguration.setEnvId(envId);
-    prometheusCVServiceConfiguration.setServiceId(serviceId);
-    prometheusCVServiceConfiguration.setEnabled24x7(true);
-    prometheusCVServiceConfiguration.setTimeSeriesToAnalyze(timeSeries);
-    prometheusCVServiceConfiguration.setConnectorId(generateUuid());
-    prometheusCVServiceConfiguration.setStateType(PROMETHEUS);
   }
 
   @Test
@@ -208,34 +183,6 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
       assertEquals(APP_DYNAMICS, obj.getStateType());
       assertEquals(appDynamicsApplicationId, obj.getAppDynamicsApplicationId());
       assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
-    }
-  }
-
-  @Test
-  public <T extends CVConfiguration> void testPrometheusConfiguration() {
-    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + PROMETHEUS;
-    logger.info("POST " + url);
-    WebTarget target = client.target(url);
-    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
-        entity(prometheusCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
-    String savedObjectUuid = restResponse.getResource();
-
-    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
-        + "&serviceConfigurationId=" + savedObjectUuid;
-
-    target = client.target(url);
-    RestResponse<T> getRequestResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
-    T fetchedObject = getRequestResponse.getResource();
-    if (fetchedObject instanceof PrometheusCVServiceConfiguration) {
-      PrometheusCVServiceConfiguration obj = (PrometheusCVServiceConfiguration) fetchedObject;
-      assertEquals(savedObjectUuid, obj.getUuid());
-      assertEquals(accountId, obj.getAccountId());
-      assertEquals(appId, obj.getAppId());
-      assertEquals(envId, obj.getEnvId());
-      assertEquals(serviceId, obj.getServiceId());
-      assertEquals(PROMETHEUS, obj.getStateType());
-      assertEquals(prometheusCVServiceConfiguration.getTimeSeriesToAnalyze(), obj.getTimeSeriesToAnalyze());
     }
   }
 }
