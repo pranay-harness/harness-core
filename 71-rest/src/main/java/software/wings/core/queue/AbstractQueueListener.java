@@ -12,6 +12,8 @@ import com.google.inject.name.Named;
 import io.harness.exception.WingsException;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -24,24 +26,18 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Created by peeyushaggarwal on 4/13/16.
- *
- * @param <T> the generic type
- * @see Queuable
- */
 public abstract class AbstractQueueListener<T extends Queuable> implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(AbstractQueueListener.class);
 
-  @Inject private Queue<T> queue;
+  @Inject @Getter @Setter private Queue<T> queue;
 
-  private boolean runOnce;
+  private @Setter boolean runOnce;
   private final boolean primaryOnly;
 
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
-  @Inject @Named("timer") private ScheduledExecutorService timer;
-  @Inject private ConfigurationController configurationController;
+  @Inject @Named("timer") @Setter private ScheduledExecutorService timer;
+  @Inject @Setter private ConfigurationController configurationController;
 
   public AbstractQueueListener(boolean primaryOnly) {
     this.primaryOnly = primaryOnly;
@@ -93,18 +89,21 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     if (logger.isDebugEnabled()) {
       logger.debug("Started timer thread for message {} every {} ms", message, timerInterval);
     }
-    final T finalizedMessage = message;
-    ScheduledFuture<?> future = timer.scheduleAtFixedRate(
-        () -> queue.updateResetDuration(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
+
+    ScheduledFuture<?> future = null;
     try {
+      final T finalizedMessage = message;
+      future = timer.scheduleAtFixedRate(
+          () -> queue.updateResetDuration(finalizedMessage), timerInterval, timerInterval, TimeUnit.MILLISECONDS);
+
       onMessage(message);
       queue.ack(message);
-    } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       onException(exception, message);
     } finally {
-      future.cancel(true);
+      if (future != null) {
+        future.cancel(true);
+      }
     }
     return true;
   }
@@ -123,58 +122,18 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    * @param message   the message
    */
   void onException(Exception exception, T message) {
-    logger.error("Exception happened while processing message " + message, exception);
+    if (exception instanceof WingsException) {
+      WingsExceptionMapper.logProcessedMessages((WingsException) exception, MANAGER, logger);
+    } else {
+      logger.error("Exception happened while processing message " + message, exception);
+    }
     if (message.getRetries() > 0) {
       message.setRetries(message.getRetries() - 1);
       queue.requeue(message);
     }
   }
 
-  /**
-   * Gets queue.
-   *
-   * @return the queue
-   */
-  public Queue<T> getQueue() {
-    return queue;
-  }
-
-  /**
-   * Sets queue.
-   *
-   * @param queue the queue
-   */
-  void setQueue(Queue<T> queue) {
-    this.queue = queue;
-  }
-
-  /**
-   * Shut down.
-   */
   public void shutDown() {
     shouldStop.set(true);
-  }
-
-  /**
-   * Sets run once.
-   *
-   * @param runOnce the run once
-   */
-  // Package protected for testing
-  void setRunOnce(boolean runOnce) {
-    this.runOnce = runOnce;
-  }
-
-  /**
-   * Sets timer.
-   *
-   * @param timer the timer
-   */
-  void setTimer(ScheduledExecutorService timer) {
-    this.timer = timer;
-  }
-
-  void setConfigurationController(ConfigurationController configurationController) {
-    this.configurationController = configurationController;
   }
 }
