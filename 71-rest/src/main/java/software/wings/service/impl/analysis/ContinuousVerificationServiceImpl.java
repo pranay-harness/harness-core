@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.beans.User;
+import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
@@ -80,7 +81,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       return results;
     }
     if (isEmpty(getAllowedApplicationsForUser(user, accountId))) {
-      logger.warn(
+      logger.info(
           "Returning empty results from getCVExecutionMetaData since user does not have permissions for any applications");
       return results;
     }
@@ -208,6 +209,76 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     pageRequest.addOrder("stateStartTs", OrderType.DESC);
 
     return wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, pageRequest);
+  }
+
+  @Override
+  public List<CVDeploymentData> getCVDeploymentData(
+      String accountId, long beginEpochTs, long endEpochTs, User user, String serviceId) {
+    List<CVDeploymentData> results = new ArrayList<>();
+    if (user == null) {
+      // user is null, we can't validate permissions. Returning empty.
+      logger.warn("Returning empty results from getCVDeploymentData since user was null");
+      return results;
+    }
+    List<String> allowedApplications = getAllowedApplicationsForUser(user, accountId);
+    if (isEmpty(allowedApplications)) {
+      logger.info(
+          "Returning empty results from getCVDeploymentData since user does not have permissions for any applications");
+      return results;
+    }
+
+    PageRequest<ContinuousVerificationExecutionMetaData> request = PageRequestBuilder.aPageRequest()
+                                                                       .addFilter("accountId", Operator.EQ, accountId)
+                                                                       .addFilter("serviceId", Operator.EQ, serviceId)
+                                                                       .addOrder("workflowStartTs", OrderType.DESC)
+                                                                       .addOrder("stateStartTs", OrderType.ASC)
+                                                                       .withLimit("500")
+                                                                       .withOffset("0")
+                                                                       .build();
+    request.addFilter("workflowStartTs", Operator.GE, beginEpochTs);
+    request.addFilter("workflowStartTs", Operator.LT, endEpochTs);
+
+    int previousOffSet = 0;
+    List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData = new ArrayList<>();
+    PageResponse<ContinuousVerificationExecutionMetaData> response =
+        wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, request);
+    while (!response.isEmpty()) {
+      continuousVerificationExecutionMetaData.addAll(response.getResponse());
+      previousOffSet += response.size();
+      request.setOffset(String.valueOf(previousOffSet));
+      response = wingsPersistence.query(ContinuousVerificationExecutionMetaData.class, request);
+    }
+
+    Map<String, CVDeploymentData> deploymentData = new HashMap<>();
+    for (ContinuousVerificationExecutionMetaData cvData : continuousVerificationExecutionMetaData) {
+      if (!deploymentData.containsKey(cvData.getWorkflowExecutionId())) {
+        deploymentData.put(cvData.getWorkflowExecutionId(), new CVDeploymentData(cvData));
+      }
+    }
+
+    // find the statuses of all the workflows we have.
+    PageRequest<WorkflowExecution> workflowExecutionPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter("_id", Operator.IN, deploymentData.keySet().toArray())
+            .addFieldsIncluded("_id", "status", "startTs", "endTs", "name")
+            .withLimit("500")
+            .withOffset("0")
+            .build();
+    previousOffSet = 0;
+    List<WorkflowExecution> workflowExecutionList = new ArrayList<>();
+    PageResponse<WorkflowExecution> workflowExecutionResponse =
+        wingsPersistence.query(WorkflowExecution.class, workflowExecutionPageRequest);
+    while (!workflowExecutionResponse.isEmpty()) {
+      workflowExecutionList.addAll(workflowExecutionResponse.getResponse());
+      previousOffSet += workflowExecutionResponse.size();
+      workflowExecutionPageRequest.setOffset(String.valueOf(previousOffSet));
+      workflowExecutionResponse = wingsPersistence.query(WorkflowExecution.class, workflowExecutionPageRequest);
+    }
+
+    for (WorkflowExecution execution : workflowExecutionList) {
+      deploymentData.get(execution.getUuid()).setStatus(execution.getStatus());
+    }
+    return new ArrayList(deploymentData.values());
   }
 
   /**

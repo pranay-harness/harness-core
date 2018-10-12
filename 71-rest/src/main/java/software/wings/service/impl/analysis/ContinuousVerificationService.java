@@ -17,6 +17,9 @@ public interface ContinuousVerificationService {
               LinkedHashMap<String, LinkedHashMap<String, List<ContinuousVerificationExecutionMetaData>>>>>>
   getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs, User user) throws ParseException;
 
+  List<CVDeploymentData> getCVDeploymentData(
+      String accountId, long beginEpochTs, long endEpochTs, User user, String serviceId);
+
   void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status);
   PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(String accountId, long beginEpochTs,
       long endEpochTs, boolean isTimeSeries, PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
