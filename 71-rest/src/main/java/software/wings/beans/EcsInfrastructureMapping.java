@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static com.amazonaws.util.StringUtils.isNullOrEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 
 import com.amazonaws.services.ecs.model.LaunchType;
@@ -106,10 +107,10 @@ public class EcsInfrastructureMapping extends ContainerInfrastructureMapping {
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(
-        format("%s (%s_%s::%s) %s", this.getClusterName(), this.getComputeProviderType(), this.getDeploymentType(),
-            Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-            this.getRegion()));
+    return Util.normalize(format("%s (%s_%s::%s) %s", isEmpty(this.getProvisionerId()) ? this.getClusterName() : "",
+        this.getComputeProviderType(), this.getDeploymentType(),
+        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
+        this.getRegion()));
   }
 
   /**
