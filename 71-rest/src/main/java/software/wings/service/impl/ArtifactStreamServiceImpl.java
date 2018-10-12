@@ -4,7 +4,6 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.STARTS_WITH;
 import static io.harness.beans.SortOrder.OrderType.ASC;
-import static io.harness.beans.SortOrder.OrderType.DESC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -145,13 +144,13 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
                                                     .addFilter("appId", EQ, artifactStream.getAppId())
                                                     .addFilter("serviceId", EQ, artifactStream.getServiceId())
                                                     .addFilter("name", STARTS_WITH, escapedString)
-                                                    .addOrder("name", DESC)
                                                     .build();
       PageResponse<ArtifactStream> response = wingsPersistence.query(ArtifactStream.class, pageRequest);
 
       // If an entry exists with the given default name
       if (isNotEmpty(response)) {
-        name = Util.getNameWithNextRevision(response.get(0).getName(), name);
+        name = Util.getNameWithNextRevision(
+            response.getResponse().stream().map(ArtifactStream::getName).collect(toList()), name);
       }
       artifactStream.setName(name);
     }

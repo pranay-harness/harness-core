@@ -2,6 +2,7 @@ package software.wings.utils;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
@@ -23,8 +24,6 @@ import java.util.Map;
  */
 public class Util {
   private static final Logger logger = LoggerFactory.getLogger(Util.class);
-
-  private static final String FIRST_REVISION = "-1";
 
   public static String generatePath(String delimiter, boolean endsWithDelimiter, String... elements) {
     StringBuilder builder = new StringBuilder();
@@ -101,41 +100,34 @@ public class Util {
   /**
    * This method gets the default name, checks if another entry exists with the same name, if exists, it parses and
    * extracts the revision and creates a name with the next revision.
-   *
-   * @param existingName
-   * @param defaultName
    */
-  public static String getNameWithNextRevision(String existingName, String defaultName) {
-    String name = defaultName;
-
-    if (isEmpty(existingName)) {
-      return name;
-    }
-
-    int index = existingName.lastIndexOf('-');
-    if (index == -1) {
-      name = name + FIRST_REVISION;
-    } else {
-      if (index < existingName.length() - 1) {
-        String revisionString = existingName.substring(index + 1);
-        int revision;
+  public static String getNameWithNextRevision(List<String> existingNames, String defaultName) {
+    String existingName = "";
+    int maxRevision = -1;
+    for (String existing : existingNames) {
+      int revision;
+      if (existing.equals(defaultName)) {
+        revision = 0;
+      } else {
+        String rev = existing.substring(defaultName.length() + 1);
         try {
-          revision = Integer.parseInt(revisionString);
+          revision = Integer.parseInt(rev);
         } catch (NumberFormatException ex) {
           revision = -1;
         }
-
-        if (revision != -1) {
-          revision++;
-          name = name + "-" + revision;
-        } else {
-          name = name + FIRST_REVISION;
-        }
-      } else {
-        name = name + FIRST_REVISION;
+      }
+      if (revision > maxRevision) {
+        maxRevision = revision;
+        existingName = existing;
       }
     }
-    return name;
+
+    if (isBlank(existingName)) {
+      return defaultName;
+    }
+
+    int revision = maxRevision + 1;
+    return defaultName + "-" + revision;
   }
 
   public static Type[] getParameterizedTypes(Object object) {

@@ -52,7 +52,6 @@ import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
@@ -585,14 +584,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                          .addFilter("appId", Operator.EQ, infraMapping.getAppId())
                                                          .addFilter("envId", Operator.EQ, infraMapping.getEnvId())
                                                          .addFilter("name", Operator.STARTS_WITH, escapedString)
-                                                         .addOrder("name", OrderType.DESC)
                                                          .build();
     PageResponse<InfrastructureMapping> response = wingsPersistence.query(InfrastructureMapping.class, pageRequest);
 
-    // If an entry exists with the given default name
+    // If an entry exists with the given default name get the next revision number
     if (isNotEmpty(response)) {
-      String existingName = response.get(0).getName();
-      name = Util.getNameWithNextRevision(existingName, name);
+      name = Util.getNameWithNextRevision(
+          response.getResponse().stream().map(InfrastructureMapping::getName).collect(toList()), name);
     }
 
     infraMapping.setName(name);

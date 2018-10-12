@@ -1,9 +1,11 @@
 package software.wings.utils;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static software.wings.utils.Util.escapifyString;
 import static software.wings.utils.Util.getNameWithNextRevision;
+
+import com.google.common.collect.ImmutableList;
 
 import org.junit.Test;
 import software.wings.beans.NameValuePair;
@@ -22,31 +24,40 @@ public class UtilTest {
 
     Map map = Util.toProperties(nameValuePairList);
     assertNotNull(map);
-    assertEquals(3, map.size());
+    assertThat(map.size()).isEqualTo(3);
   }
 
   @Test
   public void testEscapifyString() {
-    assertEquals(escapifyString("ab\\"), "ab\\\\");
-    assertEquals(escapifyString("ab\\cd"), "ab\\cd");
-    assertEquals(escapifyString("a\"b"), "a\\\"b");
-    assertEquals(escapifyString("a'b"), "a'b");
-    assertEquals(escapifyString("a`b"), "a\\`b");
-    assertEquals(escapifyString("a(b"), "a(b");
-    assertEquals(escapifyString("a)b"), "a)b");
-    assertEquals(escapifyString("a|b"), "a|b");
-    assertEquals(escapifyString("a<b"), "a<b");
-    assertEquals(escapifyString("a>b"), "a>b");
-    assertEquals(escapifyString("a;b"), "a;b");
-    assertEquals(escapifyString("a b"), "a b");
+    assertThat(escapifyString("ab\\")).isEqualTo("ab\\\\");
+    assertThat(escapifyString("ab\\cd")).isEqualTo("ab\\cd");
+    assertThat(escapifyString("a\"b")).isEqualTo("a\\\"b");
+    assertThat(escapifyString("a'b")).isEqualTo("a'b");
+    assertThat(escapifyString("a`b")).isEqualTo("a\\`b");
+    assertThat(escapifyString("a(b")).isEqualTo("a(b");
+    assertThat(escapifyString("a)b")).isEqualTo("a)b");
+    assertThat(escapifyString("a|b")).isEqualTo("a|b");
+    assertThat(escapifyString("a<b")).isEqualTo("a<b");
+    assertThat(escapifyString("a>b")).isEqualTo("a>b");
+    assertThat(escapifyString("a;b")).isEqualTo("a;b");
+    assertThat(escapifyString("a b")).isEqualTo("a b");
   }
 
   @Test
   public void testGetNameWithNextRevision() {
-    assertEquals(getNameWithNextRevision("todolist_war_copy2-do-not-delete", "todolist_war_copy2-do-not-delete"),
-        "todolist_war_copy2-do-not-delete-1");
-    assertEquals(getNameWithNextRevision("todolist_war_copy2-do-not-delete-1", "todolist_war_copy2-do-not-delete"),
-        "todolist_war_copy2-do-not-delete-2");
-    assertEquals(getNameWithNextRevision("ingress-nginx", "ingress-nginx"), "ingress-nginx-1");
+    assertThat(getNameWithNextRevision(ImmutableList.of("abc-def"), "abc-def")).isEqualTo("abc-def-1");
+    assertThat(getNameWithNextRevision(ImmutableList.of("abc-def-1", "abc-def"), "abc-def")).isEqualTo("abc-def-2");
+    assertThat(getNameWithNextRevision(ImmutableList.of("abc-def-"), "abc-def-")).isEqualTo("abc-def--1");
+    assertThat(getNameWithNextRevision(ImmutableList.of("abc-def-", "abc-def--1"), "abc-def-")).isEqualTo("abc-def--2");
+    assertThat(getNameWithNextRevision(ImmutableList.of("abc-def-1"), "abc-def-1")).isEqualTo("abc-def-1-1");
+    assertThat(getNameWithNextRevision(ImmutableList.of("abc-def-1", "abc-def-1-1"), "abc-def-1"))
+        .isEqualTo("abc-def-1-2");
+    assertThat(getNameWithNextRevision(ImmutableList.of("abc-def", "abc-def-2", "abc-def-3", "abc-def-1"), "abc-def"))
+        .isEqualTo("abc-def-4");
+    assertThat(getNameWithNextRevision(
+                   ImmutableList.of("abc-def", "abc-def-2", "abc-def-3", "abc-def-1", "abc-def-5", "abc-def-6",
+                       "abc-def-4", "abc-def-8", "abc-def-7", "abc-def-9", "abc-def-10", "abc-def-12", "abc-def-11"),
+                   "abc-def"))
+        .isEqualTo("abc-def-13");
   }
 }
