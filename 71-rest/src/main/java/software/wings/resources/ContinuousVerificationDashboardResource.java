@@ -12,8 +12,10 @@ import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.RestResponse;
+import software.wings.common.VerificationConstants;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.Scope;
+import software.wings.service.impl.analysis.CVDeploymentData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 
@@ -34,7 +36,7 @@ public class ContinuousVerificationDashboardResource {
   @Transient @Inject @SchemaIgnore protected ContinuousVerificationService continuousVerificationService;
 
   @GET
-  @Path("/get-records")
+  @Path(VerificationConstants.CV_DASH_GET_RECORDS)
   @Timed
   @ExceptionMetered
   public RestResponse<LinkedHashMap<Long,
@@ -48,7 +50,7 @@ public class ContinuousVerificationDashboardResource {
   }
 
   @GET
-  @Path("/get-all-cv-executions")
+  @Path(VerificationConstants.GET_ALL_CV_EXECUTIONS)
   @Timed
   @ExceptionMetered
   public RestResponse<PageResponse<ContinuousVerificationExecutionMetaData>> getAllCVExecutions(
@@ -57,5 +59,16 @@ public class ContinuousVerificationDashboardResource {
       @BeanParam PageRequest<ContinuousVerificationExecutionMetaData> request) {
     return new RestResponse<>(continuousVerificationService.getAllCVExecutionsForTime(
         accountId, beginEpochTs, endEpochTs, isTimeSeries, request));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_DEPLOYMENTS_24_7)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<CVDeploymentData>> getCVExecutionDeploymentRecords(@QueryParam("accountId") String accountId,
+      @QueryParam("beginEpochTs") long beginEpochTs, @QueryParam("endEpochTs") long endEpochTs,
+      @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(continuousVerificationService.getCVDeploymentData(
+        accountId, beginEpochTs, endEpochTs, UserThreadLocal.get().getPublicUser(), serviceId));
   }
 }

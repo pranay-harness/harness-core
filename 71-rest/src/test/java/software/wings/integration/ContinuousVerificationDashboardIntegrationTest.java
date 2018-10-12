@@ -16,15 +16,19 @@ import org.mockito.Mock;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.beans.User;
+import software.wings.beans.WorkflowExecution;
+import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.analysis.CVDeploymentData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.utils.WingsIntegrationTestConstants;
 
@@ -50,6 +54,7 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
+  private String envId;
 
   @Before
   public void setUp() throws Exception {
@@ -57,6 +62,8 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     User user = userService.getUserByEmail(WingsIntegrationTestConstants.adminUserEmail);
     UserThreadLocal.set(user);
     stateExecutionId = UUID.randomUUID().toString();
+
+    envId = UUID.randomUUID().toString();
 
     workflowExecutionId = UUID.randomUUID().toString();
 
@@ -163,6 +170,49 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     for (ContinuousVerificationExecutionMetaData cv : cvList) {
       assertFalse("We should not get executions of second account", cv.getAccountId().equals(accountId + "123"));
     }
+  }
+
+  @Test
+  public void getAllCVDeploymentRecords() {
+    // Setup
+    long now = System.currentTimeMillis();
+    continuousVerificationService.saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData.builder()
+                                                              .accountId(accountId)
+                                                              .applicationId(appId)
+                                                              .appName("dummy")
+                                                              .artifactName("cv dummy artifact")
+                                                              .envName("cv dummy env")
+                                                              .phaseName("dummy phase")
+                                                              .pipelineName("dummy pipeline")
+                                                              .workflowName("dummy workflow")
+                                                              .pipelineStartTs(now)
+                                                              .workflowStartTs(now)
+                                                              .serviceId(serviceId)
+                                                              .stateExecutionId(stateExecutionId)
+                                                              .envId(envId)
+                                                              .serviceName("dummy service")
+                                                              .stateType(StateType.ELK)
+                                                              .workflowId(workflowId)
+                                                              .workflowExecutionId(workflowExecutionId)
+                                                              .build());
+
+    WorkflowExecution execution1 = WorkflowExecutionBuilder.aWorkflowExecution()
+                                       .withAppId(appId)
+                                       .withUuid(workflowExecutionId)
+                                       .withStatus(ExecutionStatus.SUCCESS)
+                                       .build();
+    wingsPersistence.save(execution1);
+
+    // Call
+
+    long before = now - TimeUnit.MINUTES.toMillis(1), after = now + TimeUnit.MINUTES.toMillis(5);
+    List<CVDeploymentData> workflowExecutionList = continuousVerificationService.getCVDeploymentData(
+        accountId, before, after, userService.getUserByEmail(WingsIntegrationTestConstants.adminUserEmail), serviceId);
+
+    // Verify
+    assertTrue("There's atleast one cv deployment execution", workflowExecutionList.size() > 0);
+    assertEquals("ExecutionId matches", workflowExecutionId, workflowExecutionList.get(0).getWorkflowExecutionId());
+    assertEquals("Status is success", ExecutionStatus.SUCCESS, workflowExecutionList.get(0).getStatus());
   }
 
   @Test
