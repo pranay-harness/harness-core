@@ -198,7 +198,7 @@ public class AzureHelperService {
                 .withEnvId(azureInfrastructureMapping.getEnvId())
                 .withWinrmConnAttr(
                     StringUtils.equals(azureInfrastructureMapping.getDeploymentType(), DeploymentType.WINRM.toString())
-                        ? azureInfrastructureMapping.getHostConnectionAttrs()
+                        ? azureInfrastructureMapping.getWinRmConnectionAttributes()
                         : null)
                 .withInfraMappingId(azureInfrastructureMapping.getUuid())
                 .withServiceTemplateId(azureInfrastructureMapping.getServiceTemplateId())
