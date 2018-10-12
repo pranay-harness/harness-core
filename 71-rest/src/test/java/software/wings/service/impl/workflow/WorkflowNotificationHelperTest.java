@@ -17,7 +17,6 @@ import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aW
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.WORKFLOW_NOTIFICATION;
-import static software.wings.sm.PipelineSummary.Builder.aPipelineSummary;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -25,6 +24,7 @@ import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
+import static software.wings.utils.WingsTestConstants.PIPELINE_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
@@ -64,6 +64,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.states.PhaseSubWorkflow;
 
@@ -173,14 +174,13 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
   @Test
   public void shouldSendWorkflowStatusChangeNotificationPipeline() {
     when(workflowExecutionService.getExecutionDetails(APP_ID, WORKFLOW_EXECUTION_ID, true, emptySet()))
-        .thenReturn(
-            aWorkflowExecution()
-                .withServiceIds(asList("service-1", "service-2"))
-                .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
-                .withPipelineExecutionId(PIPELINE_EXECUTION_ID)
-                .withPipelineSummary(
-                    aPipelineSummary().withPipelineId(PIPELINE_EXECUTION_ID).withPipelineName("Pipeline Name").build())
-                .build());
+        .thenReturn(aWorkflowExecution()
+                        .withServiceIds(asList("service-1", "service-2"))
+                        .withTriggeredBy(EmbeddedUser.builder().name(USER_NAME).build())
+                        .withPipelineExecutionId(PIPELINE_EXECUTION_ID)
+                        .withPipelineSummary(
+                            PipelineSummary.builder().pipelineId(PIPELINE_ID).pipelineName("Pipeline Name").build())
+                        .build());
     NotificationRule notificationRule = aNotificationRule()
                                             .withExecutionScope(ExecutionScope.WORKFLOW)
                                             .withConditions(asList(ExecutionStatus.FAILED, ExecutionStatus.SUCCESS))

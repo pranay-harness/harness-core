@@ -17,8 +17,11 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
+import static software.wings.beans.Environment.APP_ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.ENVIRONMENT_TYPE_KEY;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.Environment.NAME_KEY;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.ServiceVariable.Type.TEXT;
@@ -66,7 +69,9 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.Notification;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.Pipeline;
@@ -458,6 +463,24 @@ public class EnvironmentServiceTest extends WingsBaseTest {
     verify(serviceVariableService).getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, MASKED);
     verify(configService)
         .getConfigFileByTemplate(environment.getAppId(), environment.getUuid(), serviceTemplate.getUuid());
+  }
+
+  @Test
+  public void shouldObtainEnvironmentSummaries() {
+    when(query.project(NAME_KEY, true)).thenReturn(query);
+    when(query.project(APP_ID_KEY, true)).thenReturn(query);
+    when(query.project(ENVIRONMENT_TYPE_KEY, true)).thenReturn(query);
+    when(query.project(Environment.ID_KEY, true)).thenReturn(query);
+    when(query.field(Environment.ID_KEY)).thenReturn(end);
+    when(end.in(asList(ENV_ID))).thenReturn(query);
+    when(query.asList())
+        .thenReturn(
+            asList(Environment.Builder.anEnvironment().withAppId(APP_ID).withUuid(ENV_ID).withName(ENV_NAME).build()));
+    List<EnvSummary> environmentSummaries = environmentService.obtainEnvironmentSummaries(APP_ID, asList(ENV_ID));
+    assertThat(environmentSummaries).isNotEmpty();
+    assertThat(environmentSummaries).extracting(EnvSummary::getName).contains(ENV_NAME);
+    assertThat(environmentSummaries).extracting(EnvSummary::getUuid).contains(ENV_ID);
+    assertThat(environmentSummaries).extracting(EnvSummary::getEnvironmentType).contains(EnvironmentType.NON_PROD);
   }
 
   @Test

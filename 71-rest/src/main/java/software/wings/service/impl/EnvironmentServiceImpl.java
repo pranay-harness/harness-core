@@ -19,9 +19,12 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.EntityType.ENVIRONMENT;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.SERVICE_TEMPLATE;
+import static software.wings.beans.Environment.APP_ID_KEY;
 import static software.wings.beans.Environment.Builder.anEnvironment;
+import static software.wings.beans.Environment.ENVIRONMENT_TYPE_KEY;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
+import static software.wings.beans.Environment.NAME_KEY;
 import static software.wings.beans.InformationNotification.Builder.anInformationNotification;
 import static software.wings.beans.ServiceVariable.DEFAULT_TEMPLATE_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
@@ -51,6 +54,7 @@ import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
 import software.wings.beans.InfrastructureMapping;
@@ -92,6 +96,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.validation.executable.ValidateOnExecution;
 /**
@@ -312,6 +317,26 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     environment.setSyncFromGit(syncFromGit);
     ensureEnvironmentSafeToDelete(environment);
     delete(environment);
+  }
+
+  @Override
+  public List<EnvSummary> obtainEnvironmentSummaries(String appId, List<String> envIds) {
+    List<Environment> environments = wingsPersistence.createQuery(Environment.class)
+                                         .project(NAME_KEY, true)
+                                         .project(ENVIRONMENT_TYPE_KEY, true)
+                                         .project(APP_ID_KEY, true)
+                                         .filter(APP_ID_KEY, appId)
+                                         .field(Environment.ID_KEY)
+                                         .in(envIds)
+                                         .asList();
+    return environments.stream()
+        .map(environment
+            -> EnvSummary.builder()
+                   .uuid(environment.getUuid())
+                   .name(environment.getName())
+                   .environmentType(environment.getEnvironmentType())
+                   .build())
+        .collect(Collectors.toList());
   }
 
   @Override

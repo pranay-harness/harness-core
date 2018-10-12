@@ -6,6 +6,7 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.EnvSummary;
 import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
@@ -148,4 +149,6 @@ public interface EnvironmentService extends OwnedByApplication {
   Environment update(Environment environment, boolean fromYaml);
 
   void delete(String appId, String envId, boolean syncFromGit);
+
+  List<EnvSummary> obtainEnvironmentSummaries(String appId, List<String> envIds);
 }
