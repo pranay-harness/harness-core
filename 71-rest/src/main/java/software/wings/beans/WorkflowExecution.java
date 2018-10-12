@@ -49,6 +49,8 @@ public class WorkflowExecution extends Base {
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
   public static final String INFRAMAPPING_IDS_KEY = "infraMappingIds";
+  public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
+  public static final String TRIGGERED_BY = "triggeredBy";
 
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);
@@ -95,6 +97,16 @@ public class WorkflowExecution extends Base {
   private OrchestrationWorkflowType orchestrationType;
 
   private boolean isBaseline;
+
+  private String deploymentTriggerId;
+
+  public String getDeploymentTriggerId() {
+    return deploymentTriggerId;
+  }
+
+  public void setDeploymentTriggerId(String deploymentTriggerId) {
+    this.deploymentTriggerId = deploymentTriggerId;
+  }
 
   /**
    * Gets name.

@@ -112,7 +112,6 @@ public class EnvState extends State {
     executionArgs.setTriggeredFromPipeline(true);
     executionArgs.setPipelineId(pipelineId);
     executionArgs.setPipelinePhaseElementId(context.getPipelineStateElementId());
-    executionArgs.setTriggeredBy(workflowStandardParams.getCurrentUser());
     executionArgs.setWorkflowVariables(populatePipelineVariables(workflowStandardParams));
     executionArgs.setExcludeHostsWithSameArtifact(workflowStandardParams.isExcludeHostsWithSameArtifact());
 
@@ -141,7 +140,7 @@ public class EnvState extends State {
         workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType());
     try {
       WorkflowExecution execution = executionService.triggerOrchestrationExecution(
-          appId, envId, workflowId, context.getWorkflowExecutionId(), executionArgs);
+          appId, envId, workflowId, context.getWorkflowExecutionId(), executionArgs, null);
       envStateExecutionData.setWorkflowExecutionId(execution.getUuid());
       return anExecutionResponse()
           .withAsync(true)

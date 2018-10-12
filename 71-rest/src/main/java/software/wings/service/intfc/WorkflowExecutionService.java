@@ -20,6 +20,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
+import software.wings.beans.trigger.Trigger;
 import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.PhaseExecutionSummary;
@@ -44,17 +45,17 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
       boolean runningOnly, boolean withBreakdownAndSummary, boolean includeStatus);
 
   WorkflowExecution triggerPipelineExecution(
-      @NotNull String appId, @NotNull String pipelineId, ExecutionArgs executionArgs);
-
-  WorkflowExecution triggerOrchestrationExecution(
-      @NotNull String appId, String envId, @NotNull String orchestrationId, @NotNull ExecutionArgs executionArgs);
+      @NotNull String appId, @NotNull String pipelineId, ExecutionArgs executionArgs, Trigger trigger);
 
   WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, String envId, @NotNull String orchestrationId,
-      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs);
+      @NotNull ExecutionArgs executionArgs, Trigger trigger);
+
+  WorkflowExecution triggerOrchestrationExecution(@NotNull String appId, String envId, @NotNull String orchestrationId,
+      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, Trigger trigger);
 
   WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String orchestrationId,
-      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs,
-      WorkflowExecutionUpdate workflowExecutionUpdate);
+      String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
+      Trigger trigger);
 
   WorkflowExecution getExecutionDetails(
       @NotNull String appId, @NotNull String workflowExecutionId, boolean upToDate, Set<String> excludeFromAggregation);
@@ -65,7 +66,7 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
 
   WorkflowExecution getExecutionDetailsWithoutGraph(String appId, String workflowExecutionId);
 
-  WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs);
+  WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs, Trigger trigger);
 
   ExecutionInterrupt triggerExecutionInterrupt(@Valid ExecutionInterrupt executionInterrupt);
 

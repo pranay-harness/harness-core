@@ -562,8 +562,8 @@ public class TriggerServiceImpl implements TriggerService {
       logger.info(
           "Triggering  execution of appId {} with  pipeline id {}", trigger.getAppId(), trigger.getWorkflowId());
       resolveTriggerPipelineVariables(trigger, executionArgs);
-      workflowExecution =
-          workflowExecutionService.triggerPipelineExecution(trigger.getAppId(), trigger.getWorkflowId(), executionArgs);
+      workflowExecution = workflowExecutionService.triggerPipelineExecution(
+          trigger.getAppId(), trigger.getWorkflowId(), executionArgs, trigger);
 
       logger.info(
           "Pipeline execution of appId {} with  pipeline id {} triggered", trigger.getAppId(), trigger.getWorkflowId());
@@ -701,7 +701,7 @@ public class TriggerServiceImpl implements TriggerService {
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
     logger.info("Triggering workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
         trigger.getWorkflowId());
-    return workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs);
+    return workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs, trigger);
   }
 
   private Map<String, String> overrideTriggerVariables(Trigger trigger, ExecutionArgs executionArgs) {
@@ -733,6 +733,7 @@ public class TriggerServiceImpl implements TriggerService {
     if (infrastructureMapping == null) {
       throw new InvalidRequestException("Infrastructure Mapping" + infraMappingId + " does not exist", USER_ADMIN);
     }
+
     List<ServiceInfraWorkflow> serviceInfraWorkflows =
         triggerServiceHelper.getServiceInfraWorkflows(appId, infraMappingId);
 
@@ -752,8 +753,9 @@ public class TriggerServiceImpl implements TriggerService {
         } else {
           logger.info("Triggering workflow execution {}  for appId {} and infraMappingId {}",
               workflowExecution.getUuid(), workflowExecution.getWorkflowId(), infraMappingId);
+          // TODO: Refactor later
           workflowExecutionService.triggerEnvExecution(
-              appId, workflowExecution.getEnvId(), workflowExecution.getExecutionArgs());
+              appId, workflowExecution.getEnvId(), workflowExecution.getExecutionArgs(), null);
         }
       }
     });

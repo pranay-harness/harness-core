@@ -65,7 +65,7 @@ public class EnvStateTest extends WingsBaseTest {
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(WORKFLOW_STANDARD_PARAMS);
     when(context.getWorkflowExecutionId()).thenReturn(PIPELINE_WORKFLOW_EXECUTION_ID);
     when(workflowExecutionService.triggerOrchestrationExecution(
-             eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any()))
+             eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any()))
         .thenReturn(aWorkflowExecution().withUuid(WORKFLOW_EXECUTION_ID).build());
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
   }
@@ -76,7 +76,7 @@ public class EnvStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService)
         .triggerOrchestrationExecution(
-            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any());
+            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
     assertThat(executionResponse.getCorrelationIds()).hasSameElementsAs(asList(WORKFLOW_EXECUTION_ID));
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SUCCESS);
     assertThat(executionResponse.isAsync()).isTrue();
@@ -93,7 +93,7 @@ public class EnvStateTest extends WingsBaseTest {
     ExecutionResponse executionResponse = envState.execute(context);
     verify(workflowExecutionService, times(0))
         .triggerOrchestrationExecution(
-            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any());
+            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(), any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(SKIPPED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }
@@ -108,14 +108,14 @@ public class EnvStateTest extends WingsBaseTest {
   @Owner(emails = "srinivas@harness.io")
   public void shouldExecuteOnError() {
     when(workflow.getOrchestrationWorkflow()).thenReturn(canaryOrchestrationWorkflow);
-    when(workflowExecutionService.triggerOrchestrationExecution(
-             eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(ExecutionArgs.class)))
+    when(workflowExecutionService.triggerOrchestrationExecution(eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID),
+             eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(ExecutionArgs.class), any()))
         .thenThrow(new InvalidRequestException("Workflow variable [test] is mandatory for execution"));
     ExecutionResponse executionResponse = envState.execute(context);
 
     verify(workflowExecutionService)
-        .triggerOrchestrationExecution(
-            eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID), any(ExecutionArgs.class));
+        .triggerOrchestrationExecution(eq(APP_ID), eq(ENV_ID), eq(WORKFLOW_ID), eq(PIPELINE_WORKFLOW_EXECUTION_ID),
+            any(ExecutionArgs.class), any());
     assertThat(executionResponse.getExecutionStatus()).isEqualTo(FAILED);
     assertThat(executionResponse.getErrorMessage()).isNotEmpty();
   }

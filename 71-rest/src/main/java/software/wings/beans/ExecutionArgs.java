@@ -4,6 +4,7 @@
 
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.artifact.Artifact;
 
@@ -32,7 +33,7 @@ public class ExecutionArgs {
   private String pipelinePhaseElementId;
   private Map<String, String> workflowVariables;
   private String notes;
-  private EmbeddedUser triggeredBy;
+  @Deprecated @JsonIgnore private EmbeddedUser triggeredBy;
   private boolean excludeHostsWithSameArtifact;
 
   /**
