@@ -350,6 +350,6 @@ public class ShellScriptState extends State {
   @Override
   @SchemaIgnore
   public List<String> getPatternsForRequiredContextElementType() {
-    return asList(scriptString);
+    return asList(scriptString, host);
   }
 }
