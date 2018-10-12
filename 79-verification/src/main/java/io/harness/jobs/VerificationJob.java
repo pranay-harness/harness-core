@@ -104,12 +104,12 @@ public class VerificationJob implements Job {
                           .withIdentity(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP)
                           .withDescription("Verification job ")
                           .build();
-      Trigger trigger =
-          TriggerBuilder.newTrigger()
-              .withIdentity(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP)
-              .withSchedule(
-                  SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(CRON_POLL_INTERVAL / 2).repeatForever())
-              .build();
+      Trigger trigger = TriggerBuilder.newTrigger()
+                            .withIdentity(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP)
+                            .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                              .withIntervalInSeconds((int) (CRON_POLL_INTERVAL / 2))
+                                              .repeatForever())
+                            .build();
       jobScheduler.scheduleJob(job, trigger);
       logger.info("Added job with details : {}", job);
     }
@@ -141,7 +141,7 @@ public class VerificationJob implements Job {
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(CRON_POLL_INTERVAL / 2)
+                                            .withIntervalInSeconds((int) (CRON_POLL_INTERVAL / 2))
                                             .withMisfireHandlingInstructionNowWithExistingCount()
                                             .repeatForever())
                           .startAt(startDate)
@@ -165,7 +165,7 @@ public class VerificationJob implements Job {
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(accountId, LOG_DATA_PROCESSOR_CRON_GROUP)
                           .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds(CRON_POLL_INTERVAL / 2)
+                                            .withIntervalInSeconds((int) (CRON_POLL_INTERVAL / 2))
                                             .withMisfireHandlingInstructionNowWithExistingCount()
                                             .repeatForever())
                           .startAt(startDate)

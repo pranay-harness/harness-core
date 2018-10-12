@@ -56,6 +56,6 @@ public interface ExperimentalMetricAnalysisResource {
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("workflowId") String workflowId,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("taskId") String taskId,
-      @QueryParam("baseLineExecutionId") String baseLineExecutionId,
+      @QueryParam("baseLineExecutionId") String baseLineExecutionId, @QueryParam("cvConfigId") String cvConfigId,
       ExperimentalMetricAnalysisRecord mlAnalysisResponse) throws IOException;
 }

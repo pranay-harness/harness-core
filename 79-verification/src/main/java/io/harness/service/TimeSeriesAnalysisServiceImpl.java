@@ -53,7 +53,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -77,7 +76,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
-      String delegateTaskId, List<NewRelicMetricDataRecord> metricData) throws IOException {
+      String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
     if (!isStateValid(appId, stateExecutionId)) {
       logger.warn("State is no longer active " + metricData.get(0).getStateExecutionId()
           + ". Sending delegate abort request " + delegateTaskId);
@@ -115,13 +114,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
    * @param analysisMinute
    * @param taskId
    * @param baseLineExecutionId
+   * @param cvConfigId
    * @param mlAnalysisResponse
    * @return
    */
   @Override
   public boolean saveAnalysisRecordsML(StateType stateType, String accountId, String appId, String stateExecutionId,
       String workflowExecutionId, String workflowId, String serviceId, String groupName, Integer analysisMinute,
-      String taskId, String baseLineExecutionId, MetricAnalysisRecord mlAnalysisResponse) {
+      String taskId, String baseLineExecutionId, String cvConfigId, MetricAnalysisRecord mlAnalysisResponse) {
     logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
         stateExecutionId, analysisMinute);
     mlAnalysisResponse.setStateType(stateType);
@@ -131,6 +131,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     mlAnalysisResponse.setAnalysisMinute(analysisMinute);
     mlAnalysisResponse.setBaseLineExecutionId(baseLineExecutionId);
     mlAnalysisResponse.setGroupName(groupName);
+    mlAnalysisResponse.setCvConfigId(cvConfigId);
 
     if (isEmpty(mlAnalysisResponse.getGroupName())) {
       mlAnalysisResponse.setGroupName(DEFAULT_GROUP_NAME);
@@ -745,5 +746,50 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                                                             .get();
 
     return newRelicMetricDataRecord == null ? -1 : newRelicMetricDataRecord.getDataCollectionMinute();
+  }
+
+  @Override
+  public long getLastCVAnalysisMinute(String appId, String cvConfigId) {
+    TimeSeriesMLAnalysisRecord newRelicMetricAnalysisRecord =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+            .filter("appId", appId)
+            .filter("cvConfigId", cvConfigId)
+            .order("-analysisMinute")
+            .get();
+
+    return newRelicMetricAnalysisRecord == null ? -1 : newRelicMetricAnalysisRecord.getAnalysisMinute();
+  }
+
+  @Override
+  public List<NewRelicMetricDataRecord> getMetricRecords(StateType stateType, String appId, String serviceId,
+      String cvConfigId, int analysisStartMinute, int analysisEndMinute) {
+    return wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeCount)
+        .filter("stateType", stateType)
+        .filter("appId", appId)
+        .filter("serviceId", serviceId)
+        .filter("cvConfigId", cvConfigId)
+        .field("dataCollectionMinute")
+        .greaterThanOrEq(analysisStartMinute)
+        .field("dataCollectionMinute")
+        .lessThanOrEq(analysisEndMinute)
+        .asList();
+  }
+
+  @Override
+  public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
+      String appId, StateType stateType, String serviceId, String groupName) {
+    Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();
+    switch (stateType) {
+      case NEW_RELIC:
+        result.put("default", NewRelicMetricValueDefinition.NEW_RELIC_VALUES_TO_ANALYZE);
+        break;
+      case APP_DYNAMICS:
+        result.put("default", NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
+        break;
+      default:
+        throw new WingsException("Invalid Verification StateType.");
+    }
+    result.putAll(getCustomMetricTemplates(appId, stateType, serviceId, groupName));
+    return result;
   }
 }

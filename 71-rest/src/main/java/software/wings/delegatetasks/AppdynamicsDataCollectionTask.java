@@ -278,8 +278,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         int retry = 0;
         while (!completed.get() && retry < RETRIES) {
           try {
-            logger.info("starting metric data collection for {} for minute {}",
-                dataCollectionInfo.getStateExecutionId(), dataCollectionMinute);
+            logger.info(
+                "starting metric data collection for {} for minute {}", dataCollectionInfo, dataCollectionMinute);
             AppdynamicsTier appdynamicsTier =
                 appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, dataCollectionInfo.getAppId(),
                     dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());

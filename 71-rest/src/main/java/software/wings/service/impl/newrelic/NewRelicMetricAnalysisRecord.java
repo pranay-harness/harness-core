@@ -51,6 +51,8 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
 
   @NotEmpty @Indexed private String stateExecutionId;
 
+  private String cvConfigId;
+
   private List<NewRelicMetricAnalysis> metricAnalyses;
 
   private int analysisMinute;
@@ -69,7 +71,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
   public NewRelicMetricAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
       String message, RiskLevel riskLevel, String workflowId, String workflowExecutionId, String stateExecutionId,
-      String groupName, String dependencyPath, TimeSeriesMlAnalysisType mlAnalysisType,
+      String cvConfigId, String groupName, String dependencyPath, TimeSeriesMlAnalysisType mlAnalysisType,
       List<NewRelicMetricAnalysis> metricAnalyses, int analysisMinute, boolean showTimeSeries,
       String baseLineExecutionId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
@@ -79,6 +81,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
     this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;
     this.stateExecutionId = stateExecutionId;
+    this.cvConfigId = cvConfigId;
     this.groupName = groupName;
     this.dependencyPath = dependencyPath;
     this.mlAnalysisType = mlAnalysisType;

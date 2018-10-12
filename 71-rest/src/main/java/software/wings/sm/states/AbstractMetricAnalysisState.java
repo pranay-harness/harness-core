@@ -47,10 +47,10 @@ import java.util.UUID;
  * Created by rsingh on 9/25/17.
  */
 public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState {
-  protected static final int SMOOTH_WINDOW = 3;
-  protected static final int MIN_REQUESTS_PER_MINUTE = 10;
-  protected static final int COMPARISON_WINDOW = 1;
-  protected static final int PARALLEL_PROCESSES = 7;
+  public static final int SMOOTH_WINDOW = 3;
+  public static final int MIN_REQUESTS_PER_MINUTE = 10;
+  public static final int COMPARISON_WINDOW = 1;
+  public static final int PARALLEL_PROCESSES = 7;
   public static final int CANARY_DAYS_TO_COLLECT = 7;
 
   @Transient @Inject protected MetricDataAnalysisService metricAnalysisService;

@@ -2,6 +2,7 @@ package io.harness.app;
 
 import static com.google.common.collect.ImmutableMap.of;
 import static java.util.Collections.singletonList;
+import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 
 import com.google.common.collect.ImmutableList;
 
@@ -52,7 +53,7 @@ public class VerificationServiceConfiguration extends Configuration implements A
    */
   public VerificationServiceConfiguration() {
     DefaultServerFactory defaultServerFactory = new DefaultServerFactory();
-    defaultServerFactory.setJerseyRootPath("/verification");
+    defaultServerFactory.setJerseyRootPath(VERIFICATION_SERVICE_BASE_URL);
     defaultServerFactory.setRegisterDefaultExceptionMappers(false);
     defaultServerFactory.setAdminContextPath("/admin");
     defaultServerFactory.setAdminConnectors(singletonList(getDefaultAdminConnectorFactory()));

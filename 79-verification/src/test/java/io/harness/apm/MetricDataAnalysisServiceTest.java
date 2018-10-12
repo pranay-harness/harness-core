@@ -1,5 +1,6 @@
 package io.harness.apm;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -29,6 +30,7 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
+  private String cvConfigId;
   private String groupName;
   private String delegateTaskId;
   private Integer analysisMinute;
@@ -39,12 +41,13 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    accountId = UUID.randomUUID().toString();
-    appId = UUID.randomUUID().toString();
-    stateExecutionId = UUID.randomUUID().toString();
-    workflowId = UUID.randomUUID().toString();
-    workflowExecutionId = UUID.randomUUID().toString();
-    serviceId = UUID.randomUUID().toString();
+    accountId = generateUuid();
+    appId = generateUuid();
+    stateExecutionId = generateUuid();
+    workflowId = generateUuid();
+    workflowExecutionId = generateUuid();
+    serviceId = generateUuid();
+    cvConfigId = generateUuid();
     groupName = "groupName-";
     delegateTaskId = UUID.randomUUID().toString();
     analysisMinute = 10;
@@ -60,7 +63,8 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         mlAnalysisResponse.setCreatedAt(j);
         mlAnalysisResponse.setTransactions(Collections.EMPTY_MAP);
         metricDataAnalysisService.saveAnalysisRecordsML(StateType.DYNA_TRACE, accountId, appId, stateExecutionId,
-            workflowExecutionId, workflowId, serviceId, groupName + i, j, delegateTaskId, "-1", mlAnalysisResponse);
+            workflowExecutionId, workflowId, serviceId, groupName + i, j, delegateTaskId, "-1", cvConfigId,
+            mlAnalysisResponse);
       }
     }
 

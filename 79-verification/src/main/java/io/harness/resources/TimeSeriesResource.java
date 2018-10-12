@@ -97,10 +97,10 @@ public class TimeSeriesResource {
       @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") final String serviceId,
       @QueryParam("groupName") final String groupName, @QueryParam("analysisMinute") Integer analysisMinute,
       @QueryParam("taskId") String taskId, @QueryParam("baseLineExecutionId") String baseLineExecutionId,
-      TimeSeriesMLAnalysisRecord mlAnalysisResponse) throws IOException {
+      @QueryParam("cvConfigId") String cvConfigId, TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
     return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, accountId, applicationId,
         stateExecutionId, workflowExecutionId, workflowId, serviceId, groupName, analysisMinute, taskId,
-        baseLineExecutionId, mlAnalysisResponse));
+        baseLineExecutionId, cvConfigId, mlAnalysisResponse));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -140,5 +140,33 @@ public class TimeSeriesResource {
       @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName) {
     return new RestResponse<>(timeSeriesAnalysisService.getCustomThreshold(
         appId, stateType, serviceId, groupName, transactionName, metricName));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path("/get-metric-data-247")
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<List<NewRelicMetricDataRecord>> getMetricRecords(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("serviceId") String serviceId,
+      @QueryParam("analysisStartMin") int analysisStartMin, @QueryParam("analysisEndMin") int analysisEndMin,
+      TSRequest request) {
+    return new RestResponse<>(timeSeriesAnalysisService.getMetricRecords(
+        stateType, appId, serviceId, cvConfigId, analysisStartMin, analysisEndMin));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path("/get-metric-template_24_7")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> getMetricTemplate(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
+      @QueryParam("stateType") StateType stateType, @QueryParam("serviceId") String serviceId,
+      @QueryParam("groupName") String groupName) {
+    return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplate(appId, stateType, serviceId, groupName));
   }
 }
