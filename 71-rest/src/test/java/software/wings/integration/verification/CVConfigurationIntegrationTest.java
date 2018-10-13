@@ -14,10 +14,14 @@ import com.google.inject.Inject;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.SettingAttribute.Category;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.intfc.AppService;
+import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -41,13 +45,28 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
   private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
 
+  private SettingAttribute settingAttribute;
+  private String settingAttributeId;
+  private Service service;
+
   @Before
   public void setUp() {
     loginAdminUser();
     appId = appService.save(anApplication().withName(generateUuid()).withAccountId(accountId).build()).getUuid();
     envId = generateUuid();
-    serviceId = generateUuid();
     appDynamicsApplicationId = generateUuid();
+
+    settingAttribute = SettingAttribute.Builder.aSettingAttribute()
+                           .withAccountId(accountId)
+                           .withName("someSettingAttributeName")
+                           .withCategory(Category.CONNECTOR)
+                           .withEnvId(envId)
+                           .withAppId(appId)
+                           .build();
+    settingAttributeId = wingsPersistence.saveAndGet(SettingAttribute.class, settingAttribute).getUuid();
+
+    service = Service.builder().name("someServiceName").appId(appId).build();
+    serviceId = wingsPersistence.saveAndGet(Service.class, service).getUuid();
 
     createNewRelicConfig(true);
     createAppDynamicsConfig();
@@ -55,15 +74,15 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   private void createNewRelicConfig(boolean enabled24x7) {
     String newRelicApplicationId = generateUuid();
-    String newRelicServerSettingId = generateUuid();
 
     newRelicCVServiceConfiguration = new NewRelicCVServiceConfiguration();
+    newRelicCVServiceConfiguration.setAppId(appId);
     newRelicCVServiceConfiguration.setEnvId(envId);
     newRelicCVServiceConfiguration.setServiceId(serviceId);
     newRelicCVServiceConfiguration.setEnabled24x7(enabled24x7);
     newRelicCVServiceConfiguration.setApplicationId(newRelicApplicationId);
-    newRelicCVServiceConfiguration.setConnectorId(newRelicServerSettingId);
-    newRelicCVServiceConfiguration.setMetrics(Collections.singletonList(generateUuid()));
+    newRelicCVServiceConfiguration.setConnectorId(settingAttributeId);
+    newRelicCVServiceConfiguration.setMetrics(Collections.singletonList("apdexScore"));
     newRelicCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
   }
 
@@ -100,10 +119,11 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         + "&serviceConfigurationId=" + savedObjectUuid;
 
     target = client.target(url);
-    RestResponse<T> getRequestResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
-    T fetchedObject = getRequestResponse.getResource();
+    RestResponse<NewRelicCVServiceConfiguration> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicCVServiceConfiguration>>() {});
+    NewRelicCVServiceConfiguration fetchedObject = getRequestResponse.getResource();
 
+    NewRelicCVServiceConfiguration newRelicCVServiceConfiguration = fetchedObject;
     assertEquals(savedObjectUuid, fetchedObject.getUuid());
     assertEquals(accountId, fetchedObject.getAccountId());
     assertEquals(appId, fetchedObject.getAppId());
@@ -111,24 +131,28 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(serviceId, fetchedObject.getServiceId());
     assertEquals(NEW_RELIC, fetchedObject.getStateType());
     assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
+    assertEquals("someSettingAttributeName", newRelicCVServiceConfiguration.getConnectorName());
+    assertEquals("someServiceName", newRelicCVServiceConfiguration.getServiceName());
 
     url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
     target = client.target(url);
 
-    RestResponse<List<T>> allConfigResponse =
-        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<T>>>() {});
-    List<T> allConifgs = allConfigResponse.getResource();
+    RestResponse<List<Object>> allConfigResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
+    List<Object> allConifgs = allConfigResponse.getResource();
 
     assertEquals(1, allConifgs.size());
-    fetchedObject = allConifgs.get(0);
 
-    assertEquals(savedObjectUuid, fetchedObject.getUuid());
-    assertEquals(accountId, fetchedObject.getAccountId());
-    assertEquals(appId, fetchedObject.getAppId());
-    assertEquals(envId, fetchedObject.getEnvId());
-    assertEquals(serviceId, fetchedObject.getServiceId());
-    assertEquals(NEW_RELIC, fetchedObject.getStateType());
-    assertEquals(AnalysisTolerance.MEDIUM, fetchedObject.getAnalysisTolerance());
+    NewRelicCVServiceConfiguration obj =
+        JsonUtils.asObject(JsonUtils.asJson(allConifgs.get(0)), NewRelicCVServiceConfiguration.class);
+
+    assertEquals(savedObjectUuid, obj.getUuid());
+    assertEquals(accountId, obj.getAccountId());
+    assertEquals(appId, obj.getAppId());
+    assertEquals(envId, obj.getEnvId());
+    assertEquals(serviceId, obj.getServiceId());
+    assertEquals(NEW_RELIC, obj.getStateType());
+    assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + NEW_RELIC + "&serviceConfigurationId=" + savedObjectUuid;
@@ -138,7 +162,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     newRelicCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
     getRequestBuilderWithAuthHeader(target).put(
         entity(newRelicCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
-    getRequestResponse = getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
+    getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<NewRelicCVServiceConfiguration>>() {});
     fetchedObject = getRequestResponse.getResource();
     assertFalse(fetchedObject.isEnabled24x7());
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());

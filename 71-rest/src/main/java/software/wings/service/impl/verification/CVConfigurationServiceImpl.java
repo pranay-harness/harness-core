@@ -6,6 +6,8 @@ import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
@@ -48,15 +50,19 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   public <T extends CVConfiguration> T getConfiguration(String serviceConfigurationId) {
-    return (T) wingsPersistence.get(CVConfiguration.class, serviceConfigurationId);
+    CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, serviceConfigurationId);
+    fillInServiceAndConnectorNames(cvConfiguration);
+    return (T) cvConfiguration;
   }
 
   @Override
   public <T extends CVConfiguration> List<T> listConfigurations(String accountId, String appId) {
-    return (List<T>) wingsPersistence.createQuery(CVConfiguration.class)
-        .filter("accountId", accountId)
-        .filter("appId", appId)
-        .asList();
+    List<T> cvConfigurations = (List<T>) wingsPersistence.createQuery(CVConfiguration.class)
+                                   .filter("accountId", accountId)
+                                   .filter("appId", appId)
+                                   .asList();
+    cvConfigurations.forEach(cvConfiguration -> fillInServiceAndConnectorNames(cvConfiguration));
+    return cvConfigurations;
   }
 
   public String updateConfiguration(
@@ -126,5 +132,17 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     }
 
     return updateOperations;
+  }
+
+  private void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration) {
+    Service service = wingsPersistence.get(Service.class, cvConfiguration.getServiceId());
+    if (service != null) {
+      cvConfiguration.setServiceName(service.getName());
+    }
+
+    SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, cvConfiguration.getConnectorId());
+    if (settingAttribute != null) {
+      cvConfiguration.setConnectorName(settingAttribute.getName());
+    }
   }
 }
