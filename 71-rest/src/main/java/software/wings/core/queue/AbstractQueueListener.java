@@ -99,6 +99,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
       onMessage(message);
       queue.ack(message);
     } catch (Exception exception) {
+      logger.error(format("Exception happened in onMessage %s", queue.name()), exception); // ToDo: delete from queue??
       onException(exception, message);
     } finally {
       if (future != null) {
