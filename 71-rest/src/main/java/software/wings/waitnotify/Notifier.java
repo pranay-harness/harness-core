@@ -48,7 +48,12 @@ public class Notifier implements Runnable {
     if (isMaintenance() || configurationController.isNotPrimary()) {
       return;
     }
-    execute();
+
+    try {
+      execute();
+    } catch (Exception e) {
+      logger.error("Exception happened in Notifier execute", e);
+    }
   }
 
   public void execute() {
