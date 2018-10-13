@@ -246,12 +246,6 @@ public class GitClientImpl implements GitClient {
                     .setUpstreamMode(SetupUpstreamMode.TRACK)
                     .setStartPoint("origin/" + gitConfig.getBranch())
                     .call();
-
-      String gitRef = gitConfig.getReference();
-      if (StringUtils.isNotEmpty(gitRef)) {
-        git.checkout().setCreateBranch(false).setStartPoint(gitRef).call();
-      }
-
       return GitCheckoutResult.builder().build();
     } catch (RefAlreadyExistsException refExIgnored) {
       logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())

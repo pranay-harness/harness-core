@@ -561,6 +561,6 @@ software.wings.beans.DelegateTaskResponse$ResponseCode, 5520
 io.harness.exception.DelegateRetryableException, 5521
 software.wings.beans.TerraformInputVariablesTaskResponse, 5522
 software.wings.api.TerraformOutputInfoElement, 5523
-software.wings.beans.delegation.TerraformProvisionParameters$TerraformCommand, 5524
-software.wings.beans.delegation.TerraformProvisionParameters$TerraformCommandUnit, 5525
+# software.wings.beans.delegation.TerraformProvisionParameters$TerraformCommand, 5524
+# software.wings.beans.delegation.TerraformProvisionParameters$TerraformCommandUnit, 5525
 software.wings.api.AwsAmiDeployStateExecutionData, 5526
