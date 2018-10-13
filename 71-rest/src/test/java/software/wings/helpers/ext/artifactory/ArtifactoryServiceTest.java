@@ -1,10 +1,5 @@
 package software.wings.helpers.ext.artifactory;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.containing;
-import static com.github.tomakehurst.wiremock.client.WireMock.get;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
@@ -147,25 +142,6 @@ public class ArtifactoryServiceTest {
         artifactoryConfig, null, "harness-maven", "io/harness/todolist/todolist/1.0/*.war", "any", 50);
     assertThat(builds).isNotNull();
     assertThat(builds).extracting(buildDetails -> buildDetails.getNumber()).contains("todolist-1.0.war");
-  }
-
-  @Test
-  public void shouldGetGroupIds() {
-    List<String> groupIds = artifactoryService.getRepoPaths(artifactoryConfig, null, "harness-maven");
-    assertThat(groupIds).isNotNull();
-    assertThat(groupIds).contains("io.harness");
-    assertThat(groupIds).contains("io.harness.portal");
-  }
-
-  @Test
-  public void shouldGetGroupIdsForAnonymousUser() {
-    stubFor(get(urlPathEqualTo("/artifactory/api/storage/harness-maven-snapshots"))
-                .withQueryParam("deep", containing("1"))
-                .willReturn(aResponse().withStatus(403)));
-    List<String> groupIds = artifactoryService.getRepoPaths(artifactoryConfig, null, "harness-maven-snapshots");
-    assertThat(groupIds).isNotNull();
-    //    assertThat(groupIds).contains("io.harness");
-    //  assertThat(groupIds).contains("io.harness");
   }
 
   @Test(expected = WingsException.class)

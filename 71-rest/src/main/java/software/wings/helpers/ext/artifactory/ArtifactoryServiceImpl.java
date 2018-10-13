@@ -1,15 +1,12 @@
 package software.wings.helpers.ext.artifactory;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
-import static io.harness.threading.Morpheus.quietSleep;
 import static java.lang.String.format;
-import static java.time.Duration.ofMillis;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -18,13 +15,10 @@ import static org.jfrog.artifactory.client.ArtifactoryRequest.ContentType.TEXT;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.Method.GET;
 import static org.jfrog.artifactory.client.ArtifactoryRequest.Method.POST;
 import static org.jfrog.artifactory.client.model.PackageType.docker;
-import static org.jfrog.artifactory.client.model.PackageType.maven;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
-import com.google.common.util.concurrent.TimeLimiter;
-import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -71,26 +65,15 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.Stack;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
-/**
- * Created by sgurubelli on 6/27/17.
- */
 @Singleton
 public class ArtifactoryServiceImpl implements ArtifactoryService {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactoryServiceImpl.class);
 
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
-  @Inject private ExecutorService executorService;
   @Inject private EncryptionService encryptionService;
-  @Inject private TimeLimiter timeLimiter;
 
   @Override
   public Map<String, String> getRepositories(
@@ -151,6 +134,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       logger.info("Retrieving repositories for packages {} success", packageTypes.toArray());
     } catch (RuntimeException e) {
+      logger.error("Error occurred while retrieving repositories", e);
       prepareException(e, USER_ADMIN);
     }
     return repositories;
@@ -159,24 +143,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   @Override
   public List<String> getRepoPaths(
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, String repoKey) {
-    logger.info("Retrieving repo paths for repoKey {}", repoKey);
-    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
-    PackageType packageType = null;
-    try {
-      Repository repository = artifactory.repository(repoKey).get();
-      RepositorySettings settings = repository.getRepositorySettings();
-      packageType = settings.getPackageType();
-    } catch (Exception e) {
-      logger.error("Error occurred while retrieving repository  from artifactory {} for Repo {}",
-          artifactoryConfig.getArtifactoryUrl(), repoKey, e);
-      prepareException(e, USER_ADMIN);
-    }
-    if (packageType.equals(docker)) {
-      return listDockerImages(artifactory, repoKey);
-    } else if (packageType.equals(maven)) {
-      return getGroupIds(artifactory, repoKey);
-    }
-    return new ArrayList<>();
+    return listDockerImages(getArtifactoryClient(artifactoryConfig, encryptionDetails), repoKey);
   }
 
   private List<String> listDockerImages(Artifactory artifactory, String repoKey) {
@@ -194,7 +161,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
           logger.info("No docker images from artifactory url {} and repo key {}", artifactory.getUri(), repoKey);
           images = new ArrayList<>();
         }
-        logger.info("Retrieving images from artifactory url {} and repo key {} success", artifactory.getUri(), repoKey);
+        logger.info("Retrieving images from artifactory url {} and repo key {} success. Images {}",
+            artifactory.getUri(), repoKey, images);
       }
     } catch (Exception e) {
       logger.error(
@@ -227,11 +195,15 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         buildDetails = tags.stream()
                            .map(tag -> aBuildDetails().withNumber(tag).withBuildUrl(tagUrl + tag).build())
                            .collect(toList());
+        logger.info(
+            "Retrieving docker tags for repoKey {} imageName {} success. Retrieved tags {}", repoKey, imageName, tags);
       }
+
     } catch (Exception e) {
+      logger.info("Exception occurred while retrieving the docker docker tags for Image {}", imageName);
       prepareException(e, USER_ADMIN);
     }
-    logger.info("Retrieving docker tags for repoKey {} imageName {} success ", repoKey, imageName);
+
     return buildDetails;
   }
 
@@ -414,124 +386,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return new ArrayList<>();
   }
 
-  @SuppressFBWarnings("BC_IMPOSSIBLE_INSTANCEOF")
-  public List<String> getGroupIds(Artifactory artifactory, String repoKey) {
-    logger.info("Retrieving groupIds for repoKey {}", repoKey);
-    List<String> groupIdList = new ArrayList<>();
-    try {
-      String apiStorageQuery = "api/storage/";
-      apiStorageQuery = apiStorageQuery + repoKey;
-      ArtifactoryRequest repositoryRequest = new ArtifactoryRequestImpl()
-                                                 .apiUrl(apiStorageQuery)
-                                                 .method(GET)
-                                                 .responseType(JSON)
-                                                 .addQueryParam("list", "")
-                                                 .addQueryParam("deep", "1");
-      Map<String, Object> response = artifactory.restCall(repositoryRequest);
-      Set<String> groupIds = new HashSet<>();
-      if (response != null) {
-        List<Map<String, String>> files = (List<Map<String, String>>) response.get("files");
-        if (files != null) {
-          for (Map<String, String> file : files) {
-            String uri = file.get("uri");
-            if (uri != null) {
-              // strip out the file
-              String[] pathElems = uri.substring(1).split("/");
-              if (pathElems.length >= 4) {
-                String groupId = getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 3).collect(toList()));
-                if (groupIds.add(groupId)) {
-                  groupIdList.add(groupId);
-                }
-              } else {
-                logger.info("Ignoring uri {} as it is not valid GAVC format", uri);
-              }
-            }
-          }
-        }
-      }
-    } catch (Exception e) {
-      if (e instanceof HttpResponseException) {
-        HttpResponseException httpResponseException = (HttpResponseException) e;
-        if (httpResponseException.getStatusCode() == 403) {
-          logger.warn("User not authorized to perform deep level search. Trying with different search api");
-          return listGroupIds(artifactory, repoKey);
-        }
-      }
-      logger.error("Error occurred while retrieving groupIds from artifactory server {} and repoKey {}",
-          artifactory.getUri(), repoKey, e);
-      prepareException(e, USER);
-    }
-    logger.info("Retrieving groupIds for repoKey {} success", repoKey);
-    return groupIdList;
-  }
-
-  /**
-   * Listing groupIds by recursively for non authenticated users
-   *
-   * @param artifactory
-   * @param repoKey
-   * @return
-   */
-  private List<String> listGroupIds(Artifactory artifactory, String repoKey) {
-    logger.info("Retrieving groupIds with anonymous user access");
-    List<String> paths = getGroupIdPathsAsync(artifactory, repoKey);
-    logger.info("Retrieved unique groupIds size {}", paths == null ? 0 : paths.size());
-    return paths;
-  }
-
-  private List<String> getGroupIdPathsAsync(Artifactory artifactory, String repoKey) {
-    Set<String> groupIds = new HashSet<>();
-    try {
-      return timeLimiter.callWithTimeout(() -> {
-        Queue<Future> futures = new ConcurrentLinkedQueue<>();
-        Stack<FolderPath> paths = new Stack<>();
-        paths.addAll(getFolderPaths(artifactory, repoKey, ""));
-        while (isNotEmpty(paths) || isNotEmpty(futures)) {
-          while (isNotEmpty(paths)) {
-            FolderPath folderPath = paths.pop();
-            String path = folderPath.getPath();
-            if (folderPath.isFolder()) {
-              traverseInParallel(artifactory, repoKey, futures, paths, folderPath, path);
-            } else {
-              // Strip out the version
-              String[] pathElems = path.substring(1).split("/");
-              if (pathElems.length >= 3) {
-                groupIds.add(getGroupId(Arrays.stream(pathElems).limit(pathElems.length - 2).collect(toList())));
-              }
-            }
-          }
-          while (isNotEmpty(futures) && futures.peek().isDone()) {
-            futures.poll().get();
-          }
-          quietSleep(ofMillis(10)); // avoid busy wait
-        }
-        return new ArrayList<>(groupIds);
-      }, 20L, TimeUnit.SECONDS, true);
-    } catch (UncheckedTimeoutException e) {
-      logger.warn("Failed to fetch all groupIds within 20 secs. Returning all groupIds collected so far", e);
-    } catch (Exception e) {
-      logger.warn("Error fetching all groupIds. Returning all groupIds collected so far", e);
-    }
-    return new ArrayList<>(groupIds);
-  }
-
-  private void traverseInParallel(Artifactory artifactory, String repoKey, Queue<Future> futures,
-      List<FolderPath> paths, FolderPath folderPath, String path) {
-    futures.add(
-        executorService.submit(() -> paths.addAll(getFolderPaths(artifactory, repoKey, path + folderPath.getUri()))));
-  }
-
-  private String getGroupId(List<String> pathElems) {
-    StringBuilder groupIdBuilder = new StringBuilder();
-    for (int i = 0; i < pathElems.size(); i++) {
-      groupIdBuilder.append(pathElems.get(i));
-      if (i != pathElems.size() - 1) {
-        groupIdBuilder.append('.');
-      }
-    }
-    return groupIdBuilder.toString();
-  }
-
   private String getPath(List<String> pathElems) {
     StringBuilder groupIdBuilder = new StringBuilder();
     for (int i = 0; i < pathElems.size(); i++) {
@@ -698,8 +552,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         builder.setProxy(new ProxyConfig(httpProxyHost.getHostName(), httpProxyHost.getPort(), Http.getProxyScheme(),
             Http.getProxyUserName(), Http.getProxyPassword()));
       }
-      builder.setSocketTimeout(15000);
-      builder.setConnectionTimeout(15000);
+      builder.setSocketTimeout(30000);
+      builder.setConnectionTimeout(30000);
       return builder.build();
     } catch (Exception ex) {
       prepareException(ex, USER_ADMIN);
@@ -716,7 +570,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
       if (httpResponseException.getStatusCode() == 401) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e)
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
             .addParam("message", "Invalid Artifactory credentials");
       } else if (httpResponseException.getStatusCode() == 403) {
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e)
@@ -727,12 +581,12 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e)
           .addParam("message",
               e.getMessage() + "."
-                  + " Artifactory server may not be running");
+                  + "SocketTimeout: Artifactory server may not be running");
     }
     if (e instanceof WingsException) {
       throw(WingsException) e;
     }
-    throw new WingsException(ARTIFACT_SERVER_ERROR, reportTargets, e).addParam("message", Misc.getMessage(e));
+    throw new WingsException(ARTIFACT_SERVER_ERROR, reportTargets).addParam("message", Misc.getMessage(e));
   }
 
   public Long getFileSize(
