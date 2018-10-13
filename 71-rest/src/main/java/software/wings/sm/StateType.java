@@ -38,7 +38,6 @@ import static software.wings.common.Constants.ROLLBACK_AWS_LAMBDA;
 import static software.wings.common.Constants.ROLLBACK_CLOUD_FORMATION;
 import static software.wings.common.Constants.ROLLBACK_CONTAINERS;
 import static software.wings.common.Constants.ROLLBACK_KUBERNETES_SETUP;
-import static software.wings.common.Constants.ROLLBACK_TERRAFORM_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
 import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP;
 import static software.wings.common.Constants.UPGRADE_CONTAINERS;
@@ -141,7 +140,6 @@ import software.wings.sm.states.provision.CloudFormationCreateStackState;
 import software.wings.sm.states.provision.CloudFormationDeleteStackState;
 import software.wings.sm.states.provision.CloudFormationRollbackStackState;
 import software.wings.sm.states.provision.DestroyTerraformProvisionState;
-import software.wings.sm.states.provision.TerraformRollbackState;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 import software.wings.utils.JsonUtils;
@@ -470,9 +468,6 @@ public enum StateType implements StateTypeDescriptor {
       asList(CONTAINER_DEPLOY, ROUTE_UPDATE, WRAP_UP), ORCHESTRATION_STENCILS),
 
   CLOUD_FORMATION_ROLLBACK_STACK(CloudFormationRollbackStackState.class, PROVISIONERS, ROLLBACK_CLOUD_FORMATION,
-      singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
-
-  TERRAFORM_ROLLBACK(TerraformRollbackState.class, PROVISIONERS, ROLLBACK_TERRAFORM_NAME,
       singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";

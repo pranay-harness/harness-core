@@ -90,11 +90,7 @@ public class Activity extends Base {
     /**
      * Verification type.
      */
-    Verification,
-    /**
-     * None of the above.
-     */
-    Other
+    Verification
   }
 
   @Builder

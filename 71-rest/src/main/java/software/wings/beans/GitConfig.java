@@ -30,7 +30,6 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @NotEmpty @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
 
   @NotEmpty @Attributes(title = "Git Branch", required = true) private String branch;
-  @SchemaIgnore private String reference;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
@@ -52,14 +51,13 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Builder
-  public GitConfig(String username, char[] password, String repoUrl, String branch, String reference, String accountId,
+  public GitConfig(String username, char[] password, String repoUrl, String branch, String accountId,
       String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth) {
     super(SettingVariableTypes.GIT.name());
     this.username = username;
     this.password = password;
     this.repoUrl = repoUrl;
     this.branch = branch;
-    this.reference = reference;
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
     this.sshSettingId = sshSettingId;
@@ -72,14 +70,12 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @NoArgsConstructor
   public static final class Yaml extends ArtifactServerYaml {
     private String branch;
-    private String reference;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
-        String reference, UsageRestrictions usageRestrictions) {
+        UsageRestrictions usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.branch = branch;
-      this.reference = reference;
     }
   }
 }

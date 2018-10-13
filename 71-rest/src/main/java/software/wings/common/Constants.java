@@ -356,7 +356,6 @@ public interface Constants {
    * The constant PROVISION_NODE_NAME.
    */
   String PROVISION_WITH_TERRAFORM_NAME = "Terraform";
-  String ROLLBACK_TERRAFORM_NAME = "Terraform Rollback";
 
   /**
    * The constant PROVISION_NODE_NAME.
