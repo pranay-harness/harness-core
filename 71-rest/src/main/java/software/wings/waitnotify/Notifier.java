@@ -52,6 +52,8 @@ public class Notifier implements Runnable {
   }
 
   public void execute() {
+    logger.info("Execute Notifier response processing");
+
     PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(
         NotifyResponse.class, aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build(), excludeAuthority);
 
@@ -59,6 +61,8 @@ public class Notifier implements Runnable {
       logger.debug("There are no NotifyResponse entries to process");
       return;
     }
+
+    logger.info("Notifier responses {}", notifyPageResponses.size());
 
     try (AcquiredLock lock =
              persistentLocker.acquireLock(Notifier.class, Notifier.class.getName(), Duration.ofMinutes(1))) {
@@ -78,6 +82,8 @@ public class Notifier implements Runnable {
         }
         return;
       }
+
+      logger.info("Wait queues {}", waitQueuesResponse.size());
 
       // process distinct set of wait instanceIds
       waitQueuesResponse.stream()
