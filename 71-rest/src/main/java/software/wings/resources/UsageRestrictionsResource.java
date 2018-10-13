@@ -18,6 +18,7 @@ import software.wings.settings.UsageRestrictions;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -78,5 +79,22 @@ public class UsageRestrictionsResource {
     UsageRestrictions defaultUsageRestrictions =
         usageRestrictionsService.getDefaultUsageRestrictions(accountId, appId, envId);
     return new RestResponse<>(defaultUsageRestrictions);
+  }
+
+  /**
+   * List the apps that the user has env update access.
+   *
+   * @param accountId   the account id
+   * @return the rest response
+   */
+  @GET
+  @Path("editable/{entityId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<Boolean> isEditable(@QueryParam("accountId") @NotEmpty String accountId,
+      @PathParam("entityId") @NotEmpty String entityId, @QueryParam("entityType") @NotEmpty String entityType) {
+    boolean isEditable = usageRestrictionsService.isEditable(accountId, entityId, entityType);
+    return new RestResponse<>(isEditable);
   }
 }
