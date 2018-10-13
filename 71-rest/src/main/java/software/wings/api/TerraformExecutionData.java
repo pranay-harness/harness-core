@@ -4,6 +4,7 @@ import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
@@ -22,6 +23,7 @@ public class TerraformExecutionData extends StateExecutionData implements Respon
   private String stateFileId;
 
   private String outputs;
+  private TerraformProvisionParameters terraformProvisionParameters;
 
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();

@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ScriptStateExecutionData;
@@ -37,6 +38,7 @@ import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
+import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
@@ -46,9 +48,12 @@ import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
-import software.wings.beans.command.Command;
+import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
+import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
+import software.wings.beans.infrastructure.TerraformfConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -70,6 +75,7 @@ import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
+import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Validator;
 
@@ -93,15 +99,16 @@ public abstract class TerraformProvisionState extends State {
   @Inject @Transient private transient AppService appService;
   @Inject @Transient private transient ActivityService activityService;
   @Inject @Transient private transient InfrastructureProvisionerService infrastructureProvisionerService;
-  @Inject @Transient private transient DelegateService delegateService;
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
-  @Inject @Transient private transient SecretManager secretManager;
-  @Inject @Transient private transient FileService fileService;
+
   @Inject @Transient private transient ServiceVariableService serviceVariableService;
   @Inject @Transient private transient EncryptionService encryptionService;
 
-  @Inject @Transient private transient WingsPersistence wingsPersistence;
+  @Inject @Transient protected transient WingsPersistence wingsPersistence;
+  @Inject @Transient protected transient DelegateService delegateService;
+  @Inject @Transient protected transient FileService fileService;
+  @Inject @Transient protected transient SecretManager secretManager;
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
@@ -117,7 +124,8 @@ public abstract class TerraformProvisionState extends State {
     super(name, stateType);
   }
 
-  protected abstract String commandUnit();
+  protected abstract TerraformCommandUnit commandUnit();
+  protected abstract TerraformCommand command();
 
   @Attributes(title = "Timeout (ms)")
   @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
@@ -181,6 +189,17 @@ public abstract class TerraformProvisionState extends State {
                            .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
                            .collect(toMap(item -> item.getName(), item -> item.getValue())))
                    .build();
+
+      if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
+        saveTerraformConfig(context, terraformExecutionData.getTerraformProvisionParameters(), terraformProvisioner);
+      }
+
+    } else {
+      if (this.getStateType().equals(StateType.TERRAFORM_DESTROY.name())) {
+        if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
+          deleteTerraformConfig(context.getWorkflowExecutionId());
+        }
+      }
     }
 
     TerraformOutputInfoElement outputInfoElement = context.getContextElement(ContextElementType.TERRAFORM_PROVISION);
@@ -281,20 +300,24 @@ public abstract class TerraformProvisionState extends State {
     return list;
   }
 
-  private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
-    TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
-
-    SettingAttribute gitSettingAttribute = settingsService.get(terraformProvisioner.getSourceRepoSettingId());
+  protected GitConfig getGitConfig(String sourceRepoSettingId) {
+    SettingAttribute gitSettingAttribute = settingsService.get(sourceRepoSettingId);
     Validator.notNullCheck("gitSettingAttribute", gitSettingAttribute);
     if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
       throw new InvalidRequestException("");
     }
 
-    GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
+    return (GitConfig) gitSettingAttribute.getValue();
+  }
+
+  protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
+    TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+
+    GitConfig gitConfig = getGitConfig(terraformProvisioner.getSourceRepoSettingId());
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
-    final String entityId = terraformProvisioner.getUuid() + "-" + executionContext.getEnv().getUuid();
+    final String entityId = generateEntityId(executionContext);
 
     final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
 
@@ -329,27 +352,29 @@ public abstract class TerraformProvisionState extends State {
       encryptedVariables = getEncryptedVariables(allVariables.stream(), context);
     }
 
-    DelegateTask delegateTask =
-        aDelegateTask()
-            .withTaskType(TERRAFORM_PROVISION_TASK)
-            .withAccountId(executionContext.getApp().getAccountId())
-            .withWaitId(activityId)
-            .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
-            .withParameters(new Object[] {
-                TerraformProvisionParameters.builder()
-                    .accountId(executionContext.getApp().getAccountId())
-                    .appId(executionContext.getAppId())
-                    .entityId(entityId)
-                    .commandUnitName(commandUnit())
-                    .currentStateFileId(fileId)
-                    .activityId(activityId)
-                    .sourceRepo(gitConfig)
-                    .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
-                    .scriptPath(terraformProvisioner.getPath())
-                    .variables(variables)
-                    .encryptedVariables(encryptedVariables)
-                    .build()})
+    TerraformProvisionParameters parameters =
+        TerraformProvisionParameters.builder()
+            .accountId(executionContext.getApp().getAccountId())
+            .activityId(activityId)
+            .appId(executionContext.getAppId())
+            .currentStateFileId(fileId)
+            .entityId(entityId)
+            .command(command())
+            .commandUnit(commandUnit())
+            .sourceRepo(gitConfig)
+            .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
+            .scriptPath(terraformProvisioner.getPath())
+            .variables(variables)
+            .encryptedVariables(encryptedVariables)
             .build();
+
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withTaskType(TERRAFORM_PROVISION_TASK)
+                                    .withAccountId(executionContext.getApp().getAccountId())
+                                    .withWaitId(activityId)
+                                    .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
+                                    .withParameters(new Object[] {parameters})
+                                    .build();
 
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
@@ -364,7 +389,31 @@ public abstract class TerraformProvisionState extends State {
         .build();
   }
 
-  private TerraformInfrastructureProvisioner getTerraformInfrastructureProvisioner(ExecutionContext context) {
+  protected void saveTerraformConfig(ExecutionContext context, TerraformProvisionParameters parameters,
+      TerraformInfrastructureProvisioner provisioner) {
+    TerraformfConfig terraformfConfig = TerraformfConfig.builder()
+                                            .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
+                                            .variables(parameters.getVariables())
+                                            .encryptedVariables(parameters.getEncryptedVariables())
+                                            .entityId(generateEntityId((ExecutionContextImpl) context))
+                                            .workflowExecutionId(context.getWorkflowExecutionId())
+                                            .build();
+
+    wingsPersistence.save(terraformfConfig);
+  }
+
+  protected String generateEntityId(ExecutionContextImpl executionContext) {
+    return provisionerId + "-" + executionContext.getEnv().getUuid();
+  }
+
+  protected void deleteTerraformConfig(String workflowExecutionId) {
+    Query<TerraformfConfig> query = wingsPersistence.createQuery(TerraformfConfig.class)
+                                        .filter(TerraformfConfig.WORKFLOW_EXECUTION_ID_KEY, workflowExecutionId);
+
+    wingsPersistence.delete(query);
+  }
+
+  protected TerraformInfrastructureProvisioner getTerraformInfrastructureProvisioner(ExecutionContext context) {
     final InfrastructureProvisioner infrastructureProvisioner =
         infrastructureProvisionerService.get(context.getAppId(), provisionerId);
 
@@ -384,7 +433,7 @@ public abstract class TerraformProvisionState extends State {
         Activity.builder()
             .applicationName(app.getName())
             .commandName(getName())
-            .type(Activity.Type.Verification)
+            .type(Type.Verification) // TODO : Change this to Type.Other
             .workflowType(executionContext.getWorkflowType())
             .workflowExecutionName(executionContext.getWorkflowExecutionName())
             .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
@@ -393,7 +442,7 @@ public abstract class TerraformProvisionState extends State {
             .workflowExecutionId(executionContext.getWorkflowExecutionId())
             .workflowId(executionContext.getWorkflowId())
             .commandUnits(
-                asList(Command.Builder.aCommand().withName(commandUnit()).withCommandType(CommandType.OTHER).build()))
+                asList(Builder.aCommand().withName(commandUnit().name()).withCommandType(CommandType.OTHER).build()))
             .status(ExecutionStatus.RUNNING);
 
     if (executionContext.getOrchestrationWorkflowType() != null

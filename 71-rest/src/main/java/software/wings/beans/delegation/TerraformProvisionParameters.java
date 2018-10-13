@@ -9,25 +9,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-@Builder
 @Value
+@Builder
 public class TerraformProvisionParameters {
-  public static final String CommandUnit = "Apply";
+  private static final long TIMEOUT_MILLIS = 10;
+
+  public enum TerraformCommand { APPLY, DESTROY }
+
+  public enum TerraformCommandUnit {
+    Apply,
+    Adjust,
+    Destroy,
+    Rollback;
+  }
 
   private String accountId;
-  private final String appId;
   private final String activityId;
-
+  private final String appId;
   private final String entityId;
-
   private final String currentStateFileId;
-
   private final GitConfig sourceRepo;
+  private final String sourceRepoReference;
   List<EncryptedDataDetail> sourceRepoEncryptionDetails;
   private final String scriptPath;
   private final Map<String, String> variables;
   private final Map<String, EncryptedDataDetail> encryptedVariables;
 
-  private final String commandUnitName;
-  private final long timeoutInMillis = TimeUnit.MINUTES.toMillis(10);
+  private final TerraformCommand command;
+  private final TerraformCommandUnit commandUnit;
+  private final long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_MILLIS);
 }
