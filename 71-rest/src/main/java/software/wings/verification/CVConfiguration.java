@@ -1,9 +1,11 @@
 package software.wings.verification;
 
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.sm.StateType;
@@ -28,4 +30,7 @@ public class CVConfiguration extends Base {
   @NotNull private StateType stateType;
   @NotNull private AnalysisTolerance analysisTolerance;
   private boolean enabled24x7;
+
+  @Transient @SchemaIgnore private String connectorName;
+  @Transient @SchemaIgnore private String serviceName;
 }
