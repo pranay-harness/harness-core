@@ -102,9 +102,9 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   @Override
   public List<String> getGroupIds(
       String repoType, ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    logger.info("Retrieving {} Group Ids.", repoType);
+    logger.info("Retrieving {} docker images.", repoType);
     List<String> repoPaths = artifactoryService.getRepoPaths(config, encryptionDetails, repoType);
-    logger.info("Retrieved {} Group Ids.", repoPaths.size());
+    logger.info("Retrieved {} docker images.", repoPaths.size());
     return repoPaths;
   }
 

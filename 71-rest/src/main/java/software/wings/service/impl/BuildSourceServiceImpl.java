@@ -274,10 +274,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
     }
     Class<? extends BuildService> buildServiceClass = serviceLocator.getBuildServiceClass(artifactStreamType);
     SyncTaskContext syncTaskContext =
-        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).build();
-    if (artifactStreamType.equals(ArtifactStreamType.JENKINS.name())) {
-      syncTaskContext.setTimeout(120 * 1000);
-    }
+        aContext().withAccountId(settingAttribute.getAccountId()).withAppId(appId).withTimeout(120 * 1000).build();
     return delegateProxyFactory.get(buildServiceClass, syncTaskContext);
   }
 
