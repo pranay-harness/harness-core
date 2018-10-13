@@ -2,6 +2,7 @@ package software.wings.core.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.govern.Switch.noop;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
@@ -64,6 +65,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     } while (!runOnce && !shouldStop.get());
   }
 
+  @SuppressWarnings("PMD")
   public boolean execute() {
     T message = null;
     try {
@@ -98,9 +100,17 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
 
       onMessage(message);
       queue.ack(message);
-    } catch (Exception exception) {
-      logger.error(format("Exception happened in onMessage %s", queue.name()), exception); // ToDo: delete from queue??
-      onException(exception, message);
+    } catch (Throwable exception) {
+      logger.error(format("Exception happened in onMessage %s", queue.name()), exception);
+      if (exception instanceof InstantiationError) {
+        // we can never process this message. Just purge it.
+        queue.ack(message);
+      } else if (exception instanceof Exception) {
+        onException((Exception) exception, message);
+      } else {
+        // we have already logged Throwable exception above. no-op here.
+        noop();
+      }
     } finally {
       if (future != null) {
         future.cancel(true);
