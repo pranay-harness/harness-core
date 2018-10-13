@@ -50,7 +50,6 @@ import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_M
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
-import static software.wings.sm.StateType.CLOUD_FORMATION_ROLLBACK_STACK;
 import static software.wings.sm.StateType.values;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -993,11 +992,26 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return workflows.stream().collect(toMap(Workflow::getUuid, o -> o.getName()));
   }
 
+  StateType getCorrespondingRollbackState(GraphNode step) {
+    if (step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())) {
+      return StateType.CLOUD_FORMATION_ROLLBACK_STACK;
+    }
+
+    if (step.getType().equals(StateType.TERRAFORM_PROVISION.name())) {
+      return StateType.TERRAFORM_ROLLBACK;
+    }
+
+    return null;
+  }
+
   private PhaseStep generateRollbackProvisioners(PhaseStep preDeploymentSteps) {
     List<GraphNode> provisionerSteps =
         preDeploymentSteps.getSteps()
             .stream()
-            .filter(step -> StateType.CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType()))
+            .filter(step -> {
+              return StateType.TERRAFORM_PROVISION.name().equals(step.getType())
+                  || StateType.CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType());
+            })
             .collect(Collectors.toList());
     if (isEmpty(provisionerSteps)) {
       return null;
@@ -1010,7 +1024,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       propertiesMap.put("provisionerId", step.getProperties().get("provisionerId"));
       propertiesMap.put("timeoutMillis", step.getProperties().get("timeoutMillis"));
       rollbackProvisionerNodes.add(aGraphNode()
-                                       .withType(CLOUD_FORMATION_ROLLBACK_STACK.name())
+                                       .withType(getCorrespondingRollbackState(step).name())
                                        .withRollback(true)
                                        .withName("Rollback " + step.getName())
                                        .withProperties(propertiesMap)

@@ -68,6 +68,10 @@ public class Base implements UuidAware {
 
   @SchemaIgnore @Indexed private List<String> keywords;
 
+  /**
+   * TODO: Add isDeleted boolean field to enable soft delete. @swagat
+   */
+
   @SchemaIgnore
   @JsonIgnore
   @Transient
