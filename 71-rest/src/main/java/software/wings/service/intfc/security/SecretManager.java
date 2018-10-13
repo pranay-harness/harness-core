@@ -66,7 +66,9 @@ public interface SecretManager {
 
   void checkAndAlertForInvalidManagers();
 
-  EncryptedData getEncryptedDataByName(String accountId, String name);
+  EncryptedData getSecretByName(String accountId, String name, boolean isMappedToAccount);
+
+  EncryptedData getSecretById(String accountId, String id);
 
   String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions);
 
@@ -91,6 +93,9 @@ public interface SecretManager {
 
   PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
       String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException;
+
+  PageResponse<EncryptedData> listSecretsMappedToAccount(
+      String accountId, PageRequest<EncryptedData> pageRequest, boolean details) throws IllegalAccessException;
 
   List<UuidAware> getSecretUsage(String accountId, String secretTextId);
 

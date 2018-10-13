@@ -3,7 +3,6 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeValidate;
@@ -147,31 +146,13 @@ public class SettingsServiceImpl implements SettingsService {
     Map<String, Set<String>> appEnvMapFromUserPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
     UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
+    boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
+
     inputSettingAttributes.forEach(settingAttribute -> {
       UsageRestrictions usageRestrictionsFromEntity = settingAttribute.getUsageRestrictions();
 
-      if (usageRestrictionsFromEntity == null) {
-        filteredSettingAttributes.add(settingAttribute);
-        return;
-      }
-
-      // Observed some entities having empty usage restrictions. Covering that case.
-      // Could have been due to a ui bug at some point.
-      if (isEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
-        usageRestrictionsFromEntity.setEditable(true);
-        filteredSettingAttributes.add(settingAttribute);
-        return;
-      }
-
-      Map<String, Set<String>> appEnvMapFromEntityRestrictions =
-          usageRestrictionsService.getAppEnvMap(accountId, usageRestrictionsFromEntity.getAppEnvRestrictions());
-
-      if (usageRestrictionsService.hasAccess(accountId, appIdFromRequest, envIdFromRequest, usageRestrictionsFromEntity,
-              appEnvMapFromEntityRestrictions, restrictionsFromUserPermissions, appEnvMapFromUserPermissions)) {
-        /* usageRestrictionsFromEntity.setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
-             settingAttribute.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
-             restrictionsFromUserPermissions, appEnvMapFromUserPermissions));*/
-        usageRestrictionsFromEntity.setEditable(true);
+      if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
+              usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromUserPermissions)) {
         filteredSettingAttributes.add(settingAttribute);
       }
     });

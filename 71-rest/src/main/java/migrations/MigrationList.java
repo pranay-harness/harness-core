@@ -55,6 +55,7 @@ import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
 import migrations.all.UnregisteredUserNameMigration;
+import migrations.all.UsageRestrictionsMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -130,6 +131,7 @@ public class MigrationList {
         .add(Pair.of(190, DeleteLETaskDelCronMigration.class))
         .add(Pair.of(191, HelmReleaseNameSuffixMigration.class))
         .add(Pair.of(192, SetIsDeletedFlagForInstances.class))
+        .add(Pair.of(193, UsageRestrictionsMigration.class))
         .build();
   }
 }
