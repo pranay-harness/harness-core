@@ -302,7 +302,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       timestamp = System.currentTimeMillis();
     }
 
-    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    query.field("accountId").equal(accountId);
+
     query.field("createdAt").lessThanOrEq(timestamp);
 
     query.and(
