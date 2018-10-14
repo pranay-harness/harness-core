@@ -160,6 +160,10 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
   private Instance deletedInstance10;
   private Instance deletedInstance11;
   private Instance deletedInstance12;
+  private Instance deletedInstance13;
+  private Instance deletedInstance14;
+  private Instance deletedInstance15;
+  private Instance deletedInstance16;
   private User user;
   private long currentTime;
 
@@ -239,16 +243,28 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
     instance8 = buildInstance(INSTANCE_8_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
         CONTAINER_8_ID, currentTime - 50000);
     wingsPersistence.save(instance8);
-    deletedInstance9 = buildInstance(INSTANCE_9_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
+    deletedInstance9 = buildInstance(INSTANCE_9_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
         CONTAINER_8_ID, currentTime - 120000, currentTime - 30000);
     wingsPersistence.save(deletedInstance9);
-    deletedInstance10 = buildInstance(INSTANCE_10_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
+    deletedInstance10 = buildInstance(INSTANCE_10_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 120000, currentTime - 60000);
     wingsPersistence.save(deletedInstance10);
-    deletedInstance11 = buildInstance(INSTANCE_11_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
+    deletedInstance11 = buildInstance(INSTANCE_11_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 30000, currentTime - 20000);
     wingsPersistence.save(deletedInstance11);
-    deletedInstance12 = buildInstance(INSTANCE_12_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
+    deletedInstance12 = buildInstance(INSTANCE_12_ID, ACCOUNT_1_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
+        INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 30000, currentTime - 10000);
+    wingsPersistence.save(deletedInstance12);
+    deletedInstance13 = buildInstance(INSTANCE_9_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID, INFRA_MAPPING_8_ID,
+        CONTAINER_8_ID, currentTime - 120000, currentTime - 30000);
+    wingsPersistence.save(deletedInstance9);
+    deletedInstance14 = buildInstance(INSTANCE_10_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
+        INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 120000, currentTime - 60000);
+    wingsPersistence.save(deletedInstance10);
+    deletedInstance15 = buildInstance(INSTANCE_11_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
+        INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 30000, currentTime - 20000);
+    wingsPersistence.save(deletedInstance11);
+    deletedInstance16 = buildInstance(INSTANCE_12_ID, ACCOUNT_2_ID, APP_5_ID, SERVICE_7_ID, ENV_6_ID,
         INFRA_MAPPING_8_ID, CONTAINER_8_ID, currentTime - 30000, currentTime - 10000);
     wingsPersistence.save(deletedInstance12);
   }
@@ -308,42 +324,45 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
           dashboardService.getAppInstanceStatsByService(appIdList, System.currentTimeMillis());
       assertEquals(7, appInstanceStatsByServiceAtTime.size());
       Set<Instance> currentInstances =
-          dashboardService.getAppInstancesForAccount(ACCOUNT_ID, System.currentTimeMillis());
-      assertEquals(8, currentInstances.size());
+          dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, System.currentTimeMillis());
+      assertEquals(6, currentInstances.size());
 
-      Set<Instance> instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_ID, currentTime - 60000);
+      Set<Instance> instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 60000);
       assertEquals(2, instancesAtTime.size());
 
       appInstanceStatsByServiceAtTime = dashboardService.getAppInstanceStatsByService(appIdList, currentTime - 60000);
       assertEquals(1, appInstanceStatsByServiceAtTime.size());
       assertEquals(2, appInstanceStatsByServiceAtTime.get(0).getTotalCount());
 
-      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_ID, currentTime - 50000);
-      assertEquals(2, instancesAtTime.size());
+      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 50000);
+      assertEquals(1, instancesAtTime.size());
 
       appInstanceStatsByServiceAtTime = dashboardService.getAppInstanceStatsByService(appIdList, currentTime - 50000);
       assertEquals(1, appInstanceStatsByServiceAtTime.size());
       assertEquals(2, appInstanceStatsByServiceAtTime.get(0).getTotalCount());
 
-      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_ID, currentTime - 40000);
-      assertEquals(3, instancesAtTime.size());
+      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 40000);
+      assertEquals(1, instancesAtTime.size());
 
       appInstanceStatsByServiceAtTime = dashboardService.getAppInstanceStatsByService(appIdList, currentTime - 40000);
       assertEquals(2, appInstanceStatsByServiceAtTime.size());
       assertEquals(1, appInstanceStatsByServiceAtTime.get(0).getTotalCount());
       assertEquals(2, appInstanceStatsByServiceAtTime.get(1).getTotalCount());
 
-      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_ID, currentTime - 30000);
-      assertEquals(7, instancesAtTime.size());
+      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 30000);
+      assertEquals(5, instancesAtTime.size());
 
-      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_ID, currentTime - 20000);
-      assertEquals(7, instancesAtTime.size());
+      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 20000);
+      assertEquals(5, instancesAtTime.size());
 
-      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_ID, currentTime - 10000);
-      assertEquals(7, instancesAtTime.size());
+      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 10000);
+      assertEquals(5, instancesAtTime.size());
 
-      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_ID, currentTime);
-      assertEquals(8, instancesAtTime.size());
+      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime);
+      assertEquals(6, instancesAtTime.size());
+
+      instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_2_ID, currentTime - 30000);
+      assertEquals(2, instancesAtTime.size());
     } finally {
       UserThreadLocal.unset();
     }
