@@ -23,6 +23,7 @@ public class VerificationConstants {
   public static final String CV_DASH_GET_RECORDS = "/get-records";
   public static final String WORKFLOW_FOR_STATE_EXEC = "/workflow-execution-for-state-execution";
   public static final String CV_24x7_STATE_EXECUTION = "CV_24x7_EXECUTION";
+  public static final String HEATMAP = "/heatmap";
   public static final String VERIFICATION_SERVICE_BASE_URL = "/verification";
 
   private VerificationConstants() {}

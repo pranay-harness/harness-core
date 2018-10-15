@@ -1,7 +1,9 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Collections.emptySet;
+import static software.wings.sm.StateType.APP_DYNAMICS;
 
 import com.google.inject.Inject;
 
@@ -10,7 +12,9 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +30,10 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
+import software.wings.verification.HeatMap;
+import software.wings.verification.TimeSeriesDataPoint;
+import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.dashboard.HeatMapUnit;
 
 import java.text.ParseException;
 import java.time.Instant;
@@ -36,6 +44,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -47,6 +56,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Inject protected AuthService authService;
   @Inject protected FeatureFlagService featureFlagService;
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
+
+  private static final int DURATION_IN_MINUTES = 10;
 
   @Override
   public void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData) {
@@ -374,5 +385,117 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     Map<String, AppPermissionSummary> userApps =
         authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
     return new ArrayList<>(userApps.keySet());
+  }
+
+  private HeatMapUnit getMockHeatMapUnit(long startEpoch, long endEpoch, int eventsPerUnit) {
+    int low = 0, medium = 0, high = 0;
+
+    Random random = new Random();
+
+    if (eventsPerUnit == 1) {
+      int randomNum = random.nextInt(3);
+      if (randomNum == 0) {
+        low = 1;
+      } else if (randomNum == 1) {
+        medium = 1;
+      } else {
+        high = 1;
+      }
+      return new HeatMapUnit(startEpoch, endEpoch, low, medium, high);
+    }
+
+    low = random.nextInt(eventsPerUnit);
+    medium = random.nextInt(eventsPerUnit - low);
+    high = eventsPerUnit - (low + medium);
+    return new HeatMapUnit(startEpoch, endEpoch, low, medium, high);
+  }
+
+  @NotNull
+  private HeatMap generateMockHeatMap(long startTime, long endTime, int resolution) {
+    HeatMap heatMap = new HeatMap();
+
+    AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
+    appDynamicsCVServiceConfiguration = new AppDynamicsCVServiceConfiguration();
+    appDynamicsCVServiceConfiguration.setAppId(generateUuid());
+    appDynamicsCVServiceConfiguration.setEnvId(generateUuid());
+    appDynamicsCVServiceConfiguration.setServiceId(generateUuid());
+    appDynamicsCVServiceConfiguration.setEnabled24x7(true);
+    appDynamicsCVServiceConfiguration.setAppDynamicsApplicationId(generateUuid());
+    appDynamicsCVServiceConfiguration.setTierId(generateUuid());
+    appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
+    appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
+    heatMap.setCvConfiguration(appDynamicsCVServiceConfiguration);
+
+    heatMap.setRiskLevelSummary(new ArrayList<>());
+
+    if (resolution == 1) {
+      long currentTs = startTime;
+      long nextTs = currentTs + TimeUnit.MINUTES.toMillis(10);
+      for (int i = 0; i < 6 * 24; i++) {
+        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 1));
+        currentTs = nextTs;
+        nextTs = currentTs + TimeUnit.MINUTES.toMillis(DURATION_IN_MINUTES);
+      }
+      return heatMap;
+    } else if (resolution == 7) {
+      long currentTs = startTime;
+      long nextTs = currentTs + TimeUnit.HOURS.toMillis(1);
+      for (int i = 0; i < 24 * 7; i++) {
+        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 6));
+        currentTs = nextTs;
+        nextTs = currentTs + TimeUnit.HOURS.toMillis(1);
+      }
+      return heatMap;
+    } else if (resolution == 30) {
+      long currentTs = startTime;
+      long nextTs = currentTs + TimeUnit.HOURS.toMillis(4);
+      for (int i = 0; i < 6 * 30; i++) {
+        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 24));
+        currentTs = nextTs;
+        nextTs = currentTs + TimeUnit.HOURS.toMillis(4);
+      }
+      return heatMap;
+    } else {
+      throw new WingsException("Unsupported resolution provided. Resolution should be 1, 7 or 30.");
+    }
+  }
+
+  public List<HeatMap> getHeatMap(String accountId, String serviceId, int resolution, long startTime, long endTime) {
+    // TODO: Fetch all CV configs of given serviceId and generate heatmaps for those configs
+
+    final int NUM_SERVICE_CONFIGS = 4;
+
+    // TODO: assert that (end - begin) == resolution
+
+    List<HeatMap> summary = new ArrayList<>();
+    for (int num = 0; num < NUM_SERVICE_CONFIGS; num++) {
+      HeatMap heatMap = generateMockHeatMap(startTime, endTime, resolution);
+      heatMap.setObservedTimeSeries(getObservedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
+      heatMap.setPredictedTimeSeries(getPredictedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
+      summary.add(heatMap);
+    }
+    return summary;
+  }
+
+  public List<TimeSeriesDataPoint> getObservedTimeSeries(
+      String accountId, String serviceId, int resolution, long startTime, long endTime) {
+    return generateRandomTimeSeries(startTime, resolution);
+  }
+
+  public List<TimeSeriesDataPoint> getPredictedTimeSeries(
+      String accountId, String serviceId, int resolution, long startTime, long endTime) {
+    return generateRandomTimeSeries(startTime, resolution);
+  }
+
+  @NotNull
+  private List<TimeSeriesDataPoint> generateRandomTimeSeries(long startTime, int resolution) {
+    Random random = new Random();
+    List<TimeSeriesDataPoint> timeSeries = new ArrayList<>();
+    long currentTs = startTime;
+    for (int i = 0; i < 24 * 60 * resolution; i++) {
+      timeSeries.add(new TimeSeriesDataPoint(currentTs, random.nextFloat() * random.nextInt(10)));
+      currentTs = currentTs + TimeUnit.MINUTES.toMillis(1);
+    }
+    return timeSeries;
   }
 }

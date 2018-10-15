@@ -4,6 +4,8 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.User;
 import software.wings.sm.ExecutionStatus;
+import software.wings.verification.HeatMap;
+import software.wings.verification.TimeSeriesDataPoint;
 
 import java.text.ParseException;
 import java.util.LinkedHashMap;
@@ -23,4 +25,10 @@ public interface ContinuousVerificationService {
   void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status);
   PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(String accountId, long beginEpochTs,
       long endEpochTs, boolean isTimeSeries, PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
+
+  List<HeatMap> getHeatMap(String accountId, String serviceId, int resolution, long startTime, long endTime);
+  List<TimeSeriesDataPoint> getObservedTimeSeries(
+      String accountId, String serviceId, int resolution, long startTime, long endTime);
+  List<TimeSeriesDataPoint> getPredictedTimeSeries(
+      String accountId, String serviceId, int resolution, long startTime, long endTime);
 }
