@@ -756,7 +756,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .filter("cvConfigId", cvConfigId)
             .order("-analysisMinute")
             .get();
-
     return newRelicMetricAnalysisRecord == null ? -1 : newRelicMetricAnalysisRecord.getAnalysisMinute();
   }
 
@@ -773,6 +772,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .field("dataCollectionMinute")
         .lessThanOrEq(analysisEndMinute)
         .asList();
+  }
+
+  @Override
+  public TimeSeriesMLAnalysisRecord getPreviousAnalysis(String appId, String cvConfigId, long dataCollectionMin) {
+    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+        .filter("appId", appId)
+        .filter("cvConfigId", cvConfigId)
+        .filter("analysisMinute", dataCollectionMin)
+        .get();
   }
 
   @Override

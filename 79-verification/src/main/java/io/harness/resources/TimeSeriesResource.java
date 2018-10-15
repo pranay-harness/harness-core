@@ -159,6 +159,17 @@ public class TimeSeriesResource {
 
   @Produces({"application/json", "application/v1+json"})
   @POST
+  @Path("/previous-analysis-247")
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<TimeSeriesMLAnalysisRecord> getPreviousAnalysis(@QueryParam("appId") String appId,
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("dataCollectionMin") long dataCollectionMin) {
+    return new RestResponse<>(timeSeriesAnalysisService.getPreviousAnalysis(appId, cvConfigId, dataCollectionMin));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
   @Path("/get-metric-template_24_7")
   @Timed
   @ExceptionMetered
