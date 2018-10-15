@@ -24,7 +24,7 @@ public interface UsageRestrictionsService {
    * @param appEnvRestrictions
    * @return
    */
-  Map<String, Set<String>> getAppEnvMap(String accountId, Set<AppEnvRestriction> appEnvRestrictions, Action action);
+  Map<String, Set<String>> getAppEnvMap(String accountId, Set<AppEnvRestriction> appEnvRestrictions);
 
   /**
    * Derive the user restrictions from user permissions.
@@ -40,15 +40,17 @@ public interface UsageRestrictionsService {
    * Access is determined from Usage restrictions, permissions and context.
    *
    * @param accountId account
-   *@param appIdFromRequest current app context
+   * @param appIdFromRequest current app context
    * @param envIdFromRequest current env context
    * @param entityUsageRestrictions
+   * @param appEnvMapFromEntityRestrictions
    * @param restrictionsFromUserPermissions
-   * @param appEnvMapFromPermissions       @return boolean if the user needs to be provided access or not
+   * @param appEnvMapFromPermissions
+   * @return boolean if the user needs to be provided access or not
    */
-  boolean hasAccess(String accountId, boolean isAccountAdmin, String appIdFromRequest, String envIdFromRequest,
-      UsageRestrictions entityUsageRestrictions, UsageRestrictions restrictionsFromUserPermissions,
-      Map<String, Set<String>> appEnvMapFromPermissions);
+  boolean hasAccess(String accountId, String appIdFromRequest, String envIdFromRequest,
+      UsageRestrictions entityUsageRestrictions, Map<String, Set<String>> appEnvMapFromEntityRestrictions,
+      UsageRestrictions restrictionsFromUserPermissions, Map<String, Set<String>> appEnvMapFromPermissions);
 
   /**
    * Lists all the applications and environments that the user has update permissions on.
@@ -69,6 +71,19 @@ public interface UsageRestrictionsService {
    * @return usage restrictions
    */
   UsageRestrictions getDefaultUsageRestrictions(String accountId, String appId, String envId);
+
+  /**
+   * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
+   * @param accountId account id
+   * @param entityUsageRestrictions entity usage restrictions
+   * @param appEnvMapFromEntityRestrictions app env map from entity restrictions
+   * @param restrictionsFromUserPermissions usage restrictions from user permissions
+   * @param appEnvMapFromUserPermissions app env map from user permissions
+   * @return boolean
+   */
+  boolean userHasPermissionsToChangeEntity(String accountId, UsageRestrictions entityUsageRestrictions,
+      Map<String, Set<String>> appEnvMapFromEntityRestrictions, UsageRestrictions restrictionsFromUserPermissions,
+      Map<String, Set<String>> appEnvMapFromUserPermissions);
 
   /**
    * Checks if the user can update / delete entity based on the user permissions and restrictions set on the entity.
@@ -97,16 +112,12 @@ public interface UsageRestrictionsService {
   void validateUsageRestrictionsOnEntityUpdate(
       String accountId, UsageRestrictions oldUsageRestrictions, UsageRestrictions newUsageRestrictions);
 
-  boolean isAccountAdmin(String accountId);
-
   /**
    * Checks if user can create an entity.
    * @param newUsageRestrictions new usage restrictions in case of update
    * @param accountId account id
    */
   void validateUsageRestrictionsOnEntitySave(String accountId, UsageRestrictions newUsageRestrictions);
-
-  boolean hasNoRestrictions(UsageRestrictions usageRestrictions);
 
   /**
    * Constructs the app env map from user permissions
@@ -125,6 +136,4 @@ public interface UsageRestrictionsService {
    * @return
    */
   RestrictionsAndAppEnvMap getRestrictionsAndAppEnvMapFromCache(String accountId, Action action);
-
-  boolean isEditable(String accountId, String entityId, String entityType);
 }

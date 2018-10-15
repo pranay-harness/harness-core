@@ -598,22 +598,10 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptedData getSecretByName(String accountId, String name, boolean mappedToAccount) {
-    Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
-                                     .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
-                                     .filter(EncryptedData.NAME_KEY, name);
-    if (mappedToAccount) {
-      query.field("usageRestrictions").doesNotExist();
-    }
-
-    return query.get();
-  }
-
-  @Override
-  public EncryptedData getSecretById(String accountId, String id) {
+  public EncryptedData getEncryptedDataByName(String accountId, String name) {
     return wingsPersistence.createQuery(EncryptedData.class)
         .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
-        .filter(EncryptedData.ID_KEY, id)
+        .filter(EncryptedData.NAME_KEY, name)
         .get();
   }
 
@@ -1028,50 +1016,6 @@ public class SecretManagerImpl implements SecretManager {
     Map<String, Set<String>> appEnvMapFromPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
     UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
-    boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
-    for (EncryptedData encryptedData : encryptedDataList) {
-      UsageRestrictions usageRestrictionsFromEntity = encryptedData.getUsageRestrictions();
-      if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
-              usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromPermissions)) {
-        filteredEncryptedDataList.add(encryptedData);
-
-        encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
-        encryptedData.setEncryptionKey(SECRET_MASK);
-
-        if (details) {
-          encryptedData.setEncryptedBy(getSecretManagerName(encryptedData.getType(), encryptedData.getUuid(),
-              encryptedData.getKmsId(), encryptedData.getEncryptionType()));
-
-          encryptedData.setSetupUsage(getSecretUsage(encryptedData.getAccountId(), encryptedData.getUuid()).size());
-          encryptedData.setRunTimeUsage(getUsageLogsSize(encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT));
-          encryptedData.setChangeLog(
-              getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
-                  .size());
-        }
-      }
-    }
-
-    pageResponse.setResponse(filteredEncryptedDataList);
-    pageResponse.setTotal(Long.valueOf(filteredEncryptedDataList.size()));
-    return pageResponse;
-  }
-
-  @Override
-  public PageResponse<EncryptedData> listSecretsMappedToAccount(
-      String accountId, PageRequest<EncryptedData> pageRequest, boolean details) throws IllegalAccessException {
-    // Also covers the case where its system originated call
-    boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
-
-    if (!isAccountAdmin) {
-      return aPageResponse().withResponse(Collections.emptyList()).build();
-    }
-
-    pageRequest.addFilter("usageRestrictions", Operator.NOT_EXISTS);
-
-    PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
-
-    List<EncryptedData> encryptedDataList = pageResponse.getResponse();
-
     for (EncryptedData encryptedData : encryptedDataList) {
       encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
       encryptedData.setEncryptionKey(SECRET_MASK);
@@ -1085,10 +1029,35 @@ public class SecretManagerImpl implements SecretManager {
             getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
                 .size());
       }
+
+      UsageRestrictions usageRestrictionsFromEntity = encryptedData.getUsageRestrictions();
+      if (usageRestrictionsFromEntity == null) {
+        filteredEncryptedDataList.add(encryptedData);
+        continue;
+      }
+
+      // Observed some entities having empty usage restrictions. Covering that case.
+      // Could have been due to a ui bug at some point.
+      if (isEmpty(usageRestrictionsFromEntity.getAppEnvRestrictions())) {
+        usageRestrictionsFromEntity.setEditable(true);
+        filteredEncryptedDataList.add(encryptedData);
+        continue;
+      }
+
+      Map<String, Set<String>> appEnvMapFromEntityRestrictions =
+          usageRestrictionsService.getAppEnvMap(accountId, usageRestrictionsFromEntity.getAppEnvRestrictions());
+
+      if (usageRestrictionsService.hasAccess(accountId, appIdFromRequest, envIdFromRequest, usageRestrictionsFromEntity,
+              appEnvMapFromEntityRestrictions, restrictionsFromUserPermissions, appEnvMapFromPermissions)) {
+        usageRestrictionsFromEntity.setEditable(usageRestrictionsService.userHasPermissionsToChangeEntity(
+            encryptedData.getAccountId(), usageRestrictionsFromEntity, appEnvMapFromEntityRestrictions,
+            restrictionsFromUserPermissions, appEnvMapFromPermissions));
+        filteredEncryptedDataList.add(encryptedData);
+      }
     }
 
-    pageResponse.setResponse(encryptedDataList);
-    pageResponse.setTotal(Long.valueOf(encryptedDataList.size()));
+    pageResponse.setResponse(filteredEncryptedDataList);
+    pageResponse.setTotal(Long.valueOf(filteredEncryptedDataList.size()));
     return pageResponse;
   }
 

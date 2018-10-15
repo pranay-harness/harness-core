@@ -127,12 +127,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptedData getSecretByName(String accountId, String name, boolean isMappedToAccount) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public EncryptedData getSecretById(String accountId, String id) {
+  public EncryptedData getEncryptedDataByName(String accountId, String name) {
     throw new UnsupportedOperationException();
   }
 
@@ -193,12 +188,6 @@ public class NoOpSecretManagerImpl implements SecretManager {
   @Override
   public PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
       String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public PageResponse<EncryptedData> listSecretsMappedToAccount(
-      String accountId, PageRequest<EncryptedData> pageRequest, boolean details) throws IllegalAccessException {
     throw new UnsupportedOperationException();
   }
 

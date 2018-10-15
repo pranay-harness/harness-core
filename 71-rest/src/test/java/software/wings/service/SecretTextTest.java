@@ -228,9 +228,7 @@ public class SecretTextTest extends WingsBaseTest {
 
   @Test
   public void saveAndUpdateSecret() throws IllegalAccessException {
-    UsageRestrictions usageRestrictions =
-        UsageRestrictionsServiceImplTest.getUsageRestrictionsForAppIdAndEnvId(appId, envId);
-
+    UsageRestrictions usageRestrictions = UsageRestrictions.builder().isEditable(true).build();
     String secretName = generateUuid();
     String secretValue = generateUuid();
     String secretId =

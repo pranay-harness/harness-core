@@ -14,6 +14,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class UsageRestrictions {
+  private boolean isEditable;
   private Set<AppEnvRestriction> appEnvRestrictions;
 
   @Data
