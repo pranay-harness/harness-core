@@ -267,13 +267,18 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   }
 
   @Override
-  public void deleteVaultSecret(String path, VaultConfig vaultConfig) {
+  public boolean deleteVaultSecret(String path, VaultConfig vaultConfig) {
+    boolean success = false;
     try {
-      getVaultRestClient(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path).execute();
+      success = getVaultRestClient(vaultConfig)
+                    .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path)
+                    .execute()
+                    .isSuccessful();
     } catch (IOException e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
           .addParam("reason", "Deletion of secret failed");
     }
+    return success;
   }
 
   @Override
