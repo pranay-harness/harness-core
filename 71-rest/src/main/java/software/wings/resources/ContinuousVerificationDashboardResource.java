@@ -79,9 +79,9 @@ public class ContinuousVerificationDashboardResource {
   @Timed
   @ExceptionMetered
   public RestResponse<List<CVDeploymentData>> getCVExecutionDeploymentRecords(@QueryParam("accountId") String accountId,
-      @QueryParam("beginEpochTs") long beginEpochTs, @QueryParam("endEpochTs") long endEpochTs,
+      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime,
       @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(continuousVerificationService.getCVDeploymentData(
-        accountId, beginEpochTs, endEpochTs, UserThreadLocal.get().getPublicUser(), serviceId));
+        accountId, startTime, endTime, UserThreadLocal.get().getPublicUser(), serviceId));
   }
 }

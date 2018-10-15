@@ -224,7 +224,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   @Override
   public List<CVDeploymentData> getCVDeploymentData(
-      String accountId, long beginEpochTs, long endEpochTs, User user, String serviceId) {
+      String accountId, long startTime, long endTime, User user, String serviceId) {
     List<CVDeploymentData> results = new ArrayList<>();
     if (user == null) {
       // user is null, we can't validate permissions. Returning empty.
@@ -246,8 +246,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                                                                        .withLimit("500")
                                                                        .withOffset("0")
                                                                        .build();
-    request.addFilter("workflowStartTs", Operator.GE, beginEpochTs);
-    request.addFilter("workflowStartTs", Operator.LT, endEpochTs);
+    request.addFilter("workflowStartTs", Operator.GE, startTime);
+    request.addFilter("workflowStartTs", Operator.LT, endTime);
 
     int previousOffSet = 0;
     List<ContinuousVerificationExecutionMetaData> continuousVerificationExecutionMetaData = new ArrayList<>();
