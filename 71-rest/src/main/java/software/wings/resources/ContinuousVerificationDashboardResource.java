@@ -18,10 +18,12 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.CVDeploymentData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.verification.HeatMap;
 
 import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import javax.validation.Valid;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -59,6 +61,17 @@ public class ContinuousVerificationDashboardResource {
       @BeanParam PageRequest<ContinuousVerificationExecutionMetaData> request) {
     return new RestResponse<>(continuousVerificationService.getAllCVExecutionsForTime(
         accountId, beginEpochTs, endEpochTs, isTimeSeries, request));
+  }
+
+  @GET
+  @Path(VerificationConstants.HEATMAP)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<HeatMap>> getHeatMap(@QueryParam("accountId") @Valid final String accountId,
+      @QueryParam("serviceId") @Valid final String serviceId, @QueryParam("resolution") int resolution,
+      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime) {
+    return new RestResponse<>(
+        continuousVerificationService.getHeatMap(accountId, serviceId, resolution, startTime, endTime));
   }
 
   @GET
