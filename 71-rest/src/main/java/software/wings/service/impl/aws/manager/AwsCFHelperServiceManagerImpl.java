@@ -1,6 +1,7 @@
 package software.wings.service.impl.aws.manager;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -39,7 +40,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
   private AwsConfig getAwsConfig(String awsConfigId) {
     SettingAttribute attribute = settingService.get(awsConfigId);
     if (attribute == null || !(attribute.getValue() instanceof AwsConfig)) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "InvalidConfiguration");
+      throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "InvalidConfiguration");
     }
     return (AwsConfig) attribute.getValue();
   }
@@ -75,7 +76,7 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
       }
       return (AwsResponse) notifyResponseData;
     } catch (InterruptedException ex) {
-      throw new InvalidRequestException(ex.getMessage(), WingsException.USER);
+      throw new InvalidRequestException(ex.getMessage(), USER);
     }
   }
 }
