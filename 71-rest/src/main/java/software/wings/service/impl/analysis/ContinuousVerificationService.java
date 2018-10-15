@@ -10,6 +10,7 @@ import software.wings.verification.TimeSeriesDataPoint;
 import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public interface ContinuousVerificationService {
   void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData);
@@ -26,9 +27,12 @@ public interface ContinuousVerificationService {
   PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(String accountId, long beginEpochTs,
       long endEpochTs, boolean isTimeSeries, PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 
-  List<HeatMap> getHeatMap(String accountId, String serviceId, int resolution, long startTime, long endTime);
+  Map<String, List<HeatMap>> getHeatMap(
+      String accountId, String serviceId, int resolution, long startTime, long endTime, boolean detailed);
   List<TimeSeriesDataPoint> getObservedTimeSeries(
       String accountId, String serviceId, int resolution, long startTime, long endTime);
   List<TimeSeriesDataPoint> getPredictedTimeSeries(
       String accountId, String serviceId, int resolution, long startTime, long endTime);
+  Map<String, Map<String, List<TimeSeriesDataPoint>>> getTimeSeriesOfHeatMapUnit(
+      String accountId, String cvConfigId, long startTime, long endTime);
 }

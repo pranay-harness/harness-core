@@ -3,6 +3,9 @@ package software.wings.verification.dashboard;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import software.wings.verification.TimeSeriesDataPoint;
+
+import java.util.List;
 
 /**
  * @author Vaibhav Tulsyan
@@ -18,4 +21,5 @@ public class HeatMapUnit {
   private int passed;
   private int failed;
   private int error;
+  private List<TimeSeriesDataPoint> timeSeries;
 }
