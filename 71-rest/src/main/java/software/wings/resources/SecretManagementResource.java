@@ -207,21 +207,6 @@ public class SecretManagementResource {
   }
 
   @GET
-  @Path("/list-account-secrets")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<PageResponse<EncryptedData>> listSecrets(@QueryParam("accountId") final String accountId,
-      @QueryParam("type") final SettingVariableTypes type, @DefaultValue("true") @QueryParam("details") boolean details,
-      @BeanParam PageRequest<EncryptedData> pageRequest) {
-    try {
-      pageRequest.addFilter("type", Operator.EQ, type);
-      return new RestResponse<>(secretManager.listSecretsMappedToAccount(accountId, pageRequest, details));
-    } catch (IllegalAccessException e) {
-      throw new WingsException(e);
-    }
-  }
-
-  @GET
   @Path("/list-secret-usage")
   @Timed
   @ExceptionMetered

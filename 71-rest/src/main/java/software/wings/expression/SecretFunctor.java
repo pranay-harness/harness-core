@@ -19,11 +19,7 @@ public class SecretFunctor extends LateBindingMap {
   private String accountId;
 
   public Object getValue(String secretName) {
-    EncryptedData encryptedData = secretManager.getSecretByName(accountId, secretName, true);
-    if (encryptedData == null) {
-      return null;
-    }
-
+    EncryptedData encryptedData = secretManager.getEncryptedDataByName(accountId, secretName);
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .accountId(accountId)
                                           .type(ENCRYPTED_TEXT)
