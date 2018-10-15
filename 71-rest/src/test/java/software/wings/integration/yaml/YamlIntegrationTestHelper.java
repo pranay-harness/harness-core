@@ -18,6 +18,8 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.DeploymentType;
@@ -43,8 +45,6 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.ScmSecret;
-import software.wings.generator.SecretName;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;

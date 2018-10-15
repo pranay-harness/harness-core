@@ -1,4 +1,4 @@
-package software.wings.generator;
+package io.harness.scm;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -1,4 +1,4 @@
-package software.wings.generator;
+package io.harness.scm;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -7,11 +7,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Inject;
 
 import io.harness.resource.Project;
+import io.harness.rule.CommonsMethodRule;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.WingsBaseTest;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -21,9 +22,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 
-public class ScmSecretTest extends WingsBaseTest {
+public class ScmSecretTest {
   private static final Logger logger = LoggerFactory.getLogger(ScmSecretTest.class);
 
+  @Rule public CommonsMethodRule commonsMethodRule = new CommonsMethodRule();
   @Inject ScmSecret scmSecret;
 
   @Test
@@ -66,7 +68,7 @@ public class ScmSecretTest extends WingsBaseTest {
     final List<Object> sortedKeys = scmSecret.getSecrets().keySet().stream().sorted().collect(toList());
 
     final Path secretsPath =
-        Paths.get(Project.rootDirectory(), "71-rest", "src", "test", "resources", "secrets.properties");
+        Paths.get(Project.rootDirectory(), "11-commons-test", "src", "main", "resources", "secrets.properties");
 
     String passphrase = System.getenv("NEW_HARNESS_GENERATION_PASSPHRASE");
     if (passphrase == null) {

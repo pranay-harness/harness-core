@@ -6,6 +6,8 @@ import static software.wings.generator.SettingGenerator.Settings.HARNESS_JENKINS
 
 import com.google.inject.Inject;
 
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.JenkinsConfig;
@@ -13,9 +15,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.generator.Randomizer;
 import software.wings.generator.Randomizer.Seed;
-import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretName;
 import software.wings.generator.SettingGenerator;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.JenkinsBuildService;

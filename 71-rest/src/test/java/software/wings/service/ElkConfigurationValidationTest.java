@@ -9,6 +9,8 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -20,9 +22,7 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretName;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;

@@ -22,6 +22,8 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -32,9 +34,6 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
-import software.wings.generator.ScmSecret;
-import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretName;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
@@ -65,7 +64,6 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsIntegrationTest.class);
 
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
-  @Inject SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
   @Inject private EncryptionService encryptionService;
   private String appdynamicsSettingId;

@@ -3,6 +3,8 @@ package software.wings.generator;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import software.wings.beans.Account;
 import software.wings.generator.OwnerManager.Owners;
 import software.wings.security.encryption.EncryptedData;
