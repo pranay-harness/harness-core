@@ -15,7 +15,7 @@ git checkout ${BRANCH}
 
 sed -i "s:<build.number>${VERSION}00</build.number>:<build.number>${NEW_VERSION}00</build.number>:g" ${VERSION_FILE}
 git add ${VERSION_FILE}
-git commit -m "Branching to release/${VERSION}. New version ${NEW_VERSION}"
+git commit -m "Branching to release/${PURPOSE}/${VERSION}. New version ${NEW_VERSION}"
 
 echo VERSION=${VERSION} > build.properties
 echo BRANCH=${BRANCH} >> build.properties
