@@ -1,8 +1,11 @@
 package software.wings.service.impl.newrelic;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
 import lombok.Builder;
@@ -24,6 +27,8 @@ import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -67,6 +72,11 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
 
   private TimeSeriesMlAnalysisType mlAnalysisType;
 
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
+
   @Builder
   public NewRelicMetricAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
@@ -90,6 +100,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
     this.showTimeSeries = showTimeSeries;
     this.baseLineExecutionId = baseLineExecutionId;
     this.groupName = groupName;
+    this.validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
   }
 
   public void addNewRelicMetricAnalysis(NewRelicMetricAnalysis analysis) {

@@ -70,6 +70,7 @@ public class ThirdPartyApiCallLog extends Base {
     this.response = response;
     this.requestTimeStamp = requestTimeStamp;
     this.responseTimeStamp = responseTimeStamp;
+    this.validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
   }
 
   public ThirdPartyApiCallLog copy() {

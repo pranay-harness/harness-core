@@ -1,5 +1,9 @@
 package software.wings.service.impl.analysis;
 
+import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -15,7 +19,9 @@ import software.wings.beans.Base;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -30,7 +36,7 @@ import java.util.List;
   }, options = @IndexOptions(unique = true, name = "logUniqueIdx"))
 })
 @Data
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @NoArgsConstructor
 public class LogDataRecord extends Base {
   @NotEmpty @Indexed private StateType stateType;
@@ -55,6 +61,11 @@ public class LogDataRecord extends Base {
   @NotEmpty private String logMD5Hash;
   @NotEmpty @Indexed private ClusterLevel clusterLevel;
   @NotEmpty @Indexed private int logCollectionMinute;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
   public static List<LogDataRecord> generateDataRecords(StateType stateType, String applicationId,
       String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,

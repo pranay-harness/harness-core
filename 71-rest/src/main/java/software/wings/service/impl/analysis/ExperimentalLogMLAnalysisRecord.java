@@ -1,6 +1,10 @@
 package software.wings.service.impl.analysis;
 
+import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -15,6 +19,8 @@ import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +32,7 @@ import java.util.Map;
     },
     options = @IndexOptions(unique = true, name = "explogAnalysisUniqueIdx")))
 @Data
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ExperimentalLogMLAnalysisRecord extends Base {
   @NotEmpty @Indexed private String stateExecutionId;
@@ -49,4 +55,9 @@ public class ExperimentalLogMLAnalysisRecord extends Base {
   private Map<String, Map<String, SplunkAnalysisCluster>> test_clusters;
   private Map<String, Map<String, SplunkAnalysisCluster>> ignore_clusters;
   private LogMLClusterScores cluster_scores;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 }

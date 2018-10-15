@@ -874,4 +874,6 @@ public interface Constants {
    */
   int TRIAL_PERIOD = 14;
   String LICENSE_INFO = "LICENSE_INFO";
+
+  long ML_RECORDS_TTL_MONTHS = 6;
 }

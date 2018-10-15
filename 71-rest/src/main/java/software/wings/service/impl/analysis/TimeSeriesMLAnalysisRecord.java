@@ -20,7 +20,7 @@ import org.mongodb.morphia.annotations.Indexes;
       , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
     options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
 @Data
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = true)
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TimeSeriesMLAnalysisRecord extends MetricAnalysisRecord {}
