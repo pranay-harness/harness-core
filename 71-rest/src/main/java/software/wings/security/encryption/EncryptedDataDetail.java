@@ -15,6 +15,7 @@ import software.wings.service.intfc.security.EncryptionConfig;
 @AllArgsConstructor
 @NoArgsConstructor
 public class EncryptedDataDetail {
+  // TODO: Why do we need EncryptionType separately? We have an encryptionType field in EncryptedData class. @swagat
   private EncryptionType encryptionType;
   private EncryptedData encryptedData;
   private EncryptionConfig encryptionConfig;

@@ -28,6 +28,7 @@ public class NameValuePair {
 
   /*
    Could be TEXT / ENCRYPTED_TEXT
+   TODO: Why is this not an enum? @swagat
   */
   private String valueType;
 

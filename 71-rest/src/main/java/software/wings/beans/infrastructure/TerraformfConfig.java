@@ -6,9 +6,9 @@ import lombok.Getter;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
-import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.beans.NameValuePair;
 
-import java.util.Map;
+import java.util.List;
 
 @EqualsAndHashCode(callSuper = false)
 @Builder(toBuilder = true)
@@ -24,8 +24,11 @@ public class TerraformfConfig extends Base {
    */
   private final String sourceRepoReference;
 
-  private final Map<String, String> variables;
-  private final Map<String, EncryptedDataDetail> encryptedVariables;
+  /**
+   * All variables of type TEXT & ENCRYPTED_TEXT.
+   * Encrypted variables are not persisted in plain text. The uuid of the corresponding EncryptedRecord is stored.
+   */
+  private final List<NameValuePair> variables;
 
   @Indexed private final String entityId;
   @Indexed private final String workflowExecutionId;
