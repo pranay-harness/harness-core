@@ -17,6 +17,8 @@ import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Reservation;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -30,9 +32,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
-import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretName;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Collections;

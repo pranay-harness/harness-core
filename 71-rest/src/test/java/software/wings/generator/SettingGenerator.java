@@ -25,6 +25,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.api.EnhancedRandom;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import software.wings.beans.Account;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;

@@ -15,6 +15,8 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import io.harness.rule.OwnerRule.Owner;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -22,8 +24,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SplunkConfig;
-import software.wings.generator.ScmSecret;
-import software.wings.generator.SecretName;
 import software.wings.service.impl.splunk.SplunkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;

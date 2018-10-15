@@ -6,6 +6,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.apache.commons.text.StrSubstitutor;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -17,9 +19,7 @@ import software.wings.cloudprovider.aws.AwsClusterConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
-import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretName;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Collections;

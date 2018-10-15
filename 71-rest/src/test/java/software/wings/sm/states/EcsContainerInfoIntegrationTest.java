@@ -17,6 +17,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -39,9 +41,7 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretName;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.AppService;

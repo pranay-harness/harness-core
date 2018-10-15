@@ -1,8 +1,6 @@
-package software.wings.generator;
+package io.harness.scm;
 
-import com.google.inject.Singleton;
-
-import io.harness.exception.WingsException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import org.apache.commons.codec.binary.Hex;
 
@@ -14,9 +12,8 @@ import java.util.Properties;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
-@Singleton
 public class ScmSecret {
-  protected static final String passphrase = System.getenv("HARNESS_GENERATION_PASSPHRASE");
+  public static final String passphrase = System.getenv("HARNESS_GENERATION_PASSPHRASE");
 
   @Getter private final Properties secrets;
 
@@ -25,7 +22,7 @@ public class ScmSecret {
     try (InputStream in = getClass().getResourceAsStream("/secrets.properties")) {
       secrets.load(in);
     } catch (IOException exception) {
-      throw new WingsException(exception);
+      throw new RuntimeException(exception);
     }
   }
 
@@ -37,19 +34,19 @@ public class ScmSecret {
     return decrypt(secrets.getProperty(name.getValue()));
   }
 
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public byte[] decrypt(String cipheredSecretHex) {
-    if (!isInitialized()) {
-      return "You can't decrypt in this environment. You need to set HARNESS_GENERATION_PASSPHRASE in your environment!"
-          .getBytes();
-    }
-
     try {
+      if (!isInitialized()) {
+        return "You can't decrypt in this environment. You need to set HARNESS_GENERATION_PASSPHRASE in your environment!"
+            .getBytes("UTF-8");
+      }
       Key aesKey = new SecretKeySpec(Hex.decodeHex(passphrase.toCharArray()), "AES");
       Cipher cipher = Cipher.getInstance("AES");
       cipher.init(Cipher.DECRYPT_MODE, aesKey);
       return cipher.doFinal(Hex.decodeHex(cipheredSecretHex.toCharArray()));
     } catch (Exception e) {
-      throw new WingsException(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -61,7 +58,7 @@ public class ScmSecret {
     try {
       return new String(decrypt(cipheredSecretHex), "UTF-8");
     } catch (UnsupportedEncodingException e) {
-      throw new WingsException(e);
+      throw new RuntimeException(e);
     }
   }
 
@@ -80,11 +77,11 @@ public class ScmSecret {
       cipher.init(Cipher.ENCRYPT_MODE, aesKey);
       return Hex.encodeHexString(cipher.doFinal(secret));
     } catch (Exception e) {
-      throw new WingsException(e);
+      throw new RuntimeException(e);
     }
   }
 
-  String encrypt(byte[] secret) {
+  public String encrypt(byte[] secret) {
     return encrypt(secret, passphrase);
   }
 }

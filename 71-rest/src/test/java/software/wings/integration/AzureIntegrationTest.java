@@ -6,6 +6,8 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.inject.Inject;
 
 import com.microsoft.azure.management.compute.VirtualMachine;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -15,8 +17,6 @@ import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.AzureVirtualMachineScaleSet;
-import software.wings.generator.ScmSecret;
-import software.wings.generator.SecretName;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.rules.Integration;
 import software.wings.service.intfc.security.EncryptionService;

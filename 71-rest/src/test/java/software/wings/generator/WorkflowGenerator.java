@@ -33,6 +33,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.api.EnhancedRandom;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import lombok.Builder;
 import lombok.Value;
 import software.wings.beans.Application;

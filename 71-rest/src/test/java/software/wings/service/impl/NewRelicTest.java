@@ -8,6 +8,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import io.harness.time.Timestamp;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -15,9 +17,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
-import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretName;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;

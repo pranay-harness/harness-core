@@ -8,6 +8,7 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.scm.ScmSecret;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -23,7 +24,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.YamlConstants;
-import software.wings.generator.ScmSecret;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.impl.yaml.GitClientImpl;

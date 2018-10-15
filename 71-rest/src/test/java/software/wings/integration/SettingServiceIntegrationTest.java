@@ -16,6 +16,8 @@ import com.google.inject.Inject;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.rule.RepeatRule.Repeat;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -28,9 +30,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.Constants;
-import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretName;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;

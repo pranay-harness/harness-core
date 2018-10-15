@@ -17,6 +17,8 @@ import com.google.inject.Inject;
 
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
+import io.harness.scm.ScmSecret;
+import io.harness.scm.SecretName;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -36,9 +38,7 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.ScmSecret;
 import software.wings.generator.SecretGenerator;
-import software.wings.generator.SecretName;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;

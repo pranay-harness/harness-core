@@ -5,6 +5,7 @@ import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.scm.SecretName;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
