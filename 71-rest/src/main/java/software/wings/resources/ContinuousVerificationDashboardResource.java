@@ -19,10 +19,12 @@ import software.wings.service.impl.analysis.CVDeploymentData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
 import software.wings.verification.HeatMap;
+import software.wings.verification.TimeSeriesDataPoint;
 
 import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import javax.validation.Valid;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -67,11 +69,12 @@ public class ContinuousVerificationDashboardResource {
   @Path(VerificationConstants.HEATMAP)
   @Timed
   @ExceptionMetered
-  public RestResponse<List<HeatMap>> getHeatMap(@QueryParam("accountId") @Valid final String accountId,
-      @QueryParam("serviceId") @Valid final String serviceId, @QueryParam("resolution") int resolution,
-      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime) {
+  public RestResponse<Map<String, List<HeatMap>>> getDetailedHeatMap(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("serviceId") @Valid final String serviceId,
+      @QueryParam("resolution") int resolution, @QueryParam("startTime") long startTime,
+      @QueryParam("endTime") long endTime) {
     return new RestResponse<>(
-        continuousVerificationService.getHeatMap(accountId, serviceId, resolution, startTime, endTime));
+        continuousVerificationService.getHeatMap(accountId, serviceId, resolution, startTime, endTime, true));
   }
 
   @GET
@@ -83,5 +86,28 @@ public class ContinuousVerificationDashboardResource {
       @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(continuousVerificationService.getCVDeploymentData(
         accountId, startTime, endTime, UserThreadLocal.get().getPublicUser(), serviceId));
+  }
+
+  @GET
+  @Path("/heatmap-summary")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, List<HeatMap>>> getHeatMapSummary(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("serviceId") @Valid final String serviceId,
+      @QueryParam("resolution") int resolution, @QueryParam("startTime") long startTime,
+      @QueryParam("endTime") long endTime) {
+    return new RestResponse<>(
+        continuousVerificationService.getHeatMap(accountId, serviceId, resolution, startTime, endTime, false));
+  }
+
+  @GET
+  @Path("/timeseries")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Map<String, Map<String, List<TimeSeriesDataPoint>>>> getTimeSeriesOfHeatMapUnit(
+      @QueryParam("accountId") @Valid final String accountId, @QueryParam("startTime") long startTime,
+      @QueryParam("endTime") long endTime, @QueryParam("cvConfigId") String cvConfigId) {
+    return new RestResponse<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnit(accountId, cvConfigId, startTime, endTime));
   }
 }

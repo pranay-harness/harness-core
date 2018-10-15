@@ -46,6 +46,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -387,7 +388,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return new ArrayList<>(userApps.keySet());
   }
 
-  private HeatMapUnit getMockHeatMapUnit(long startEpoch, long endEpoch, int eventsPerUnit) {
+  private HeatMapUnit getMockHeatMapUnit(long startEpoch, long endEpoch, int eventsPerUnit, int durationInMinutes) {
     int low = 0, medium = 0, high = 0;
 
     Random random = new Random();
@@ -401,29 +402,32 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       } else {
         high = 1;
       }
-      return new HeatMapUnit(startEpoch, endEpoch, low, medium, high);
+
+      return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, null);
     }
 
     low = random.nextInt(eventsPerUnit);
     medium = random.nextInt(eventsPerUnit - low);
     high = eventsPerUnit - (low + medium);
-    return new HeatMapUnit(startEpoch, endEpoch, low, medium, high);
+    return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, null);
   }
 
   @NotNull
-  private HeatMap generateMockHeatMap(long startTime, long endTime, int resolution) {
+  private HeatMap generateMockHeatMap(long startTime, long endTime, int resolution, String appId, String serviceId) {
     HeatMap heatMap = new HeatMap();
 
     AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
     appDynamicsCVServiceConfiguration = new AppDynamicsCVServiceConfiguration();
-    appDynamicsCVServiceConfiguration.setAppId(generateUuid());
+    appDynamicsCVServiceConfiguration.setAppId(appId);
     appDynamicsCVServiceConfiguration.setEnvId(generateUuid());
-    appDynamicsCVServiceConfiguration.setServiceId(generateUuid());
+    appDynamicsCVServiceConfiguration.setServiceId(serviceId);
     appDynamicsCVServiceConfiguration.setEnabled24x7(true);
     appDynamicsCVServiceConfiguration.setAppDynamicsApplicationId(generateUuid());
     appDynamicsCVServiceConfiguration.setTierId(generateUuid());
     appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
+    appDynamicsCVServiceConfiguration.setName("App Dynamics Service Config " + UUID.randomUUID().toString());
+    appDynamicsCVServiceConfiguration.setConnectorName("Connector " + UUID.randomUUID().toString());
     heatMap.setCvConfiguration(appDynamicsCVServiceConfiguration);
 
     heatMap.setRiskLevelSummary(new ArrayList<>());
@@ -432,7 +436,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       long currentTs = startTime;
       long nextTs = currentTs + TimeUnit.MINUTES.toMillis(10);
       for (int i = 0; i < 6 * 24; i++) {
-        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 1));
+        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 1, 10));
         currentTs = nextTs;
         nextTs = currentTs + TimeUnit.MINUTES.toMillis(DURATION_IN_MINUTES);
       }
@@ -441,7 +445,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       long currentTs = startTime;
       long nextTs = currentTs + TimeUnit.HOURS.toMillis(1);
       for (int i = 0; i < 24 * 7; i++) {
-        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 6));
+        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 6, 60));
         currentTs = nextTs;
         nextTs = currentTs + TimeUnit.HOURS.toMillis(1);
       }
@@ -450,7 +454,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       long currentTs = startTime;
       long nextTs = currentTs + TimeUnit.HOURS.toMillis(4);
       for (int i = 0; i < 6 * 30; i++) {
-        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 24));
+        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 24, 240));
         currentTs = nextTs;
         nextTs = currentTs + TimeUnit.HOURS.toMillis(4);
       }
@@ -460,21 +464,30 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
-  public List<HeatMap> getHeatMap(String accountId, String serviceId, int resolution, long startTime, long endTime) {
+  public Map<String, List<HeatMap>> getHeatMap(
+      String accountId, String serviceId, int resolution, long startTime, long endTime, boolean detailed) {
     // TODO: Fetch all CV configs of given serviceId and generate heatmaps for those configs
 
-    final int NUM_SERVICE_CONFIGS = 4;
+    final int NUM_SERVICE_CONFIGS = 2;
 
     // TODO: assert that (end - begin) == resolution
 
-    List<HeatMap> summary = new ArrayList<>();
-    for (int num = 0; num < NUM_SERVICE_CONFIGS; num++) {
-      HeatMap heatMap = generateMockHeatMap(startTime, endTime, resolution);
-      heatMap.setObservedTimeSeries(getObservedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
-      heatMap.setPredictedTimeSeries(getPredictedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
-      summary.add(heatMap);
+    Map<String, List<HeatMap>> resp = new LinkedHashMap<>();
+
+    for (int i = 0; i < 3; i++) {
+      List<HeatMap> summary = new ArrayList<>();
+      String appId = UUID.randomUUID().toString();
+      for (int num = 0; num < NUM_SERVICE_CONFIGS; num++) {
+        HeatMap heatMap = generateMockHeatMap(startTime, endTime, resolution, appId, serviceId);
+        if (detailed) {
+          heatMap.setObservedTimeSeries(getObservedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
+          heatMap.setPredictedTimeSeries(getPredictedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
+        }
+        summary.add(heatMap);
+      }
+      resp.put("Environment Name " + UUID.randomUUID().toString(), summary);
     }
-    return summary;
+    return resp;
   }
 
   public List<TimeSeriesDataPoint> getObservedTimeSeries(
@@ -497,5 +510,52 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       currentTs = currentTs + TimeUnit.MINUTES.toMillis(1);
     }
     return timeSeries;
+  }
+
+  private List<TimeSeriesDataPoint> generateRandomTimeSeriesWithNDataPoints(long startTime, int count) {
+    Random random = new Random();
+    List<TimeSeriesDataPoint> timeSeries = new ArrayList<>();
+    long currentTs = startTime;
+    for (int i = 0; i < count; i++) {
+      timeSeries.add(new TimeSeriesDataPoint(currentTs, random.nextFloat() * random.nextInt(10)));
+      currentTs = currentTs + TimeUnit.MINUTES.toMillis(1);
+    }
+    return timeSeries;
+  }
+
+  public Map<String, Map<String, List<TimeSeriesDataPoint>>> getTimeSeriesOfHeatMapUnit(
+      String accountId, String cvConfigId, long startTime, long endTime) {
+    // TODO: RBAC check on cvConfigId
+    int minutes = (int) ((endTime - startTime) / 60);
+
+    int NUM_TRANSACTIONS = 3;
+    List<String> metrics = Arrays.asList("apdexScore", "requestsPerMinute", "averageResponseTime");
+
+    Map<String, Map<String, List<TimeSeriesDataPoint>>> timeSeriesMap = new HashMap<>();
+    for (int i = 0; i < NUM_TRANSACTIONS; i++) {
+      String transactionName = "WebTransaction/Servlet/" + generateUuid();
+      Map<String, List<TimeSeriesDataPoint>> metricTimeSeries = new HashMap<>();
+      for (String metric : metrics) {
+        metricTimeSeries.put(metric, getTimeSeriesDataPointsFor24Hours(startTime, minutes));
+      }
+      timeSeriesMap.put(transactionName, metricTimeSeries);
+    }
+    return timeSeriesMap;
+  }
+
+  @NotNull
+  private List<TimeSeriesDataPoint> getTimeSeriesDataPointsFor24Hours(long startTime, int durationOfCurrentSquare) {
+    List<TimeSeriesDataPoint> resp = new ArrayList<>();
+    List<TimeSeriesDataPoint> before =
+        generateRandomTimeSeriesWithNDataPoints(startTime - TimeUnit.HOURS.toMillis(12), 12 * 60);
+    List<TimeSeriesDataPoint> timeSeriesForGivenSquare =
+        generateRandomTimeSeriesWithNDataPoints(startTime, durationOfCurrentSquare);
+    List<TimeSeriesDataPoint> after = generateRandomTimeSeriesWithNDataPoints(
+        startTime + TimeUnit.MINUTES.toMillis(durationOfCurrentSquare), (12 * 60) - durationOfCurrentSquare);
+    resp.addAll(before);
+    resp.addAll(timeSeriesForGivenSquare);
+    resp.addAll(after);
+    logger.info("Response size = " + resp.size());
+    return resp;
   }
 }
