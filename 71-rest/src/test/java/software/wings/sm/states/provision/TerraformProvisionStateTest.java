@@ -32,30 +32,30 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   }
 
   @Test
-  public void testCalculateVariables() {
+  public void testValidateAndFilterVariables() {
     List<NameValuePair> variables = new ArrayList<>();
     List<NameValuePair> provisionerVariables = new ArrayList<>();
 
-    assertThat(TerraformProvisionState.calculateVariables(variables, provisionerVariables)).isEmpty();
+    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables)).isEmpty();
 
     variables.add(NameValuePair.builder().name("foo").valueType("TEXT").build());
-    assertThat(TerraformProvisionState.calculateVariables(variables, provisionerVariables)).isEmpty();
+    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables)).isEmpty();
 
     provisionerVariables.add(NameValuePair.builder().name("foo").valueType("TEXT").build());
-    assertThat(TerraformProvisionState.calculateVariables(variables, provisionerVariables))
+    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables))
         .containsExactly(variables.get(0));
 
     variables.add(NameValuePair.builder().name("bar").valueType("ENCYPTED_TEXT").build());
     provisionerVariables.add(NameValuePair.builder().name("bar").valueType("ENCYPTED_TEXT").build());
-    assertThat(TerraformProvisionState.calculateVariables(variables, provisionerVariables))
+    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables))
         .containsExactly(variables.get(0), variables.get(1));
 
     provisionerVariables.add(NameValuePair.builder().name("baz").valueType("TEXT").build());
-    assertThatThrownBy(() -> TerraformProvisionState.calculateVariables(variables, provisionerVariables))
+    assertThatThrownBy(() -> TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables))
         .isInstanceOf(InvalidRequestException.class);
 
     variables.add(NameValuePair.builder().name("baz").valueType("ENCYPTED_TEXT").build());
-    assertThatThrownBy(() -> TerraformProvisionState.calculateVariables(variables, provisionerVariables))
+    assertThatThrownBy(() -> TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables))
         .isInstanceOf(InvalidRequestException.class);
   }
 }

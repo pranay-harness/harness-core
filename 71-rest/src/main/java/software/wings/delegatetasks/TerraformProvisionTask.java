@@ -25,6 +25,8 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
+import software.wings.beans.NameValuePair;
+import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommandUnit;
@@ -44,6 +46,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -138,15 +141,18 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       File tfOutputsFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
 
       String joinedCommands = null;
+      String commandExecuted = "";
       switch (parameters.getCommand()) {
         case APPLY:
           joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
               "terraform refresh -input=false", "terraform plan -out=tfplan -input=false",
               "terraform apply -input=false tfplan", "(terraform output --json > " + tfOutputsFile.toString() + ")"));
+          commandExecuted = "Apply";
           break;
         case DESTROY:
           joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
               "terraform refresh -input=false", "terraform destroy -force"));
+          commandExecuted = "Destroy";
           break;
         default:
           throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
@@ -204,11 +210,22 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         delegateFileManager.upload(delegateFile, initialStream);
       }
 
+      List<NameValuePair> variableList = new ArrayList<>();
+      for (Entry<String, String> variable : parameters.getVariables().entrySet()) {
+        variableList.add(new NameValuePair(variable.getKey(), variable.getValue(), Type.TEXT.name()));
+      }
+
+      for (Entry<String, EncryptedDataDetail> encVariable : parameters.getEncryptedVariables().entrySet()) {
+        variableList.add(new NameValuePair(
+            encVariable.getKey(), encVariable.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
+      }
+
       final TerraformExecutionDataBuilder terraformExecutionDataBuilder =
           TerraformExecutionData.builder()
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
-              .terraformProvisionParameters(parameters)
+              .commandExecuted(commandExecuted)
+              .variables(variableList)
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
 
