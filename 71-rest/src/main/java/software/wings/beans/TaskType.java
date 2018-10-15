@@ -205,6 +205,7 @@ public enum TaskType {
   KMS_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, KmsValidation.class),
   GIT_COMMAND(TaskGroup.GIT, GitCommandTask.class, GitValidation.class),
   VAULT_ENCRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
+  VAULT_DELETE_SECRET(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
   VAULT_DECRYPT(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
   VAULT_RENEW_TOKEN(TaskGroup.KMS, ServiceImplDelegateTask.class, VaultValidation.class),
   HOST_VALIDATION(TaskGroup.HOST_VALIDATION, ServiceImplDelegateTask.class, HostValidationValidation.class),
