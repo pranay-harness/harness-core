@@ -69,7 +69,7 @@ public class ActivityResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new ActivityResource(APP_SERVICE, ACTIVITY_SERVICE, LOG_SERVICE, API_CALL_LOG_SERVICE))
+          .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE, API_CALL_LOG_SERVICE))
           .addProvider(WingsExceptionMapper.class)
           .build();
 
