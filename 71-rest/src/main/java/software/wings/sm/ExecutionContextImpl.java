@@ -29,6 +29,7 @@ import software.wings.beans.Application;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.ErrorStrategy;
+import software.wings.beans.NameValuePair;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.ServiceVariable;
@@ -64,6 +65,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Describes execution context for a state machine execution.
@@ -499,6 +501,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Builder
   static class ServiceVariables implements LateBindingValue {
     private EncryptedFieldMode encryptedFieldMode;
+    private List<NameValuePair> phaseOverrides;
 
     private ExecutionContextImpl executionContext;
     private ManagerDecryptionService managerDecryptionService;
@@ -512,22 +515,26 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       final List<ServiceVariable> serviceVariables = executionContext.prepareServiceVariables(
           encryptedFieldMode == MASKED ? EncryptedFieldComputeMode.MASKED : EncryptedFieldComputeMode.OBTAIN_META);
 
-      Map<String, Object> variables = new HashMap<>();
+      Map<String, Object> variables = isEmpty(phaseOverrides)
+          ? new HashMap<>()
+          : phaseOverrides.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
 
       serviceVariables.forEach(serviceVariable -> {
         final String variableName = executionContext.renderExpression(serviceVariable.getName());
 
-        if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
-          variables.put(variableName, executionContext.renderExpression(new String(serviceVariable.getValue())));
-        } else {
-          if (isEmpty(serviceVariable.getAccountId())) {
-            serviceVariable.setAccountId(executionContext.getApp().getAccountId());
+        if (!variables.containsKey(variableName)) {
+          if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
+            variables.put(variableName, executionContext.renderExpression(new String(serviceVariable.getValue())));
+          } else {
+            if (isEmpty(serviceVariable.getAccountId())) {
+              serviceVariable.setAccountId(executionContext.getApp().getAccountId());
+            }
+            variables.put(variableName,
+                ServiceEncryptedVariable.builder()
+                    .serviceVariable(serviceVariable)
+                    .executionContext(executionContext)
+                    .build());
           }
-          variables.put(variableName,
-              ServiceEncryptedVariable.builder()
-                  .serviceVariable(serviceVariable)
-                  .executionContext(executionContext)
-                  .build());
         }
       });
       executionContext.contextMap.put(key, variables);
@@ -551,10 +558,14 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       }
     }
 
-    final ServiceVariablesBuilder serviceVariablesBuilder = ServiceVariables.builder()
-                                                                .executionContext(this)
-                                                                .managerDecryptionService(managerDecryptionService)
-                                                                .secretManager(secretManager);
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+
+    final ServiceVariablesBuilder serviceVariablesBuilder =
+        ServiceVariables.builder()
+            .phaseOverrides(phaseElement == null ? null : phaseElement.getVariableOverrides())
+            .executionContext(this)
+            .managerDecryptionService(managerDecryptionService)
+            .secretManager(secretManager);
 
     context.put(SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(OBTAIN_VALUE).build());
     context.put(SAFE_DISPLAY_SERVICE_VARIABLE, serviceVariablesBuilder.encryptedFieldMode(MASKED).build());
@@ -646,6 +657,12 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       serviceVariables.forEach(serviceVariable
           -> variables.put(
               renderExpression(serviceVariable.getName()), renderExpression(new String(serviceVariable.getValue()))));
+    }
+
+    PhaseElement phaseElement = getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    if (phaseElement != null && isNotEmpty(phaseElement.getVariableOverrides())) {
+      variables.putAll(phaseElement.getVariableOverrides().stream().collect(
+          Collectors.toMap(NameValuePair::getName, NameValuePair::getValue)));
     }
 
     if (contextMap != null) {
