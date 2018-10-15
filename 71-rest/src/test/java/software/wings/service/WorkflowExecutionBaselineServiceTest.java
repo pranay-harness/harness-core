@@ -1,5 +1,6 @@
 package software.wings.service;
 
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -35,6 +36,10 @@ import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.UserThreadLocal;
+import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
@@ -43,7 +48,9 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -166,9 +173,13 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
                                                           .withExecutionUuid(workflowExecutionId)
                                                           .withStateType(StateType.DYNA_TRACE.name())
                                                           .build();
+
+      createDataRecords(workflowExecutionId, appId);
       stateExecutionInstance.setAppId(appId);
       wingsPersistence.save(stateExecutionInstance);
     }
+
+    verifyValidUntil(workflowExecutionIds, Date.from(OffsetDateTime.now().plusMonths(7).toInstant()), true);
 
     for (String workflowExecutionId : workflowExecutionIds) {
       WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
@@ -214,6 +225,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
         stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
           assertTrue(pipelineWorkflowExecution.isBaseline());
         }));
+
+    verifyValidUntil(workflowExecutionIds, Date.from(OffsetDateTime.now().plusMonths(7).toInstant()), false);
 
     // unmark the baseline and verify
     workflowExecutionBaselines = workflowExecutionService.markBaseline(appId, workflowExecutionId, false);
@@ -716,5 +729,66 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
         stageExecution -> stageExecution.getWorkflowExecutions().forEach(pipelineWorkflowExecution -> {
           assertTrue(pipelineWorkflowExecution.isBaseline());
         }));
+  }
+
+  private void createDataRecords(String workflowExecutionId, String appId) {
+    for (int i = 0; i < 100; i++) {
+      wingsPersistence.save(
+          NewRelicMetricDataRecord.builder().workflowExecutionId(workflowExecutionId).appId(appId).build());
+      wingsPersistence.save(
+          NewRelicMetricAnalysisRecord.builder().workflowExecutionId(workflowExecutionId).appId(appId).build());
+      TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
+      timeSeriesMLAnalysisRecord.setWorkflowExecutionId(workflowExecutionId);
+      timeSeriesMLAnalysisRecord.setAppId(appId);
+      wingsPersistence.save(timeSeriesMLAnalysisRecord);
+
+      LogDataRecord logDataRecord = new LogDataRecord();
+      logDataRecord.setWorkflowExecutionId(workflowExecutionId);
+      logDataRecord.setAppId(appId);
+      wingsPersistence.save(logDataRecord);
+    }
+  }
+
+  private void verifyValidUntil(List<String> workflowExecutionIds, Date validUntil, boolean greater) {
+    workflowExecutionIds.forEach(workflowExecutionId -> {
+      List<NewRelicMetricDataRecord> newRelicMetricDataRecords =
+          wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeAuthority).asList();
+      newRelicMetricDataRecords.forEach(newRelicMetricDataRecord -> {
+        if (greater) {
+          assertTrue(validUntil.getTime() > newRelicMetricDataRecord.getValidUntil().getTime());
+        } else {
+          assertTrue(validUntil.getTime() < newRelicMetricDataRecord.getValidUntil().getTime());
+        }
+      });
+
+      List<NewRelicMetricAnalysisRecord> newRelicMetricAnalysisRecords =
+          wingsPersistence.createQuery(NewRelicMetricAnalysisRecord.class, excludeAuthority).asList();
+      newRelicMetricAnalysisRecords.forEach(newRelicMetricAnalysisRecord -> {
+        if (greater) {
+          assertTrue(validUntil.getTime() > newRelicMetricAnalysisRecord.getValidUntil().getTime());
+        } else {
+          assertTrue(validUntil.getTime() < newRelicMetricAnalysisRecord.getValidUntil().getTime());
+        }
+      });
+
+      List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
+          wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class, excludeAuthority).asList();
+      timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        if (greater) {
+          assertTrue(validUntil.getTime() > timeSeriesMLAnalysisRecord.getValidUntil().getTime());
+        } else {
+          assertTrue(validUntil.getTime() < timeSeriesMLAnalysisRecord.getValidUntil().getTime());
+        }
+      });
+
+      List<LogDataRecord> logDataRecords = wingsPersistence.createQuery(LogDataRecord.class, excludeAuthority).asList();
+      logDataRecords.forEach(logDataRecord -> {
+        if (greater) {
+          assertTrue(validUntil.getTime() > logDataRecord.getValidUntil().getTime());
+        } else {
+          assertTrue(validUntil.getTime() < logDataRecord.getValidUntil().getTime());
+        }
+      });
+    });
   }
 }

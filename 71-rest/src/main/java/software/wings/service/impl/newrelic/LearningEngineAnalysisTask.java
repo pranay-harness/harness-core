@@ -38,7 +38,7 @@ import java.util.concurrent.TimeUnit;
 })
 @Data
 @Builder
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 public class LearningEngineAnalysisTask extends Base {
   public static long TIME_SERIES_ANALYSIS_TASK_TIME_OUT = TimeUnit.MINUTES.toMillis(12);
   public static final int RETRIES = 3;

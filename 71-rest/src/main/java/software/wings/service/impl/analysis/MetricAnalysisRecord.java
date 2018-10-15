@@ -1,15 +1,21 @@
 package software.wings.service.impl.analysis;
 
+import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -18,7 +24,7 @@ import java.util.Map;
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 public class MetricAnalysisRecord extends Base {
   // Represents type of State
   @NotEmpty @Indexed private StateType stateType;
@@ -41,4 +47,9 @@ public class MetricAnalysisRecord extends Base {
   private String message;
 
   private String cvConfigId;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 }

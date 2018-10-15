@@ -1,9 +1,13 @@
 package software.wings.service.impl.newrelic;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -20,6 +24,8 @@ import software.wings.beans.EmbeddedUser;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +42,7 @@ import java.util.Map;
   }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
 })
 @Data
-@EqualsAndHashCode(callSuper = false)
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -67,10 +73,14 @@ public class NewRelicMetricDataRecord extends Base {
 
   private String tag;
 
-  @Default @Indexed private String groupName = DEFAULT_GROUP_NAME;
+  @Indexed private String groupName = DEFAULT_GROUP_NAME;
 
-  // generic values
-  @Default private Map<String, Double> values = new HashMap<>();
+  private Map<String, Double> values = new HashMap<>();
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
 
   @Builder
   public NewRelicMetricDataRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
@@ -91,7 +101,8 @@ public class NewRelicMetricDataRecord extends Base {
     this.host = host;
     this.level = level;
     this.tag = tag;
-    this.groupName = groupName;
-    this.values = values;
+    this.groupName = isEmpty(groupName) ? DEFAULT_GROUP_NAME : groupName;
+    this.values = isEmpty(values) ? new HashMap<>() : values;
+    this.validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
   }
 }

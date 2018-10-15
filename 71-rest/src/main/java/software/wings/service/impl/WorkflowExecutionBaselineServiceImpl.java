@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.beans.Base.APP_ID_KEY;
+import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -10,14 +12,21 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.SearchFilter.Operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Base;
 import software.wings.beans.PipelineExecution;
 import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.baseline.WorkflowExecutionBaseline;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.analysis.LogDataRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 
+import java.time.OffsetDateTime;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +36,7 @@ import java.util.Map;
  */
 public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBaselineService {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionBaselineServiceImpl.class);
+  private static final Date BASELINE_TTL = Date.from(OffsetDateTime.now().plusYears(ML_RECORDS_TTL_MONTHS).toInstant());
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -38,7 +48,7 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     for (WorkflowExecutionBaseline workflowExecutionBaseline : workflowExecutionBaselines) {
       List<WorkflowExecutionBaseline> existingBaselines =
           wingsPersistence.createQuery(WorkflowExecutionBaseline.class)
-              .filter(WorkflowExecutionBaseline.APP_ID_KEY, workflowExecutionBaseline.getAppId())
+              .filter(APP_ID_KEY, workflowExecutionBaseline.getAppId())
               .filter("workflowId", workflowExecutionBaseline.getWorkflowId())
               .filter("envId", workflowExecutionBaseline.getEnvId())
               .filter("serviceId", workflowExecutionBaseline.getServiceId())
@@ -76,6 +86,11 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
       logger.info("marking {} to be baseline", workflowExecutionBaseline);
       wingsPersistence.updateField(
           WorkflowExecution.class, workflowExecutionBaseline.getWorkflowExecutionId(), "isBaseline", isBaseline);
+      // update metric and log data's ttl
+      if (isBaseline) {
+        updateDataAndAnalysisRecords(
+            workflowExecutionBaseline.getWorkflowExecutionId(), workflowExecutionBaseline.getAppId());
+      }
       markPipelineWorkflowBaselineIfNecessary(workflowExecutionBaseline, isBaseline);
     }
 
@@ -144,6 +159,21 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
     }
 
     wingsPersistence.updateField(WorkflowExecution.class, executionId, "isBaseline", markBaseline);
+  }
+
+  private void updateDataAndAnalysisRecords(String workflowExecutionId, String appId) {
+    updateTtl(workflowExecutionId, appId, NewRelicMetricDataRecord.class);
+    updateTtl(workflowExecutionId, appId, NewRelicMetricAnalysisRecord.class);
+    updateTtl(workflowExecutionId, appId, TimeSeriesMLAnalysisRecord.class);
+
+    updateTtl(workflowExecutionId, appId, LogDataRecord.class);
+  }
+
+  private <T extends Base> void updateTtl(String workflowExecutionId, String appId, Class<T> recordClass) {
+    wingsPersistence.update(wingsPersistence.createQuery(recordClass)
+                                .filter("workflowExecutionId", workflowExecutionId)
+                                .filter(APP_ID_KEY, appId),
+        wingsPersistence.createUpdateOperations(recordClass).set("validUntil", BASELINE_TTL));
   }
 
   @Override
