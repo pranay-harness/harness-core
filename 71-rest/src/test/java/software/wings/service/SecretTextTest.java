@@ -2245,23 +2245,4 @@ public class SecretTextTest extends WingsBaseTest {
       }
     }
   }
-
-  private VaultConfig getVaultConfig() throws IOException {
-    return VaultConfig.builder()
-        .vaultUrl("http://127.0.0.1:8200")
-        .authToken(generateUuid())
-        .name("myVault")
-        .isDefault(true)
-        .build();
-  }
-
-  private KmsConfig getKmsConfig() {
-    final KmsConfig kmsConfig = new KmsConfig();
-    kmsConfig.setName("myKms");
-    kmsConfig.setDefault(true);
-    kmsConfig.setKmsArn(generateUuid());
-    kmsConfig.setAccessKey(generateUuid());
-    kmsConfig.setSecretKey(generateUuid());
-    return kmsConfig;
-  }
 }

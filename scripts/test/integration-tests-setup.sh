@@ -9,7 +9,7 @@ sleep 5
 
 echo 'starting vault server'
 touch vault.log
-~/vault server --dev > vault.log &
+~/vault server --dev -dev-root-token-id="root" -dev-listen-address="127.0.0.1:8200" > vault.log &
 i=0
 while [ "$i" -lt 30 ]
 do

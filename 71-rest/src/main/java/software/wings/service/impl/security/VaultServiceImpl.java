@@ -14,14 +14,26 @@ import static software.wings.security.encryption.SimpleEncryption.CHARSET;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.network.Http;
 import io.harness.persistence.HIterator;
+import okhttp3.OkHttpClient;
+import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
+import okhttp3.logging.HttpLoggingInterceptor.Level;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.KmsConfig;
@@ -29,6 +41,7 @@ import software.wings.beans.VaultConfig;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.common.Constants;
+import software.wings.helpers.ext.vault.VaultSysMountsRestClient;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.AlertService;
@@ -331,7 +344,20 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   void validateVaultConfig(String accountId, VaultConfig vaultConfig) {
     try {
-      encrypt(VAULT_VAILDATION_URL, VAULT_VAILDATION_URL, accountId, SettingVariableTypes.VAULT, vaultConfig, null);
+      if (vaultConfig.getSecretEngineVersion() == 0) {
+        // Value 0 means the vault secret engine version has not been determined. Will need to check with
+        // the Vault server to determine the actual secret engine version.
+        int secreteEngineVersion = getVaultSecretEngineVersion(vaultConfig);
+        vaultConfig.setSecretEngineVersion(secreteEngineVersion);
+      }
+    } catch (Exception e) {
+      String message =
+          "Was not able to determine the vault server's secret engine version using given credentials. Please check your credentials and try again";
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, message, USER, e).addParam("reason", message);
+    }
+
+    try {
+      encrypt(VAULT_VAILDATION_URL, Boolean.TRUE.toString(), accountId, SettingVariableTypes.VAULT, vaultConfig, null);
     } catch (WingsException e) {
       String message =
           "Was not able to reach vault using given credentials. Please check your credentials and try again";
@@ -346,5 +372,76 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
         wingsPersistence.save(kmsConfig);
       }
     }
+  }
+
+  int getVaultSecretEngineVersion(VaultConfig vaultConfig) throws IOException {
+    // http logging interceptor for dumping retrofit request/response content.
+    HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+    // set your desired log level, NONE by default. BODY while performing local testing.
+    logging.setLevel(Level.NONE);
+
+    OkHttpClient httpClient = Http.getOkHttpClientWithNoProxyValueSet(vaultConfig.getVaultUrl())
+                                  .readTimeout(10, TimeUnit.SECONDS)
+                                  .addInterceptor(logging)
+                                  .build();
+
+    final Retrofit retrofit = new Retrofit.Builder()
+                                  .baseUrl(vaultConfig.getVaultUrl())
+                                  .addConverterFactory(JacksonConverterFactory.create())
+                                  .client(httpClient)
+                                  .build();
+    VaultSysMountsRestClient restClient = retrofit.create(VaultSysMountsRestClient.class);
+
+    Response<ResponseBody> response = restClient.getAll(vaultConfig.getAuthToken()).execute();
+
+    int version = 1;
+    if (response.isSuccessful()) {
+      version = parseSecretEngineVersionFromSysMountsJson(response.body().string());
+    }
+
+    return version;
+  }
+
+  /**
+   * Parsing the /secret/option/version integer value of the of full sys mounts output JSON from the
+   * Vault /v1/secret/sys/mounts REST API call. Sample snippet of the output call is:
+   *
+   * {
+   *   "secret/": {
+   *     "accessor": "kv_7fa3b4ad",
+   *     "config": {
+   *       "default_lease_ttl": 0,
+   *       "force_no_cache": false,
+   *       "max_lease_ttl": 0,
+   *       "plugin_name": ""
+   *     },
+   *     "description": "key\/value secret storage",
+   *     "local": false,
+   *     "options": {
+   *       "version": "2"
+   *     },
+   *     "seal_wrap": false,
+   *     "type": "kv"
+   *   }
+   * }
+   *
+   */
+  static int parseSecretEngineVersionFromSysMountsJson(String jsonResponse) {
+    int version = 1;
+
+    JsonParser jsonParser = new JsonParser();
+    JsonElement responseElement = jsonParser.parse(jsonResponse);
+    JsonObject sysMountsObject = responseElement.getAsJsonObject();
+    JsonObject secretObject = sysMountsObject.getAsJsonObject("secret/");
+    if (secretObject != null) {
+      JsonObject optionsObject = secretObject.getAsJsonObject("options");
+      if (optionsObject != null) {
+        JsonPrimitive versionObject = optionsObject.getAsJsonPrimitive("version");
+        if (versionObject != null) {
+          version = versionObject.getAsInt();
+        }
+      }
+    }
+    return version;
   }
 }

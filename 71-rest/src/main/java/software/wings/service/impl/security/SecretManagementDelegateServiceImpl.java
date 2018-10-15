@@ -24,20 +24,16 @@ import com.amazonaws.services.kms.model.GenerateDataKeyResult;
 import com.amazonaws.services.kms.model.KMSInternalException;
 import com.amazonaws.services.kms.model.KeyUnavailableException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
-import io.harness.network.Http;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import retrofit2.Call;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
-import software.wings.helpers.ext.vault.VaultRestClient;
+import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
@@ -50,7 +46,6 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
-import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -192,16 +187,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       try {
         if (savedEncryptedData != null && isNotBlank(value)) {
           logger.info("deleting vault secret {} for {}", savedEncryptedData.getEncryptionKey(), savedEncryptedData);
-          getVaultRestClient(vaultConfig)
-              .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey())
-              .execute();
+          VaultRestClientFactory.create(vaultConfig)
+              .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey());
         }
-        Call<Void> request = getVaultRestClient(vaultConfig)
-                                 .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, settingType,
-                                     VaultSecretValue.builder().value(value).build());
+        boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
+                                   .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, settingType, value);
 
-        Response<Void> response = request.execute();
-        if (response.isSuccessful()) {
+        if (isSuccessful) {
           logger.info("saving vault secret {} for {}", keyUrl, savedEncryptedData);
           return EncryptedData.builder()
               .encryptionKey(keyUrl)
@@ -213,7 +205,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
               .kmsId(vaultConfig.getUuid())
               .build();
         } else {
-          String errorMsg = "Request not successful. Reason: {" + response + "}";
+          String errorMsg = "Request not successful.";
           logger.error(errorMsg);
           throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
         }
@@ -239,16 +231,13 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
-        Call<VaultReadResponse> request =
-            getVaultRestClient(vaultConfig)
-                .readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
+        String value = VaultRestClientFactory.create(vaultConfig)
+                           .readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
 
-        Response<VaultReadResponse> response = request.execute();
-
-        if (response.isSuccessful()) {
-          return response.body().getData().getValue().toCharArray();
+        if (EmptyPredicate.isNotEmpty(value)) {
+          return value.toCharArray();
         } else {
-          String errorMsg = "Request not successful. Reason: {" + response + "}";
+          String errorMsg = "Request not successful.";
           logger.error(errorMsg);
           throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
         }
@@ -270,10 +259,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   public boolean deleteVaultSecret(String path, VaultConfig vaultConfig) {
     boolean success = false;
     try {
-      success = getVaultRestClient(vaultConfig)
-                    .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path)
-                    .execute()
-                    .isSuccessful();
+      success =
+          VaultRestClientFactory.create(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
           .addParam("reason", "Deletion of secret failed");
@@ -286,15 +273,14 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         logger.info("renewing token for vault {}", vaultConfig);
-        Call<Object> renewTokenCall = getVaultRestClient(vaultConfig).renewToken(vaultConfig.getAuthToken());
-
-        Response<Object> response = renewTokenCall.execute();
-        if (response.isSuccessful()) {
+        boolean isSuccessful = VaultRestClientFactory.create(vaultConfig).renewToken(vaultConfig.getAuthToken());
+        if (isSuccessful) {
           return true;
+        } else {
+          String errorMsg = "Request not successful.";
+          logger.error(errorMsg);
+          throw new IOException(errorMsg);
         }
-        String errorMsg = "Request not successful. Reason: {" + response + "}";
-        logger.error(errorMsg);
-        throw new IOException(errorMsg);
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
           logger.warn(format("renewal failed. trial num: %d", retry), e);
@@ -332,16 +318,5 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     byte[] byteArray = new byte[b.remaining()];
     b.get(byteArray);
     return byteArray;
-  }
-
-  public static VaultRestClient getVaultRestClient(final VaultConfig vaultConfig) {
-    final Retrofit retrofit = new Retrofit.Builder()
-                                  .baseUrl(vaultConfig.getVaultUrl())
-                                  .addConverterFactory(JacksonConverterFactory.create())
-                                  .client(Http.getOkHttpClientWithNoProxyValueSet(vaultConfig.getVaultUrl())
-                                              .readTimeout(10, TimeUnit.SECONDS)
-                                              .build())
-                                  .build();
-    return retrofit.create(VaultRestClient.class);
   }
 }

@@ -1,7 +1,6 @@
 package software.wings.delegatetasks.validation;
 
 import static java.util.Collections.singletonList;
-import static software.wings.service.impl.security.SecretManagementDelegateServiceImpl.getVaultRestClient;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 
 import com.google.common.base.Preconditions;
@@ -14,14 +13,12 @@ import com.amazonaws.services.kms.AWSKMSClientBuilder;
 import com.amazonaws.services.kms.model.GenerateDataKeyRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import retrofit2.Call;
-import retrofit2.Response;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.VaultConfig;
+import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.security.EncryptionType;
 import software.wings.security.encryption.EncryptedDataDetail;
-import software.wings.service.impl.security.VaultSecretValue;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Misc;
@@ -72,17 +69,11 @@ public abstract class AbstractSecretManagerValidation extends AbstractDelegateVa
     }
     if (encryptionConfig instanceof VaultConfig) {
       VaultConfig vaultConfig = (VaultConfig) encryptionConfig;
-      Call<Void> request = getVaultRestClient(vaultConfig)
-                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()),
-                                   SettingVariableTypes.VAULT + "/" + VAULT_VAILDATION_URL, SettingVariableTypes.VAULT,
-                                   VaultSecretValue.builder().value(VAULT_VAILDATION_URL).build());
-
       try {
-        Response<Void> response = request.execute();
-        return DelegateConnectionResult.builder()
-            .criteria(vaultConfig.getVaultUrl())
-            .validated(response.isSuccessful())
-            .build();
+        boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
+                                   .writeSecret(String.valueOf(vaultConfig.getAuthToken()), VAULT_VAILDATION_URL,
+                                       SettingVariableTypes.VAULT, VAULT_VAILDATION_URL);
+        return DelegateConnectionResult.builder().criteria(vaultConfig.getVaultUrl()).validated(isSuccessful).build();
       } catch (IOException e) {
         logger.info("Can not reach to vault at {}, reason: {} ", vaultConfig.getVaultUrl(), Misc.getMessage(e), e);
         return DelegateConnectionResult.builder().criteria(vaultConfig.getVaultUrl()).validated(false).build();

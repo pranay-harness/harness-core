@@ -30,13 +30,12 @@ import software.wings.beans.VaultConfig;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.NewRelicValidation;
 import software.wings.helpers.ext.vault.VaultRestClient;
+import software.wings.helpers.ext.vault.VaultRestClientFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
-import software.wings.service.impl.security.VaultSecretValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
-import java.io.IOException;
 import java.net.SocketException;
 import java.util.List;
 
@@ -44,29 +43,30 @@ import java.util.List;
  * Created by rsingh on 7/6/18.
  */
 @RunWith(PowerMockRunner.class)
+@PrepareForTest({SecretManagementDelegateServiceImpl.class, Http.class, VaultRestClientFactory.class})
 public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
   @Mock private VaultRestClient vaultRestClient;
   private String newRelicUrl = "https://api.newrelic.com";
 
+  private VaultConfig vaultConfig;
+
   @Before
-  public void setup() throws IOException {
+  public void setup() {
     initMocks(this);
+    PowerMockito.mockStatic(Http.class);
+    PowerMockito.mockStatic(VaultRestClientFactory.class);
+    PowerMockito.mockStatic(SecretManagementDelegateServiceImpl.class);
+
+    vaultConfig =
+        VaultConfig.builder().vaultUrl(generateUuid()).accountId(generateUuid()).authToken(generateUuid()).build();
+    PowerMockito.when(VaultRestClientFactory.create(vaultConfig)).thenReturn(vaultRestClient);
   }
 
-  @PrepareForTest({SecretManagementDelegateServiceImpl.class, Http.class})
   @Test
   public void validationVaultReachable() throws Exception {
-    PowerMockito.mockStatic(Http.class);
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
-    Call<Void> restCall = Mockito.mock(Call.class);
-    VaultConfig vaultConfig =
-        VaultConfig.builder().vaultUrl(generateUuid()).accountId(generateUuid()).authToken(generateUuid()).build();
-    when(restCall.execute()).thenReturn(Response.success(null));
-    when(vaultRestClient.writeSecret(
-             anyString(), anyString(), any(SettingVariableTypes.class), any(VaultSecretValue.class)))
-        .thenReturn(restCall);
-    PowerMockito.mockStatic(SecretManagementDelegateServiceImpl.class);
-    PowerMockito.when(SecretManagementDelegateServiceImpl.getVaultRestClient(vaultConfig)).thenReturn(vaultRestClient);
+    when(vaultRestClient.writeSecret(anyString(), anyString(), any(SettingVariableTypes.class), any(String.class)))
+        .thenReturn(true);
 
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
         DelegateTask.Builder.aDelegateTask()
@@ -88,20 +88,11 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
     assertTrue(delegateConnectionResult.isValidated());
   }
 
-  @PrepareForTest({SecretManagementDelegateServiceImpl.class, Http.class})
   @Test
   public void validationVaultUnReachable() throws Exception {
-    PowerMockito.mockStatic(Http.class);
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
     Call<Void> restCall = Mockito.mock(Call.class);
-    VaultConfig vaultConfig =
-        VaultConfig.builder().vaultUrl(generateUuid()).accountId(generateUuid()).authToken(generateUuid()).build();
     doThrow(new SocketException("can't reach to vault")).when(restCall).execute();
-    when(vaultRestClient.writeSecret(
-             anyString(), anyString(), any(SettingVariableTypes.class), any(VaultSecretValue.class)))
-        .thenReturn(restCall);
-    PowerMockito.mockStatic(SecretManagementDelegateServiceImpl.class);
-    PowerMockito.when(SecretManagementDelegateServiceImpl.getVaultRestClient(vaultConfig)).thenReturn(vaultRestClient);
 
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
         DelegateTask.Builder.aDelegateTask()
@@ -123,20 +114,11 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
     assertFalse(delegateConnectionResult.isValidated());
   }
 
-  @PrepareForTest({SecretManagementDelegateServiceImpl.class, Http.class})
   @Test
   public void validationNewRelicUnReachable() throws Exception {
-    PowerMockito.mockStatic(Http.class);
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(false);
     Call<Void> restCall = Mockito.mock(Call.class);
-    VaultConfig vaultConfig =
-        VaultConfig.builder().vaultUrl(generateUuid()).accountId(generateUuid()).authToken(generateUuid()).build();
     when(restCall.execute()).thenReturn(Response.success(null));
-    when(vaultRestClient.writeSecret(
-             anyString(), anyString(), any(SettingVariableTypes.class), any(VaultSecretValue.class)))
-        .thenReturn(restCall);
-    PowerMockito.mockStatic(SecretManagementDelegateServiceImpl.class);
-    PowerMockito.when(SecretManagementDelegateServiceImpl.getVaultRestClient(vaultConfig)).thenReturn(vaultRestClient);
 
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),
         DelegateTask.Builder.aDelegateTask()

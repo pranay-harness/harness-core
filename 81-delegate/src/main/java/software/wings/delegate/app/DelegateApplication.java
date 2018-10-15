@@ -82,14 +82,6 @@ public class DelegateApplication {
     if (args.length > 1 && StringUtils.equals(args[1], "watched")) {
       watcherProcess = args[2];
     }
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-      MessageService messageService =
-          Guice.createInjector(new DelegateModule().cumulativeDependencies()).getInstance(MessageService.class);
-      messageService.closeChannel(DELEGATE, processId);
-      messageService.closeData(DELEGATE_DASH + processId);
-      logger.info("Log manager shutdown hook executing.");
-      LogManager.shutdown();
-    }));
     logger.info("Starting Delegate");
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DelegateApplication delegateApplication = new DelegateApplication();
@@ -114,10 +106,13 @@ public class DelegateApplication {
     modules.add(new VerificationServiceClientModule(configuration.getVerificationServiceUrl()));
 
     Injector injector = Guice.createInjector(modules);
+    final MessageService messageService = injector.getInstance(MessageService.class);
+
+    // Add JVM shutdown hook so as to have a clean shutdown
+    addShutdownHook(injector, messageService);
 
     boolean watched = watcherProcess != null;
     if (watched) {
-      MessageService messageService = injector.getInstance(MessageService.class);
       logger.info("Sending watcher {} new delegate process ID: {}", watcherProcess, processId);
       messageService.writeMessageToChannel(WATCHER, watcherProcess, NEW_DELEGATE, processId);
       Map<String, Object> watcherData = new HashMap<>();
@@ -128,18 +123,32 @@ public class DelegateApplication {
     DelegateService delegateService = injector.getInstance(DelegateService.class);
     delegateService.run(watched);
 
-    // This should run in case of upgrade flow otherwise never called
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("heartbeatExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("localHeartbeatExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("inputExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("verificationExecutor"))).shutdownNow();
-    injector.getInstance(Key.get(ExecutorService.class, Names.named("verificationDataCollector"))).shutdownNow();
-    injector.getInstance(ExecutorService.class).shutdown();
-    injector.getInstance(AsyncHttpClient.class).close();
-    logger.info("Flushing logs");
-    LogManager.shutdown();
     System.exit(0);
+  }
+
+  private void addShutdownHook(Injector injector, MessageService messageService) {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      messageService.closeChannel(DELEGATE, processId);
+      messageService.closeData(DELEGATE_DASH + processId);
+      logger.info("Message service has been closed.");
+
+      // This should run in case of upgrade flow otherwise never called
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("heartbeatExecutor"))).shutdownNow();
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("localHeartbeatExecutor")))
+          .shutdownNow();
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("upgradeExecutor"))).shutdownNow();
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("inputExecutor"))).shutdownNow();
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor"))).shutdownNow();
+      injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("verificationExecutor"))).shutdownNow();
+      injector.getInstance(Key.get(ExecutorService.class, Names.named("verificationDataCollector"))).shutdownNow();
+      injector.getInstance(ExecutorService.class).shutdown();
+      logger.info("Executor services have been shut down.");
+
+      injector.getInstance(AsyncHttpClient.class).close();
+      logger.info("Async HTTP client has been closed.");
+
+      LogManager.shutdown();
+      logger.info("Log manager has been shutdown and logs have been flushed.");
+    }));
   }
 }

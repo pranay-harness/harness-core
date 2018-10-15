@@ -3243,7 +3243,7 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(3, query.count());
   }
 
-  public static KmsConfig getKmsConfig() {
+  public KmsConfig getKmsConfig() {
     final KmsConfig kmsConfig = new KmsConfig();
     kmsConfig.setName("myKms");
     kmsConfig.setKmsArn(accessKey);
