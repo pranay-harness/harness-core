@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -136,7 +135,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Before
-  public void setup() throws IOException {
+  public void setup() {
     //    assumeTrue(getClass().getClassLoader().getResource("vault_token.txt") != null);
     initMocks(this);
     appId = UUID.randomUUID().toString();
@@ -189,8 +188,8 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void invalidConfig() throws IOException {
-    VaultConfig vaultConfig = getVaultConfig();
+  public void invalidConfig() {
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setAuthToken("invalidKey");
     vaultConfig.setAccountId(accountId);
 
@@ -203,12 +202,12 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void saveConfig() throws IOException {
+  public void saveConfig() {
     if (isKmsEnabled) {
       kmsService.deleteKmsConfig(accountId, kmsId);
     }
 
-    VaultConfig vaultConfig = getVaultConfig();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setDefault(false);
     String vaultConfigId = vaultService.saveVaultConfig(accountId, vaultConfig);
 
@@ -248,7 +247,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(1, numOfKmsDefaults);
     assertEquals(1, numOfVaultDefaults);
 
-    vaultConfig = getVaultConfig();
+    vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setDefault(true);
     vaultConfigId = vaultService.saveVaultConfig(accountId, vaultConfig);
 
@@ -309,21 +308,18 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void saveAndEditConfig() throws IOException {
+  public void saveAndEditConfig() {
     String renameAccountId = UUID.randomUUID().toString();
     String name = UUID.randomUUID().toString();
-    VaultConfig vaultConfig = getVaultConfig();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setName(name);
     vaultConfig.setAccountId(renameAccountId);
 
     vaultService.saveVaultConfig(renameAccountId, vaultConfig);
+    vaultConfig.setAuthToken(VAULT_TOKEN);
 
     VaultConfig savedConfig = vaultService.getSecretConfig(renameAccountId);
-    vaultConfig = getVaultConfig();
-    vaultConfig.setName(name);
-    vaultConfig.setAccountId(renameAccountId);
     assertEquals(vaultConfig, savedConfig);
-    assertEquals(name, savedConfig.getName());
     List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class)
                                                 .filter("type", SettingVariableTypes.VAULT)
                                                 .filter("accountId", renameAccountId)
@@ -349,7 +345,7 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void saveConfigDefaultWithDefaultKms() throws IOException {
+  public void saveConfigDefaultWithDefaultKms() {
     if (isKmsEnabled) {
       wingsPersistence.delete(KmsConfig.class, kmsId);
     }
@@ -364,7 +360,7 @@ public class VaultTest extends WingsBaseTest {
     assertTrue(savedKmsConfig.isDefault());
     assertEquals(Base.GLOBAL_ACCOUNT_ID, savedKmsConfig.getAccountId());
 
-    VaultConfig vaultConfig = getVaultConfig();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     encryptionConfigs = secretManager.listEncryptionConfig(accountId);
@@ -380,8 +376,8 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void saveConfigDefault() throws IOException {
-    VaultConfig vaultConfig = getVaultConfig();
+  public void saveConfigDefault() {
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
@@ -389,7 +385,7 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig next = vaultConfigs.iterator().next();
     assertTrue(next.isDefault());
 
-    vaultConfig = getVaultConfig();
+    vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setName("config1");
     vaultConfig.setDefault(true);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -401,7 +397,7 @@ public class VaultTest extends WingsBaseTest {
     int numOfNonDefault = 0;
 
     for (VaultConfig config : vaultConfigs) {
-      if (config.getName().equals(getVaultConfig().getName())) {
+      if (config.getName().equals(getVaultConfig(VAULT_TOKEN).getName())) {
         assertFalse(config.isDefault());
         numOfNonDefault++;
       }
@@ -415,7 +411,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(1, numOfDefault);
     assertEquals(1, numOfNonDefault);
 
-    vaultConfig = getVaultConfig();
+    vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setName("config2");
     vaultConfig.setDefault(true);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -424,7 +420,7 @@ public class VaultTest extends WingsBaseTest {
     assertEquals(3, vaultConfigs.size());
 
     for (VaultConfig config : vaultConfigs) {
-      if (config.getName().equals(getVaultConfig().getName()) || config.getName().equals("config1")) {
+      if (config.getName().equals(getVaultConfig(VAULT_TOKEN).getName()) || config.getName().equals("config1")) {
         assertFalse(config.isDefault());
         numOfNonDefault++;
       }
@@ -437,8 +433,8 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void getConfigDefault() throws IOException {
-    VaultConfig vaultConfig = getVaultConfig();
+  public void getConfigDefault() {
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     Collection<VaultConfig> vaultConfigs = vaultService.listVaultConfigs(accountId, true);
@@ -446,12 +442,12 @@ public class VaultTest extends WingsBaseTest {
     VaultConfig next = vaultConfigs.iterator().next();
     assertTrue(next.isDefault());
 
-    vaultConfig = getVaultConfig();
+    vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setName("config1");
     vaultConfig.setDefault(true);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
-    vaultConfig = getVaultConfig();
+    vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultConfig.setName("config2");
     vaultConfig.setDefault(false);
     vaultService.saveVaultConfig(accountId, vaultConfig);
@@ -471,7 +467,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   public void vaultNullEncryption() throws Exception {
-    VaultConfig vaultConfig = getVaultConfig();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
     final String keyToEncrypt = null;
     final String name = "password";
@@ -520,7 +516,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   public void vaultEncryptionWhileSaving() throws IOException, IllegalAccessException {
-    VaultConfig vaultConfig = getVaultConfig();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
     String password = UUID.randomUUID().toString();
 
@@ -575,8 +571,8 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void vaultEncryptionSaveMultiple() throws IOException {
-    VaultConfig vaultConfig = getVaultConfig();
+  public void vaultEncryptionSaveMultiple() {
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     int numOfSettingAttributes = 5;
@@ -628,7 +624,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   public void vaultEncryptionUpdateObject() throws IOException, IllegalAccessException {
-    VaultConfig vaultConfig = getVaultConfig();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
@@ -718,7 +714,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   public void vaultEncryptionUpdateFieldSettingAttribute() throws IOException, IllegalAccessException {
-    VaultConfig vaultConfig = getVaultConfig();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
@@ -869,7 +865,7 @@ public class VaultTest extends WingsBaseTest {
   @Test
   @RealMongo
   public void vaultEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
-    VaultConfig vaultConfig = getVaultConfig();
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     String secretName = UUID.randomUUID().toString();
@@ -929,8 +925,8 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void vaultEncryptionSaveServiceVariableTemplate() throws IOException {
-    VaultConfig vaultConfig = getVaultConfig();
+  public void vaultEncryptionSaveServiceVariableTemplate() {
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     String secretName = UUID.randomUUID().toString();
@@ -965,8 +961,8 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void vaultEncryptionDeleteSettingAttribute() throws IOException {
-    VaultConfig vaultConfig = getVaultConfig();
+  public void vaultEncryptionDeleteSettingAttribute() {
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     int numOfSettingAttributes = 5;
@@ -1004,8 +1000,8 @@ public class VaultTest extends WingsBaseTest {
   }
 
   @Test
-  public void vaultEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
-    VaultConfig vaultConfig = getVaultConfig();
+  public void vaultEncryptionDeleteSettingAttributeQueryUuid() {
+    VaultConfig vaultConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, vaultConfig);
 
     int numOfSettingAttributes = 5;
@@ -1059,7 +1055,7 @@ public class VaultTest extends WingsBaseTest {
   public void transitionVault() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     try {
-      VaultConfig fromConfig = getVaultConfig();
+      VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
       vaultService.saveVaultConfig(accountId, fromConfig);
 
       int numOfSettingAttributes = 5;
@@ -1102,7 +1098,7 @@ public class VaultTest extends WingsBaseTest {
 
       assertEquals(numOfSettingAttributes, encryptedData.size());
 
-      VaultConfig toConfig = getVaultConfig();
+      VaultConfig toConfig = getVaultConfig(VAULT_TOKEN);
       vaultService.saveVaultConfig(accountId, toConfig);
 
       secretManager.transitionSecrets(
@@ -1138,7 +1134,7 @@ public class VaultTest extends WingsBaseTest {
   public void transitionAndDeleteVault() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     try {
-      VaultConfig fromConfig = getVaultConfig();
+      VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
       vaultService.saveVaultConfig(accountId, fromConfig);
 
       int numOfSettingAttributes = 5;
@@ -1181,7 +1177,7 @@ public class VaultTest extends WingsBaseTest {
 
       assertEquals(numOfSettingAttributes, encryptedData.size());
 
-      VaultConfig toConfig = getVaultConfig();
+      VaultConfig toConfig = getVaultConfig(VAULT_TOKEN);
       vaultService.saveVaultConfig(accountId, toConfig);
 
       assertEquals(2, wingsPersistence.createQuery(VaultConfig.class).count());
@@ -1251,7 +1247,7 @@ public class VaultTest extends WingsBaseTest {
         assertEquals(EncryptionType.KMS, data.getEncryptionType());
       }
 
-      VaultConfig toConfig = getVaultConfig();
+      VaultConfig toConfig = getVaultConfig(VAULT_TOKEN);
       vaultService.saveVaultConfig(accountId, toConfig);
 
       secretManager.transitionSecrets(
@@ -1296,7 +1292,7 @@ public class VaultTest extends WingsBaseTest {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
-    VaultConfig fromConfig = getVaultConfig();
+    VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, fromConfig);
 
     String secretName = UUID.randomUUID().toString();
@@ -1392,7 +1388,7 @@ public class VaultTest extends WingsBaseTest {
 
   @Test
   public void reuseYamlPasswordVaultEncryption() throws IOException, IllegalAccessException {
-    VaultConfig fromConfig = getVaultConfig();
+    VaultConfig fromConfig = getVaultConfig(VAULT_TOKEN);
     vaultService.saveVaultConfig(accountId, fromConfig);
 
     int numOfSettingAttributes = 5;
@@ -1495,25 +1491,6 @@ public class VaultTest extends WingsBaseTest {
       }
       i++;
     }
-  }
-
-  private VaultConfig getVaultConfig() throws IOException {
-    return VaultConfig.builder()
-        .vaultUrl("http://127.0.0.1:8200")
-        .authToken(VAULT_TOKEN)
-        .name("myVault")
-        .isDefault(true)
-        .build();
-  }
-
-  private KmsConfig getKmsConfig() {
-    final KmsConfig kmsConfig = new KmsConfig();
-    kmsConfig.setName("myKms");
-    kmsConfig.setDefault(true);
-    kmsConfig.setKmsArn(generateUuid());
-    kmsConfig.setAccessKey(generateUuid());
-    kmsConfig.setSecretKey(generateUuid());
-    return kmsConfig;
   }
 
   private Thread startTransitionListener() {

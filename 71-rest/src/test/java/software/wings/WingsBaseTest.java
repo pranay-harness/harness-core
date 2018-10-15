@@ -1,5 +1,7 @@
 package software.wings;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+
 import io.harness.CategoryTest;
 import io.harness.MockableTestMixin;
 import io.harness.exception.KmsOperationException;
@@ -15,8 +17,6 @@ import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -87,17 +87,27 @@ public abstract class WingsBaseTest extends CategoryTest implements MockableTest
     return data.getEncryptedValue();
   }
 
-  protected void setStaticTimeOut(Class clazz, String name, long value)
-      throws NoSuchFieldException, IllegalAccessException {
-    Field field = clazz.getDeclaredField(name);
-    field.setAccessible(true); // Suppress Java language access checking
+  protected VaultConfig getVaultConfig() {
+    return getVaultConfig(generateUuid());
+  }
 
-    // Remove "final" modifier
-    Field modifiersField = Field.class.getDeclaredField("modifiers");
-    modifiersField.setAccessible(true);
-    modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+  protected VaultConfig getVaultConfig(String authToken) {
+    return VaultConfig.builder()
+        .vaultUrl("http://127.0.0.1:8200")
+        .authToken(authToken)
+        .name("myVault")
+        .isDefault(true)
+        .secretEngineVersion(1)
+        .build();
+  }
 
-    // Set value
-    field.set(null, value);
+  protected KmsConfig getKmsConfig() {
+    final KmsConfig kmsConfig = new KmsConfig();
+    kmsConfig.setName("myKms");
+    kmsConfig.setDefault(true);
+    kmsConfig.setKmsArn(generateUuid());
+    kmsConfig.setAccessKey(generateUuid());
+    kmsConfig.setSecretKey(generateUuid());
+    return kmsConfig;
   }
 }

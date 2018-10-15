@@ -43,6 +43,13 @@ public class VaultConfig extends Base implements EncryptionConfig {
 
   @Attributes(title = "Renew token interval", required = true) private int renewIntervalHours;
 
+  /**
+   * Vault 0.11 is using secrete engine V2 by default and it mandate a slightly different way of read/write secrets
+   * This field should have value "1" or "2". For backward compatibility, null of value "0" will be converted to value
+   * "1" automatically.
+   */
+  @SchemaIgnore private int secretEngineVersion;
+
   private boolean isDefault = true;
 
   private long renewedAt;

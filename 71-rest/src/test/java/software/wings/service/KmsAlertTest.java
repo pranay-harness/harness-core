@@ -1,7 +1,6 @@
 package software.wings.service;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
@@ -190,24 +189,5 @@ public class KmsAlertTest extends WingsBaseTest {
                       .addFilter("accountId", Operator.EQ, accountId)
                       .build();
     assertEquals(1, alertService.list(pageRequest).size());
-  }
-
-  private VaultConfig getVaultConfig() {
-    return VaultConfig.builder()
-        .vaultUrl("http://127.0.0.1:8200")
-        .authToken(generateUuid())
-        .name("myVault")
-        .isDefault(true)
-        .build();
-  }
-
-  private KmsConfig getKmsConfig() {
-    final KmsConfig kmsConfig = new KmsConfig();
-    kmsConfig.setName("myKms");
-    kmsConfig.setDefault(true);
-    kmsConfig.setKmsArn(generateUuid());
-    kmsConfig.setAccessKey(generateUuid());
-    kmsConfig.setSecretKey(generateUuid());
-    return kmsConfig;
   }
 }
