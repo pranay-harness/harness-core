@@ -60,6 +60,7 @@ public class LearningEngineAnalysisTask extends Base {
   private String analysis_save_url;
   private String metric_template_url;
   private String log_analysis_get_url;
+  private String previous_analysis_url;
   @Default private String group_name = NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
   private TimeSeriesMlAnalysisType time_series_ml_analysis_type;
   private int analysis_start_time;

@@ -5,6 +5,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.ExperimentalMetricAnalysisRecord;
 import software.wings.service.impl.analysis.MetricAnalysisRecord;
+import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLScores;
 import software.wings.service.impl.analysis.TimeSeriesMLTransactionThresholds;
 import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAnalysisGroupInfo;
@@ -96,6 +97,8 @@ public interface TimeSeriesAnalysisService {
 
   List<NewRelicMetricDataRecord> getMetricRecords(StateType stateType, String appId, String serviceId,
       String cvConfigId, int analysisStartMinute, int analysisEndMinute);
+
+  TimeSeriesMLAnalysisRecord getPreviousAnalysis(String appId, String cvConfigId, long dataCollectionMin);
 
   Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
       String appId, StateType stateType, String serviceId, String groupName);

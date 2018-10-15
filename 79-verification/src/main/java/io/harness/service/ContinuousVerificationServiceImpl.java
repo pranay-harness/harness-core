@@ -147,6 +147,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .comparison_unit_window(0)
             .parallel_processes(0)
             .test_input_url(testInputUrl)
+            .previous_analysis_url(getPreviousAnalysisUrl(cvConfiguration))
             .control_input_url("")
             .analysis_save_url(metricAnalysisSaveUrl)
             .metric_template_url(metricTemplateUrl)
@@ -185,5 +186,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         + "/get-metric-data-247?accountId=" + cvConfiguration.getAccountId() + "&appId=" + cvConfiguration.getAppId()
         + "&stateType=" + cvConfiguration.getStateType() + "&cvConfigId=" + cvConfiguration.getUuid() + "&serviceId="
         + cvConfiguration.getServiceId() + "&analysisStartMin=" + startMinute + "&analysisEndMin=" + endMinute;
+  }
+
+  private String getPreviousAnalysisUrl(CVConfiguration cvConfiguration) {
+    long min = timeSeriesAnalysisService.getLastCVAnalysisMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
+    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
+        + "/previous-analysis-247?appId=" + cvConfiguration.getAppId() + "&cvConfigId=" + cvConfiguration.getUuid()
+        + "&dataCollectionMin=" + min;
   }
 }

@@ -42,13 +42,10 @@ public class LogClusterManagerJob implements Job {
 
   @org.simpleframework.xml.Transient @Inject private LearningEngineService learningEngineService;
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     try {
       String params = jobExecutionContext.getMergedJobDataMap().getString("jobParams");
-      long timestamp = jobExecutionContext.getMergedJobDataMap().getLong("timestamp");
-      String delegateTaskId = jobExecutionContext.getMergedJobDataMap().getString("delegateTaskId");
       AnalysisContext context = JsonUtils.asObject(params, AnalysisContext.class);
       new LogClusterTask(analysisService, managerClientHelper, jobExecutionContext, context, learningEngineService)
           .run();
@@ -84,7 +81,6 @@ public class LogClusterManagerJob implements Job {
     @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     private void cluster() {
       boolean completeCron = false;
-      boolean keepProcessing = true;
       try {
         Set<String> nodes = getCollectedNodes();
         // TODO handle pause
