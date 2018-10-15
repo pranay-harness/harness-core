@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
@@ -20,7 +19,6 @@ import software.wings.common.Constants;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.ActivityService;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ThirdPartyApiService;
 
@@ -44,7 +42,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 @Produces("application/json")
 @Scope(APPLICATION)
 public class ActivityResource {
-  private AppService appService;
   private ActivityService activityService;
   private LogService logService;
   private ThirdPartyApiService thirdPartyApiService;
@@ -52,15 +49,12 @@ public class ActivityResource {
   /**
    * Instantiates a new activity resource.
    *
-   * @param appService the activity service
    * @param activityService the activity service
    * @param logService      the log service
    */
-  @SuppressFBWarnings("URF_UNREAD_FIELD")
   @Inject
-  public ActivityResource(AppService appService, ActivityService activityService, LogService logService,
-      ThirdPartyApiService thirdPartyApiService) {
-    this.appService = appService;
+  public ActivityResource(
+      ActivityService activityService, LogService logService, ThirdPartyApiService thirdPartyApiService) {
     this.activityService = activityService;
     this.logService = logService;
     this.thirdPartyApiService = thirdPartyApiService;

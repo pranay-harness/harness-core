@@ -52,6 +52,10 @@ import java.util.Set;
 public class MongoModule extends AbstractModule {
   private static final Logger logger = LoggerFactory.getLogger(MongoModule.class);
 
+  // Java packages which Morphia will map
+  // Indexes will not be created for any class outside these.
+  private static final List<String> JAVA_PACKAGES_TO_SCAN = Arrays.asList("software.wings", "io.harness");
+
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;
@@ -92,7 +96,7 @@ public class MongoModule extends AbstractModule {
       this.secondaryDatastore = primaryDatastore;
     }
 
-    morphia.mapPackage("software.wings");
+    JAVA_PACKAGES_TO_SCAN.forEach(morphia::mapPackage);
     ensureIndex(morphia);
 
     this.primaryDatastore.setQueryFactory(new QueryFactory());
