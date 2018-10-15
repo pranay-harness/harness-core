@@ -66,7 +66,7 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
           SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
           executor.init(expectedSshConfig);
 
-          CommandExecutionStatus commandExecutionStatus = executor.executeCommandString(parameters.getScript());
+          CommandExecutionStatus commandExecutionStatus = executor.executeCommandString(parameters.getScript(), false);
 
           return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
         } catch (Exception e) {
