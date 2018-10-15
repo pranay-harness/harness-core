@@ -214,7 +214,7 @@ public class BuildSourceServiceImpl implements BuildSourceService {
 
   private Service getService(String appId, ArtifactStream artifactStream) {
     Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
-    notNullCheck("Service", service);
+    notNullCheck("Service might have been deleted", service, USER);
     return service;
   }
 

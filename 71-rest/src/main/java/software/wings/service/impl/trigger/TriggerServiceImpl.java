@@ -651,8 +651,8 @@ public class TriggerServiceImpl implements TriggerService {
         WorkflowServiceTemplateHelper.getServiceInfrastructureWorkflowVariables(variables);
     for (String serviceInfraVarName : serviceInfraWorkflowVariables) {
       String serviceInfraIdOrName = triggerWorkflowVariableValues.get(serviceInfraVarName);
-      notNullCheck(
-          "There is no corresponding Workflow Variable associated to Service Infrastructure", serviceInfraIdOrName);
+      notNullCheck("There is no corresponding Workflow Variable associated to Service Infrastructure",
+          serviceInfraIdOrName, USER);
       logger.info("Checking  Service Infrastructure {} can be found by id first.", serviceInfraIdOrName);
       InfrastructureMapping infrastructureMapping =
           infrastructureMappingService.get(trigger.getAppId(), serviceInfraIdOrName);
@@ -663,8 +663,7 @@ public class TriggerServiceImpl implements TriggerService {
         infrastructureMapping =
             infrastructureMappingService.getInfraMappingByName(trigger.getAppId(), envId, serviceInfraIdOrName);
       }
-      notNullCheck(
-          "Service Infrastructure [" + serviceInfraIdOrName + "] does not exist", infrastructureMapping, USER_ADMIN);
+      notNullCheck("Service Infrastructure [" + serviceInfraIdOrName + "] does not exist", infrastructureMapping, USER);
       triggerWorkflowVariableValues.put(serviceInfraVarName, infrastructureMapping.getUuid());
     }
   }
@@ -673,8 +672,8 @@ public class TriggerServiceImpl implements TriggerService {
         trigger.getWorkflowId());
 
     Workflow workflow = workflowService.readWorkflow(trigger.getAppId(), trigger.getWorkflowId());
-    notNullCheck("Workflow was deleted", workflow, USER_ADMIN);
-    notNullCheck("Orchestration Workflow not present", workflow.getOrchestrationWorkflow(), USER_ADMIN);
+    notNullCheck("Workflow was deleted", workflow, USER);
+    notNullCheck("Orchestration Workflow not present", workflow.getOrchestrationWorkflow(), USER);
     Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(trigger, executionArgs);
 
     String envId = null;
@@ -731,7 +730,7 @@ public class TriggerServiceImpl implements TriggerService {
     logger.info("Received the trigger execution for appId {} and infraMappingId {}", appId, infraMappingId);
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
     if (infrastructureMapping == null) {
-      throw new InvalidRequestException("Infrastructure Mapping" + infraMappingId + " does not exist", USER_ADMIN);
+      throw new InvalidRequestException("Infrastructure Mapping" + infraMappingId + " does not exist", USER);
     }
 
     List<ServiceInfraWorkflow> serviceInfraWorkflows =
@@ -1012,7 +1011,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private ArtifactStream validateArtifactStream(String appId, String artifactStreamId) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-    notNullCheck("Artifact Source does not exist", artifactStream, USER_ADMIN);
+    notNullCheck("Artifact Source does not exist", artifactStream, USER);
     return artifactStream;
   }
 
@@ -1061,7 +1060,7 @@ public class TriggerServiceImpl implements TriggerService {
         logger.warn("Error occurred while retrieving Pipeline {} ", trigger.getWorkflowId());
       }
       if (pipeline == null) {
-        throw new WingsException("Pipeline " + trigger.getWorkflowName() + " does not exist.", USER_ADMIN);
+        throw new WingsException("Pipeline " + trigger.getWorkflowName() + " does not exist.", USER);
       }
       services = pipeline.getServices().stream().collect(Collectors.toMap(Base::getUuid, Service::getName));
     }
@@ -1080,7 +1079,7 @@ public class TriggerServiceImpl implements TriggerService {
       logger.warn("Error occurred while retrieving Pipeline {} ", trigger.getWorkflowId());
     }
     if (workflow == null) {
-      throw new WingsException("Workflow " + trigger.getWorkflowName() + " does not exist.", USER_ADMIN);
+      throw new WingsException("Workflow " + trigger.getWorkflowName() + " does not exist.", USER);
     }
     if (!BUILD.equals(workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType())) {
       if (workflow.getOrchestrationWorkflow().isServiceTemplatized()) {

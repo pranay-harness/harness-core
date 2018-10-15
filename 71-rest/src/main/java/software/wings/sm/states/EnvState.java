@@ -130,7 +130,7 @@ public class EnvState extends State {
     if (disable) {
       return anExecutionResponse()
           .withExecutionStatus(SKIPPED)
-          .withErrorMessage("Workflow [" + workflow.getName() + "] step is disabled. Execution is skipped.")
+          .withErrorMessage("Workflow [" + workflow.getName() + "] step is disabled. Execution has been skipped.")
           .withStateExecutionData(envStateExecutionData)
           .build();
     }

@@ -662,24 +662,24 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   private void validateAzureInfraMapping(AzureInfrastructureMapping infraMapping) {
     if (isEmpty(infraMapping.getComputeProviderType()) || !infraMapping.getComputeProviderType().equals(AZURE.name())) {
-      throw new WingsException(INVALID_ARGUMENT)
+      throw new WingsException(INVALID_ARGUMENT, USER)
           .addParam("args", "Compute Provider type is empty or not correct for Azure Infra mapping.");
     }
 
     if (isEmpty(infraMapping.getSubscriptionId())) {
-      throw new WingsException(INVALID_ARGUMENT)
+      throw new WingsException(INVALID_ARGUMENT, USER)
           .addParam("args", "Subscription Id must not be empty for Azure Infra mapping.");
     }
 
     if (isEmpty(infraMapping.getDeploymentType())
         || (!infraMapping.getDeploymentType().equals(SSH.name())
                && !infraMapping.getDeploymentType().equals(WINRM.name()))) {
-      throw new WingsException(INVALID_ARGUMENT)
+      throw new WingsException(INVALID_ARGUMENT, USER)
           .addParam("args", "Deployment type must not be empty and must be one of SSH/WINRM for Azure Infra mapping.");
     }
 
     if (isEmpty(infraMapping.getInfraMappingType())) {
-      throw new WingsException(INVALID_ARGUMENT)
+      throw new WingsException(INVALID_ARGUMENT, USER)
           .addParam("args", "Infra mapping type must not be empty for Azure Infra mapping.");
     }
   }
@@ -1631,7 +1631,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
             + EcsConvention.DELIMITER + "0";
       }
     }
-    notNullCheck("SettingAttribute", settingAttribute);
+    notNullCheck("SettingAttribute might have been deleted", settingAttribute, USER);
 
     List<EncryptedDataDetail> encryptionDetails =
         secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
