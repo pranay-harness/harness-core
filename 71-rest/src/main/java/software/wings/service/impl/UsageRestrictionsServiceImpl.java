@@ -415,11 +415,20 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
           return;
         }
 
-        Filter entityFilter;
+        GenericEntityFilter appFilter = appPermission.getAppFilter();
         if (permissionType == PermissionType.ALL_APP_ENTITIES) {
-          entityFilter = EnvFilter.builder().filterTypes(Sets.newHashSet(FilterType.PROD, FilterType.NON_PROD)).build();
+          EnvFilter prodEntityFilter = EnvFilter.builder().filterTypes(Sets.newHashSet(FilterType.PROD)).build();
+          AppEnvRestriction prodAppEnvRestriction =
+              AppEnvRestriction.builder().appFilter(appFilter).envFilter(prodEntityFilter).build();
+          appEnvRestrictions.add(prodAppEnvRestriction);
+
+          EnvFilter nonProdEntityFilter = EnvFilter.builder().filterTypes(Sets.newHashSet(FilterType.NON_PROD)).build();
+          AppEnvRestriction nonProdAppEnvRestriction =
+              AppEnvRestriction.builder().appFilter(appFilter).envFilter(nonProdEntityFilter).build();
+          appEnvRestrictions.add(nonProdAppEnvRestriction);
+
         } else {
-          entityFilter = appPermission.getEntityFilter();
+          Filter entityFilter = appPermission.getEntityFilter();
           if (!(entityFilter instanceof EnvFilter)) {
             return;
           }
@@ -427,13 +436,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
           if (entityFilter instanceof WorkflowFilter) {
             entityFilter = getEnvFilterFromWorkflowFilter((WorkflowFilter) entityFilter);
           }
+
+          AppEnvRestriction appEnvRestriction =
+              AppEnvRestriction.builder().appFilter(appFilter).envFilter((EnvFilter) entityFilter).build();
+          appEnvRestrictions.add(appEnvRestriction);
         }
-
-        GenericEntityFilter appFilter = appPermission.getAppFilter();
-
-        AppEnvRestriction appEnvRestriction =
-            AppEnvRestriction.builder().appFilter(appFilter).envFilter((EnvFilter) entityFilter).build();
-        appEnvRestrictions.add(appEnvRestriction);
       });
     });
 
