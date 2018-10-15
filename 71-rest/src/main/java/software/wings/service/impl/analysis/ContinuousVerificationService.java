@@ -20,7 +20,7 @@ public interface ContinuousVerificationService {
   getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs, User user) throws ParseException;
 
   List<CVDeploymentData> getCVDeploymentData(
-      String accountId, long beginEpochTs, long endEpochTs, User user, String serviceId);
+      String accountId, long startTime, long endTime, User user, String serviceId);
 
   void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status);
   PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(String accountId, long beginEpochTs,
