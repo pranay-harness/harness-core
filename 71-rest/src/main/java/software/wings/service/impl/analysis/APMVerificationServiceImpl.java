@@ -43,6 +43,7 @@ import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -148,7 +149,7 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .applicationId(config.getAppId())
             .serviceId(config.getServiceId())
             .cvConfigId(config.getUuid())
-            .stateExecutionId(CV_24x7_STATE_EXECUTION + config.getAppId() + ":" + config.getServiceId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId())
             .startTime(startTime)
             .collectionTime(timeDuration)
             .appId(Long.parseLong(config.getAppDynamicsApplicationId()))
@@ -166,11 +167,13 @@ public class APMVerificationServiceImpl implements APMVerificationService {
       NewRelicCVServiceConfiguration config, String waitId, long startTime, long endTime) {
     final NewRelicConfig newRelicConfig = (NewRelicConfig) settingsService.get(config.getConnectorId()).getValue();
     int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    Map<String, String> hostsMap = new HashMap<>();
+    hostsMap.put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME);
     final NewRelicDataCollectionInfo dataCollectionInfo =
         NewRelicDataCollectionInfo.builder()
             .newRelicConfig(newRelicConfig)
             .applicationId(config.getAppId())
-            .stateExecutionId(CV_24x7_STATE_EXECUTION + config.getAppId() + ":" + config.getServiceId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId())
             .serviceId(config.getServiceId())
             .startTime(startTime)
             .cvConfigId(config.getUuid())
@@ -178,9 +181,7 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .newRelicAppId(Long.parseLong(config.getApplicationId()))
             .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
             .dataCollectionMinute(0)
-            .hosts(new HashMap<String, String>() {
-              { put("DUMMY_24_7_HOST", DEFAULT_GROUP_NAME); }
-            })
+            .hosts(hostsMap)
             .encryptedDataDetails(secretManager.getEncryptionDetails(newRelicConfig, config.getAppId(), null))
             .settingAttributeId(config.getConnectorId())
             .build();
