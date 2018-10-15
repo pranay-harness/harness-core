@@ -16,6 +16,7 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.EnvFilter.FilterType.SELECTED;
+import static software.wings.security.PermissionAttribute.PermissionType.ALL_APP_ENTITIES;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -136,8 +137,12 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
   }
 
   private void setUserGroupMocks(AppPermission appPermission, List<String> appIds) {
+    setUserGroupMocks(asList(appPermission), appIds);
+  }
+
+  private void setUserGroupMocks(List<AppPermission> appPermissions, List<String> appIds) {
     List<UserGroup> userGroups =
-        asList(UserGroup.builder().accountId(ACCOUNT_ID).appPermissions(newHashSet(asList(appPermission))).build());
+        asList(UserGroup.builder().accountId(ACCOUNT_ID).appPermissions(newHashSet(appPermissions)).build());
     pageResponse = aPageResponse().withResponse(userGroups).build();
     when(userGroupService.getUserGroupsByAccountId(anyString(), any(User.class))).thenReturn(userGroups);
     when(userGroupService.list(anyString(), any(PageRequest.class), anyBoolean())).thenReturn(pageResponse);
@@ -180,6 +185,57 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       defaultUsageRestrictions = usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, APP_ID_1, ENV_ID);
       assertEquals(expected, defaultUsageRestrictions);
 
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
+  public void shouldGetDefaultRestrictionsWithMultipleUserGroups() {
+    try {
+      List<String> appIds = asList(APP_ID_1);
+      List<String> envIds = asList(ENV_ID_1);
+
+      AppPermission allAppPermissions = AppPermission.builder()
+                                            .permissionType(ALL_APP_ENTITIES)
+                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .actions(newHashSet(allActions))
+                                            .build();
+      AppPermission prodAppPermission = AppPermission.builder()
+                                            .permissionType(ENV)
+                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .actions(newHashSet(allActions))
+                                            .entityFilter(EnvFilter.builder().filterTypes(newHashSet(PROD)).build())
+                                            .build();
+      AppPermission nonProdAppPermission =
+          AppPermission.builder()
+              .permissionType(ENV)
+              .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+              .actions(newHashSet(allActions))
+              .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
+              .build();
+      setUserGroupMocks(asList(allAppPermissions, prodAppPermission, nonProdAppPermission), appIds);
+      Set<Action> actions = allActions;
+
+      setPermissions(appIds, envIds, actions, false);
+
+      GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      HashSet<String> prodEnvFilters = newHashSet(PROD);
+      EnvFilter prodEnvFilter = EnvFilter.builder().filterTypes(prodEnvFilters).build();
+      AppEnvRestriction prodAppEnvRestriction =
+          AppEnvRestriction.builder().appFilter(appFilter).envFilter(prodEnvFilter).build();
+
+      HashSet<String> nonprodEnvFilters = newHashSet(NON_PROD);
+      EnvFilter nonprodEnvFilter = EnvFilter.builder().filterTypes(nonprodEnvFilters).build();
+      AppEnvRestriction nonprodAppEnvRestriction =
+          AppEnvRestriction.builder().appFilter(appFilter).envFilter(nonprodEnvFilter).build();
+
+      UsageRestrictions expected = UsageRestrictions.builder()
+                                       .appEnvRestrictions(newHashSet(prodAppEnvRestriction, nonprodAppEnvRestriction))
+                                       .build();
+      UsageRestrictions defaultUsageRestrictions =
+          usageRestrictionsService.getDefaultUsageRestrictions(ACCOUNT_ID, null, null);
+      assertEquals(expected, defaultUsageRestrictions);
     } finally {
       UserThreadLocal.unset();
     }
