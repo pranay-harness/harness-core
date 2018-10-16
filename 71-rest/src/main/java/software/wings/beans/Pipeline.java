@@ -36,6 +36,9 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Pipeline extends Base {
+  public static final String NAME_KEY = "name";
+  public static final String DESCRIPTION_KEY = "description";
+
   @NotNull @EntityName private String name;
   private String description;
   @NotNull private List<PipelineStage> pipelineStages = new ArrayList<>();

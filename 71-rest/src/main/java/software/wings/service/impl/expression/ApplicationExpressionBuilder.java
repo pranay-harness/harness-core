@@ -13,6 +13,7 @@ public class ApplicationExpressionBuilder extends ExpressionBuilder {
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
     expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION));
+    expressions.addAll(asList(PIPELINE_NAME, PIPELINE_DESCRIPTION));
     return expressions;
   }
 

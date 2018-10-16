@@ -79,12 +79,17 @@ public abstract class ExpressionBuilder {
   protected static final String SERVICE_DESCRIPTION = "service.description";
 
   protected static final String WORKFLOW_NAME = "workflow.name";
+  protected static final String WORKFLOW_START_TS = "workflow.startTs";
   protected static final String WORKFLOW_DESCRIPTION = "workflow.description";
   protected static final String WORKFLOW_DISPLAY_NAME = "workflow.displayName";
   protected static final String WORKFLOW_RELEASE_NO = "workflow.releaseNo";
   protected static final String WORKFLOW_LAST_GOOD_RELEASE_NO = "workflow.lastGoodReleaseNo";
   protected static final String WORKFLOW_LAST_GOOD_DEPLOYMENT_DISPLAY_NAME = "workflow.lastGoodDeploymentDisplayName";
   protected static final String WORKFLOW_PIPELINE_DEPLOYMENT_UUID = "workflow.pipelineDeploymentUuid";
+
+  protected static final String PIPELINE_NAME = "pipeline.name";
+  protected static final String PIPELINE_DESCRIPTION = "pipeline.description";
+  protected static final String PIPELINE_START_TS = "pipeline.startTs";
 
   protected static final String INSTANCE_NAME = "instance.name";
   protected static final String INSTANCE_HOSTNAME = "instance.hostName";
@@ -150,7 +155,9 @@ public abstract class ExpressionBuilder {
     expressions.addAll(asList(ENV_NAME, ENV_DESCRIPTION));
     expressions.addAll(asList(SERVICE_NAME, SERVICE_DESCRIPTION));
     expressions.addAll(asList(WORKFLOW_NAME, WORKFLOW_DESCRIPTION, WORKFLOW_DISPLAY_NAME, WORKFLOW_RELEASE_NO,
-        WORKFLOW_LAST_GOOD_DEPLOYMENT_DISPLAY_NAME, WORKFLOW_LAST_GOOD_RELEASE_NO, WORKFLOW_PIPELINE_DEPLOYMENT_UUID));
+        WORKFLOW_LAST_GOOD_DEPLOYMENT_DISPLAY_NAME, WORKFLOW_LAST_GOOD_RELEASE_NO, WORKFLOW_PIPELINE_DEPLOYMENT_UUID,
+        WORKFLOW_START_TS));
+    expressions.addAll(asList(PIPELINE_NAME, PIPELINE_DESCRIPTION, PIPELINE_START_TS));
 
     expressions.addAll(asList(INSTANCE_NAME, INSTANCE_HOSTNAME, INSTANCE_HOST_PUBLICDNS));
 

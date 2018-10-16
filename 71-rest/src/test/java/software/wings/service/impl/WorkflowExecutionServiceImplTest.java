@@ -2220,4 +2220,23 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
         workflowExecutionService.listWaitingOnDeployments(appId, execution.getUuid());
     assertThat(waitingOnDeployments).isNotEmpty().hasSize(1);
   }
+
+  @Test
+  @Owner(emails = {"srinivas@harness.io"})
+  public void shouldFetchWorkflowExecutionStartTs() throws Exception {
+    String appId = app.getUuid();
+    Workflow workflow = createExecutableWorkflow(appId, env);
+    ExecutionArgs executionArgs = new ExecutionArgs();
+    executionArgs.setArtifacts(asList(Artifact.Builder.anArtifact().withAppId(APP_ID).withUuid(ARTIFACT_ID).build()));
+
+    WorkflowExecutionUpdateFake callback = new WorkflowExecutionUpdateFake();
+    WorkflowExecution execution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
+        appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback, null);
+    callback.await(ofSeconds(15));
+
+    assertThat(execution).isNotNull();
+
+    assertThat(workflowExecutionService.fetchWorkflowExecutionStartTs(execution.getAppId(), execution.getUuid()))
+        .isNotNull();
+  }
 }

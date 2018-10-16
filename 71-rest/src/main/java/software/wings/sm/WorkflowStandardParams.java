@@ -40,6 +40,7 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
+import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.InstanceExpressionProcessor;
@@ -50,6 +51,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.WorkflowExecutionService;
 
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -79,6 +81,8 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   @Inject private transient ArtifactStreamService artifactStreamService;
 
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
+
+  @Inject private transient WorkflowExecutionService workflowExecutionService;
 
   private String appId;
   private String envId;
@@ -123,6 +127,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   public Map<String, Object> paramMap(ExecutionContext context) {
     Map<String, Object> map = new HashMap<>();
     if (workflowElement != null) {
+      if (WorkflowType.ORCHESTRATION.equals(context.getWorkflowType()) && workflowElement.getStartTs() == null) {
+        workflowElement.setStartTs(workflowExecutionService.fetchWorkflowExecutionStartTs(
+            getApp().getAppId(), context.getWorkflowExecutionId()));
+      }
       map.put(WORKFLOW, workflowElement);
     }
     map.put(APP, getApp());
@@ -494,7 +502,7 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
   private Account getAccount() {
     String accountId = getApp() == null ? null : getApp().getAccountId();
     if (account == null && accountId != null) {
-      return accountService.getAccountWithDefaults(accountId);
+      account = accountService.getAccountWithDefaults(accountId);
     }
     return account;
   }
