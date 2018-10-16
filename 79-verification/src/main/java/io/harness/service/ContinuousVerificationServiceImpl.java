@@ -128,7 +128,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       String accountId, CVConfiguration cvConfiguration, long startMin, long endMin) {
     String learningTaskId = generateUuid();
 
-    String testInputUrl = getDataFetchUrl(cvConfiguration, startMin, endMin);
+    String testInputUrl = getDataFetchUrl(cvConfiguration, startMin - PREDECTIVE_HISTORY_MINUTES, endMin);
     String metricAnalysisSaveUrl = getMetricAnalysisSaveUrl(cvConfiguration, endMin, learningTaskId);
 
     String metricTemplateUrl = getMetricTemplateUrl(
