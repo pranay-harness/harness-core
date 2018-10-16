@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import software.wings.verification.dashboard.HeatMapUnit;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author Vaibhav Tulsyan
@@ -18,6 +19,6 @@ import java.util.List;
 public class HeatMap {
   private CVConfiguration cvConfiguration;
   private List<HeatMapUnit> riskLevelSummary;
-  private List<TimeSeriesDataPoint> observedTimeSeries;
-  private List<TimeSeriesDataPoint> predictedTimeSeries;
+  private Map<String, Map<String, List<TimeSeriesDataPoint>>> observedTimeSeries;
+  private Map<String, Map<String, List<TimeSeriesDataPoint>>> predictedTimeSeries;
 }
