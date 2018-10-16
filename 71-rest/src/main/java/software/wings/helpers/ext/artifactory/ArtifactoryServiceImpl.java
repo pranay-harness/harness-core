@@ -133,7 +133,13 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.info("Retrieving repositories for packages {} success", packageTypes.toArray());
     } catch (RuntimeException e) {
       logger.error("Error occurred while retrieving repositories", e);
-      prepareException(e, USER);
+      handleAndRethrow(e, USER);
+    } catch (Exception e) {
+      logger.error("Error occurred while retrieving repositories", e);
+      if (e instanceof SocketTimeoutException) {
+        return repositories;
+      }
+      handleAndRethrow(e, USER);
     }
     return repositories;
   }
@@ -162,11 +168,19 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
         logger.info("Retrieving images from artifactory url {} and repo key {} success. Images {}",
             artifactory.getUri(), repoKey, images);
       }
+    } catch (RuntimeException e) {
+      logger.error(
+          format("Error occurred while listing docker images from artifactory %s for Repo %s", artifactory, repoKey),
+          e);
+      handleAndRethrow(e, USER);
     } catch (Exception e) {
       logger.error(
           format("Error occurred while listing docker images from artifactory %s for Repo %s", artifactory, repoKey),
           e);
-      prepareException(e, USER);
+      if (e instanceof SocketTimeoutException) {
+        return images;
+      }
+      handleAndRethrow(e, USER);
     }
     return images;
   }
@@ -199,7 +213,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
     } catch (Exception e) {
       logger.info("Exception occurred while retrieving the docker docker tags for Image {}", imageName);
-      prepareException(e, USER);
+      handleAndRethrow(e, USER);
     }
 
     return buildDetails;
@@ -298,7 +312,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
           artifactoryConfig.getArtifactoryUrl(), e);
-      prepareException(e, USER);
+      handleAndRethrow(e, USER);
     }
     return new ArrayList<>();
   }
@@ -379,7 +393,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error(
           format("Error occurred while retrieving File Paths from Artifactory server %s", artifactory.getUri()), e);
-      prepareException(e, USER);
+      handleAndRethrow(e, USER);
     }
     return new ArrayList<>();
   }
@@ -531,8 +545,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
   private Artifactory getArtifactoryClient(
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(artifactoryConfig, encryptionDetails);
+    ArtifactoryClientBuilder builder = ArtifactoryClientBuilder.create();
     try {
-      ArtifactoryClientBuilder builder = ArtifactoryClientBuilder.create();
       builder.setUrl(getBaseUrl(artifactoryConfig));
       if (isBlank(artifactoryConfig.getUsername())) {
         logger.info("Username is not set for artifactory config {} . Will use anonymous access.",
@@ -552,11 +566,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       builder.setSocketTimeout(30000);
       builder.setConnectionTimeout(30000);
-      return builder.build();
     } catch (Exception ex) {
-      prepareException(ex, USER);
+      handleAndRethrow(ex, USER);
     }
-    return null;
+    return builder.build();
   }
 
   private String getBaseUrl(ArtifactoryConfig artifactoryConfig) {
@@ -564,19 +577,19 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
                                                                : artifactoryConfig.getArtifactoryUrl() + "/";
   }
 
-  private void prepareException(Exception e, EnumSet<ReportTarget> reportTargets) throws WingsException {
+  private void handleAndRethrow(Exception e, EnumSet<ReportTarget> reportTargets) throws WingsException {
     if (e instanceof HttpResponseException) {
       HttpResponseException httpResponseException = (HttpResponseException) e;
       if (httpResponseException.getStatusCode() == 401) {
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
             .addParam("message", "Invalid Artifactory credentials");
       } else if (httpResponseException.getStatusCode() == 403) {
-        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e)
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
             .addParam("message", "User not authorized to access artifactory");
       }
     }
     if (e instanceof SocketTimeoutException) {
-      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets, e)
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
           .addParam("message",
               e.getMessage() + "."
                   + "SocketTimeout: Artifactory server may not be running");
@@ -607,8 +620,30 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
           artifactoryConfig.getArtifactoryUrl(), e);
-      prepareException(e, USER);
+      handleAndRethrow(e, USER);
     }
     return 0L;
+  }
+
+  @Override
+  public boolean isRunning(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails) {
+    logger.info("Validating artifactory server");
+    Artifactory artifactory = getArtifactoryClient(artifactoryConfig, encryptionDetails);
+    ArtifactoryRequest repositoryRequest =
+        new ArtifactoryRequestImpl().apiUrl("api/repositories/").method(GET).responseType(JSON);
+    try {
+      artifactory.restCall(repositoryRequest);
+      logger.info("Validating artifactory server success");
+    } catch (RuntimeException e) {
+      logger.error("Runtime exception occurred while validating artifactory", e);
+      handleAndRethrow(e, USER);
+    } catch (Exception e) {
+      logger.error("Exception occurred while validating artifactory", e);
+      if (e instanceof SocketTimeoutException) {
+        return true;
+      }
+      handleAndRethrow(e, USER);
+    }
+    return true;
   }
 }

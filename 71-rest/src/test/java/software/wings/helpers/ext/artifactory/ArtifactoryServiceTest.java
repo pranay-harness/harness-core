@@ -185,4 +185,9 @@ public class ArtifactoryServiceTest {
     Long size = artifactoryService.getFileSize(artifactoryConfig, null, metadata);
     assertThat(size).isEqualTo(1776799L);
   }
+
+  @Test
+  public void shouldTestArtifactoryRunning() {
+    assertThat(artifactoryService.isRunning(artifactoryConfig, null)).isTrue();
+  }
 }

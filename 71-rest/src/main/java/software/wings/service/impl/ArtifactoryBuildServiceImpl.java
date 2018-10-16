@@ -114,7 +114,7 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Artifactory Server at : " + config.getArtifactoryUrl());
     }
-    return artifactoryService.getRepositories(config, Collections.emptyList()) != null;
+    return artifactoryService.isRunning(config, Collections.emptyList());
   }
 
   @Override

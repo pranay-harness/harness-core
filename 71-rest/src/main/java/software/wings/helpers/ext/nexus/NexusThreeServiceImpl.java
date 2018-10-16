@@ -32,12 +32,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Created by sgurubelli on 11/16/17.
- */
 @Singleton
 public class NexusThreeServiceImpl {
-  private static final Logger logger = LoggerFactory.getLogger(NexusTwoServiceImpl.class);
+  private static final Logger logger = LoggerFactory.getLogger(NexusThreeServiceImpl.class);
 
   @Inject EncryptionService encryptionService;
 
