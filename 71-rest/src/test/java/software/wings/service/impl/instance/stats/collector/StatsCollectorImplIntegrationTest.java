@@ -99,8 +99,8 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     assertTrue(success);
     lastTs = statService.getLastSnapshotTime(accountId);
     assertEquals(instant, lastTs);
-    long countAfterInstanceDelete = ds.getCount(ds.createQuery(InstanceStatsSnapshot.class));
-    assertEquals("verify new stat entry created in database", finalCount + 1, countAfterInstanceDelete);
+    long countAfter = ds.getCount(ds.createQuery(InstanceStatsSnapshot.class).filter("accountId", accountId));
+    assertEquals("verify new stat entry created in database", finalCount + 1, countAfter);
 
     Instant end = Instant.now();
 
