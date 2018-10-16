@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -36,11 +37,13 @@ import software.wings.beans.Environment;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SweepingOutput;
 import software.wings.beans.TaskType;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandType;
+import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
@@ -52,6 +55,7 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -63,6 +67,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.utils.KryoUtils;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 
@@ -78,6 +83,7 @@ public class ShellScriptState extends State {
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
   @Inject @Transient private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
+  @Inject @Transient private SweepingOutputService sweepingOutputService;
 
   @Getter @Setter @Attributes(title = "Execute on Delegate") private boolean executeOnDelegate;
 
@@ -114,6 +120,10 @@ public class ShellScriptState extends State {
 
   @NotEmpty @Getter @Setter @Attributes(title = "Script") private String scriptString;
 
+  @Getter @Setter private String outputVars;
+  @Getter @Setter private SweepingOutput.Scope sweepingOutputScope;
+  @Getter @Setter private String sweepingOutputName;
+
   /**
    * Create a new Script State with given name.
    *
@@ -148,7 +158,7 @@ public class ShellScriptState extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     ExecutionResponse executionResponse = new ExecutionResponse();
-
+    String activityId = response.keySet().iterator().next();
     ResponseData data = response.values().iterator().next();
 
     if (data instanceof CommandExecutionResult) {
@@ -172,9 +182,14 @@ public class ShellScriptState extends State {
               "Unhandled type CommandExecutionStatus: " + commandExecutionResult.getStatus().name());
       }
       executionResponse.setErrorMessage(commandExecutionResult.getErrorMessage());
+      Map<String, String> sweepingOutputEnvVariables =
+          ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
+              .getSweepingOutputEnvVariables();
 
-      ScriptStateExecutionData scriptStateExecutionData = (ScriptStateExecutionData) context.getStateExecutionData();
-      scriptStateExecutionData.setDelegateMetaInfo(commandExecutionResult.getDelegateMetaInfo());
+      ScriptStateExecutionData scriptStateExecutionData = ScriptStateExecutionData.builder()
+                                                              .activityId(activityId)
+                                                              .sweepingOutputEnvVariables(sweepingOutputEnvVariables)
+                                                              .build();
       executionResponse.setStateExecutionData(scriptStateExecutionData);
     } else if (data instanceof ErrorNotifyResponseData) {
       ErrorNotifyResponseData executionData = (ErrorNotifyResponseData) data;
@@ -184,15 +199,19 @@ public class ShellScriptState extends State {
       logger.error("Unhandled ResponseData class " + data.getClass().getCanonicalName(), new Exception(""));
     }
 
-    String activityId = null;
-
-    for (String key : response.keySet()) {
-      activityId = key;
-    }
-
     updateActivityStatus(
         activityId, ((ExecutionContextImpl) context).getApp().getUuid(), executionResponse.getExecutionStatus());
+    if (isNotEmpty(sweepingOutputName)) {
+      final SweepingOutput sweepingOutput =
+          context.prepareSweepingOutputBuilder(sweepingOutputScope)
+              .name(sweepingOutputName)
+              .output(KryoUtils.asDeflatedBytes(
+                  ((ShellExecutionData) ((CommandExecutionResult) data).getCommandExecutionData())
+                      .getSweepingOutputEnvVariables()))
+              .build();
 
+      sweepingOutputService.save(sweepingOutput);
+    }
     return executionResponse;
   }
 
@@ -284,6 +303,7 @@ public class ShellScriptState extends State {
                                               .scriptType(scriptType)
                                               .script(context.renderExpression(scriptString))
                                               .executeOnDelegate(executeOnDelegate)
+                                              .outputVars(outputVars)
                                               .build()})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)
@@ -296,9 +316,9 @@ public class ShellScriptState extends State {
     String delegateTaskId = delegateService.queueTask(delegateTask);
     return anExecutionResponse()
         .withAsync(true)
+        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .withCorrelationIds(Collections.singletonList(activityId))
         .withDelegateTaskId(delegateTaskId)
-        .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activityId).build())
         .build();
   }
 

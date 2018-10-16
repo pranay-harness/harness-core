@@ -8,6 +8,7 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -27,6 +28,9 @@ import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.service.intfc.security.EncryptionService;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -53,10 +57,13 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
     if (parameters.isExecuteOnDelegate()) {
       ShellExecutor executor = shellExecutorFactory.getExecutor(
           parameters.processExecutorConfig(containerDeploymentDelegateHelper), parameters.getScriptType());
-      CommandExecutionStatus commandExecutionStatus =
-          executor.executeCommandString(parameters.getScript(), new StringBuffer());
+      List<String> items = new ArrayList<>();
+      if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
+        items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
+        items.replaceAll(String::trim);
+      }
 
-      return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
+      return executor.executeCommandString(parameters.getScript(), items);
     }
 
     switch (parameters.getConnectionType()) {
