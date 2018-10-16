@@ -105,13 +105,13 @@ public class ExecutionInterruptManager {
       stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, executionInterrupt.getAppId(),
           executionInterrupt.getStateExecutionInstanceId());
       if (stateExecutionInstance == null) {
-        throw new WingsException(INVALID_ARGUMENT)
+        throw new WingsException(INVALID_ARGUMENT, USER)
             .addParam("args", "invalid stateExecutionInstanceId: " + executionInterrupt.getStateExecutionInstanceId());
       }
 
       final List<ExecutionStatus> statuses = acceptableIndividualStatusList.get(executionInterruptType);
       if (!statuses.contains(stateExecutionInstance.getStatus())) {
-        throw new WingsException(STATE_NOT_FOR_TYPE)
+        throw new WingsException(STATE_NOT_FOR_TYPE, USER)
             .addParam("displayName", stateExecutionInstance.getDisplayName())
             .addParam("type", executionInterruptType.name())
             .addParam("status", stateExecutionInstance.getStatus().name())

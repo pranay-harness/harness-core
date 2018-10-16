@@ -3,9 +3,7 @@ package software.wings.helpers.ext.artifactory;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.exception.WingsException.USER_ADMIN;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -135,7 +133,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.info("Retrieving repositories for packages {} success", packageTypes.toArray());
     } catch (RuntimeException e) {
       logger.error("Error occurred while retrieving repositories", e);
-      prepareException(e, USER_ADMIN);
+      prepareException(e, USER);
     }
     return repositories;
   }
@@ -168,7 +166,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.error(
           format("Error occurred while listing docker images from artifactory %s for Repo %s", artifactory, repoKey),
           e);
-      prepareException(e, USER_ADMIN);
+      prepareException(e, USER);
     }
     return images;
   }
@@ -201,7 +199,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
 
     } catch (Exception e) {
       logger.info("Exception occurred while retrieving the docker docker tags for Image {}", imageName);
-      prepareException(e, USER_ADMIN);
+      prepareException(e, USER);
     }
 
     return buildDetails;
@@ -300,7 +298,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       }
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
           artifactoryConfig.getArtifactoryUrl(), e);
-      prepareException(e, ADMIN);
+      prepareException(e, USER);
     }
     return new ArrayList<>();
   }
@@ -381,7 +379,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error(
           format("Error occurred while retrieving File Paths from Artifactory server %s", artifactory.getUri()), e);
-      prepareException(e, ADMIN);
+      prepareException(e, USER);
     }
     return new ArrayList<>();
   }
@@ -443,7 +441,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       String msg =
           "Failed to download the latest artifacts  of repo [" + repositoryName + "] artifactPath [" + artifactPath;
-      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ADMIN, e);
+      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), USER, e);
     }
     return res;
   }
@@ -462,7 +460,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       String msg =
           "Failed to download the latest artifacts  of repo [" + repositoryName + "] artifactPath [" + artifactPath;
-      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), ADMIN, e);
+      prepareAndThrowException(msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e), USER, e);
     }
     return pair;
   }
@@ -515,7 +513,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       logger.error("Failed to download the artifact of repository {} from path {}", repoKey, artifactPath, e);
       String msg =
           "Failed to download the latest artifacts  of repository [" + repoKey + "] file path [" + artifactPath;
-      throw new WingsException(ARTIFACT_SERVER_ERROR, ADMIN)
+      throw new WingsException(ARTIFACT_SERVER_ERROR, USER)
           .addParam("message", msg + "Reason:" + ExceptionUtils.getRootCauseMessage(e));
     }
     logger.info(
@@ -556,7 +554,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       builder.setConnectionTimeout(30000);
       return builder.build();
     } catch (Exception ex) {
-      prepareException(ex, USER_ADMIN);
+      prepareException(ex, USER);
     }
     return null;
   }
@@ -609,7 +607,7 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       logger.error("Error occurred while retrieving File Paths from Artifactory server {}",
           artifactoryConfig.getArtifactoryUrl(), e);
-      prepareException(e, ADMIN);
+      prepareException(e, USER);
     }
     return 0L;
   }

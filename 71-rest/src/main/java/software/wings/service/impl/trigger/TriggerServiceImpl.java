@@ -685,7 +685,7 @@ public class TriggerServiceImpl implements TriggerService {
         notNullCheck(
             "Workflow Environment is templatized. However, there is no corresponding mapping associated in the trigger. "
                 + " Please update the trigger",
-            envNameOrId);
+            envNameOrId, USER);
         envId = resolveEnvId(trigger, envNameOrId);
         triggerWorkflowVariableValues.put(templatizedEnvName, envId);
       } else {
@@ -858,7 +858,7 @@ public class TriggerServiceImpl implements TriggerService {
     Service service;
     if (serviceIdNames.get(artifactSelection.getServiceId()) == null) {
       service = serviceResourceService.get(trigger.getAppId(), artifactSelection.getServiceId(), false);
-      notNullCheck("Service", service);
+      notNullCheck("Service might have been deleted", service, USER);
       artifactSelection.setServiceName(service.getName());
     } else {
       artifactSelection.setServiceName(serviceIdNames.get(artifactSelection.getServiceId()));
@@ -874,7 +874,7 @@ public class TriggerServiceImpl implements TriggerService {
     }
     artifactStream = validateArtifactStream(trigger.getAppId(), artifactSelection.getArtifactStreamId());
     service = serviceResourceService.get(trigger.getAppId(), artifactStream.getServiceId(), false);
-    notNullCheck("Service", service);
+    notNullCheck("Service might have been deleted", service, USER);
     artifactSelection.setArtifactSourceName(artifactStream.getSourceName() + " (" + service.getName() + ")");
   }
 

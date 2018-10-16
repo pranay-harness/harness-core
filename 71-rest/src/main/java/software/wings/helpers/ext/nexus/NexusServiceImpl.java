@@ -2,7 +2,6 @@ package software.wings.helpers.ext.nexus;
 
 import static io.harness.eraro.ErrorCode.ARTIFACT_SERVER_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static software.wings.utils.ArtifactType.DOCKER;
@@ -188,7 +187,7 @@ public class NexusServiceImpl implements NexusService {
       return nexusTwoService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactName, version);
     } catch (IOException e) {
       logger.error("Error occurred while downloading the artifact", e);
-      throw new WingsException(ARTIFACT_SERVER_ERROR, ADMIN).addParam("message", Misc.getMessage(e));
+      throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
