@@ -481,7 +481,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         HeatMap heatMap = generateMockHeatMap(startTime, endTime, resolution, appId, serviceId);
         if (detailed) {
           heatMap.setObservedTimeSeries(getObservedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
-          heatMap.setPredictedTimeSeries(getPredictedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
+          heatMap.setPredictedTimeSeries(getObservedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
         }
         summary.add(heatMap);
       }
@@ -490,26 +490,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return resp;
   }
 
-  public List<TimeSeriesDataPoint> getObservedTimeSeries(
+  private Map<String, Map<String, List<TimeSeriesDataPoint>>> getObservedTimeSeries(
       String accountId, String serviceId, int resolution, long startTime, long endTime) {
-    return generateRandomTimeSeries(startTime, resolution);
-  }
+    int minutes = (int) ((endTime - startTime) / 60);
+    int NUM_TRANSACTIONS = 3;
+    List<String> metrics = Arrays.asList("apdexScore", "requestsPerMinute", "averageResponseTime");
 
-  public List<TimeSeriesDataPoint> getPredictedTimeSeries(
-      String accountId, String serviceId, int resolution, long startTime, long endTime) {
-    return generateRandomTimeSeries(startTime, resolution);
-  }
-
-  @NotNull
-  private List<TimeSeriesDataPoint> generateRandomTimeSeries(long startTime, int resolution) {
-    Random random = new Random();
-    List<TimeSeriesDataPoint> timeSeries = new ArrayList<>();
-    long currentTs = startTime;
-    for (int i = 0; i < 24 * 60 * resolution; i++) {
-      timeSeries.add(new TimeSeriesDataPoint(currentTs, random.nextFloat() * random.nextInt(10)));
-      currentTs = currentTs + TimeUnit.MINUTES.toMillis(1);
+    Map<String, Map<String, List<TimeSeriesDataPoint>>> timeSeriesMap = new HashMap<>();
+    for (int i = 0; i < NUM_TRANSACTIONS; i++) {
+      String transactionName = "WebTransaction/Servlet/" + generateUuid();
+      Map<String, List<TimeSeriesDataPoint>> metricTimeSeries = new HashMap<>();
+      for (String metric : metrics) {
+        metricTimeSeries.put(metric, generateRandomTimeSeriesWithNDataPoints(startTime, minutes));
+      }
+      timeSeriesMap.put(transactionName, metricTimeSeries);
     }
-    return timeSeries;
+    return timeSeriesMap;
   }
 
   private List<TimeSeriesDataPoint> generateRandomTimeSeriesWithNDataPoints(long startTime, int count) {
