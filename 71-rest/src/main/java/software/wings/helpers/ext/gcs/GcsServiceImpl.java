@@ -3,7 +3,6 @@ package software.wings.helpers.ext.gcs;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
 import static software.wings.common.Constants.ARTIFACT_PATH;
@@ -88,10 +87,10 @@ public class GcsServiceImpl implements GcsService {
       }
       return buildDetailsList;
     } catch (WingsException e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     } catch (Exception e) {
       logger.error("Error occurred while retrieving artifacts from ", e);
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     }
   }
 

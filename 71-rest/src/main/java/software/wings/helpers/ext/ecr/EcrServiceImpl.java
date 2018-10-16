@@ -2,7 +2,7 @@ package software.wings.helpers.ext.ecr;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
-import static io.harness.exception.WingsException.ADMIN;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.inject.Inject;
@@ -49,7 +49,7 @@ public class EcrServiceImpl implements EcrService {
         listImagesRequest.setNextToken(listImagesResult.getNextToken());
       } while (listImagesRequest.getNextToken() != null);
     } catch (Exception e) {
-      throw new WingsException(GENERAL_ERROR, ADMIN).addParam("message", Misc.getMessage(e));
+      throw new WingsException(GENERAL_ERROR, USER).addParam("message", Misc.getMessage(e));
     }
     return buildDetails;
   }

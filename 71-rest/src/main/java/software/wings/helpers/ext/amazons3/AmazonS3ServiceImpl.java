@@ -1,7 +1,7 @@
 package software.wings.helpers.ext.amazons3;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static io.harness.exception.WingsException.ADMIN;
+import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
 import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
@@ -105,7 +105,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
       }
       return buildDetailsList;
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN, e).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER, e).addParam("message", Misc.getMessage(e));
     }
   }
 

@@ -114,7 +114,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
       logger.info("The complete list  of the the tags {}", buildDetails);
       return buildDetails;
     } catch (IOException e) {
-      throw new WingsException(GENERAL_ERROR, WingsException.ADMIN_SRE).addParam("message", Misc.getMessage(e));
+      throw new WingsException(GENERAL_ERROR, WingsException.USER).addParam("message", Misc.getMessage(e));
     }
   }
 

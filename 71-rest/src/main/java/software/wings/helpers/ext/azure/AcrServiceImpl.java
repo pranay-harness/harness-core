@@ -2,7 +2,6 @@ package software.wings.helpers.ext.azure;
 
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static io.harness.exception.WingsException.ADMIN;
 import static io.harness.exception.WingsException.USER;
 import static java.util.stream.Collectors.toList;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
@@ -53,7 +52,7 @@ public class AcrServiceImpl implements AcrService {
           .map(tag -> aBuildDetails().withNumber(tag).build())
           .collect(toList());
     } catch (Exception e) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, ADMIN).addParam("message", Misc.getMessage(e));
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     }
   }
 
