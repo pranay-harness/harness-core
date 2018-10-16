@@ -1,22 +1,19 @@
 package software.wings.waitnotify;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.inject.Inject;
 
-import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +22,9 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 
 import java.time.Duration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Scheduled Task to look for finished WaitInstances and send messages to NotifyEventQueue.
@@ -58,49 +57,74 @@ public class Notifier implements Runnable {
 
   public void execute() {
     logger.info("Execute Notifier response processing");
+    final List<NotifyResponse> notifyResponses = wingsPersistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                                     .project(NotifyResponse.ID_KEY, true)
+                                                     .project(NotifyResponse.CREATED_AT_KEY, true)
+                                                     .asList();
 
-    PageResponse<NotifyResponse> notifyPageResponses = wingsPersistence.query(
-        NotifyResponse.class, aPageRequest().withLimit(UNLIMITED).addFieldsIncluded(ID_KEY).build(), excludeAuthority);
-
-    if (isEmpty(notifyPageResponses)) {
+    if (isEmpty(notifyResponses)) {
       logger.debug("There are no NotifyResponse entries to process");
       return;
     }
 
-    logger.info("Notifier responses {}", notifyPageResponses.size());
+    logger.info("Notifier responses {}", notifyResponses.size());
 
     try (AcquiredLock lock =
-             persistentLocker.acquireLock(Notifier.class, Notifier.class.getName(), Duration.ofMinutes(1))) {
-      List<String> correlationIds = notifyPageResponses.stream().map(NotifyResponse::getUuid).collect(toList());
-
-      // Get wait queue entries
-      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class,
-          aPageRequest().withLimit(UNLIMITED).addFilter("correlationId", Operator.IN, correlationIds).build(),
-          excludeAuthority);
-
-      if (isEmpty(waitQueuesResponse)) {
-        if (correlationIds.size() > 200) {
-          logger.warn("No entry in the waitQueue found for {} correlationIds", correlationIds.size());
-        } else if (correlationIds.size() > 750) {
-          logger.error(
-              "No entry in the waitQueue found for dangerously big number {} of correlationIds", correlationIds.size());
-        }
+             persistentLocker.tryToAcquireLock(Notifier.class, Notifier.class.getName(), Duration.ofMinutes(1))) {
+      if (lock == null) {
         return;
       }
 
-      logger.info("Wait queues {}", waitQueuesResponse.size());
+      List<String> correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toList());
 
-      // process distinct set of wait instanceIds
-      waitQueuesResponse.stream()
-          .map(WaitQueue::getWaitInstanceId)
-          .distinct()
-          .forEach(waitInstanceId
-              -> notifyQueue.send(
-                  aNotifyEvent().withWaitInstanceId(waitInstanceId).withCorrelationIds(correlationIds).build()));
-    } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
-    } catch (Exception exception) {
-      logger.error("Error seen in the Notifier call", exception);
+      // Get wait queue entries
+      try (HIterator<WaitQueue> iterator = new HIterator<WaitQueue>(wingsPersistence.createQuery(WaitQueue.class)
+                                                                        .field(WaitQueue.CORRELATION_ID_KEY)
+                                                                        .in(correlationIds)
+                                                                        .fetch())) {
+        if (!iterator.hasNext()) {
+          // All responses that are older than a minute and do not have wait queue yet should be considered zombies.
+          // We would like to delete them to avoid blocking the collection.
+          final long limit = System.currentTimeMillis() - Duration.ofMinutes(5).toMillis();
+          List<String> deleteResponses = notifyResponses.stream()
+                                             .filter(response -> response.getCreatedAt() < limit)
+                                             .map(NotifyResponse::getUuid)
+                                             .collect(toList());
+
+          if (isNotEmpty(deleteResponses)) {
+            logger.warn("Deleting zombie responses {}", correlationIds.toString());
+            wingsPersistence.delete(wingsPersistence.createQuery(NotifyResponse.class, excludeAuthority)
+                                        .field(NotifyResponse.ID_KEY)
+                                        .in(deleteResponses));
+          }
+
+          if (correlationIds.size() > 750) {
+            logger.error("No entry in the waitQueue found for dangerously big number {} of correlationIds",
+                correlationIds.size());
+          } else if (correlationIds.size() > 200) {
+            logger.warn("No entry in the waitQueue found for {} correlationIds", correlationIds.size());
+          }
+        }
+
+        Set<String> handled = new HashSet<>();
+
+        while (iterator.hasNext()) {
+          // process distinct set of wait instanceIds
+          final WaitQueue waitQueue = iterator.next();
+          final String waitInstanceId = waitQueue.getWaitInstanceId();
+          if (handled.contains(waitInstanceId)) {
+            continue;
+          }
+          handled.add(waitInstanceId);
+
+          notifyQueue.send(
+              aNotifyEvent().withWaitInstanceId(waitInstanceId).withCorrelationIds(correlationIds).build());
+        }
+      } catch (WingsException exception) {
+        WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      } catch (Exception exception) {
+        logger.error("Error seen in the Notifier call", exception);
+      }
     }
   }
 }
