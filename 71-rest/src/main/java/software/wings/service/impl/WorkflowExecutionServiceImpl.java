@@ -113,6 +113,7 @@ import software.wings.api.KubernetesSteadyStateCheckExecutionData;
 import software.wings.api.PhaseElement;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
+import software.wings.api.PipelineElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.api.SimpleWorkflowParam;
@@ -144,6 +145,7 @@ import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.StateExecutionElement;
 import software.wings.beans.StateExecutionInterrupt;
+import software.wings.beans.SweepingOutput.Scope;
 import software.wings.beans.User;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
@@ -169,12 +171,12 @@ import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.BarrierService.OrchestrationWorkflowInfo;
 import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.EnvironmentService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.StateExecutionService;
+import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionBaselineService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -262,11 +264,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private WorkflowExecutionBaselineService workflowExecutionBaselineService;
   @Inject private EntityVersionService entityVersionService;
   @Inject private MongoStore mongoStore;
-  @Inject private FeatureFlagService featureFlagService;
-
   @Inject private WingsPersistence wingsPersistence;
   @Inject private UserGroupService userGroupService;
   @Inject private AuthHandler authHandler;
+  @Inject private SweepingOutputService sweepingOutputService;
 
   /**
    * {@inheritDoc}
@@ -972,7 +973,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       workflowExecution.setServiceIds(pipeline.getServices().stream().map(Service::getUuid).collect(toList()));
     }
     workflowExecution.setEnvIds(pipeline.getEnvIds());
-    return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger);
+    return triggerExecution(
+        workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
   }
 
   private void checkIfAccountExpired(String appId) throws WingsException {
@@ -1079,7 +1081,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stdParams.setExcludeHostsWithSameArtifact(executionArgs.isExcludeHostsWithSameArtifact());
 
     return triggerExecution(workflowExecution, stateMachine, new CanaryWorkflowExecutionAdvisor(),
-        workflowExecutionUpdate, stdParams, trigger);
+        workflowExecutionUpdate, stdParams, trigger, null, workflow);
   }
 
   private Map<String, Object> getWorkflowVariables(
@@ -1122,15 +1124,16 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       WorkflowExecutionUpdate workflowExecutionUpdate, WorkflowStandardParams stdParams, Trigger trigger,
-      ContextElement... contextElements) {
-    return triggerExecution(
-        workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, trigger, contextElements);
+      Pipeline pipeline, Workflow workflow, ContextElement... contextElements) {
+    return triggerExecution(workflowExecution, stateMachine, null, workflowExecutionUpdate, stdParams, trigger,
+        pipeline, workflow, contextElements);
   }
 
   @SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
-      WorkflowStandardParams stdParams, Trigger trigger, ContextElement... contextElements) {
+      WorkflowStandardParams stdParams, Trigger trigger, Pipeline pipeline, Workflow workflow,
+      ContextElement... contextElements) {
     List<Object> keywords = newArrayList(
         workflowExecution.getName(), workflowExecution.getWorkflowType(), workflowExecution.getOrchestrationType());
 
@@ -1138,8 +1141,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (executionArgs.isTriggeredFromPipeline()) {
       if (executionArgs.getPipelineId() != null) {
-        Pipeline pipeline =
-            wingsPersistence.get(Pipeline.class, workflowExecution.getAppId(), executionArgs.getPipelineId());
+        pipeline = wingsPersistence.get(Pipeline.class, workflowExecution.getAppId(), executionArgs.getPipelineId());
         workflowExecution.setPipelineSummary(
             PipelineSummary.builder().pipelineId(pipeline.getUuid()).pipelineName(pipeline.getName()).build());
         keywords.add(pipeline.getName());
@@ -1312,6 +1314,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     stdParams.getWorkflowElement().setPipelineDeploymentUuid(workflowExecution.getPipelineExecutionId());
     lastGoodReleaseInfo(stdParams.getWorkflowElement(), workflowExecution);
+    stdParams.getWorkflowElement().setDescription(workflow != null ? workflow.getDescription() : null);
 
     LinkedList<ContextElement> elements = new LinkedList<>();
     elements.push(stdParams);
@@ -1323,9 +1326,26 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     stateExecutionInstance.setContextElements(elements);
     stateExecutionInstance = stateMachineExecutor.queue(stateMachine, stateExecutionInstance);
 
+    WorkflowExecution savedWorkflowExecution;
     if (workflowExecution.getWorkflowType() != ORCHESTRATION) {
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
       updateStartStatus(workflowExecution, RUNNING);
+      savedWorkflowExecution =
+          wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+      if (workflowExecution.getWorkflowType() == PIPELINE) {
+        PipelineElement pipelineElement = PipelineElement.builder()
+                                              .displayName(workflowExecution.getDisplayName())
+                                              .name(pipeline.getName())
+                                              .description(pipeline.getDescription())
+                                              .startTs(savedWorkflowExecution.getStartTs())
+                                              .build();
+        sweepingOutputService.save(SweepingOutputServiceImpl
+                                       .prepareSweepingOutputBuilder(workflowExecution.getAppId(),
+                                           workflowExecution.getUuid(), null, null, Scope.PIPELINE)
+                                       .name("pipeline")
+                                       .output(KryoUtils.asDeflatedBytes(pipelineElement))
+                                       .build());
+      }
     } else {
       // create queue event
       executionEventQueue.send(ExecutionEvent.builder()
@@ -1333,8 +1353,10 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                    .workflowId(workflowExecution.getWorkflowId())
                                    .infraMappingIds(workflowExecution.getInfraMappingIds())
                                    .build());
+      savedWorkflowExecution =
+          wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
     }
-    return wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+    return savedWorkflowExecution;
   }
 
   private void lastGoodReleaseInfo(WorkflowElement workflowElement, WorkflowExecution workflowExecution) {
@@ -1498,8 +1520,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     simpleOrchestrationParams.setExecutionStrategy(executionArgs.getExecutionStrategy());
     simpleOrchestrationParams.setCommandName(executionArgs.getCommandName());
-    return triggerExecution(
-        workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, null, simpleOrchestrationParams);
+    return triggerExecution(workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, null, null, null,
+        simpleOrchestrationParams);
   }
 
   private List<WorkflowExecution> getRunningWorkflowExecutions(
@@ -2587,5 +2609,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           WorkflowExecution.INFRAMAPPING_IDS_KEY, IN, workflowExecution.getInfraMappingIds().toArray());
     }
     return wingsPersistence.query(WorkflowExecution.class, pageRequestBuilder.build());
+  }
+
+  @Override
+  public Long fetchWorkflowExecutionStartTs(String appId, String workflowExecutionId) {
+    WorkflowExecution workflowExecution = wingsPersistence.createQuery(WorkflowExecution.class)
+                                              .project(WorkflowExecution.START_TS_KEY, true)
+                                              .project(WorkflowExecution.APP_ID_KEY, true)
+                                              .project(WorkflowExecution.ID_KEY, true)
+                                              .filter(WorkflowExecution.APP_ID_KEY, appId)
+                                              .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
+                                              .get();
+    return workflowExecution == null ? null : workflowExecution.getStartTs();
   }
 }
