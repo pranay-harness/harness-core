@@ -13,6 +13,7 @@ import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.Log.LogLevel.WARN;
+import static software.wings.beans.command.CommandExecutionResult.Builder.aCommandExecutionResult;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.RUNNING;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -25,8 +26,10 @@ import com.google.inject.Inject;
 
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.IOUtils;
@@ -35,21 +38,29 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
+import software.wings.beans.command.ShellExecutionData;
+import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateFile;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.FileService.FileBucket;
+import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Misc;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,6 +74,7 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public abstract class AbstractSshExecutor implements SshExecutor {
+  public static final int CHUNK_SIZE = 10 * 1024; // 10MB
   /**
    * The constant DEFAULT_SUDO_PROMPT_PATTERN.
    */
@@ -241,6 +253,154 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         channel.disconnect();
       }
     }
+  }
+
+  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
+  public CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect) {
+    ShellExecutionDataBuilder executionDataBuilder = ShellExecutionData.builder();
+    CommandExecutionResult.Builder commandExecutionResult = aCommandExecutionResult().but();
+    CommandExecutionStatus commandExecutionStatus = FAILURE;
+    Channel channel = null;
+    long start = System.currentTimeMillis();
+    try {
+      saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
+      channel = getCachedSession(this.config).openChannel("exec");
+      logger.info("Session fetched in " + (System.currentTimeMillis() - start) + " ms");
+
+      ((ChannelExec) channel).setPty(true);
+
+      String directoryPath = this.config.getWorkingDirectory() + "/";
+      File pwd = new File(directoryPath);
+      String envVariablesFilename = null;
+      File envVariablesOutputFile;
+      if (!envVariablesToCollect.isEmpty()) {
+        envVariablesFilename = "harness-" + this.config.getExecutionId() + ".out";
+        envVariablesOutputFile = new File(pwd, envVariablesFilename);
+        command = addEnvVariablesCollector(command, envVariablesToCollect, envVariablesOutputFile.getAbsolutePath());
+      }
+
+      try (OutputStream outputStream = channel.getOutputStream(); InputStream inputStream = channel.getInputStream()) {
+        ((ChannelExec) channel).setCommand(command);
+        saveExecutionLog(format("Connecting to %s ....", config.getHost()));
+        channel.connect();
+        saveExecutionLog(format("Connection to %s established", config.getHost()));
+        saveExecutionLog("Executing command...");
+
+        int totalBytesRead = 0;
+        byte[] byteBuffer = new byte[1024];
+        String text = "";
+
+        while (true) {
+          while (inputStream.available() > 0) {
+            int numOfBytesRead = inputStream.read(byteBuffer, 0, 1024);
+            if (numOfBytesRead < 0) {
+              break;
+            }
+            totalBytesRead += numOfBytesRead;
+            if (totalBytesRead >= MAX_BYTES_READ_PER_CHANNEL) {
+              // TODO: better error reporting
+              throw new WingsException(UNKNOWN_ERROR);
+            }
+            String dataReadFromTheStream = new String(byteBuffer, 0, numOfBytesRead, UTF_8);
+            text += dataReadFromTheStream;
+            text = processStreamData(text, false, outputStream);
+          }
+
+          if (text.length() > 0) {
+            text = processStreamData(text, true, outputStream); // finished reading. update logs
+          }
+
+          if (channel.isClosed()) {
+            commandExecutionStatus = channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
+            saveExecutionLog("Command finished with status " + commandExecutionStatus, commandExecutionStatus);
+            Map<String, String> envVariablesMap = new HashMap<>();
+            if (commandExecutionStatus == SUCCESS && envVariablesFilename != null) {
+              channel = getCachedSession(this.config).openChannel("sftp");
+              channel.connect();
+              ((ChannelSftp) channel).cd(directoryPath);
+              BoundedInputStream stream =
+                  new BoundedInputStream(((ChannelSftp) channel).get(envVariablesFilename), CHUNK_SIZE);
+              BufferedReader br = null;
+              saveExecutionLog("Script output: ");
+              try {
+                br = new BufferedReader(new InputStreamReader(stream, Charset.forName("UTF-8")));
+                String line;
+                while ((line = br.readLine()) != null) {
+                  String[] parts = line.split("=");
+                  envVariablesMap.put(parts[0], parts[1].trim());
+                  saveExecutionLog(parts[0] + "=" + parts[1].trim());
+                }
+              } catch (IOException e) {
+                saveExecutionLogError(
+                    "Exception occurred during reading file from SFTP server due to " + e.getMessage());
+              } finally {
+                if (br != null) {
+                  br.close();
+                }
+                if (envVariablesFilename != null) {
+                  ((ChannelSftp) channel).rm(envVariablesFilename);
+                }
+              }
+            }
+            executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
+            commandExecutionResult.withStatus(commandExecutionStatus);
+            commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
+            return commandExecutionResult.build();
+          }
+          sleep(Duration.ofSeconds(1));
+        }
+      }
+    } catch (RuntimeException | JSchException | IOException | SftpException ex) {
+      logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
+      logger.error("Command execution failed with error", ex);
+      RuntimeException rethrow = null;
+      if (ex instanceof JSchException) {
+        saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
+      } else if (ex instanceof IOException) {
+        logger.error("Exception in reading InputStream", ex);
+      } else if (ex instanceof RuntimeException) {
+        rethrow = (RuntimeException) ex;
+      }
+      int i = 0;
+      Throwable t = ex;
+      while (t != null && i++ < Misc.MAX_CAUSES) {
+        String msg = getMessage(t);
+        if (isNotBlank(msg)) {
+          saveExecutionLogError(msg);
+        }
+        t = t instanceof JSchException ? null : t.getCause();
+      }
+      if (rethrow != null) {
+        throw rethrow;
+      }
+      commandExecutionResult.withStatus(commandExecutionStatus);
+      commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
+      return commandExecutionResult.build();
+    } finally {
+      if (channel != null && !channel.isClosed()) {
+        logger.info("Disconnect channel if still open post execution command");
+        channel.disconnect();
+      }
+    }
+  }
+
+  private String addEnvVariablesCollector(
+      String command, List<String> envVariablesToCollect, String envVariablesOutputFileName) {
+    StringBuilder wrapperCommand = new StringBuilder(command);
+    wrapperCommand.append('\n');
+    String redirect = ">";
+    for (String env : envVariablesToCollect) {
+      wrapperCommand.append("echo $")
+          .append(env)
+          .append("| xargs echo \"")
+          .append(env)
+          .append("=\" ")
+          .append(redirect)
+          .append(envVariablesOutputFileName)
+          .append('\n');
+      redirect = ">>";
+    }
+    return wrapperCommand.toString();
   }
 
   @Override

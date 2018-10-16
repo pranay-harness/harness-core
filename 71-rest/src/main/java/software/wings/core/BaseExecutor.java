@@ -2,6 +2,7 @@ package software.wings.core;
 
 import org.apache.commons.lang3.tuple.Pair;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
+import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
 import software.wings.service.intfc.FileService.FileBucket;
@@ -16,6 +17,8 @@ public interface BaseExecutor {
   CommandExecutionStatus executeCommandString(String command, StringBuffer output);
 
   CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand);
+
+  CommandExecutionResult executeCommandString(String command, List<String> envVariablesToCollect);
 
   CommandExecutionStatus copyConfigFiles(ConfigFileMetaData configFileMetaData);
 

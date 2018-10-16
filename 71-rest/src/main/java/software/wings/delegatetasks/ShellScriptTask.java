@@ -14,7 +14,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.CommandExecutionResult;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.delegation.ShellScriptParameters;
 import software.wings.core.local.executors.ShellExecutor;
 import software.wings.core.local.executors.ShellExecutorFactory;
@@ -72,10 +71,12 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
         try {
           SshSessionConfig expectedSshConfig = parameters.sshSessionConfig(encryptionService);
           executor.init(expectedSshConfig);
-
-          CommandExecutionStatus commandExecutionStatus = executor.executeCommandString(parameters.getScript(), false);
-
-          return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
+          List<String> items = new ArrayList<>();
+          if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
+            items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
+            items.replaceAll(String::trim);
+          }
+          return executor.executeCommandString(parameters.getScript(), items);
         } catch (Exception e) {
           throw new WingsException(e);
         }
@@ -84,11 +85,12 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
         try {
           WinRmSessionConfig winRmSessionConfig = parameters.winrmSessionConfig(encryptionService);
           WinRmExecutor executor = winrmExecutorFactory.getExecutor(winRmSessionConfig);
-
-          CommandExecutionStatus commandExecutionStatus =
-              executor.executeCommandString(parameters.getScript(), new StringBuffer());
-
-          return aCommandExecutionResult().withStatus(commandExecutionStatus).build();
+          List<String> items = new ArrayList<>();
+          if (parameters.getOutputVars() != null && StringUtils.isNotEmpty(parameters.getOutputVars().trim())) {
+            items = Arrays.asList(parameters.getOutputVars().split("\\s*,\\s*"));
+            items.replaceAll(String::trim);
+          }
+          return executor.executeCommandString(parameters.getScript(), items);
         } catch (Exception e) {
           throw new WingsException(e);
         }

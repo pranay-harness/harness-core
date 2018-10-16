@@ -45,6 +45,7 @@ public class SshSessionConfig implements EncryptableSetting {
   private String keyPath;
 
   private boolean keyLess;
+  private String workingDirectory;
 
   @Override
   public SettingVariableTypes getSettingType() {
@@ -83,6 +84,7 @@ public class SshSessionConfig implements EncryptableSetting {
     private SshSessionConfig bastionHostConfig;
     private String keyPath;
     private boolean keyLess;
+    private String workingDirectory;
 
     private Builder() {}
 
@@ -199,6 +201,11 @@ public class SshSessionConfig implements EncryptableSetting {
       return this;
     }
 
+    public Builder withWorkingDirectory(String workingDirectory) {
+      this.workingDirectory = workingDirectory;
+      return this;
+    }
+
     public Builder but() {
       return aSshSessionConfig()
           .withAccountId(accountId)
@@ -221,7 +228,8 @@ public class SshSessionConfig implements EncryptableSetting {
           .withSudoAppPassword(sudoAppPassword)
           .withBastionHostConfig(bastionHostConfig)
           .withKeyPath(keyPath)
-          .withKeyLess(keyLess);
+          .withKeyLess(keyLess)
+          .withWorkingDirectory(workingDirectory);
     }
 
     public SshSessionConfig build() {
@@ -247,6 +255,7 @@ public class SshSessionConfig implements EncryptableSetting {
       sshSessionConfig.setBastionHostConfig(bastionHostConfig);
       sshSessionConfig.setKeyPath(keyPath);
       sshSessionConfig.setKeyLess(keyLess);
+      sshSessionConfig.setWorkingDirectory(workingDirectory);
       return sshSessionConfig;
     }
   }

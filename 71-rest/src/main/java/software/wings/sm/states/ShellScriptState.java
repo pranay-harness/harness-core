@@ -18,6 +18,7 @@ import io.harness.exception.WingsException;
 import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Property;
 import org.mongodb.morphia.annotations.Transient;
@@ -242,9 +243,13 @@ public class ShellScriptState extends State {
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
     String username = null;
+    String keyPath = null;
+    boolean keyless = false;
     WinRmConnectionAttributes winRmConnectionAttributes = null;
     List<EncryptedDataDetail> winrmEdd = Collections.emptyList();
     List<EncryptedDataDetail> keyEncryptionDetails = Collections.emptyList();
+
+    HostConnectionAttributes hostConnectionAttributes = null;
 
     if (connectionType == null) {
       connectionType = ConnectionType.SSH;
@@ -257,8 +262,10 @@ public class ShellScriptState extends State {
     if (!executeOnDelegate) {
       if (connectionType == ConnectionType.SSH) {
         SettingAttribute keySettingAttribute = settingsService.get(sshKeyRef);
-        HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
-        username = hostConnectionAttributes.getUserName();
+        hostConnectionAttributes = (HostConnectionAttributes) keySettingAttribute.getValue();
+        username = ((HostConnectionAttributes) keySettingAttribute.getValue()).getUserName();
+        keyPath = ((HostConnectionAttributes) keySettingAttribute.getValue()).getKeyPath();
+        keyless = ((HostConnectionAttributes) keySettingAttribute.getValue()).isKeyless();
         keyEncryptionDetails = secretManager.getEncryptionDetails(
             (EncryptableSetting) keySettingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
 
@@ -279,6 +286,15 @@ public class ShellScriptState extends State {
             (ContainerInfrastructureMapping) infraMapping, "");
       }
     }
+
+    if (StringUtils.isEmpty(commandPath)) {
+      if (scriptType.equals(ScriptType.BASH)) {
+        commandPath = "/tmp";
+      } else if (scriptType.equals(ScriptType.POWERSHELL)) {
+        commandPath = "%TEMP%";
+      }
+    }
+
     DelegateTask delegateTask =
         aDelegateTask()
             .withTaskType(TaskType.SCRIPT)
@@ -304,6 +320,9 @@ public class ShellScriptState extends State {
                                               .script(context.renderExpression(scriptString))
                                               .executeOnDelegate(executeOnDelegate)
                                               .outputVars(outputVars)
+                                              .hostConnectionAttributes(hostConnectionAttributes)
+                                              .keyless(keyless)
+                                              .keyPath(keyPath)
                                               .build()})
             .withEnvId(envId)
             .withInfrastructureMappingId(infrastructureMappingId)
