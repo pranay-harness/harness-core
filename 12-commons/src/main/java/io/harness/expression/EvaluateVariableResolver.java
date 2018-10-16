@@ -7,11 +7,13 @@ import org.apache.commons.jexl3.JexlContext;
 import org.apache.commons.jexl3.JexlException;
 import org.apache.commons.text.StrLookup;
 
+import java.util.List;
+
 @Builder
 public class EvaluateVariableResolver extends StrLookup {
   private JexlContext context;
   private ExpressionEvaluator expressionEvaluator;
-  private String objectPrefix;
+  private List<String> objectPrefixes;
   private int varIndex;
   private String prefix;
   private String suffix;
@@ -20,8 +22,8 @@ public class EvaluateVariableResolver extends StrLookup {
   public String lookup(String variable) {
     Object value = null;
     try {
-      if (isNotEmpty(objectPrefix)) {
-        variable = NormalizeVariableResolver.expand(variable, context, objectPrefix);
+      if (isNotEmpty(objectPrefixes)) {
+        variable = NormalizeVariableResolver.expand(variable, context, objectPrefixes);
       }
       value = expressionEvaluator.evaluate(variable, context);
     } catch (JexlException exception) {

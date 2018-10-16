@@ -3,6 +3,7 @@ package io.harness.expression;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
+import static java.util.Arrays.asList;
 
 import io.harness.data.algorithm.IdentifierName;
 import io.harness.exception.WingsException;
@@ -78,7 +79,7 @@ public class ExpressionEvaluator {
     JexlContext jc = prepareContext(context);
 
     final NormalizeVariableResolver variableResolver =
-        NormalizeVariableResolver.builder().objectPrefix(defaultObjectPrefix).context(jc).build();
+        NormalizeVariableResolver.builder().objectPrefixes(asList(defaultObjectPrefix, "context")).context(jc).build();
 
     StrSubstitutor substitutor = new StrSubstitutor();
     substitutor.setVariableResolver(variableResolver);
@@ -105,7 +106,7 @@ public class ExpressionEvaluator {
 
     final EvaluateVariableResolver variableResolver = EvaluateVariableResolver.builder()
                                                           .expressionEvaluator(this)
-                                                          .objectPrefix(defaultObjectPrefix)
+                                                          .objectPrefixes(asList(defaultObjectPrefix, "context"))
                                                           .context(jc)
                                                           .prefix(prefix)
                                                           .suffix(suffix)
