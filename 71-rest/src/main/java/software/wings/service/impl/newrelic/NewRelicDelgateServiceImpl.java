@@ -71,6 +71,8 @@ import javax.servlet.http.HttpServletResponse;
  */
 
 public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
+  public static final String METRIC_NAME_NON_SPECIAL_CHARS = "METRIC_NAME_NON_SPECIAL_CHARS";
+  public static final String METRIC_NAME_SPECIAL_CHARS = "METRIC_NAME_SPECIAL_CHAR";
   private static final Set<String> txnsToCollect = Sets.newHashSet("WebTransaction/", "WebTransactionTotalTime/");
   private static final int METRIC_DATA_QUERY_BATCH_SIZE = 30;
   private static final int MIN_RPM = 1;
@@ -83,8 +85,10 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Inject private DataCollectionExecutorService dataCollectionService;
   @Inject private DelegateLogService delegateLogService;
 
-  public static List<Set<String>> batchMetricsToCollect(Collection<NewRelicMetric> metrics) {
-    List<Set<String>> rv = new ArrayList<>();
+  public static Map<String, List<Set<String>>> batchMetricsToCollect(Collection<NewRelicMetric> metrics) {
+    Map<String, List<Set<String>>> rv = new HashMap<>();
+    rv.put(METRIC_NAME_NON_SPECIAL_CHARS, new ArrayList<>());
+    rv.put(METRIC_NAME_SPECIAL_CHARS, new ArrayList<>());
 
     Set<String> batchedNonSpecialCharMetrics = new HashSet<>();
     Set<String> batchedSpecialCharMetrics = new HashSet<>();
@@ -101,22 +105,22 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       }
 
       if (batchedNonSpecialCharMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
-        rv.add(batchedNonSpecialCharMetrics);
+        rv.get(METRIC_NAME_NON_SPECIAL_CHARS).add(batchedNonSpecialCharMetrics);
         batchedNonSpecialCharMetrics = new HashSet<>();
       }
 
       if (batchedSpecialCharMetrics.size() == METRIC_DATA_QUERY_BATCH_SIZE) {
-        rv.add(batchedSpecialCharMetrics);
+        rv.get(METRIC_NAME_SPECIAL_CHARS).add(batchedSpecialCharMetrics);
         batchedSpecialCharMetrics = new HashSet<>();
       }
     }
 
     if (!batchedNonSpecialCharMetrics.isEmpty()) {
-      rv.add(batchedNonSpecialCharMetrics);
+      rv.get(METRIC_NAME_NON_SPECIAL_CHARS).add(batchedNonSpecialCharMetrics);
     }
 
     if (!batchedSpecialCharMetrics.isEmpty()) {
-      rv.add(batchedSpecialCharMetrics);
+      rv.get(METRIC_NAME_SPECIAL_CHARS).add(batchedSpecialCharMetrics);
     }
 
     return rv;
@@ -152,15 +156,14 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public boolean validateConfig(NewRelicConfig newRelicConfig) throws IOException, CloneNotSupportedException {
+  public boolean validateConfig(NewRelicConfig newRelicConfig) throws IOException {
     getAllApplications(newRelicConfig, Collections.emptyList(), null);
     return true;
   }
 
   @Override
-  public List<NewRelicApplication> getAllApplications(
-      NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog)
-      throws IOException, CloneNotSupportedException {
+  public List<NewRelicApplication> getAllApplications(NewRelicConfig newRelicConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     List<NewRelicApplication> rv = new ArrayList<>();
     if (apiCallLog == null) {
       apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
@@ -214,7 +217,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   @Override
   public List<NewRelicApplicationInstance> getApplicationInstances(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException, CloneNotSupportedException {
+      throws IOException {
     List<NewRelicApplicationInstance> rv = new ArrayList<>();
     if (apiCallLog == null) {
       apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
@@ -342,7 +345,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   public Set<NewRelicMetric> getTxnsWithDataInLastHour(Collection<NewRelicMetric> metrics,
       NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails, long applicationId,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
+      ThirdPartyApiCallLog apiCallLog) {
     if (apiCallLog == null) {
       apiCallLog = ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
     }
@@ -350,13 +353,28 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
     for (NewRelicMetric metric : metrics) {
       webTransactionMetrics.put(metric.getName(), metric);
     }
-    List<Set<String>> metricBatches = batchMetricsToCollect(metrics);
+    Map<String, List<Set<String>>> metricBatches = batchMetricsToCollect(metrics);
     List<Callable<Set<String>>> metricDataCallabels = new ArrayList<>();
-    for (Collection<String> metricNames : metricBatches) {
-      final ThirdPartyApiCallLog apiCallLogCopy = apiCallLog.copy();
-      metricDataCallabels.add(
-          () -> getMetricsWithNoData(metricNames, newRelicConfig, encryptedDataDetails, applicationId, apiCallLogCopy));
-    }
+    final ThirdPartyApiCallLog apiCallLogCopy = apiCallLog.copy();
+    metricBatches.forEach((metricTypeName, metricSets) -> {
+      if (metricTypeName.equals(METRIC_NAME_NON_SPECIAL_CHARS)) {
+        metricSets.forEach(metricNames
+            -> metricDataCallabels.add(()
+                                           -> getMetricsWithNoData(metricNames, newRelicConfig, encryptedDataDetails,
+                                               applicationId, apiCallLogCopy, true)));
+        return;
+      }
+
+      if (metricTypeName.equals(METRIC_NAME_SPECIAL_CHARS)) {
+        metricSets.forEach(metricNames
+            -> metricDataCallabels.add(()
+                                           -> getMetricsWithNoData(metricNames, newRelicConfig, encryptedDataDetails,
+                                               applicationId, apiCallLogCopy, false)));
+        return;
+      }
+
+      throw new IllegalStateException("Invalid metric batch type " + metricTypeName);
+    });
     List<Optional<Set<String>>> results = dataCollectionService.executeParrallel(metricDataCallabels);
     results.forEach(result -> {
       if (result.isPresent()) {
@@ -369,8 +387,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   private Set<String> getMetricsWithNoData(Collection<String> metricNames, NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, long applicationId, ThirdPartyApiCallLog apiCallLog)
-      throws IOException {
+      List<EncryptedDataDetail> encryptedDataDetails, long applicationId, ThirdPartyApiCallLog apiCallLog,
+      boolean failOnException) throws IOException {
     final long currentTime = System.currentTimeMillis();
     Set<String> metricsWithNoData = Sets.newHashSet(metricNames);
     NewRelicMetricData metricData = getMetricDataApplication(newRelicConfig, encryptedDataDetails, applicationId,

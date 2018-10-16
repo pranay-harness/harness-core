@@ -10,7 +10,7 @@ import javax.ws.rs.client.WebTarget;
  * Created by rsingh on 5/15/17.
  */
 public class AppDynamicsToDoListLoadGenTest extends BaseIntegrationTest {
-  private final String baseUrl = "http://35.197.110.8/todolist";
+  private final String baseUrl = "http://104.198.10.86/todolist";
   //  private final String baseUrl = "https://appd.cfapps.io";
   //  private final String baseUrl = "http://localhost:8080";
   @Test
