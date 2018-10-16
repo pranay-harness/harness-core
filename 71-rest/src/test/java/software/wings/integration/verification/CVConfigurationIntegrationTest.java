@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateType.APP_DYNAMICS;
+import static software.wings.sm.StateType.DATA_DOG;
 import static software.wings.sm.StateType.NEW_RELIC;
 
 import com.google.inject.Inject;
@@ -24,6 +25,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.util.Collections;
@@ -44,6 +46,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
   private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
+  private DatadogCVServiceConfiguration datadogCVServiceConfiguration;
 
   private SettingAttribute settingAttribute;
   private String settingAttributeId;
@@ -70,6 +73,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     createNewRelicConfig(true);
     createAppDynamicsConfig();
+    createDatadogConfig();
   }
 
   private void createNewRelicConfig(boolean enabled24x7) {
@@ -97,6 +101,19 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
     appDynamicsCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
+  }
+
+  private void createDatadogConfig() {
+    datadogCVServiceConfiguration = new DatadogCVServiceConfiguration();
+    datadogCVServiceConfiguration.setAppId(appId);
+    datadogCVServiceConfiguration.setEnvId(envId);
+    datadogCVServiceConfiguration.setServiceId(serviceId);
+    datadogCVServiceConfiguration.setEnabled24x7(true);
+    datadogCVServiceConfiguration.setConnectorId(generateUuid());
+    datadogCVServiceConfiguration.setStateType(DATA_DOG);
+    datadogCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
+    datadogCVServiceConfiguration.setDatadogServiceName(generateUuid());
+    datadogCVServiceConfiguration.setMetrics("trace.servlet.request.errors, system.mem.used, system.cpu.iowait");
   }
 
   @Test
@@ -208,6 +225,34 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
       assertEquals(APP_DYNAMICS, obj.getStateType());
       assertEquals(appDynamicsApplicationId, obj.getAppDynamicsApplicationId());
       assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
+    }
+  }
+
+  @Test
+  public <T extends CVConfiguration> void testDatadogConfiguration() {
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + DATA_DOG;
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(datadogCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<T> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
+    T fetchedObject = getRequestResponse.getResource();
+    if (fetchedObject instanceof DatadogCVServiceConfiguration) {
+      DatadogCVServiceConfiguration obj = (DatadogCVServiceConfiguration) fetchedObject;
+      assertEquals(savedObjectUuid, obj.getUuid());
+      assertEquals(accountId, obj.getAccountId());
+      assertEquals(appId, obj.getAppId());
+      assertEquals(envId, obj.getEnvId());
+      assertEquals(serviceId, obj.getServiceId());
+      assertEquals(DATA_DOG, obj.getStateType());
+      assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
+      assertEquals("trace.servlet.request.errors, system.mem.used, system.cpu.iowait", obj.getMetrics());
     }
   }
 }
