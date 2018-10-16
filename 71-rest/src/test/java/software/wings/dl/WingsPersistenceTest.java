@@ -43,6 +43,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.KmsService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.utils.WingsTestConstants;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -384,7 +385,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     entity.setMapField(map);
     wingsPersistence.save(entity);
 
-    TestEntity entity1 = wingsPersistence.get(TestEntity.class, entity.getUuid());
+    wingsPersistence.get(TestEntity.class, entity.getUuid());
 
     Query<TestEntity> query = wingsPersistence.createQuery(TestEntity.class).filter(ID_KEY, entity.getUuid());
 
@@ -570,13 +571,13 @@ public class WingsPersistenceTest extends WingsBaseTest {
       String password = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
       JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
                                         .jenkinsUrl("https://jenkins.wings.software")
-                                        .accountId("kmpySmUISimoRrJL6NL73w")
+                                        .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                                         .username("wingsbuild")
                                         .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
                                         .password(password.toCharArray())
                                         .build();
       SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                              .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                              .withAccountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                                               .withCategory(Category.CONNECTOR)
                                               .withName("Jenkins Config" + rand)
                                               .withValue(jenkinsConfig)
@@ -602,12 +603,12 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String originalPassword = "06b13aea6f5f13ec69577689a899bbaad69eeb2f";
     JenkinsConfig jenkinsConfig = JenkinsConfig.builder()
                                       .jenkinsUrl("https://jenkins.wings.software")
-                                      .accountId("kmpySmUISimoRrJL6NL73w")
+                                      .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                                       .username("wingsbuild")
                                       .password(originalPassword.toCharArray())
                                       .build();
     SettingAttribute settingAttribute = SettingAttribute.Builder.aSettingAttribute()
-                                            .withAccountId("kmpySmUISimoRrJL6NL73w")
+                                            .withAccountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                                             .withCategory(Category.CONNECTOR)
                                             .withName("Jenkins Config" + rand)
                                             .withValue(jenkinsConfig)
@@ -634,7 +635,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();
     ServiceVariable serviceVariable = ServiceVariable.builder()
-                                          .accountId("kmpySmUISimoRrJL6NL73w")
+                                          .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                                           .templateId(TEMPLATE_ID)
                                           .envId(ENV_ID)
                                           .entityType(EntityType.SERVICE)
@@ -655,7 +656,7 @@ public class WingsPersistenceTest extends WingsBaseTest {
     String rand = String.valueOf(Math.random());
     char[] password = "bar".toCharArray();
     ServiceVariable serviceVariable = ServiceVariable.builder()
-                                          .accountId("kmpySmUISimoRrJL6NL73w")
+                                          .accountId(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                                           .templateId(TEMPLATE_ID)
                                           .envId(ENV_ID)
                                           .entityType(EntityType.SERVICE)

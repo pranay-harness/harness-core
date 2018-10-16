@@ -176,6 +176,8 @@ import software.wings.service.impl.infra.InfraDownloadServiceImpl;
 import software.wings.service.impl.instance.DashboardStatisticsServiceImpl;
 import software.wings.service.impl.instance.DeploymentServiceImpl;
 import software.wings.service.impl.instance.InstanceServiceImpl;
+import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
+import software.wings.service.impl.instance.stats.collector.StatsCollectorImpl;
 import software.wings.service.impl.instance.sync.ContainerSync;
 import software.wings.service.impl.instance.sync.ContainerSyncImpl;
 import software.wings.service.impl.newrelic.NewRelicServiceImpl;
@@ -303,6 +305,8 @@ import software.wings.service.intfc.expression.ExpressionBuilderService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.DeploymentService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.instance.stats.InstanceStatService;
+import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.prometheus.PrometheusAnalysisService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -494,6 +498,8 @@ public class WingsModule extends DependencyModule {
     bind(DelegateProfileService.class).to(DelegateProfileServiceImpl.class);
     bind(AwsCFHelperServiceManager.class).to(AwsCFHelperServiceManagerImpl.class);
     bind(SumoLogicAnalysisService.class).to(SumoLogicAnalysisServiceImpl.class);
+    bind(InstanceStatService.class).to(InstanceStatServiceImpl.class);
+    bind(StatsCollector.class).to(StatsCollectorImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);

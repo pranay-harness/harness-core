@@ -40,6 +40,7 @@ import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.states.HttpState;
+import software.wings.utils.WingsTestConstants;
 
 import java.time.Duration;
 import java.util.List;
@@ -80,7 +81,8 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   public void shouldGetTemplateTreeByKeyword() {
-    TemplateFolder templateFolder = templateFolderService.getTemplateTree("kmpySmUISimoRrJL6NL73w", "Install", null);
+    TemplateFolder templateFolder =
+        templateFolderService.getTemplateTree(WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID, "Install", null);
     assertThat(templateFolder).isNotNull();
     assertThat(templateFolder.getName()).isEqualTo(TEMPLATE_FOLDER_NAME);
     assertThat(templateFolder.getKeywords()).contains(TEMPLATE_FOLDER_NAME.toLowerCase());

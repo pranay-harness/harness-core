@@ -8,6 +8,7 @@ import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 
 import java.util.List;
 import java.util.Set;
+import javax.annotation.Nonnull;
 
 /**
  * Serves all the service and infrastructure dashboard related statistics
@@ -49,7 +50,7 @@ public interface DashboardStatisticsService {
    * @param timestamp point in time
    * @return set of instances
    */
-  Set<Instance> getAppInstancesForAccount(String accountId, long timestamp);
+  @Nonnull Set<Instance> getAppInstancesForAccount(String accountId, long timestamp);
 
   /**
    * Gets the detailed information about the instances provisioned, deployments and pipelines for the given service.

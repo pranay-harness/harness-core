@@ -92,6 +92,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import javax.annotation.Nonnull;
 
 /**
  * @author rktummala on 8/13/17
@@ -297,7 +298,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public Set<Instance> getAppInstancesForAccount(String accountId, long timestamp) {
+  public @Nonnull Set<Instance> getAppInstancesForAccount(String accountId, long timestamp) {
     if (timestamp == 0) {
       timestamp = System.currentTimeMillis();
     }
