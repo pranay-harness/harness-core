@@ -179,19 +179,24 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     // for Fargate, where network mode is "awsvpc", setting taskRole causes error.
     if (!isFargateTaskType) {
       createServiceRequest.withRole(setupParams.getRoleArn());
+    } else {
+      createServiceRequest.withLaunchType(LaunchType.FARGATE);
     }
 
     // Setup config related to Fargate lauch type. here we set NetworkConfig
-    if (isFargateTaskType) {
-      AssignPublicIp assignPublicIp =
-          setupParams.isAssignPublicIps() ? AssignPublicIp.ENABLED : AssignPublicIp.DISABLED;
+    if (isFargateTaskType || NetworkMode.Awsvpc.name().equalsIgnoreCase(taskDefinition.getNetworkMode())) {
+      AssignPublicIp assignPublicIp = AssignPublicIp.DISABLED;
 
-      createServiceRequest.withLaunchType(LaunchType.FARGATE)
-          .withNetworkConfiguration(new NetworkConfiguration().withAwsvpcConfiguration(
-              new AwsVpcConfiguration()
-                  .withSecurityGroups(setupParams.getSecurityGroupIds())
-                  .withSubnets(setupParams.getSubnetIds())
-                  .withAssignPublicIp(assignPublicIp)));
+      // For EC2 type deployment, assignPublicIp = Enabled is not supported even for awsvpc networkMode
+      if (isFargateTaskType) {
+        assignPublicIp = setupParams.isAssignPublicIps() ? AssignPublicIp.ENABLED : AssignPublicIp.DISABLED;
+      }
+
+      createServiceRequest.withNetworkConfiguration(
+          new NetworkConfiguration().withAwsvpcConfiguration(new AwsVpcConfiguration()
+                                                                 .withSecurityGroups(setupParams.getSecurityGroupIds())
+                                                                 .withSubnets(setupParams.getSubnetIds())
+                                                                 .withAssignPublicIp(assignPublicIp)));
     }
     return createServiceRequest;
   }
