@@ -565,3 +565,4 @@ software.wings.beans.delegation.TerraformProvisionParameters$TerraformCommand, 5
 software.wings.beans.delegation.TerraformProvisionParameters$TerraformCommandUnit, 5525
 software.wings.api.AwsAmiDeployStateExecutionData, 5526
 software.wings.api.PipelineElement, 5527
+software.wings.beans.command.ShellExecutionData, 5528

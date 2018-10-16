@@ -1,5 +1,7 @@
 package software.wings.api;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import io.harness.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +16,7 @@ import java.util.Map;
 public class ScriptStateExecutionData extends StateExecutionData implements ResponseData {
   private String name;
   private String activityId;
+  private Map<String, String> sweepingOutputEnvVariables;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionSummary() {
@@ -31,12 +34,22 @@ public class ScriptStateExecutionData extends StateExecutionData implements Resp
 
   @Override
   public ScriptStateExecutionSummary getStepExecutionSummary() {
-    return ScriptStateExecutionSummary.builder().build();
+    return ScriptStateExecutionSummary.builder()
+        .activityId(activityId)
+        .sweepingOutputEnvVariables(sweepingOutputEnvVariables)
+        .build();
   }
 
   private void setExecutionData(Map<String, ExecutionDataValue> executionDetails) {
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().displayName("Activity Id").value(activityId).build());
     putNotNull(executionDetails, "name", ExecutionDataValue.builder().displayName("Name").value(name).build());
+    if (isNotEmpty(sweepingOutputEnvVariables)) {
+      putNotNull(executionDetails, "sweepingOutputEnvVariables",
+          ExecutionDataValue.builder()
+              .displayName("Script output")
+              .value(removeNullValues(sweepingOutputEnvVariables))
+              .build());
+    }
   }
 }

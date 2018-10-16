@@ -44,6 +44,7 @@ public class ShellScriptParameters {
   private final ScriptType scriptType;
   private final String script;
   private final boolean executeOnDelegate;
+  private final String outputVars;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
     Map<String, String> resolvedEnvironment = new HashMap<>();

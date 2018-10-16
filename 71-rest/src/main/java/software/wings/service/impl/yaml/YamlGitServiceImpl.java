@@ -209,7 +209,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public void fullSync(String accountId, boolean forcePush) {
-    logger.info(GIT_YAML_LOG_PREFIX + "Performing git full-sync for account {} " + accountId);
+    logger.info(GIT_YAML_LOG_PREFIX + "Performing git full-sync for account {} ", accountId);
     YamlGitConfig yamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId);
     if (yamlGitConfig != null) {
       try {
@@ -229,7 +229,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         }
 
         syncFiles(accountId, gitFileChanges, forcePush);
-        logger.info(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account {} successfully" + accountId);
+        logger.info(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account {} successfully", accountId);
       } catch (Exception ex) {
         logger.error(
             GIT_YAML_LOG_PREFIX + "Failed to perform git full-sync for account {} ", yamlGitConfig.getAccountId(), ex);
