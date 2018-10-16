@@ -91,6 +91,15 @@ public class EnvResourceRestClient {
     return env;
   }
 
+  public Environment createEnv(Client client, String userToken, String appId, Environment environment) {
+    WebTarget target = client.target(API_BASE + "/environments/?appId=" + appId);
+    RestResponse<Environment> response =
+        userResourceRestClient.getRequestBuilderWithAuthHeader(userToken, target)
+            .post(entity(environment, APPLICATION_JSON), new GenericType<RestResponse<Environment>>() {});
+    assertThat(response.getResource()).isNotNull().isInstanceOf(Environment.class);
+    return response.getResource();
+  }
+
   public InfrastructureMapping getSeedFakeHostsDcInfra(Client client) {
     return infraCachedEntity.computeIfAbsent(
         SEED_FAKE_HOSTS_DC_INFRA_KEY, key -> fetchOrCreateFakeHostsDcInfra(client));

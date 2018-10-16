@@ -25,6 +25,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
@@ -77,6 +78,9 @@ import software.wings.resources.KmsResource;
 import software.wings.resources.SecretManagementResource;
 import software.wings.resources.ServiceVariableResource;
 import software.wings.security.EncryptionType;
+import software.wings.security.EnvFilter;
+import software.wings.security.GenericEntityFilter;
+import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
@@ -97,6 +101,9 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManagementDelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
+import software.wings.settings.UsageRestrictions;
+import software.wings.settings.UsageRestrictions.AppEnvRestriction;
+import software.wings.settings.UsageRestrictions.AppEnvRestriction.AppEnvRestrictionBuilder;
 import software.wings.utils.BoundedInputStream;
 
 import java.io.File;
@@ -1318,6 +1325,44 @@ public class KmsTest extends WingsBaseTest {
                    .asList()
                    .get(0)
                    .getParentIds());
+  }
+
+  @Test
+  public void getSecret() throws IOException {
+    final KmsConfig kmsConfig = getKmsConfig();
+    kmsResource.saveKmsConfig(accountId, kmsConfig);
+
+    // update to encrypt the variable
+    String secretName = UUID.randomUUID().toString();
+    String secretValue = UUID.randomUUID().toString();
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+
+    EncryptedData secretByName = secretManager.getSecretByName(accountId, secretName, true);
+    assertThat(secretByName).isNotNull();
+    assertThat(secretByName.getName()).isEqualTo(secretName);
+
+    secretByName = secretManager.getSecretByName(accountId, secretName, false);
+    assertThat(secretByName).isNotNull();
+    assertThat(secretByName.getName()).isEqualTo(secretName);
+
+    String secretName1 = UUID.randomUUID().toString();
+    String secretValue1 = UUID.randomUUID().toString();
+
+    AppEnvRestrictionBuilder appEnvRestrictionBuilder =
+        AppEnvRestriction.builder()
+            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+            .envFilter(EnvFilter.builder().filterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD)).build());
+    Set<AppEnvRestriction> appEnvRestrictions = new HashSet<>();
+    appEnvRestrictions.add(appEnvRestrictionBuilder.build());
+    secretManager.saveSecret(accountId, secretName1, secretValue1,
+        UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build());
+
+    secretByName = secretManager.getSecretByName(accountId, secretName1, true);
+    assertThat(secretByName).isNull();
+
+    secretByName = secretManager.getSecretByName(accountId, secretName1, false);
+    assertThat(secretByName).isNotNull();
+    assertThat(secretByName.getName()).isEqualTo(secretName1);
   }
 
   @Test
