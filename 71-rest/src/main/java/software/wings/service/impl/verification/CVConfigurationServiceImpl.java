@@ -14,6 +14,7 @@ import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.util.List;
@@ -37,6 +38,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case APP_DYNAMICS:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), AppDynamicsCVServiceConfiguration.class);
+        break;
+
+      case DATA_DOG:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), DatadogCVServiceConfiguration.class);
         break;
 
       default:
@@ -76,6 +81,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case APP_DYNAMICS:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), AppDynamicsCVServiceConfiguration.class);
+        break;
+      case DATA_DOG:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), DatadogCVServiceConfiguration.class);
         break;
       default:
         throw new WingsException("No matching state type found - " + stateType)
@@ -125,6 +133,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("appDynamicsApplicationId",
                 ((AppDynamicsCVServiceConfiguration) cvConfiguration).getAppDynamicsApplicationId())
             .set("tierId", ((AppDynamicsCVServiceConfiguration) cvConfiguration).getTierId());
+        break;
+
+      case DATA_DOG:
+        updateOperations
+            .set("datadogServiceName", ((DatadogCVServiceConfiguration) cvConfiguration).getDatadogServiceName())
+            .set("metrics", ((DatadogCVServiceConfiguration) cvConfiguration).getMetrics());
         break;
 
       default:
