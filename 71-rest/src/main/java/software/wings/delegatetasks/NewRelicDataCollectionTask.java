@@ -3,6 +3,8 @@ package software.wings.delegatetasks;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
+import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_NON_SPECIAL_CHARS;
+import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_SPECIAL_CHARS;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.batchMetricsToCollect;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.getApdexMetricNames;
 import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.getErrorMetricNames;
@@ -148,14 +150,14 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricData(
-        NewRelicApplicationInstance node, Set<String> metricNames, long endTime) throws Exception {
+        NewRelicApplicationInstance node, Set<String> metricNames, long endTime, boolean failOnException) {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
 
       logger.info("Fetching for host {} for stateExecutionId {} for metrics {}", node,
           dataCollectionInfo.getStateExecutionId(), metricNames);
-      getWebTransactionMetrics(node, metricNames, endTime, records);
-      getErrorMetrics(node, metricNames, endTime, records);
-      getApdexMetrics(node, metricNames, endTime, records);
+      getWebTransactionMetrics(node, metricNames, endTime, records, failOnException);
+      getErrorMetrics(node, metricNames, endTime, records, failOnException);
+      getApdexMetrics(node, metricNames, endTime, records, failOnException);
       logger.info("Fetching done for host {} for stateExecutionId {} for metrics {}", node,
           dataCollectionInfo.getStateExecutionId(), metricNames);
 
@@ -195,8 +197,9 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       }
       return metricData;
     }
+
     private void getWebTransactionMetrics(NewRelicApplicationInstance node, Set<String> metricNames, long endTime,
-        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
+        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records, boolean failOnException) {
       int retry = 0;
       while (retry < RETRIES) {
         try {
@@ -250,8 +253,12 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
           }
           break;
         } catch (Exception e) {
-          logger.warn(
+          logger.info(
               "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
+          if (!failOnException) {
+            logger.info("no retrying or failing for node {}, metrics {}", node, metricNames);
+            return;
+          }
           retry++;
           if (retry >= RETRIES) {
             throw new WingsException("Fetching for web transaction metrics failed. reason " + Misc.getMessage(e));
@@ -261,7 +268,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private void getErrorMetrics(NewRelicApplicationInstance node, Set<String> metricNames, long endTime,
-        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
+        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records, boolean failOnException) {
       // get error metrics
       int retry = 0;
       while (retry < RETRIES) {
@@ -289,6 +296,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         } catch (Exception e) {
           logger.warn(
               "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
+          if (!failOnException) {
+            logger.info("no retrying or failing for node {}, metrics {}", node, metricNames);
+            return;
+          }
           retry++;
           if (retry >= RETRIES) {
             throw new WingsException("Fetching for error metrics failed. reason " + Misc.getMessage(e));
@@ -298,7 +309,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private void getApdexMetrics(NewRelicApplicationInstance node, Set<String> metricNames, long endTime,
-        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) throws IOException {
+        TreeBasedTable<String, Long, NewRelicMetricDataRecord> records, boolean failOnException) {
       // get apdex metrics
       int retry = 0;
       while (retry < RETRIES) {
@@ -329,6 +340,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
         } catch (Exception e) {
           logger.warn(
               "Error fetching metrics for node: " + node + ", retry: " + retry + ", metrics: " + metricNames, e);
+          if (!failOnException) {
+            logger.info("no retrying or failing for node {}, metrics {}", node, metricNames);
+            return;
+          }
           retry++;
           if (retry >= RETRIES) {
             throw new WingsException("Fetching for apdex metrics failed. reason " + Misc.getMessage(e));
@@ -384,7 +399,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                 dataCollectionInfo.getNewRelicAppId(), createApiCallLog(dataCollectionInfo.getStateExecutionId()));
             logger.info("Got {} new relic nodes.", instances.size());
 
-            List<Set<String>> metricBatches = batchMetricsToCollect(txnsToCollect);
+            Map<String, List<Set<String>>> metricBatches = batchMetricsToCollect(txnsToCollect);
             logger.info("Found total new relic metric batches " + metricBatches.size());
 
             List<Callable<Boolean>> callables = new ArrayList<>();
@@ -509,12 +524,22 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     }
 
     private boolean fetchAndSaveMetricsForNode(
-        NewRelicApplicationInstance node, List<Set<String>> metricBatches, long endTime) throws Exception {
+        NewRelicApplicationInstance node, Map<String, List<Set<String>>> metricBatches, long endTime) {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> records = TreeBasedTable.create();
       final long startTime = System.currentTimeMillis();
-      for (Set<String> metricNames : metricBatches) {
-        records.putAll(getMetricData(node, metricNames, endTime));
-      }
+      metricBatches.forEach((metricNamesType, batchedMetrics) -> {
+        if (metricNamesType.equals(METRIC_NAME_NON_SPECIAL_CHARS)) {
+          batchedMetrics.forEach(metrics -> records.putAll(getMetricData(node, metrics, endTime, true)));
+          return;
+        }
+
+        if (metricNamesType.equals(METRIC_NAME_SPECIAL_CHARS)) {
+          batchedMetrics.forEach(metrics -> records.putAll(getMetricData(node, metrics, endTime, false)));
+          return;
+        }
+
+        throw new IllegalStateException("Invalid metric batch type " + metricNamesType);
+      });
 
       List<NewRelicMetricDataRecord> metricRecords = getAllMetricRecords(records);
       logger.info("Sending {} new relic metric records for node {} for minute {}. Time taken: {}",

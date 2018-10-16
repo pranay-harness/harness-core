@@ -3,6 +3,8 @@ package software.wings.service.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_NON_SPECIAL_CHARS;
+import static software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl.METRIC_NAME_SPECIAL_CHARS;
 
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
@@ -30,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -107,7 +110,7 @@ public class NewRelicTest extends WingsBaseTest {
   }
 
   @Test
-  public void testMetricsBatching() throws Exception {
+  public void testMetricsBatching() {
     Set<NewRelicMetric> metricNames =
         Sets.newHashSet(NewRelicMetric.builder().name("WebTransaction/456/load+test-some/with_under_score1").build(),
             NewRelicMetric.builder().name("WebTransaction/456/load+test-some/with_under_score2").build(),
@@ -121,15 +124,18 @@ public class NewRelicTest extends WingsBaseTest {
                 .name("WebTransaction/SpringController/$server.error.path:$error.path:/error}} (GET)")
                 .build());
 
-    List<Set<String>> batchMetricsToCollect = NewRelicDelgateServiceImpl.batchMetricsToCollect(metricNames);
+    Map<String, List<Set<String>>> batchMetricsToCollect =
+        NewRelicDelgateServiceImpl.batchMetricsToCollect(metricNames);
     assertEquals(2, batchMetricsToCollect.size());
-    assertEquals(3, batchMetricsToCollect.get(0).size());
-    assertTrue(batchMetricsToCollect.get(0).contains("WebTransaction/456/load+test-some/with_under_score1"));
-    assertTrue(batchMetricsToCollect.get(0).contains("WebTransaction/456/load+test-some/with_under_score2"));
-    assertTrue(batchMetricsToCollect.get(0).contains("1292Name/456/load test-some/with space_and_underscore"));
+    List<Set<String>> nonSpecialCharBatches = batchMetricsToCollect.get(METRIC_NAME_NON_SPECIAL_CHARS);
+    assertEquals(1, nonSpecialCharBatches.size());
+    assertTrue(nonSpecialCharBatches.get(0).contains("WebTransaction/456/load+test-some/with_under_score1"));
+    assertTrue(nonSpecialCharBatches.get(0).contains("WebTransaction/456/load+test-some/with_under_score2"));
+    assertTrue(nonSpecialCharBatches.get(0).contains("1292Name/456/load test-some/with space_and_underscore"));
 
-    assertEquals(2, batchMetricsToCollect.get(1).size());
-    assertTrue(batchMetricsToCollect.get(1).contains("WebTransaction/special char %?name=s1&value=v1"));
-    assertTrue(batchMetricsToCollect.get(1).contains("WebTransaction/special char %?name=s2&value=v2"));
+    List<Set<String>> specialCharBatches = batchMetricsToCollect.get(METRIC_NAME_SPECIAL_CHARS);
+    assertEquals(1, specialCharBatches.size());
+    assertTrue(specialCharBatches.get(0).contains("WebTransaction/special char %?name=s1&value=v1"));
+    assertTrue(specialCharBatches.get(0).contains("WebTransaction/special char %?name=s2&value=v2"));
   }
 }
