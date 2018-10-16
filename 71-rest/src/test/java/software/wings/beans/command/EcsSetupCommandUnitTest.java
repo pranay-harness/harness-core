@@ -41,6 +41,7 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -357,26 +358,14 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
 
   @Test
   public void testGetCreateServiceRequest_EC2() throws Exception {
-    EcsSetupParams setupParams = anEcsSetupParams()
-                                     .withClusterName(CLUSTER_NAME)
-                                     .withTargetGroupArn(TARGET_GROUP_ARN)
-                                     .withRoleArn(ROLE_ARN)
-                                     .withRegion(Regions.US_EAST_1.getName())
-                                     .withUseLoadBalancer(true)
-                                     .build();
-
-    TaskDefinition taskDefinition = new TaskDefinition().withFamily("family").withRevision(1).withContainerDefinitions(
-        new com.amazonaws.services.ecs.model.ContainerDefinition()
-            .withPortMappings(new PortMapping().withContainerPort(80).withProtocol("http"))
-            .withName(CONTAINER_NAME));
+    EcsSetupParams setupParams = getEcsSetupParams();
+    TaskDefinition taskDefinition = getTaskDefinition();
 
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
 
-    TargetGroup targetGroup = new TargetGroup();
-    targetGroup.setPort(80);
-    targetGroup.setTargetGroupArn(TARGET_GROUP_ARN);
+    TargetGroup targetGroup = getTargetGroup();
 
     when(awsClusterService.getTargetGroup(
              Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), TARGET_GROUP_ARN))
@@ -387,6 +376,11 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
             new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME,
                 executionLogCallback});
 
+    assertCreateServiceRequestObject(taskDefinition, createServiceRequest);
+  }
+
+  private void assertCreateServiceRequestObject(
+      TaskDefinition taskDefinition, CreateServiceRequest createServiceRequest) {
     assertNotNull(createServiceRequest);
 
     // netWorkConfiguration should be ignored here, as its required only for fargate
@@ -408,6 +402,66 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
     assertEquals(CONTAINER_NAME, loadBalancer.getContainerName());
     assertEquals(TARGET_GROUP_ARN, loadBalancer.getTargetGroupArn());
     assertEquals(80, loadBalancer.getContainerPort().intValue());
+  }
+
+  @NotNull
+  private TargetGroup getTargetGroup() {
+    TargetGroup targetGroup = new TargetGroup();
+    targetGroup.setPort(80);
+    targetGroup.setTargetGroupArn(TARGET_GROUP_ARN);
+    return targetGroup;
+  }
+
+  private EcsSetupParams getEcsSetupParams() {
+    return anEcsSetupParams()
+        .withClusterName(CLUSTER_NAME)
+        .withTargetGroupArn(TARGET_GROUP_ARN)
+        .withRoleArn(ROLE_ARN)
+        .withRegion(Regions.US_EAST_1.getName())
+        .withUseLoadBalancer(true)
+        .build();
+  }
+
+  @Test
+  public void testGetCreateServiceRequest_EC2_awsvpc() throws Exception {
+    EcsSetupParams setupParams = getEcsSetupParams();
+    setupParams.setSubnetIds(new String[] {"subnet1"});
+    setupParams.setSecurityGroupIds(new String[] {"sg1"});
+    setupParams.setAssignPublicIps(true);
+
+    TaskDefinition taskDefinition = getTaskDefinition();
+    taskDefinition.setNetworkMode("awsvpc");
+
+    TargetGroup targetGroup = getTargetGroup();
+
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+
+    when(awsClusterService.getTargetGroup(
+             Regions.US_EAST_1.getName(), computeProvider, Collections.emptyList(), TARGET_GROUP_ARN))
+        .thenReturn(targetGroup);
+
+    CreateServiceRequest createServiceRequest =
+        (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "getCreateServiceRequest",
+            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME,
+                executionLogCallback});
+
+    assertNotNull(createServiceRequest.getNetworkConfiguration());
+    assertNotNull(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration());
+    AwsVpcConfiguration awsVpcConfiguration = createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration();
+    assertEquals(1, awsVpcConfiguration.getSecurityGroups().size());
+    assertEquals("sg1", awsVpcConfiguration.getSecurityGroups().get(0));
+    assertEquals(1, awsVpcConfiguration.getSubnets().size());
+    assertEquals("subnet1", awsVpcConfiguration.getSubnets().get(0));
+    assertEquals(AssignPublicIp.DISABLED.name(), awsVpcConfiguration.getAssignPublicIp());
+  }
+
+  private TaskDefinition getTaskDefinition() {
+    return new TaskDefinition().withFamily("family").withRevision(1).withContainerDefinitions(
+        new com.amazonaws.services.ecs.model.ContainerDefinition()
+            .withPortMappings(new PortMapping().withContainerPort(80).withProtocol("http"))
+            .withName(CONTAINER_NAME));
   }
 
   @Test
