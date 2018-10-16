@@ -7,6 +7,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
@@ -66,7 +67,7 @@ public class AccountServiceTest extends WingsBaseTest {
         anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
     verify(settingsService).createDefaultAccountSettings(account.getUuid());
-    verify(jobScheduler).deleteJob(eq(account.getUuid()), anyString());
+    verify(jobScheduler, times(2)).deleteJob(eq(account.getUuid()), anyString());
   }
 
   @Test
