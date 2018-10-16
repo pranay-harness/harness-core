@@ -91,6 +91,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
       }
 
       Workflow workflow = workflowService.readWorkflow(workflowExecution.getAppId(), workflowExecution.getWorkflowId());
+      CanaryOrchestrationWorkflow orchestrationWorkflow =
+          (CanaryOrchestrationWorkflow) findOrchestrationWorkflow(workflow, workflowExecution);
 
       boolean rolling = false;
       if (stateExecutionInstance != null && stateExecutionInstance.getOrchestrationWorkflowType() == ROLLING) {
@@ -101,8 +103,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           && state.getName().equals(Constants.PRE_DEPLOYMENT) && executionEvent.getExecutionStatus() == SUCCESS) {
         // ready for rolling deploy
 
-        CanaryOrchestrationWorkflow orchestrationWorkflow =
-            (CanaryOrchestrationWorkflow) findOrchestrationWorkflow(workflow, workflowExecution);
         if (orchestrationWorkflow == null || isEmpty(orchestrationWorkflow.getWorkflowPhases())) {
           return null;
         }
@@ -182,6 +182,10 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
           && executionEvent.getExecutionStatus() == SUCCESS) {
         rollbackProvisioners = true;
 
+      } else if (state.getStateType().equals(StateType.PHASE_STEP.name()) && state instanceof PhaseStepSubWorkflow
+          && ((PhaseStepSubWorkflow) state).getPhaseStepType().equals(PhaseStepType.PRE_DEPLOYMENT)
+          && executionEvent.getExecutionStatus() == FAILED) {
+        return getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
       } else if (!(executionEvent.getExecutionStatus() == FAILED || executionEvent.getExecutionStatus() == ERROR)) {
         return null;
       }
@@ -195,8 +199,6 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         return null;
       }
 
-      CanaryOrchestrationWorkflow orchestrationWorkflow =
-          (CanaryOrchestrationWorkflow) findOrchestrationWorkflow(workflow, workflowExecution);
       if (orchestrationWorkflow == null || orchestrationWorkflow.getRollbackWorkflowPhaseIdMap() == null) {
         return null;
       }
@@ -218,8 +220,9 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         }
 
         if (lastExecutedPhaseName == null) {
-          return null;
+          return anExecutionEventAdvice().withExecutionInterruptType(ExecutionInterruptType.ROLLBACK_DONE).build();
         }
+
         String finalLastExecutedPhaseName = lastExecutedPhaseName;
         Optional<WorkflowPhase> lastExecutedPhase =
             orchestrationWorkflow.getWorkflowPhases()
@@ -458,19 +461,26 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         .build();
   }
 
+  private ExecutionEventAdvice getRollbackProvisionerAdviceIfNeeded(PhaseStep preDeploymentSteps) {
+    if (preDeploymentSteps != null && preDeploymentSteps.getSteps() != null
+        && preDeploymentSteps.getSteps().stream().anyMatch(step -> {
+             return step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
+                 || step.getType().equals(StateType.TERRAFORM_PROVISION.getType());
+           })) {
+      return anExecutionEventAdvice()
+          .withNextStateName(Constants.ROLLBACK_PROVISIONERS)
+          .withExecutionInterruptType(ROLLBACK)
+          .build();
+    }
+    return null;
+  }
   private ExecutionEventAdvice phaseSubWorkflowAdviceForOthers(CanaryOrchestrationWorkflow orchestrationWorkflow,
       PhaseSubWorkflow phaseSubWorkflow, StateExecutionInstance stateExecutionInstance) {
     if (!phaseSubWorkflow.isRollback()) {
-      if (orchestrationWorkflow.getPreDeploymentSteps() != null
-          && orchestrationWorkflow.getPreDeploymentSteps().getSteps() != null
-          && orchestrationWorkflow.getPreDeploymentSteps().getSteps().stream().anyMatch(step -> {
-               return step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())
-                   || step.getType().equals(StateType.TERRAFORM_PROVISION.getType());
-             })) {
-        return anExecutionEventAdvice()
-            .withNextStateName(Constants.ROLLBACK_PROVISIONERS)
-            .withExecutionInterruptType(ROLLBACK)
-            .build();
+      ExecutionEventAdvice rollbackProvisionerAdvice =
+          getRollbackProvisionerAdviceIfNeeded(orchestrationWorkflow.getPreDeploymentSteps());
+      if (rollbackProvisionerAdvice != null) {
+        return rollbackProvisionerAdvice;
       }
 
       return anExecutionEventAdvice()
