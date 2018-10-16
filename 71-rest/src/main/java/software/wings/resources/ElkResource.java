@@ -103,12 +103,11 @@ public class ElkResource implements LogAnalysisResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> validateQuery(@QueryParam("accountId") String accountId,
-      @QueryParam("query") String query, @DefaultValue("false") @QueryParam("formattedQuery") String formattedQuery)
-      throws IOException {
+      @QueryParam("query") String query, @DefaultValue("false") @QueryParam("formattedQuery") boolean formattedQuery) {
     try {
       ElkLogFetchRequest.builder()
           .query(query)
-          .formattedQuery(Boolean.valueOf(formattedQuery))
+          .formattedQuery(formattedQuery)
           .indices("logstash-*")
           .hostnameField("beat.hostname")
           .messageField("message")
