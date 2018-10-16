@@ -26,6 +26,7 @@ import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.containerregistry.Registry;
 import com.microsoft.azure.management.containerservice.KubernetesCluster;
+import com.microsoft.azure.management.containerservice.OSType;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.rest.LogLevel;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -131,7 +132,8 @@ public class AzureHelperService {
 
     notNullCheck("Compute Provider", computeProviderSetting);
     AzureConfig azureConfig = validateAndGetAzureConfig(computeProviderSetting);
-    return listVmsByTagsAndResourceGroup(azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap);
+    return listVmsByTagsAndResourceGroup(
+        azureConfig, encryptedDataDetails, subscriptionId, resourceGroup, tagsMap, OSType.WINDOWS);
   }
 
   public List<AzureAvailabilitySet> listAvailabilitySets(
@@ -151,9 +153,19 @@ public class AzureHelperService {
         .collect(toList());
   }
 
+  private OSType getVmOSType(VirtualMachine vm) {
+    if (vm.osProfile() != null && vm.osProfile().windowsConfiguration() != null) {
+      return OSType.WINDOWS;
+    } else if (vm.osProfile() != null && vm.osProfile().linuxConfiguration() != null) {
+      return OSType.LINUX;
+    } else {
+      return null;
+    }
+  }
+
   public List<VirtualMachine> listVmsByTagsAndResourceGroup(AzureConfig azureConfig,
       List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroupName,
-      Map<String, String> tags) {
+      Map<String, String> tags, OSType osType) {
     List<VirtualMachine> matchingVMs = new ArrayList<>();
 
     encryptionService.decrypt(azureConfig, encryptionDetails);
@@ -166,7 +178,14 @@ public class AzureHelperService {
       return Collections.emptyList();
     }
 
-    // Tags are optional
+    // Filter VMs by OS type
+    if (osType != null && (OSType.WINDOWS.equals(osType) || OSType.LINUX.equals(osType))) {
+      listVms = listVms.stream()
+                    .filter(vm -> getVmOSType(vm) != null && getVmOSType(vm).equals(osType))
+                    .collect(Collectors.toList());
+    }
+
+    // Filter by tags if present, tags are optional.
     for (VirtualMachine vm : listVms) {
       if (tags.isEmpty()) {
         matchingVMs.add(vm);
