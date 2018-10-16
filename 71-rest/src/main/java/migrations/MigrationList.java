@@ -2,6 +2,7 @@ package migrations;
 
 import com.google.common.collect.ImmutableList;
 
+import migrations.all.AddInstanceStatsCollectionJobToAllAccounts;
 import migrations.all.AddReplCtrlNameToKubeSetupProperties;
 import migrations.all.AddUsersToAdminUserGroup;
 import migrations.all.AddValidUntilToActivity;
@@ -132,6 +133,7 @@ public class MigrationList {
         .add(Pair.of(191, HelmReleaseNameSuffixMigration.class))
         .add(Pair.of(192, SetIsDeletedFlagForInstances.class))
         .add(Pair.of(193, UsageRestrictionsMigration.class))
+        .add(Pair.of(194, AddInstanceStatsCollectionJobToAllAccounts.class))
         .build();
   }
 }
