@@ -6,6 +6,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.inject.Inject;
 
 import com.microsoft.azure.management.compute.VirtualMachine;
+import com.microsoft.azure.management.containerservice.OSType;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
@@ -139,7 +140,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  public void getVmsByResourceGroupAndTag() {
+  public void getWindowsHostsByResourceGroupAndTag() {
     AzureConfig config = getAzureConfig();
     Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
     subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
@@ -152,8 +153,34 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
       for (String rg : resourceGroups) {
         List<VirtualMachine> vms = azureHelperService.listVmsByTagsAndResourceGroup(
-            config, Collections.EMPTY_LIST, subscriptionId, rg, Collections.EMPTY_MAP);
+            config, Collections.EMPTY_LIST, subscriptionId, rg, Collections.EMPTY_MAP, OSType.WINDOWS);
+        // assert that only windows instances are returned
         for (VirtualMachine vm : vms) {
+          assertThat(vm.inner().osProfile().windowsConfiguration()).isNotNull();
+          logger.info("Resource group :" + rg + " VM :" + vm.name());
+        }
+      }
+    }
+  }
+
+  @Test
+  public void getLinuxHostsByResourceGroupAndTag() {
+    AzureConfig config = getAzureConfig();
+    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
+    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
+      String subscriptionId = entry.getKey();
+      logger.info("Subscription: " + subscriptionId);
+      Set<String> resourceGroups =
+          azureHelperService.listResourceGroups(config, Collections.EMPTY_LIST, subscriptionId);
+      assertThat(resourceGroups).isNotEmpty();
+
+      for (String rg : resourceGroups) {
+        List<VirtualMachine> vms = azureHelperService.listVmsByTagsAndResourceGroup(
+            config, Collections.EMPTY_LIST, subscriptionId, rg, Collections.EMPTY_MAP, OSType.LINUX);
+        // assert that only Linux instances are returned
+        for (VirtualMachine vm : vms) {
+          assertThat(vm.inner().osProfile().linuxConfiguration()).isNotNull();
           logger.info("Resource group :" + rg + " VM :" + vm.name());
         }
       }
