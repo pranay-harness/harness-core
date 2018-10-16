@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Setter;
 import lombok.Value;
 import software.wings.api.ScriptType;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.core.local.executors.ShellExecutorConfig;
 import software.wings.core.ssh.executors.SshSessionConfig;
@@ -45,6 +46,9 @@ public class ShellScriptParameters {
   private final String script;
   private final boolean executeOnDelegate;
   private final String outputVars;
+  private final HostConnectionAttributes hostConnectionAttributes;
+  private final String keyPath;
+  private final boolean keyless;
 
   private Map<String, String> getResolvedEnvironmentVariables() {
     Map<String, String> resolvedEnvironment = new HashMap<>();
@@ -61,6 +65,7 @@ public class ShellScriptParameters {
   }
 
   public SshSessionConfig sshSessionConfig(EncryptionService encryptionService) throws IOException {
+    encryptionService.decrypt(hostConnectionAttributes, keyEncryptedDataDetails);
     return aSshSessionConfig()
         .withAccountId(accountId)
         .withAppId(appId)
@@ -68,6 +73,9 @@ public class ShellScriptParameters {
         .withHost(host)
         .withUserName(userName)
         .withKey(encryptionService.getDecryptedValue(keyEncryptedDataDetails.get(0)))
+        .withKeyPath(keyPath)
+        .withKeyLess(keyless)
+        .withWorkingDirectory(workingDirectory)
         .withCommandUnitName(CommandUnit)
         .withPort(22)
         .build();
