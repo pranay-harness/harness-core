@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
-import static io.harness.exception.WingsException.SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.network.Http.connectableHttpUrl;
@@ -84,7 +83,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw e;
     } catch (IOException ex) {
       throw new InvalidRequestException(
-          "Failed to fetch build details jenkins server. Reason:" + Misc.getMessage(ex), USER_ADMIN);
+          "Failed to fetch build details jenkins server. Reason:" + Misc.getMessage(ex), USER);
     }
   }
 
@@ -165,7 +164,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   @Override
   public List<String> getGroupIds(
       String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new InvalidRequestException("Operation not supported by Jenkins Artifact Stream", SRE);
+    throw new InvalidRequestException("Operation not supported by Jenkins Artifact Stream", USER);
   }
 
   @Override

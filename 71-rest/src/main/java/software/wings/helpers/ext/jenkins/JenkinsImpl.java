@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -371,8 +370,7 @@ public class JenkinsImpl implements Jenkins {
   public QueueReference trigger(String jobname, Map<String, String> parameters) throws IOException {
     JobWithDetails jobWithDetails = getJob(jobname);
     if (jobWithDetails == null) {
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER_ADMIN)
-          .addParam("message", "No job [" + jobname + "] found");
+      throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "No job [" + jobname + "] found");
     }
     try {
       QueueReference queueReference;

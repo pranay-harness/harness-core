@@ -86,4 +86,6 @@ public interface ArtifactoryService {
 
   Long getFileSize(
       ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails, Map<String, String> metadata);
+
+  boolean isRunning(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptionDetails);
 }
