@@ -6,6 +6,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.util.Arrays.asList;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.utils.Misc.replaceUnicodeWithDot;
 
@@ -767,6 +768,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .filter("appId", appId)
         .filter("serviceId", serviceId)
         .filter("cvConfigId", cvConfigId)
+        .field("name")
+        .notEqual(HARNESS_HEARTBEAT_METRIC_NAME)
         .field("dataCollectionMinute")
         .greaterThanOrEq(analysisStartMinute)
         .field("dataCollectionMinute")
