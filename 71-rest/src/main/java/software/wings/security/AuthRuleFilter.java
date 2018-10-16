@@ -42,6 +42,7 @@ import software.wings.security.UserRequestContext.UserRequestContextBuilder;
 import software.wings.security.UserRequestInfo.UserRequestInfoBuilder;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.DelegateAuth;
+import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.PublicApi;
@@ -162,26 +163,25 @@ public class AuthRuleFilter implements ContainerRequestFilter {
     if (user != null) {
       user.setUseNewRbac(rbacEnabledForAccount);
     } else {
-      logger.error("No user context in operation: {}", uriPath);
+      logger.warn("No user context in operation: {}", uriPath);
+      throw new InvalidRequestException("No user context set", USER);
     }
 
     String httpMethod = requestContext.getMethod();
     List<PermissionAttribute> requiredPermissionAttributes;
     List<String> appIdsOfAccount = getValidAppsFromAccount(accountId, appIdsFromRequest, emptyAppIdsInReq);
-    if (user != null) {
-      if (!userService.isUserAssignedToAccount(user, accountId)) {
-        if (!httpMethod.equals(HttpMethod.GET.name()) && !uriPath.startsWith("users/license/account")) {
-          throw new InvalidRequestException("User not authorized", USER);
-        }
+    if (!userService.isUserAssignedToAccount(user, accountId)) {
+      if (!httpMethod.equals(HttpMethod.GET.name()) && !uriPath.startsWith("users/license/account")) {
+        throw new InvalidRequestException("User not authorized", USER);
+      }
 
-        Set<Action> actions = null;
-        if (rbacEnabledForAccount) {
-          actions = harnessUserGroupService.listAllowedUserActionsForAccount(accountId, user.getUuid());
-        }
+      Set<Action> actions = null;
+      if (rbacEnabledForAccount) {
+        actions = harnessUserGroupService.listAllowedUserActionsForAccount(accountId, user.getUuid());
+      }
 
-        if (isEmpty(actions)) {
-          throw new InvalidRequestException("User not authorized", USER);
-        }
+      if (isEmpty(actions)) {
+        throw new InvalidRequestException("User not authorized", USER);
       }
     }
 
@@ -199,18 +199,16 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       requiredPermissionAttributes = getAllRequiredPermissionAttributes(requestContext);
 
       if (isEmpty(requiredPermissionAttributes) || allLoggedInScope(requiredPermissionAttributes)) {
-        if (user != null) {
-          UserRequestContextBuilder userRequestContextBuilder =
-              UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
+        UserRequestContextBuilder userRequestContextBuilder =
+            UserRequestContext.builder().accountId(accountId).entityInfoMap(Maps.newHashMap());
 
-          UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user);
-          userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
+        UserPermissionInfo userPermissionInfo = authService.getUserPermissionInfo(accountId, user);
+        userRequestContextBuilder.userPermissionInfo(userPermissionInfo);
 
-          Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
-          setAppIdFilterInUserRequestContext(userRequestContextBuilder, emptyAppIdsInReq, allowedAppIds);
+        Set<String> allowedAppIds = getAllowedAppIds(userPermissionInfo);
+        setAppIdFilterInUserRequestContext(userRequestContextBuilder, emptyAppIdsInReq, allowedAppIds);
 
-          user.setUserRequestContext(userRequestContextBuilder.build());
-        }
+        user.setUserRequestContext(userRequestContextBuilder.build());
 
         return;
       }
@@ -524,7 +522,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   }
 
   private boolean authorizationExemptedRequest(ContainerRequestContext requestContext) {
-    return publicAPI() || requestContext.getMethod().equals(OPTIONS)
+    // externalAPI() doesn't need any authorization
+    return publicAPI() || requestContext.getMethod().equals(OPTIONS) || externalAPI()
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/version")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger")
         || requestContext.getUriInfo().getAbsolutePath().getPath().endsWith("api/swagger.json");
@@ -546,6 +545,14 @@ public class AuthRuleFilter implements ContainerRequestFilter {
 
     return resourceMethod.getAnnotation(PublicApi.class) != null
         || resourceClass.getAnnotation(PublicApi.class) != null;
+  }
+
+  private boolean externalAPI() {
+    Class<?> resourceClass = resourceInfo.getResourceClass();
+    Method resourceMethod = resourceInfo.getResourceMethod();
+
+    return resourceMethod.getAnnotation(ExternalFacingApiAuth.class) != null
+        || resourceClass.getAnnotation(ExternalFacingApiAuth.class) != null;
   }
 
   private boolean delegateAPI() {
