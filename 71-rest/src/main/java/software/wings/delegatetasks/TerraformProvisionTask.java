@@ -14,6 +14,9 @@ import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -47,6 +50,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
@@ -105,8 +109,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     }
 
     String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
-    File tfVariablesFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
 
+    String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
+
+    File tfVariablesFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
     try {
       File tfStateFile = Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile();
 
@@ -222,6 +228,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
               .commandExecuted(parameters.getCommand())
+              .sourceRepoReference(sourceRepoReference)
               .variables(variableList)
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
@@ -241,6 +248,24 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     } finally {
       FileUtils.deleteQuietly(tfVariablesFile);
     }
+  }
+
+  private String getLatestCommitSHAFromLocalRepo(GitConfig gitConfig) {
+    File repoDir = new File(gitClientHelper.getRepoDirectory(gitConfig));
+    if (repoDir.exists()) {
+      try (Git git = Git.open(repoDir)) {
+        Iterator<RevCommit> commits = git.log().call().iterator();
+        if (commits.hasNext()) {
+          RevCommit firstCommit = commits.next();
+
+          return firstCommit.toString().split(" ")[1];
+        }
+      } catch (IOException | GitAPIException e) {
+        logger.error("Failed to extract the commit id from the cloned repo.");
+      }
+    }
+
+    return null;
   }
 
   private String resolveScriptDirectory(GitConfig gitConfig, String scriptPath) {

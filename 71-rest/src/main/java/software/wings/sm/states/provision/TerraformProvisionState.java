@@ -11,7 +11,6 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
-import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
@@ -76,7 +75,6 @@ import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
-import software.wings.stencils.DefaultValue;
 import software.wings.utils.Validator;
 
 import java.io.IOException;
@@ -96,6 +94,7 @@ public abstract class TerraformProvisionState extends State {
 
   private static final String VARIABLES_KEY = "variables";
   private static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
+  private static final int DEFAULT_TERRAFORM_ASYNC_CALL_TIMEOUT = 30 * 60 * 1000; // 10 minutes
 
   @Inject @Transient private transient AppService appService;
   @Inject @Transient private transient ActivityService activityService;
@@ -129,10 +128,9 @@ public abstract class TerraformProvisionState extends State {
   protected abstract TerraformCommand command();
 
   @Attributes(title = "Timeout (ms)")
-  @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
   @Override
   public Integer getTimeoutMillis() {
-    return super.getTimeoutMillis();
+    return DEFAULT_TERRAFORM_ASYNC_CALL_TIMEOUT;
   }
 
   @Override
@@ -192,13 +190,13 @@ public abstract class TerraformProvisionState extends State {
                    .build();
 
       if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
-        saveTerraformConfig(context, terraformProvisioner, getVariables());
+        saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
       }
 
     } else {
       if (this.getStateType().equals(StateType.TERRAFORM_DESTROY.name())) {
         if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
-          deleteTerraformConfig(context.getWorkflowExecutionId());
+          deleteTerraformConfig(context);
         }
       }
     }
@@ -315,8 +313,7 @@ public abstract class TerraformProvisionState extends State {
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
-    final String entityId = generateEntityId(executionContext);
-
+    final String entityId = generateEntityId(context);
     final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
 
     Map<String, String> variables = null;
@@ -389,24 +386,26 @@ public abstract class TerraformProvisionState extends State {
   }
 
   protected void saveTerraformConfig(
-      ExecutionContext context, TerraformInfrastructureProvisioner provisioner, List<NameValuePair> allVariables) {
+      ExecutionContext context, TerraformInfrastructureProvisioner provisioner, TerraformExecutionData executionData) {
     TerraformfConfig terraformfConfig = TerraformfConfig.builder()
+                                            .entityId(generateEntityId(context))
                                             .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
-                                            .variables(allVariables)
-                                            .entityId(generateEntityId((ExecutionContextImpl) context))
+                                            .sourceRepoReference(executionData.getSourceRepoReference())
+                                            .variables(executionData.getVariables())
                                             .workflowExecutionId(context.getWorkflowExecutionId())
                                             .build();
 
     wingsPersistence.save(terraformfConfig);
   }
 
-  protected String generateEntityId(ExecutionContextImpl executionContext) {
+  protected String generateEntityId(ExecutionContext context) {
+    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     return provisionerId + "-" + executionContext.getEnv().getUuid();
   }
 
-  protected void deleteTerraformConfig(String workflowExecutionId) {
+  protected void deleteTerraformConfig(ExecutionContext context) {
     Query<TerraformfConfig> query = wingsPersistence.createQuery(TerraformfConfig.class)
-                                        .filter(TerraformfConfig.WORKFLOW_EXECUTION_ID_KEY, workflowExecutionId);
+                                        .filter(TerraformfConfig.ENTITY_ID_KEY, generateEntityId(context));
 
     wingsPersistence.delete(query);
   }
