@@ -542,6 +542,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       String watcherCheckLocation = watcherMetadataUrl.substring(watcherMetadataUrl.lastIndexOf('/') + 1);
 
       Account account = accountService.get(accountId);
+
+      if (mainConfiguration.getDeployMode().equals(DeployMode.KUBERNETES_ONPREM)) {
+        delegateDockerImage = mainConfiguration.getPortal().getDelegateDockerImage();
+      }
+
       ImmutableMap.Builder<String, String> params = ImmutableMap.<String, String>builder()
                                                         .put("delegateDockerImage", delegateDockerImage)
                                                         .put("accountId", accountId)
@@ -560,9 +565,6 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
       if (delegateProfile != null) {
         params.put("delegateProfile", delegateProfile);
-      }
-      if (mainConfiguration.getDeployMode().equals(DeployMode.KUBERNETES_ONPREM)) {
-        params.put("delegateDockerImage", mainConfiguration.getPortal().getDelegateDockerImage());
       }
 
       return params.build();
