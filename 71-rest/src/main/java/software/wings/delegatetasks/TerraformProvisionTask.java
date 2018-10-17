@@ -141,18 +141,15 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       File tfOutputsFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
 
       String joinedCommands = null;
-      String commandExecuted = "";
       switch (parameters.getCommand()) {
         case APPLY:
           joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
               "terraform refresh -input=false", "terraform plan -out=tfplan -input=false",
               "terraform apply -input=false tfplan", "(terraform output --json > " + tfOutputsFile.toString() + ")"));
-          commandExecuted = "Apply";
           break;
         case DESTROY:
           joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
               "terraform refresh -input=false", "terraform destroy -force"));
-          commandExecuted = "Destroy";
           break;
         default:
           throw new IllegalArgumentException("Invalid Terraform Command : " + parameters.getCommand().name());
@@ -224,7 +221,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           TerraformExecutionData.builder()
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
-              .commandExecuted(commandExecuted)
+              .commandExecuted(parameters.getCommand())
               .variables(variableList)
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);

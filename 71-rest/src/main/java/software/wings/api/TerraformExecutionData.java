@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.NameValuePair;
+import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
@@ -24,7 +25,7 @@ public class TerraformExecutionData extends StateExecutionData implements Respon
   private String stateFileId;
 
   private String outputs;
-  private String commandExecuted;
+  private TerraformCommand commandExecuted;
   private List<NameValuePair> variables;
 
   public Map<String, ExecutionDataValue> getExecutionDetails() {

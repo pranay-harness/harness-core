@@ -152,11 +152,10 @@ public class TerraformRollbackState extends TerraformProvisionState {
     TerraformExecutionData terraformExecutionData = (TerraformExecutionData) entry.getValue();
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 
-    String commandExecuted = terraformExecutionData.getCommandExecuted();
     if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
-      if ("Apply".equals(commandExecuted)) {
+      if (terraformExecutionData.getCommandExecuted() == TerraformCommand.APPLY) {
         saveTerraformConfig(context, terraformProvisioner, terraformExecutionData.getVariables());
-      } else if ("Destroy".equals(commandExecuted)) {
+      } else if (terraformExecutionData.getCommandExecuted() == TerraformCommand.DESTROY) {
         Query<TerraformfConfig> query =
             wingsPersistence.createQuery(TerraformfConfig.class)
                 .filter(TerraformfConfig.ENTITY_ID_KEY, generateEntityId((ExecutionContextImpl) context))
