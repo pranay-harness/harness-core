@@ -37,6 +37,7 @@ import io.harness.beans.SearchFilter.Operator;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.glassfish.jersey.client.ClientConfig;
+import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.glassfish.jersey.media.multipart.internal.MultiPartWriter;
 import org.junit.Before;
@@ -75,6 +76,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import javax.crypto.spec.SecretKeySpec;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -83,6 +85,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.GenericType;
 
 /**
@@ -132,11 +135,16 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
     JacksonJaxbJsonProvider jacksonProvider = new JacksonJaxbJsonProvider();
     jacksonProvider.setMapper(objectMapper);
 
+    // To log HTTP Request/Response for debugging purpose.
+    java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger(BaseIntegrationTest.class.getName());
+    Feature loggingFeature = new LoggingFeature(julLogger, Level.INFO, null, null);
+
     client = ClientBuilder.newBuilder()
                  .sslContext(sslcontext)
                  .hostnameVerifier((s1, s2) -> true)
                  .register(MultiPartFeature.class)
                  .register(jacksonProvider)
+                 .register(loggingFeature)
                  .build();
   }
 

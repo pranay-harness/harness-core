@@ -947,32 +947,37 @@ public class SecretManagerImpl implements SecretManager {
 
     // update parent's file size
     Set<Parent> parents = new HashSet<>();
-    for (String parentId : encryptedData.getParentIds()) {
-      parents.add(
-          Parent.builder()
-              .id(parentId)
-              .variableType(SettingVariableTypes.CONFIG_FILE)
-              .encryptionDetail(EncryptionDetail.builder().encryptionType(encryptedData.getEncryptionType()).build())
-              .build());
+    if (isNotEmpty(encryptedData.getParentIds())) {
+      for (String parentId : encryptedData.getParentIds()) {
+        parents.add(
+            Parent.builder()
+                .id(parentId)
+                .variableType(SettingVariableTypes.CONFIG_FILE)
+                .encryptionDetail(EncryptionDetail.builder().encryptionType(encryptedData.getEncryptionType()).build())
+                .build());
+      }
     }
     List<UuidAware> configFiles = fetchParents(accountId, parents);
     configFiles.forEach(configFile -> {
       ((ConfigFile) configFile).setSize(inputStream.getTotalBytesRead());
       wingsPersistence.save((ConfigFile) configFile);
-      if (UserThreadLocal.get() != null) {
-        String description = oldName.equals(name) ? "Changed File" : "Changed Name and File";
-        wingsPersistence.save(SecretChangeLog.builder()
-                                  .accountId(accountId)
-                                  .encryptedDataId(uuid)
-                                  .description(description)
-                                  .user(EmbeddedUser.builder()
-                                            .uuid(UserThreadLocal.get().getUuid())
-                                            .email(UserThreadLocal.get().getEmail())
-                                            .name(UserThreadLocal.get().getName())
-                                            .build())
-                                  .build());
-      }
     });
+
+    // Logging the secret file changes.
+    if (UserThreadLocal.get() != null) {
+      String description = oldName.equals(name) ? "Changed File" : "Changed Name and File";
+      description = usageRestrictions == null ? description : description + " or Usage Restrictions";
+      wingsPersistence.save(SecretChangeLog.builder()
+                                .accountId(accountId)
+                                .encryptedDataId(uuid)
+                                .description(description)
+                                .user(EmbeddedUser.builder()
+                                          .uuid(UserThreadLocal.get().getUuid())
+                                          .email(UserThreadLocal.get().getEmail())
+                                          .name(UserThreadLocal.get().getName())
+                                          .build())
+                                .build());
+    }
 
     return true;
   }
