@@ -29,7 +29,11 @@ import software.wings.service.intfc.security.EncryptionConfig;
 @NoArgsConstructor
 @AllArgsConstructor
 @Indexes({
-  @Index(fields = { @Field("name"), @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+  @Index(fields = { @Field("name")
+                    , @Field("accountId") }, options = @IndexOptions(unique = true, name = "uniqueIdx"))
+  , @Index(fields = {
+    @Field("vaultUrl"), @Field("accountId")
+  }, options = @IndexOptions(unique = true, name = "uniqueUrlIdx"))
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Entity(value = "vaultConfig", noClassnameStored = true)
