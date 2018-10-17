@@ -17,6 +17,14 @@
     </dependencySets>
     <fileSets>
         <fileSet>
+            <directory>11-commons-test/target/classes</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>secrets.properties</include>
+            </includes>
+            <useDefaultExcludes>true</useDefaultExcludes>
+        </fileSet>
+        <fileSet>
             <directory>${project.build.directory}/test-classes</directory>
             <outputDirectory>/</outputDirectory>
             <includes>
