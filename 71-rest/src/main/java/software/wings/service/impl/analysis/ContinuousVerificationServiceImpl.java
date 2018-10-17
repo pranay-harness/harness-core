@@ -389,27 +389,42 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private HeatMapUnit getMockHeatMapUnit(long startEpoch, long endEpoch, int eventsPerUnit, int durationInMinutes) {
-    int low = 0, medium = 0, high = 0;
+    final int NUM_CLASSES = 4; // low / med / high / na
+
+    int low = 0, medium = 0, high = 0, na = 0;
 
     Random random = new Random();
 
     if (eventsPerUnit == 1) {
-      int randomNum = random.nextInt(3);
+      int randomNum = random.nextInt(NUM_CLASSES);
       if (randomNum == 0) {
         low = 1;
       } else if (randomNum == 1) {
         medium = 1;
-      } else {
+      } else if (randomNum == 2) {
         high = 1;
+      } else {
+        na = 1;
       }
 
-      return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, null);
+      return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, na, null);
     }
 
-    low = random.nextInt(eventsPerUnit);
-    medium = random.nextInt(eventsPerUnit - low);
-    high = eventsPerUnit - (low + medium);
-    return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, null);
+    int randomNum = random.nextInt(eventsPerUnit);
+    if (randomNum % 2 == 0) {
+      low = randomNum;
+    } else {
+      medium = randomNum;
+    }
+    eventsPerUnit -= randomNum;
+    if (eventsPerUnit > 0) {
+      high = random.nextInt(eventsPerUnit);
+      eventsPerUnit -= high;
+    }
+    if (eventsPerUnit > 0) {
+      na = random.nextInt(eventsPerUnit);
+    }
+    return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, na, null);
   }
 
   @NotNull

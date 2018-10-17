@@ -18,8 +18,9 @@ import java.util.List;
 public class HeatMapUnit {
   private long startTime;
   private long endTime;
-  private int passed;
-  private int failed;
-  private int error;
+  private int highRisk;
+  private int mediumRisk;
+  private int lowRisk;
+  private int NA;
   private List<TimeSeriesDataPoint> timeSeries;
 }
