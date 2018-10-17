@@ -174,10 +174,11 @@ public class TimeSeriesResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> getMetricTemplate(
+  public RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> getMetricTemplates(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
       @QueryParam("stateType") StateType stateType, @QueryParam("serviceId") String serviceId,
-      @QueryParam("groupName") String groupName) {
-    return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplate(appId, stateType, serviceId, groupName));
+      @QueryParam("groupName") String groupName, @QueryParam("cvConfigId") String cvConfigId) {
+    return new RestResponse<>(
+        timeSeriesAnalysisService.getMetricTemplate(appId, serviceId, groupName, stateType, cvConfigId));
   }
 }

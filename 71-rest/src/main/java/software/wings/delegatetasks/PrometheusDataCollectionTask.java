@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.sm.states.AbstractAnalysisState.END_TIME_PLACE_HOLDER;
 import static software.wings.sm.states.AbstractAnalysisState.HOST_NAME_PLACE_HOLDER;
@@ -17,9 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.PrometheusConfig;
+import software.wings.beans.TaskType;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
+import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusMetricDataResponse;
@@ -42,8 +46,6 @@ import java.util.function.Supplier;
  */
 public class PrometheusDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(PrometheusDataCollectionTask.class);
-  private static final int DURATION_TO_ASK_MINUTES = 5;
-  private static final int CANARY_DAYS_TO_COLLECT = 7;
   private PrometheusDataCollectionInfo dataCollectionInfo;
 
   @Inject private PrometheusDelegateService prometheusDelegateService;
@@ -76,7 +78,8 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
 
   @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new PrometheusMetricCollector(dataCollectionInfo, taskResult);
+    return new PrometheusMetricCollector(
+        dataCollectionInfo, taskResult, this.getTaskType().equals(TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA.name()));
   }
 
   private class PrometheusMetricCollector implements Runnable {
@@ -84,13 +87,17 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
     private final DataCollectionTaskResult taskResult;
     private long collectionStartTime;
     private int dataCollectionMinute;
+    private PrometheusConfig prometheusConfig;
+    private boolean is247Task;
 
     private PrometheusMetricCollector(
-        PrometheusDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
+        PrometheusDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult, boolean is247Task) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.taskResult = taskResult;
       this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
+      prometheusConfig = dataCollectionInfo.getPrometheusConfig();
+      this.is247Task = is247Task;
     }
 
     @SuppressFBWarnings("REC_CATCH_EXCEPTION")
@@ -100,11 +107,13 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
         int retry = 0;
         while (!completed.get() && retry < RETRIES) {
           try {
+            logger.info("starting metric data collection for {} for minute {} is247Task {}", dataCollectionInfo,
+                dataCollectionMinute, is247Task);
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataRecords = getMetricsData();
 
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(metricDataRecords);
-            if (!saveMetrics(dataCollectionInfo.getPrometheusConfig().getAccountId(),
-                    dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
+            if (!saveMetrics(prometheusConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
+                    dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
               logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                   dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
             } else {
@@ -113,7 +122,7 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
             }
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime() || is247Task) {
               // We are done with all data collection, so setting task status to success and quitting.
               logger.info(
                   "Completed Prometheus collection task. So setting task status to success and quitting. StateExecutionId {}",
@@ -122,7 +131,6 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
               taskResult.setStatus(DataCollectionTaskStatus.SUCCESS);
             }
             break;
-
           } catch (Exception ex) {
             if (++retry >= RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
@@ -155,16 +163,39 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
 
     public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricsData() throws IOException {
       final TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataResponses = TreeBasedTable.create();
-      List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
-      for (String host : dataCollectionInfo.getHosts().keySet()) {
-        callables.add(() -> getMetricDataRecords(host));
-      }
 
-      logger.info("fetching Prometheus metrics for {} strategy {} for min {}", dataCollectionInfo.getStateExecutionId(),
-          dataCollectionInfo.getAnalysisComparisonStrategy(), dataCollectionMinute);
-      List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results = executeParrallel(callables);
-      logger.info("done fetching Prometheus metrics for {} strategy {} for min {}",
-          dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getAnalysisComparisonStrategy(),
+      List<Callable<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> callables = new ArrayList<>();
+      long startTime = collectionStartTime / TimeUnit.SECONDS.toMillis(1);
+      long endTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
+      List<Optional<TreeBasedTable<String, Long, NewRelicMetricDataRecord>>> results;
+      logger.info("fetching Prometheus metrics for {} Analysis Type {} for min {}",
+          dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
+          dataCollectionMinute);
+      switch (dataCollectionInfo.getTimeSeriesMlAnalysisType()) {
+        case COMPARATIVE:
+          for (String host : dataCollectionInfo.getHosts().keySet()) {
+            callables.add(() -> getMetricDataRecords(host, startTime, endTime));
+          }
+          break;
+        case PREDICTIVE:
+          final int periodToCollect = is247Task
+              ? dataCollectionInfo.getCollectionTime()
+              : (dataCollectionMinute == 0) ? PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES
+                                            : DURATION_TO_ASK_MINUTES;
+          if (is247Task) {
+            callables.add(
+                () -> getMetricDataRecords(null, startTime, startTime + TimeUnit.MINUTES.toSeconds(periodToCollect)));
+          } else {
+            callables.add(
+                () -> getMetricDataRecords(null, endTime - TimeUnit.MINUTES.toSeconds(periodToCollect), endTime));
+          }
+          break;
+        default:
+          throw new IllegalStateException("Invalid type " + dataCollectionInfo.getTimeSeriesMlAnalysisType());
+      }
+      results = executeParrallel(callables);
+      logger.info("done fetching Prometheus metrics for {} Analysis Type {} for min {}",
+          dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getTimeSeriesMlAnalysisType(),
           dataCollectionMinute);
       results.forEach(result -> {
         if (result.isPresent()) {
@@ -174,28 +205,31 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
       return metricDataResponses;
     }
 
-    private TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricDataRecords(String host) {
+    private TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricDataRecords(
+        String host, long startTime, long endTime) {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
       dataCollectionInfo.getTimeSeriesToCollect().forEach(timeSeries -> {
         String url = timeSeries.getUrl();
         Preconditions.checkState(url.contains(START_TIME_PLACE_HOLDER));
         Preconditions.checkState(url.contains(END_TIME_PLACE_HOLDER));
-        Preconditions.checkState(url.contains(HOST_NAME_PLACE_HOLDER));
 
-        url = url.replace(HOST_NAME_PLACE_HOLDER, host);
-        url = url.replace(START_TIME_PLACE_HOLDER, String.valueOf(collectionStartTime / TimeUnit.SECONDS.toMillis(1)));
-        url = url.replace(
-            END_TIME_PLACE_HOLDER, String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
+        url = url.replace(START_TIME_PLACE_HOLDER, String.valueOf(startTime));
+        url = url.replace(END_TIME_PLACE_HOLDER, String.valueOf(endTime));
 
+        if (!is247Task) {
+          Preconditions.checkState(url.contains(HOST_NAME_PLACE_HOLDER));
+          url = url.replace(HOST_NAME_PLACE_HOLDER, host);
+        }
         try {
           ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
           PrometheusMetricDataResponse response =
-              prometheusDelegateService.fetchMetricData(dataCollectionInfo.getPrometheusConfig(), url, apiCallLog);
-          TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricRecords = response.getMetricRecords(
-              timeSeries.getTxnName(), timeSeries.getMetricName(), dataCollectionInfo.getApplicationId(),
-              dataCollectionInfo.getWorkflowId(), dataCollectionInfo.getWorkflowExecutionId(),
-              dataCollectionInfo.getStateExecutionId(), dataCollectionInfo.getServiceId(), host,
-              dataCollectionInfo.getHosts().get(host), dataCollectionInfo.getStartTime());
+              prometheusDelegateService.fetchMetricData(prometheusConfig, url, apiCallLog);
+          TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricRecords =
+              response.getMetricRecords(timeSeries.getTxnName(), timeSeries.getMetricName(),
+                  dataCollectionInfo.getApplicationId(), dataCollectionInfo.getWorkflowId(),
+                  dataCollectionInfo.getWorkflowExecutionId(), dataCollectionInfo.getStateExecutionId(),
+                  dataCollectionInfo.getServiceId(), host, dataCollectionInfo.getHosts().get(host),
+                  dataCollectionInfo.getStartTime(), dataCollectionInfo.getCvConfigId(), is247Task);
           metricRecords.cellSet().forEach(cell -> {
             if (rv.contains(cell.getRowKey(), cell.getColumnKey())) {
               NewRelicMetricDataRecord metricDataRecord = rv.get(cell.getRowKey(), cell.getColumnKey());
@@ -216,13 +250,29 @@ public class PrometheusDataCollectionTask extends AbstractDelegateDataCollection
               .workflowId(dataCollectionInfo.getWorkflowId())
               .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
               .serviceId(dataCollectionInfo.getServiceId())
+              .cvConfigId(dataCollectionInfo.getCvConfigId())
               .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-              .dataCollectionMinute(dataCollectionMinute)
+              .dataCollectionMinute(fetchCollectionMinute())
               .timeStamp(collectionStartTime)
               .groupName(dataCollectionInfo.getHosts().get(host))
               .level(ClusterLevel.H0)
               .build());
       return rv;
+    }
+
+    private int fetchCollectionMinute() {
+      boolean isPredictiveAnalysis =
+          dataCollectionInfo.getTimeSeriesMlAnalysisType().equals(TimeSeriesMlAnalysisType.PREDICTIVE);
+      int collectionMinute;
+      if (is247Task) {
+        collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
+            + dataCollectionInfo.getCollectionTime();
+      } else if (isPredictiveAnalysis) {
+        collectionMinute = dataCollectionMinute + PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
+      } else {
+        collectionMinute = dataCollectionMinute;
+      }
+      return collectionMinute;
     }
 
     private List<NewRelicMetricDataRecord> getAllMetricRecords(

@@ -118,7 +118,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
       MetricAnalysisExecutionData executionData, Map<String, String> hosts) {
     List<String> metricNames = Arrays.asList(metrics.split(","));
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.DATA_DOG,
-        context.getStateExecutionInstanceId(), metricDefinitions(metrics(metricNames).values()));
+        context.getStateExecutionInstanceId(), null, metricDefinitions(metrics(metricNames).values()));
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     SettingAttribute settingAttribute = null;

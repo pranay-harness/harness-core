@@ -24,6 +24,7 @@ import software.wings.beans.Base;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.NewRelicConfig;
+import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -31,6 +32,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
+import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.APMVerificationService;
@@ -40,6 +42,7 @@ import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
+import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.HashMap;
@@ -128,6 +131,13 @@ public class APMVerificationServiceImpl implements APMVerificationService {
                 .get();
         task = createNewRelicDelegateTask(nrConfig, waitId, startTime, endTime);
         break;
+      case PROMETHEUS:
+        PrometheusCVServiceConfiguration prometheusCVServiceConfiguration =
+            (PrometheusCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
+                .filter("_id", cvConfigId)
+                .get();
+        task = createPrometheusDelegateTask(prometheusCVServiceConfiguration, waitId, startTime, endTime);
+        break;
       default:
         logger.error("Calling collect 24x7 data for an unsupported state");
         return false;
@@ -187,6 +197,28 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .build();
     return createDelegateTask(
         config, waitId, new Object[] {dataCollectionInfo}, timeDuration, TaskType.NEWRELIC_COLLECT_24_7_METRIC_DATA);
+  }
+
+  private DelegateTask createPrometheusDelegateTask(
+      PrometheusCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    PrometheusConfig prometheusConfig = (PrometheusConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final PrometheusDataCollectionInfo dataCollectionInfo =
+        PrometheusDataCollectionInfo.builder()
+            .prometheusConfig(prometheusConfig)
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId())
+            .serviceId(config.getServiceId())
+            .cvConfigId(config.getUuid())
+            .startTime(startTime)
+            .collectionTime(timeDuration)
+            .timeSeriesToCollect(config.getTimeSeriesToAnalyze())
+            .hosts(new HashMap<>())
+            .timeSeriesMlAnalysisType(TimeSeriesMlAnalysisType.PREDICTIVE)
+            .dataCollectionMinute(0)
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, timeDuration, TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA);
   }
 
   private DelegateTask createDelegateTask(

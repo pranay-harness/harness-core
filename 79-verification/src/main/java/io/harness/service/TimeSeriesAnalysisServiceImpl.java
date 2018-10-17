@@ -395,7 +395,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       case CLOUD_WATCH:
       case DATA_DOG:
       case APM_VERIFICATION:
-        result.put("default", getMetricTemplates(appId, stateType, stateExecutionId));
+        result.put("default", getMetricTemplates(appId, stateType, stateExecutionId, null));
         break;
       default:
         throw new WingsException("Invalid Verification StateType.");
@@ -658,7 +658,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Map<String, TimeSeriesMetricDefinition> getMetricTemplates(
-      String appId, StateType stateType, String stateExecutionId) {
+      String appId, StateType stateType, String stateExecutionId, String cvConfigId) {
     TimeSeriesMetricTemplates newRelicMetricTemplates = wingsPersistence.createQuery(TimeSeriesMetricTemplates.class)
                                                             .field("appId")
                                                             .equal(appId)
@@ -666,6 +666,8 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                                                             .equal(stateType)
                                                             .field("stateExecutionId")
                                                             .equal(stateExecutionId)
+                                                            .field("cvConfigId")
+                                                            .equal(cvConfigId)
                                                             .get();
     return newRelicMetricTemplates == null ? null : newRelicMetricTemplates.getMetricTemplates();
   }
@@ -788,7 +790,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
-      String appId, StateType stateType, String serviceId, String groupName) {
+      String appId, String serviceId, String groupName, StateType stateType, String cvConfigId) {
     Map<String, Map<String, TimeSeriesMetricDefinition>> result = new HashMap<>();
     switch (stateType) {
       case NEW_RELIC:
@@ -796,6 +798,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         break;
       case APP_DYNAMICS:
         result.put("default", NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
+        break;
+      case PROMETHEUS:
+        result.put("default", getMetricTemplates(appId, stateType, null, cvConfigId));
         break;
       default:
         throw new WingsException("Invalid Verification StateType.");

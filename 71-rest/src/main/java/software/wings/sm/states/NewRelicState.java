@@ -144,7 +144,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     final Map<String, TimeSeriesMetricDefinition> metricTemplate =
         newRelicService.metricDefinitions(metricNameToObjectMap);
     metricAnalysisService.saveMetricTemplates(
-        context.getAppId(), StateType.NEW_RELIC, context.getStateExecutionInstanceId(), metricTemplate);
+        context.getAppId(), StateType.NEW_RELIC, context.getStateExecutionInstanceId(), null, metricTemplate);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
     SettingAttribute settingAttribute = null;

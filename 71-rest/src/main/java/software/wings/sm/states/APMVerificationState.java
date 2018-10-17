@@ -214,7 +214,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
     final APMVerificationConfig apmConfig = (APMVerificationConfig) settingAttribute.getValue();
     Map<String, List<APMMetricInfo>> apmMetricInfos = apmMetricInfos(context);
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.APM_VERIFICATION,
-        context.getStateExecutionInstanceId(), metricDefinitions(apmMetricInfos));
+        context.getStateExecutionInstanceId(), null, metricDefinitions(apmMetricInfos));
     final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
     String accountId = appService.get(context.getAppId()).getAccountId();
     final APMDataCollectionInfo dataCollectionInfo =

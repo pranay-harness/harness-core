@@ -198,7 +198,7 @@ public class MetricAnalysisJob implements Job {
         case DATA_DOG:
         case APM_VERIFICATION:
           stateValuesToAnalyze = getMetricTypeMap(analysisService.getMetricTemplates(
-              context.getAppId(), context.getStateType(), context.getStateExecutionId()));
+              context.getAppId(), context.getStateType(), context.getStateExecutionId(), null));
           break;
         default:
           throw new IllegalStateException("Invalid stateType " + context.getStateType());

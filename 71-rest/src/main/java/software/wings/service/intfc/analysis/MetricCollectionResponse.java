@@ -10,5 +10,5 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 public interface MetricCollectionResponse {
   TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricRecords(String transactionName, String metricName,
       String appId, String workflowId, String workflowExecutionId, String stateExecutionId, String serviceId,
-      String host, String groupName, long collectionStartTime);
+      String host, String groupName, long collectionStartTime, String cvConfigId, boolean is247Task);
 }

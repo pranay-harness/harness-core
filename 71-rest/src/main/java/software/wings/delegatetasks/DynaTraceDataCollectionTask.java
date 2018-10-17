@@ -1,9 +1,11 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.PERIODIC_GAP_IN_DAYS;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.states.AbstractMetricAnalysisState.CANARY_DAYS_TO_COLLECT;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.TreeBasedTable;
@@ -47,9 +49,6 @@ import java.util.function.Supplier;
  */
 public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(DynaTraceDataCollectionTask.class);
-  private static final int DURATION_TO_ASK_MINUTES = 5;
-  private static final int CANARY_DAYS_TO_COLLECT = 7;
-  private static final int PERIODIC_GAP_IN_DAYS = 7;
   private DynaTraceDataCollectionInfo dataCollectionInfo;
 
   @Inject private DynaTraceDelegateService dynaTraceDelegateService;
