@@ -16,9 +16,9 @@ import static software.wings.sm.StateType.HELM_DEPLOY;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;

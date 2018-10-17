@@ -3,7 +3,7 @@ package software.wings.sm.states;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

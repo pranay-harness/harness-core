@@ -14,11 +14,11 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.task.protocol.ResponseData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;

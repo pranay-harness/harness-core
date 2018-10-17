@@ -1,6 +1,6 @@
 package software.wings.waitnotify;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
 

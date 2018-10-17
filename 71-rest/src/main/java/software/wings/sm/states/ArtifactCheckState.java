@@ -11,7 +11,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.artifact.Artifact;

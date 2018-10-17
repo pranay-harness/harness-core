@@ -14,8 +14,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
-import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;

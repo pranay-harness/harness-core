@@ -21,8 +21,8 @@ import static software.wings.sm.ExecutionStatus.SKIPPED;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
-import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import software.wings.api.ApprovalStateExecutionData;

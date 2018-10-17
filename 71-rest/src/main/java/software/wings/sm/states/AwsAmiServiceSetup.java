@@ -12,9 +12,9 @@ import com.google.common.base.Charsets;
 import com.google.common.io.BaseEncoding;
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

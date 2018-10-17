@@ -8,9 +8,9 @@ import static software.wings.waitnotify.StringNotifyResponseData.Builder.aString
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
-import io.harness.task.protocol.ResponseData;
 import io.harness.threading.Concurrent;
 import org.junit.Before;
 import org.junit.Test;

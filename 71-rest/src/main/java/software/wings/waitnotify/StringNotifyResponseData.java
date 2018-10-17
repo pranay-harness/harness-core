@@ -2,7 +2,7 @@ package software.wings.waitnotify;
 
 import com.google.common.base.MoreObjects;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 
 import java.util.Objects;
 

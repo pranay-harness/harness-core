@@ -7,9 +7,10 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.task.DelegateRunnableTask;
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.WingsException;
-import io.harness.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;

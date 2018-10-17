@@ -18,8 +18,8 @@ import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 
 import com.google.common.collect.Lists;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.WingsException;
-import io.harness.task.protocol.ResponseData;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.mockito.Mock;

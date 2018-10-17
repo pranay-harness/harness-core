@@ -8,9 +8,9 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import io.harness.task.protocol.ResponseData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.SettingAttribute;

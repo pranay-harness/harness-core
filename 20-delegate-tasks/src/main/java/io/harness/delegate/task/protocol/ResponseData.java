@@ -1,4 +1,4 @@
-package io.harness.task.protocol;
+package io.harness.delegate.task.protocol;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 

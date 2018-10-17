@@ -4,13 +4,13 @@ import static org.joor.Reflect.on;
 
 import com.google.inject.Injector;
 
+import io.harness.delegate.task.DelegateRunnableTask;
 import software.wings.delegatetasks.APMDataCollectionTask;
 import software.wings.delegatetasks.AppdynamicsDataCollectionTask;
 import software.wings.delegatetasks.BambooTask;
 import software.wings.delegatetasks.CloudWatchDataCollectionTask;
 import software.wings.delegatetasks.CollaborationProviderTask;
 import software.wings.delegatetasks.CommandTask;
-import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.DynaTraceDataCollectionTask;
 import software.wings.delegatetasks.EcsSteadyStateCheckTask;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;

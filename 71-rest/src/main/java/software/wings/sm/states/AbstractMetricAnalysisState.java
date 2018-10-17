@@ -10,8 +10,8 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.WingsException;
-import io.harness.task.protocol.ResponseData;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.MetricDataAnalysisResponse;

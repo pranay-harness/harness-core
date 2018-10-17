@@ -8,7 +8,7 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.query.Query;

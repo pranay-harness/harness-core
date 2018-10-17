@@ -5,7 +5,7 @@ import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

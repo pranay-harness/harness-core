@@ -60,6 +60,7 @@ import com.google.inject.name.Named;
 
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
@@ -100,7 +101,6 @@ import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.RestResponse;
 import software.wings.beans.TaskType;
 import software.wings.delegate.app.DelegateConfiguration;
-import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.delegatetasks.TaskLogContext;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;

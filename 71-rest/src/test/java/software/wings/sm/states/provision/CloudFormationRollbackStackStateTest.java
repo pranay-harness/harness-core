@@ -25,7 +25,7 @@ import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 
 import com.google.common.collect.ImmutableMap;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;

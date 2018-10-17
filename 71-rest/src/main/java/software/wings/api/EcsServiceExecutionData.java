@@ -7,7 +7,7 @@ import static org.apache.commons.lang3.StringUtils.strip;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.ExecutionStatus;
