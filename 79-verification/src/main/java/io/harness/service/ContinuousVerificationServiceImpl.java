@@ -1,7 +1,7 @@
 package io.harness.service;
 
-import static io.harness.app.VerificationServiceApplication.CRON_POLL_INTERVAL;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
@@ -131,8 +131,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     String testInputUrl = getDataFetchUrl(cvConfiguration, startMin - PREDECTIVE_HISTORY_MINUTES, endMin);
     String metricAnalysisSaveUrl = getMetricAnalysisSaveUrl(cvConfiguration, endMin, learningTaskId);
 
-    String metricTemplateUrl = getMetricTemplateUrl(
-        accountId, cvConfiguration.getAppId(), cvConfiguration.getStateType(), cvConfiguration.getServiceId());
+    String metricTemplateUrl = getMetricTemplateUrl(accountId, cvConfiguration.getAppId(),
+        cvConfiguration.getStateType(), cvConfiguration.getServiceId(), cvConfiguration.getUuid());
 
     LearningEngineAnalysisTask learningEngineAnalysisTask =
         LearningEngineAnalysisTask.builder()
@@ -168,10 +168,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return learningEngineAnalysisTask;
   }
 
-  public String getMetricTemplateUrl(String accountId, String appId, StateType stateType, String serviceId) {
+  public String getMetricTemplateUrl(
+      String accountId, String appId, StateType stateType, String serviceId, String cvConfigId) {
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
         + "/get-metric-template_24_7?accountId=" + accountId + "&appId=" + appId + "&stateType=" + stateType
-        + "&serviceId=" + serviceId;
+        + "&serviceId=" + serviceId + "&cvConfigId=" + cvConfigId;
   }
 
   private String getMetricAnalysisSaveUrl(CVConfiguration cvConfiguration, long endMinute, String taskId) {

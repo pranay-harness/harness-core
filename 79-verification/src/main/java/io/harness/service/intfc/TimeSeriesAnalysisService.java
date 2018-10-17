@@ -81,7 +81,7 @@ public interface TimeSeriesAnalysisService {
       String workflowExecutionId, String serviceId, String groupName);
 
   Map<String, TimeSeriesMetricDefinition> getMetricTemplates(
-      String accountId, StateType stateType, String stateExecutionId);
+      String accountId, StateType stateType, String stateExecutionId, String cvConfigId);
 
   Map<String, TimeSeriesMlAnalysisGroupInfo> getMetricGroups(String appId, String stateExecutionId);
 
@@ -101,5 +101,5 @@ public interface TimeSeriesAnalysisService {
   TimeSeriesMLAnalysisRecord getPreviousAnalysis(String appId, String cvConfigId, long dataCollectionMin);
 
   Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
-      String appId, StateType stateType, String serviceId, String groupName);
+      String appId, String serviceId, String groupName, StateType stateType, String cvConfigId);
 }

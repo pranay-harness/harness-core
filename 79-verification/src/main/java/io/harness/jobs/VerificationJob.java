@@ -1,8 +1,8 @@
 package io.harness.jobs;
 
-import static io.harness.app.VerificationServiceApplication.CRON_POLL_INTERVAL;
 import static io.harness.jobs.LogDataProcessorJob.LOG_DATA_PROCESSOR_CRON_GROUP;
 import static io.harness.jobs.MetricDataProcessorJob.METRIC_DATA_PROCESSOR_CRON_GROUP;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;

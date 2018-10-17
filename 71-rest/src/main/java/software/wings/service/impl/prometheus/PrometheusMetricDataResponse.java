@@ -3,7 +3,6 @@ package software.wings.service.impl.prometheus;
 import com.google.common.collect.TreeBasedTable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.time.Timestamp;
 import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +52,7 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
   @Override
   public TreeBasedTable<String, Long, NewRelicMetricDataRecord> getMetricRecords(String transactionName,
       String metricName, String appId, String workflowId, String workflowExecutionId, String stateExecutionId,
-      String serviceId, String host, String groupName, long collectionStartTime) {
+      String serviceId, String host, String groupName, long collectionStartTime, String cvConfigId, boolean is247Task) {
     TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
     if (!status.equals("success")) {
       return rv;
@@ -82,19 +81,21 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
 
         NewRelicMetricDataRecord metricDataRecord = rv.get(transactionName, timeStamp);
         if (metricDataRecord == null) {
-          metricDataRecord = NewRelicMetricDataRecord.builder()
-                                 .name(transactionName)
-                                 .appId(appId)
-                                 .workflowId(workflowId)
-                                 .workflowExecutionId(workflowExecutionId)
-                                 .stateExecutionId(stateExecutionId)
-                                 .serviceId(serviceId)
-                                 .dataCollectionMinute(getDataCollectionMinute(timeStamp, collectionStartTime))
-                                 .timeStamp(timeStamp)
-                                 .stateType(StateType.PROMETHEUS)
-                                 .host(host)
-                                 .groupName(groupName)
-                                 .build();
+          metricDataRecord =
+              NewRelicMetricDataRecord.builder()
+                  .name(transactionName)
+                  .appId(appId)
+                  .workflowId(workflowId)
+                  .workflowExecutionId(workflowExecutionId)
+                  .stateExecutionId(stateExecutionId)
+                  .serviceId(serviceId)
+                  .cvConfigId(cvConfigId)
+                  .dataCollectionMinute(getDataCollectionMinute(timeStamp, collectionStartTime, is247Task))
+                  .timeStamp(timeStamp)
+                  .stateType(StateType.PROMETHEUS)
+                  .host(host)
+                  .groupName(groupName)
+                  .build();
           metricDataRecord.setAppId(appId);
           if (metricDataRecord.getTimeStamp() >= collectionStartTime) {
             rv.put(transactionName, timeStamp, metricDataRecord);
@@ -115,7 +116,11 @@ public class PrometheusMetricDataResponse implements MetricCollectionResponse {
     return rv;
   }
 
-  private int getDataCollectionMinute(long metricTimestamp, long dataCollectionStarttime) {
-    return (int) ((Timestamp.minuteBoundary(metricTimestamp) - dataCollectionStarttime) / TimeUnit.MINUTES.toMillis(1));
+  private int getDataCollectionMinute(long metricTimeStamp, long collectionStartTime, boolean is247Task) {
+    if (is247Task) {
+      return (int) TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp);
+    } else {
+      return (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
+    }
   }
 }

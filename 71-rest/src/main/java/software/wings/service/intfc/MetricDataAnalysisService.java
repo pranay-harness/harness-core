@@ -27,7 +27,7 @@ public interface MetricDataAnalysisService {
   List<NewRelicMetricHostAnalysisValue> getToolTip(String stateExecutionId, String workflowExecutionId,
       int analysisMinute, String transactionName, String metricName, String groupName);
 
-  void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId,
+  void saveMetricTemplates(String appId, StateType stateType, String stateExecutionId, String cvConfigId,
       Map<String, TimeSeriesMetricDefinition> metricTemplates);
 
   void saveMetricGroups(
