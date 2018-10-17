@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import com.google.common.base.Preconditions;
 
@@ -71,5 +72,36 @@ public class VaultIntegrationTest extends BaseIntegrationTest {
     assertEquals(0, deleteRestResponse.getResponseMessages().size());
     assertTrue(Boolean.valueOf(deleteRestResponse.getResource()));
     assertNull(wingsPersistence.get(VaultConfig.class, vaultConfigId));
+  }
+
+  @Test
+  public void test_creatrDuplicateVaultSecretManager_shouldFail() {
+    // 1. Create a new Vault config.
+    WebTarget target = client.target(API_BASE + "/vault?accountId=" + accountId);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(vaultConfig, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    // Verify vault config was successfully created.
+    assertEquals(0, restResponse.getResponseMessages().size());
+    String vaultConfigId = restResponse.getResource();
+    assertTrue(isNotEmpty(vaultConfigId));
+
+    // 2. Create the same Vault config with a different name.
+    try {
+      vaultConfig.setName("TestVault_Different_Name");
+      getRequestBuilderWithAuthHeader(target).post(
+          entity(vaultConfig, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+      fail("Excpetio is expected when creating the same Vault secret manager with a different name");
+    } catch (Exception e) {
+      // Ignore. Expected.
+    } finally {
+      // 3. Delete the vault config
+      target = client.target(API_BASE + "/vault?accountId=" + accountId + "&vaultConfigId=" + vaultConfigId);
+      RestResponse<Boolean> deleteRestResponse =
+          getRequestBuilderWithAuthHeader(target).delete(new GenericType<RestResponse<Boolean>>() {});
+      // Verify the vault config was deleted successfully
+      assertEquals(0, deleteRestResponse.getResponseMessages().size());
+      assertTrue(Boolean.valueOf(deleteRestResponse.getResource()));
+      assertNull(wingsPersistence.get(VaultConfig.class, vaultConfigId));
+    }
   }
 }

@@ -207,7 +207,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
       vaultConfigId = wingsPersistence.save(vaultConfig);
     } catch (DuplicateKeyException e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
-          .addParam("reason", "Another configuration with the same name exists");
+          .addParam("reason", "Another vault configuration with the same name or URL exists");
     }
 
     encryptedData.setAccountId(accountId);
