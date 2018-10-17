@@ -31,7 +31,7 @@ spec:
         envFrom:
         - configMapRef:
             name: harness-learning-engine
-        image: {{ .Values.images.le }}
+        image: {{ .Values.images.le.repository }}:{{ .Values.images.le.tag }}
         imagePullPolicy: Always
         name: learning-engine
         resources:

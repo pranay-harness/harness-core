@@ -82,7 +82,7 @@ spec:
       terminationGracePeriodSeconds: 10
       containers:
         - name: mongo
-          image: {{ .Values.images.mongo }}
+          image: {{ .Values.images.mongo.repository }}:{{ .Values.images.mongo.tag }}
           command:
             - mongod
             - "--replSet"

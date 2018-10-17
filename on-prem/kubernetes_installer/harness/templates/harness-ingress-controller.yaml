@@ -40,7 +40,7 @@ spec:
       - envFrom:
         - configMapRef:
             name: nginx-default-backend
-        image: {{ .Values.images.defaultBackend }}
+        image: {{ .Values.images.defaultBackend.repository }}:{{ .Values.images.defaultBackend.tag }}
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
@@ -149,7 +149,7 @@ spec:
         envFrom:
         - configMapRef:
             name: nginx-ingress-controller
-        image: {{ .Values.images.ingressController }}
+        image: {{ .Values.images.ingressController.repository }}:{{ .Values.images.ingressController.tag }}
         imagePullPolicy: Always
         livenessProbe:
           failureThreshold: 3

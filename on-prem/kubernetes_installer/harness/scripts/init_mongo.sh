@@ -4,67 +4,31 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 K8S_CLUSTER_NAMESPACE=$(yq r ${SCRIPT_DIR}/../values.internal.yaml kubernetesClusterNamespace)
-
-
-function seedData(){
-	if [[ $(kubectl exec -it -n ${K8S_CLUSTER_NAMESPACE} mongo-0 -- bash -c "mongo  mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/harness --eval 'rs.status();'" | grep NotYetInitialized ) ]];then
-		echo "Replica sets are not initialized, initializing replica sets..."
-		kubectl exec -it -n ${K8S_CLUSTER_NAMESPACE} mongo-0 -- bash -c "mongo mongodb://mongo-0.mongo:27017/ < /scripts/initialize_replicaset.js"
-		echo "Sleeping for 30 seconds..."
-		sleep 30
-	fi
-	kubectl exec -it -n ${K8S_CLUSTER_NAMESPACE} mongo-0 -- bash -c "mongo  mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/ < /scripts/add_first_user.js"
-	kubectl exec -it -n ${K8S_CLUSTER_NAMESPACE} mongo-0 -- bash -c "mongo  mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/ < /scripts/add_learning_engine_secret.js"
-}
+source ${SCRIPT_DIR}/utils.sh
 
 echo "######################### Mongo Start ##############################"
-kubectl apply -f output/harness-mongo.yaml
-
+kubectl patch serviceaccount default -n ${K8S_CLUSTER_NAMESPACE} -p '{"imagePullSecrets": [{"name": "regcred"}]}'
 
 if [[ !$(kubectl get configmaps -n ${K8S_CLUSTER_NAMESPACE} scripts-configmap) ]]; then
     echo "No configs found setting config"
     kubectl apply -f output/harness-configs.yaml
 fi
 
-i=$(kubectl get pods --selector=role=mongo -n ${K8S_CLUSTER_NAMESPACE} | grep Running | wc -l )
-wait=0
-while [ $i -lt 3  ] && [ $wait -lt 30 ]
-do
-	sleep 3
-    wait=$(($wait+1))
-	echo "Waiting for pods to come up, number of pods : $i"
-	i=$(kubectl get pods --selector=role=mongo -n ${K8S_CLUSTER_NAMESPACE} | grep Running | wc -l )
-done
+kubectl apply -n ${K8S_CLUSTER_NAMESPACE} -f output/harness-mongodb-replicaset.yaml
 
-if [[ $i -eq 3 ]]; then
-	echo "All mongos are up and running"
+echo "Waiting for mongo replicaset to be ready..."
 
-	if [[ $(kubectl exec -it -n ${K8S_CLUSTER_NAMESPACE} mongo-0 -- bash -c "mongo  mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/harness --eval 'rs.status();'" | grep NotYetInitialized ) ]];then
-		echo "Replica sets are not initialized, initializing replica sets..."
-		kubectl exec -it -n ${K8S_CLUSTER_NAMESPACE} mongo-0 -- bash -c "mongo mongodb://mongo-0.mongo:27017/ < /scripts/initialize_replicaset.js"
-		echo "Sleeping for 30 seconds..."
-		sleep 30
-	fi
+echo "Mongo replicaset pods status: [0/3]"
+until kubectl get pods harness-mongodb-replicaset-0 -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' -n ${K8S_CLUSTER_NAMESPACE} 2>/dev/null | grep True &> /dev/null; do sleep 3; done;
+echo "Mongo replicaset pods status: [1/3]"
+until kubectl get pods harness-mongodb-replicaset-1 -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' -n ${K8S_CLUSTER_NAMESPACE} 2>/dev/null | grep True &> /dev/null; do sleep 3; done;
+echo "Mongo replicaset pods status: [2/3]"
+until kubectl get pods harness-mongodb-replicaset-2 -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}' -n ${K8S_CLUSTER_NAMESPACE} 2>/dev/null | grep True &> /dev/null; do sleep 3; done;
+echo "Mongo replicaset pods status: [3/3]"
+echo "All mongo pods are up and running."
 
-	kubectl exec -it -n ${K8S_CLUSTER_NAMESPACE} mongo-0 -- bash -c "mongo  mongodb://mongo-0.mongo,mongo-1.mongo,mongo-2.mongo:27017/harness --eval 'db.accounts.count()' " > dbOutput.txt
-	accountsize=$(tail -1 dbOutput.txt)
-	if [[ "$accountsize" == *"0"* ]];then
-		echo "No data found, seeding data with seed data"
-		seedData
-		rm -f dbOutput.txt
-	elif [[ "$accountsize" == *"1"* ]] || [[ "$accountsize" == *"2"* ]];then
-		echo "Data found in db, not seeding it again..."
-		rm -f dbOutput.txt
-	else
-		echo "Error verifying installation, please check logs"
-		echo $accountsize
-		cat dbOutput.txt
-		exit 1
-	fi
-
-else
-	echo "Mongo cluster is not coming up as expected"
-	exit 1
-fi
+echo "Applying init scripts if required."
+kubectl cp -n ${K8S_CLUSTER_NAMESPACE} output/init.js harness-mongodb-replicaset-0:/tmp/init.js
+kubectl exec -n ${K8S_CLUSTER_NAMESPACE} harness-mongodb-replicaset-0 -it -- bash -c "mongo mongodb://$(rv services.mongo.adminUser):$(rv services.mongo.adminPassword)@localhost/harness?replicaSet=rs0\&authSource=admin < /tmp/init.js"
 
 echo "######################### Mongo End ##############################"

@@ -2,46 +2,34 @@
 
 set -e
 
-source scripts/utils.sh
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+INSTALLER_DIR="$(dirname ${SCRIPT_DIR})"
+source ${SCRIPT_DIR}/utils.sh
 
-yq w -i values.internal.yaml appSecrets.learningEngineSecret $(generateRandomStringOfLength 32)
-yq w -i values.internal.yaml secrets.jwtAuthSecret $(generateRandomStringOfLength 80)
-yq w -i values.internal.yaml secrets.jwtExternalServiceSecret $(generateRandomStringOfLength 80)
-yq w -i values.internal.yaml secrets.jwtMultiAuthSecret $(generateRandomStringOfLength 80)
-yq w -i values.internal.yaml secrets.jwtPasswordSecret $(generateRandomStringOfLength 80)
-yq w -i values.internal.yaml secrets.jwtSsoRedirectSecret $(generateRandomStringOfLength 80)
-yq w -i values.internal.yaml secrets.jwtZendeskSecret $(generateRandomStringOfLength 80)
-yq w -i values.internal.yaml accounts.accountId $(generateRandomStringOfLength 22)
-yq w -i values.internal.yaml accounts.accountSecret $(generateRandomString)
+wv appSecrets.learningEngineSecret $(generateRandomStringOfLength 32)
+wv secrets.jwtAuthSecret $(generateRandomStringOfLength 80)
+wv secrets.jwtExternalServiceSecret $(generateRandomStringOfLength 80)
+wv secrets.jwtMultiAuthSecret $(generateRandomStringOfLength 80)
+wv secrets.jwtPasswordSecret $(generateRandomStringOfLength 80)
+wv secrets.jwtSsoRedirectSecret $(generateRandomStringOfLength 80)
+wv secrets.jwtZendeskSecret $(generateRandomStringOfLength 80)
+wv accounts.accountId $(generateRandomStringOfLength 22)
+wv accounts.accountSecret $(generateRandomString)
 
-private_docker_repo=$(yq r values.internal.yaml privatedockerrepo.docker_registry_url)
+DOCKER_REGISTRY_URL=$(rv docker.registry.url)
 
-if [[ $private_docker_repo != "" ]] ; then
-   echo "Updating the images with private docker prefix"
-    if [[ $(yq r values.internal.yaml images.manager) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
-        yq w -i values.internal.yaml images.manager $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.manager)
-    fi
-    if [[ $(yq r values.internal.yaml images.le) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
-        yq w -i values.internal.yaml images.le $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.le)
-    fi
-    if [[ $(yq r values.internal.yaml images.ui) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
-        yq w -i values.internal.yaml images.ui $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.ui)
-    fi
-    if [[ $(yq r values.internal.yaml images.mongo) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
-        yq w -i values.internal.yaml images.mongo $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.mongo)
-    fi
-    if [[ $(yq r values.internal.yaml images.defaultBackend) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
-        yq w -i values.internal.yaml images.defaultBackend $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.defaultBackend)
-    fi
-    if [[ $(yq r values.internal.yaml images.ingressController) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
-        yq w -i values.internal.yaml images.ingressController $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.ingressController)
-    fi
-    if [[ $(yq r values.internal.yaml images.nginx) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
-        yq w -i values.internal.yaml images.nginx $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.nginx)
-    fi
-    if [[ $(yq r values.internal.yaml images.delegate) != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
-        yq w -i values.internal.yaml images.delegate $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)/$(yq r values.internal.yaml images.delegate)
-    fi
+if [[ ${DOCKER_REGISTRY_URL} != "" ]] ; then
+    echo "Updating the images with private docker prefix"
+
+    wv images.manager.repository ${DOCKER_REGISTRY_URL}/$(rv images.manager.repository)
+    wv images.le.repository ${DOCKER_REGISTRY_URL}/$(rv images.le.repository)
+    wv images.ui.repository ${DOCKER_REGISTRY_URL}/$(rv images.ui.repository)
+    wv images.mongo.repository ${DOCKER_REGISTRY_URL}/$(rv images.mongo.repository)
+    wv images.mongoInstall.repository ${DOCKER_REGISTRY_URL}/$(rv images.mongoInstall.repository)
+    wv images.defaultBackend.repository ${DOCKER_REGISTRY_URL}/$(rv images.defaultBackend.repository)
+    wv images.ingressController.repository ${DOCKER_REGISTRY_URL}/$(rv images.ingressController.repository)
+    wv images.nginx.repository ${DOCKER_REGISTRY_URL}/$(rv images.nginx.repository)
+    wv images.delegate.repository ${DOCKER_REGISTRY_URL}/$(rv images.delegate.repository)
 fi
 
 mkdir -p output
@@ -53,4 +41,12 @@ helm template -f values.internal.yaml . -x templates/harness-namespace.yaml > ou
 helm template -f values.internal.yaml . -x templates/harness-regcred.yaml > output/harness-regcred.yaml
 helm template -f values.internal.yaml . -x templates/harness-ui.yaml > output/harness-ui.yaml
 helm template -f values.internal.yaml . -x templates/harness-mongo.yaml > output/harness-mongo.yaml
+helm template -f ${INSTALLER_DIR}/values.internal.yaml . -x ${INSTALLER_DIR}/templates/init.template.js > ${INSTALLER_DIR}/output/init.js
+# To remove the top 2 unnecessary lines in the generated js using template.
+tail -n +3 ${INSTALLER_DIR}/output/init.js > ${INSTALLER_DIR}/output/init.js.tmp
+rm -f ${INSTALLER_DIR}/output/init.js
+mv ${INSTALLER_DIR}/output/init.js.tmp ${INSTALLER_DIR}/output/init.js
 
+wv services.mongo.configMap.init "$(cat ${INSTALLER_DIR}/output/init.js)"
+
+${SCRIPT_DIR}/prepare_mongodb_replicaset.sh

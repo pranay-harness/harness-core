@@ -1,0 +1,58 @@
+accounts:
+  accountName:
+  adminEmail:
+  companyName:
+  accountId:
+  accountSecret:
+images:
+  manager:
+    repository:
+    tag:
+  le:
+    repository:
+    tag:
+  ui:
+    repository:
+    tag:
+  mongo:
+    repository:
+    tag:
+  defaultBackend:
+    repository:
+    tag:
+  ingressController:
+    repository:
+    tag:
+  nginx:
+    repository:
+    tag:
+  delegate:
+    repository:
+    tag:
+inframapping:
+  lbIpAddress:
+  lbUrl:
+kubernetesClusterNamespace:
+docker:
+  registry:
+    url:
+    username:
+    password:
+    authsUrl:
+    email:
+appSecrets:
+  learningEngineSecret:
+secrets:
+  jwtAuthSecret:
+  jwtExternalServiceSecret:
+  jwtMultiAuthSecret:
+  jwtPasswordSecret:
+  jwtSsoRedirectSecret:
+  jwtZendeskSecret:
+services:
+  mongo:
+    adminUser: admin
+    adminPassword: adminpass
+    key: harness
+    configMap:
+      init:

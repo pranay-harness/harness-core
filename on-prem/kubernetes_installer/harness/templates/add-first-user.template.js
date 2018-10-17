@@ -1,115 +1,14 @@
-apiVersion: v1
-data:
-  ENV: on-prem
-  PROJECT_ID: on-prem
-kind: ConfigMap
-metadata:
-  name: nginx-default-backend
-  namespace: {{ .Values.kubernetesClusterNamespace }}
+use harness;
 
----
+function addFirstUser() {
 
-apiVersion: v1
-data:
-  ENV: on-prem
-  INSTANCES: "1"
-  IP_WHITELIST_CIDRS: 0.0.0.0/0
-  PROJECT_ID: on-prem
-  proxy-body-size: 1024m
-kind: ConfigMap
-metadata:
-  labels:
-    harness-app: harness
-    harness-service: nginx-ingress-controller
-  name: nginx-ingress-controller
-  namespace: {{ .Values.kubernetesClusterNamespace }}
----
+    if (0 < db.accounts.count()) {
+        print("Data found in DB. No need of seeding the initial accounts data again.");
+        return;
+    }
 
-### Learning Engine configs and secrets ###
+    print("No data found in DB. Seeding initial accounts data into it.");
 
-apiVersion: v1
-data:
-  CPU: "2"
-  ENV: onprem
-  INSTANCES: "2"
-  MEMORY: "2048"
-  https_port: "10800"
-  server_url: http://harness-manager:9090
-kind: ConfigMap
-metadata:
-  labels:
-    harness-app: harness
-    harness-service: learning-engine
-  name: harness-learning-engine
-  namespace: {{ .Values.kubernetesClusterNamespace }}
----
-
-apiVersion: v1
-stringData:
-  service_secret: {{ .Values.appSecrets.learningEngineSecret }}
-kind: Secret
-metadata:
-  name: harness-learning-engine
-  namespace: {{ .Values.kubernetesClusterNamespace }}
-
-
----
-##### Manager configs and secrets #####
-apiVersion: v1
-data:
-  ALLOWED_ORIGINS: {{ .Values.inframapping.lbUrl }},https://localhost:8181
-  CAPSULE_JAR: rest-capsule.jar
-  COMPANYNAME: {{ .Values.accounts.companyName }}
-  DELEGATE_METADATA_URL: {{ .Values.inframapping.lbUrl }}/storage/wingsdelegates/delegateprod.txt
-  DEPLOY_MODE: KUBERNETES_ONPREM
-  DISABLE_NEW_RELIC: "true"
-  ENABLE_APPDYNAMICS: "false"
-  ENV: ONPREM
-  HZ_CLUSTER_NAME: on-prem
-  INSTANCES: "1"
-  LOGGING_LEVEL: INFO
-  MEMORY: "4096"
-  POD_MEMORY: "4096"
-  PROJECT_ID: ONPREM
-  SERVER_PORT: "9090"
-  UI_SERVER_URL: {{ .Values.inframapping.lbUrl }}
-  VERSION: "5919"
-  WATCHER_METADATA_URL: {{ .Values.inframapping.lbUrl }}/storage/wingswatchers/watcherprod.txt
-  FEATURES: RBAC,HELM,LDAP_SSO_PROVIDER
-  DELEGATE_DOCKER_IMAGE: {{ .Values.images.delegate.repository }}:{{ .Values.images.delegate.tag }}
-kind: ConfigMap
-metadata:
-  labels:
-    haress-app: harness
-    harness-service: manager
-  name: harness-manager
-  namespace: {{ .Values.kubernetesClusterNamespace }}
----
-
-apiVersion: v1
-stringData:
-  MONGO_DB_URL: mongodb://{{ .Values.services.mongo.adminUser }}:{{ .Values.services.mongo.adminPassword }}@harness-mongodb-replicaset-0.harness-mongodb-replicaset,harness-mongodb-replicaset-1.harness-mongodb-replicaset,harness-mongodb-replicaset-2.harness-mongodb-replicaset:27017/harness?replicaSet=rs0\&authSource=admin
-  MONGO_URI: mongodb://{{ .Values.services.mongo.adminUser }}:{{ .Values.services.mongo.adminPassword }}@harness-mongodb-replicaset-0.harness-mongodb-replicaset,harness-mongodb-replicaset-1.harness-mongodb-replicaset,harness-mongodb-replicaset-2.harness-mongodb-replicaset:27017/harness?replicaSet=rs0\&authSource=admin
-  SERVICE_ACC: ONPREM
-  jwtAuthSecret: {{ .Values.secrets.jwtAuthSecret }}
-  jwtExternalServiceSecret: {{ .Values.secrets.jwtExternalServiceSecret }}
-  jwtMultiAuthSecret: {{ .Values.secrets.jwtMultiAuthSecret }}
-  jwtPasswordSecret: {{ .Values.secrets.jwtPasswordSecret }}
-  jwtSsoRedirectSecret: {{ .Values.secrets.jwtSsoRedirectSecret }}
-  jwtZendeskSecret: {{ .Values.secrets.jwtZendeskSecret }}
-kind: Secret
-metadata:
-  name: harness-manager
-  namespace: {{ .Values.kubernetesClusterNamespace }}
-
----
-
-### Mongo configs ########
-
-apiVersion: v1
-data:
-  add_first_user.js: |
-    use harness;
     db.getCollection('accounts').insert({
         "_id" : "{{ .Values.accounts.accountId }}",
         "companyName" : "{{ .Values.accounts.companyName }}",
@@ -401,45 +300,6 @@ data:
         "createdAt" : NumberLong(1518718220557),
         "lastUpdatedAt" : NumberLong(1518718221043)
     });
-  add_learning_engine_secret.js: |-
-    use harness;
+}
 
-    db.getCollection('serviceSecrets').insert({
-        "_id" : "djEzvOJtTFSvpglImf1fXg",
-        "serviceSecret" : "{{ .Values.appSecrets.learningEngineSecret }}",
-        "serviceType" : "LEARNING_ENGINE",
-        "createdAt" : NumberLong(1518718228292),
-        "lastUpdatedAt" : NumberLong(1518718228292)
-    });
-  initialize_replicaset.js: |-
-    rs.initiate( {
-    _id : "rs0",
-    members: [
-      { _id: 0, host: "mongo-0.mongo:27017" },
-      { _id: 1, host: "mongo-1.mongo:27017" },
-      { _id: 2, host: "mongo-2.mongo:27017" }
-    ]
-    })
-
-
-kind: ConfigMap
-metadata:
-  name: scripts-configmap
-  namespace: {{ .Values.kubernetesClusterNamespace }}
-
----
-
-### UI ### 
-
-apiVersion: v1
-data:
-  API_URL: {{ .Values.inframapping.lbUrl }}
-kind: ConfigMap
-metadata:
-  labels:
-    harness-app: harness
-    harness-service: ui
-  name: harness-ui
-  namespace: {{ .Values.kubernetesClusterNamespace }}
-
----
+addFirstUser();

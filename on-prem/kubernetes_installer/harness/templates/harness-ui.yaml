@@ -72,7 +72,7 @@ spec:
         envFrom:
         - configMapRef:
             name: harness-ui
-        image: {{ .Values.images.ui }}
+        image: {{ .Values.images.ui.repository }}:{{ .Values.images.ui.tag }}
         imagePullPolicy: Always
         name: ui
         ports:

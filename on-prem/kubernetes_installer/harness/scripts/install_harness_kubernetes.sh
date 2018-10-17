@@ -15,6 +15,7 @@ if [ $mongo_status -eq 1 ];then
 	"Mongo was not installed successfully, exiting now "
 	exit 1
 fi
+
 ${SCRIPT_DIR}/init_harness_ms.sh
 
 harness_ms_status=$?

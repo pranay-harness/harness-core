@@ -124,7 +124,7 @@ spec:
         envFrom:
         - configMapRef:
             name: harness-manager
-        image: {{ .Values.images.manager }}
+        image: {{ .Values.images.manager.repository }}:{{ .Values.images.manager.tag }}
         imagePullPolicy: Always
         lifecycle:
           preStop:
@@ -262,7 +262,7 @@ spec:
         harness-service: harness-manager-nginx
     spec:
       containers:
-      - image: {{ .Values.images.nginx }}
+      - image: {{ .Values.images.nginx.repository }}:{{ .Values.images.nginx.tag }}
         imagePullPolicy: Always
         name: harness-manager-nginx
         volumeMounts:
