@@ -1,6 +1,6 @@
 package software.wings.api;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;

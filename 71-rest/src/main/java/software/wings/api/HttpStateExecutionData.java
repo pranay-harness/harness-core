@@ -1,7 +1,7 @@
 package software.wings.api;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.serializer.XmlUtils;
-import io.harness.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

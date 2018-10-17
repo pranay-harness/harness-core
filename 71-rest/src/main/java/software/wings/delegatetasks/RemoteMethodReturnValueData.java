@@ -4,7 +4,7 @@ import com.google.common.base.MoreObjects;
 
 import com.esotericsoftware.kryo.serializers.FieldSerializer.Bind;
 import com.esotericsoftware.kryo.serializers.JavaSerializer;
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 
 import java.util.Objects;
 

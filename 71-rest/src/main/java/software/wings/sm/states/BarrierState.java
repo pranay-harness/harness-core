@@ -8,8 +8,8 @@ import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.distribution.barrier.Barrier;
-import io.harness.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.mongodb.morphia.annotations.Transient;

@@ -2,7 +2,7 @@ package software.wings.sm;
 
 import com.google.inject.Inject;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.waitnotify.NotifyCallback;

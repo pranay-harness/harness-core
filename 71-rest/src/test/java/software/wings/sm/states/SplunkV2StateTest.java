@@ -12,7 +12,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;

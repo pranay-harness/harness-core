@@ -1,7 +1,7 @@
 package software.wings.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.sm.ExecutionStatus;

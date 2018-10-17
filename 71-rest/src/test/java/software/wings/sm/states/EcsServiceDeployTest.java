@@ -49,7 +49,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 import com.google.common.collect.Lists;
 
 import com.amazonaws.regions.Regions;
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;

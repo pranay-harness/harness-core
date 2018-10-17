@@ -6,9 +6,9 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.task.protocol.ResponseData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;

@@ -4,7 +4,7 @@ package software.wings.sm;
  * Created by rishi on 2/5/17.
  */
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 
 import java.util.Objects;
 

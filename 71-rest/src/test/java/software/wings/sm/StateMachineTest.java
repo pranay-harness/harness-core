@@ -9,9 +9,9 @@ import static software.wings.waitnotify.StringNotifyResponseData.Builder.aString
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.task.protocol.ResponseData;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

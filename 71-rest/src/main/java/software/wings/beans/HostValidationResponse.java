@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.ResponseData;
 
 /**
  * Created by anubhaw on 2/22/17.

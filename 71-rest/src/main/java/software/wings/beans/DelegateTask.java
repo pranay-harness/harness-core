@@ -7,7 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.harness.task.protocol.ResponseData;
+import io.harness.delegate.task.DelegateRunnableTask;
+import io.harness.delegate.task.protocol.ResponseData;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Converters;
 import org.mongodb.morphia.annotations.Entity;
@@ -17,7 +18,6 @@ import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.converters.TypeConverter;
 import org.mongodb.morphia.mapping.MappedField;
 import software.wings.beans.DelegateTask.Converter;
-import software.wings.delegatetasks.DelegateRunnableTask;
 import software.wings.utils.KryoUtils;
 
 import java.time.OffsetDateTime;
