@@ -469,7 +469,7 @@ public class InstanceHelper {
     } catch (Exception ex) {
       // We have to catch all kinds of runtime exceptions, log it and move on, otherwise the queue impl keeps retrying
       // forever in case of exception
-      logger.error("Exception while handling deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
+      logger.warn("Exception while handling deployment event for executionId [{}], infraMappingId [{}] of appId [{}]",
           workflowExecutionId, infraMappingId, appId, ex);
     }
   }
