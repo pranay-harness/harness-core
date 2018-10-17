@@ -11,6 +11,7 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
@@ -65,10 +66,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
   @Override
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
-    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 
-    String entityId = generateEntityId(executionContext);
-
+    String entityId = generateEntityId(context);
     Iterator<TerraformfConfig> configIterator = wingsPersistence.createQuery(TerraformfConfig.class)
                                                     .filter(TerraformfConfig.ENTITY_ID_KEY, entityId)
                                                     .order(Sort.descending(TerraformfConfig.CREATED_AT_KEY))
@@ -86,7 +85,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
     while (configIterator.hasNext()) {
       configParameter = configIterator.next();
 
-      if (configParameter.getWorkflowExecutionId().equals(executionContext.getWorkflowExecutionId())) {
+      if (configParameter.getWorkflowExecutionId().equals(context.getWorkflowExecutionId())) {
         if (currentConfig == null) {
           currentConfig = configParameter;
         }
@@ -102,12 +101,16 @@ public class TerraformRollbackState extends TerraformProvisionState {
 
     final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
     final GitConfig gitConfig = getGitConfig(configParameter.getSourceRepoSettingId());
+    if (StringUtils.isNotEmpty(configParameter.getSourceRepoReference())) {
+      gitConfig.setReference(configParameter.getSourceRepoReference());
+    }
 
     List<NameValuePair> allVariables = configParameter.getVariables();
     Map<String, String> textVariables = extractTextVariables(allVariables.stream(), context);
     Map<String, EncryptedDataDetail> encryptedTextVariables =
         extractEncryptedTextVariables(allVariables.stream(), context);
 
+    ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
             .accountId(executionContext.getApp().getAccountId())
@@ -118,7 +121,6 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .command(rollbackCommand)
             .commandUnit(TerraformCommandUnit.Rollback)
             .sourceRepo(gitConfig)
-            .sourceRepoReference(configParameter.getSourceRepoReference())
             .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
             .scriptPath(terraformProvisioner.getPath())
             .variables(textVariables)
@@ -154,7 +156,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
 
     if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
       if (terraformExecutionData.getCommandExecuted() == TerraformCommand.APPLY) {
-        saveTerraformConfig(context, terraformProvisioner, terraformExecutionData.getVariables());
+        saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
       } else if (terraformExecutionData.getCommandExecuted() == TerraformCommand.DESTROY) {
         Query<TerraformfConfig> query =
             wingsPersistence.createQuery(TerraformfConfig.class)

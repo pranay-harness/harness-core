@@ -28,6 +28,8 @@ public class TerraformExecutionData extends StateExecutionData implements Respon
   private TerraformCommand commandExecuted;
   private List<NameValuePair> variables;
 
+  private String sourceRepoReference;
+
   public Map<String, ExecutionDataValue> getExecutionDetails() {
     Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
     putNotNull(executionDetails, "activityId", ExecutionDataValue.builder().displayName("").value(activityId).build());

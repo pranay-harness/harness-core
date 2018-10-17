@@ -240,22 +240,24 @@ public class GitClientImpl implements GitClient {
   @Override
   public synchronized GitCheckoutResult checkout(GitConfig gitConfig) {
     try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitConfig)))) {
-      Ref ref = git.checkout()
-                    .setCreateBranch(true)
-                    .setName(gitConfig.getBranch())
-                    .setUpstreamMode(SetupUpstreamMode.TRACK)
-                    .setStartPoint("origin/" + gitConfig.getBranch())
-                    .call();
+      try {
+        Ref ref = git.checkout()
+                      .setCreateBranch(true)
+                      .setName(gitConfig.getBranch())
+                      .setUpstreamMode(SetupUpstreamMode.TRACK)
+                      .setStartPoint("origin/" + gitConfig.getBranch())
+                      .call();
+
+      } catch (RefAlreadyExistsException refExIgnored) {
+        logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+            + "Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
+      }
 
       String gitRef = gitConfig.getReference();
       if (StringUtils.isNotEmpty(gitRef)) {
-        git.checkout().setCreateBranch(false).setStartPoint(gitRef).call();
+        git.checkout().setName(gitRef).call();
       }
 
-      return GitCheckoutResult.builder().build();
-    } catch (RefAlreadyExistsException refExIgnored) {
-      logger.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())
-          + "Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
       return GitCheckoutResult.builder().build();
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
@@ -726,7 +728,11 @@ public class GitClientImpl implements GitClient {
         FetchResult fetchResult =
             ((FetchCommand) (getAuthConfiguredCommand(git.fetch(), gitConfig))).call(); // fetch all remote references
         checkout(gitConfig);
-        Ref ref = git.reset().setMode(ResetType.HARD).setRef("refs/remotes/origin/" + gitConfig.getBranch()).call();
+
+        // Do not sync to the HEAD of the branch if a specific commit SHA is provided
+        if (StringUtils.isEmpty(gitConfig.getReference())) {
+          Ref ref = git.reset().setMode(ResetType.HARD).setRef("refs/remotes/origin/" + gitConfig.getBranch()).call();
+        }
         logger.info(
             getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset done for branch " + gitConfig.getBranch());
         // TODO:: log failed commits queued and being ignored.
