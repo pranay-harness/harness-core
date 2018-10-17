@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -197,7 +198,8 @@ public class MongoModule extends AbstractModule {
 
     final Map<String, Accesses> accesses = mergeAccesses(accessesPrimary, accessesSecondary);
 
-    final Date tooNew = new Date(System.currentTimeMillis() - Duration.ofDays(7).toMillis());
+    final long now = System.currentTimeMillis();
+    final Date tooNew = new Date(now - Duration.ofDays(0).toMillis());
 
     accesses.entrySet()
         .stream()
@@ -211,9 +213,11 @@ public class MongoModule extends AbstractModule {
         .filter(entry -> !entry.getKey().startsWith("keywords"))
         .filter(entry -> !entry.getKey().startsWith("createdAt"))
         // Alert for every index that left:
-        .forEach(entry
-            -> logger.error(format("(work in progress alert): Index %s.%s is not used at all for more than 7 days",
-                collection.getName(), entry.getKey())));
+        .forEach(entry -> {
+          Duration passed = Duration.between(ZonedDateTime.now().toInstant(), entry.getValue().getSince().toInstant());
+          logger.error(format("(work in progress alert): Index %s.%s is not used at for days %d", collection.getName(),
+              entry.getKey(), passed.toDays()));
+        });
   }
 
   private void ensureIndex(Morphia morphia) {
