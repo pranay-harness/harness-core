@@ -7,15 +7,15 @@ source harness/scripts/utils.sh
 VERSION_PROPERTY_FILE=version.yaml
 
 echo "# Reading versions from $VERSION_PROPERTY_FILE"
-echo "# Reading versions from $VERSION_PROPERTY_FILE"
-leimage=$(yq r version.yaml images.le)
-managerimage=$(yq r version.yaml images.manager)
-mongoimage=$(yq r version.yaml images.mongo)
-nginximage=$(yq r version.yaml images.nginx)
-uiimage=$(yq r version.yaml images.ui)
-defaultbackendimage=$(yq r version.yaml images.defaultBackend)
-ingresscontrollerimage=$(yq r version.yaml images.ingressController)
-delegateimage=$(yq r version.yaml images.delegate)
+leimage=$(yq r version.yaml images.le.repository):$(yq r version.yaml images.le.tag)
+managerimage=$(yq r version.yaml images.manager.repository):$(yq r version.yaml images.manager.tag)
+mongoimage=$(yq r version.yaml images.mongo.repository):$(yq r version.yaml images.mongo.tag)
+mongoinstallimage=$(yq r version.yaml images.mongoInstall.repository):$(yq r version.yaml images.mongoInstall.tag)
+nginximage=$(yq r version.yaml images.nginx.repository):$(yq r version.yaml images.nginx.tag)
+uiimage=$(yq r version.yaml images.ui.repository):$(yq r version.yaml images.ui.tag)
+defaultbackendimage=$(yq r version.yaml images.defaultBackend.repository):$(yq r version.yaml images.defaultBackend.tag)
+ingresscontrollerimage=$(yq r version.yaml images.ingressController.repository):$(yq r version.yaml images.ingressController.tag)
+delegateimage=$(yq r version.yaml images.delegate.repository):$(yq r version.yaml images.delegate.tag)
 
 INSTALLER_DIR=harness-kubernetes
 ARTIFACT_DIR=$INSTALLER_DIR/artifacts
@@ -39,6 +39,7 @@ function downloadImages(){
    saveImage $managerimage $ARTIFACT_DIR/manager.tar
    saveImage $leimage $ARTIFACT_DIR/le.tar
    saveImage $mongoimage $ARTIFACT_DIR/mongo.tar
+   saveImage $mongoinstallimage $ARTIFACT_DIR/mongoinstall.tar
    saveImage $nginximage $ARTIFACT_DIR/nginx.tar
    saveImage $ingresscontrollerimage $ARTIFACT_DIR/ingress.tar
    saveImage $defaultbackendimage $ARTIFACT_DIR/defaultbackend.tar
@@ -64,7 +65,6 @@ function prepareInstaller(){
     replace MANAGER_VERSION $managerversion "$SCRIPTS_DIR/init_delegate.sh"
     downloadImages
     yq m -i $INSTALLER_DIR/values.yaml version.yaml
-
 }
 
 prepareInstaller

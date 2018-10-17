@@ -7,12 +7,14 @@ accounts:
   companyName: Demo-Company
   adminEmail: admin@harness.io
 
-privatedockerrepo:
-  docker_registry_url:
-  docker_registry_username:
-  docker_registry_password:
-  docker_reg_auths_url:
-  docker_registry_email:
+# Private docker registry/repository details
+docker:
+  registry:
+    url:
+    username:
+    password:
+    authsUrl:
+    email:
 
 inframapping:
   lbUrl: http://127.0.0.1

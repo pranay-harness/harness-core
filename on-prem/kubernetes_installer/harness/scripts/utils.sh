@@ -6,7 +6,7 @@ function getProperty () {
    FILENAME=$1
    PROP_KEY=$2
    PROP_VALUE=`cat "$FILENAME" | grep "$PROP_KEY" | cut -d'=' -f2`
-   echo $PROP_VALUE
+   echo ${PROP_VALUE}
 }
 
 function generateRandomString(){
@@ -42,4 +42,17 @@ function confirm() {
             * ) echo "Please answer y or n.";;
         esac
     done
+}
+
+# Read value from values.internal.yaml
+function rv() {
+    KEY=$1
+    echo $(yq r values.internal.yaml ${KEY})
+}
+
+# Write value to values.internal.yaml
+function wv() {
+    KEY=$1
+    VALUE=$2
+    yq w -i values.internal.yaml "${KEY}" "${VALUE}"
 }

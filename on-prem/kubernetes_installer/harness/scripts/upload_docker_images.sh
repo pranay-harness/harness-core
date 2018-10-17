@@ -5,9 +5,9 @@ set -e
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${SCRIPT_DIR}/utils.sh
 
-docker_registry_username=$(yq r values.internal.yaml privatedockerrepo.docker_registry_username)
-docker_registry_password=$(yq r values.internal.yaml privatedockerrepo.docker_registry_password)
-docker_registry_url=$(yq r values.internal.yaml privatedockerrepo.docker_registry_url)
+docker_registry_username=$(rv docker.registry.username)
+docker_registry_password=$(rv docker.registry.password)
+docker_registry_url=$(rv docker.registry.url)
 
 VERSION_PROPERTY_FILE=version.properties
 
@@ -31,20 +31,45 @@ function loadDockerImages(){
     docker load --input artifacts/le.tar
     docker load --input artifacts/manager.tar
     docker load --input artifacts/mongo.tar
+    docker load --input artifacts/mongoinstall.tar
     docker load --input artifacts/nginx.tar
     docker load --input artifacts/ui.tar
     docker load --input artifacts/delegate.tar
 }
 
+function prepareandUploadImage(){
+    image=$1 ## images.le
+
+    if [[ $image != $(rv docker.registry.url)* ]]; then
+        docker tag $image $docker_registry_url/$image
+        docker push $docker_registry_url/$image
+    else
+        docker push $image
+    fi
+}
+
+function uploadDockerImages(){
+    prepareandUploadImage $leimage
+    prepareandUploadImage $managerimage
+    prepareandUploadImage $uiimage
+    prepareandUploadImage $mongoimage
+    prepareandUploadImage $mongoinstallimage
+    prepareandUploadImage $nginximage
+    prepareandUploadImage $ingresscontrollerimage
+    prepareandUploadImage $defaultbackendimage
+    prepareandUploadImage $delegateimage
+}
+
 echo "# Reading versions from $VERSION_PROPERTY_FILE"
-leimage=$(yq r values.internal.yaml images.le)
-managerimage=$(yq r values.internal.yaml images.manager)
-mongoimage=$(yq r values.internal.yaml images.mongo)
-nginximage=$(yq r values.internal.yaml images.nginx)
-uiimage=$(yq r values.internal.yaml images.ui)
-defaultbackendimage=$(yq r values.internal.yaml images.defaultBackend)
-ingresscontrollerimage=$(yq r values.internal.yaml images.ingressController)
-delegateimage=$(yq r values.internal.yaml images.delegate)
+leimage=$(rv images.le.repository):$(rv images.le.tag)
+managerimage=$(rv images.manager.repository):$(rv images.manager.tag)
+mongoimage=$(rv images.mongo.repository):$(rv images.mongo.tag)
+mongoinstallimage=$(rv images.mongoInstall.repository):$(rv images.mongoInstall.tag)
+nginximage=$(rv images.nginx.repository):$(rv images.nginx.tag)
+uiimage=$(rv images.ui.repository):$(rv images.ui.tag)
+defaultbackendimage=$(rv images.defaultBackend.repository):$(rv images.defaultBackend.tag)
+ingresscontrollerimage=$(rv images.ingressController.repository):$(rv images.ingressController.tag)
+delegateimage=$(rv images.delegate.repository):$(rv images.delegate.tag)
 
 
 echo "#######Version details start #############"
@@ -56,37 +81,8 @@ echo "uiimage="$uiimage
 echo "ingresscontrollerimage="$ingresscontrollerimage
 echo "defaultbackendimage="$defaultbackendimage
 echo "delegateimage="$delegateimage
-
 echo "#######Version details end #############"
-printf "\n"
-
-
-function prepareandUploadImage(){
-    image=$1 ## images.le
-
-    if [[ $image != $(yq r values.internal.yaml privatedockerrepo.docker_registry_url)* ]]; then
-        docker tag $image $docker_registry_url/$image
-        docker push $docker_registry_url/$image
-    else
-        docker push $image
-    fi
-
-}
-
-function uploadDockerImages(){
-
-    prepareandUploadImage $leimage
-    prepareandUploadImage $managerimage
-    prepareandUploadImage $uiimage
-    prepareandUploadImage $mongoimage
-    prepareandUploadImage $nginximage
-    prepareandUploadImage $ingresscontrollerimage
-    prepareandUploadImage $defaultbackendimage
-    prepareandUploadImage $delegateimage
-}
-
-
-
+echo ""
 
 loadDockerImages
 uploadDockerImages
