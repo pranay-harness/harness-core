@@ -305,11 +305,14 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (DeployMode.isOnPrem(deployMode)) {
       AccountService accountService = injector.getInstance(AccountService.class);
       String encryptedLicenseInfoBase64String = System.getenv(Constants.LICENSE_INFO);
+      logger.info("Encrypted license info read from environment {}", encryptedLicenseInfoBase64String);
       if (isEmpty(encryptedLicenseInfoBase64String)) {
         logger.error("No license info is provided");
       } else {
         try {
+          logger.info("Updating license info read from environment {}", encryptedLicenseInfoBase64String);
           accountService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
+          logger.info("Updated license info read from environment {}", encryptedLicenseInfoBase64String);
         } catch (WingsException ex) {
           logger.error("Error while updating license info", ex);
         }
