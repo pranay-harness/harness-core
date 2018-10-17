@@ -66,10 +66,12 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       final URL url = new URL(splunkConfig.getSplunkUrl());
       loginArgs.setHost(url.getHost());
       loginArgs.setPort(url.getPort());
+      loginArgs.setScheme(url.toURI().getScheme());
 
       if (url.toURI().getScheme().equals("https")) {
         HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
       }
+
       Service service = new Service(loginArgs);
       service.setConnectTimeout(HTTP_TIMEOUT);
       service.setReadTimeout(HTTP_TIMEOUT);
@@ -169,6 +171,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
 
     loginArgs.setHost(uri.getHost());
     loginArgs.setPort(uri.getPort());
+    loginArgs.setScheme(uri.getScheme());
     if (uri.getScheme().equals("https")) {
       HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
     }
