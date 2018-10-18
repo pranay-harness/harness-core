@@ -442,6 +442,13 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
+  public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks) {
+    Query<T> query = createQuery(cls, readPref);
+    ((HQuery) query).setQueryChecks(queryChecks);
+    return query;
+  }
+
+  @Override
   public GridFSBucket getOrCreateGridFSBucket(String bucketName) {
     return GridFSBuckets.create(
         primaryDatastore.getMongo().getDatabase(primaryDatastore.getDB().getName()), bucketName);

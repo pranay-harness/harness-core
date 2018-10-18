@@ -239,7 +239,7 @@ public class DataGenService {
     List<Application> apps = createApplications();
 
     for (Application application : apps) {
-      //      addAppContainers(application.getUuid());
+      // addAppContainers(application.getUuid());
       addServices(application.getAppId());
     }
 
@@ -587,7 +587,6 @@ public class DataGenService {
       String name = getName(appNames);
       Application application =
           applicationGenerator.ensureApplication(anApplication().withAccountId(accountId).withName(name).build());
-      //      assertThat(application).isNotNull();
       apps.add(application);
     }
     return apps;
@@ -601,7 +600,6 @@ public class DataGenService {
       String name = getName(serviceNames);
       Service service = serviceGenerator.ensureService(
           Service.builder().name(name).description(randomText(40)).appId(appId).artifactType(ArtifactType.WAR).build());
-      //      assertThat(service).isNotNull();
       services.add(service);
 
       configFileNames = new ArrayList<>(seedNames);
