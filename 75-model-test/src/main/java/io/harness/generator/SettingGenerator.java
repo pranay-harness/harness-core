@@ -45,6 +45,8 @@ import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.SettingsService;
 
+import java.util.EnumSet;
+
 @Singleton
 public class SettingGenerator {
   @Inject AccountGenerator accountGenerator;
@@ -65,6 +67,10 @@ public class SettingGenerator {
     HARNESS_ARTIFACTORY_CONNECTOR,
     HARNESS_DOCKER_REGISTRY,
     HARNESS_GCP_EXPLORATION
+  }
+
+  public void ensureAllPredefined(Randomizer.Seed seed, Owners owners) {
+    EnumSet.allOf(Settings.class).forEach(predefined -> ensurePredefined(seed, owners, predefined));
   }
 
   public SettingAttribute ensurePredefined(Randomizer.Seed seed, Owners owners, Settings predefined) {
