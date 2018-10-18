@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -401,22 +402,26 @@ public class HttpState extends State {
           } catch (ClassCastException e) {
             logger.info("Invalid assertion " + Misc.getMessage(e), e);
             executionData.setErrorMsg(ASSERTION_ERROR_MSG);
+            throw new InvalidRequestException(ASSERTION_ERROR_MSG, WingsException.USER);
           } catch (JexlException e) {
             logger.info("Error in httpStateAssertion", e);
-            assertionStatus = false;
+
+            String errorMsg;
             if (e instanceof Parsing) {
               Parsing p = (Parsing) e;
-              executionData.setErrorMsg("Parsing error '" + p.getDetail() + "' in assertion.");
+              errorMsg = "Parsing error '" + p.getDetail() + "' in assertion.";
             } else if (e instanceof Property) {
               Property pr = (Property) e;
-              executionData.setErrorMsg("Unresolvable property '" + pr.getProperty() + "' in assertion.");
+              errorMsg = "Unresolvable property '" + pr.getProperty() + "' in assertion.";
             } else {
-              executionData.setErrorMsg(getMessage(e));
+              errorMsg = getMessage(e);
             }
+            executionData.setErrorMsg(errorMsg);
+            throw new InvalidRequestException(errorMsg, WingsException.USER);
           } catch (Exception e) {
             logger.info("Error in httpStateAssertion", e);
             executionData.setErrorMsg(getMessage(e));
-            assertionStatus = false;
+            throw new InvalidRequestException(getMessage(e), WingsException.USER);
           }
         }
       }
