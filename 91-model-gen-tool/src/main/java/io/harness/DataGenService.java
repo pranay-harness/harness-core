@@ -26,6 +26,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_ARTIFACTORY_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_BAMBOO_CONNECTOR;
+import static io.harness.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_NEXU3_CONNECTOR;
 import static io.harness.generator.SettingGenerator.Settings.HARNESS_NEXUS_CONNECTOR;
 import static java.util.Arrays.asList;
@@ -432,6 +433,7 @@ public class DataGenService {
     Owners owners = new Owners();
     owners.add(account);
 
+    settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_CONNECTOR);
     settingGenerator.ensurePredefined(seed, owners, HARNESS_BAMBOO_CONNECTOR);
     settingGenerator.ensurePredefined(seed, owners, HARNESS_NEXUS_CONNECTOR);
     settingGenerator.ensurePredefined(seed, owners, HARNESS_NEXU3_CONNECTOR);
