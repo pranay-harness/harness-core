@@ -23,6 +23,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.EcsContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.PcfServiceSpecification;
@@ -272,6 +273,8 @@ public class YamlHandlerFactory {
       return YamlType.DEPLOYMENT_SPECIFICATION;
     } else if (entity instanceof KubernetesContainerTask) {
       return YamlType.DEPLOYMENT_SPECIFICATION;
+    } else if (entity instanceof EcsServiceSpecification) {
+      return YamlType.DEPLOYMENT_SPECIFICATION;
     }
 
     throw new InvalidRequestException(
@@ -307,6 +310,8 @@ public class YamlHandlerFactory {
       return YamlConstants.USER_DATA_SPEC_YAML_FILE_NAME;
     } else if (entity instanceof EcsContainerTask) {
       return YamlConstants.ECS_CONTAINER_TASK_YAML_FILE_NAME;
+    } else if (entity instanceof EcsServiceSpecification) {
+      return YamlConstants.ECS_SERVICE_SPEC_YAML_FILE_NAME;
     } else if (entity instanceof KubernetesContainerTask) {
       return YamlConstants.KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME;
     } else if (entity instanceof ConfigFile) {

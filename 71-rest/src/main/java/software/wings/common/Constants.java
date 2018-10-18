@@ -204,6 +204,12 @@ public interface Constants {
    */
   String ECS_SERVICE_SETUP = "ECS Service Setup";
 
+  String ECS_DAEMON_SCHEDULING_STRATEGY = "DAEMON";
+
+  String ECS_REPLICA_SCHEDULING_STRATEGY = "REPLICA";
+
+  String ECS_SERVICE_SPEC = "ECS_SERVICE_SPEC";
+
   String SETUP = "Setup";
 
   String DEPLOY = "Deploy";

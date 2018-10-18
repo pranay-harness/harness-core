@@ -91,6 +91,7 @@ import software.wings.beans.command.CommandUnitType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskType;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
@@ -799,6 +800,56 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
+  public EcsServiceSpecification getEcsServiceSpecification(String appId, String serviceId) {
+    return wingsPersistence.createQuery(EcsServiceSpecification.class)
+        .filter("appId", appId)
+        .filter("serviceId", serviceId)
+        .get();
+  }
+
+  @Override
+  public EcsServiceSpecification createEcsServiceSpecification(EcsServiceSpecification ecsServiceSpecification) {
+    return upsertEcsServiceSpecification(ecsServiceSpecification, true);
+  }
+
+  @Override
+  public void deleteEcsServiceSpecification(String appId, String ecsServiceSpecificationId) {
+    wingsPersistence.delete(EcsServiceSpecification.class, appId, ecsServiceSpecificationId);
+  }
+
+  @Override
+  public EcsServiceSpecification getEcsServiceSpecificationById(String appId, String ecsServiceSpecificationId) {
+    return wingsPersistence.get(EcsServiceSpecification.class, appId, ecsServiceSpecificationId);
+  }
+
+  @Override
+  public EcsServiceSpecification updateEcsServiceSpecification(EcsServiceSpecification ecsServiceSpecification) {
+    return upsertEcsServiceSpecification(ecsServiceSpecification, false);
+  }
+
+  @Override
+  public EcsServiceSpecification resetToDefaultEcsServiceSpecification(
+      EcsServiceSpecification ecsServiceSpecification) {
+    boolean exist = exist(ecsServiceSpecification.getAppId(), ecsServiceSpecification.getServiceId());
+    if (!exist) {
+      throw new InvalidRequestException("Service doesn't exist");
+    }
+    ecsServiceSpecification.resetToDefaultSpecification();
+    return upsertEcsServiceSpecification(ecsServiceSpecification, false);
+  }
+
+  @Override
+  public EcsServiceSpecification getExistingOrDefaultEcsServiceSpecification(String appId, String serviceId) {
+    EcsServiceSpecification ecsServiceSpecification = getEcsServiceSpecification(appId, serviceId);
+    if (ecsServiceSpecification == null) {
+      ecsServiceSpecification = EcsServiceSpecification.builder().serviceId(serviceId).build();
+      ecsServiceSpecification.setAppId(appId);
+      ecsServiceSpecification.resetToDefaultSpecification();
+    }
+    return ecsServiceSpecification;
+  }
+
+  @Override
   public HelmChartSpecification createHelmChartSpecification(HelmChartSpecification helmChartSpecification) {
     return upsertHelmChartSpecification(helmChartSpecification, true);
   }
@@ -821,6 +872,26 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
         accountId, service, persistedHelmChartSpecification, type, helmChartSpecification.isSyncFromGit());
 
     return persistedHelmChartSpecification;
+  }
+
+  private EcsServiceSpecification upsertEcsServiceSpecification(
+      EcsServiceSpecification ecsServiceSpecification, boolean isCreate) {
+    boolean exist = exist(ecsServiceSpecification.getAppId(), ecsServiceSpecification.getServiceId());
+    if (!exist) {
+      throw new InvalidRequestException("Service doesn't exist");
+    }
+    EcsServiceSpecification serviceSpecification =
+        wingsPersistence.saveAndGet(EcsServiceSpecification.class, ecsServiceSpecification);
+
+    String appId = serviceSpecification.getAppId();
+    String accountId = appService.getAccountIdByAppId(appId);
+    Service service = get(appId, serviceSpecification.getServiceId());
+
+    Type type = isCreate ? Type.CREATE : Type.UPDATE;
+    yamlPushService.pushYamlChangeSet(
+        accountId, service, serviceSpecification, type, serviceSpecification.isSyncFromGit());
+
+    return serviceSpecification;
   }
 
   @Override

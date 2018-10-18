@@ -616,6 +616,27 @@ public class YamlResource {
     return yamlResourceService.getContainerTask(accountId, appId, containerTaskId);
   }
 
+  @GET
+  @Path("/ecs-service-spec/{ecsServiceSpecificationId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlPayload> getEcsSErviceSpecification(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId,
+      @PathParam("ecsServiceSpecificationId") String ecsServiceSpecificationId) {
+    return yamlResourceService.getEcsServiceSpecification(accountId, appId, ecsServiceSpecificationId);
+  }
+
+  @PUT
+  @Path("/ecs-service-spec/{ecsServiceSpecificationId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE, skipAuth = true)
+  public RestResponse<Base> updateEcsServiceSpecification(@QueryParam("appId") String appId,
+      @QueryParam("accountId") String accountId, YamlPayload yamlPayload,
+      @QueryParam("deleteEnabled") @DefaultValue("false") boolean deleteEnabled) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
   @PUT
   @Path("/container-tasks/{containerTaskId}")
   @Timed
