@@ -14,6 +14,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
@@ -419,6 +420,19 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   PcfServiceSpecification getExistingOrDefaultPcfServiceSpecification(String appId, String serviceId);
 
+  EcsServiceSpecification getEcsServiceSpecification(String appId, String serviceId);
+
+  EcsServiceSpecification createEcsServiceSpecification(EcsServiceSpecification ecsServiceSpecification);
+
+  EcsServiceSpecification getEcsServiceSpecificationById(String appId, String ecsServiceSpecificationId);
+
+  void deleteEcsServiceSpecification(String appId, String ecsServiceSpecificationId);
+
+  EcsServiceSpecification updateEcsServiceSpecification(EcsServiceSpecification ecsServiceSpecification);
+
+  EcsServiceSpecification getExistingOrDefaultEcsServiceSpecification(String appId, String serviceId);
+
+  EcsServiceSpecification resetToDefaultEcsServiceSpecification(EcsServiceSpecification ecsServiceSpecification);
   /***
    * Get command categories equivalent to stencils call
    * @param appId

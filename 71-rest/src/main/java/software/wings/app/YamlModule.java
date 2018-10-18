@@ -52,6 +52,7 @@ import com.google.inject.multibindings.MapBinder;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureProvisionerType;
+import software.wings.common.Constants;
 import software.wings.service.impl.yaml.AppYamlResourceServiceImpl;
 import software.wings.service.impl.yaml.YamlArtifactStreamServiceImpl;
 import software.wings.service.impl.yaml.YamlDirectoryServiceImpl;
@@ -93,6 +94,7 @@ import software.wings.service.impl.yaml.handler.command.ScpCommandUnitYamlHandle
 import software.wings.service.impl.yaml.handler.command.SetupEnvCommandUnitYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.DeploymentSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.EcsContainerTaskYamlHandler;
+import software.wings.service.impl.yaml.handler.deploymentspec.container.EcsServiceSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.HelmChartSpecificationYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.KubernetesContainerTaskYamlHandler;
 import software.wings.service.impl.yaml.handler.deploymentspec.container.PcfServiceSpecificationYamlHandler;
@@ -213,6 +215,8 @@ public class YamlModule extends AbstractModule {
     MapBinder<String, DeploymentSpecificationYamlHandler> deploymentSpecYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, DeploymentSpecificationYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.ECS.name()).to(EcsContainerTaskYamlHandler.class);
+    deploymentSpecYamlHelperMapBinder.addBinding(Constants.ECS_SERVICE_SPEC)
+        .to(EcsServiceSpecificationYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.KUBERNETES.name())
         .to(KubernetesContainerTaskYamlHandler.class);
     deploymentSpecYamlHelperMapBinder.addBinding(DeploymentType.HELM.name())

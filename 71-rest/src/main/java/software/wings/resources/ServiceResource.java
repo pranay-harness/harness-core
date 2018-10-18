@@ -18,6 +18,7 @@ import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.KubernetesPayload;
 import software.wings.beans.container.PcfServiceSpecification;
@@ -419,6 +420,53 @@ public class ServiceResource {
     pcfServiceSpecification.setAppId(appId);
     pcfServiceSpecification.setServiceId(serviceId);
     return new RestResponse<>(serviceResourceService.resetToDefaultPcfServiceSpecification(pcfServiceSpecification));
+  }
+
+  @POST
+  @Path("{serviceId}/ecsspecification")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.CREATE)
+  public RestResponse<EcsServiceSpecification> createEcsServiceSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, EcsServiceSpecification ecsServiceSpecification) {
+    ecsServiceSpecification.setAppId(appId);
+    ecsServiceSpecification.setServiceId(serviceId);
+    return new RestResponse<>(serviceResourceService.createEcsServiceSpecification(ecsServiceSpecification));
+  }
+
+  @GET
+  @Path("{serviceId}/ecsSpecification")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<EcsServiceSpecification> getEcsServiceSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<EcsServiceSpecification> pageRequest) {
+    return new RestResponse<>(serviceResourceService.getExistingOrDefaultEcsServiceSpecification(appId, serviceId));
+  }
+
+  @PUT
+  @Path("{serviceId}/ecsSpecification/{ecsSpecificationId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  public RestResponse<EcsServiceSpecification> updateEcsServiceSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, @PathParam("ecsSpecificationId") String ecsSpecificationId,
+      EcsServiceSpecification ecsServiceSpecification) {
+    ecsServiceSpecification.setAppId(appId);
+    ecsServiceSpecification.setServiceId(serviceId);
+    ecsServiceSpecification.setUuid(ecsSpecificationId);
+    return new RestResponse<>(serviceResourceService.updateEcsServiceSpecification(ecsServiceSpecification));
+  }
+
+  @PUT
+  @Path("{serviceId}/ecsSpecification/reset")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  public RestResponse<EcsServiceSpecification> resetToDefaultEcsServiceSpecification(@QueryParam("appId") String appId,
+      @PathParam("serviceId") String serviceId, EcsServiceSpecification ecsServiceSpecification) {
+    ecsServiceSpecification.setAppId(appId);
+    ecsServiceSpecification.setServiceId(serviceId);
+    return new RestResponse<>(serviceResourceService.resetToDefaultEcsServiceSpecification(ecsServiceSpecification));
   }
 
   @POST

@@ -50,6 +50,7 @@ public interface YamlConstants {
   String LAMBDA_SPEC_YAML_FILE_NAME = "Lambda";
   String USER_DATA_SPEC_YAML_FILE_NAME = "UserData";
   String ECS_CONTAINER_TASK_YAML_FILE_NAME = "Ecs";
+  String ECS_SERVICE_SPEC_YAML_FILE_NAME = "EcsServiceSpec";
   String KUBERNETES_CONTAINER_TASK_YAML_FILE_NAME = "Kubernetes";
   String HELM_CHART_YAML_FILE_NAME = "HelmChart";
   String PCF_MANIFEST_YAML_FILE_NAME = "PcfManifest";

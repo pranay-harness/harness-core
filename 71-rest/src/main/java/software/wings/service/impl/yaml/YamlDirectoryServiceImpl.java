@@ -61,6 +61,7 @@ import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
@@ -266,6 +267,10 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           case "PcfServiceSpecification":
             appId = ((ServiceLevelYamlNode) dn).getAppId();
             yaml = yamlResourceService.getPcfServiceSpecification(accountId, appId, entityId).getResource().getYaml();
+            break;
+          case "EcsServiceSpecification":
+            appId = ((ServiceLevelYamlNode) dn).getAppId();
+            yaml = yamlResourceService.getEcsServiceSpecification(accountId, appId, entityId).getResource().getYaml();
             break;
           case "HelmChartSpecification":
             appId = ((ServiceLevelYamlNode) dn).getAppId();
@@ -734,6 +739,17 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
             deploymentSpecsFolder.addChild(new ServiceLevelYamlNode(accountId, ecsContainerTask.getUuid(),
                 ecsContainerTask.getAppId(), service.getUuid(), ecsSpecFileName, ContainerTask.class,
                 deploymentSpecsPath.clone().add(ecsSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
+          }
+
+          // This is Service json spec for ECS
+          EcsServiceSpecification serviceSpecification =
+              serviceResourceService.getEcsServiceSpecification(service.getAppId(), service.getUuid());
+          if (serviceSpecification != null) {
+            String ecsServiceSpecFileName = YamlConstants.ECS_SERVICE_SPEC_YAML_FILE_NAME + YAML_EXTENSION;
+            deploymentSpecsFolder.addChild(
+                new ServiceLevelYamlNode(accountId, serviceSpecification.getUuid(), serviceSpecification.getAppId(),
+                    service.getUuid(), ecsServiceSpecFileName, EcsServiceSpecification.class,
+                    deploymentSpecsPath.clone().add(ecsServiceSpecFileName), yamlGitSyncService, Type.DEPLOYMENT_SPEC));
           }
 
           HelmChartSpecification helmChartSpecification =

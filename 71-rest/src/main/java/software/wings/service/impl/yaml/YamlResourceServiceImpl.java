@@ -33,11 +33,13 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
+import software.wings.common.Constants;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.intfc.AppService;
@@ -324,6 +326,19 @@ public class YamlResourceServiceImpl implements YamlResourceService {
                         .toYaml(helmChartSpecification, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, helmChartSpecification.getUuid(), accountId, yaml, yamlFileName + YAML_EXTENSION);
+  }
+
+  @Override
+  public RestResponse<YamlPayload> getEcsServiceSpecification(
+      String accountId, String appId, String ecsServiceSpecificationId) {
+    EcsServiceSpecification ecsServiceSpecification =
+        serviceResourceService.getEcsServiceSpecificationById(appId, ecsServiceSpecificationId);
+    String yamlFileName = YamlConstants.ECS_SERVICE_SPEC_YAML_FILE_NAME;
+
+    BaseYaml yaml = yamlHandlerFactory.getYamlHandler(YamlType.DEPLOYMENT_SPECIFICATION, Constants.ECS_SERVICE_SPEC)
+                        .toYaml(ecsServiceSpecification, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, ecsServiceSpecification.getUuid(), accountId, yaml, yamlFileName + YAML_EXTENSION);
   }
 
   @Override
