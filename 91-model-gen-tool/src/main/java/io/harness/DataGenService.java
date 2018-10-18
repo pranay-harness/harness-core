@@ -135,6 +135,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateGalleryService;
+import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.ContainerFamily;
@@ -429,6 +430,8 @@ public class DataGenService {
 
     settingGenerator.ensureAllPredefined(seed, owners);
 
+    UsageRestrictions defaultUsageRestrictions = settingGenerator.getDefaultUsageRestrictions();
+
     SettingAttribute smtpSettingAttribute =
         aSettingAttribute()
             .withCategory(Category.CONNECTOR)
@@ -443,6 +446,7 @@ public class DataGenService {
                            .port(465)
                            .useSSL(true)
                            .build())
+            .withUsageRestrictions(defaultUsageRestrictions)
             .build();
     wingsPersistence.save(smtpSettingAttribute);
 
@@ -457,6 +461,7 @@ public class DataGenService {
                            .password(scmSecret.decryptToCharArray(new SecretName("splunk_config_password")))
                            .username("admin")
                            .build())
+            .withUsageRestrictions(defaultUsageRestrictions)
             .build();
     wingsPersistence.save(splunkSettingAttribute);
 
@@ -472,6 +477,7 @@ public class DataGenService {
                            .accountname("harness-test")
                            .password(scmSecret.decryptToCharArray(new SecretName("appd_config_password")))
                            .build())
+            .withUsageRestrictions(defaultUsageRestrictions)
             .build();
     wingsPersistence.save(appdSettingAttribute);
 
@@ -485,6 +491,7 @@ public class DataGenService {
                            .newRelicUrl("https://api.newrelic.com")
                            .apiKey("d8d3da54ce9355bd39cb7ced542a8acd2c1672312711610".toCharArray())
                            .build())
+            .withUsageRestrictions(defaultUsageRestrictions)
             .build();
 
     wingsPersistence.save(newRelicSettingAttribute);
@@ -501,6 +508,7 @@ public class DataGenService {
                            .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")))
                            .accountId(accountId)
                            .build())
+            .withUsageRestrictions(defaultUsageRestrictions)
             .build();
     wingsPersistence.save(awsNonProdAttribute);
 
@@ -517,6 +525,7 @@ public class DataGenService {
                            .withUserName("ubuntu")
                            .withKey(scmSecret.decryptToCharArray(new SecretName("ubuntu_ssh_key")))
                            .build())
+            .withUsageRestrictions(defaultUsageRestrictions)
             .build();
     wingsPersistence.save(hostConnection);
   }
