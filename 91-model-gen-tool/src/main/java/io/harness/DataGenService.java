@@ -24,11 +24,6 @@ import static io.harness.common.GeneratorConstants.readOnlyPassword;
 import static io.harness.common.GeneratorConstants.readOnlyUserName;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
-import static io.harness.generator.SettingGenerator.Settings.HARNESS_ARTIFACTORY_CONNECTOR;
-import static io.harness.generator.SettingGenerator.Settings.HARNESS_BAMBOO_CONNECTOR;
-import static io.harness.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
-import static io.harness.generator.SettingGenerator.Settings.HARNESS_NEXU3_CONNECTOR;
-import static io.harness.generator.SettingGenerator.Settings.HARNESS_NEXUS_CONNECTOR;
 import static java.util.Arrays.asList;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -76,7 +71,6 @@ import io.harness.generator.ResourceConstraintGenerator.ResourceConstraints;
 import io.harness.generator.ServiceGenerator;
 import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
-import io.harness.generator.SettingGenerator.Settings;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.mongo.MongoModule;
@@ -433,13 +427,7 @@ public class DataGenService {
     Owners owners = new Owners();
     owners.add(account);
 
-    settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_CONNECTOR);
-    settingGenerator.ensurePredefined(seed, owners, HARNESS_BAMBOO_CONNECTOR);
-    settingGenerator.ensurePredefined(seed, owners, HARNESS_NEXUS_CONNECTOR);
-    settingGenerator.ensurePredefined(seed, owners, HARNESS_NEXU3_CONNECTOR);
-    settingGenerator.ensurePredefined(seed, owners, HARNESS_ARTIFACTORY_CONNECTOR);
-    settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_DOCKER_REGISTRY);
-    settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_GCP_EXPLORATION);
+    settingGenerator.ensureAllPredefined(seed, owners);
 
     SettingAttribute smtpSettingAttribute =
         aSettingAttribute()
