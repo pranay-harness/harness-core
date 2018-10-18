@@ -74,6 +74,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -414,6 +415,35 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  public void isEditableByNonProdSupportAndAllAppAllEnvRestrictions() {
+    try {
+      List<String> appIds = asList(APP_ID_1, APP_ID_2, APP_ID_3);
+      AppPermission appPermission = AppPermission.builder()
+                                        .permissionType(ENV)
+                                        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                        .actions(allActions)
+                                        .entityFilter(EnvFilter.builder().filterTypes(newHashSet(NON_PROD)).build())
+                                        .build();
+      setUserGroupMocks(appPermission, appIds);
+
+      List<String> envIds = new ArrayList<>();
+      Set<Action> actions = newHashSet(Action.UPDATE);
+
+      setPermissions(appIds, envIds, actions, false);
+
+      UsageRestrictions entityUsageRestrictions =
+          getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD, NON_PROD));
+
+      boolean hasEditPermissions =
+          usageRestrictionsService.userHasPermissionsToChangeEntity(ACCOUNT_ID, entityUsageRestrictions);
+      assertFalse(hasEditPermissions);
+
+    } finally {
+      UserThreadLocal.unset();
+    }
+  }
+
+  @Test
   public void shouldHaveAccessWithUserHavingReadAccessToApp() {
     try {
       boolean isAccountAdmin = true;
@@ -438,7 +468,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
       Map<String, Set<String>> appEnvMapFromPermissionsForUpdateAction =
           UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getAppEnvMapForUpdateAction();
 
-      UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndProdEnv();
+      UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD));
 
       boolean hasAccess = usageRestrictionsService.hasAccess(ACCOUNT_ID, isAccountAdmin, APP_ID, ENV_ID,
           usageRestrictions, restrictionsFromPermissionsForUpdateAction, appEnvMapFromPermissionsForUpdateAction);
@@ -502,7 +532,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
 
       setPermissions(appIds, envIds, actions, isAccountAdmin);
 
-      UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndProdEnv();
+      UsageRestrictions usageRestrictions = getUsageRestrictionsWithAllAppsAndEnvTypes(newHashSet(PROD));
 
       UsageRestrictions restrictionsFromPermissionsForUpdateAction =
           UserThreadLocal.get().getUserRequestContext().getUserPermissionInfo().getUsageRestrictionsForUpdateAction();
@@ -522,9 +552,8 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
     }
   }
 
-  private UsageRestrictions getUsageRestrictionsWithAllAppsAndProdEnv() {
+  private UsageRestrictions getUsageRestrictionsWithAllAppsAndEnvTypes(Set<String> envFilters) {
     GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
-    Set<String> envFilters = newHashSet(PROD);
     EnvFilter envFilter = EnvFilter.builder().filterTypes(envFilters).build();
     AppEnvRestriction appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
     UsageRestrictions usageRestrictions = new UsageRestrictions();
