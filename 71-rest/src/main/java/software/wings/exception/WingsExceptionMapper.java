@@ -143,8 +143,11 @@ public class WingsExceptionMapper implements ExceptionMapper<WingsException> {
     logProcessedMessages(exception, MANAGER, logger);
     List<ResponseMessage> responseMessages = getResponseMessageList(exception, REST_API);
 
+    ErrorCode errorCode = exception.getCode() != null ? exception.getCode() : ErrorCode.UNKNOWN_ERROR;
+
     return Response.status(resolveHttpStatus(responseMessages))
         .entity(aRestResponse().withResponseMessages(responseMessages).build())
+        .header("X-Harness-Error", errorCode.toString())
         .build();
   }
 
