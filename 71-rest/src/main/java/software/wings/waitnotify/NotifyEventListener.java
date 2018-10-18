@@ -1,21 +1,16 @@
 package software.wings.waitnotify;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageRequest.UNLIMITED;
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
-import io.harness.beans.PageRequest;
-import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -30,8 +25,10 @@ import software.wings.sm.ExecutionStatus;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by peeyushaggarwal on 4/13/16.
@@ -67,35 +64,28 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
       logger.info("waitInstance not found for waitInstanceId: {}", waitInstanceId);
       return;
     }
+
     if (waitInstance.getStatus() != ExecutionStatus.NEW) {
       logger.warn("WaitInstance already processed - waitInstanceId:[{}], status=[{}] skipping ...", waitInstanceId,
           waitInstance.getStatus());
       return;
     }
 
-    PageRequest<WaitQueue> req = aPageRequest()
-                                     .withLimit(UNLIMITED)
-                                     .withReadPref(ReadPref.CRITICAL)
-                                     .addFilter("waitInstanceId", EQ, waitInstanceId)
-                                     .build();
-    PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, excludeAuthority);
+    List<WaitQueue> waitQueues = wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
+                                     .filter(WaitQueue.WAIT_INSTANCE_ID_KEY, waitInstanceId)
+                                     .asList();
 
-    if (isEmpty(waitQueuesResponse)) {
+    if (isEmpty(waitQueues)) {
       logger.warn("No entry in the waitQueue found for the waitInstanceId:[{}] skipping ...", waitInstanceId);
       return;
     }
 
     List<String> correlationIds = message.getCorrelationIds();
-    final List<String> finalCorrelationIdsForLambda = correlationIds;
-
     if (isNotEmpty(correlationIds)) {
-      if (correlationIds.size() * waitQueuesResponse.size() > 100) {
-        logger.error("Correlation/WaitQueue O(N*M) algorithm needs to be optimized");
-      }
-
-      List<String> missingCorrelationIds = waitQueuesResponse.stream()
+      Set<String> correlationIdSet = new HashSet<>(correlationIds);
+      List<String> missingCorrelationIds = waitQueues.stream()
                                                .map(WaitQueue::getCorrelationId)
-                                               .filter(s -> !finalCorrelationIdsForLambda.contains(s))
+                                               .filter(s -> !correlationIdSet.contains(s))
                                                .collect(toList());
       if (isNotEmpty(missingCorrelationIds)) {
         logger.info("Some of the correlationIds still needs to be waited, waitInstanceId: [{}], correlationIds: {}",
@@ -104,23 +94,17 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
       }
     }
 
-    PageRequest<NotifyResponse> notifyResponseReq =
-        aPageRequest()
-            .withReadPref(ReadPref.CRITICAL)
-            .addFilter(ID_KEY, Operator.IN,
-                waitQueuesResponse.stream().map(WaitQueue::getCorrelationId).collect(toList()).toArray())
-            .withLimit(PageRequest.UNLIMITED)
-            .build();
-    PageResponse<NotifyResponse> notifyResponses =
-        wingsPersistence.query(NotifyResponse.class, notifyResponseReq, excludeAuthority);
+    final List<NotifyResponse> notifyResponses =
+        wingsPersistence.createQuery(NotifyResponse.class, ReadPref.CRITICAL, excludeAuthority)
+            .field(ID_KEY)
+            .in(waitQueues.stream().map(WaitQueue::getCorrelationId).collect(toList()))
+            .asList();
 
-    correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toList());
-
-    final List<String> finalCorrelationIds = correlationIds;
-    if (notifyResponses.size() != waitQueuesResponse.size()) {
-      List<String> missingCorrelationIds = waitQueuesResponse.stream()
+    Set<String> correlationIdSet = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toSet());
+    if (notifyResponses.size() != waitQueues.size()) {
+      List<String> missingCorrelationIds = waitQueues.stream()
                                                .map(WaitQueue::getCorrelationId)
-                                               .filter(s -> !finalCorrelationIds.contains(s))
+                                               .filter(s -> !correlationIdSet.contains(s))
                                                .collect(toList());
       logger.warn(
           "notifyResponses for the correlationIds: {} not found. skipping the callback for the waitInstanceId: [{}]",
@@ -180,7 +164,7 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
       UpdateOperations<NotifyResponse> notifyResponseUpdate =
           wingsPersistence.createUpdateOperations(NotifyResponse.class).set("status", ExecutionStatus.SUCCESS);
-      for (WaitQueue waitQueue : waitQueuesResponse) {
+      for (WaitQueue waitQueue : waitQueues) {
         try {
           wingsPersistence.delete(waitQueue);
           wingsPersistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);

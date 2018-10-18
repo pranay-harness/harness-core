@@ -315,6 +315,17 @@ public interface WingsPersistence extends HPersistence {
   <T> Query<T> createQuery(Class<T> cls, ReadPref readPref);
 
   /**
+   * Creates the query.
+   *
+   * @param <T>          the generic type
+   * @param cls          the cls
+   * @param readPref     the read pref
+   * @param queryChecks  the query checks
+   * @return             the query
+   */
+  <T> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks);
+
+  /**
    * Gets the or create grid fs bucket.
    *
    * @param bucketName the bucket name
