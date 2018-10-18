@@ -204,6 +204,8 @@ public class YamlGitServiceImpl implements YamlGitService {
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
+      throw new InvalidRequestException(
+          "Thread was interrupted. Please try again. " + e.getMessage(), WingsException.USER);
     }
   }
 
