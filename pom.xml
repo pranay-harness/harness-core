@@ -1221,6 +1221,7 @@
                         <excludes>
                             <exclude>${datagen.exclude}</exclude>
                             <exclude>**/DelegateIntegrationTest</exclude>
+                            <exclude>**/VaultIntegrationTest</exclude>
                             <exclude>**/JenkinsSettingOverWriteTest.java</exclude>
                         </excludes>
                         <forkCount>6</forkCount>
