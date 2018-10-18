@@ -10,11 +10,9 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
-import static software.wings.beans.Service.builder;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.Category.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
-import static software.wings.generator.SettingGenerator.Settings.HARNESS_JENKINS_CONNECTOR;
 import static software.wings.utils.ArtifactType.DOCKER;
 import static software.wings.utils.ArtifactType.RPM;
 import static software.wings.utils.ArtifactType.WAR;
@@ -39,7 +37,6 @@ import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameter;
 import org.junit.runners.Parameterized.Parameters;
 import org.mockito.Mock;
-import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BambooConfig;
@@ -61,17 +58,6 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.AccountGenerator;
-import software.wings.generator.ApplicationGenerator;
-import software.wings.generator.ApplicationGenerator.Applications;
-import software.wings.generator.ArtifactStreamGenerator;
-import software.wings.generator.OwnerManager;
-import software.wings.generator.OwnerManager.Owners;
-import software.wings.generator.Randomizer;
-import software.wings.generator.Randomizer.Seed;
-import software.wings.generator.SecretGenerator;
-import software.wings.generator.ServiceGenerator;
-import software.wings.generator.SettingGenerator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.integration.BaseIntegrationTest;
@@ -118,15 +104,8 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
   @Inject private ArtifactoryBuildService artifactoryBuildService;
   @Inject private EcrBuildService ecrBuildService;
   @Inject private AmazonS3BuildService amazonS3BuildService;
-  @Inject private SecretManagementDelegateService secretManagementDelegateService;
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
-  @Inject private OwnerManager ownerManager;
-  @Inject private SettingGenerator settingGenerator;
-  @Inject private ArtifactStreamGenerator artifactStreamGenerator;
-  @Inject private ApplicationGenerator applicationGenerator;
-  @Inject private ServiceGenerator serviceGenerator;
-  @Inject private AccountGenerator accountGenerator;
+  @Inject private SecretManagementDelegateService secretManagementDelegateService;
   private final String userEmail = "rsingh@harness.io";
   private final String userName = "raghu";
   private final User user = User.Builder.anUser().withEmail(userEmail).withName(userName).build();
@@ -166,19 +145,19 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
     //    Owners owners = new Owners();
     //    owners.add(account);
 
-    Seed seed = new Seed(0);
-    Account account = accountGenerator.ensureGenericTest();
-    seed = Randomizer.seed();
-    Owners owners = ownerManager.create();
-    application = owners.obtainApplication(()
-                                               -> applicationGenerator.ensurePredefined(Randomizer.seed(),
-                                                   ownerManager.create(), Applications.GENERIC_TEST));
+    //    Seed seed = new Seed(0);
+    //    Account account = accountGenerator.ensureGenericTest();
+    //    seed = Randomizer.seed();
+    //    Owners owners = ownerManager.create();
+    //    application = owners.obtainApplication(()
+    //                                               -> applicationGenerator.ensurePredefined(Randomizer.seed(),
+    //                                                   ownerManager.create(), Applications.GENERIC_TEST));
     switch (type) {
       case JENKINS:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(jenkinsBuildService);
-        owners = new Owners();
-        owners.add(account);
-        settingAttribute = settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_CONNECTOR);
+        //        owners = new Owners();
+        //        owners.add(account);
+        //        settingAttribute = settingGenerator.ensurePredefined(seed, owners, HARNESS_JENKINS_CONNECTOR);
         artifactStream = new JenkinsArtifactStream();
         ((JenkinsArtifactStream) artifactStream).setJobname(jobName);
         ((JenkinsArtifactStream) artifactStream).setArtifactPaths(Collections.singletonList(artifactPath));
@@ -291,20 +270,20 @@ public class BuildSourceServiceIntegrationTest extends BaseIntegrationTest {
       case AMAZON_S3:
         when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(amazonS3BuildService);
 
-        settingAttribute = settingGenerator.ensureAwsTest(seed, owners);
-        final Service s3Service = serviceGenerator.ensureService(
-            seed, owners, builder().name("S3 Service").artifactType(ArtifactType.WAR).build());
-        artifactStream = artifactStreamGenerator.ensureArtifactStream(seed,
-            AmazonS3ArtifactStream.builder()
-                .appId(application.getAppId())
-                .serviceId(s3Service.getUuid())
-                .name("harness-example_todolist-war")
-                .sourceName(settingAttribute.getName())
-                .jobname("harness-example")
-                .artifactPaths(asList("todolist.war"))
-                .settingId(settingAttribute.getUuid())
-                .build());
-        artifactStream.setServiceId(s3Service.getUuid());
+        //        settingAttribute = settingGenerator.ensureAwsTest(seed, owners);
+        //        final Service s3Service = serviceGenerator.ensureService(
+        //            seed, owners, builder().name("S3 Service").artifactType(ArtifactType.WAR).build());
+        //        artifactStream = artifactStreamGenerator.ensureArtifactStream(seed,
+        AmazonS3ArtifactStream.builder()
+            .appId(application.getAppId())
+            //                .serviceId(s3Service.getUuid())
+            .name("harness-example_todolist-war")
+            .sourceName(settingAttribute.getName())
+            .jobname("harness-example")
+            .artifactPaths(asList("todolist.war"))
+            .settingId(settingAttribute.getUuid())
+            .build();
+        //        artifactStream.setServiceId(s3Service.getUuid());
         artifactStream.setAppId(application.getAppId());
         break;
       default:

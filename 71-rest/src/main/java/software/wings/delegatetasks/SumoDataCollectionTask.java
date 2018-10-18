@@ -96,7 +96,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           + logCollectionMinute * TimeUnit.MINUTES.toMillis(1);
     }
 
-    @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE", "REC_CATCH_EXCEPTION"})
+    @SuppressFBWarnings({"RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"})
     @Override
     public void run() {
       try {

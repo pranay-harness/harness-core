@@ -271,7 +271,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       return collectionMinute;
     }
 
-    @SuppressFBWarnings({"DMI_ARGUMENTS_WRONG_ORDER", "REC_CATCH_EXCEPTION"})
+    @SuppressFBWarnings({"DMI_ARGUMENTS_WRONG_ORDER"})
     @Override
     public void run() {
       try {
@@ -330,7 +330,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             }
             break;
 
-          } catch (Exception ex) {
+          } catch (RuntimeException ex) {
             if (++retry >= RETRIES) {
               taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
               completed.set(true);
@@ -347,7 +347,8 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           }
         }
 
-      } catch (Exception e) {
+      } catch (RuntimeException | IOException | CloneNotSupportedException | InvocationTargetException
+          | IllegalAccessException | NoSuchMethodException e) {
         completed.set(true);
         taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
         taskResult.setErrorMessage("error fetching appdynamics metrics for minute " + dataCollectionMinute);

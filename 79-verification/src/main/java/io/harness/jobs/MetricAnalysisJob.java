@@ -10,7 +10,6 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
@@ -309,7 +308,6 @@ public class MetricAnalysisJob implements Job {
       }
     }
 
-    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
     @Override
     public void run() {
       logger.info("Starting analysis for " + context.getStateExecutionId());
@@ -452,7 +450,7 @@ public class MetricAnalysisJob implements Job {
             logger.info("[Learning Engine] : Failed to create Experimental Task with error {}", ex);
           }
         }
-      } catch (Exception ex) {
+      } catch (RuntimeException | IOException ex) {
         completeCron = true;
         error = true;
         errMsg = Misc.getMessage(ex);

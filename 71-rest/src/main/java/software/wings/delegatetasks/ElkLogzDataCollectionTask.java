@@ -97,7 +97,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       this.taskResult = taskResult;
     }
 
-    @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "REC_CATCH_EXCEPTION"})
+    @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE"})
     @Override
     public void run() {
       try {
@@ -208,7 +208,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
                   + " stateExecutionId: " + dataCollectionInfo.getStateExecutionId() + " minute: " + logCollectionMinute
                   + " host: " + hostName);
               break;
-            } catch (Exception e) {
+            } catch (RuntimeException e) {
               if (++retry >= RETRIES) {
                 taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
                 completed.set(true);

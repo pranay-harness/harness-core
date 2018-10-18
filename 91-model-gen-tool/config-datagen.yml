@@ -1,0 +1,148 @@
+xxxxxxxx
+  applicationConnectors:
+    - type: h2
+      port: 9090
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+      maxRequestHeaderSize: 100KiB
+    - type: http
+      port: 3457
+      maxRequestHeaderSize: 100KiB
+  adminConnectors:
+    - type: h2
+      port: 9091
+      keyStorePath: keystore.jks
+      keyStorePassword: password
+      trustStorePath: ${JAVA_HOME}/jre/lib/security/cacerts
+      certAlias: localhost
+      validateCerts: false
+  requestLog:
+    appenders:
+      - type: rest-log
+        name: rest-accesslogs-appender
+        threshold: TRACE
+        key: 9a3e6eac4dcdbdc41a93ca99100537df
+        programName: manager-saas-accesslogs
+
+smtp:
+  type: SMTP
+  host: host_placeholder
+  port: 465
+  fromAddress: noreply@harness.io
+  useSSL: true
+  username: smtp_username_placeholder
+  password: "smtp_password_placeholder"
+
+globalWhitelistConfig:
+  filters: 127.0.0.1/8
+
+logging:
+  level: INFO
+  loggers:
+    com.novemberain.quartz.mongodb: WARN
+    org.quartz.plugins: WARN
+    org.glassfish.jersey: WARN
+    allbegray.slack: WARN
+    # the following is to suppress "Error retrieving job for trigger XYZ, setting trigger state to ERROR."
+    # TODO: remove this suppression when the mentioned issue is resolved
+    com.novemberain.quartz.mongodb.TriggerRunner: "OFF"
+  appenders:
+    - type: console
+      threshold: TRACE
+      target: STDOUT
+      logFormat: "%date{ISO8601} %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+    - type: rest-log
+      threshold: TRACE
+      logFormat: "%blue([${VERSION}]) %green([%thread]) %highlight(%-5level) %blue(%X{executionId}) %cyan(%logger) - %msg %n"
+      key: 9a3e6eac4dcdbdc41a93ca99100537df
+      programName: manager-saas
+
+mongo:
+  uri: mongodb://localhost:27017/harness
+
+watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
+delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
+apiUrl:
+deployMode: AWS
+
+portal:
+  url: https://localhost:8000
+  allowedDomains: harness.io, wings.software, localhost, 127.0.0.1
+  allowedOrigins: http://localhost:8000, https://localhost:8000, https://127.0.0.1:8000, https://localhost:8181, https://127.0.0.1:8181, http://127.0.0.1:8000
+  companyName: Harness Inc
+  authTokenExpiryInMillis: 86400000
+  jwtPasswordSecret: a8SGF1CQMHN6pnCJgz32kLn1tebrXnw6MtWto8xI
+  jwtExternalServiceSecret: nhUmut2NMcUnsR01OgOz0e51MZ51AqUwrOATJ3fJ
+  jwtZendeskSecret: RdL7j9ZdCz6TVSHO7obJRS6ywYLJjH8tdfPP39i4MbevKjVo
+  jwtMultiAuthSecret: 5E1YekVGldTSS5Kt0GHlyWrJ6fJHmee9nXSBssefAWSOgdMwAvvbvJalnYENZ0H0EealN0CxHh34gUCN
+  jwtSsoRedirectSecret: qY4GXZAlPJQPEV8JCPTNhgmDmnHZSAgorzGxvOY03Xptr8N9xDfAYbwGohr2pCRLfFG69vBQaNpeTjcV
+  jwtAuthSecret: dOkdsVqdRPPRJG31XU0qY4MPqmBBMk0PTAGIKM6O7TGqhjyxScIdJe80mwh5Yb5zF3KxYBHw6B3Lfzlq
+  delegateDockerImage: harness/delegate:latest
+
+featuresEnabled:
+
+awsRegionIdToName:
+  us-east-1: US East (N. Virginia)
+  us-east-2: US East (Ohio)
+  us-west-1: US West (N. California)
+  us-west-2: US West (Oregon)
+  eu-west-1: EU (Ireland)
+  eu-west-2: EU (London)
+  eu-west-3: EU (Paris)
+  eu-central-1: EU (Frankfurt)
+  ap-northeast-1: Asia Pacific (Tokyo)
+  ap-northeast-2: Asia Pacific (Seoul)
+  ap-southeast-1: Asia Pacific (Singapore)
+  ap-southeast-2: Asia Pacific (Sydney)
+  ca-central-1: Canada (Central)
+  ap-south-1: Asia Pacific (Mumbai)
+  sa-east-1: South America (São Paulo)
+  us-gov-west-1: GovCloud
+  cn-north-1: China North (Beijing)
+  cn-northwest-1: China (Ningxia),
+  ca-central-1: Canada (Central);
+
+awsInstanceTypes:
+  - t2.nano
+  - t2.micro
+  - t2.small
+  - t2.medium
+  - t2.large
+  - m3.medium
+  - m3.large
+  - m3.xlarge
+  - m3.2xlarge
+  - m4.large
+  - m4.xlarge
+  - m4.2xlarge
+  - m4.4xlarge
+  - m4.10xlarge
+  - c4.large
+  - c4.xlarge
+  - c4.2xlarge
+  - c4.4xlarge
+  - c4.8xlarge
+  - c3.large
+  - c3.xlarge
+  - c3.2xlarge
+  - c3.4xlarge
+  - c3.8xlarge
+  - r3.large
+  - r3.xlarge
+  - r3.2xlarge
+  - r3.4xlarge
+  - r3.8xlarge
+  - g2.2xlarge
+  - g2.8xlarge
+  - i2.xlarge
+  - i2.2xlarge
+  - i2.4xlarge
+  - i2.8xlarge
+  - d2.xlarge
+  - d2.2xlarge
+  - d2.4xlarge
+  - d2.8xlarge
+

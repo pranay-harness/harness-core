@@ -22,7 +22,6 @@ import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.generator.SecretGenerator;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
@@ -40,7 +39,6 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   @Inject private AnalysisService analysisService;
   @Inject private ElkDelegateService elkDelegateService;
   @Inject private EncryptionService encryptionService;
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
 
   @Before

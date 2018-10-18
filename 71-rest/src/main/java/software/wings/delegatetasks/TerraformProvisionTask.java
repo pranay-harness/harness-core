@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
@@ -92,7 +93,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     writer.write(String.format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "REC_CATCH_EXCEPTION"})
+  @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
@@ -239,7 +240,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
       return terraformExecutionDataBuilder.build();
 
-    } catch (Exception ex) {
+    } catch (RuntimeException | IOException | InterruptedException | TimeoutException ex) {
+      if (ex instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
+
       logger.error("Exception in processing terraform operation", ex);
       return TerraformExecutionData.builder()
           .executionStatus(ExecutionStatus.FAILED)

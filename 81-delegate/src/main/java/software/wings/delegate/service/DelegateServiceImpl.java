@@ -117,9 +117,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.net.ConnectException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.List;
@@ -247,12 +250,10 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateId;
   }
 
-  @SuppressFBWarnings(
-      {"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP", "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD", "REC_CATCH_EXCEPTION"})
+  @SuppressFBWarnings({"UW_UNCOND_WAIT", "WA_NOT_IN_LOOP", "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD"})
   @Override
   @SuppressWarnings("unchecked")
-  public void
-  run(boolean watched) {
+  public void run(boolean watched) {
     try {
       hostName = getLocalHostName();
       accountId = delegateConfiguration.getAccountId();
@@ -422,7 +423,11 @@ public class DelegateServiceImpl implements DelegateService {
         cleanupOldDelegateVersionFromBackup();
       }
 
-    } catch (Exception e) {
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      logger.error("Exception while starting/running delegate", e);
+    } catch (
+        RuntimeException | IOException | NoSuchAlgorithmException | KeyManagementException | URISyntaxException e) {
       logger.error("Exception while starting/running delegate", e);
     }
   }

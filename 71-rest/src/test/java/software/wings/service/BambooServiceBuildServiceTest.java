@@ -15,22 +15,17 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.BambooConfig;
 import software.wings.beans.SettingAttribute;
-import software.wings.generator.SecretGenerator;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.service.intfc.SettingsService;
 
 import java.io.InputStream;
 
-/**
- * Created by anubhaw on 11/28/16.
- */
 @Ignore
 public class BambooServiceBuildServiceTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(BambooServiceBuildServiceTest.class);
 
   @Inject BambooService bambooService;
   @Inject SettingsService settingsService;
-  @Inject SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
   private BambooConfig bambooConfig;
 

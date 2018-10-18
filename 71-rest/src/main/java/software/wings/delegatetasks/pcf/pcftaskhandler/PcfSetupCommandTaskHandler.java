@@ -4,7 +4,6 @@ import static software.wings.helpers.ext.pcf.PcfConstants.PIVOTAL_CLOUD_FOUNDRY_
 
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidArgumentsException;
 import lombok.NoArgsConstructor;
@@ -18,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.helpers.ext.pcf.PcfRequestConfig;
+import software.wings.helpers.ext.pcf.PivotalClientApiException;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest;
 import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
@@ -28,8 +28,10 @@ import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @NoArgsConstructor
 @Singleton
@@ -41,7 +43,6 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
    * This method is responsible for fetching previous release version information
    * like, previous releaseNames with Running instances, All existing previous releaseNames.
    */
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   public PcfCommandExecutionResponse executeTaskInternal(
       PcfCommandRequest pcfCommandRequest, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!(pcfCommandRequest instanceof PcfCommandSetupRequest)) {
@@ -173,7 +174,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           .pcfCommandResponse(pcfSetupCommandResponse)
           .build();
 
-    } catch (Exception e) {
+    } catch (RuntimeException | PivotalClientApiException | IOException | ExecutionException e) {
       logger.error(
           PIVOTAL_CLOUD_FOUNDRY_LOG_PREFIX + "Exception in processing PCF Setup task [{}]", pcfCommandSetupRequest, e);
       executionLogCallback.saveExecutionLog("\n\n ----------  PCF Setup process failed to complete successfully");

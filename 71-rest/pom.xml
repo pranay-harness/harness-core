@@ -821,17 +821,17 @@
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>INSTRUCTION</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.504</minimum>
+                                            <minimum>0.300</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.397</minimum>
+                                            <minimum>0.300</minimum>
                                         </limit>
                                         <limit implementation="org.jacoco.report.check.Limit">
                                             <counter>COMPLEXITY</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.410</minimum>
+                                            <minimum>0.300</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -839,29 +839,6 @@
                             <excludes>
                                 <exclude>**/migrations/all/*.class</exclude>
                             </excludes>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>2.4</version>
-                <configuration>
-                    <descriptor>src/test/assembly/assembly.xml</descriptor>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>software.wings.integration.DataGenUtil</mainClass>
-                                </manifest>
-                            </archive>
                         </configuration>
                     </execution>
                 </executions>

@@ -38,7 +38,6 @@ import software.wings.beans.SumoConfig;
 import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.SecretGenerator;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
@@ -108,7 +107,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   @Inject private SplunkDelegateService splunkDelegateService;
   @Inject private ElkDelegateService elkDelegateService;
   @Inject private SumoDelegateService sumoDelegateService;
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
 
   @Before

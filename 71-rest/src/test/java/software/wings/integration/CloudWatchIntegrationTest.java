@@ -12,7 +12,6 @@ import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplate
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
-import static software.wings.integration.DataGenUtil.AWS_PLAY_GROUND;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
 import com.google.inject.Inject;
@@ -49,7 +48,7 @@ import javax.ws.rs.core.Response;
  */
 public class CloudWatchIntegrationTest extends BaseIntegrationTest {
   @Inject private SettingsService settingsService;
-
+  public static final String AWS_PLAY_GROUND = "aws-playground";
   private String awsConfigId;
   private String appId;
   private String workflowId;

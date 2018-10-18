@@ -27,7 +27,6 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.artifact.BambooArtifactStream;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.SecretGenerator;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.service.intfc.BambooBuildService;
@@ -40,9 +39,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Created by rsingh on 10/9/17.
- */
 @Ignore("Unit tests should not access external resources")
 public class BambooBuildSourceServiceTest extends WingsBaseTest {
   private String accountId;
@@ -53,7 +49,6 @@ public class BambooBuildSourceServiceTest extends WingsBaseTest {
   @Inject private BuildSourceService buildSourceService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private BambooBuildService bambooBuildService;
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
 
   @Before

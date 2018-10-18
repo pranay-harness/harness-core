@@ -199,7 +199,7 @@ public class MongoModule extends AbstractModule {
     final Map<String, Accesses> accesses = mergeAccesses(accessesPrimary, accessesSecondary);
 
     final long now = System.currentTimeMillis();
-    final Date tooNew = new Date(now - Duration.ofDays(0).toMillis());
+    final Date tooNew = new Date(now - Duration.ofDays(7).toMillis());
 
     accesses.entrySet()
         .stream()

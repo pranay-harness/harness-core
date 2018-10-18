@@ -2,7 +2,6 @@ package software.wings.service.impl.elk;
 
 import static java.util.Arrays.asList;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
@@ -93,7 +92,6 @@ public class ElkLogFetchRequest {
     return result.toString();
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   protected JSONObject eval() {
     try {
       String[] tokens = insertSpaces(query.toLowerCase()).split(" ");
@@ -144,7 +142,7 @@ public class ElkLogFetchRequest {
       }
       return operandStack.pop();
 
-    } catch (Exception ex) {
+    } catch (RuntimeException ex) {
       throw new WingsException(
           "Malformed Query. Braces should be matching. Only supported operators are 'or' and 'and' ");
     }

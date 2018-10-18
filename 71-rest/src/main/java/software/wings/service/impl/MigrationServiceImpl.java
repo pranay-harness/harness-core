@@ -13,7 +13,6 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
@@ -53,7 +52,6 @@ public class MigrationServiceImpl implements MigrationService {
   @Inject private ExecutorService executorService;
   @Inject private TimeLimiter timeLimiter;
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   @Override
   public void runMigrations() {
     Map<Integer, Class<? extends Migration>> migrations =
@@ -197,7 +195,7 @@ public class MigrationServiceImpl implements MigrationService {
         logger.info("[SeedDataMigration] - Schema is up to date");
       }
 
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       logger.error("[Migration] - Migration failed.", e);
     }
   }

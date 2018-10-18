@@ -41,7 +41,6 @@ import software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.SecretGenerator;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.AppService;
@@ -72,7 +71,6 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
   @Inject private AwsHelperService awsHelperService;
   @Inject private ContainerService containerService;
