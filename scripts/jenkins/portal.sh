@@ -63,4 +63,5 @@ cp dist/disconnected_on_prem_pov/disconnected_on_prem_pov_template.tar.gz discon
 mkdir -p dist/test
 cd dist/test
 cp ../../91-model-gen-tool/target/model-gen-tool.jar .
+cp ../../91-model-gen-tool/config-datagen.yml .
 cd ../..
