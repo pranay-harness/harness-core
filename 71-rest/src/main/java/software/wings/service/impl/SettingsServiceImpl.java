@@ -30,6 +30,7 @@ import static software.wings.common.Constants.DEFAULT_WINDOWS_RUNTIME_PATH;
 import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
+import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.equalCheck;
 import static software.wings.utils.Validator.notNullCheck;
@@ -530,6 +531,7 @@ public class SettingsServiceImpl implements SettingsService {
                               .withEnvId(GLOBAL_ENV_ID)
                               .withName(WINDOWS_RUNTIME_PATH)
                               .withValue(aStringValue().withValue(DEFAULT_WINDOWS_RUNTIME_PATH).build())
+                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                               .build());
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
@@ -537,6 +539,7 @@ public class SettingsServiceImpl implements SettingsService {
                               .withEnvId(GLOBAL_ENV_ID)
                               .withName(RUNTIME_PATH)
                               .withValue(aStringValue().withValue(DEFAULT_RUNTIME_PATH).build())
+                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                               .build());
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(appId)
@@ -544,6 +547,7 @@ public class SettingsServiceImpl implements SettingsService {
                               .withEnvId(GLOBAL_ENV_ID)
                               .withName(STAGING_PATH)
                               .withValue(aStringValue().withValue(DEFAULT_STAGING_PATH).build())
+                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                               .build());
 
     SettingAttribute settingAttribute = aSettingAttribute()
@@ -552,6 +556,7 @@ public class SettingsServiceImpl implements SettingsService {
                                             .withEnvId(GLOBAL_ENV_ID)
                                             .withName(BACKUP_PATH)
                                             .withValue(aStringValue().withValue(DEFAULT_BACKUP_PATH).build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                             .build();
     wingsPersistence.save(settingAttribute);
 
@@ -572,6 +577,7 @@ public class SettingsServiceImpl implements SettingsService {
                                              .withAccessType(USER_PASSWORD)
                                              .withAccountId(accountId)
                                              .build())
+                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                               .build());
     wingsPersistence.save(aSettingAttribute()
                               .withAppId(GLOBAL_APP_ID)
@@ -583,6 +589,7 @@ public class SettingsServiceImpl implements SettingsService {
                                              .withAccessType(USER_PASSWORD_SU_APP_USER)
                                              .withAccountId(accountId)
                                              .build())
+                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                               .build());
 
     SettingAttribute settingAttribute = aSettingAttribute()
@@ -595,6 +602,7 @@ public class SettingsServiceImpl implements SettingsService {
                                                            .withAccessType(USER_PASSWORD_SUDO_APP_USER)
                                                            .withAccountId(accountId)
                                                            .build())
+                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                             .build();
     wingsPersistence.save(settingAttribute);
 
