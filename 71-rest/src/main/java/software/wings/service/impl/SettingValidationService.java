@@ -30,6 +30,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
+import software.wings.beans.GitConfig;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
@@ -86,6 +87,7 @@ public class SettingValidationService {
   @Inject private SecretManager secretManager;
   @Inject private EncryptionService encryptionService;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
+  @Inject private GitConfigHelperService gitConfigHelperService;
 
   public boolean validate(SettingAttribute settingAttribute) {
     // Name has leading/trailing spaces
@@ -159,6 +161,8 @@ public class SettingValidationService {
       newRelicService.validateConfig(settingAttribute, StateType.DYNA_TRACE);
     } else if (settingValue instanceof PrometheusConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.PROMETHEUS);
+    } else if (settingValue instanceof GitConfig) {
+      validateGitConfig(settingAttribute);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {
@@ -205,6 +209,16 @@ public class SettingValidationService {
     try {
       AwsConfig value = (AwsConfig) settingAttribute.getValue();
       awsEc2HelperServiceManager.validateAwsAccountCredential(value, emptyList());
+    } catch (Exception e) {
+      logger.warn(Misc.getMessage(e), e);
+      throw new InvalidRequestException(Misc.getMessage(e), USER);
+    }
+  }
+
+  private void validateGitConfig(SettingAttribute settingAttribute) {
+    try {
+      GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+      gitConfigHelperService.validateGitConfig(gitConfig, emptyList());
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
