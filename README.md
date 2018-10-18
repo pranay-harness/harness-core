@@ -186,7 +186,7 @@ Also make sure that the layout looks like this:
            `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
 
        * Use classpath of module:  
-           rest
+           71-rest
 
        * JRE:  
            Default (1.8 - SDK of 'rest' module)
@@ -215,7 +215,7 @@ Also make sure that the layout looks like this:
     `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
 
     _ Use classpath of module:  
-    delegate
+    81-delegate
 
     _ JRE:  
     Default (1.8 - SDK of 'delegate' module)
@@ -242,7 +242,37 @@ Also make sure that the layout looks like this:
            `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
 
        * Use classpath of module:
-           verification
+           79-verification
+
+       * JRE:
+           Default (1.8 - SDK of 'rest' module)
+
+       * Ensure [File > Project Structure > Project SDK] "java version" is 1.8.0_\<update number>. (update number - java build aupdate number, say 152)
+       * Ensure [IntelliJ IDEA > Preferences > Build, Execution, Deployment > Compile > Java Compiler > Module] "Target Bytecode Version" is 1.8 for all modules.
+
+4. Create the Data Model Generation tool - "DataGeneration":
+   [Run > Edit Configurations...]
+
+       * Add new Application:
+           Use the "+" on the left to add a new application. Call it "DataGeneration"
+
+       * Set Main class:
+           'DataGenApplication' class (found at io.harness.DataGenApplication) with the following configurations.
+
+       * VM Options:
+           `-Xbootclasspath/p:<Your Home Directory>/.m2/repository/org/mortbay/jetty/alpn/alpn-boot/8.1.11.v20170118/alpn-boot-8.1.11.v20170118.jar`
+
+       * Program Arguments:
+           `server config-datagen.yml`
+
+       * Working Directory:
+           `$MODULE_DIR$`
+
+       * Environment Variable:
+           `JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_<update number>.jdk/Contents/Home`
+
+       * Use classpath of module:
+           91-model-gen-tool
 
        * JRE:
            Default (1.8 - SDK of 'rest' module)
