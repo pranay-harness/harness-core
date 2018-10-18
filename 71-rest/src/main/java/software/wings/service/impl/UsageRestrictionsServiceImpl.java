@@ -166,7 +166,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     final UsageRestrictions entityUsageRestrictionsFinal = entityUsageRestrictions;
     // We want to first check if the restrictions from user permissions is not null
     if (isEmpty(appEnvMapFromEntityRestrictions)) {
-      return hasCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
+      return hasAnyCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
     }
 
     return appEnvMapFromEntityRestrictions.entrySet().stream().anyMatch(
@@ -179,7 +179,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
           Set<String> envIdsFromRestrictions = appEnvEntryOfEntity.getValue();
           if (isEmpty(envIdsFromRestrictions)) {
-            return hasCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
+            return hasAnyCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
           }
 
           Set<String> envIdsOfUser = appEnvMapFromPermissions.get(appId);
@@ -192,7 +192,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         });
   }
 
-  private boolean hasCommonEnv(
+  private boolean hasAnyCommonEnv(
       String appId, UsageRestrictions restrictionsFromEntity, UsageRestrictions restrictionsFromUserPermissions) {
     return (hasAllEnvAccessOfType(restrictionsFromEntity, appId, FilterType.PROD)
                && hasAllEnvAccessOfType(restrictionsFromUserPermissions, appId, FilterType.PROD))
@@ -200,12 +200,55 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
                && hasAllEnvAccessOfType(restrictionsFromUserPermissions, appId, FilterType.NON_PROD));
   }
 
-  private boolean hasCommonEnv(
+  private boolean hasAnyCommonEnv(
       UsageRestrictions restrictionsFromEntity, UsageRestrictions restrictionsFromUserPermissions) {
     return (hasAllEnvAccessOfType(restrictionsFromEntity, FilterType.PROD)
                && hasAllEnvAccessOfType(restrictionsFromUserPermissions, FilterType.PROD))
         || (hasAllEnvAccessOfType(restrictionsFromEntity, FilterType.NON_PROD)
                && hasAllEnvAccessOfType(restrictionsFromUserPermissions, FilterType.NON_PROD));
+  }
+
+  private boolean hasAllCommonEnv(
+      String appId, UsageRestrictions restrictionsFromEntity, UsageRestrictions restrictionsFromUserPermissions) {
+    boolean hasAllProdRestrictions = hasAllEnvAccessOfType(restrictionsFromEntity, appId, FilterType.PROD);
+    boolean hasAllProdPermissions = hasAllEnvAccessOfType(restrictionsFromUserPermissions, appId, FilterType.PROD);
+    boolean hasAllNonProdRestrictions = hasAllEnvAccessOfType(restrictionsFromEntity, appId, FilterType.NON_PROD);
+    boolean hasAllNonProdPermissions =
+        hasAllEnvAccessOfType(restrictionsFromUserPermissions, appId, FilterType.NON_PROD);
+
+    return hasAllAccess(
+        hasAllProdPermissions, hasAllProdRestrictions, hasAllNonProdPermissions, hasAllNonProdRestrictions);
+  }
+
+  private boolean hasAllCommonEnv(
+      UsageRestrictions restrictionsFromEntity, UsageRestrictions restrictionsFromUserPermissions) {
+    boolean hasAllProdRestrictions = hasAllEnvAccessOfType(restrictionsFromEntity, FilterType.PROD);
+    boolean hasAllProdPermissions = hasAllEnvAccessOfType(restrictionsFromUserPermissions, FilterType.PROD);
+    boolean hasAllNonProdRestrictions = hasAllEnvAccessOfType(restrictionsFromEntity, FilterType.NON_PROD);
+    boolean hasAllNonProdPermissions = hasAllEnvAccessOfType(restrictionsFromUserPermissions, FilterType.NON_PROD);
+
+    return hasAllAccess(
+        hasAllProdPermissions, hasAllProdRestrictions, hasAllNonProdPermissions, hasAllNonProdRestrictions);
+  }
+
+  private boolean hasAllAccess(boolean hasAllProdPermissions, boolean hasAllProdRestrictions,
+      boolean hasAllNonProdPermissions, boolean hasAllNonProdRestrictions) {
+    boolean hasAllAccess = false;
+    if (hasAllProdRestrictions) {
+      if (!hasAllProdPermissions) {
+        return false;
+      }
+      hasAllAccess = true;
+    }
+
+    if (hasAllNonProdRestrictions) {
+      if (!hasAllNonProdPermissions) {
+        return false;
+      }
+      hasAllAccess = true;
+    }
+
+    return hasAllAccess;
   }
 
   @Override
@@ -746,7 +789,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         getAppEnvMap(accountId, entityUsageRestrictions.getAppEnvRestrictions(), Action.UPDATE);
 
     if (isEmpty(appEnvMapFromEntityRestrictions)) {
-      return hasCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
+      return hasAllCommonEnv(entityUsageRestrictions, restrictionsFromUserPermissions);
     }
 
     UsageRestrictions entityUsageRestrictionsFinal = entityUsageRestrictions;
@@ -760,7 +803,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
           Set<String> envIdsFromRestrictions = appEnvEntryOfEntity.getValue();
           if (isEmpty(envIdsFromRestrictions)) {
-            return hasCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
+            return hasAllCommonEnv(appId, entityUsageRestrictionsFinal, restrictionsFromUserPermissions);
           }
 
           Set<String> envIdsFromUserPermissions = appEnvMapFromUserPermissions.get(appId);
