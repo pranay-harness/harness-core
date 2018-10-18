@@ -28,7 +28,7 @@ public interface ContinuousVerificationService {
       long endEpochTs, boolean isTimeSeries, PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 
   Map<String, List<HeatMap>> getHeatMap(
-      String accountId, String serviceId, int resolution, long startTime, long endTime, boolean detailed);
+      String accountId, String serviceId, long startTime, long endTime, boolean detailed);
   Map<String, Map<String, List<TimeSeriesDataPoint>>> getTimeSeriesOfHeatMapUnit(
       String accountId, String cvConfigId, long startTime, long endTime);
 }

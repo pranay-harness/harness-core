@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Collections.emptySet;
 import static software.wings.sm.StateType.APP_DYNAMICS;
+import static software.wings.verification.HeatMapResolution.getResolution;
 
 import com.google.inject.Inject;
 
@@ -12,8 +13,8 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.verification.HeatMap;
+import software.wings.verification.HeatMapResolution;
 import software.wings.verification.TimeSeriesDataPoint;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.dashboard.HeatMapUnit;
@@ -294,6 +296,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   /**
    * Check if the user has permissions to view the executionData.
+   *
    * @param user
    * @param accountId
    * @param executionMetaDataList
@@ -364,7 +367,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   /**
-   *
    * @param setToCheck
    * @param value
    * @return False if set is either empty or it does not contain value. True otherwise.
@@ -387,7 +389,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return new ArrayList<>(userApps.keySet());
   }
 
-  private HeatMapUnit getMockHeatMapUnit(long startEpoch, long endEpoch, int eventsPerUnit, int durationInMinutes) {
+  private HeatMapUnit getMockHeatMapUnit(long startEpoch, long endEpoch, HeatMapResolution heatMapResolution) {
+    int eventsPerUnit = heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution);
     final int NUM_CLASSES = 4; // low / med / high / na
 
     int low = 0, medium = 0, high = 0, na = 0;
@@ -426,9 +429,33 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, na, null);
   }
 
-  private HeatMap generateMockHeatMap(long startTime, long endTime, int resolution, String appId, String serviceId) {
+  @NotNull
+  private HeatMap generateMockHeatMap(long startTime, long endTime, String appId, String serviceId) {
+    HeatMapResolution heatMapResolution = getResolution(startTime, endTime);
     HeatMap heatMap = new HeatMap();
 
+    AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration =
+        createMockAppDynamicsCVServiceConfiguration(appId, serviceId);
+    heatMap.setCvConfiguration(appDynamicsCVServiceConfiguration);
+    heatMap.setRiskLevelSummary(new ArrayList<>());
+
+    long currentTs = startTime;
+    long nextTs = currentTs + TimeUnit.MINUTES.toMillis(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+    int totalMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    int datapoints = totalMinutes / heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution);
+    logger.info("No. of heatmap datapoints = " + datapoints);
+
+    for (int i = 0; i < datapoints; i++) {
+      heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, heatMapResolution));
+      currentTs = nextTs;
+      nextTs = currentTs + TimeUnit.MINUTES.toMillis(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+    }
+    return heatMap;
+  }
+
+  @NotNull
+  private AppDynamicsCVServiceConfiguration createMockAppDynamicsCVServiceConfiguration(
+      String appId, String serviceId) {
     AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
     appDynamicsCVServiceConfiguration = new AppDynamicsCVServiceConfiguration();
     appDynamicsCVServiceConfiguration.setAppId(appId);
@@ -441,44 +468,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
     appDynamicsCVServiceConfiguration.setName("App Dynamics Service Config " + UUID.randomUUID().toString());
     appDynamicsCVServiceConfiguration.setConnectorName("Connector " + UUID.randomUUID().toString());
-    heatMap.setCvConfiguration(appDynamicsCVServiceConfiguration);
-
-    heatMap.setRiskLevelSummary(new ArrayList<>());
-
-    if (resolution == 1) {
-      long currentTs = startTime;
-      long nextTs = currentTs + TimeUnit.MINUTES.toMillis(10);
-      for (int i = 0; i < 6 * 24; i++) {
-        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 1, 10));
-        currentTs = nextTs;
-        nextTs = currentTs + TimeUnit.MINUTES.toMillis(DURATION_IN_MINUTES);
-      }
-      return heatMap;
-    } else if (resolution == 7) {
-      long currentTs = startTime;
-      long nextTs = currentTs + TimeUnit.HOURS.toMillis(1);
-      for (int i = 0; i < 24 * 7; i++) {
-        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 6, 60));
-        currentTs = nextTs;
-        nextTs = currentTs + TimeUnit.HOURS.toMillis(1);
-      }
-      return heatMap;
-    } else if (resolution == 30) {
-      long currentTs = startTime;
-      long nextTs = currentTs + TimeUnit.HOURS.toMillis(4);
-      for (int i = 0; i < 6 * 30; i++) {
-        heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, 24, 240));
-        currentTs = nextTs;
-        nextTs = currentTs + TimeUnit.HOURS.toMillis(4);
-      }
-      return heatMap;
-    } else {
-      throw new WingsException("Unsupported resolution provided. Resolution should be 1, 7 or 30.");
-    }
+    return appDynamicsCVServiceConfiguration;
   }
 
   public Map<String, List<HeatMap>> getHeatMap(
-      String accountId, String serviceId, int resolution, long startTime, long endTime, boolean detailed) {
+      String accountId, String serviceId, long startTime, long endTime, boolean detailed) {
     // TODO: Fetch all CV configs of given serviceId and generate heatmaps for those configs
 
     final int NUM_SERVICE_CONFIGS = 2;
@@ -491,10 +485,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       List<HeatMap> summary = new ArrayList<>();
       String appId = UUID.randomUUID().toString();
       for (int num = 0; num < NUM_SERVICE_CONFIGS; num++) {
-        HeatMap heatMap = generateMockHeatMap(startTime, endTime, resolution, appId, serviceId);
+        HeatMap heatMap = generateMockHeatMap(startTime, endTime, appId, serviceId);
         if (detailed) {
-          heatMap.setObservedTimeSeries(getObservedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
-          heatMap.setPredictedTimeSeries(getObservedTimeSeries(accountId, serviceId, resolution, startTime, endTime));
+          heatMap.setObservedTimeSeries(getRandomTimeSeries(startTime, endTime));
+          heatMap.setPredictedTimeSeries(getRandomTimeSeries(startTime, endTime));
         }
         summary.add(heatMap);
       }
@@ -503,11 +497,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return resp;
   }
 
-  private Map<String, Map<String, List<TimeSeriesDataPoint>>> getObservedTimeSeries(
-      String accountId, String serviceId, int resolution, long startTime, long endTime) {
-    int minutes = (int) ((endTime - startTime) / 60);
-    int NUM_TRANSACTIONS = 3;
-    List<String> metrics = Arrays.asList("apdexScore", "requestsPerMinute", "averageResponseTime");
+  private Map<String, Map<String, List<TimeSeriesDataPoint>>> getRandomTimeSeries(long startTime, long endTime) {
+    int minutes = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    logger.info("Minutes = " + minutes);
+    int NUM_TRANSACTIONS = 2;
+    List<String> metrics = Arrays.asList("requestsPerMinute", "averageResponseTime");
 
     Map<String, Map<String, List<TimeSeriesDataPoint>>> timeSeriesMap = new HashMap<>();
     for (int i = 0; i < NUM_TRANSACTIONS; i++) {
@@ -535,7 +529,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public Map<String, Map<String, List<TimeSeriesDataPoint>>> getTimeSeriesOfHeatMapUnit(
       String accountId, String cvConfigId, long startTime, long endTime) {
     // TODO: RBAC check on cvConfigId
-    int minutes = (int) ((endTime - startTime) / 60);
+    int minutes = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
 
     int NUM_TRANSACTIONS = 3;
     List<String> metrics = Arrays.asList("apdexScore", "requestsPerMinute", "averageResponseTime");
