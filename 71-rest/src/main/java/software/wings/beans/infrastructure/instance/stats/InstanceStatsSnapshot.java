@@ -26,7 +26,8 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "instanceStats", noClassnameStored = true)
 @Indexes(@Index(fields = { @Field("timestamp")
-                           , @Field("accountId") }, options = @IndexOptions(unique = true)))
+                           , @Field("accountId") },
+    options = @IndexOptions(unique = true, name = "instanceStatsUniqueIdx")))
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InstanceStatsSnapshot extends Base {
   private static final List<EntityType> ENTITY_TYPES_TO_AGGREGATE_ON = Arrays.asList(EntityType.APPLICATION);
