@@ -1,5 +1,7 @@
 package io.harness.generator;
 
+import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -21,7 +23,8 @@ public class SecretGenerator {
       return encryptedData.getUuid();
     }
 
-    return secretManager.saveSecret(accountId, name.getValue(), scmSecret.decryptToString(name), null);
+    return secretManager.saveSecret(
+        accountId, name.getValue(), scmSecret.decryptToString(name), getAllAppAllEnvUsageRestrictions());
   }
 
   public String ensureStored(Owners owners, SecretName name) {

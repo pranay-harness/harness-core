@@ -21,8 +21,8 @@ import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.SettingAttribute.Category.CLOUD_PROVIDER;
 import static software.wings.beans.SettingAttribute.Category.CONNECTOR;
 import static software.wings.beans.SettingAttribute.Category.SETTING;
+import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -44,12 +44,7 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.EnvFilter;
-import software.wings.security.GenericEntityFilter;
-import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.service.intfc.SettingsService;
-import software.wings.settings.UsageRestrictions;
-import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
 import java.util.EnumSet;
 
@@ -124,23 +119,9 @@ public class SettingGenerator {
                            .secretKey(scmSecret.decryptToCharArray(new SecretName("aws_playground_secret_key")))
                            .accountId(account.getUuid())
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, settingAttribute);
-  }
-
-  public UsageRestrictions getDefaultUsageRestrictions() {
-    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
-    EnvFilter prodEnvFilter = EnvFilter.builder().filterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD)).build();
-    EnvFilter nonprodEnvFilter =
-        EnvFilter.builder().filterTypes(Sets.newHashSet(EnvFilter.FilterType.NON_PROD)).build();
-    AppEnvRestriction prodAppEnvRestriction =
-        AppEnvRestriction.builder().appFilter(appFilter).envFilter(prodEnvFilter).build();
-    AppEnvRestriction nonProdAppEnvRestriction =
-        AppEnvRestriction.builder().appFilter(appFilter).envFilter(nonprodEnvFilter).build();
-    return UsageRestrictions.builder()
-        .appEnvRestrictions(Sets.newHashSet(prodAppEnvRestriction, nonProdAppEnvRestriction))
-        .build();
   }
 
   private SettingAttribute ensureDevTest(Randomizer.Seed seed) {
@@ -160,7 +141,7 @@ public class SettingGenerator {
                            .withUserName("ubuntu")
                            .withKey(scmSecret.decryptToCharArray(new SecretName("ubuntu_private_key")))
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, settingAttribute);
   }
@@ -182,7 +163,7 @@ public class SettingGenerator {
                            .withUserName("test-harness")
                            .withKey(scmSecret.decryptToCharArray(new SecretName("playground_private_key")))
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, settingAttribute);
   }
@@ -204,7 +185,7 @@ public class SettingGenerator {
                            .branch("master")
                            .accountId(githubKey.getAccountId())
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, settingAttribute);
   }
@@ -224,7 +205,7 @@ public class SettingGenerator {
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_jenkins")))
                            .authMechanism(Constants.USERNAME_PASSWORD_FIELD)
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, settingAttribute);
   }
@@ -242,7 +223,7 @@ public class SettingGenerator {
                            .username("wingsbuild")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_bamboo")))
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, bambooSettingAttribute);
   }
@@ -260,7 +241,7 @@ public class SettingGenerator {
                            .username("admin")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, nexusSettingAttribute);
   }
@@ -278,7 +259,7 @@ public class SettingGenerator {
                            .username("admin")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_nexus")))
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, nexus3SettingAttribute);
   }
@@ -296,7 +277,7 @@ public class SettingGenerator {
                            .username("admin")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_artifactory")))
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, artifactorySettingAttribute);
   }
@@ -314,7 +295,7 @@ public class SettingGenerator {
                            .username("wingsplugins")
                            .password(scmSecret.decryptToCharArray(new SecretName("harness_docker_hub")))
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, dockerSettingAttribute);
   }
@@ -331,7 +312,7 @@ public class SettingGenerator {
                                scmSecret.decryptToCharArray(new SecretName("harness_gcp_exploration")))
                            .accountId(account.getUuid())
                            .build())
-            .withUsageRestrictions(getDefaultUsageRestrictions())
+            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
             .build();
     return ensureSettingAttribute(seed, gcpSettingAttribute);
   }
