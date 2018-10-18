@@ -100,8 +100,6 @@ import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.InfrastructureMappingGenerator;
-import software.wings.generator.OwnerManager;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.ContainerServiceParams;
@@ -157,9 +155,6 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
-
-  @Inject InfrastructureMappingGenerator infrastructureMappingGenerator;
-  @Inject private OwnerManager ownerManager;
 
   @Mock private SecretManager secretManager;
   @Mock private HQuery<InfrastructureMapping> query;

@@ -22,7 +22,6 @@ import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SumoConfig;
-import software.wings.generator.SecretGenerator;
 import software.wings.service.impl.sumo.SumoLogicSetupTestNodedata;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.ExecutionStatus;
@@ -41,7 +40,6 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
   private String appId;
   private String workflowId;
   private String workflowExecutionId;
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
 
   @Before

@@ -12,7 +12,6 @@ import com.google.common.io.Resources;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
@@ -50,6 +49,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -231,7 +231,6 @@ public class DatadogState extends AbstractMetricAnalysisState {
     this.datadogServiceName = datadogServiceName;
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   public static Map<String, List<APMMetricInfo>> metricEndpointsInfo(String serviceName, List<String> metricNames) {
     YamlUtils yamlUtils = new YamlUtils();
     URL url = DatadogState.class.getResource("/apm/datadog.yml");
@@ -282,7 +281,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
         }
       }
       return result;
-    } catch (Exception ex) {
+    } catch (RuntimeException | IOException ex) {
       throw new WingsException("Unable to get metric info", ex);
     }
   }

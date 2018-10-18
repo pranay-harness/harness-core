@@ -158,13 +158,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     return executeCommandString(command, null, displayCommand);
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION") // TODO
   @Override
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output) {
     return executeCommandString(command, output, true);
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION") // TODO
   @Override
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output, boolean displayCommand) {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
@@ -223,7 +221,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           sleep(Duration.ofSeconds(1));
         }
       }
-    } catch (Exception ex) {
+    } catch (RuntimeException | JSchException | IOException ex) {
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       logger.error("Command execution failed with error", ex);
       RuntimeException rethrow = null;

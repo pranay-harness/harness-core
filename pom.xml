@@ -35,7 +35,7 @@
         <module>81-delegate</module>
         <module>82-watcher</module>
 
-        <module>91-model-gen</module>
+        <module>91-model-gen-tool</module>
         <module>95-e2e</module>
     </modules>
 

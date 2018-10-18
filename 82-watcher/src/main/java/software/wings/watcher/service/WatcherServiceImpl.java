@@ -558,7 +558,6 @@ public class WatcherServiceImpl implements WatcherService {
     return delegateVersionNumber;
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   private void downloadRunScripts(String version) throws Exception {
     if (new File(version + "/delegate.sh").exists()) {
       return;
@@ -830,7 +829,6 @@ public class WatcherServiceImpl implements WatcherService {
     return Http.getResponseStringFromUrl(url, httpProxyHost, 10000, 10000);
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   private void upgradeWatcher(String version, String newVersion) {
     StartedProcess process = null;
     try {
@@ -867,8 +865,10 @@ public class WatcherServiceImpl implements WatcherService {
         process.getProcess().destroy();
         process.getProcess().waitFor();
       }
-    } catch (Exception e) {
-      logger.error("", e);
+    } catch (RuntimeException | InterruptedException e) {
+      if (e instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
       logger.error("[Old] Exception while upgrading", e);
       if (process != null) {
         try {
@@ -888,6 +888,8 @@ public class WatcherServiceImpl implements WatcherService {
           logger.error("[Old] ALERT: Couldn't kill forcibly", ex);
         }
       }
+    } catch (IOException e) {
+      e.printStackTrace();
     } finally {
       working.set(false);
     }

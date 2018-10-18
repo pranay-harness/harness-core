@@ -38,7 +38,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.SecretGenerator;
 import software.wings.scheduler.JobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -62,7 +61,6 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   @Inject private ServiceInstanceService serviceInstanceService;
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
 
   private Application app;

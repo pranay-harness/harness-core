@@ -7,19 +7,14 @@ import com.google.inject.Inject;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.Workflow;
-import software.wings.generator.OwnerManager;
-import software.wings.generator.OwnerManager.Owners;
-import software.wings.generator.Randomizer.Seed;
-import software.wings.generator.WorkflowGenerator;
-import software.wings.generator.WorkflowGenerator.Workflows;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.setup.rest.WorkflowResourceRestClient;
 
 @Ignore
 public class WorkflowIntegrationTest extends BaseIntegrationTest {
   @Inject private WorkflowResourceRestClient workflowResourceRestClient;
-  @Inject private WorkflowGenerator workflowGenerator;
-  @Inject private OwnerManager ownerManager;
+  //  @Inject private WorkflowGenerator workflowGenerator;
+  //  @Inject private OwnerManager ownerManager;
 
   @Test
   @Ignore
@@ -30,12 +25,12 @@ public class WorkflowIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void shouldReturnSeedBuildWorkflow() {
-    final Seed seed = new Seed(0);
+    //    final Seed seed = new Seed(0);
 
-    final Owners owners = ownerManager.create();
+    //    final Owners owners = ownerManager.create();
 
-    Workflow seedBuildWorkflow = workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD_JENKINS);
-    assertThat(seedBuildWorkflow).isNotNull().hasFieldOrPropertyWithValue("name", SEED_BUILD_WORKFLOW_NAME);
+    //    Workflow seedBuildWorkflow = workflowGenerator.ensurePredefined(seed, owners, Workflows.BUILD_JENKINS);
+    //    assertThat(seedBuildWorkflow).isNotNull().hasFieldOrPropertyWithValue("name", SEED_BUILD_WORKFLOW_NAME);
   }
 
   @Ignore

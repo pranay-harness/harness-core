@@ -12,7 +12,6 @@ import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClient;
 import com.amazonaws.services.cloudwatch.AmazonCloudWatchClientBuilder;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -94,7 +93,6 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
     }
 
-    @SuppressFBWarnings("REC_CATCH_EXCEPTION")
     @Override
     public void run() {
       encryptionService.decrypt(dataCollectionInfo.getAwsConfig(), dataCollectionInfo.getEncryptedDataDetails());
@@ -159,7 +157,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
             }
           }
         }
-      } catch (Exception e) {
+      } catch (RuntimeException e) {
         completed.set(true);
         taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
         taskResult.setErrorMessage("error fetching cloud watch metrics for minute " + dataCollectionMinute);

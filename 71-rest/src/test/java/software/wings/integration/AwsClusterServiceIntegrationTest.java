@@ -19,7 +19,6 @@ import software.wings.cloudprovider.aws.AwsClusterConfiguration;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.cloudprovider.aws.EcsContainerServiceImpl;
-import software.wings.generator.SecretGenerator;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Collections;
@@ -34,7 +33,6 @@ public class AwsClusterServiceIntegrationTest extends WingsBaseTest {
   @Inject private AwsClusterService awsClusterService;
   @Inject private EcsContainerService ecsContainerService;
   @Inject private AwsHelperService awsHelperService;
-  @Inject SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
   private SettingAttribute awsConnectorSetting;
 

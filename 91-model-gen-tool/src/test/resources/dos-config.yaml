@@ -1,0 +1,361 @@
+﻿scanners:
+- name: A-01
+  diverts:
+  - divertName: A-01-01
+    alias: OSD01
+  - divertName: A-01-02
+    scanner: A-02
+  - divertName: A-01-03
+    alias: VAS01
+  - divertName: A-01-99
+- name: A-02
+  diverts:
+  - divertName: A-02-01
+    scanner: A-06
+    alias: RT10
+  - divertName: A-02-99
+- name: A-03
+  diverts:
+  - divertName: A-03-01
+    alias: RP51,RP61,TA51,TA61
+  - divertName: A-03-02
+    alias: RP71,TA71
+  - divertName: A-03-99
+    scanner: A-04
+- name: A-04
+  diverts:
+  - divertName: A-04-01
+    alias: RP52,RP62,TA52,TA62
+  - divertName: A-04-02
+    alias: RP50,RP72,TA72
+  - divertName: A-04-99
+    scanner: A-05
+- name: A-05
+  diverts:
+  - divertName: A-05-01
+    alias: RP53,RP63,TA53,TA63
+  - divertName: A-05-99
+    alias: RP73,TA73
+- name: A-06
+  diverts:
+  - divertName: A-06-11
+    scanner: B-11
+  - divertName: A-06-12
+    scanner: B-21
+  - divertName: A-06-13
+    scanner: B-31
+  - divertName: A-06-21
+    scanner: C-41
+  - divertName: A-06-22
+    scanner: C-51
+  - divertName: A-06-23
+    scanner: C-61
+  - divertName: A-06-99
+    scanner: A-03
+- name: B-11
+  diverts:
+  - divertName: B-11-01
+    alias: PZ21,RP21,RP22,TA22A1,TR22A1,TR23A1
+  - divertName: B-11-02
+    alias: TA25A1,TR24A1,TR25A1
+  - divertName: B-11-99
+    scanner: B-12
+- name: B-12
+  diverts:
+  - divertName: B-12-01
+    alias: TA22A2,TR22A2,TR23A2
+  - divertName: B-12-02
+    alias: TA25A2,TR24A2,TR25A2
+  - divertName: B-12-99
+    scanner: B-13
+- name: B-13
+  diverts:
+  - divertName: B-13-01
+    alias: TA22A3,TR22A3,TR23A3
+  - divertName: B-13-02
+    alias: TA25A3,TR24A3,TR25A3
+  - divertName: B-13-99
+    scanner: B-14
+- name: B-14
+  diverts:
+  - divertName: B-14-01
+    alias: TA22A4,TR22A4,TR23A4
+  - divertName: B-14-02
+    alias: TA25A4,TR24A4,TR25A4
+- name: B-21
+  diverts:
+  - divertName: B-21-01
+    alias: TA22B1,TR22B1,TR23B1
+  - divertName: B-21-02
+    alias: TA25B1,TR24B1,TR25B1
+  - divertName: B-21-99
+    scanner: B-22
+- name: B-22
+  diverts:
+  - divertName: B-22-01
+    alias: TA22B2,TR22B2,TR23B2
+  - divertName: B-22-02
+    alias: TA25B2,TR24B2,TR25B2
+  - divertName: B-22-99
+    scanner: B-23
+- name: B-23
+  diverts:
+  - divertName: B-23-01
+    alias: TA22B3,TR22B3,TR23B3
+  - divertName: B-23-02
+    alias: TA25B3,TR24B3,TR25B3
+  - divertName: B-23-99
+    scanner: B-24
+- name: B-24
+  diverts:
+  - divertName: B-24-01
+    alias: TA22B4,TR22B4,TR23B4
+  - divertName: B-24-02
+    alias: TA25B4,TR24B4,TR25B4
+- name: B-31
+  diverts:
+  - divertName: B-31-01
+    alias: TA22C1,TR23C1
+  - divertName: B-31-02
+    alias: TA25C1,TR24C1
+  - divertName: B-31-99
+    scanner: B-32
+- name: B-32
+  diverts:
+  - divertName: B-32-01
+    alias: TA22C2,TR23C2
+  - divertName: B-32-02
+    alias: TA25C2,TR24C2
+  - divertName: B-32-99
+    scanner: B-33
+- name: B-33
+  diverts:
+  - divertName: B-33-01
+    alias: TA22C3,TR23C3
+  - divertName: B-33-02
+    alias: TA25C3,TR24C3
+  - divertName: B-33-99
+    scanner: B-34
+- name: B-34
+  diverts:
+  - divertName: B-34-01
+    alias: TA22C4,TR23C4
+  - divertName: B-34-02
+    alias: TA25C4,TR24C4
+- name: C-41
+  diverts:
+  - divertName: C-41-01
+    alias: TA26A1,TR26A1,TR27A1
+  - divertName: C-41-99
+    scanner: C-42
+- name: C-42
+  diverts:
+  - divertName: C-42-01
+    alias: TA26A2,TR26A2,TR27A2
+  - divertName: C-42-99
+    scanner: C-43
+- name: C-43
+  diverts:
+  - divertName: C-43-01
+    alias: TA26A3,TA26A4,TR26A3,TR26A4,TR27A3,TR27A4
+  - divertName: C-43-99
+- name: C-51
+  diverts:
+  - divertName: C-51-01
+    alias: TA26B1,TR26B1,TR27B1
+  - divertName: C-51-99
+    scanner: C-52
+- name: C-52
+  diverts:
+  - divertName: C-52-01
+    alias: TA26B2,TR26B2,TR27B2
+  - divertName: C-52-99
+    scanner: C-53
+- name: C-53
+  diverts:
+  - divertName: C-53-01
+    alias: TA26B3,TA26B4,TR26B3,TR26B4,TR27B3,TR27B4
+  - divertName: C-53-99
+- name: C-61
+  diverts:
+  - divertName: C-61-01
+    alias: TA26C1,TR27C1
+  - divertName: C-61-99
+    scanner: C-62
+- name: C-62
+  diverts:
+  - divertName: C-62-01
+    alias: TA26C2,TR27C2
+  - divertName: C-62-99
+    scanner: C-63
+- name: C-63
+  diverts:
+  - divertName: C-63-01
+    alias: TA26C3,TA26C4,TR27C3,TR27C4
+  - divertName: C-63-99
+- name: D-71
+  diverts:
+  - divertName: D-71-01
+  - divertName: D-71-02
+  - divertName: D-71-03
+  - divertName: D-71-04
+  - divertName: D-71-05
+  - divertName: D-71-06
+  - divertName: D-71-07
+  - divertName: D-71-08
+  - divertName: D-71-09
+  - divertName: D-71-10
+  - divertName: D-71-11
+  - divertName: D-71-12
+  - divertName: D-71-13
+  - divertName: D-71-14
+  - divertName: D-71-15
+  - divertName: D-71-16
+  - divertName: D-71-17
+  - divertName: D-71-18
+  - divertName: D-71-19
+  - divertName: D-71-20
+  - divertName: D-71-21
+  - divertName: D-71-22
+  - divertName: D-71-23
+  - divertName: D-71-24
+  - divertName: D-71-25
+  - divertName: D-71-26
+  - divertName: D-71-27
+  - divertName: D-71-28
+  - divertName: D-71-29
+  - divertName: D-71-99
+    scanner: D-72
+- name: D-72
+  diverts:
+  - divertName: D-72-01
+  - divertName: D-72-02
+  - divertName: D-72-03
+  - divertName: D-72-04
+  - divertName: D-72-05
+  - divertName: D-72-06
+  - divertName: D-72-07
+  - divertName: D-72-08
+  - divertName: D-72-09
+  - divertName: D-72-10
+  - divertName: D-72-11
+  - divertName: D-72-99
+    scanner: D-71
+- name: D-73
+  diverts:
+  - divertName: D-73-01
+  - divertName: D-73-99
+    scanner: E-74
+- name: E-74
+  diverts:
+  - divertName: E-74-01
+  - divertName: E-74-02
+  - divertName: E-74-03
+  - divertName: E-74-04
+  - divertName: E-74-05
+  - divertName: E-74-99
+    scanner: PA1-76
+- name: E-75
+  diverts:
+  - divertName: E-75-01
+  - divertName: E-75-02
+  - divertName: E-75-03
+  - divertName: E-75-04
+  - divertName: E-75-05
+  - divertName: E-75-06
+  - divertName: E-75-07
+  - divertName: E-75-08
+  - divertName: E-75-09
+  - divertName: E-75-10
+  - divertName: E-75-11
+  - divertName: E-75-12
+  - divertName: E-75-13
+  - divertName: E-75-14
+  - divertName: E-75-15
+  - divertName: E-75-16
+  - divertName: E-75-99
+- name: PA1-76
+  diverts:
+  - divertName: PA1-76-00
+    scanner: PA1-77
+- name: PA1-77
+  diverts:
+  - divertName: PA1-77-01
+  - divertName: PA1-77-99
+    scanner: E-75
+shiplanes:
+  - name: "01"
+    shipsortcodes:
+      - code: 200
+      - code: 201
+      - code: 202
+      - code: 203
+      - code: 204
+      - code: 207
+      - code: 400
+  - name: "02"
+    shipsortcodes:
+      - code: 901
+      - code: 903
+  - name: "03"
+    shipsortcodes:
+      - code: 901
+      - code: 903
+  - name: "04"
+    shipsortcodes:
+      - code: 501
+      - code: 502
+  - name: "05"
+    shipsortcodes:
+      - code: 501
+      - code: 502
+  - name: "07"
+    shipsortcodes:
+      - code: 900
+      - code: 902
+  - name: "08"
+    shipsortcodes:
+      - code: 900
+      - code: 902
+  - name: "09"
+    shipsortcodes:
+      - code: 603
+  - name: "10"
+    shipsortcodes:
+      - code: 309
+  - name: "12"
+    shipsortcodes:
+      - code: 102
+  - name: "13"
+    shipsortcodes:
+      - code: 101
+      - code: 102
+      - code: 103
+  - name: "14"
+    shipsortcodes:
+      - code: 103
+      - code: 951
+  - name: "15"
+    shipsortcodes:
+      - code: 205
+      - code: 206
+      - code: 950
+  - name: "16"
+    shipsortcodes:
+      - code: 999
+packlanes:
+  - name: "01"
+    packsortcodes:
+      - code: 100
+  - name: "02"
+    packsortcodes:
+      - code: 100
+  - name: "03"
+    packsortcodes:
+      - code: 100
+  - name: "04"
+    packsortcodes:
+      - code: 100
+  - name: "05"
+    packsortcodes:
+      - code: 999

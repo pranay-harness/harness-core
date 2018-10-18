@@ -19,7 +19,6 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.FeatureName;
 import software.wings.beans.NewRelicConfig;
-import software.wings.generator.SecretGenerator;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
@@ -41,7 +40,6 @@ import java.util.UUID;
  */
 public class NewRelicTest extends WingsBaseTest {
   @Inject private NewRelicDelegateService newRelicDelegateService;
-  @Inject SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
   private NewRelicConfig newRelicConfig;
   private String accountId;

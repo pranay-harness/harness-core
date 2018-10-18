@@ -18,7 +18,6 @@ import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
-import static software.wings.integration.DataGenUtil.NEW_RELIC_CONNECTOR_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.APDEX_SCORE;
 import static software.wings.service.impl.newrelic.NewRelicMetricValueDefinition.AVERAGE_RESPONSE_TIME;
@@ -60,7 +59,6 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WorkflowExecution;
-import software.wings.generator.SecretGenerator;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
@@ -104,6 +102,8 @@ import javax.ws.rs.core.GenericType;
  * Created by rsingh on 9/7/17.
  */
 public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
+  public static String NEW_RELIC_CONNECTOR_NAME = "NewRelic";
+
   private Set<String> hosts = new HashSet<>();
   @Inject private MetricUtilHelper metricUtilHelper;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
@@ -111,7 +111,6 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   @Inject private VerificationManagerClient mgrClient;
   @Inject private VerificationManagerClientHelper managerClient;
 
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
 
   private String newRelicConfigId;

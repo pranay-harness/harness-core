@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -ex
 
 sudo service mongod stop
 sleep 5
@@ -86,14 +86,18 @@ fi
 echo "server started, going to run DataGen util"
 set -e
 
+echo "Running data gen"
 # run data gen to load test data
-mvn -B failsafe:integration-test -pl 71-rest -Dit.test=DataGenUtil -P datagen -P integration-coverage
-datagen_status=$?
-if [[ $datagen_status -ne 0 ]] ; then
-  echo 'Datagen failed';
-  exit $datagen_status
+#run datagen
+if [[ -z "${SERVER_BUILD_DIR}" ]]; then
+    java -Xmx1024m -jar 91-model-gen-tool/target/model-gen-tool-capsule.jar 91-model-gen-tool/config-datagen.yml > datagen.out 2>&1
+else
+    java -Xmx1024m -jar $SERVER_BUILD_DIR/91-model-gen-tool/target/model-gen-tool-capsule.jar 91-model-gen-tool/config-datagen.yml > datagen.out 2>&1
 fi
+
 echo "datagen finished"
+cat datagen.out
+
 # specifying -DfailIfNoTests=false flag b/c we are using surefire on integration dir
 mvn -B test -pl 71-rest -Dtest=software.wings.integration.JenkinsIntegrationTest -DfailIfNoTests=false
 
@@ -116,19 +120,6 @@ fi
 
 # wait for verification to start
 echo 'wait for verification engine to start'
-
-
-#Delegate integration test. Don't run with UI integration tests
-if [ "$TEST_SUITE" != "UI_INTEGRATION" ] ;
-then
-  mvn -B test -pl 71-rest -Dtest=software.wings.integration.DelegateIntegrationTest -DfailIfNoTests=false
-  delegateIntegrationTestResult=$?
-  if [[ $delegateIntegrationTestResult -ne 0 ]] ;
-  then
-    echo 'Delegate integration test failed';
-    exit $delegateIntegrationTestResult
-  fi
-fi
 
 #run delegate
 sed -i -e 's/^doUpgrade.*/doUpgrade: false/' 81-delegate/config-delegate.yml

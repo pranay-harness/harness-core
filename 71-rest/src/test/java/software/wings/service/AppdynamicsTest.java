@@ -27,7 +27,6 @@ import software.wings.beans.SettingAttribute.Category;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.generator.SecretGenerator;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.newrelic.NewRelicApplication;
@@ -48,7 +47,6 @@ public class AppdynamicsTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EncryptionService encryptionService;
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
   @Mock private DelegateProxyFactory appdDelegateProxyFactory;
   @Mock private DelegateProxyFactory kmsDelegateProxyFactory;

@@ -14,7 +14,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
-import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -427,7 +426,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, na, null);
   }
 
-  @NotNull
   private HeatMap generateMockHeatMap(long startTime, long endTime, int resolution, String appId, String serviceId) {
     HeatMap heatMap = new HeatMap();
 
@@ -554,7 +552,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return timeSeriesMap;
   }
 
-  @NotNull
   private List<TimeSeriesDataPoint> getTimeSeriesDataPointsFor24Hours(long startTime, int durationOfCurrentSquare) {
     List<TimeSeriesDataPoint> resp = new ArrayList<>();
     List<TimeSeriesDataPoint> before =

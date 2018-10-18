@@ -20,7 +20,6 @@ import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDeta
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovyx.net.http.HttpResponseException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
@@ -438,7 +437,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return folderPaths;
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   @Override
   public ListNotifyResponseData downloadArtifacts(ArtifactoryConfig artifactoryConfig,
       List<EncryptedDataDetail> encryptionDetails, String repositoryName, Map<String, String> metadata,
@@ -460,7 +458,6 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     return res;
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   @Override
   public Pair<String, InputStream> downloadArtifact(ArtifactoryConfig artifactoryConfig,
       List<EncryptedDataDetail> encryptionDetails, String repositoryName, Map<String, String> metadata) {

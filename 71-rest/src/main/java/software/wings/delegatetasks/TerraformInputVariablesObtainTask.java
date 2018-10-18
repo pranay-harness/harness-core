@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
 import com.bertramlabs.plugins.hcl4j.HCLParserException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
@@ -23,6 +22,7 @@ import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -48,7 +48,6 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
     return run((TerraformProvisionParameters) parameters[0]);
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   private TerraformInputVariablesTaskResponse run(TerraformProvisionParameters parameters) {
     try {
       GitConfig gitConfig = parameters.getSourceRepo();
@@ -91,7 +90,7 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
           .variablesList(new ArrayList<>(variablesList))
           .terraformExecutionData(TerraformExecutionData.builder().executionStatus(ExecutionStatus.SUCCESS).build())
           .build();
-    } catch (Exception e) {
+    } catch (RuntimeException | IOException e) {
       logger.error("Terraform Input Variables Task Exception " + parameters, e);
       return TerraformInputVariablesTaskResponse.builder()
           .terraformExecutionData(TerraformExecutionData.builder()

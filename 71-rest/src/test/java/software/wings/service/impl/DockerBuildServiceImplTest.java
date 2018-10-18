@@ -17,7 +17,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.DockerArtifactStream;
-import software.wings.generator.SecretGenerator;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.rules.Integration;
@@ -37,7 +36,6 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
 
   @Inject private DockerRegistryService dockerRegistryService;
   @Inject private ArtifactStreamService artifactStreamService;
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
 
   @Inject @InjectMocks private DockerBuildService dockerBuildService;

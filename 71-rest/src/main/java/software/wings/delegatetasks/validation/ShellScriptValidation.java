@@ -7,7 +7,6 @@ import static software.wings.core.ssh.executors.SshSessionFactory.getSSHSession;
 
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureConfig;
@@ -45,7 +44,6 @@ public class ShellScriptValidation extends AbstractDelegateValidateTask {
     return singletonList(validate((ShellScriptParameters) parameters[0]));
   }
 
-  @SuppressFBWarnings("REC_CATCH_EXCEPTION")
   private DelegateConnectionResult validate(ShellScriptParameters parameters) {
     DelegateConnectionResultBuilder resultBuilder = DelegateConnectionResult.builder().criteria(getCriteria().get(0));
 

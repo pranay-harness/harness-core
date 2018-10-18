@@ -110,7 +110,8 @@ then
 
 2. Run DataGenUtil: Open a new terminal and run following command (Make sure you [setup `HARNESS_GENERATION_PASSPHRASE` environment variable](https://docs.google.com/document/d/1CddJtyZ7CvLzHnBIe408tQN-zCeQ7NXTfIdEGilm4bs/edit) in your Bash profile):
 
-`mvn test -pl 71-rest -Dtest=software.wings.integration.DataGenUtil`
+### `mvn test -pl 71-rest -Dtest=io.harness.DataGenApplication`
+java -Xmx1024m -jar 91-model-gen-tool/target/model-gen-tool-capsule.jar 91-model-gen-tool/config-datagen.yml > datagen.out 2>&1 &
 
 3. Start Delegate : Open a new terminal and navigate to the same directory. And run following command:
 

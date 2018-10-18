@@ -32,7 +32,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.CodeDeployDeploymentInfo;
-import software.wings.generator.SecretGenerator;
 import software.wings.service.impl.AwsHelperService;
 
 import java.util.Collections;
@@ -45,7 +44,6 @@ import java.util.List;
 public class AwsCodeDeployServiceTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(AwsCodeDeployServiceTest.class);
   @InjectMocks @Inject private AwsCodeDeployService awsCodeDeployService;
-  @Inject private SecretGenerator secretGenerator;
   @Inject private ScmSecret scmSecret;
   @Mock private AwsHelperService awsHelperService;
 

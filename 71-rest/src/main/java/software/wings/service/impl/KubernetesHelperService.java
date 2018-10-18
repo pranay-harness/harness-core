@@ -65,6 +65,12 @@ import java.net.MalformedURLException;
 import java.net.Proxy;
 import java.net.URL;
 import java.security.GeneralSecurityException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.TreeMap;
@@ -172,7 +178,7 @@ public class KubernetesHelperService {
    * use DefaultKubernetesClient(config) constructor version as it internally call
    * super(createHttpClient(config), config)
    */
-  @SuppressFBWarnings({"NP_LOAD_OF_KNOWN_NULL_VALUE", "NP_ALWAYS_NULL", "REC_CATCH_EXCEPTION"}) // TODO
+  @SuppressFBWarnings({"NP_LOAD_OF_KNOWN_NULL_VALUE", "NP_ALWAYS_NULL"})
   private OkHttpClient createHttpClientWithProxySetting(final Config config) {
     try {
       OkHttpClient.Builder httpClientBuilder = getOkHttpClientBuilder();
@@ -299,7 +305,8 @@ public class KubernetesHelperService {
       }
 
       return httpClientBuilder.build();
-    } catch (Exception e) {
+    } catch (RuntimeException | CertificateException | NoSuchAlgorithmException | KeyStoreException | IOException
+        | UnrecoverableKeyException | InvalidKeySpecException | KeyManagementException e) {
       throw KubernetesClientException.launderThrowable(e);
     }
   }
