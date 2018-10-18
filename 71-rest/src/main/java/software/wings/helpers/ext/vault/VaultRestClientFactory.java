@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.vault;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.network.Http;
 import okhttp3.OkHttpClient;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -24,6 +26,12 @@ import java.util.concurrent.TimeUnit;
  * @author mark.lu on 10/11/18
  */
 public class VaultRestClientFactory {
+  // This Jackson object mapper always ignore unknown properties while deserialize JSON documents.
+  private static ObjectMapper objectMapper = new ObjectMapper();
+  static {
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+  }
+
   public static VaultRestClient create(final VaultConfig vaultConfig) {
     // http logging interceptor for dumping retrofit request/response content.
     HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
@@ -35,9 +43,12 @@ public class VaultRestClientFactory {
                                   .addInterceptor(logging)
                                   .build();
 
+    ObjectMapper objectMapper = new ObjectMapper();
+    objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
     final Retrofit retrofit = new Retrofit.Builder()
                                   .baseUrl(vaultConfig.getVaultUrl())
-                                  .addConverterFactory(JacksonConverterFactory.create())
+                                  .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                                   .client(httpClient)
                                   .build();
 

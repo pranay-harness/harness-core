@@ -163,33 +163,34 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
 
   @Override
   public String saveVaultConfig(String accountId, VaultConfig vaultConfig) {
+    VaultConfig savedVaultConfig = null;
     boolean shouldVerify = true;
     if (!isEmpty(vaultConfig.getUuid())) {
-      VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+      savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+      if (savedVaultConfig.isDefault() && !vaultConfig.isDefault()) {
+        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER_SRE)
+            .addParam("reason",
+                "Can't set default vault secret manager to non-default explicitly. "
+                    + "Please choose another secret manager instance as default instead.");
+      }
       shouldVerify = !savedVaultConfig.getVaultUrl().equals(vaultConfig.getVaultUrl())
           || !Constants.SECRET_MASK.equals(vaultConfig.getAuthToken());
     }
     if (shouldVerify) {
+      // New vault configuration, need to validate it's parameters
       validateVaultConfig(accountId, vaultConfig);
-    }
+    } else {
+      // When setting this vault config as default, set current default secret manager to non-default first.
+      updateCurrentEncryptionConfigToNonDefaultIfNeeded(accountId, vaultConfig);
 
-    Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
-    List<KmsConfig> kmsConfigs = kmsConfigQuery.asList();
-
-    // update without token or url changes
-    if (!shouldVerify) {
-      VaultConfig savedVaultConfig = wingsPersistence.get(VaultConfig.class, vaultConfig.getUuid());
+      // update without token or url changes
       savedVaultConfig.setName(vaultConfig.getName());
       savedVaultConfig.setRenewIntervalHours(vaultConfig.getRenewIntervalHours());
       savedVaultConfig.setDefault(vaultConfig.isDefault());
-      String parentId = wingsPersistence.save(savedVaultConfig);
-      updateKMSConfig(kmsConfigs, !vaultConfig.isDefault());
-      return parentId;
+      return wingsPersistence.save(savedVaultConfig);
     }
 
     vaultConfig.setAccountId(accountId);
-    Query<VaultConfig> query = wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId);
-    List<VaultConfig> savedConfigs = query.asList();
 
     EncryptedData encryptedData =
         kmsService.encrypt(vaultConfig.getAuthToken().toCharArray(), accountId, kmsService.getSecretConfig(accountId));
@@ -210,27 +211,17 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
           .addParam("reason", "Another vault configuration with the same name or URL exists");
     }
 
+    // When setting this vault config as default, set current default secret manager to non-default first.
+    updateCurrentEncryptionConfigToNonDefaultIfNeeded(accountId, vaultConfig);
+
     encryptedData.setAccountId(accountId);
     encryptedData.addParent(vaultConfigId);
     encryptedData.setType(SettingVariableTypes.VAULT);
     encryptedData.setName(vaultConfig.getName() + "_token");
     String encryptedDataId = wingsPersistence.save(encryptedData);
-
     vaultConfig.setAuthToken(encryptedDataId);
     wingsPersistence.save(vaultConfig);
 
-    if (vaultConfig.isDefault() && (!savedConfigs.isEmpty() || !kmsConfigs.isEmpty())) {
-      for (VaultConfig savedConfig : savedConfigs) {
-        if (vaultConfig.getUuid().equals(savedConfig.getUuid())) {
-          continue;
-        }
-        if (savedConfig.isDefault()) {
-          savedConfig.setDefault(false);
-          wingsPersistence.save(savedConfig);
-        }
-      }
-      updateKMSConfig(kmsConfigs, false);
-    }
     return vaultConfigId;
   }
 
@@ -365,13 +356,31 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
     }
   }
 
-  private void updateKMSConfig(List<KmsConfig> kmsConfigs, boolean isDefault) {
-    for (KmsConfig kmsConfig : kmsConfigs) {
-      if (kmsConfig.isDefault()) {
-        kmsConfig.setDefault(isDefault);
-        wingsPersistence.save(kmsConfig);
+  private boolean updateCurrentEncryptionConfigToNonDefaultIfNeeded(String accountId, VaultConfig currentVaultConfig) {
+    boolean updated = false;
+    if (currentVaultConfig.isDefault()) {
+      Query<KmsConfig> kmsConfigQuery = wingsPersistence.createQuery(KmsConfig.class).filter("accountId", accountId);
+      List<KmsConfig> kmsConfigs = kmsConfigQuery.asList();
+      for (KmsConfig kmsConfig : kmsConfigs) {
+        if (kmsConfig.isDefault()) {
+          kmsConfig.setDefault(false);
+          wingsPersistence.save(kmsConfig);
+          updated = true;
+        }
+      }
+      Query<VaultConfig> vaultConfigQuery =
+          wingsPersistence.createQuery(VaultConfig.class).filter("accountId", accountId);
+      List<VaultConfig> vaultConfigs = vaultConfigQuery.asList();
+      for (VaultConfig vaultConfig : vaultConfigs) {
+        if (vaultConfig.isDefault()) {
+          vaultConfig.setDefault(false);
+          wingsPersistence.save(vaultConfig);
+          updated = true;
+        }
       }
     }
+
+    return updated;
   }
 
   int getVaultSecretEngineVersion(VaultConfig vaultConfig) throws IOException {

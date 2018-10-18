@@ -10,6 +10,8 @@ sleep 5
 echo 'starting vault server'
 touch vault.log
 ~/vault server --dev -dev-root-token-id="root" -dev-listen-address="127.0.0.1:8200" > vault.log &
+~/vault server --dev -dev-root-token-id="root" -dev-listen-address="127.0.0.1:8300" > vault2.log &
+
 i=0
 while [ "$i" -lt 30 ]
 do
@@ -141,6 +143,10 @@ if [[ $foundRegisteredDelegate -ne 0 ]] ; then
   echo 'Delegate registration failed';
   exit $foundRegisteredDelegate
 fi
+
+# Vault integration test need to be run first to avoid interfering with other integration test such as
+# Sumo/Elk integration tests etc.
+mvn -B test -pl 71-rest -Dtest=software.wings.integration.VaultIntegrationTest -DfailIfNoTests=false
 
 #build and start learning engine
 export HOSTNAME
