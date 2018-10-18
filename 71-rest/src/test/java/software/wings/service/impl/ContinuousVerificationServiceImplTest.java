@@ -17,6 +17,7 @@ import org.mockito.MockitoAnnotations;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.User;
+import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
@@ -26,6 +27,7 @@ import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaD
 import software.wings.service.impl.analysis.ContinuousVerificationServiceImpl;
 import software.wings.service.intfc.AuthService;
 import software.wings.sm.StateType;
+import software.wings.verification.HeatMapResolution;
 
 import java.text.ParseException;
 import java.util.Arrays;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Praveen on 5/31/2018
@@ -183,5 +186,40 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
 
     assertNotNull("Execution data is not null", execData);
     assertEquals("Execution data should be empty", 0, execData.size());
+  }
+
+  @Test
+  public void testHeatMapResolutionEnum() {
+    long endTime = System.currentTimeMillis();
+    long oneDay = endTime - TimeUnit.DAYS.toMillis(1);
+    HeatMapResolution heatMapResolution = HeatMapResolution.getResolution(oneDay, endTime);
+    assertEquals(HeatMapResolution.SMALL, heatMapResolution);
+
+    int smallResolutionDuration = 15;
+    assertEquals(smallResolutionDuration, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+
+    // With CRON INTERVAL IN MINUTES set to 15, this should result in 96 datapoints.
+    assertEquals(smallResolutionDuration / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
+        heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
+
+    long sevenDays = endTime - TimeUnit.DAYS.toMillis(7);
+    heatMapResolution = HeatMapResolution.getResolution(sevenDays, endTime);
+    assertEquals(HeatMapResolution.MEDIUM, heatMapResolution);
+
+    int mediumResolutionDuration = 180;
+    assertEquals(mediumResolutionDuration, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+
+    assertEquals(mediumResolutionDuration / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
+        heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
+
+    long thirtyDays = endTime - TimeUnit.DAYS.toMillis(30);
+    heatMapResolution = HeatMapResolution.getResolution(thirtyDays, endTime);
+    assertEquals(HeatMapResolution.LARGE, heatMapResolution);
+
+    int largeResolutionDuration = 480;
+    assertEquals(largeResolutionDuration, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+
+    assertEquals(largeResolutionDuration / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
+        heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
   }
 }

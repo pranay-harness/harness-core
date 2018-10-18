@@ -65,16 +65,49 @@ public class ContinuousVerificationDashboardResource {
         accountId, beginEpochTs, endEpochTs, isTimeSeries, request));
   }
 
+  /**
+   * Response format:
+   * {"envName":
+   *    [
+   *      "cvConfiguration": {cvConfigurationObject},
+   *      "riskLevelSummary": {
+   *        "startTime": epoch in ms,
+   *        "endTime": epoch in ms,
+   *        "passed": int,
+   *        "failed": int,
+   *        "error": int,
+   *        "timeSeries": null
+   *      },
+   *      "observedTimeSeries": {
+   *        "transactionName": {
+   *          "metricName": [
+   *            {
+   *              "timestamp": epoch in ms
+   *              "value": floating point
+   *            }
+   *          ]
+   *        }
+   *      },
+   *      "predictedTimeSeries": (same format as observedTimeSeries)
+   *    ]
+   * }
+   *
+   * The time series is an ordered list, ch
+   *
+   * @param accountId
+   * @param serviceId
+   * @param startTime
+   * @param endTime
+   * @return
+   */
   @GET
   @Path(VerificationConstants.HEATMAP)
   @Timed
   @ExceptionMetered
   public RestResponse<Map<String, List<HeatMap>>> getDetailedHeatMap(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("serviceId") @Valid final String serviceId,
-      @QueryParam("resolution") int resolution, @QueryParam("startTime") long startTime,
-      @QueryParam("endTime") long endTime) {
-    return new RestResponse<>(
-        continuousVerificationService.getHeatMap(accountId, serviceId, resolution, startTime, endTime, true));
+      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime) {
+    return new RestResponse<>(continuousVerificationService.getHeatMap(accountId, serviceId, startTime, endTime, true));
   }
 
   @GET
@@ -94,10 +127,9 @@ public class ContinuousVerificationDashboardResource {
   @ExceptionMetered
   public RestResponse<Map<String, List<HeatMap>>> getHeatMapSummary(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("serviceId") @Valid final String serviceId,
-      @QueryParam("resolution") int resolution, @QueryParam("startTime") long startTime,
-      @QueryParam("endTime") long endTime) {
+      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime) {
     return new RestResponse<>(
-        continuousVerificationService.getHeatMap(accountId, serviceId, resolution, startTime, endTime, false));
+        continuousVerificationService.getHeatMap(accountId, serviceId, startTime, endTime, false));
   }
 
   @GET

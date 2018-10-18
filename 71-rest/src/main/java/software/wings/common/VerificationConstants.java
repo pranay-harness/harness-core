@@ -30,7 +30,8 @@ public class VerificationConstants {
   public static final int CANARY_DAYS_TO_COLLECT = 7;
   public static final int PERIODIC_GAP_IN_DAYS = 7;
 
-  public static final long CRON_POLL_INTERVAL = TimeUnit.MINUTES.toSeconds(10); // in seconds
+  public static final int CRON_POLL_INTERVAL_IN_MINUTES = 15;
+  public static final long CRON_POLL_INTERVAL = TimeUnit.MINUTES.toSeconds(CRON_POLL_INTERVAL_IN_MINUTES); // in seconds
 
   private VerificationConstants() {}
 
