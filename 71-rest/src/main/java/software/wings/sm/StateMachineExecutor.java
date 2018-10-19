@@ -467,15 +467,15 @@ public class StateMachineExecutor {
       injector.injectMembers(currentState);
       invokeAdvisors(context, currentState);
       executionResponse = currentState.execute(context);
+
+      handleExecuteResponse(context, executionResponse);
     } catch (WingsException exception) {
       ex = exception;
     } catch (Exception exception) {
       ex = new WingsException(exception);
     }
 
-    if (ex == null) {
-      handleExecuteResponse(context, executionResponse);
-    } else {
+    if (ex != null) {
       handleExecuteResponseException(context, ex);
     }
   }
@@ -734,7 +734,7 @@ public class StateMachineExecutor {
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       addContext(context, exception);
       WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
-    } catch (Exception ex) {
+    } catch (RuntimeException ex) {
       logger.error("Error when processing exception", ex);
     }
 
