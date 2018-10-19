@@ -52,15 +52,17 @@ public class PipelineStage {
     private boolean parallel;
     private String workflowName;
     private List<WorkflowVariable> workflowVariables = Lists.newArrayList();
+    private Map<String, Object> properties = new HashMap<>();
 
     @Builder
-    public Yaml(
-        String type, String name, boolean parallel, String workflowName, List<WorkflowVariable> workflowVariables) {
+    public Yaml(String type, String name, boolean parallel, String workflowName,
+        List<WorkflowVariable> workflowVariables, Map<String, Object> properties) {
       super(type);
       this.name = name;
       this.parallel = parallel;
       this.workflowName = workflowName;
       this.workflowVariables = workflowVariables;
+      this.properties = properties;
     }
   }
 
