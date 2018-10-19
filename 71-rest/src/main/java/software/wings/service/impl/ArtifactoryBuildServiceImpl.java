@@ -25,7 +25,6 @@ import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.utils.ArtifactType;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -109,12 +108,12 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(ArtifactoryConfig config) {
+  public boolean validateArtifactServer(ArtifactoryConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!connectableHttpUrl(config.getArtifactoryUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Artifactory Server at : " + config.getArtifactoryUrl());
     }
-    return artifactoryService.isRunning(config, Collections.emptyList());
+    return artifactoryService.isRunning(config, encryptedDataDetails);
   }
 
   @Override

@@ -68,7 +68,7 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(AwsConfig config) {
+  public boolean validateArtifactServer(AwsConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     return false;
   }
 

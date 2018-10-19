@@ -50,7 +50,6 @@ import java.text.SimpleDateFormat;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
@@ -156,8 +155,10 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   }
 
   @Override
-  public boolean validateConfig(NewRelicConfig newRelicConfig) throws IOException {
-    getAllApplications(newRelicConfig, Collections.emptyList(), null);
+
+  public boolean validateConfig(NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails)
+      throws IOException {
+    getAllApplications(newRelicConfig, encryptedDataDetails, null);
     return true;
   }
 

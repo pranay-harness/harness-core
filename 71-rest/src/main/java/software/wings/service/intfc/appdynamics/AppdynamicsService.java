@@ -1,6 +1,7 @@
 package software.wings.service.intfc.appdynamics;
 
 import software.wings.beans.SettingAttribute;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
@@ -27,7 +28,7 @@ public interface AppdynamicsService {
    * @param settingAttribute
    * @return
    */
-  boolean validateConfig(@NotNull SettingAttribute settingAttribute);
+  boolean validateConfig(@NotNull SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
    * Api to fetch metric data for given node.

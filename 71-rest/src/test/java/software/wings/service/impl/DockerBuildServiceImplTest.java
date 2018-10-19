@@ -24,6 +24,7 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.utils.ArtifactType;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -75,7 +76,7 @@ public class DockerBuildServiceImplTest extends WingsBaseTest {
             .password(scmSecret.decryptToCharArray(new SecretName("docker_config_anubhaw_password")))
             .build();
     try {
-      dockerBuildService.validateArtifactServer(dockerConfig);
+      dockerBuildService.validateArtifactServer(dockerConfig, Collections.emptyList());
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
       assertThat(e.getParams()).isNotEmpty();

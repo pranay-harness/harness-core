@@ -43,5 +43,6 @@ public interface NexusBuildService extends BuildService<NexusConfig> {
   BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       NexusConfig config, List<EncryptedDataDetail> encryptionDetails);
 
-  @DelegateTaskType(TaskType.NEXUS_VALIDATE_ARTIFACT_SERVER) boolean validateArtifactServer(NexusConfig config);
+  @DelegateTaskType(TaskType.NEXUS_VALIDATE_ARTIFACT_SERVER)
+  boolean validateArtifactServer(NexusConfig config, List<EncryptedDataDetail> encryptedDataDetails);
 }

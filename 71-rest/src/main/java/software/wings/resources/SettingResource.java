@@ -124,6 +124,7 @@ public class SettingResource {
     if (variable.getValue() != null) {
       if (variable.getValue() instanceof EncryptableSetting) {
         ((EncryptableSetting) variable.getValue()).setAccountId(variable.getAccountId());
+        ((EncryptableSetting) variable.getValue()).setDecrypted(true);
       }
     }
     variable.setCategory(Category.getCategory(SettingVariableTypes.valueOf(variable.getValue().getType())));
@@ -188,6 +189,7 @@ public class SettingResource {
                                .build();
 
       ((EncryptableSetting) value).setAccountId(accountId);
+      ((EncryptableSetting) value).setDecrypted(true);
 
       UsageRestrictions usageRestrictionsFromJson =
           usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
@@ -242,6 +244,7 @@ public class SettingResource {
     if (variable.getValue() != null) {
       if (variable.getValue() instanceof EncryptableSetting) {
         ((EncryptableSetting) variable.getValue()).setAccountId(variable.getAccountId());
+        ((EncryptableSetting) variable.getValue()).setDecrypted(true);
       }
     }
     return new RestResponse<>(settingsService.update(variable));
@@ -286,6 +289,7 @@ public class SettingResource {
             .withUsageRestrictions(usageRestrictionsFromJson);
     if (value != null) {
       ((EncryptableSetting) value).setAccountId(accountId);
+      ((EncryptableSetting) value).setDecrypted(true);
       settingAttribute.withValue(value);
     }
     return new RestResponse<>(settingsService.update(settingAttribute.build()));

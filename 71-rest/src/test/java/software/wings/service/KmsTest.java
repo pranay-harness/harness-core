@@ -185,7 +185,7 @@ public class KmsTest extends WingsBaseTest {
         .thenReturn(encryptionService);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(SyncTaskContext.class))).thenReturn(containerService);
     when(containerService.validate(any(ContainerServiceParams.class))).thenReturn(true);
-    doNothing().when(newRelicService).validateConfig(anyObject(), anyObject());
+    doNothing().when(newRelicService).validateConfig(anyObject(), anyObject(), anyObject());
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(managerDecryptionService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);

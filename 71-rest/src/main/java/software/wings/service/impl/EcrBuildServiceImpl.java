@@ -76,7 +76,7 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(AwsConfig config) {
+  public boolean validateArtifactServer(AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by ECR Artifact Stream", USER);
   }
 

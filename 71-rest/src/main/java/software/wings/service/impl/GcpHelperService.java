@@ -46,8 +46,8 @@ public class GcpHelperService {
    * Validate credential.
    *
    */
-  public void validateCredential(GcpConfig gcpConfig) {
-    getGkeContainerService(gcpConfig, Collections.emptyList());
+  public void validateCredential(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    getGkeContainerService(gcpConfig, encryptedDataDetails);
   }
 
   /**

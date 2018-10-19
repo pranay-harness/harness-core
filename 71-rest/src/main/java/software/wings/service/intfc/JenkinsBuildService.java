@@ -36,7 +36,7 @@ public interface JenkinsBuildService extends BuildService<JenkinsConfig> {
   Map<String, String> getPlans(JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.JENKINS_VALIDATE_ARTIFACT_SERVER)
-  boolean validateArtifactServer(JenkinsConfig jenkinsConfig);
+  boolean validateArtifactServer(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   @DelegateTaskType(TaskType.JENKINS_GET_JOB)
   JobDetails getJob(String jobName, JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails);

@@ -49,7 +49,7 @@ public interface ArtifactoryBuildService extends BuildService<ArtifactoryConfig>
       ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.ARTIFACTORY_VALIDATE_ARTIFACT_SERVER)
-  boolean validateArtifactServer(ArtifactoryConfig artifactoryConfig);
+  boolean validateArtifactServer(ArtifactoryConfig artifactoryConfig, List<EncryptedDataDetail> encryptedDataDetails);
 
   @DelegateTaskType(TaskType.ARTIFACTORY_VALIDATE_ARTIFACT_STREAM)
   boolean validateArtifactSource(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails,

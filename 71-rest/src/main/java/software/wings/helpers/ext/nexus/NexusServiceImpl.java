@@ -29,7 +29,6 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -253,7 +252,7 @@ public class NexusServiceImpl implements NexusService {
   public boolean isRunning(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
     List<String> images = new ArrayList<>();
     if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x")) {
-      return getRepositories(nexusConfig, Collections.emptyList()) != null;
+      return getRepositories(nexusConfig, encryptionDetails) != null;
     } else {
       Map<String, String> repositories;
 

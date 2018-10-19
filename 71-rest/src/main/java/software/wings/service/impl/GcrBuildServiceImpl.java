@@ -80,7 +80,7 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(GcpConfig config) {
+  public boolean validateArtifactServer(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return true;
   }
 

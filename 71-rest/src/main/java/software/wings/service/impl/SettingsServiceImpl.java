@@ -235,6 +235,7 @@ public class SettingsServiceImpl implements SettingsService {
   @ValidationGroups(Create.class)
   public SettingAttribute save(SettingAttribute settingAttribute, boolean pushToGit) {
     settingValidationService.validate(settingAttribute);
+
     SettingAttribute newSettingAttribute = forceSave(settingAttribute);
 
     if (shouldBeSynced(newSettingAttribute, pushToGit)) {

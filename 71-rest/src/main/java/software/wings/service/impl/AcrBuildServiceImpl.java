@@ -76,7 +76,7 @@ public class AcrBuildServiceImpl implements AcrBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(AzureConfig config) {
+  public boolean validateArtifactServer(AzureConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     return true;
   }
 

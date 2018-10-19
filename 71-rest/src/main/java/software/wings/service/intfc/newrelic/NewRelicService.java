@@ -5,6 +5,7 @@ import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
@@ -22,7 +23,8 @@ import javax.validation.constraints.NotNull;
  * Created by rsingh on 8/28/17.
  */
 public interface NewRelicService {
-  void validateConfig(@NotNull SettingAttribute settingAttribute, @NotNull StateType stateType);
+  void validateConfig(@NotNull SettingAttribute settingAttribute, @NotNull StateType stateType,
+      List<EncryptedDataDetail> encryptedDataDetails);
   void validateAPMConfig(SettingAttribute settingAttribute, APMValidateCollectorConfig config);
   List<NewRelicApplication> getApplications(@NotNull String settingId, @NotNull StateType stateType);
   String fetch(String accountId, String serverConfigId, APMFetchConfig url);

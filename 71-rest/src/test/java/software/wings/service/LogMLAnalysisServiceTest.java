@@ -140,7 +140,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     final SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(splunkConfig).build();
-    analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2);
+    analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2, Collections.emptyList());
   }
 
   @Test
@@ -170,7 +170,7 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
 
     final SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(sumoConfig).build();
-    analysisService.validateConfig(settingAttribute, StateType.SUMO);
+    analysisService.validateConfig(settingAttribute, StateType.SUMO, Collections.emptyList());
   }
 
   @Test
