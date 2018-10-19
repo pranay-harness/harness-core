@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Multimap;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -78,7 +77,6 @@ public class LogResponseParser {
     return logs;
   }
 
-  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   private static void createRecords(List<Multimap<String, Object>> response, Map<String, LogElement> resultMap) {
     if (response == null) {
       logger.error("Something went wrong during parsing. Response is null.");

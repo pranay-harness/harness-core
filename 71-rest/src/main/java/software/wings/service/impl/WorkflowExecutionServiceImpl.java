@@ -1129,7 +1129,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         pipeline, workflow, contextElements);
   }
 
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH")
   private WorkflowExecution triggerExecution(WorkflowExecution workflowExecution, StateMachine stateMachine,
       ExecutionEventAdvisor workflowExecutionAdvisor, WorkflowExecutionUpdate workflowExecutionUpdate,
       WorkflowStandardParams stdParams, Trigger trigger, Pipeline pipeline, Workflow workflow,

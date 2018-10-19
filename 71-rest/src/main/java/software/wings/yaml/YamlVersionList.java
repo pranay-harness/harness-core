@@ -1,15 +1,12 @@
 package software.wings.yaml;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class YamlVersionList implements YamlHistory {
-  @SuppressFBWarnings("SS_SHOULD_BE_STATIC")
-  private final String NO_YAML_IN_VERSION_LIST = "Call with yamlVersionId (Uuid) to get Yaml.";
+  private static final String NO_YAML_IN_VERSION_LIST = "Call with yamlVersionId (Uuid) to get Yaml.";
 
-  List<YamlVersion> versions = new ArrayList<>();
+  private List<YamlVersion> versions = new ArrayList<>();
 
   public YamlVersionList() {}
 

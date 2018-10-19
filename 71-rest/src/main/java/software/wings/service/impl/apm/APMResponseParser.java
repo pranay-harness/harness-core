@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import com.google.common.collect.Multimap;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import lombok.AllArgsConstructor;
@@ -59,7 +58,6 @@ public class APMResponseParser {
     return resultMap.values();
   }
 
-  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   private static void createRecords(String txnName, String metricName, String hostName, String tag, String groupName,
       List<Multimap<String, Object>> response, Map<String, NewRelicMetricDataRecord> resultMap) {
     if (groupName == null) {
@@ -84,7 +82,7 @@ public class APMResponseParser {
         if (!resultMap.containsKey(key)) {
           resultMap.put(key, new NewRelicMetricDataRecord());
           resultMap.get(key).setTimeStamp(timestamp);
-          resultMap.get(key).setValues(new HashMap());
+          resultMap.get(key).setValues(new HashMap<>());
           resultMap.get(key).setName(txnName);
           resultMap.get(key).setHost(hostName);
           resultMap.get(key).setTag(tag);
@@ -95,7 +93,7 @@ public class APMResponseParser {
         metricName =
             record.containsKey("metricName") ? (String) record.get("metricName").iterator().next() : metricName;
 
-        resultMap.get(key).getValues().put(metricName, (double) VerificationResponseParser.cast(val, "value"));
+        resultMap.get(key).getValues().put(metricName, (Double) VerificationResponseParser.cast(val, "value"));
       }
     }
   }

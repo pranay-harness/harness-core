@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.container;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -13,13 +14,13 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AzureConfig;
@@ -39,7 +40,6 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -61,7 +61,6 @@ public class ContainerDeploymentDelegateHelper {
   public static final LoadingCache<String, Object> lockObjects =
       CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
   public String createAndGetKubeConfigLocation(ContainerServiceParams containerServiceParam) {
     try {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
@@ -74,10 +73,11 @@ public class ContainerDeploymentDelegateHelper {
         String configFilePath = KUBE_CONFIG_DIR + md5Hash;
         File file = new File(configFilePath);
         if (!file.exists()) {
-          file.getParentFile().mkdirs();
-          try (FileWriter writer = new FileWriter(file)) {
-            writer.write(configFileContent);
+          if (!file.getParentFile().mkdirs()) {
+            throw new WingsException(ErrorCode.GENERAL_ERROR)
+                .addParam("message", "Failed to create dir " + file.getParentFile().getCanonicalPath());
           }
+          FileUtils.writeStringToFile(file, configFileContent, UTF_8);
         }
         return file.getAbsolutePath();
       }

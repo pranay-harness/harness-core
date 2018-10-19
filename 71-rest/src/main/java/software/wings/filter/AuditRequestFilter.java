@@ -141,18 +141,17 @@ public class AuditRequestFilter implements ContainerRequestFilter {
     return headerStr;
   }
 
-  @SuppressFBWarnings({"SBSC_USE_STRINGBUFFER_CONCATENATION"})
   private String getQueryParams(MultivaluedMap<String, String> queryParameters) {
-    String queryParams = "";
+    StringBuilder queryParams = new StringBuilder();
     for (Entry<String, List<String>> entry : queryParameters.entrySet()) {
       String key = entry.getKey();
-      String temp = "";
+      StringBuilder temp = new StringBuilder();
       for (String value : queryParameters.get(key)) {
-        temp += "&" + key + "=" + value;
+        temp.append('&').append(key).append('=').append(value);
       }
-      queryParams += "&" + temp.substring(1);
+      queryParams.append('&').append(temp.substring(1));
     }
-    if (queryParams.equals("")) {
+    if (isEmpty(queryParams.toString())) {
       return null;
     } else {
       return queryParams.substring(1);

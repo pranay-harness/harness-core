@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
@@ -831,20 +832,20 @@ public class GitClientImpl implements GitClient {
     };
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
   private String getTempSshKeyPath(String sshKey) throws IOException {
     String keyFilePath = TEMP_SSH_KEY_DIR + "/" + UUIDGenerator.generateUuid();
     File keyFile = new File(keyFilePath);
 
     File sshDirectory = keyFile.getParentFile();
     if (sshDirectory.exists() || !sshDirectory.isDirectory()) {
-      sshDirectory.delete();
+      FileUtils.deleteDirectory(sshDirectory);
     }
-    sshDirectory.mkdirs();
+    if (!sshDirectory.mkdirs()) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR)
+          .addParam("message", "Failed to create dir " + sshDirectory.getCanonicalPath());
+    }
 
-    try (FileWriter writer = new FileWriter(keyFile)) {
-      writer.write(sshKey);
-    }
+    FileUtils.writeStringToFile(keyFile, sshKey, UTF_8);
     return keyFilePath;
   }
 

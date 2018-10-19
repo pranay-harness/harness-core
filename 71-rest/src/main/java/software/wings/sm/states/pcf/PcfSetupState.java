@@ -2,6 +2,7 @@ package software.wings.sm.states.pcf;
 
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -71,7 +72,6 @@ import software.wings.utils.Misc;
 import software.wings.utils.ServiceVersionConvention;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -169,7 +169,7 @@ public class PcfSetupState extends State {
     }
   }
 
-  @SuppressFBWarnings({"DLS_DEAD_LOCAL_STORE", "BX_UNBOXING_IMMEDIATELY_REBOXED"}) // TODO
+  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE") // TODO
   protected ExecutionResponse executeInternal(ExecutionContext context) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
@@ -215,11 +215,11 @@ public class PcfSetupState extends State {
     }
 
     List<String> tempRouteMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getTempRouteMap())
-        ? Collections.EMPTY_LIST
+        ? emptyList()
         : pcfInfrastructureMapping.getTempRouteMap();
 
     List<String> routeMaps = CollectionUtils.isEmpty(pcfInfrastructureMapping.getRouteMaps())
-        ? Collections.EMPTY_LIST
+        ? emptyList()
         : pcfInfrastructureMapping.getRouteMaps();
 
     // change ${app.name}__${service.name}__${env.name} to actual name.
@@ -248,7 +248,7 @@ public class PcfSetupState extends State {
             .artifactFiles(artifact.getArtifactFiles())
             .routeMaps(isOriginalRoute ? routeMaps : tempRouteMaps)
             .serviceVariables(serviceVariables)
-            .timeoutIntervalInMin(timeoutIntervalInMinutes == null ? 5 : timeoutIntervalInMinutes)
+            .timeoutIntervalInMin(timeoutIntervalInMinutes == null ? Integer.valueOf(5) : timeoutIntervalInMinutes)
             .maxCount(maxInstances)
             .build();
 
@@ -287,7 +287,6 @@ public class PcfSetupState extends State {
     return appName + "_" + serviceName + "_" + envName;
   }
 
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   private void validateSpecification(PcfServiceSpecification pcfServiceSpecification) {
     if (pcfServiceSpecification == null || pcfServiceSpecification.getManifestYaml() == null
         || !pcfServiceSpecification.getManifestYaml().contains("{FILE_LOCATION}")
@@ -312,7 +311,6 @@ public class PcfSetupState extends State {
     }
   }
 
-  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED") // TODO
   protected ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
     String activityId = response.keySet().iterator().next();
 

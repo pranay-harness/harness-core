@@ -18,6 +18,7 @@ import static software.wings.security.EncryptionType.LOCAL;
 import static software.wings.service.impl.security.VaultServiceImpl.VAULT_VAILDATION_URL;
 import static software.wings.service.intfc.FileService.FileBucket.CONFIGS;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.TreeBasedTable;
@@ -416,7 +417,6 @@ public class SecretManagerImpl implements SecretManager {
         .build();
   }
 
-  @SuppressFBWarnings("DMI_INVOKING_TOSTRING_ON_ARRAY")
   @Override
   public String getEncryptedYamlRef(EncryptableSetting object, String... fieldNames) throws IllegalAccessException {
     if (object.getSettingType() == SettingVariableTypes.CONFIG_FILE) {
@@ -439,7 +439,8 @@ public class SecretManagerImpl implements SecretManager {
         }
       }
     }
-    Preconditions.checkNotNull(encryptedField, "encrypted field not found " + object + ", args:" + fieldNames);
+    Preconditions.checkNotNull(
+        encryptedField, "encrypted field not found " + object + ", args:" + Joiner.on(",").join(fieldNames));
 
     encryptedField.setAccessible(true);
 

@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.configfile;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -9,7 +10,6 @@ import static software.wings.utils.Validator.notNullCheck;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
@@ -108,7 +108,6 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
         .build();
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public ConfigFile upsertFromYaml(ChangeContext<OverrideYaml> changeContext, List<ChangeContext> changeSetContext)
       throws HarnessException {
@@ -140,7 +139,7 @@ public class ConfigFileOverrideYamlHandler extends BaseYamlHandler<OverrideYaml,
         if (contentChangeContext.isPresent()) {
           ChangeContext fileContext = contentChangeContext.get();
           String fileContent = fileContext.getChange().getFileContent();
-          inputStream = new BoundedInputStream(new ByteArrayInputStream(fileContent.getBytes()));
+          inputStream = new BoundedInputStream(new ByteArrayInputStream(fileContent.getBytes(UTF_8)));
         }
       }
     }

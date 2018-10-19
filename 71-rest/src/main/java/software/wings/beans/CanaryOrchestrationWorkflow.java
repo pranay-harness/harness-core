@@ -226,7 +226,6 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
         .collect(toList());
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   @Override
   public void setCloneMetadata(Map<String, String> serviceIdMapping) {
     if (workflowPhaseIdMap == null || serviceIdMapping == null) {

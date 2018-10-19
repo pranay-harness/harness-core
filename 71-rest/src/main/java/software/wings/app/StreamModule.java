@@ -22,7 +22,7 @@ public class StreamModule extends AbstractModule {
   private MetaBroadcaster metaBroadcaster;
 
   private static void setHazelcastInstance(HazelcastInstance hazelcastInstance) {
-    HazelcastBroadcaster.HAZELCAST_INSTANCE = hazelcastInstance;
+    HazelcastBroadcaster.HAZELCAST_INSTANCE.set(hazelcastInstance);
   }
 
   /**

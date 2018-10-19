@@ -21,7 +21,6 @@ import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsRequest;
 import com.amazonaws.services.autoscaling.model.Instance;
 import com.amazonaws.services.cloudformation.model.CreateStackRequest;
-import com.amazonaws.services.cloudformation.model.CreateStackResult;
 import com.amazonaws.services.cloudformation.model.DescribeStacksRequest;
 import com.amazonaws.services.cloudformation.model.Parameter;
 import com.amazonaws.services.cloudformation.model.Stack;
@@ -54,7 +53,6 @@ import com.amazonaws.services.ecs.model.UpdateServiceResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
@@ -100,9 +98,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   /**
    * Create cluster.
    */
-  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
   public void createCluster() {
-    CreateStackResult result = awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
+    awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
         new CreateStackRequest()
             .withStackName("EC2ContainerService-demo")
@@ -425,7 +422,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                     .withParameterValue("us-east-1e,us-east-1c,us-east-1d,us-east-1a"),
                 new Parameter().withParameterKey("VpcCidr").withParameterValue("10.0.0.0/16"),
                 new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")));
-    result.getStackId();
 
     Stack stack;
     while (!"CREATE_COMPLETE".equals(
@@ -445,9 +441,8 @@ public class EcsContainerServiceImpl implements EcsContainerService {
   /**
    * Destroy cluster.
    */
-  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
   public void destroyCluster() {
-    CreateStackResult result = awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
+    awsHelperService.createStack("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
         "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
         new CreateStackRequest()
             .withStackName("EC2ContainerService-test2")
@@ -770,8 +765,6 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                     .withParameterValue("us-east-1e,us-east-1c,us-east-1d,us-east-1a"),
                 new Parameter().withParameterKey("VpcCidr").withParameterValue("10.0.0.0/16"),
                 new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")));
-
-    result.getStackId();
 
     Stack stack;
     while (!"CREATE_COMPLETE".equals(

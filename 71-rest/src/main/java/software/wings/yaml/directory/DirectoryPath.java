@@ -5,8 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 public class DirectoryPath {
+  private static final String delimiter = "/";
+
   private String path;
-  @SuppressFBWarnings("SS_SHOULD_BE_STATIC") private final String delimiter = "/";
 
   public DirectoryPath(String path) {
     this.path = path;
@@ -16,7 +17,7 @@ public class DirectoryPath {
     if (isEmpty(path)) {
       this.path = pathPart;
     } else {
-      this.path += this.delimiter + pathPart;
+      this.path += delimiter + pathPart;
     }
 
     return this;

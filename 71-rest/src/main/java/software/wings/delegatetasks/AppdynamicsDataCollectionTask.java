@@ -283,7 +283,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
             AppdynamicsTier appdynamicsTier =
                 appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, dataCollectionInfo.getAppId(),
                     dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());
-            Preconditions.checkNotNull("No trier found for {}", dataCollectionInfo);
+            Preconditions.checkNotNull(dataCollectionInfo, "No trier found for dataCollectionInfo");
             List<AppdynamicsMetricData> metricsData = getMetricsData();
             logger.info(
                 "Got {} metrics from appdynamics for {}", metricsData.size(), dataCollectionInfo.getStateExecutionId());
