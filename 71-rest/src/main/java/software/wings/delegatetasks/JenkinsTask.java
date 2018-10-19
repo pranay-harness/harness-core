@@ -118,6 +118,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
 
       case POLL_TASK:
         jenkinsExecutionResponse.setSubTaskType(JenkinsSubTaskType.POLL_TASK);
+        jenkinsExecutionResponse.setActivityId(jenkinsTaskParams.getActivityId());
         try {
           // Get jenkins build from queued URL
           logger.info(
