@@ -259,7 +259,9 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       int collectionMinute;
       if (isHeartbeat) {
         if (is247Task) {
-          collectionMinute = maxDataCollectionMin24x7;
+          collectionMinute = maxDataCollectionMin24x7 != 0
+              ? maxDataCollectionMin24x7
+              : (int) TimeUnit.MILLISECONDS.toMinutes(collectionStartTime) + dataCollectionInfo.getCollectionTime();
         } else if (isPredictiveAnalysis) {
           collectionMinute = dataCollectionMinute + PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
         } else {
