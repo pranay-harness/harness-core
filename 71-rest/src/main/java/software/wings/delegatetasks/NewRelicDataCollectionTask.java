@@ -440,7 +440,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             int dataCollectionMinForHeartbeat = dataCollectionMinuteEnd;
             if (is247Task) {
-              dataCollectionMinForHeartbeat = maxDataCollectionMin24x7;
+              dataCollectionMinForHeartbeat = maxDataCollectionMin24x7 != 0
+                  ? maxDataCollectionMin24x7
+                  : (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
+                      + dataCollectionInfo.getCollectionTime();
             }
 
             if (!saveHeartBeats(dataCollectionMinForHeartbeat)) {
