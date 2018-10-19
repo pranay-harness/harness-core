@@ -273,7 +273,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
               .workflowId(getWorkflowId(context))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .serviceId(getPhaseServiceId(context))
-              .query(query)
+              .query(getRenderedQuery())
               .formattedQuery(Boolean.valueOf(context.renderExpression(Boolean.toString(getFormattedQuery()))))
               .indices(finalIndices)
               .hostnameField(context.renderExpression(hostnameField))

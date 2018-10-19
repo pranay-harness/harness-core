@@ -160,6 +160,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
             .options(logConfig.collectionParams())
             .encryptedDataDetails(logConfig.encryptedDataDetails(secretManager))
             .hosts(hosts)
+            .query(getRenderedQuery())
             .stateType(StateType.LOG_VERIFICATION)
             .applicationId(context.getAppId())
             .stateExecutionId(context.getStateExecutionInstanceId())
