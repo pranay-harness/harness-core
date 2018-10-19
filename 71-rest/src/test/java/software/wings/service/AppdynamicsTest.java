@@ -35,6 +35,7 @@ import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -90,7 +91,7 @@ public class AppdynamicsTest extends WingsBaseTest {
   public void validateConfig() {
     ((AppDynamicsConfig) settingAttribute.getValue())
         .setPassword(scmSecret.decryptToCharArray(new SecretName("appd_config_password")));
-    appdynamicsService.validateConfig(settingAttribute);
+    appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
   }
 
   @Test

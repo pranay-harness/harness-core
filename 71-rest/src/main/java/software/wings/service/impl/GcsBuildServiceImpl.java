@@ -60,7 +60,7 @@ public class GcsBuildServiceImpl implements GcsBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(GcpConfig config) {
+  public boolean validateArtifactServer(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
     return false;
   }
 

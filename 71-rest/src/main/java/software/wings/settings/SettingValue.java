@@ -21,7 +21,7 @@ import java.util.List;
 public abstract class SettingValue implements ExtensionPoint {
   private String type;
 
-  private boolean decrypted;
+  private transient boolean decrypted;
 
   /**
    * Instantiates a new setting value.

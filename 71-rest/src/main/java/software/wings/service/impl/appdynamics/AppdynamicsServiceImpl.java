@@ -115,13 +115,14 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
   }
 
   @Override
-  public boolean validateConfig(final SettingAttribute settingAttribute) {
+  public boolean validateConfig(
+      final SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       SyncTaskContext syncTaskContext =
           aContext().withAccountId(settingAttribute.getAccountId()).withAppId(Base.GLOBAL_APP_ID).build();
       AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
       return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
-          .validateConfig(appDynamicsConfig);
+          .validateConfig(appDynamicsConfig, encryptedDataDetails);
     } catch (Exception e) {
       throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR).addParam("reason", Misc.getMessage(e));
     }

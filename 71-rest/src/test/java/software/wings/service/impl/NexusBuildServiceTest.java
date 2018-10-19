@@ -30,6 +30,7 @@ import software.wings.helpers.ext.jenkins.JobDetails;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.service.intfc.NexusBuildService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -102,7 +103,7 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                                   .accountId(ACCOUNT_ID)
                                   .build();
     try {
-      nexusBuildService.validateArtifactServer(nexusConfig);
+      nexusBuildService.validateArtifactServer(nexusConfig, Collections.emptyList());
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());
       assertThat(e.getParams()).isNotEmpty();

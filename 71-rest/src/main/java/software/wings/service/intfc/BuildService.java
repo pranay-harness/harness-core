@@ -118,7 +118,7 @@ public interface BuildService<T> {
    * @param config
    * @throws WingsException if not valid
    */
-  boolean validateArtifactServer(T config);
+  boolean validateArtifactServer(T config, List<EncryptedDataDetail> encryptedDataDetails);
 
   /**
    * Gets the all the Job details

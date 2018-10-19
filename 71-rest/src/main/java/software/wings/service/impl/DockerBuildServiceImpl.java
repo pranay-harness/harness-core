@@ -21,7 +21,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.DockerBuildService;
 import software.wings.utils.ArtifactType;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,12 +75,12 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(DockerConfig config) {
+  public boolean validateArtifactServer(DockerConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!connectableHttpUrl(config.getDockerRegistryUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Docker Registry at : " + config.getDockerRegistryUrl());
     }
-    return dockerRegistryService.validateCredentials(config, Collections.emptyList());
+    return dockerRegistryService.validateCredentials(config, encryptedDataDetails);
   }
 
   @Override

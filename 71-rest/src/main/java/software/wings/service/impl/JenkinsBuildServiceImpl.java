@@ -39,7 +39,6 @@ import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -168,7 +167,9 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(JenkinsConfig jenkinsConfig) {
+  public boolean validateArtifactServer(JenkinsConfig jenkinsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
+    encryptionService.decrypt(jenkinsConfig, encryptedDataDetails);
+
     if (Constants.TOKEN_FIELD.equals(jenkinsConfig.getAuthMechanism())) {
       if (isEmpty(new String(jenkinsConfig.getToken()))) {
         throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", "Token should be not empty");
@@ -184,7 +185,7 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Jenkins Server at : " + jenkinsConfig.getJenkinsUrl());
     }
-    encryptionService.decrypt(jenkinsConfig, Collections.emptyList());
+
     Jenkins jenkins = jenkinsUtil.getJenkins(jenkinsConfig);
 
     return jenkins.isRunning();

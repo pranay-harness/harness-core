@@ -70,7 +70,7 @@ public class AmiBuildServiceImpl implements AmiBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(AwsConfig config) {
+  public boolean validateArtifactServer(AwsConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     return true;
   }
 

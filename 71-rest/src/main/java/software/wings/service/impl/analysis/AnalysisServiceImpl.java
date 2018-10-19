@@ -721,9 +721,10 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public void validateConfig(final SettingAttribute settingAttribute, StateType stateType) {
+  public void validateConfig(
+      final SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
     ErrorCode errorCode = null;
-    List<EncryptedDataDetail> encryptedDataDetails = Collections.emptyList();
+
     try {
       switch (stateType) {
         case SPLUNKV2:

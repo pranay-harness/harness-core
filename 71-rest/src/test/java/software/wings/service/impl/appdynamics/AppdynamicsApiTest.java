@@ -104,7 +104,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
     try {
-      appdynamicsService.validateConfig(settingAttribute);
+      appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
       fail("Validated invalid config");
     } catch (WingsException e) {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
@@ -123,7 +123,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
     try {
-      appdynamicsService.validateConfig(settingAttribute);
+      appdynamicsService.validateConfig(settingAttribute, Collections.emptyList());
       fail("Validated invalid config");
     } catch (WingsException e) {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
@@ -140,7 +140,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
     String savedAttributeId = saveAppdynamicsConfig();
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, savedAttributeId);
     ((AppDynamicsConfig) settingAttribute.getValue()).setPassword(UUID.randomUUID().toString().toCharArray());
-    assertTrue(appdynamicsService.validateConfig(settingAttribute));
+    assertTrue(appdynamicsService.validateConfig(settingAttribute, Collections.emptyList()));
   }
 
   @Test

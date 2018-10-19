@@ -30,7 +30,6 @@ import software.wings.utils.JsonUtils;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -46,10 +45,10 @@ public class DynaTraceDelegateServiceImpl implements DynaTraceDelegateService {
   @Inject private DataCollectionExecutorService dataCollectionService;
 
   @Override
-  public boolean validateConfig(DynaTraceConfig dynaTraceConfig) throws IOException {
-    final Call<Object> request =
-        getDynaTraceRestClient(dynaTraceConfig)
-            .listTimeSeries(getHeaderWithCredentials(dynaTraceConfig, Collections.emptyList()));
+  public boolean validateConfig(DynaTraceConfig dynaTraceConfig, List<EncryptedDataDetail> encryptedDataDetails)
+      throws IOException {
+    final Call<Object> request = getDynaTraceRestClient(dynaTraceConfig)
+                                     .listTimeSeries(getHeaderWithCredentials(dynaTraceConfig, encryptedDataDetails));
     final Response<Object> response = request.execute();
     if (response.isSuccessful()) {
       return true;

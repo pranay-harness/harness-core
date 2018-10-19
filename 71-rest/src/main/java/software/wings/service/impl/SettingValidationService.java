@@ -45,6 +45,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BuildSourceService;
@@ -107,16 +108,17 @@ public class SettingValidationService {
     }
 
     SettingValue settingValue = settingAttribute.getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = fetchEncryptionDetails(settingValue);
 
     if (settingValue instanceof GcpConfig) {
-      gcpHelperService.validateCredential((GcpConfig) settingValue);
+      gcpHelperService.validateCredential((GcpConfig) settingValue, encryptedDataDetails);
     } else if (settingValue instanceof AzureConfig) {
       azureHelperService.validateAzureAccountCredential(((AzureConfig) settingValue).getClientId(),
           ((AzureConfig) settingValue).getTenantId(), new String(((AzureConfig) settingValue).getKey()));
     } else if (settingValue instanceof PcfConfig) {
       validatePcfConfig(settingAttribute, (PcfConfig) settingValue);
     } else if (settingValue instanceof AwsConfig) {
-      validateAwsConfig(settingAttribute);
+      validateAwsConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof KubernetesClusterConfig) {
       if (!((KubernetesClusterConfig) settingValue).isSkipValidation()) {
         validateKubernetesClusterConfig(settingAttribute);
@@ -124,9 +126,10 @@ public class SettingValidationService {
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
         || settingValue instanceof ArtifactoryConfig) {
-      buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID).validateArtifactServer(settingValue);
+      buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID)
+          .validateArtifactServer(settingValue, encryptedDataDetails);
     } else if (settingValue instanceof AppDynamicsConfig) {
-      newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS);
+      newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS, encryptedDataDetails);
     } else if (settingValue instanceof DatadogConfig) {
       newRelicService.validateAPMConfig(
           settingAttribute, ((DatadogConfig) settingAttribute.getValue()).createAPMValidateCollectorConfig());
@@ -139,7 +142,7 @@ public class SettingValidationService {
               .createAPMValidateCollectorConfig(secretManager, encryptionService));
       ((APMVerificationConfig) settingAttribute.getValue()).encryptFields(secretManager);
     } else if (settingValue instanceof SplunkConfig) {
-      analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2);
+      analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2, encryptedDataDetails);
     } else if (settingValue instanceof ElkConfig) {
       if (((ElkConfig) settingValue).getElkConnector() == ElkConnector.KIBANA_SERVER) {
         try {
@@ -150,19 +153,19 @@ public class SettingValidationService {
           throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, USER, ex).addParam("reason", Misc.getMessage(ex));
         }
       }
-      analysisService.validateConfig(settingAttribute, StateType.ELK);
+      analysisService.validateConfig(settingAttribute, StateType.ELK, encryptedDataDetails);
     } else if (settingValue instanceof LogzConfig) {
-      analysisService.validateConfig(settingAttribute, StateType.LOGZ);
+      analysisService.validateConfig(settingAttribute, StateType.LOGZ, encryptedDataDetails);
     } else if (settingValue instanceof SumoConfig) {
-      analysisService.validateConfig(settingAttribute, StateType.SUMO);
+      analysisService.validateConfig(settingAttribute, StateType.SUMO, encryptedDataDetails);
     } else if (settingValue instanceof NewRelicConfig) {
-      newRelicService.validateConfig(settingAttribute, StateType.NEW_RELIC);
+      newRelicService.validateConfig(settingAttribute, StateType.NEW_RELIC, encryptedDataDetails);
     } else if (settingValue instanceof DynaTraceConfig) {
-      newRelicService.validateConfig(settingAttribute, StateType.DYNA_TRACE);
+      newRelicService.validateConfig(settingAttribute, StateType.DYNA_TRACE, encryptedDataDetails);
     } else if (settingValue instanceof PrometheusConfig) {
-      newRelicService.validateConfig(settingAttribute, StateType.PROMETHEUS);
+      newRelicService.validateConfig(settingAttribute, StateType.PROMETHEUS, encryptedDataDetails);
     } else if (settingValue instanceof GitConfig) {
-      validateGitConfig(settingAttribute);
+      validateGitConfig(settingAttribute, encryptedDataDetails);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {
@@ -205,23 +208,32 @@ public class SettingValidationService {
     }
   }
 
-  private void validateAwsConfig(SettingAttribute settingAttribute) {
+  private void validateAwsConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       AwsConfig value = (AwsConfig) settingAttribute.getValue();
-      awsEc2HelperServiceManager.validateAwsAccountCredential(value, emptyList());
+      awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
     }
   }
 
-  private void validateGitConfig(SettingAttribute settingAttribute) {
+  private void validateGitConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
-      gitConfigHelperService.validateGitConfig(gitConfig, emptyList());
+      gitConfigHelperService.validateGitConfig(gitConfig, encryptedDataDetails);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
     }
+  }
+
+  private List<EncryptedDataDetail> fetchEncryptionDetails(SettingValue settingValue) {
+    // Shouldn't we have accountId check while fetching the encrypted Data inside the below function
+    if (EncryptableSetting.class.isInstance(settingValue)) {
+      return secretManager.getEncryptionDetails((EncryptableSetting) settingValue, null, null);
+    }
+
+    return Collections.emptyList();
   }
 }

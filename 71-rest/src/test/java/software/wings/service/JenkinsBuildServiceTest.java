@@ -47,6 +47,7 @@ import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.JenkinsBuildService;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -160,7 +161,7 @@ public class JenkinsBuildServiceTest extends WingsBaseTest {
                                          .accountId(ACCOUNT_ID)
                                          .build();
     try {
-      jenkinsBuildService.validateArtifactServer(badJenkinsConfig);
+      jenkinsBuildService.validateArtifactServer(badJenkinsConfig, Collections.emptyList());
       fail("jenkinsBuildService.validateArtifactServer did not throw!!!");
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_ARTIFACT_SERVER.toString());

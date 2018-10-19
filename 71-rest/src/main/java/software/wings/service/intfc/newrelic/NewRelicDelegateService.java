@@ -23,7 +23,8 @@ import javax.validation.constraints.NotNull;
  */
 public interface NewRelicDelegateService {
   @DelegateTaskType(TaskType.NEWRELIC_VALIDATE_CONFIGURATION_TASK)
-  boolean validateConfig(@NotNull NewRelicConfig newRelicConfig) throws IOException, CloneNotSupportedException;
+  boolean validateConfig(@NotNull NewRelicConfig newRelicConfig, List<EncryptedDataDetail> encryptedDataDetails)
+      throws IOException, CloneNotSupportedException;
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_APP_TASK)
   List<NewRelicApplication> getAllApplications(@NotNull NewRelicConfig newRelicConfig,

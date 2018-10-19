@@ -22,7 +22,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.utils.ArtifactType;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -89,12 +88,12 @@ public class NexusBuildServiceImpl implements NexusBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(NexusConfig nexusConfig) {
+  public boolean validateArtifactServer(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!connectableHttpUrl(nexusConfig.getNexusUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Nexus Server at : " + nexusConfig.getNexusUrl());
     }
-    return nexusService.isRunning(nexusConfig, Collections.emptyList());
+    return nexusService.isRunning(nexusConfig, encryptedDataDetails);
   }
 
   @Override

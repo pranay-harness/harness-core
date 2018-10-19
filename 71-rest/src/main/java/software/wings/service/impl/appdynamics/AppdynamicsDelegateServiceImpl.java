@@ -520,7 +520,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public boolean validateConfig(AppDynamicsConfig appDynamicsConfig) throws IOException {
+  public boolean validateConfig(AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptedDataDetails)
+      throws IOException {
     if (!validUrl(appDynamicsConfig.getControllerUrl())) {
       throw new WingsException("AppDynamics Controller URL must be a valid URL");
     }
@@ -528,7 +529,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
     try {
       final Call<List<NewRelicApplication>> request =
           getAppdynamicsRestClient(appDynamicsConfig)
-              .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, Collections.emptyList()));
+              .listAllApplications(getHeaderWithCredentials(appDynamicsConfig, encryptedDataDetails));
       response = request.execute();
       if (response.isSuccessful()) {
         return true;

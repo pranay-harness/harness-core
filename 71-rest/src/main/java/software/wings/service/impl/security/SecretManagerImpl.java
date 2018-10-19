@@ -84,6 +84,7 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.Validator;
+import software.wings.utils.WingsReflectionUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -237,7 +238,7 @@ public class SecretManagerImpl implements SecretManager {
         f.setAccessible(true);
         Field encryptedRefField = getEncryptedRefField(f, object);
         encryptedRefField.setAccessible(true);
-        if (f.get(object) != null) {
+        if (f.get(object) != null && !WingsReflectionUtils.isSetByYaml(object, encryptedRefField)) {
           Preconditions.checkState(
               encryptedRefField.get(object) == null, "both encrypted and non encrypted field set for " + object);
           encryptedDataDetails.add(EncryptedDataDetail.builder()
@@ -250,6 +251,10 @@ public class SecretManagerImpl implements SecretManager {
                                        .build());
         } else {
           String id = (String) encryptedRefField.get(object);
+          if (WingsReflectionUtils.isSetByYaml(object, encryptedRefField)) {
+            id = id.substring(id.indexOf(':') + 1);
+          }
+
           EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, id);
           if (encryptedData == null) {
             logger.info("No encrypted record set for field {} for id: {}", f.getName(), id);

@@ -26,7 +26,8 @@ public interface EcrClassicBuildService extends BuildService<EcrConfig> {
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes, EcrConfig ecrConfig,
       List<EncryptedDataDetail> encryptionDetails);
 
-  @DelegateTaskType(TaskType.ECR_VALIDATE_ARTIFACT_SERVER) boolean validateArtifactServer(EcrConfig config);
+  @DelegateTaskType(TaskType.ECR_VALIDATE_ARTIFACT_SERVER)
+  boolean validateArtifactServer(EcrConfig config, List<EncryptedDataDetail> encryptedDataDetails);
 
   @DelegateTaskType(TaskType.ECR_VALIDATE_ARTIFACT_STREAM)
   boolean validateArtifactSource(

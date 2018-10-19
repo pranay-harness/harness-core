@@ -18,7 +18,8 @@ import javax.validation.constraints.NotNull;
  */
 public interface DynaTraceDelegateService {
   @DelegateTaskType(TaskType.DYNA_TRACE_VALIDATE_CONFIGURATION_TASK)
-  boolean validateConfig(@NotNull DynaTraceConfig dynaTraceConfig) throws IOException;
+  boolean validateConfig(@NotNull DynaTraceConfig dynaTraceConfig, List<EncryptedDataDetail> encryptedDataDetails)
+      throws IOException;
 
   DynaTraceMetricDataResponse fetchMetricData(@NotNull DynaTraceConfig dynaTraceConfig,
       @NotNull DynaTraceMetricDataRequest dataRequest, @NotNull List<EncryptedDataDetail> encryptedDataDetails,

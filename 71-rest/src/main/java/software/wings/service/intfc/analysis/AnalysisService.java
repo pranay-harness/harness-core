@@ -4,6 +4,7 @@ import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.api.InstanceElement;
 import software.wings.beans.SettingAttribute;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -46,7 +47,8 @@ public interface AnalysisService {
 
   LogMLAnalysisSummary getAnalysisSummary(String stateExecutionId, String appId, StateType stateType);
 
-  void validateConfig(@NotNull SettingAttribute settingAttribute, StateType stateType);
+  void validateConfig(
+      @NotNull SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails);
 
   boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
       String workflowId, String workflowExecutionId, String serviceId);

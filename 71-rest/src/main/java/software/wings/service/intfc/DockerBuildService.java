@@ -25,7 +25,8 @@ public interface DockerBuildService extends BuildService<DockerConfig> {
   List<BuildDetails> getBuilds(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails);
 
-  @DelegateTaskType(TaskType.DOCKER_VALIDATE_ARTIFACT_SERVER) boolean validateArtifactServer(DockerConfig config);
+  @DelegateTaskType(TaskType.DOCKER_VALIDATE_ARTIFACT_SERVER)
+  boolean validateArtifactServer(DockerConfig config, List<EncryptedDataDetail> encryptedDataDetails);
 
   @DelegateTaskType(TaskType.DOCKER_VALIDATE_ARTIFACT_STREAM)
   boolean validateArtifactSource(DockerConfig config, List<EncryptedDataDetail> encryptionDetails,

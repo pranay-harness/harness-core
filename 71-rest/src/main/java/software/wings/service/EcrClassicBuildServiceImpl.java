@@ -19,7 +19,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.EcrClassicBuildService;
 import software.wings.utils.ArtifactType;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -77,12 +76,12 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(EcrConfig config) {
+  public boolean validateArtifactServer(EcrConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!connectableHttpUrl(config.getEcrUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER)
           .addParam("message", "Could not reach Amazon EC2 Container Registry at : " + config.getEcrUrl());
     }
-    return ecrClassicService.validateCredentials(config, Collections.emptyList());
+    return ecrClassicService.validateCredentials(config, encryptedDataDetails);
   }
 
   @Override

@@ -27,6 +27,7 @@ import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.StateType;
 
+import java.util.Collections;
 import java.util.UUID;
 
 /**
@@ -60,7 +61,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
     final SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(elkConfig).build();
     try {
-      analysisService.validateConfig(settingAttribute, StateType.ELK);
+      analysisService.validateConfig(settingAttribute, StateType.ELK, Collections.emptyList());
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
       assertEquals("User name is given but password is empty", e.getParams().get("reason"));
@@ -77,7 +78,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
     final SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(elkConfig).build();
     try {
-      analysisService.validateConfig(settingAttribute, StateType.ELK);
+      analysisService.validateConfig(settingAttribute, StateType.ELK, Collections.emptyList());
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
       assertEquals("User name is empty but password is given", e.getParams().get("reason"));
@@ -93,7 +94,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
     final SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(elkConfig).build();
     try {
-      analysisService.validateConfig(settingAttribute, StateType.ELK);
+      analysisService.validateConfig(settingAttribute, StateType.ELK, Collections.emptyList());
       Assert.fail("validated invalid config");
     } catch (WingsException e) {
       assertEquals("IllegalArgumentException: Illegal URL: some url/", e.getParams().get("reason"));
@@ -111,6 +112,6 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
 
     final SettingAttribute settingAttribute =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(elkConfig).build();
-    analysisService.validateConfig(settingAttribute, StateType.ELK);
+    analysisService.validateConfig(settingAttribute, StateType.ELK, Collections.emptyList());
   }
 }

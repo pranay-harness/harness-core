@@ -21,7 +21,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.BambooBuildService;
 import software.wings.utils.ArtifactType;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -79,13 +78,13 @@ public class BambooBuildServiceImpl implements BambooBuildService {
   }
 
   @Override
-  public boolean validateArtifactServer(BambooConfig bambooConfig) {
+  public boolean validateArtifactServer(BambooConfig bambooConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (!connectableHttpUrl(bambooConfig.getBambooUrl())) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach Bamboo Server at : " + bambooConfig.getBambooUrl());
     }
     // check for credentials
-    return bambooService.isRunning(bambooConfig, Collections.emptyList());
+    return bambooService.isRunning(bambooConfig, encryptionDetails);
   }
 
   @Override

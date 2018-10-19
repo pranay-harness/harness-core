@@ -114,7 +114,8 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public void validateConfig(SettingAttribute settingAttribute, StateType stateType) {
+  public void validateConfig(
+      SettingAttribute settingAttribute, StateType stateType, List<EncryptedDataDetail> encryptedDataDetails) {
     ErrorCode errorCode = null;
     try {
       SyncTaskContext syncTaskContext =
@@ -123,17 +124,19 @@ public class NewRelicServiceImpl implements NewRelicService {
         case NEW_RELIC:
           errorCode = ErrorCode.NEWRELIC_CONFIGURATION_ERROR;
           delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-              .validateConfig((NewRelicConfig) settingAttribute.getValue());
+              .validateConfig((NewRelicConfig) settingAttribute.getValue(), encryptedDataDetails);
           break;
         case APP_DYNAMICS:
           errorCode = ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR;
           AppDynamicsConfig appDynamicsConfig = (AppDynamicsConfig) settingAttribute.getValue();
-          delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext).validateConfig(appDynamicsConfig);
+          delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
+              .validateConfig(appDynamicsConfig, encryptedDataDetails);
           break;
         case DYNA_TRACE:
           errorCode = ErrorCode.DYNA_TRACE_CONFIGURATION_ERROR;
           DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingAttribute.getValue();
-          delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext).validateConfig(dynaTraceConfig);
+          delegateProxyFactory.get(DynaTraceDelegateService.class, syncTaskContext)
+              .validateConfig(dynaTraceConfig, encryptedDataDetails);
           break;
         case PROMETHEUS:
           errorCode = ErrorCode.PROMETHEUS_CONFIGURATION_ERROR;

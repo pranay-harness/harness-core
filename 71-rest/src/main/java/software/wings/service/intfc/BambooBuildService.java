@@ -36,5 +36,5 @@ public interface BambooBuildService extends BuildService<BambooConfig> {
   Map<String, String> getPlans(BambooConfig config, List<EncryptedDataDetail> encryptionDetails);
 
   @DelegateTaskType(TaskType.BAMBOO_VALIDATE_ARTIFACT_SERVER)
-  boolean validateArtifactServer(BambooConfig jenkinsConfig);
+  boolean validateArtifactServer(BambooConfig jenkinsConfig, List<EncryptedDataDetail> encryptionDetails);
 }
