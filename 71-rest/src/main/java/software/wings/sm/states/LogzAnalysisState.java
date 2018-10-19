@@ -73,7 +73,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
               .workflowId(getWorkflowId(context))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .serviceId(getPhaseServiceId(context))
-              .query(query)
+              .query(getRenderedQuery())
               .hostnameField(hostnameField)
               .messageField(messageField)
               .timestampField(DEFAULT_TIME_FIELD)

@@ -46,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BugsnagState extends AbstractLogAnalysisState {
   @SchemaIgnore @Transient private static final Logger logger = LoggerFactory.getLogger(BugsnagState.class);
+
   @SchemaIgnore
   @Transient
   private static final String FETCH_EVENTS_URL =
@@ -190,7 +191,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
             .validationUrl(BugsnagConfig.validationUrl)
             .headers(config.headersMap())
             .options(config.optionsMap())
-            .query("")
+            .query(getRenderedQuery())
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(config, context.getAppId(), context.getWorkflowExecutionId()))
             .hosts(hosts)

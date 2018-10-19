@@ -104,7 +104,6 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
       ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts) {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
-
     SettingAttribute settingAttribute = null;
     if (!isEmpty(getTemplateExpressions())) {
       TemplateExpression configIdExpression =
@@ -127,6 +126,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
     String[] waitIds = new String[batchedHosts.size()];
     List<DelegateTask> delegateTasks = new ArrayList<>();
     int i = 0;
+
     for (Set<String> hostBatch : batchedHosts) {
       final SumoDataCollectionInfo dataCollectionInfo =
           SumoDataCollectionInfo.builder()
@@ -137,7 +137,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
               .workflowId(getWorkflowId(context))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .serviceId(getPhaseServiceId(context))
-              .query(query)
+              .query(getRenderedQuery())
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
               .collectionTime(Integer.parseInt(timeDuration))

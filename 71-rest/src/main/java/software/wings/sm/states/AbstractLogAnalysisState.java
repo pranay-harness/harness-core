@@ -50,6 +50,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
 
   @Transient @Inject @SchemaIgnore protected AnalysisService analysisService;
   @Transient @Inject @SchemaIgnore protected VersionInfoManager versionInfoManager;
+  @SchemaIgnore @Transient private String renderedQuery;
 
   public AbstractLogAnalysisState(String name, String stateType) {
     super(name, stateType);
@@ -65,6 +66,10 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     this.query = query.trim();
   }
 
+  public String getRenderedQuery() {
+    return renderedQuery;
+  }
+
   private void cleanUpForRetry(ExecutionContext executionContext) {
     analysisService.cleanUpForLogRetry(executionContext.getStateExecutionInstanceId());
   }
@@ -74,6 +79,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
     String corelationId = UUID.randomUUID().toString();
     String delegateTaskId = null;
     try {
+      renderedQuery = executionContext.renderExpression(query);
       getLogger().info("Executing {} state, id: {} ", getStateType(), executionContext.getStateExecutionInstanceId());
       cleanUpForRetry(executionContext);
       AnalysisContext analysisContext = getLogAnalysisContext(executionContext, corelationId);
@@ -145,7 +151,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           LogAnalysisExecutionData.builder()
               .stateExecutionInstanceId(analysisContext.getStateExecutionId())
               .serverConfigId(getAnalysisServerConfigId())
-              .query(query)
+              .query(getRenderedQuery())
               .timeDuration(Integer.parseInt(timeDuration))
               .canaryNewHostNames(canaryNewHostNames)
               .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
@@ -167,6 +173,8 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
       delegateTaskId = triggerAnalysisDataCollection(executionContext, executionData, hostsToBeCollected);
       getLogger().info("triggered data collection for {} state, id: {}, delgateTaskId: {}", getStateType(),
           executionContext.getStateExecutionInstanceId(), delegateTaskId);
+      // Set the rendered query into the analysiscontext which will be used during task analysis.
+      analysisContext.setQuery(getRenderedQuery());
 
       scheduleAnalysisCronJob(analysisContext, delegateTaskId);
 
@@ -191,7 +199,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
           .withStateExecutionData(LogAnalysisExecutionData.builder()
                                       .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
                                       .serverConfigId(getAnalysisServerConfigId())
-                                      .query(query)
+                                      .query(getRenderedQuery())
                                       .timeDuration(Integer.parseInt(timeDuration))
                                       .delegateTaskId(delegateTaskId)
                                       .build())
