@@ -16,16 +16,19 @@ public class InstanceHandlerFactory {
   private AwsAmiInstanceHandler awsAmiInstanceHandler;
   private AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler;
   private PcfInstanceHandler pcfInstanceHandler;
+  private AzureInstanceHandler azureInstanceHandler;
 
   @Inject
   public InstanceHandlerFactory(ContainerInstanceHandler containerInstanceHandler,
       AwsInstanceHandler awsInstanceHandler, AwsAmiInstanceHandler awsAmiInstanceHandler,
-      AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler, PcfInstanceHandler pcfInstanceHandler) {
+      AwsCodeDeployInstanceHandler awsCodeDeployInstanceHandler, PcfInstanceHandler pcfInstanceHandler,
+      AzureInstanceHandler azureInstanceHandler) {
     this.containerInstanceHandler = containerInstanceHandler;
     this.awsInstanceHandler = awsInstanceHandler;
     this.awsAmiInstanceHandler = awsAmiInstanceHandler;
     this.awsCodeDeployInstanceHandler = awsCodeDeployInstanceHandler;
     this.pcfInstanceHandler = pcfInstanceHandler;
+    this.azureInstanceHandler = azureInstanceHandler;
   }
 
   public InstanceHandler getInstanceHandler(InfrastructureMappingType infraMappingType) {
@@ -41,6 +44,8 @@ public class InstanceHandlerFactory {
       case DIRECT_KUBERNETES:
       case AWS_ECS:
         return containerInstanceHandler;
+      case AZURE_INFRA:
+        return azureInstanceHandler;
       case PCF_PCF:
         return pcfInstanceHandler;
       case AWS_AWS_LAMBDA:

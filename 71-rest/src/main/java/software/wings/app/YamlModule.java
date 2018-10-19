@@ -5,6 +5,7 @@ import static software.wings.beans.InfrastructureMappingType.AWS_AWS_CODEDEPLOY;
 import static software.wings.beans.InfrastructureMappingType.AWS_AWS_LAMBDA;
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
 import static software.wings.beans.InfrastructureMappingType.AWS_SSH;
+import static software.wings.beans.InfrastructureMappingType.AZURE_INFRA;
 import static software.wings.beans.InfrastructureMappingType.AZURE_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.DIRECT_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
@@ -103,6 +104,7 @@ import software.wings.service.impl.yaml.handler.deploymentspec.userdata.UserData
 import software.wings.service.impl.yaml.handler.inframapping.AwsAmiInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AwsLambdaInfraMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.inframapping.AzureInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AzureKubernetesInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.CodeDeployInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.DirectKubernetesInfraMappingYamlHandler;
@@ -206,6 +208,7 @@ public class YamlModule extends AbstractModule {
     infraMappingYamlHelperMapBinder.addBinding(GCP_KUBERNETES.name()).to(GcpKubernetesInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(AZURE_KUBERNETES.name())
         .to(AzureKubernetesInfraMappingYamlHandler.class);
+    infraMappingYamlHelperMapBinder.addBinding(AZURE_INFRA.name()).to(AzureInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(PHYSICAL_DATA_CENTER_SSH.name())
         .to(PhysicalInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(PHYSICAL_DATA_CENTER_WINRM.name())

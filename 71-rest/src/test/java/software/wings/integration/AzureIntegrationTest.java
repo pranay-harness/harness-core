@@ -57,8 +57,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   public void getSubscriptionsTest() {
     AzureConfig config = getAzureConfig();
-
-    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    Map<String, String> subscriptions = listSubscriptions(config);
     assertThat(subscriptions).isNotEmpty();
     logger.info("Azure Subscriptions: " + subscriptions);
   }
@@ -66,7 +65,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   public void getContainerRegistriesTest() {
     AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    Map<String, String> subscriptions = listSubscriptions(config);
     List<String> registries = new ArrayList<>();
 
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
@@ -81,7 +80,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   public void getVirtualMachineScaleSetsTest() {
     AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    Map<String, String> subscriptions = listSubscriptions(config);
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
       List<AzureVirtualMachineScaleSet> virtualMachineScaleSets =
@@ -95,7 +94,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   public void getAvailabilitySets() {
     AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    Map<String, String> subscriptions = listSubscriptions(config);
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
       List<AzureAvailabilitySet> availabilitySets =
@@ -109,7 +108,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   public void getAvailableTags() {
     AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    Map<String, String> subscriptions = listSubscriptions(config);
     subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
@@ -123,26 +122,9 @@ public class AzureIntegrationTest extends WingsBaseTest {
   }
 
   @Test
-  public void getResourceGroups() {
+  public void getHostsByResourceGroupAndTag() {
     AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
-    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
-    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
-      String subscriptionId = entry.getKey();
-      logger.info("Subscription: " + subscriptionId);
-      Set<String> resourceGroups =
-          azureHelperService.listResourceGroups(config, Collections.EMPTY_LIST, subscriptionId);
-      assertThat(resourceGroups).isNotEmpty();
-      for (String rg : resourceGroups) {
-        logger.info("Resource group : " + rg);
-      }
-    }
-  }
-
-  @Test
-  public void getWindowsHostsByResourceGroupAndTag() {
-    AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    Map<String, String> subscriptions = listSubscriptions(config);
     subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
@@ -151,6 +133,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
           azureHelperService.listResourceGroups(config, Collections.EMPTY_LIST, subscriptionId);
       assertThat(resourceGroups).isNotEmpty();
 
+      // Win hosts
       for (String rg : resourceGroups) {
         List<VirtualMachine> vms = azureHelperService.listVmsByTagsAndResourceGroup(
             config, Collections.EMPTY_LIST, subscriptionId, rg, Collections.EMPTY_MAP, OSType.WINDOWS);
@@ -160,25 +143,12 @@ public class AzureIntegrationTest extends WingsBaseTest {
           logger.info("Resource group :" + rg + " VM :" + vm.name());
         }
       }
-    }
-  }
 
-  @Test
-  public void getLinuxHostsByResourceGroupAndTag() {
-    AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
-    subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
-    for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
-      String subscriptionId = entry.getKey();
-      logger.info("Subscription: " + subscriptionId);
-      Set<String> resourceGroups =
-          azureHelperService.listResourceGroups(config, Collections.EMPTY_LIST, subscriptionId);
-      assertThat(resourceGroups).isNotEmpty();
-
+      // Linux hosts
       for (String rg : resourceGroups) {
         List<VirtualMachine> vms = azureHelperService.listVmsByTagsAndResourceGroup(
             config, Collections.EMPTY_LIST, subscriptionId, rg, Collections.EMPTY_MAP, OSType.LINUX);
-        // assert that only Linux instances are returned
+        // assert that only windows instances are returned
         for (VirtualMachine vm : vms) {
           assertThat(vm.inner().osProfile().linuxConfiguration()).isNotNull();
           logger.info("Resource group :" + rg + " VM :" + vm.name());
@@ -190,7 +160,7 @@ public class AzureIntegrationTest extends WingsBaseTest {
   @Test
   public void getRepositoryTags() {
     AzureConfig config = getAzureConfig();
-    Map<String, String> subscriptions = azureHelperService.listSubscriptions(config, Collections.emptyList());
+    Map<String, String> subscriptions = listSubscriptions(config);
     subscriptions.forEach((subId, Desc) -> logger.info(subId + Desc));
     for (Map.Entry<String, String> entry : subscriptions.entrySet()) {
       String subscriptionId = entry.getKey();
@@ -225,5 +195,9 @@ public class AzureIntegrationTest extends WingsBaseTest {
 
   private AzureConfig getAzureConfig() {
     return new AzureConfig(clientId, tenantId, key.toCharArray(), "", "");
+  }
+
+  private Map<String, String> listSubscriptions(AzureConfig config) {
+    return azureHelperService.listSubscriptions(config, Collections.emptyList());
   }
 }

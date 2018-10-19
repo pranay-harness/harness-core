@@ -113,6 +113,7 @@ public class InstanceHelperTest extends WingsBaseTest {
   @InjectMocks @Inject private AwsInstanceHandler awsInstanceHandler;
   @InjectMocks @Inject private ContainerInstanceHandler containerInstanceHandler;
   @InjectMocks @Inject private PcfInstanceHandler pcfInstanceHandler;
+  @InjectMocks @Inject private AzureInstanceHandler azureInstanceHandler;
 
   @InjectMocks @Inject private InstanceHelper instanceHelper;
   private WorkflowExecution workflowExecution;
@@ -730,8 +731,9 @@ public class InstanceHelperTest extends WingsBaseTest {
 
   @Test
   public void testManualSyncSuccess() throws Exception {
-    InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
-        awsInstanceHandler, awsAmiInstanceHandler, awsCodeDeployInstanceHandler, pcfInstanceHandler));
+    InstanceHandlerFactory instanceHandlerFactory =
+        spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
+            awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler));
     Whitebox.setInternalState(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory);
 
     doReturn(new InstanceHandler() {
@@ -784,8 +786,9 @@ public class InstanceHelperTest extends WingsBaseTest {
 
   @Test
   public void testManualSyncFailure() throws Exception {
-    InstanceHandlerFactory instanceHandlerFactory = spy(new InstanceHandlerFactory(containerInstanceHandler,
-        awsInstanceHandler, awsAmiInstanceHandler, awsCodeDeployInstanceHandler, pcfInstanceHandler));
+    InstanceHandlerFactory instanceHandlerFactory =
+        spy(new InstanceHandlerFactory(containerInstanceHandler, awsInstanceHandler, awsAmiInstanceHandler,
+            awsCodeDeployInstanceHandler, pcfInstanceHandler, azureInstanceHandler));
     Whitebox.setInternalState(instanceHelper, "instanceHandlerFactory", instanceHandlerFactory);
 
     doReturn(new InstanceHandler() {
