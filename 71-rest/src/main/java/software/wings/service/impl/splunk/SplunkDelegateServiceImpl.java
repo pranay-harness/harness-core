@@ -32,7 +32,6 @@ import software.wings.utils.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.text.ParseException;
@@ -59,27 +58,8 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     try {
       encryptionService.decrypt(splunkConfig, encryptedDataDetails);
       logger.info("Validating splunk, url {}, for user {} ", splunkConfig.getSplunkUrl(), splunkConfig.getUsername());
-      final ServiceArgs loginArgs = new ServiceArgs();
-      loginArgs.setUsername(splunkConfig.getUsername());
-      loginArgs.setPassword(String.valueOf(splunkConfig.getPassword()));
-
-      final URL url = new URL(splunkConfig.getSplunkUrl());
-      loginArgs.setHost(url.getHost());
-      loginArgs.setPort(url.getPort());
-      loginArgs.setScheme(url.toURI().getScheme());
-
-      if (url.toURI().getScheme().equals("https")) {
-        HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
-      }
-
-      Service service = new Service(loginArgs);
-      service.setConnectTimeout(HTTP_TIMEOUT);
-      service.setReadTimeout(HTTP_TIMEOUT);
-
-      Service.connect(loginArgs);
+      initSplunkService(splunkConfig, encryptedDataDetails);
       return true;
-    } catch (MalformedURLException exception) {
-      throw new WingsException(splunkConfig.getSplunkUrl() + " is not a valid url", exception);
     } catch (Exception exception) {
       throw new WingsException("Error connecting to Splunk " + Misc.getMessage(exception), exception);
     }
@@ -165,26 +145,23 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
     URI uri;
     try {
       uri = new URI(splunkConfig.getSplunkUrl().trim());
-    } catch (Exception ex) {
-      throw new WingsException("Invalid server URL " + splunkConfig.getSplunkUrl());
-    }
+      final URL url = new URL(splunkConfig.getSplunkUrl().trim());
+      loginArgs.setHost(url.getHost());
+      loginArgs.setPort(url.getPort());
 
-    loginArgs.setHost(uri.getHost());
-    loginArgs.setPort(uri.getPort());
-    loginArgs.setScheme(uri.getScheme());
-    if (uri.getScheme().equals("https")) {
-      HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
-    }
-    Service splunkService = new Service(loginArgs);
+      loginArgs.setScheme(uri.getScheme());
+      if (uri.getScheme().equals("https")) {
+        HttpService.setSslSecurityProtocol(SSLSecurityProtocol.TLSv1_2);
+      }
+      Service splunkService = new Service(loginArgs);
 
-    try {
       splunkService.setConnectTimeout(HTTP_TIMEOUT);
       splunkService.setReadTimeout(HTTP_TIMEOUT);
       splunkService = Service.connect(loginArgs);
+      return splunkService;
     } catch (Exception ex) {
       throw new WingsException("Unable to connect to server : " + Misc.getMessage(ex));
     }
-    return splunkService;
   }
 
   private String getQuery(String query, String hostNameField, String host) {
