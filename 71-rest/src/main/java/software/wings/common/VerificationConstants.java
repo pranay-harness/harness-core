@@ -29,6 +29,7 @@ public class VerificationConstants {
   public static final int DURATION_TO_ASK_MINUTES = 5;
   public static final int CANARY_DAYS_TO_COLLECT = 7;
   public static final int PERIODIC_GAP_IN_DAYS = 7;
+  public static final int TIME_DELAY_QUERY_MINS = 2;
 
   public static final int CRON_POLL_INTERVAL_IN_MINUTES = 15;
   public static final long CRON_POLL_INTERVAL = TimeUnit.MINUTES.toSeconds(CRON_POLL_INTERVAL_IN_MINUTES); // in seconds

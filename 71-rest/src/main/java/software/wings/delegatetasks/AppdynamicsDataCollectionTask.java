@@ -106,6 +106,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
     private final DataCollectionTaskResult taskResult;
     private AppDynamicsConfig appDynamicsConfig;
     boolean is247Task;
+    private int maxDataCollectionMin24x7;
 
     private AppdynamicsMetricCollector(
         AppdynamicsDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult, boolean is247Task) {
@@ -206,6 +207,10 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
         for (AppdynamicsMetricDataValue metricDataValue : metricData.getMetricValues()) {
           long metricTimeStamp = metricDataValue.getStartTimeInMillis();
+          int dataCollectionMinForRecord = getCollectionMinute(metricTimeStamp, false);
+          if (is247Task && dataCollectionMinForRecord > maxDataCollectionMin24x7) {
+            maxDataCollectionMin24x7 = dataCollectionMinForRecord;
+          }
 
           Map<String, NewRelicMetricDataRecord> hostVsRecordMap = records.get(btName, metricTimeStamp);
           if (hostVsRecordMap == null) {
@@ -223,7 +228,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                              .serviceId(dataCollectionInfo.getServiceId())
                              .cvConfigId(dataCollectionInfo.getCvConfigId())
                              .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                             .dataCollectionMinute(getCollectionMinute(metricTimeStamp, false))
+                             .dataCollectionMinute(dataCollectionMinForRecord)
                              .timeStamp(metricTimeStamp)
                              .host(nodeName)
                              .groupName(tierName)
@@ -254,8 +259,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
       int collectionMinute;
       if (isHeartbeat) {
         if (is247Task) {
-          collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
-              + dataCollectionInfo.getCollectionTime();
+          collectionMinute = maxDataCollectionMin24x7;
         } else if (isPredictiveAnalysis) {
           collectionMinute = dataCollectionMinute + PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
         } else {
