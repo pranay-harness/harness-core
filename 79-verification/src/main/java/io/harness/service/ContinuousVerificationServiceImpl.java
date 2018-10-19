@@ -3,6 +3,7 @@ package io.harness.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
@@ -51,14 +52,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public boolean triggerDataCollection(String accountId) {
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
-    long endMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+    long endMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TIME_DELAY_QUERY_MINS;
     cvConfigurations.stream().filter(cvConfiguration -> cvConfiguration.isEnabled24x7()).forEach(cvConfiguration -> {
       long maxCVCollectionMinute =
           timeSeriesAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
       long startTime = maxCVCollectionMinute <= 0 || endMinute - maxCVCollectionMinute > PREDECTIVE_HISTORY_MINUTES
           ? TimeUnit.MINUTES.toMillis(endMinute) - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES)
               - TimeUnit.SECONDS.toMillis(CRON_POLL_INTERVAL)
-          : TimeUnit.MINUTES.toMillis(maxCVCollectionMinute + 1);
+          : TimeUnit.MINUTES.toMillis(maxCVCollectionMinute);
       long endTime = TimeUnit.MINUTES.toMillis(endMinute);
       if (getMetricAnalysisStates().contains(cvConfiguration.getStateType())) {
         logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",

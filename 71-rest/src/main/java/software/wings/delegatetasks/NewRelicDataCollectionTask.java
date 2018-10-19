@@ -131,6 +131,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
     private long managerAnalysisStartTime;
     private TimeSeriesMlAnalysisType analysisType;
     private boolean is247Task;
+    private int maxDataCollectionMin24x7;
 
     private NewRelicMetricCollector(NewRelicDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult,
         boolean is247Task) throws IOException {
@@ -232,7 +233,11 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
                       .groupName(groupName)
                       .build();
 
-              metricDataRecord.setDataCollectionMinute(getCollectionMinute(timeStamp));
+              int dataCollectionMinForRecord = getCollectionMinute(timeStamp);
+              if (is247Task && dataCollectionMinForRecord > maxDataCollectionMin24x7) {
+                maxDataCollectionMin24x7 = dataCollectionMinForRecord;
+              }
+              metricDataRecord.setDataCollectionMinute(dataCollectionMinForRecord);
 
               if (metricDataRecord.getDataCollectionMinute() < 0) {
                 logger.info("New relic sending us data in the past. request start time {}, received time {}",
@@ -435,7 +440,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
 
             int dataCollectionMinForHeartbeat = dataCollectionMinuteEnd;
             if (is247Task) {
-              dataCollectionMinForHeartbeat = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary());
+              dataCollectionMinForHeartbeat = maxDataCollectionMin24x7;
             }
 
             if (!saveHeartBeats(dataCollectionMinForHeartbeat)) {
