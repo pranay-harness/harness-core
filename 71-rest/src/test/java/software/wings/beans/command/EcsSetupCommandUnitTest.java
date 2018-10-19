@@ -126,6 +126,42 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
       + "  \"memory\": \"1024\"\n"
       + "}";
 
+  private static final String taskDefinitionYaml = "{\n"
+      + "  \"executionRoleArn\": \"arn:aws:iam::733017110293:role/ecsTaskExecutionRole\",\n"
+      + "  \"containerDefinitions\": [\n"
+      + "    {\n"
+      + "      \"entryPoint\": null,\n"
+      + "      \"portMappings\": [\n"
+      + "        {\n"
+      + "          \"protocol\": \"tcp\",\n"
+      + "          \"containerPort\": 80\n"
+      + "        }\n      ],\n"
+      + "      \"cpu\": 1000,\n"
+      + "\"repositoryCredentials\": {\n"
+      + "        \"credentialsParameter\": \"arn:aws:secretsmanager:us-west-2:625734649295:secret:dockerhub/marlinadmin-ktQyEA\"\n      },\n"
+      + "      \"memory\": 2800,\n"
+      + "      \"memoryReservation\": null,\n"
+      + "      \"volumesFrom\": [],\n"
+      + "      \"image\": \"${DOCKER_IMAGE_NAME}\",\n"
+      + "      \"dockerLabels\": null,\n"
+      + "      \"privileged\": null,\n"
+      + "      \"name\": \"${CONTAINER_NAME}\"\n"
+      + "    }\n"
+      + "  ],\n"
+      + "  \"placementConstraints\": [],\n"
+      + "  \"memory\": null,\n"
+      + "  \"taskRoleArn\": null,\n"
+      + "  \"compatibilities\": [\n"
+      + "    \"EC2\"\n"
+      + "  ],\n"
+      + " \"networkMode\": \"awsvpc\",\n"
+      + "  \"requiresCompatibilities\": [],\n"
+      + "  \"cpu\": null,\n"
+      + "  \"revision\": 77,\n"
+      + "  \"status\": \"ACTIVE\",\n"
+      + "  \"volumes\": []\n"
+      + "}";
+
   private EcsSetupParams setupParams =
       anEcsSetupParams()
           .withAppName(APP_NAME)
@@ -465,24 +501,11 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
   }
 
   @Test
-  public void testCreateTaskDefinition() throws Exception {
+  public void testCreateTaskDefinition_Fargate() throws Exception {
     EcsContainerTask ecsContainerTask = new EcsContainerTask();
     ecsContainerTask.setAdvancedConfig(fargateConfigYaml);
 
-    EcsSetupParams setupParams = anEcsSetupParams()
-                                     .withClusterName(CLUSTER_NAME)
-                                     .withTargetGroupArn(TARGET_GROUP_ARN)
-                                     .withRoleArn(ROLE_ARN)
-                                     .withAssignPublicIps(true)
-                                     .withVpcId(VPC_ID)
-                                     .withSecurityGroupIds(new String[] {SECURITY_GROUP_ID_1})
-                                     .withSubnetIds(new String[] {SUBNET_ID})
-                                     .withLaunchType(LaunchType.FARGATE.name())
-                                     .withExecutionRoleArn("arn")
-                                     .withUseLoadBalancer(true)
-                                     .withTaskFamily(TASK_FAMILY)
-                                     .withRegion(Regions.US_EAST_1.name())
-                                     .build();
+    EcsSetupParams setupParams = generateEcsSetupParams(LaunchType.FARGATE);
 
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
@@ -516,5 +539,66 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
     PortMapping portMapping = taskDefinition1.getPortMappings().iterator().next();
     assertEquals("tcp", portMapping.getProtocol());
     assertEquals(80, portMapping.getContainerPort().intValue());
+  }
+
+  @Test
+  public void testCreateTaskDefinition_ECS() throws Exception {
+    EcsContainerTask ecsContainerTask = new EcsContainerTask();
+    ecsContainerTask.setAdvancedConfig(taskDefinitionYaml);
+
+    EcsSetupParams setupParams = generateEcsSetupParams(LaunchType.EC2);
+
+    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    SettingAttribute settingAttribute = new SettingAttribute();
+
+    TaskDefinition taskDefinition =
+        (TaskDefinition) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "createTaskDefinition",
+            new Object[] {ecsContainerTask, CONTAINER_NAME, DOCKER_IMG_NAME, setupParams, settingAttribute,
+                new HashMap<>(), new HashMap<>(), encryptedDataDetails, executionLogCallback, DOCKER_DOMAIN_NAME});
+
+    // Capture RegisterTaskDefinitionRequest arg that was passed to "awsClusterService.createTask" and assert it
+    ArgumentCaptor<RegisterTaskDefinitionRequest> captorArg =
+        ArgumentCaptor.forClass(RegisterTaskDefinitionRequest.class);
+    verify(awsClusterService, times(1)).createTask(anyObject(), anyObject(), anyObject(), captorArg.capture());
+    RegisterTaskDefinitionRequest registerTaskDefinitionRequest = captorArg.getValue();
+
+    assertNotNull(registerTaskDefinitionRequest);
+    assertNotNull(registerTaskDefinitionRequest.getContainerDefinitions());
+    assertEquals(1, registerTaskDefinitionRequest.getContainerDefinitions().size());
+    com.amazonaws.services.ecs.model.ContainerDefinition containerDefinition =
+        registerTaskDefinitionRequest.getContainerDefinitions().get(0);
+
+    assertEquals(1000, containerDefinition.getCpu().intValue());
+    assertEquals(2800, containerDefinition.getMemory().intValue());
+    assertEquals(
+        "arn:aws:iam::733017110293:role/ecsTaskExecutionRole", registerTaskDefinitionRequest.getExecutionRoleArn());
+
+    assertEquals(setupParams.getTaskFamily(), registerTaskDefinitionRequest.getFamily());
+    assertEquals(NetworkMode.Awsvpc.name().toLowerCase(), registerTaskDefinitionRequest.getNetworkMode().toLowerCase());
+    assertNotNull(containerDefinition.getPortMappings());
+    assertEquals(1, containerDefinition.getPortMappings().size());
+
+    PortMapping portMapping = containerDefinition.getPortMappings().iterator().next();
+    assertEquals(80, portMapping.getContainerPort().intValue());
+    assertEquals("tcp", portMapping.getProtocol());
+  }
+
+  private EcsSetupParams generateEcsSetupParams(LaunchType launchType) {
+    return anEcsSetupParams()
+        .withClusterName(CLUSTER_NAME)
+        .withTargetGroupArn(TARGET_GROUP_ARN)
+        .withRoleArn(ROLE_ARN)
+        .withAssignPublicIps(true)
+        .withVpcId(VPC_ID)
+        .withSecurityGroupIds(new String[] {SECURITY_GROUP_ID_1})
+        .withSubnetIds(new String[] {SUBNET_ID})
+        .withLaunchType(launchType.name())
+        .withExecutionRoleArn("arn")
+        .withUseLoadBalancer(true)
+        .withTaskFamily(TASK_FAMILY)
+        .withRegion(Regions.US_EAST_1.name())
+        .build();
   }
 }

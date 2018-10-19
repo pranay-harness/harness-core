@@ -409,9 +409,12 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
             .withPlacementConstraints(taskDefinition.getPlacementConstraints())
             .withVolumes(taskDefinition.getVolumes());
 
+    if (isNotEmpty(taskDefinition.getExecutionRoleArn())) {
+      registerTaskDefinitionRequest.withExecutionRoleArn(taskDefinition.getExecutionRoleArn());
+    }
+
     // Add extra parameters for Fargate launch type
     if (isFargateTaskLauchType(ecsSetupParams)) {
-      registerTaskDefinitionRequest.withExecutionRoleArn(taskDefinition.getExecutionRoleArn());
       registerTaskDefinitionRequest.withNetworkMode(NetworkMode.Awsvpc);
       registerTaskDefinitionRequest.setRequiresCompatibilities(Collections.singletonList(LaunchType.FARGATE.name()));
       registerTaskDefinitionRequest.withCpu(taskDefinition.getCpu());
