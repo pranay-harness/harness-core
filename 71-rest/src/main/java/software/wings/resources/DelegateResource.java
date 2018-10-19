@@ -297,6 +297,15 @@ public class DelegateResource {
     return new RestResponse<>(profileParams);
   }
 
+  @GET
+  @Path("{delegateId}/profile-result")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<String> getProfileResult(
+      @PathParam("delegateId") String delegateId, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(delegateService.getProfileResult(accountId, delegateId));
+  }
+
   @DelegateAuth
   @POST
   @Path("connectionHeartbeat/{delegateId}")

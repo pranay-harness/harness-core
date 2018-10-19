@@ -17,6 +17,7 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static org.apache.commons.io.filefilter.FileFilterUtils.falseFileFilter;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -64,7 +65,11 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
+import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody.Part;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -106,6 +111,7 @@ import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
 import software.wings.managerclient.ManagerClient;
 import software.wings.managerclient.ManagerClientFactory;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.message.Message;
 import software.wings.utils.message.MessageService;
@@ -124,6 +130,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.time.Clock;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -593,17 +600,21 @@ public class DelegateServiceImpl implements DelegateService {
 
   private void checkForProfile() {
     if (!initializing.get()) {
-      logger.info("Checking for initialization...");
       try {
-        DelegateProfileParams profileParams = getProfile();
-        String profileId = profileParams == null ? "" : profileParams.getProfileId();
-        long updated = profileParams == null ? 0L : profileParams.getProfileLastUpdatedAt();
-        RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
-            ()
-                -> execute(managerClient.checkForProfile(delegateId, accountId, profileId, updated)),
-            15L, TimeUnit.SECONDS, true);
-        if (response != null) {
-          applyProfile(response.getResource());
+        RestResponse<VersionInfo> versionInfo =
+            timeLimiter.callWithTimeout(() -> execute(managerClient.getManagerVersion()), 15L, TimeUnit.SECONDS, true);
+        if (versionInfo != null && versionInfo.getResource().getVersion().equals(getVersion())) {
+          logger.info("Checking for initialization...");
+          DelegateProfileParams profileParams = getProfile();
+          String profileId = profileParams == null ? "" : profileParams.getProfileId();
+          long updated = profileParams == null ? 0L : profileParams.getProfileLastUpdatedAt();
+          RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
+              ()
+                  -> execute(managerClient.checkForProfile(delegateId, accountId, profileId, updated)),
+              15L, TimeUnit.SECONDS, true);
+          if (response != null) {
+            applyProfile(response.getResource());
+          }
         }
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out checking for initialization");
@@ -625,21 +636,15 @@ public class DelegateServiceImpl implements DelegateService {
     return null;
   }
 
-  private void saveProfile(DelegateProfileParams profile) {
-    try {
-      File file = new File("profile");
-      if (file.exists()) {
-        FileUtils.forceDelete(file);
-      }
-      FileUtils.touch(file);
-      FileUtils.write(file, JsonUtils.asPrettyJson(profile), UTF_8);
-    } catch (IOException e) {
-      logger.error(format("Error writing profile [%s]", profile.getName()), e);
-    }
-  }
-
   private void applyProfile(DelegateProfileParams profile) {
     if (profile != null && initializing.compareAndSet(false, true)) {
+      if ("NONE".equals(profile.getProfileId())) {
+        FileUtils.deleteQuietly(new File("profile"));
+        FileUtils.deleteQuietly(new File("profile.result"));
+        initializing.set(false);
+        return;
+      }
+
       try {
         logger.info("Updating delegate profile to [{} : {}], last update {} ...", profile.getProfileId(),
             profile.getName(), profile.getProfileLastUpdatedAt());
@@ -647,35 +652,79 @@ public class DelegateServiceImpl implements DelegateService {
 
         Logger scriptLogger = LoggerFactory.getLogger("delegate-profile-" + profile.getProfileId());
         scriptLogger.info("Executing profile script: {}", profile.getName());
+        List<String> result = new ArrayList<>();
 
         ProcessExecutor processExecutor = new ProcessExecutor()
-                                              .timeout(5, TimeUnit.MINUTES)
+                                              .timeout(10, TimeUnit.MINUTES)
                                               .command("/bin/bash", "-c", script)
                                               .readOutput(true)
                                               .redirectOutput(new LogOutputStream() {
                                                 @Override
                                                 protected void processLine(String line) {
                                                   scriptLogger.info(line);
+                                                  result.add(line);
                                                 }
                                               })
                                               .redirectError(new LogOutputStream() {
                                                 @Override
                                                 protected void processLine(String line) {
                                                   scriptLogger.error(line);
+                                                  result.add("ERROR: " + line);
                                                 }
                                               });
-        processExecutor.execute();
-        saveProfile(profile);
+        int exitCode = processExecutor.execute().getExitValue();
+        saveProfile(profile, result);
+        uploadProfileResult(exitCode);
+        logger.info("Profile applied");
       } catch (IOException e) {
         logger.error(format("Error applying profile [%s]", profile.getName()), e);
       } catch (InterruptedException e) {
         logger.info("Interrupted", e);
       } catch (TimeoutException e) {
         logger.info("Timed out", e);
+      } catch (UncheckedTimeoutException ex) {
+        logger.error("Timed out sending profile result");
+      } catch (Exception e) {
+        logger.error("Error applying profile", e);
       } finally {
         initializing.set(false);
       }
     }
+  }
+
+  private void saveProfile(DelegateProfileParams profile, List<String> result) {
+    logger.info("Saving profile result");
+    try {
+      File profileFile = new File("profile");
+      if (profileFile.exists()) {
+        FileUtils.forceDelete(profileFile);
+      }
+      FileUtils.touch(profileFile);
+      FileUtils.write(profileFile, JsonUtils.asPrettyJson(profile), UTF_8);
+
+      File resultFile = new File("profile.result");
+      if (resultFile.exists()) {
+        FileUtils.forceDelete(resultFile);
+      }
+      FileUtils.touch(resultFile);
+      FileUtils.writeLines(resultFile, result);
+    } catch (IOException e) {
+      logger.error(format("Error writing profile [%s]", profile.getName()), e);
+    }
+  }
+
+  private void uploadProfileResult(int exitCode) throws Exception {
+    logger.info("Uploading profile result");
+    // create RequestBody instance from file
+    File profileResult = new File("profile.result");
+    RequestBody requestFile = RequestBody.create(MediaType.parse(MULTIPART_FORM_DATA), profileResult);
+
+    // MultipartBody.Part is used to send also the actual file name
+    Part part = Part.createFormData("file", profileResult.getName(), requestFile);
+    timeLimiter.callWithTimeout(()
+                                    -> execute(managerClient.saveProfileResult(
+                                        delegateId, accountId, exitCode != 0, FileBucket.PROFILE_RESULTS, part)),
+        15L, TimeUnit.SECONDS, true);
   }
 
   private void startInputCheck() {

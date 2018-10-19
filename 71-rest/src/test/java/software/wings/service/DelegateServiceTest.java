@@ -4,6 +4,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.head;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
@@ -18,6 +19,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Event.Builder.anEvent;
@@ -45,6 +47,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.io.IOUtils;
 import org.atmosphere.cpr.Broadcaster;
 import org.atmosphere.cpr.BroadcasterFactory;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,6 +55,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.app.DeployMode;
+import software.wings.app.FileUploadLimit;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -69,10 +73,13 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FileMetadata;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.TaskType;
+import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Cache;
 import software.wings.security.encryption.EncryptedData;
@@ -81,9 +88,12 @@ import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
@@ -92,11 +102,14 @@ import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
@@ -125,6 +138,8 @@ public class DelegateServiceTest extends WingsBaseTest {
   @Mock private LearningEngineService learningEngineService;
   @Mock private SecretManager secretManager;
   @Mock private ManagerDecryptionService managerDecryptionService;
+  @Mock private FileService fileService;
+  @Mock private AlertService alertService;
 
   @Rule public WireMockRule wireMockRule = new WireMockRule(8888);
 
@@ -141,6 +156,10 @@ public class DelegateServiceTest extends WingsBaseTest {
     verificationServiceSecret = generateUuid();
     when(mainConfiguration.getDelegateMetadataUrl()).thenReturn("http://localhost:8888/delegateci.txt");
     when(mainConfiguration.getDeployMode()).thenReturn(DeployMode.KUBERNETES);
+    when(mainConfiguration.getWatcherMetadataUrl()).thenReturn("http://localhost:8888/watcherci.txt");
+    FileUploadLimit fileUploadLimit = new FileUploadLimit();
+    fileUploadLimit.setProfileResultLimit(1000000000L);
+    when(mainConfiguration.getFileUploadLimits()).thenReturn(fileUploadLimit);
     when(accountService.getDelegateConfiguration(anyString()))
         .thenReturn(DelegateConfiguration.builder().delegateVersions(singletonList("0.0.0")).build());
     when(accountService.get(ACCOUNT_ID)).thenReturn(account);
@@ -156,7 +175,6 @@ public class DelegateServiceTest extends WingsBaseTest {
 
     wireMockRule.stubFor(head(urlEqualTo("/builds/9/delegate.jar")).willReturn(aResponse().withStatus(200)));
 
-    when(mainConfiguration.getWatcherMetadataUrl()).thenReturn("http://localhost:8888/watcherci.txt");
     wireMockRule.stubFor(get(urlEqualTo("/watcherci.txt"))
                              .willReturn(aResponse()
                                              .withStatus(200)
@@ -762,5 +780,84 @@ public class DelegateServiceTest extends WingsBaseTest {
     assertThat(init.getName()).isEqualTo("A Secret Profile");
     assertThat(init.getProfileLastUpdatedAt()).isEqualTo(100L);
     assertThat(init.getScriptContent()).isEqualTo("A secret: Shhh! This is a secret!");
+  }
+
+  @Test
+  public void shouldSaveProfileResult_NoPrevious() {
+    Delegate previousDelegate =
+        aDelegate().withUuid(DELEGATE_ID).withAccountId(ACCOUNT_ID).withHostName("hostname").withIp("1.2.3.4").build();
+    wingsPersistence.save(previousDelegate);
+
+    String content = "This is the profile result text";
+    FormDataContentDisposition fileDetail =
+        FormDataContentDisposition.name("profile-result").fileName("profile.result").build();
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(UTF_8));
+
+    when(fileService.saveFile(any(FileMetadata.class), any(InputStream.class), eq(FileBucket.PROFILE_RESULTS)))
+        .thenReturn("file_id");
+
+    long now = System.currentTimeMillis();
+    delegateService.saveProfileResult(
+        ACCOUNT_ID, DELEGATE_ID, false, FileBucket.PROFILE_RESULTS, inputStream, fileDetail);
+
+    verify(alertService)
+        .closeAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegateProfileError),
+            eq(DelegateProfileErrorAlert.builder().accountId(ACCOUNT_ID).hostName("hostname").ip("1.2.3.4").build()));
+
+    Delegate delegate = wingsPersistence.get(Delegate.class, DELEGATE_ID);
+    assertThat(delegate.getProfileExecutedAt()).isGreaterThanOrEqualTo(now);
+    assertThat(delegate.isProfileError()).isFalse();
+    assertThat(delegate.getProfileResult()).isEqualTo("file_id");
+  }
+
+  @Test
+  public void shouldSaveProfileResult_WithPrevious() {
+    Delegate previousDelegate =
+        aDelegate().withUuid(DELEGATE_ID).withAccountId(ACCOUNT_ID).withHostName("hostname").withIp("1.2.3.4").build();
+    previousDelegate.setProfileResult("previous-result");
+    wingsPersistence.save(previousDelegate);
+
+    String content = "This is the profile result text";
+    FormDataContentDisposition fileDetail =
+        FormDataContentDisposition.name("profile-result").fileName("profile.result").build();
+    ByteArrayInputStream inputStream = new ByteArrayInputStream(content.getBytes(UTF_8));
+
+    when(fileService.saveFile(any(FileMetadata.class), any(InputStream.class), eq(FileBucket.PROFILE_RESULTS)))
+        .thenReturn("file_id");
+
+    long now = System.currentTimeMillis();
+    delegateService.saveProfileResult(
+        ACCOUNT_ID, DELEGATE_ID, true, FileBucket.PROFILE_RESULTS, inputStream, fileDetail);
+
+    verify(alertService)
+        .openAlert(eq(ACCOUNT_ID), eq(GLOBAL_APP_ID), eq(AlertType.DelegateProfileError),
+            eq(DelegateProfileErrorAlert.builder().accountId(ACCOUNT_ID).hostName("hostname").ip("1.2.3.4").build()));
+
+    verify(fileService).deleteFile(eq("previous-result"), eq(FileBucket.PROFILE_RESULTS));
+
+    Delegate delegate = wingsPersistence.get(Delegate.class, DELEGATE_ID);
+    assertThat(delegate.getProfileExecutedAt()).isGreaterThanOrEqualTo(now);
+    assertThat(delegate.isProfileError()).isTrue();
+    assertThat(delegate.getProfileResult()).isEqualTo("file_id");
+  }
+
+  @Test
+  public void shouldGetProfileResult() {
+    Delegate delegate =
+        aDelegate().withUuid(DELEGATE_ID).withAccountId(ACCOUNT_ID).withHostName("hostname").withIp("1.2.3.4").build();
+    delegate.setProfileResult("result_file_id");
+    wingsPersistence.save(delegate);
+
+    String content = "This is the profile result text";
+
+    doAnswer(invocation -> {
+      ((OutputStream) invocation.getArguments()[1]).write(content.getBytes(UTF_8));
+      return null;
+    })
+        .when(fileService)
+        .downloadToStream(eq("result_file_id"), any(OutputStream.class), eq(FileBucket.PROFILE_RESULTS));
+
+    String result = delegateService.getProfileResult(ACCOUNT_ID, DELEGATE_ID);
+    assertThat(result).isEqualTo(content);
   }
 }

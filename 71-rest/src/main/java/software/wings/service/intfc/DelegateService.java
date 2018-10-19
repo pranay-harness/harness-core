@@ -5,6 +5,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.validation.Create;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Delegate;
 import software.wings.beans.DelegateConnectionHeartbeat;
@@ -16,9 +17,11 @@ import software.wings.beans.DelegateTaskAbortEvent;
 import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.service.intfc.FileService.FileBucket;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import javax.validation.Valid;
 
@@ -63,6 +66,11 @@ public interface DelegateService {
   Delegate register(@Valid Delegate delegate);
 
   DelegateProfileParams checkForProfile(String accountId, String delegateId, String profileId, long lastUpdatedAt);
+
+  void saveProfileResult(String accountId, String delegateId, boolean error, FileBucket fileBucket,
+      InputStream uploadedInputStream, FormDataContentDisposition fileDetail);
+
+  String getProfileResult(String accountId, String delegateId);
 
   void removeDelegateConnection(String accountId, String delegateConnectionId);
 

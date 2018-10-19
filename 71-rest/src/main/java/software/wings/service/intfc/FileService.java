@@ -45,38 +45,15 @@ public interface FileService {
 
   void deleteAllFilesForEntity(String entityId, FileBucket fileBucket);
 
-  /**
-   * The Enum FileBucket.
-   */
   enum FileBucket {
-    /**
-     * Lob file bucket.
-     */
-    LOB(),
-    /**
-     * Artifacts file bucket.
-     */
-    ARTIFACTS(),
-    /**
-     * Audits file bucket.
-     */
-    AUDITS(),
-    /**
-     * Configs file bucket.
-     */
-    CONFIGS(),
-    /**
-     * Logs file bucket.
-     */
-    LOGS(),
-    /**
-     * Platforms file bucket.
-     */
-    PLATFORMS(),
-    /**
-     * Terraform state file bucket.
-     */
-    TERRAFORM_STATE();
+    LOB,
+    ARTIFACTS,
+    AUDITS,
+    CONFIGS,
+    LOGS,
+    PLATFORMS,
+    TERRAFORM_STATE,
+    PROFILE_RESULTS;
 
     private int chunkSize;
 

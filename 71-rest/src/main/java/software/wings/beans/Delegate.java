@@ -44,6 +44,9 @@ public class Delegate extends Base {
   private List<DelegateScope> includeScopes;
   private List<DelegateScope> excludeScopes;
   private List<String> tags;
+  private String profileResult;
+  private boolean profileError;
+  private long profileExecutedAt;
 
   public enum Status { ENABLED, DISABLED, DELETED }
 
