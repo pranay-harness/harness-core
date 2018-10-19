@@ -1,5 +1,6 @@
 package software.wings.security.saml;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.exception.WingsException.USER;
 
 import com.google.inject.Inject;
@@ -7,7 +8,6 @@ import com.google.inject.Singleton;
 
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.hibernate.validator.constraints.NotBlank;
@@ -52,10 +52,9 @@ public class SamlClientService {
     return getSamlClient(samlSettings.getMetaDataFile());
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "DM_DEFAULT_ENCODING"})
   public SamlClient getSamlClient(String samlData) throws SamlException {
     return SamlClient.fromMetadata(
-        "Harness", null, new InputStreamReader(new ByteArrayInputStream(samlData.getBytes())));
+        "Harness", null, new InputStreamReader(new ByteArrayInputStream(samlData.getBytes(UTF_8)), UTF_8));
   }
 
   public SamlRequest generateSamlRequest(User user) {

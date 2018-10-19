@@ -7,7 +7,6 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
@@ -88,10 +87,9 @@ public class OverridingInfrastructureMappingType
     return infrastructureMappingDescriptor == null ? null : infrastructureMappingDescriptor.getStencilCategory();
   }
 
-  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   @Override
   public Integer getDisplayOrder() {
-    return infrastructureMappingDescriptor == null ? DEFAULT_DISPLAY_ORDER
+    return infrastructureMappingDescriptor == null ? Integer.valueOf(DEFAULT_DISPLAY_ORDER)
                                                    : infrastructureMappingDescriptor.getDisplayOrder();
   }
 

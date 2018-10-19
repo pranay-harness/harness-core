@@ -4,7 +4,6 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.api.HelmDeployContextElement;
 import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.beans.Application;
@@ -40,7 +39,6 @@ public class HelmRollbackState extends HelmDeployState {
     super(name, StateType.HELM_ROLLBACK.name());
   }
 
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   @Override
   protected HelmCommandRequest getHelmCommandRequest(ExecutionContext context,
       HelmChartSpecification helmChartSpecification, ContainerServiceParams containerServiceParams, String releaseName,
@@ -58,7 +56,7 @@ public class HelmRollbackState extends HelmDeployState {
         getSteadyStateTimeout() > 0 ? getSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT; // 10 minutes if not set
     return HelmRollbackCommandRequest.builder()
         .releaseName(releaseName)
-        .prevReleaseVersion(previousReleaseRevision)
+        .prevReleaseVersion(previousReleaseRevision != null ? previousReleaseRevision : -1)
         .accountId(accountId)
         .appId(context.getAppId())
         .activityId(activityId)

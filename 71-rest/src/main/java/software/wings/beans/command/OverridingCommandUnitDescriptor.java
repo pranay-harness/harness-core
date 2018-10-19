@@ -2,7 +2,6 @@ package software.wings.beans.command;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
@@ -87,10 +86,10 @@ public class OverridingCommandUnitDescriptor implements OverridingStencil<Comman
     return commandUnitDescriptor == null ? null : commandUnitDescriptor.getStencilCategory();
   }
 
-  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   @Override
   public Integer getDisplayOrder() {
-    return commandUnitDescriptor == null ? DEFAULT_DISPLAY_ORDER : commandUnitDescriptor.getDisplayOrder();
+    return commandUnitDescriptor == null ? Integer.valueOf(DEFAULT_DISPLAY_ORDER)
+                                         : commandUnitDescriptor.getDisplayOrder();
   }
 
   @Override

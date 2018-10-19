@@ -9,7 +9,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -157,7 +156,6 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
     return yamlHelper.getService(appId, yamlFilePath);
   }
 
-  @SuppressFBWarnings({"UC_USELESS_OBJECT"})
   private void saveOrUpdateServiceVariables(Yaml previousYaml, Yaml updatedYaml,
       List<ServiceVariable> previousServiceVariables, String appId, String serviceId, boolean syncFromGit)
       throws HarnessException {
@@ -211,19 +209,20 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
         previousServiceVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, serviceVar -> serviceVar));
 
     // do deletions
-    configVarsToDelete.forEach(configVar -> {
-      if (serviceVariableMap.containsKey(configVar.getName())) {
-        serviceVariableService.delete(appId, serviceVariableMap.get(configVar.getName()).getUuid(), syncFromGit);
+    for (NameValuePair.Yaml yaml : configVarsToDelete) {
+      if (serviceVariableMap.containsKey(yaml.getName())) {
+        serviceVariableService.delete(appId, serviceVariableMap.get(yaml.getName()).getUuid(), syncFromGit);
       }
-    });
+    }
 
     // save the new variables
-    configVarsToAdd.forEach(
-        configVar -> serviceVariableService.save(createNewServiceVariable(appId, serviceId, configVar), syncFromGit));
+    for (NameValuePair.Yaml yaml : configVarsToAdd) {
+      serviceVariableService.save(createNewServiceVariable(appId, serviceId, yaml), syncFromGit);
+    }
 
     try {
       // update the existing variables
-      configVarsToUpdate.forEach(configVar -> {
+      for (NameValuePair.Yaml configVar : configVarsToUpdate) {
         ServiceVariable serviceVar = serviceVariableMap.get(configVar.getName());
         if (serviceVar != null) {
           String value = configVar.getValue();
@@ -234,12 +233,12 @@ public class ServiceYamlHandler extends BaseYamlHandler<Yaml, Service> {
             serviceVar.setValue(value != null ? value.toCharArray() : null);
           } else {
             logger.warn("Yaml doesn't support {} type service variables", serviceVar.getType());
-            return;
+            continue;
           }
 
           serviceVariableService.update(serviceVar, syncFromGit);
         }
-      });
+      }
     } catch (WingsException ex) {
       throw new HarnessException(ex);
     }

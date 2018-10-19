@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.FAILURE;
 import static software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus.SUCCESS;
@@ -17,10 +18,12 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_VERSION_COMMAND
 
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -34,7 +37,6 @@ import software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmInstallCommandResponse;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -203,7 +205,6 @@ public class HelmClientImpl implements HelmClient {
     return chartReference;
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
   private String constructValueOverrideFile(HelmInstallCommandRequest requestParameters)
       throws IOException, ExecutionException {
     StringBuilder fileOverrides = new StringBuilder();
@@ -215,10 +216,11 @@ public class HelmClientImpl implements HelmClient {
         synchronized (lockObjects.get(md5Hash)) {
           File overrideFile = new File(overrideFilePath);
           if (!overrideFile.exists()) {
-            overrideFile.getParentFile().mkdirs();
-            try (FileWriter writer = new FileWriter(overrideFile)) {
-              writer.write(yamlFileContent);
+            if (!overrideFile.getParentFile().mkdirs()) {
+              throw new WingsException(ErrorCode.GENERAL_ERROR)
+                  .addParam("message", "Failed to create dir " + overrideFile.getParentFile().getCanonicalPath());
             }
+            FileUtils.writeStringToFile(overrideFile, yamlFileContent, UTF_8);
           }
           fileOverrides.append(" -f").append(overrideFilePath);
         }

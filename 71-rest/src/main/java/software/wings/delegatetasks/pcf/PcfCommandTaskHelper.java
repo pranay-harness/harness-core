@@ -1,14 +1,17 @@
 package software.wings.delegatetasks.pcf;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,10 +33,8 @@ import software.wings.helpers.ext.pcf.request.PcfCommandSetupRequest;
 import software.wings.helpers.ext.pcf.response.PcfAppSetupTimeDetails;
 import software.wings.service.intfc.FileService.FileBucket;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -296,8 +297,7 @@ public class PcfCommandTaskHelper {
     executionLogCallback.saveExecutionLog(builder.toString());
   }
 
-  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
-  public File downloadArtifact(List<ArtifactFile> artifactFiles, String activityId, String accountId)
+  public File downloadArtifact(List<ArtifactFile> artifactFiles, String accountId)
       throws IOException, ExecutionException {
     List<Pair<String, String>> fileIds = Lists.newArrayList();
     artifactFiles.forEach(artifactFile -> fileIds.add(Pair.of(artifactFile.getFileUuid(), null)));
@@ -312,7 +312,10 @@ public class PcfCommandTaskHelper {
 
     String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
     File artifactFile = new File(dir.getAbsolutePath() + "/" + fileName);
-    artifactFile.createNewFile();
+    if (!artifactFile.createNewFile()) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR)
+          .addParam("message", "Failed to create file " + artifactFile.getCanonicalPath());
+    }
     IOUtils.copy(inputStream, new FileOutputStream(artifactFile));
     inputStream.close();
     return artifactFile;
@@ -354,7 +357,6 @@ public class PcfCommandTaskHelper {
     return -1;
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
   public File createManifestYamlFileLocally(
       PcfCommandSetupRequest pcfCommandSetupRequest, String tempPath, String releaseName) throws IOException {
     String manifestYaml = pcfCommandSetupRequest.getManifestYaml();
@@ -370,11 +372,12 @@ public class PcfCommandTaskHelper {
     File dir = new File(directoryPath);
 
     File manifestFile = getManifestFile(releaseName, dir);
-    manifestFile.createNewFile();
-
-    try (BufferedWriter writer = new BufferedWriter(new FileWriter(manifestFile))) {
-      writer.write(manifestYaml);
+    if (!manifestFile.createNewFile()) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR)
+          .addParam("message", "Failed to create file " + manifestFile.getCanonicalPath());
     }
+
+    FileUtils.writeStringToFile(manifestFile, manifestYaml, UTF_8);
     return manifestFile;
   }
 

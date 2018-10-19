@@ -39,7 +39,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
@@ -463,7 +462,6 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     return wingsPersistence.query(Environment.class, pageRequest).getResponse();
   }
 
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   @Override
   public Environment cloneEnvironment(String appId, String envId, CloneMetadata cloneMetadata) {
     notNullCheck("cloneMetadata", cloneMetadata, USER);
@@ -525,12 +523,14 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
               }
             }
           }
-          // Clone Service Config Files
-          cloneServiceVariables(clonedEnvironment, serviceTemplate.getServiceVariablesOverrides(),
-              clonedServiceTemplate.getUuid(), null, null);
-          // Clone Service Config File overrides
-          cloneConfigFiles(
-              clonedEnvironment, clonedServiceTemplate, serviceTemplate.getConfigFilesOverrides(), null, null);
+          if (serviceTemplate != null) {
+            // Clone Service Config Files
+            cloneServiceVariables(clonedEnvironment, serviceTemplate.getServiceVariablesOverrides(),
+                clonedServiceTemplate.getUuid(), null, null);
+            // Clone Service Config File overrides
+            cloneConfigFiles(
+                clonedEnvironment, clonedServiceTemplate, serviceTemplate.getConfigFilesOverrides(), null, null);
+          }
         }
       }
       // Clone ALL service variable overrides

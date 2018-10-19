@@ -1,5 +1,6 @@
 package software.wings.delegate.app;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
 import static software.wings.utils.message.MessageConstants.NEW_DELEGATE;
 import static software.wings.utils.message.MessageConstants.WATCHER_DATA;
@@ -86,7 +87,7 @@ public class DelegateApplication {
     logger.info("Process: {}", ManagementFactory.getRuntimeMXBean().getName());
     DelegateApplication delegateApplication = new DelegateApplication();
     final DelegateConfiguration configuration =
-        new YamlUtils().read(FileUtils.readFileToString(configFile, "UTF-8"), DelegateConfiguration.class);
+        new YamlUtils().read(FileUtils.readFileToString(configFile, UTF_8), DelegateConfiguration.class);
     delegateApplication.run(configuration, watcherProcess);
   }
 

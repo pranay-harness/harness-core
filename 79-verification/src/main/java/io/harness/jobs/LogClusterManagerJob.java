@@ -5,7 +5,6 @@ import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.a
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
@@ -78,7 +77,6 @@ public class LogClusterManagerJob implements Job {
       }
     }
 
-    @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_NO_SIDE_EFFECT")
     private void cluster() {
       boolean completeCron = false;
       try {
@@ -97,9 +95,9 @@ public class LogClusterManagerJob implements Job {
           analysisService
               .getHearbeatRecordForL0(context.getAppId(), context.getStateExecutionId(), context.getStateType(), node)
               .map(log -> {
-                /**
-                 * Process L0 records.
-                 */
+                // ***
+                // *** Process L0 records. ***
+                // ***
                 boolean hasDataRecords = analysisService.hasDataRecords(log.getQuery(), context.getAppId(),
                     context.getStateExecutionId(), context.getStateType(), Sets.newHashSet(log.getHost()),
                     ClusterLevel.L0, log.getLogCollectionMinute());
@@ -127,8 +125,7 @@ public class LogClusterManagerJob implements Job {
                 }
 
                 return true;
-              })
-              .orElse(false);
+              });
         }
       } catch (Exception ex) {
         completeCron = true;

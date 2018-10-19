@@ -313,7 +313,6 @@ public class HelmDeployState extends State {
     return imageNameTag;
   }
 
-  @SuppressFBWarnings("NP_NULL_ON_SOME_PATH") // TODO
   protected int getPreviousReleaseVersion(String appId, String accountId, String releaseName,
       ContainerServiceParams containerServiceParams, GitConfig gitConfig,
       List<EncryptedDataDetail> encryptedDataDetails) throws InterruptedException {
@@ -346,7 +345,9 @@ public class HelmDeployState extends State {
           ? 0
           : Integer.parseInt(releaseInfoList.get(releaseInfoList.size() - 1).getRevision());
     } else {
-      throw new InvalidRequestException(helmCommandExecutionResponse.getErrorMessage());
+      String errorMsg =
+          helmCommandExecutionResponse != null ? helmCommandExecutionResponse.getErrorMessage() : "Null response";
+      throw new InvalidRequestException(errorMsg);
     }
     return prevVersion;
   }

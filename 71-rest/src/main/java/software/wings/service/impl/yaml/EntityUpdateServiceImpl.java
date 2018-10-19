@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
@@ -9,7 +10,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -254,12 +254,11 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
     return gitFileChanges;
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private String loadFileContentIntoString(ConfigFile configFile) {
     if (!configFile.isEncrypted()) {
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
       fileService.downloadToStream(configFile.getFileUuid(), outputStream, FileBucket.CONFIGS);
-      return outputStream.toString();
+      return new String(outputStream.toByteArray(), UTF_8);
     }
     return null;
   }

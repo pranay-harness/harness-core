@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.ITopic;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.atmosphere.cpr.AtmosphereConfig;
 import org.atmosphere.cpr.AtmosphereResource;
 import org.atmosphere.cpr.Broadcaster;
@@ -15,15 +14,15 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by peeyushaggarwal on 1/11/17.
  */
-@SuppressFBWarnings("MS_CANNOT_BE_FINAL")
 public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
   private static final Logger logger = LoggerFactory.getLogger(HazelcastBroadcaster.class);
 
-  public static HazelcastInstance HAZELCAST_INSTANCE;
+  public static final AtomicReference<HazelcastInstance> HAZELCAST_INSTANCE = new AtomicReference<>();
 
   private final AtomicBoolean isClosed = new AtomicBoolean();
   private ITopic topic;
@@ -44,9 +43,9 @@ public class HazelcastBroadcaster extends AbstractBroadcasterProxy {
   }
 
   public void setUp() {
-    topic = HAZELCAST_INSTANCE.getTopic(getID());
+    topic = HAZELCAST_INSTANCE.get().getTopic(getID());
     config.shutdownHook(() -> {
-      HazelcastBroadcaster.HAZELCAST_INSTANCE.shutdown();
+      HazelcastBroadcaster.HAZELCAST_INSTANCE.get().shutdown();
       isClosed.set(true);
     });
   }

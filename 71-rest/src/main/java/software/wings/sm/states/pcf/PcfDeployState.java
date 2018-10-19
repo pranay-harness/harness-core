@@ -1,5 +1,6 @@
 package software.wings.sm.states.pcf;
 
+import static java.util.Collections.emptyList;
 import static software.wings.beans.InstanceUnitType.PERCENTAGE;
 
 import com.google.inject.Inject;
@@ -57,7 +58,6 @@ import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -244,7 +244,6 @@ public class PcfDeployState extends State {
     return updateCount;
   }
 
-  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   protected PcfCommandRequest getPcfCommandRequest(ExecutionContext context, Application application, String activityId,
       PcfSetupContextElement pcfSetupContextElement, PcfConfig pcfConfig, Integer updateCount,
       Integer downsizeUpdateCount, PcfDeployStateExecutionData stateExecutionData,
@@ -260,10 +259,10 @@ public class PcfDeployState extends State {
         .updateCount(updateCount)
         .downSizeCount(downsizeUpdateCount)
         .totalPreviousInstanceCount(pcfSetupContextElement.getTotalPreviousInstanceCount() == null
-                ? 0
+                ? Integer.valueOf(0)
                 : pcfSetupContextElement.getTotalPreviousInstanceCount())
         .resizeStrategy(pcfSetupContextElement.getResizeStrategy())
-        .instanceData(Collections.EMPTY_LIST)
+        .instanceData(emptyList())
         .routeMaps(pcfSetupContextElement.getRouteMaps())
         .appId(application.getUuid())
         .accountId(application.getAccountId())
@@ -304,7 +303,7 @@ public class PcfDeployState extends State {
 
     InstanceElementListParam instanceElementListParam =
         InstanceElementListParamBuilder.anInstanceElementListParam()
-            .withInstanceElements(Collections.emptyList())
+            .withInstanceElements(emptyList())
             .withPcfInstanceElements(pcfDeployCommandResponse.getPcfInstanceElements())
             .build();
 

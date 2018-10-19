@@ -49,11 +49,11 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.Yaml;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.error.Mark;
 import com.fasterxml.jackson.dataformat.yaml.snakeyaml.scanner.ScannerException;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +89,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StringWriter;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.List;
@@ -234,7 +233,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
   }
 
-  @SuppressFBWarnings("RV_RETURN_VALUE_IGNORED_BAD_PRACTICE")
   protected List<GitFileChange> getChangesForZipFile(String accountId, InputStream fileInputStream, String yamlPath)
       throws IOException {
     List<GitFileChange> changeList = Lists.newArrayList();
@@ -269,16 +267,14 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
             changeList.add(change);
           }
         } finally {
-          if (currFile != null) {
-            currFile.delete();
-          }
+          FileUtils.deleteQuietly(currFile);
         }
       }
     } finally {
       if (zipFile != null) {
         zipFile.close();
       }
-      tempFile.delete();
+      FileUtils.deleteQuietly(tempFile);
     }
     return changeList;
   }
@@ -288,11 +284,10 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
    * @param changeList
    * @throws WingsException
    */
-  private void computeProcessingOrder(List<Change> changeList) throws YamlProcessingException {
-    Collections.sort(changeList, new FilePathComparator());
+  private void computeProcessingOrder(List<Change> changeList) {
+    changeList.sort(new FilePathComparator());
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   private <T extends BaseYamlHandler> List<ChangeContext> validate(List<Change> changeList)
       throws YamlProcessingException {
     logger.info(GIT_YAML_LOG_PREFIX + "Validating changeset");
@@ -309,21 +304,17 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           String yamlSubType = getYamlSubType(change.getFileContent());
 
           T yamlSyncHandler = yamlHandlerFactory.getYamlHandler(yamlType, yamlSubType);
-          if (yamlSyncHandler != null) {
-            Class yamlClass = yamlSyncHandler.getYamlClass();
-            BaseYaml yaml = getYaml(change.getFileContent(), yamlClass);
-            notNullCheck("Could not get yaml object for :" + yamlFilePath, yaml);
+          Class yamlClass = yamlSyncHandler.getYamlClass();
+          BaseYaml yaml = getYaml(change.getFileContent(), yamlClass);
+          notNullCheck("Could not get yaml object for :" + yamlFilePath, yaml);
 
-            ChangeContext.Builder changeContextBuilder = ChangeContext.Builder.aChangeContext()
-                                                             .withChange(change)
-                                                             .withYaml(yaml)
-                                                             .withYamlType(yamlType)
-                                                             .withYamlSyncHandler(yamlSyncHandler);
-            ChangeContext changeContext = changeContextBuilder.build();
-            changeContextList.add(changeContext);
-          } else {
-            addToFailedYamlMap(failedYamlFileChangeMap, change, "Unsupported type: " + yamlType);
-          }
+          ChangeContext.Builder changeContextBuilder = ChangeContext.Builder.aChangeContext()
+                                                           .withChange(change)
+                                                           .withYaml(yaml)
+                                                           .withYamlType(yamlType)
+                                                           .withYamlSyncHandler(yamlSyncHandler);
+          ChangeContext changeContext = changeContextBuilder.build();
+          changeContextList.add(changeContext);
         } else if (yamlFilePath.contains(YamlConstants.CONFIG_FILES_FOLDER)) {
           // Special handling for config files
           YamlType yamlType = findYamlType(yamlFilePath);

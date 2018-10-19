@@ -22,7 +22,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.reinert.jjschema.Attributes;
 import com.mongodb.client.gridfs.model.GridFSFile;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
@@ -85,6 +84,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -144,7 +144,7 @@ public abstract class TerraformProvisionState extends State {
     // nothing to do
   }
 
-  protected static Map<String, Object> parseOutputs(String all) {
+  static Map<String, Object> parseOutputs(String all) {
     Map<String, Object> outputs = new LinkedHashMap<>();
     if (isBlank(all)) {
       return outputs;
@@ -163,11 +163,11 @@ public abstract class TerraformProvisionState extends State {
     return outputs;
   }
 
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    String activityId = response.keySet().iterator().next();
-    TerraformExecutionData terraformExecutionData = (TerraformExecutionData) response.get(activityId);
+    Entry<String, ResponseData> responseEntry = response.entrySet().iterator().next();
+    String activityId = responseEntry.getKey();
+    TerraformExecutionData terraformExecutionData = (TerraformExecutionData) responseEntry.getValue();
     terraformExecutionData.setActivityId(activityId);
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
@@ -181,12 +181,12 @@ public abstract class TerraformProvisionState extends State {
                        variables.stream()
                            .filter(item -> item.getValue() != null)
                            .filter(item -> item.getValueType() == null || "TEXT".equals(item.getValueType()))
-                           .collect(toMap(item -> item.getName(), item -> item.getValue())))
+                           .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
                    .put(ENCRYPTED_VARIABLES_KEY,
                        variables.stream()
                            .filter(item -> item.getValue() != null)
                            .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
-                           .collect(toMap(item -> item.getName(), item -> item.getValue())))
+                           .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
                    .build();
 
       if (terraformExecutionData.getExecutionStatus() == SUCCESS) {

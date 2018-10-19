@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.IN;
@@ -61,7 +62,6 @@ import com.nimbusds.jose.JWSSigner;
 import com.nimbusds.jose.Payload;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
@@ -1156,7 +1156,6 @@ public class UserServiceImpl implements UserService {
     return null;
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   @Override
   public ZendeskSsoLoginResponse generateZendeskSsoJwt(String returnToUrl) {
     String jwtZendeskSecret = configuration.getPortal().getJwtZendeskSecret();
@@ -1182,7 +1181,7 @@ public class UserServiceImpl implements UserService {
 
     try {
       // Create HMAC signer
-      JWSSigner signer = new MACSigner(jwtZendeskSecret.getBytes());
+      JWSSigner signer = new MACSigner(jwtZendeskSecret.getBytes(UTF_8));
       jwsObject.sign(signer);
     } catch (com.nimbusds.jose.JOSEException e) {
       logger.error("Error signing JWT: " + Misc.getMessage(e), e);

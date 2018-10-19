@@ -5,7 +5,6 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -107,8 +106,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
         : new NoopExecutionCallback();
   }
 
-  @SuppressFBWarnings("SIC_INNER_SHOULD_BE_STATIC")
-  public class NoopExecutionCallback implements LogCallback {
+  public static class NoopExecutionCallback implements LogCallback {
     @Override
     public void saveExecutionLog(String line) {}
 

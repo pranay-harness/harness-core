@@ -41,10 +41,12 @@ import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -575,11 +577,7 @@ public class StateMachine extends Base {
     if (transitionFlowMap == null || transitionFlowMap.get(fromStateName) == null) {
       return null;
     }
-    return transitionFlowMap.get(fromStateName)
-        .values()
-        .stream()
-        .flatMap(transitions -> transitions.stream())
-        .collect(toList());
+    return transitionFlowMap.get(fromStateName).values().stream().flatMap(Collection::stream).collect(toList());
   }
 
   /**
@@ -587,7 +585,6 @@ public class StateMachine extends Base {
    *
    * @return a transition flow map describing transition types to list of states.
    */
-  @SuppressFBWarnings("WMI_WRONG_MAP_ITERATOR")
   public Map<String, Map<TransitionType, List<State>>> getTransitionFlowMap() {
     if (isNotEmpty(cachedTransitionFlowMap)) {
       return cachedTransitionFlowMap;
@@ -657,11 +654,8 @@ public class StateMachine extends Base {
           }
 
           if (transition.getTransitionType() == TransitionType.FORK) {
-            List<String> forkStateNames = forkStateNamesMap.get(fromState.getName());
-            if (forkStateNames == null) {
-              forkStateNames = new ArrayList<>();
-              forkStateNamesMap.put(fromState.getName(), forkStateNames);
-            }
+            List<String> forkStateNames =
+                forkStateNamesMap.computeIfAbsent(fromState.getName(), k -> new ArrayList<>());
             forkStateNames.add(toState.getName());
           }
         }
@@ -681,9 +675,9 @@ public class StateMachine extends Base {
       throw new WingsException(ErrorCode.STATES_WITH_DUP_TRANSITIONS)
           .addParam("statesWithDupTransitions", statesWithDupTransitions.toString());
     }
-    for (String forkStateName : forkStateNamesMap.keySet()) {
-      ForkState forkFromState = (ForkState) statesMap.get(forkStateName);
-      forkFromState.setForkStateNames(forkStateNamesMap.get(forkStateName));
+    for (Entry<String, List<String>> forkStateEntry : forkStateNamesMap.entrySet()) {
+      ForkState forkFromState = (ForkState) statesMap.get(forkStateEntry.getKey());
+      forkFromState.setForkStateNames(forkStateEntry.getValue());
     }
 
     cachedTransitionFlowMap = flowMap;

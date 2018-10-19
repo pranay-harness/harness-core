@@ -6,7 +6,6 @@ import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
 import software.wings.beans.NameValuePair;
@@ -54,7 +53,6 @@ public class DefaultVariablesHelper {
         .collect(toList());
   }
 
-  @SuppressFBWarnings({"NP_NULL_ON_SOME_PATH", "UC_USELESS_OBJECT"}) // TODO
   public void saveOrUpdateDefaults(Yaml updatedYaml, String appId, String accountId, boolean syncFromGit)
       throws HarnessException {
     List<SettingAttribute> previousDefaultValues = getCurrentDefaultVariables(appId, accountId);
@@ -69,9 +67,7 @@ public class DefaultVariablesHelper {
 
     if (defaults != null) {
       // initialize the defaults to add from the after
-      for (NameValuePair.Yaml cv : defaults) {
-        varsToAdd.add(cv);
-      }
+      varsToAdd.addAll(defaults);
     }
 
     if (previousDefaultYamls != null) {
@@ -95,30 +91,31 @@ public class DefaultVariablesHelper {
               break;
             }
           }
-          if (!cv.getValue().equals(beforeCV.getValue())) {
+          if (beforeCV != null && !cv.getValue().equals(beforeCV.getValue())) {
             varsToUpdate.add(cv);
           }
         }
       }
     }
 
-    Map<String, SettingAttribute> defaultVarMap = previousDefaultValues.stream().collect(
-        Collectors.toMap(defaultVar -> defaultVar.getName(), defaultVar -> defaultVar));
+    Map<String, SettingAttribute> defaultVarMap =
+        previousDefaultValues.stream().collect(Collectors.toMap(SettingAttribute::getName, defaultVar -> defaultVar));
 
     // do deletions
-    varsToDelete.forEach(defaultVar -> {
-      if (defaultVarMap.containsKey(defaultVar.getName())) {
-        settingsService.delete(appId, defaultVarMap.get(defaultVar.getName()).getUuid(), false, syncFromGit);
+    for (NameValuePair.Yaml defaultVar1 : varsToDelete) {
+      if (defaultVarMap.containsKey(defaultVar1.getName())) {
+        settingsService.delete(appId, defaultVarMap.get(defaultVar1.getName()).getUuid(), false, syncFromGit);
       }
-    });
+    }
 
     // save the new variables
-    varsToAdd.forEach(
-        defaultVar -> settingsService.save(createNewSettingAttribute(accountId, appId, defaultVar), false));
+    for (NameValuePair.Yaml yaml : varsToAdd) {
+      settingsService.save(createNewSettingAttribute(accountId, appId, yaml), false);
+    }
 
     try {
       // update the existing variables
-      varsToUpdate.forEach(defaultVar -> {
+      for (NameValuePair.Yaml defaultVar : varsToUpdate) {
         SettingAttribute settingAttribute = defaultVarMap.get(defaultVar.getName());
         if (settingAttribute != null) {
           SettingValue settingValue = settingAttribute.getValue();
@@ -128,7 +125,7 @@ public class DefaultVariablesHelper {
             settingsService.update(settingAttribute, false);
           }
         }
-      });
+      }
     } catch (WingsException ex) {
       throw new HarnessException(ex);
     }

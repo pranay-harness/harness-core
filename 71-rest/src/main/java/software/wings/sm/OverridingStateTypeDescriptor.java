@@ -2,7 +2,6 @@ package software.wings.sm;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
@@ -139,10 +138,9 @@ public class OverridingStateTypeDescriptor implements StateTypeDescriptor, Overr
     return stateTypeDescriptor == null ? null : stateTypeDescriptor.getStencilCategory();
   }
 
-  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   @Override
   public Integer getDisplayOrder() {
-    return stateTypeDescriptor == null ? DEFAULT_DISPLAY_ORDER : stateTypeDescriptor.getDisplayOrder();
+    return stateTypeDescriptor == null ? Integer.valueOf(DEFAULT_DISPLAY_ORDER) : stateTypeDescriptor.getDisplayOrder();
   }
 
   @Override

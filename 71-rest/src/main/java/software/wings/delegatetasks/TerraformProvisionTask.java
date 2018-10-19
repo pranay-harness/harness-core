@@ -81,7 +81,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     return run((TerraformProvisionParameters) parameters[0]);
   }
 
-  Pattern varList = Pattern.compile("^\\s*\\[.*?]\\s*$");
+  private Pattern varList = Pattern.compile("^\\s*\\[.*?]\\s*$");
 
   private void saveVariable(BufferedWriter writer, String key, String value) throws IOException {
     // If the variable is wrapped with [] square brackets, we assume it is a list and we keep it as is.
@@ -93,7 +93,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     writer.write(String.format("%s = \"%s\"%n", key, value.replaceAll("\"", "\\\"")));
   }
 
-  @SuppressFBWarnings({"DM_DEFAULT_ENCODING"})
+  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private TerraformExecutionData run(TerraformProvisionParameters parameters) {
     GitConfig gitConfig = parameters.getSourceRepo();
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
@@ -147,7 +147,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
 
       File tfOutputsFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
 
-      String joinedCommands = null;
+      String joinedCommands;
       switch (parameters.getCommand()) {
         case APPLY:
           joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",

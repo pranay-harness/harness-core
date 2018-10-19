@@ -7,7 +7,6 @@ import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.AwsCodeDeployDeploymentInfo;
@@ -40,6 +39,7 @@ import software.wings.utils.Validator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -95,7 +95,6 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
     syncInstancesInternal(appId, infraMappingId, null, false);
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
   private void syncInstancesInternal(String appId, String infraMappingId,
       List<DeploymentSummary> newDeploymentSummaries, boolean rollback) throws HarnessException {
     InfrastructureMapping infrastructureMapping = infraMappingService.get(appId, infraMappingId);
@@ -139,8 +138,8 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
         // instancesInDBMap contains all instancesInDB for current appId and infraMapId
         Map<String, Instance> instancesInDBMap =
             instancesInDB.stream()
-                .filter(instance -> instance != null)
-                .collect(Collectors.toMap(instance -> getKeyFromInstance(instance), instance -> instance));
+                .filter(Objects::nonNull)
+                .collect(Collectors.toMap(this ::getKeyFromInstance, instance -> instance));
 
         // This will create filter for "instance-state-name" = "running"
         List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances =
@@ -148,48 +147,30 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
                 awsConfig, encryptedDataDetails, region, awsCodeDeployDeploymentInfo.getDeploymentId());
         Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
             latestEc2Instances.stream().collect(
-                Collectors.toMap(ec2Instance -> ec2Instance.getInstanceId(), ec2Instance -> ec2Instance));
+                Collectors.toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, ec2Instance -> ec2Instance));
 
         SetView<String> instancesToBeUpdated =
             Sets.intersection(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
-        if (newDeploymentSummary != null) {
-          instancesToBeUpdated.forEach(ec2InstanceId -> {
-            // change to codeDeployInstance builder
-            Instance instance = instancesInDBMap.get(ec2InstanceId);
-            String uuid = null;
-            if (instance != null) {
-              uuid = instance.getUuid();
-            }
-            com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
-            instance = buildInstanceUsingEc2Instance(uuid, ec2Instance, infrastructureMapping,
-                getDeploymentSummaryForInstanceCreation(newDeploymentSummary, rollback));
-            instanceService.saveOrUpdate(instance);
-          });
-        }
+        instancesToBeUpdated.forEach(ec2InstanceId -> {
+          // change to codeDeployInstance builder
+          Instance instance = instancesInDBMap.get(ec2InstanceId);
+          String uuid = null;
+          if (instance != null) {
+            uuid = instance.getUuid();
+          }
+          com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
+          instance = buildInstanceUsingEc2Instance(uuid, ec2Instance, infrastructureMapping,
+              getDeploymentSummaryForInstanceCreation(newDeploymentSummary, rollback));
+          instanceService.saveOrUpdate(instance);
+        });
 
         // Find the instances that were yet to be added to db
         SetView<String> instancesToBeAdded = Sets.difference(latestEc2InstanceMap.keySet(), instancesInDBMap.keySet());
 
         DeploymentSummary deploymentSummary;
         if (isNotEmpty(instancesToBeAdded)) {
-          // newDeploymentInfo would be null in case of sync job.
-          if (newDeploymentSummary == null && isNotEmpty(instancesInDB)) {
-            Optional<Instance> instanceWithExecutionInfoOptional = getInstanceWithExecutionInfo(instancesInDB);
-            if (!instanceWithExecutionInfoOptional.isPresent()) {
-              logger.warn("Couldn't find an instance from a previous deployment for inframapping {}",
-                  infrastructureMapping.getUuid());
-              return;
-            }
-
-            DeploymentSummary deploymentSummaryFromPrevious =
-                DeploymentSummary.builder().deploymentInfo(AwsCodeDeployDeploymentInfo.builder().build()).build();
-            generateDeploymentSummaryFromInstance(
-                instanceWithExecutionInfoOptional.get(), deploymentSummaryFromPrevious);
-            deploymentSummary = deploymentSummaryFromPrevious;
-          } else {
-            deploymentSummary = getDeploymentSummaryForInstanceCreation(newDeploymentSummary, rollback);
-          }
+          deploymentSummary = getDeploymentSummaryForInstanceCreation(newDeploymentSummary, rollback);
 
           instancesToBeAdded.forEach(ec2InstanceId -> {
             com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);

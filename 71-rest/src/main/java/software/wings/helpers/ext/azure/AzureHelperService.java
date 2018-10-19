@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.azure;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64ToString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -29,7 +30,6 @@ import com.microsoft.azure.management.containerservice.KubernetesCluster;
 import com.microsoft.azure.management.containerservice.OSType;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.rest.LogLevel;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.model.AuthInfo;
 import io.fabric8.kubernetes.api.model.Cluster;
 import io.fabric8.kubernetes.api.model.Context;
@@ -537,9 +537,8 @@ public class AzureHelperService {
     return retrofit.create(AzureManagementRestClient.class);
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   private String getAuthHeader(String username, String password) {
-    return "Basic " + encodeBase64String(format("%s:%s", username, password).getBytes());
+    return "Basic " + encodeBase64String(format("%s:%s", username, password).getBytes(UTF_8));
   }
 
   public String getUrl(String acrHostName) {

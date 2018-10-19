@@ -2,7 +2,6 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ContainerTaskTypeDescriptor;
 import software.wings.stencils.OverridingStencil;
@@ -90,9 +89,9 @@ public class OverridingContainerTaskTypeDescriptor
     return containerTaskTypeDescriptor == null ? null : containerTaskTypeDescriptor.getStencilCategory();
   }
 
-  @SuppressFBWarnings("BX_UNBOXING_IMMEDIATELY_REBOXED")
   @Override
   public Integer getDisplayOrder() {
-    return containerTaskTypeDescriptor == null ? DEFAULT_DISPLAY_ORDER : containerTaskTypeDescriptor.getDisplayOrder();
+    return containerTaskTypeDescriptor == null ? Integer.valueOf(DEFAULT_DISPLAY_ORDER)
+                                               : containerTaskTypeDescriptor.getDisplayOrder();
   }
 }

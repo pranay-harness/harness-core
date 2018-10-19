@@ -13,7 +13,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
@@ -223,7 +222,6 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
         changeContext.getChange().isSyncFromGit());
   }
 
-  @SuppressFBWarnings({"UC_USELESS_OBJECT", "UC_USELESS_OBJECT"})
   private void saveOrUpdateVariableOverrides(List<VariableOverrideYaml> previousVariableOverrideList,
       List<VariableOverrideYaml> latestVariableOverrideList, List<ServiceVariable> currentVariables, String appId,
       String envId, boolean syncFromGit) throws HarnessException {
@@ -270,11 +268,11 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
         currentVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, serviceVar -> serviceVar));
 
     // do deletions
-    configVarsToDelete.forEach(configVar -> {
-      if (variableMap.containsKey(configVar.getName())) {
-        serviceVariableService.delete(appId, variableMap.get(configVar.getName()).getUuid(), syncFromGit);
+    for (VariableOverrideYaml variableOverrideYaml : configVarsToDelete) {
+      if (variableMap.containsKey(variableOverrideYaml.getName())) {
+        serviceVariableService.delete(appId, variableMap.get(variableOverrideYaml.getName()).getUuid(), syncFromGit);
       }
-    });
+    }
 
     for (VariableOverrideYaml configVar : configVarsToAdd) {
       // save the new variables
@@ -283,7 +281,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
 
     try {
       // update the existing variables
-      configVarsToUpdate.forEach(configVar -> {
+      for (VariableOverrideYaml configVar : configVarsToUpdate) {
         ServiceVariable serviceVar = variableMap.get(configVar.getName());
         if (serviceVar != null) {
           String value = configVar.getValue();
@@ -294,12 +292,12 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             serviceVar.setValue(value != null ? value.toCharArray() : null);
           } else {
             logger.warn("Yaml doesn't support LB type service variables");
-            return;
+            continue;
           }
 
           serviceVariableService.update(serviceVar, syncFromGit);
         }
-      });
+      }
     } catch (WingsException ex) {
       throw new HarnessException(ex);
     }

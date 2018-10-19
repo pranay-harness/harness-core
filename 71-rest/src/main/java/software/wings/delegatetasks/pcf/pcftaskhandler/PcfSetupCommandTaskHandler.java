@@ -126,8 +126,8 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
           ServiceVersionConvention.getServiceName(pcfCommandSetupRequest.getReleaseNamePrefix(), releaseRevision);
 
       // Download artifact on delegate from manager
-      File artifactFile = pcfCommandTaskHelper.downloadArtifact(pcfCommandSetupRequest.getArtifactFiles(),
-          pcfCommandSetupRequest.getActivityId(), pcfCommandSetupRequest.getAccountId());
+      File artifactFile = pcfCommandTaskHelper.downloadArtifact(
+          pcfCommandSetupRequest.getArtifactFiles(), pcfCommandSetupRequest.getAccountId());
 
       // Create manifest.yaml file
       File manifestYamlFile = pcfCommandTaskHelper.createManifestYamlFileLocally(

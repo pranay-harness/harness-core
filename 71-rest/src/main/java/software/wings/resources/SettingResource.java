@@ -15,7 +15,6 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
@@ -168,7 +167,6 @@ public class SettingResource {
    *
    * @return the rest response
    */
-  @SuppressFBWarnings({"NP_NULL_ON_SOME_PATH", "BC_VACUOUS_INSTANCEOF"}) // TODO
   @POST
   @Path("upload")
   @Consumes(MULTIPART_FORM_DATA)
@@ -183,31 +181,28 @@ public class SettingResource {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT).addParam("args", "Missing file.");
     }
 
-    SettingValue value = null;
     if (GCP.name().equals(type)) {
-      value = GcpConfig.builder()
-                  .serviceAccountKeyFileContent(
-                      IOUtils.toString(uploadedInputStream, Charset.defaultCharset()).toCharArray())
-                  .build();
-    }
-    if (null != value) {
-      if (value instanceof EncryptableSetting) {
-        ((EncryptableSetting) value).setAccountId(accountId);
-      }
-    }
+      SettingValue value = GcpConfig.builder()
+                               .serviceAccountKeyFileContent(
+                                   IOUtils.toString(uploadedInputStream, Charset.defaultCharset()).toCharArray())
+                               .build();
 
-    UsageRestrictions usageRestrictionsFromJson =
-        usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
+      ((EncryptableSetting) value).setAccountId(accountId);
 
-    return new RestResponse<>(
-        settingsService.save(aSettingAttribute()
-                                 .withAccountId(accountId)
-                                 .withAppId(appId)
-                                 .withName(name)
-                                 .withValue(value)
-                                 .withCategory(Category.getCategory(SettingVariableTypes.valueOf(value.getType())))
-                                 .withUsageRestrictions(usageRestrictionsFromJson)
-                                 .build()));
+      UsageRestrictions usageRestrictionsFromJson =
+          usageRestrictionsService.getUsageRestrictionsFromJson(usageRestrictionsString);
+
+      return new RestResponse<>(
+          settingsService.save(aSettingAttribute()
+                                   .withAccountId(accountId)
+                                   .withAppId(appId)
+                                   .withName(name)
+                                   .withValue(value)
+                                   .withCategory(Category.getCategory(SettingVariableTypes.valueOf(value.getType())))
+                                   .withUsageRestrictions(usageRestrictionsFromJson)
+                                   .build()));
+    }
+    return new RestResponse<>();
   }
 
   /**
@@ -262,7 +257,6 @@ public class SettingResource {
   @Consumes(MULTIPART_FORM_DATA)
   @Timed
   @ExceptionMetered
-  @SuppressFBWarnings("BC_VACUOUS_INSTANCEOF")
   public RestResponse<SettingAttribute> update(@PathParam("attrId") String attrId,
       @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
       @FormDataParam("type") String type, @FormDataParam("name") String name,
@@ -272,7 +266,7 @@ public class SettingResource {
     char[] credentials = IOUtils.toString(uploadedInputStream, Charset.defaultCharset()).toCharArray();
     SettingValue value = null;
     if (GCP.name().equals(type)) {
-      if (credentials != null && credentials.length > 0) {
+      if (credentials.length > 0) {
         value = GcpConfig.builder().serviceAccountKeyFileContent(credentials).build();
       } else {
         value = GcpConfig.builder().serviceAccountKeyFileContent(ENCRYPTED_FIELD_MASK).build();
@@ -291,9 +285,7 @@ public class SettingResource {
             .withCategory(Category.getCategory(SettingVariableTypes.valueOf(type)))
             .withUsageRestrictions(usageRestrictionsFromJson);
     if (value != null) {
-      if (value instanceof EncryptableSetting) {
-        ((EncryptableSetting) value).setAccountId(accountId);
-      }
+      ((EncryptableSetting) value).setAccountId(accountId);
       settingAttribute.withValue(value);
     }
     return new RestResponse<>(settingsService.update(settingAttribute.build()));

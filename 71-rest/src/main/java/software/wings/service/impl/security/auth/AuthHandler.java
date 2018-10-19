@@ -36,7 +36,6 @@ import com.google.common.collect.Sets.SetView;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -623,14 +622,15 @@ public class AuthHandler {
     userRequestContext.setAppIds(appIds);
   }
 
-  @SuppressFBWarnings("RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE") // TODO
   public boolean authorize(
       List<PermissionAttribute> requiredPermissionAttributes, List<String> appIds, String entityId) {
     User user = UserThreadLocal.get();
-    // UserRequestContext is null if rbac enabled is false
-    UserRequestContext userRequestContext = user.getUserRequestContext();
-    if (user != null && userRequestContext != null) {
-      authService.authorize(userRequestContext.getAccountId(), appIds, entityId, user, requiredPermissionAttributes);
+    if (user != null) {
+      UserRequestContext userRequestContext = user.getUserRequestContext();
+      // UserRequestContext is null if rbac enabled is false
+      if (userRequestContext != null) {
+        authService.authorize(userRequestContext.getAccountId(), appIds, entityId, user, requiredPermissionAttributes);
+      }
     }
     return true;
   }
