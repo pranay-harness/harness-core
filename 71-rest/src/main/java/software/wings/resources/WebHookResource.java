@@ -10,7 +10,6 @@ import software.wings.beans.WebHookResponse;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.WebHookService;
 import software.wings.sm.ExecutionStatus;
-import software.wings.utils.Validator;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -32,7 +31,6 @@ public class WebHookResource {
   @ExceptionMetered
   @Path("{webHookToken}")
   public WebHookResponse execute(@PathParam("webHookToken") String webHookToken, WebHookRequest webHookRequest) {
-    Validator.notNullCheck("Request body", webHookRequest);
     return webHookService.execute(webHookToken, webHookRequest);
   }
 

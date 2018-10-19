@@ -48,6 +48,7 @@ import software.wings.sm.StateType;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import javax.ws.rs.BeanParam;
@@ -339,8 +340,8 @@ public class WorkflowResource {
       return new RestResponse<>(workflowService.updateWorkflowPhase(appId, workflowId, workflowPhase));
     } catch (WingsException exception) {
       // When the workflow update is coming from the user there is no harness engineer wrong doing to alerted for
-      exception.excludeReportTarget(DUPLICATE_STATE_NAMES, LOG_SYSTEM);
-      exception.excludeReportTarget(INVALID_ARGUMENT, LOG_SYSTEM);
+      exception.excludeReportTarget(DUPLICATE_STATE_NAMES, EnumSet.of(LOG_SYSTEM));
+      exception.excludeReportTarget(INVALID_ARGUMENT, EnumSet.of(LOG_SYSTEM));
       throw exception;
     }
   }

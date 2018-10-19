@@ -1,6 +1,8 @@
 package software.wings.helpers.ext.amazons3;
 
+import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.INVALID_ARTIFACT_SERVER;
+import static io.harness.exception.WingsException.EVERYBODY;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.sort;
 import static java.util.stream.Collectors.toList;
@@ -104,7 +106,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         buildDetailsList.addAll(buildDetailsListForArtifactPath);
       }
       return buildDetailsList;
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
+      if (e instanceof WingsException) {
+        ((WingsException) e).excludeReportTarget(AWS_ACCESS_DENIED, EVERYBODY);
+      }
+
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER, e).addParam("message", Misc.getMessage(e));
     }
   }

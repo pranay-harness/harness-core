@@ -15,6 +15,7 @@ import lombok.Getter;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * The generic exception class for the Wings Application.
@@ -150,16 +151,17 @@ public class WingsException extends RuntimeException {
     return this;
   }
 
-  public void excludeReportTarget(ErrorCode errorCode, ReportTarget target) {
+  public void excludeReportTarget(ErrorCode errorCode, Set<ReportTarget> targets) {
     if (code == errorCode) {
-      reportTargets.remove(target);
+      if (targets != null) {
+        reportTargets.removeAll(targets);
+      }
     }
-
     Throwable cause = getCause();
 
     while (cause != null) {
       if (cause instanceof WingsException) {
-        ((WingsException) cause).excludeReportTarget(errorCode, target);
+        ((WingsException) cause).excludeReportTarget(errorCode, targets);
 
         // the cause exception will take care of its cause exception. There is no need for this function to keep going.
         break;
