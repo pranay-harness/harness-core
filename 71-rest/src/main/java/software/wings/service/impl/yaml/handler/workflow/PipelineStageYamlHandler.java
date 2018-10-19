@@ -38,6 +38,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -130,6 +131,12 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
           }
         });
       }
+    } else if (StateType.APPROVAL.name().equals(yaml.getType())) {
+      Map<String, Object> yamlProperties = yaml.getProperties();
+
+      if (yamlProperties != null) {
+        yamlProperties.forEach((name, value) -> properties.put(name, value));
+      }
     }
 
     PipelineStageElement pipelineStageElement = PipelineStageElement.builder()
@@ -155,7 +162,9 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     PipelineStageElement stageElement = bean.getPipelineStageElements().get(0);
     notNullCheck("Pipeline stage element is null", stageElement, USER);
 
+    Map<String, Object> outputProperties = new HashMap<>();
     String workflowName = null;
+
     List<PipelineStage.WorkflowVariable> pipelineStageVariables = new ArrayList<>();
     if (!StateType.APPROVAL.name().equals(stageElement.getType())) {
       Map<String, Object> properties = stageElement.getProperties();
@@ -217,6 +226,16 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
           }
         }
       }
+    } else if (StateType.APPROVAL.name().equals(stageElement.getType())) {
+      Map<String, Object> properties = stageElement.getProperties();
+
+      if (properties != null) {
+        properties.forEach((name, value) -> {
+          if (!shouldBeIgnored(name)) {
+            outputProperties.put(name, value);
+          }
+        });
+      }
     }
 
     return Yaml.builder()
@@ -225,7 +244,24 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
         .type(stageElement.getType())
         .workflowName(workflowName)
         .workflowVariables(pipelineStageVariables)
+        .properties(outputProperties.isEmpty() ? null : outputProperties)
         .build();
+  }
+
+  private boolean shouldBeIgnored(String name) {
+    if (isEmpty(name)) {
+      return true;
+    }
+
+    switch (name) {
+      case "id":
+      case "parentId":
+      case "subWorkflowId":
+      case "groupName":
+        return true;
+      default:
+        return false;
+    }
   }
 
   @Override
