@@ -19,6 +19,7 @@ import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -334,8 +335,8 @@ public class JenkinsState extends State {
                                               .queuedBuildUrl(jenkinsExecutionResponse.queuedBuildUrl)
                                               .build();
 
-    DelegateTask delegateTask = buildDelegateTask(
-        context, jenkinsExecutionResponse.activityId, jenkinsTaskParams, envId, infrastructureMappingId);
+    String waitId = UUIDGenerator.generateUuid();
+    DelegateTask delegateTask = buildDelegateTask(context, waitId, jenkinsTaskParams, envId, infrastructureMappingId);
 
     if (getTimeoutMillis() != null) {
       jenkinsTaskParams.setStartTs(System.currentTimeMillis());
@@ -356,25 +357,23 @@ public class JenkinsState extends State {
     return anExecutionResponse()
         .withAsync(true)
         .withStateExecutionData(jenkinsExecutionData)
-        .withCorrelationIds(Collections.singletonList(jenkinsExecutionResponse.activityId))
+        .withCorrelationIds(Collections.singletonList(waitId))
         .withDelegateTaskId(delegateTaskId)
         .build();
   }
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    String activityId = response.keySet().iterator().next();
     ResponseData notifyResponseData = response.values().iterator().next();
     JenkinsExecutionResponse jenkinsExecutionResponse;
     if (notifyResponseData instanceof ErrorNotifyResponseData) {
-      updateActivityStatus(activityId, ((ExecutionContextImpl) context).getApp().getUuid(), FAILED);
       return anExecutionResponse()
           .withExecutionStatus(FAILED)
           .withErrorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
           .build();
     }
-
-    jenkinsExecutionResponse = (JenkinsExecutionResponse) response.values().iterator().next();
+    jenkinsExecutionResponse = (JenkinsExecutionResponse) notifyResponseData;
+    String activityId = jenkinsExecutionResponse.getActivityId();
     updateActivityStatus(
         activityId, ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
     JenkinsExecutionData jenkinsExecutionData = (JenkinsExecutionData) context.getStateExecutionData();

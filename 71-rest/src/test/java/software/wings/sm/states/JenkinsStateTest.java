@@ -96,6 +96,7 @@ public class JenkinsStateTest {
                 .executionStatus(ExecutionStatus.FAILED)
                 .jenkinsResult("SUCCESS")
                 .jobUrl("http://jenkins")
+                .activityId(ACTIVITY_ID)
                 .subTaskType(JenkinsSubTaskType.START_TASK)
                 .filePathAssertionMap(Collections.emptyList())
                 .build()));
@@ -113,6 +114,7 @@ public class JenkinsStateTest {
                 .executionStatus(ExecutionStatus.FAILED)
                 .jenkinsResult("SUCCESS")
                 .jobUrl("http://jenkins")
+                .activityId(ACTIVITY_ID)
                 .subTaskType(JenkinsSubTaskType.POLL_TASK)
                 .filePathAssertionMap(Collections.emptyList())
                 .build()));
