@@ -412,7 +412,8 @@ public class GitClientImpl implements GitClient {
                 + "Other info: Force push: %s. Fast forward: %s",
             remoteRefUpdate.getStatus(), remoteRefUpdate.getMessage(), remoteRefUpdate.isForceUpdate(),
             remoteRefUpdate.isFastForward());
-        throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", errorMsg);
+        logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + errorMsg);
+        throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR, errorMsg).addParam("message", errorMsg);
       }
     } catch (IOException | GitAPIException ex) {
       logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
