@@ -28,6 +28,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateTypeScope;
 import software.wings.stencils.Stencil;
 
+import java.util.EnumSet;
 import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
@@ -134,7 +135,7 @@ public class PipelineResource {
       return new RestResponse<>(pipelineService.update(pipeline));
     } catch (WingsException exception) {
       // When the pipeline update is coming from the user there is no harness engineer wrong doing to alerted for
-      exception.excludeReportTarget(DUPLICATE_STATE_NAMES, LOG_SYSTEM);
+      exception.excludeReportTarget(DUPLICATE_STATE_NAMES, EnumSet.of(LOG_SYSTEM));
       throw exception;
     }
   }

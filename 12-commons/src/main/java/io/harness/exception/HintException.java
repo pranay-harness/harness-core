@@ -3,7 +3,8 @@ package io.harness.exception;
 import static io.harness.eraro.ErrorCode.EXPLANATION;
 import static io.harness.eraro.ErrorCode.HINT;
 import static io.harness.eraro.Level.INFO;
-import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
+
+import java.util.EnumSet;
 
 public class HintException extends WingsException {
   public static final HintException MOVE_TO_THE_PARENT_OBJECT =
@@ -12,7 +13,7 @@ public class HintException extends WingsException {
 
   public HintException(String message) {
     super(null, null, HINT, INFO, null);
-    super.excludeReportTarget(EXPLANATION, LOG_SYSTEM);
+    super.excludeReportTarget(EXPLANATION, EnumSet.of(ReportTarget.LOG_SYSTEM));
     super.addParam("message", message);
   }
 }

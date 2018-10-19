@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.lang.String.format;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
@@ -25,6 +26,7 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.TriggerService;
@@ -76,7 +78,11 @@ public class WebHookServiceImpl implements WebHookService {
   @Override
   public WebHookResponse execute(String token, WebHookRequest webHookRequest) {
     try {
-      logger.info("Received the webhookRequest {}  ", String.valueOf(webHookRequest));
+      if (webHookRequest == null) {
+        logger.warn("Payload is mandatory");
+        return WebHookResponse.builder().error("Payload is mandatory").build();
+      }
+      logger.info("Received the Webhook Request {}  ", String.valueOf(webHookRequest));
       String appId = webHookRequest.getApplication();
       Application app = appService.get(appId);
       if (app == null) {
@@ -92,8 +98,12 @@ public class WebHookServiceImpl implements WebHookService {
           triggerService.triggerExecutionByWebHook(appId, token, serviceBuildNumbers, webHookRequest.getParameters());
 
       return constructWebhookResponse(appId, app, workflowExecution);
+    } catch (WingsException ex) {
+      WingsExceptionMapper.logProcessedMessages(ex, MANAGER, logger);
+      return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
     } catch (Exception ex) {
-      return constructWebhookResponse(token, ex);
+      logger.warn(format("Webhook Request call failed [%s]", token), ex);
+      return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
     }
   }
 
@@ -115,7 +125,8 @@ public class WebHookServiceImpl implements WebHookService {
           .build();
 
     } catch (Exception ex) {
-      return constructWebhookResponse(token, ex);
+      logger.warn(format("Webhook Request call failed [%s]", token), ex);
+      return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
     }
   }
 
@@ -224,16 +235,4 @@ public class WebHookServiceImpl implements WebHookService {
             workflowExecution.getEnvId(), workflowExecution.getUuid()))
         .build();
   }
-
-  private WebHookResponse constructWebhookResponse(String token, Exception ex) {
-    logger.warn(format("Webhook Request call failed [%s]", token), ex);
-    return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
-  }
 }
-
-// generate requestId and save workflow executionId map
-// queue multiple request
-// compare queued requests
-// wait for artifact to appear
-// return response;
-// Already running workflow

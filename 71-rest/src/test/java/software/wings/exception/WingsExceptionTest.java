@@ -11,6 +11,7 @@ import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ResponseMessage;
 
+import java.util.EnumSet;
 import java.util.List;
 
 public class WingsExceptionTest extends WingsBaseTest {
@@ -29,7 +30,7 @@ public class WingsExceptionTest extends WingsBaseTest {
     assertThat(exception.getReportTargets()).contains(REST_API);
     assertThat(((WingsException) exception.getCause().getCause()).getReportTargets()).contains(REST_API);
 
-    exception.excludeReportTarget(DEFAULT_ERROR_CODE, REST_API);
+    exception.excludeReportTarget(DEFAULT_ERROR_CODE, EnumSet.of(REST_API));
 
     assertThat(exception.getReportTargets()).doesNotContain(REST_API);
     assertThat(((WingsException) exception.getCause().getCause()).getReportTargets()).doesNotContain(REST_API);
