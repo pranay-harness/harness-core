@@ -27,10 +27,10 @@ import software.wings.beans.FileMetadata;
 import software.wings.beans.RestResponse;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.delegatetasks.DelegateFile;
-import software.wings.dl.WingsPersistence;
 import software.wings.security.annotations.DelegateAuth;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.utils.BoundedInputStream;
@@ -60,7 +60,7 @@ public class DelegateFileResource {
   @Inject private FileService fileService;
   @Inject private MainConfiguration configuration;
   @Inject private ConfigService configService;
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private DelegateService delegateService;
 
   @Inject MongoIdempotentRegistry<String> idempotentRegistry;
 
@@ -155,5 +155,17 @@ public class DelegateFileResource {
                                   .withFileName(gridFSFile.getFilename())
                                   .withLength(gridFSFile.getLength())
                                   .build());
+  }
+
+  @DelegateAuth
+  @POST
+  @Path("{delegateId}/profile-result")
+  @Timed
+  @ExceptionMetered
+  public void saveProfileResult(@PathParam("delegateId") String delegateId,
+      @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("error") boolean error,
+      @QueryParam("fileBucket") FileBucket fileBucket, @FormDataParam("file") InputStream uploadedInputStream,
+      @FormDataParam("file") FormDataContentDisposition fileDetail) {
+    delegateService.saveProfileResult(accountId, delegateId, error, fileBucket, uploadedInputStream, fileDetail);
   }
 }

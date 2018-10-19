@@ -976,10 +976,10 @@ public class WatcherServiceImpl implements WatcherService {
 
       cleanupVersionFolders(workingDir, emptySet());
 
-      IOFileFilter fileFilter =
-          or(prefixFileFilter("delegate"), prefixFileFilter("watcher"), prefixFileFilter("config-"),
-              nameFileFilter("README.txt"), nameFileFilter("proxy.config"), nameFileFilter("profile"),
-              nameFileFilter("mygclogfilename.gc"), nameFileFilter("nohup-watcher.out"), suffixFileFilter(".sh"));
+      IOFileFilter fileFilter = or(prefixFileFilter("delegate"), prefixFileFilter("watcher"),
+          prefixFileFilter("config-"), nameFileFilter("README.txt"), nameFileFilter("proxy.config"),
+          nameFileFilter("profile"), nameFileFilter("profile.result"), nameFileFilter("mygclogfilename.gc"),
+          nameFileFilter("nohup-watcher.out"), suffixFileFilter(".sh"));
 
       IOFileFilter dirFilter = or(prefixFileFilter("jre"), prefixFileFilter("backup."), nameFileFilter(".cache"),
           nameFileFilter("msg"), nameFileFilter("repository"));

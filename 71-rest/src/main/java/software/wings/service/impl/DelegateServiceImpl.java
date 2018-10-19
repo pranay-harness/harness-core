@@ -1,20 +1,22 @@
 package software.wings.service.impl;
 
+import static com.google.common.base.Charsets.UTF_8;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.UNAVAILABLE_DELEGATES;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
@@ -59,6 +61,7 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
 import com.github.zafarkhaja.semver.Version;
+import com.mongodb.MongoGridFSException;
 import freemarker.cache.ClassTemplateLoader;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
@@ -78,6 +81,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.fluent.Request;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.atteo.evo.inflector.English;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
@@ -101,11 +105,13 @@ import software.wings.beans.DelegateTaskEvent;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FileMetadata;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
+import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
@@ -119,22 +125,27 @@ import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.FileService;
+import software.wings.service.intfc.FileService.FileBucket;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.DelegateMetaInfo;
+import software.wings.utils.BoundedInputStream;
 import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.StringWriter;
 import java.time.Clock;
@@ -191,6 +202,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private SecretManager secretManager;
   @Inject private ExpressionEvaluator evaluator;
+  @Inject private FileService fileService;
 
   private final Map<String, Object> syncTaskWaitMap = new ConcurrentHashMap<>();
 
@@ -393,6 +405,27 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   }
 
   private Delegate updateDelegate(Delegate delegate, UpdateOperations<Delegate> updateOperations) {
+    Delegate previousDelegate = get(delegate.getAccountId(), delegate.getUuid(), false);
+
+    if (previousDelegate != null && isBlank(delegate.getDelegateProfileId())) {
+      updateOperations.unset("profileResult").unset("profileError").unset("profileExecutedAt");
+
+      DelegateProfileErrorAlert alertData = DelegateProfileErrorAlert.builder()
+                                                .accountId(delegate.getAccountId())
+                                                .hostName(delegate.getHostName())
+                                                .ip(delegate.getIp())
+                                                .build();
+      alertService.closeAlert(delegate.getAccountId(), GLOBAL_APP_ID, AlertType.DelegateProfileError, alertData);
+
+      if (isNotBlank(previousDelegate.getProfileResult())) {
+        try {
+          fileService.deleteFile(previousDelegate.getProfileResult(), FileBucket.PROFILE_RESULTS);
+        } catch (MongoGridFSException e) {
+          logger.warn("Didn't find profile result file: {}", previousDelegate.getProfileResult());
+        }
+      }
+    }
+
     wingsPersistence.update(wingsPersistence.createQuery(Delegate.class)
                                 .filter("accountId", delegate.getAccountId())
                                 .filter(ID_KEY, delegate.getUuid()),
@@ -889,6 +922,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
     logger.info("Checking delegate profile for account {}, delegate [{}]. Previous profile [{}] updated at {}",
         accountId, delegateId, profileId, lastUpdatedAt);
     Delegate delegate = get(accountId, delegateId, true);
+
+    if (isNotBlank(profileId) && isBlank(delegate.getDelegateProfileId())) {
+      return DelegateProfileParams.builder().profileId("NONE").build();
+    }
+
     if (isNotBlank(delegate.getDelegateProfileId())) {
       DelegateProfile profile = delegateProfileService.get(accountId, delegate.getDelegateProfileId());
       if (profile != null && (!profile.getUuid().equals(profileId) || profile.getLastUpdatedAt() > lastUpdatedAt)) {
@@ -909,6 +947,60 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       }
     }
     return null;
+  }
+
+  @Override
+  public void saveProfileResult(String accountId, String delegateId, boolean error, FileBucket fileBucket,
+      InputStream uploadedInputStream, FormDataContentDisposition fileDetail) {
+    Delegate delegate = get(accountId, delegateId, true);
+    DelegateProfileErrorAlert alertData = DelegateProfileErrorAlert.builder()
+                                              .accountId(accountId)
+                                              .hostName(delegate.getHostName())
+                                              .ip(delegate.getIp())
+                                              .build();
+    if (error) {
+      alertService.openAlert(accountId, GLOBAL_APP_ID, AlertType.DelegateProfileError, alertData);
+    } else {
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegateProfileError, alertData);
+    }
+
+    FileMetadata fileMetadata = new FileMetadata();
+    fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
+    String fileId = fileService.saveFile(fileMetadata,
+        new BoundedInputStream(uploadedInputStream, mainConfiguration.getFileUploadLimits().getProfileResultLimit()),
+        fileBucket);
+
+    String previousProfileResult = delegate.getProfileResult();
+
+    wingsPersistence.update(
+        wingsPersistence.createQuery(Delegate.class).filter("accountId", accountId).filter(ID_KEY, delegateId),
+        wingsPersistence.createUpdateOperations(Delegate.class)
+            .set("profileResult", fileId)
+            .set("profileError", error)
+            .set("profileExecutedAt", clock.millis()));
+
+    if (isNotBlank(previousProfileResult)) {
+      fileService.deleteFile(previousProfileResult, FileBucket.PROFILE_RESULTS);
+    }
+  }
+
+  @Override
+  public String getProfileResult(String accountId, String delegateId) {
+    Delegate delegate = get(accountId, delegateId, false);
+
+    String profileResultFileId = delegate.getProfileResult();
+
+    if (isBlank(profileResultFileId)) {
+      return "No profile result available for " + delegate.getHostName();
+    }
+
+    try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
+      fileService.downloadToStream(profileResultFileId, os, FileBucket.PROFILE_RESULTS);
+      os.flush();
+      return new String(os.toByteArray(), UTF_8);
+    } catch (IOException e) {
+      throw new WingsException(INVALID_ARGUMENT, e).addParam("args", "Failed to get content");
+    }
   }
 
   @Override

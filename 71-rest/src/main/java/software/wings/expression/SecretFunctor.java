@@ -20,10 +20,6 @@ public class SecretFunctor extends LateBindingMap {
 
   public Object getValue(String secretName) {
     EncryptedData encryptedData = secretManager.getSecretByName(accountId, secretName, true);
-    if (encryptedData == null) {
-      return "Invalid Secret Name";
-    }
-
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .accountId(accountId)
                                           .type(ENCRYPTED_TEXT)
