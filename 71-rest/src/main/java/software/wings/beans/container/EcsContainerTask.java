@@ -151,7 +151,7 @@ public class EcsContainerTask extends ContainerTask {
     }
 
     if (executionRole == null) {
-      executionRole = "null";
+      executionRole = "";
     }
 
     if (isNotEmpty(domainName)) {

@@ -54,7 +54,7 @@ public class EcsContainerTaskTest {
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
     assertEquals("256", taskDefinition.getCpu());
     assertEquals("1024", taskDefinition.getMemory());
-    assertEquals("null", taskDefinition.getExecutionRoleArn());
+    assertEquals("", taskDefinition.getExecutionRoleArn());
 
     containerDefinitionAws = taskDefinition.getContainerDefinitions().get(0);
     assertNotNull(containerDefinitionAws);
@@ -114,7 +114,7 @@ public class EcsContainerTaskTest {
     assertNotNull(taskDefinition);
     assertEquals(1, taskDefinition.getContainerDefinitions().size());
     assertEquals("256", taskDefinition.getCpu());
-    assertEquals("null", taskDefinition.getExecutionRoleArn());
+    assertEquals("", taskDefinition.getExecutionRoleArn());
 
     containerDefinitionAws = taskDefinition.getContainerDefinitions().get(0);
     assertNotNull(containerDefinitionAws);
