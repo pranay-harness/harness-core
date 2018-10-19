@@ -31,9 +31,8 @@ public class GitChangeSetRunnableHelper {
   public List<String> getQueuedAccountIdList(WingsPersistence wingsPersistence) {
     return wingsPersistence.getDatastore()
         .getCollection(YamlChangeSet.class)
-        .distinct("accountId",
-            new BasicDBObject(
-                "status", new BasicDBObject("$in", new String[] {Status.FAILED.name(), Status.QUEUED.name()})));
+        .distinct(
+            "accountId", new BasicDBObject("status", new BasicDBObject("$in", new String[] {Status.QUEUED.name()})));
   }
 
   public List<String> getRunningAccountIdList(WingsPersistence wingsPersistence) {
