@@ -1,5 +1,7 @@
 package software.wings.expression;
 
+import static java.lang.String.format;
+
 import io.harness.expression.LateBindingMap;
 import lombok.Builder;
 import software.wings.beans.SweepingOutput;
@@ -19,7 +21,7 @@ public class SweepingOutputFunctor extends LateBindingMap {
     SweepingOutput sweepingOutput =
         sweepingOutputService.find(appId, name, pipelineExecutionId, workflowExecutionId, phaseExecutionId);
     if (sweepingOutput == null) {
-      return null;
+      throw new RuntimeException(format("Missing sweeping output %s", name));
     }
     return KryoUtils.asInflatedObject(sweepingOutput.getOutput());
   }
