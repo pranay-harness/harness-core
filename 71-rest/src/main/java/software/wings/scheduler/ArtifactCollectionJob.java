@@ -96,9 +96,8 @@ public class ArtifactCollectionJob implements Job {
     if (isNotEmpty(artifacts)) {
       logger.info("[{}] new artifacts collected", artifacts.size());
       artifacts.forEach(artifact -> logger.info(artifact.toString()));
-      Artifact latestArtifact = artifacts.get(artifacts.size() - 1);
-      logger.info("Calling trigger execution if any for new artifact id {}", latestArtifact.getUuid());
-      triggerService.triggerExecutionPostArtifactCollectionAsync(latestArtifact);
+      logger.info("Calling trigger service to check if any triggers set for the collected artifacts");
+      triggerService.triggerExecutionPostArtifactCollectionAsync(appId, artifactStreamId, artifacts);
     }
   }
 
