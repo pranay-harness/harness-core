@@ -66,8 +66,6 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
     }
 
     if (waitInstance.getStatus() != ExecutionStatus.NEW) {
-      logger.warn("WaitInstance already processed - waitInstanceId:[{}], status=[{}] skipping ...", waitInstanceId,
-          waitInstance.getStatus());
       return;
     }
 
@@ -127,10 +125,17 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
       if (lock == null) {
         return;
       }
+
+      // Make sure that the instance status is still new after the lock was obtained
+      waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
+      if (waitInstance.getStatus() != ExecutionStatus.NEW) {
+        return;
+      }
+
       ExecutionStatus status = ExecutionStatus.SUCCESS;
       NotifyCallback callback = waitInstance.getCallback();
-      injector.injectMembers(callback);
       if (callback != null) {
+        injector.injectMembers(callback);
         try {
           if (isError) {
             callback.notifyError(responseMap);
