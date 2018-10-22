@@ -185,6 +185,8 @@ public class WebHookServiceTest extends WingsBaseTest {
     }); // mapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
     final String value = expressionEvaluator.substitute("${commits[0].id}", map);
     assertThat(value).isNotEmpty().isEqualTo("4ebc6e9e489979a29ca17b8da0c29d9f6803a5b9");
+    final String ref = expressionEvaluator.substitute("${ref.substring(${ref.indexOf('/')+1})}", map);
+    assertThat(ref).isNotEmpty().isEqualTo("heads/master");
   }
 
   @Test

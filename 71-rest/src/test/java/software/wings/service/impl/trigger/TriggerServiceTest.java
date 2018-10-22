@@ -637,7 +637,7 @@ public class TriggerServiceTest extends WingsBaseTest {
 
     triggerService.save(artifactConditionTrigger);
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
     verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
@@ -656,7 +656,8 @@ public class TriggerServiceTest extends WingsBaseTest {
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
+
     verify(workflowExecutionService, times(0))
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
@@ -682,7 +683,8 @@ public class TriggerServiceTest extends WingsBaseTest {
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
+
     verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
@@ -706,7 +708,8 @@ public class TriggerServiceTest extends WingsBaseTest {
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
+
     verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
@@ -730,7 +733,8 @@ public class TriggerServiceTest extends WingsBaseTest {
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
+
     verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
@@ -748,12 +752,108 @@ public class TriggerServiceTest extends WingsBaseTest {
     artifactTriggerCondition.setRegex(true);
     artifactTriggerCondition.setArtifactFilter("^release");
 
+    triggerService.save(artifactConditionTrigger);
+
     when(workflowExecutionService.triggerPipelineExecution(
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
+
     verify(workflowExecutionService, times(0))
+        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+  }
+
+  @Test
+  public void shouldTriggerPostArtifactCollectionBothArtifactsDoesNotMatch() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", "@33release23"))
+                            .build();
+    Artifact artifact2 = anArtifact()
+                             .withAppId(APP_ID)
+                             .withUuid(ARTIFACT_ID)
+                             .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                             .withMetadata(ImmutableMap.of("buildNo", "@34release23"))
+                             .build();
+
+    ArtifactTriggerCondition artifactTriggerCondition =
+        (ArtifactTriggerCondition) artifactConditionTrigger.getCondition();
+    artifactTriggerCondition.setRegex(true);
+    artifactTriggerCondition.setArtifactFilter("^release");
+
+    triggerService.save(artifactConditionTrigger);
+
+    when(workflowExecutionService.triggerPipelineExecution(
+             anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
+        .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact, artifact2));
+
+    verify(workflowExecutionService, times(0))
+        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+  }
+  @Test
+  public void shouldTriggerPostArtifactCollectionBothArtifactsMatch() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", "release23"))
+                            .build();
+    Artifact artifact2 = anArtifact()
+                             .withAppId(APP_ID)
+                             .withUuid(ARTIFACT_ID)
+                             .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                             .withMetadata(ImmutableMap.of("buildNo", "release456"))
+                             .build();
+    ArtifactTriggerCondition artifactTriggerCondition =
+        (ArtifactTriggerCondition) artifactConditionTrigger.getCondition();
+    artifactTriggerCondition.setRegex(true);
+    artifactTriggerCondition.setArtifactFilter("^release");
+
+    triggerService.save(artifactConditionTrigger);
+
+    when(workflowExecutionService.triggerPipelineExecution(
+             anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
+        .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact, artifact2));
+
+    verify(workflowExecutionService)
+        .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+  }
+
+  @Test
+  public void shouldTriggerPostArtifactCollectionOneArtifactMatchesOtherDoesNotMatch() {
+    Artifact artifact = anArtifact()
+                            .withAppId(APP_ID)
+                            .withUuid(ARTIFACT_ID)
+                            .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                            .withMetadata(ImmutableMap.of("buildNo", "@33release23"))
+                            .build();
+    Artifact artifact2 = anArtifact()
+                             .withAppId(APP_ID)
+                             .withUuid(ARTIFACT_ID)
+                             .withArtifactStreamId(ARTIFACT_STREAM_ID)
+                             .withMetadata(ImmutableMap.of("buildNo", "release456"))
+                             .build();
+    ArtifactTriggerCondition artifactTriggerCondition =
+        (ArtifactTriggerCondition) artifactConditionTrigger.getCondition();
+    artifactTriggerCondition.setRegex(true);
+    artifactTriggerCondition.setArtifactFilter("^release");
+
+    when(workflowExecutionService.triggerPipelineExecution(
+             anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
+        .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
+
+    triggerService.save(artifactConditionTrigger);
+
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact, artifact2));
+
+    verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
 
@@ -770,7 +870,8 @@ public class TriggerServiceTest extends WingsBaseTest {
              anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class)))
         .thenReturn(aWorkflowExecution().withAppId(APP_ID).withStatus(SUCCESS).build());
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
+
     verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
   }
@@ -812,7 +913,8 @@ public class TriggerServiceTest extends WingsBaseTest {
                             aWorkflowExecution().withAppId(APP_ID).withExecutionArgs(executionArgs).build()))
                         .build());
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
+
     verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
     verify(artifactStreamService, times(3)).get(APP_ID, ARTIFACT_STREAM_ID);
@@ -862,7 +964,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                             aWorkflowExecution().withAppId(APP_ID).withExecutionArgs(executionArgs).build()))
                         .build());
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
@@ -912,7 +1014,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                             aWorkflowExecution().withAppId(APP_ID).withExecutionArgs(executionArgs).build()))
                         .build());
 
-    triggerService.triggerExecutionPostArtifactCollectionAsync(artifact);
+    triggerService.triggerExecutionPostArtifactCollectionAsync(APP_ID, ARTIFACT_STREAM_ID, asList(artifact));
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));

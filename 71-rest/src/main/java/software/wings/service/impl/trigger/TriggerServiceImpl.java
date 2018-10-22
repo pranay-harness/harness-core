@@ -3,7 +3,6 @@ package software.wings.service.impl.trigger;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.exception.WingsException.USER_ADMIN;
 import static java.lang.String.format;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
@@ -15,7 +14,6 @@ import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
-import static software.wings.beans.trigger.ArtifactSelection.Type.ARTIFACT_SOURCE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_DEPLOYED;
 import static software.wings.beans.trigger.ArtifactSelection.Type.PIPELINE_SOURCE;
@@ -208,8 +206,9 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public void triggerExecutionPostArtifactCollectionAsync(Artifact artifact) {
-    executorService.execute(() -> triggerExecutionPostArtifactCollection(artifact));
+  public void triggerExecutionPostArtifactCollectionAsync(
+      String appId, String artifactStreamId, List<Artifact> artifacts) {
+    executorService.execute(() -> triggerExecutionPostArtifactCollection(appId, artifactStreamId, artifacts));
   }
 
   @Override
@@ -239,7 +238,7 @@ public class TriggerServiceImpl implements TriggerService {
         String s =
             "Trigger workflow or pipeline needs artifact. However, no artifact matched or collected. So, skipping the execution.";
         logger.warn(s);
-        throw new InvalidRequestException(s, USER_ADMIN);
+        throw new InvalidRequestException(s, USER);
       }
     }
     return triggerExecution(artifacts, trigger, parameters);
@@ -307,17 +306,35 @@ public class TriggerServiceImpl implements TriggerService {
     return TriggerServiceHelper.getCronDescription(cronExpression);
   }
 
-  private void triggerExecutionPostArtifactCollection(Artifact artifact) {
-    for (Trigger trigger :
-        triggerServiceHelper.getNewArtifactTriggers(artifact.getAppId(), artifact.getArtifactStreamId())) {
-      logger.info("Trigger found for artifact streamId {}", artifact.getArtifactStreamId());
+  private void triggerExecutionPostArtifactCollection(
+      String appId, String artifactStreamId, List<Artifact> collectedArtifacts) {
+    for (Trigger trigger : triggerServiceHelper.getNewArtifactTriggers(appId, artifactStreamId)) {
+      logger.info("Trigger found {} for artifact streamId {}", trigger.getName(), artifactStreamId);
       ArtifactTriggerCondition artifactTriggerCondition = (ArtifactTriggerCondition) trigger.getCondition();
       List<Artifact> artifacts = new ArrayList<>();
       List<ArtifactSelection> artifactSelections = trigger.getArtifactSelections();
+      if (isEmpty(artifactTriggerCondition.getArtifactFilter())) {
+        logger.info("No artifact filter set. Triggering with the collected artifact {}",
+            collectedArtifacts.get(collectedArtifacts.size() - 1).getUuid());
+        artifacts.add(collectedArtifacts.get(collectedArtifacts.size() - 1));
+      } else {
+        logger.info("Artifact filter {} set. Going over all the artifacts to find the matched artifacts",
+            artifactTriggerCondition.getArtifactFilter());
+        List<Artifact> matchedArtifacts = new ArrayList<>();
+        for (Artifact artifact : collectedArtifacts) {
+          if (checkArtifactMatchesArtifactFilter(
+                  artifact, artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex())) {
+            matchedArtifacts.add(artifact);
+          }
+        }
+        if (isNotEmpty(matchedArtifacts)) {
+          logger.info(
+              "Matched artifacts {}. Selecting the latest artifact", matchedArtifacts.get(matchedArtifacts.size() - 1));
+          artifacts.add(matchedArtifacts.get(matchedArtifacts.size() - 1));
+        }
+      }
       if (isEmpty(artifactSelections)) {
-        logger.info("No artifact selections found so executing pipeline with the collected artifact");
-        addIfArtifactFilterMatches(
-            artifact, artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex(), artifacts);
+        logger.info("No artifact selections found so executing pipeline/ workflow with the collected artifacts");
         if (isEmpty(artifacts)) {
           logger.warn(
               "Skipping execution - artifact does not match with the given filter {}", artifactTriggerCondition);
@@ -325,17 +342,6 @@ public class TriggerServiceImpl implements TriggerService {
         }
       } else {
         logger.info("Artifact selections found collecting artifacts as per artifactStream selections ");
-        if (artifactSelections.stream().anyMatch(artifactSelection
-                -> artifactSelection.getType().equals(ARTIFACT_SOURCE)
-                    && artifact.getServiceIds().contains(artifactSelection.getServiceId()))) {
-          addIfArtifactFilterMatches(
-              artifact, artifactTriggerCondition.getArtifactFilter(), artifactTriggerCondition.isRegex(), artifacts);
-          if (isEmpty(artifacts)) {
-            logger.warn(
-                "Skipping execution - artifact does not match with the given filter {}", artifactTriggerCondition);
-            continue;
-          }
-        }
         if (addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts)) {
           if (isEmpty(artifacts)) {
             logger.warn(
@@ -343,6 +349,10 @@ public class TriggerServiceImpl implements TriggerService {
             continue;
           }
         }
+      }
+      if (isNotEmpty(artifacts)) {
+        logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
+            artifacts.stream().map(Artifact::getUuid).collect(toList()));
       }
       triggerExecution(artifacts, trigger);
     }
@@ -462,15 +472,17 @@ public class TriggerServiceImpl implements TriggerService {
    */
   private void addLastCollectedArtifact(String appId, ArtifactSelection artifactSelection, List<Artifact> artifacts) {
     ArtifactStream artifactStream = artifactStreamService.get(appId, artifactSelection.getArtifactStreamId());
-    notNullCheck("ArtifactStream was deleted", artifactStream, USER_ADMIN);
+    notNullCheck("ArtifactStream was deleted", artifactStream, USER);
     Artifact lastCollectedArtifact;
     if (isEmpty(artifactSelection.getArtifactFilter())) {
       lastCollectedArtifact = artifactService.fetchLastCollectedArtifact(
           appId, artifactSelection.getArtifactStreamId(), artifactStream.getSourceName());
       if (lastCollectedArtifact != null
           && lastCollectedArtifact.getServiceIds().contains(artifactSelection.getServiceId())) {
-        addIfArtifactFilterMatches(
-            lastCollectedArtifact, artifactSelection.getArtifactFilter(), artifactSelection.isRegex(), artifacts);
+        if (checkArtifactMatchesArtifactFilter(
+                lastCollectedArtifact, artifactSelection.getArtifactFilter(), artifactSelection.isRegex())) {
+          artifacts.add(lastCollectedArtifact);
+        }
       }
     } else {
       lastCollectedArtifact = artifactService.getArtifactByBuildNumber(appId, artifactSelection.getArtifactStreamId(),
@@ -514,37 +526,32 @@ public class TriggerServiceImpl implements TriggerService {
     return lastDeployedArtifacts == null ? new ArrayList<>() : lastDeployedArtifacts;
   }
 
-  private void addIfArtifactFilterMatches(
-      Artifact artifact, String artifactFilter, boolean isRegEx, List<Artifact> artifacts) {
-    if (isNotEmpty(artifactFilter)) {
-      logger.info("Artifact filter {} set for artifact stream id {}", artifactFilter, artifact.getArtifactStreamId());
-      Pattern pattern;
-      if (isRegEx) {
-        pattern = compile(artifactFilter);
-      } else {
-        pattern = compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
-      }
-      if (isEmpty(artifact.getArtifactFiles())) {
-        if (pattern.matcher(artifact.getBuildNo()).find()) {
-          logger.info("Artifact filter {} matching with artifact name/ tag / buildNo {}", artifactFilter,
-              artifact.getBuildNo());
-          artifacts.add(artifact);
-        }
-      } else {
-        logger.info("Comparing artifact file name matches with the given artifact filter");
-        List<ArtifactFile> artifactFiles = artifact.getArtifactFiles()
-                                               .stream()
-                                               .filter(artifactFile -> pattern.matcher(artifactFile.getName()).find())
-                                               .collect(toList());
-        if (isNotEmpty(artifactFiles)) {
-          logger.info("Artifact file names matches with the given artifact filter");
-          artifact.setArtifactFiles(artifactFiles);
-          artifacts.add(artifact);
-        }
+  private boolean checkArtifactMatchesArtifactFilter(Artifact artifact, String artifactFilter, boolean isRegEx) {
+    Pattern pattern;
+    if (isRegEx) {
+      pattern = compile(artifactFilter);
+    } else {
+      pattern = compile(artifactFilter.replace(".", "\\.").replace("?", ".?").replace("*", ".*?"));
+    }
+    if (isEmpty(artifact.getArtifactFiles())) {
+      if (pattern.matcher(artifact.getBuildNo()).find()) {
+        logger.info(
+            "Artifact filter {} matching with artifact name/ tag / buildNo {}", artifactFilter, artifact.getBuildNo());
+        return true;
       }
     } else {
-      artifacts.add(artifact);
+      logger.info("Comparing artifact file name matches with the given artifact filter");
+      List<ArtifactFile> artifactFiles = artifact.getArtifactFiles()
+                                             .stream()
+                                             .filter(artifactFile -> pattern.matcher(artifactFile.getName()).find())
+                                             .collect(toList());
+      if (isNotEmpty(artifactFiles)) {
+        logger.info("Artifact file names matches with the given artifact filter");
+        artifact.setArtifactFiles(artifactFiles);
+        return true;
+      }
     }
+    return false;
   }
 
   private WorkflowExecution triggerExecution(List<Artifact> artifacts, Trigger trigger) {
@@ -588,7 +595,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private void resolveTriggerPipelineVariables(Trigger trigger, ExecutionArgs executionArgs) {
     Pipeline pipeline = pipelineService.readPipeline(trigger.getAppId(), trigger.getWorkflowId(), true);
-    notNullCheck("Pipeline was deleted or does not exist", pipeline, USER_ADMIN);
+    notNullCheck("Pipeline was deleted or does not exist", pipeline, USER);
     Map<String, String> triggerWorkflowVariableValues = overrideTriggerVariables(trigger, executionArgs);
     List<Variable> pipelineVariables = pipeline.getPipelineVariables();
     String envId = null;
@@ -625,7 +632,7 @@ public class TriggerServiceImpl implements TriggerService {
         logger.info("Service does not exist by Id, checking if environment {} can be found by name.", serviceIdOrName);
         service = serviceResourceService.getServiceByName(trigger.getAppId(), serviceIdOrName, false);
       }
-      notNullCheck("Service [" + serviceIdOrName + "] does not exist", service, USER_ADMIN);
+      notNullCheck("Service [" + serviceIdOrName + "] does not exist", service, USER);
       triggerWorkflowVariableValues.put(serviceVarName, service.getUuid());
     }
   }
@@ -1026,7 +1033,8 @@ public class TriggerServiceImpl implements TriggerService {
           String buildNumber = serviceBuildNumbers.get(serviceName);
           if (isBlank(buildNumber)) {
             throw new WingsException("Webhook services " + serviceBuildNumbers.keySet()
-                + " do not match with the trigger services " + services.values());
+                    + " do not match with the trigger services " + services.values(),
+                USER);
           } else {
             artifact = fetchMatchedArtifact(trigger, artifactSelection, buildNumber);
             if (artifact != null) {

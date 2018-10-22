@@ -81,12 +81,7 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    */
   WebHookToken generateWebHookToken(String appId, String triggerId);
 
-  /**
-   * Trigger stream action.
-   *
-   * @param artifact the artifact
-   */
-  void triggerExecutionPostArtifactCollectionAsync(Artifact artifact);
+  void triggerExecutionPostArtifactCollectionAsync(String appId, String artifactStreamId, List<Artifact> artifacts);
 
   /**
    * Trigger post pipeline completion async
