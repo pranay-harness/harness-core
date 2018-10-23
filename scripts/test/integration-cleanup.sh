@@ -15,6 +15,6 @@ docker ps | grep le_local | awk '{print $1}'
 docker ps -a | grep Exited | awk '{print $1}' | xargs docker rm || true
 
 echo "about to call docker kill le_local"
-docker ps | grep le_local | awk '{print $1}' | xargs docker kill || true
+docker ps | grep learning | awk '{print $1}' | xargs docker kill || true
 
 
