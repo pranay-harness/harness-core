@@ -20,10 +20,11 @@ public class AppdynamicsSetupTestNodeData extends SetupTestNodeData {
   private long tierId;
 
   @Builder
-  private AppdynamicsSetupTestNodeData(String appId, String settingId, String instanceName,
+  private AppdynamicsSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       long applicationId, long tierId) {
-    super(appId, settingId, instanceName, instanceElement, hostExpression, workflowId, fromTime, toTime);
+    super(
+        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
     this.applicationId = applicationId;
     this.tierId = tierId;
   }

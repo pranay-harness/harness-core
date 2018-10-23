@@ -17,18 +17,20 @@ import javax.validation.constraints.NotNull;
 public class SetupTestNodeData {
   @NotNull private String appId;
   @NotNull private String settingId;
-  @NotNull private String instanceName;
+  private String instanceName;
+  private boolean isServiceLevel;
   private InstanceElement instanceElement;
   private String hostExpression;
-  @NotNull private String workflowId;
+  private String workflowId;
   private long toTime = System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1);
   private long fromTime = toTime - TimeUnit.MINUTES.toMillis(15) / TimeUnit.SECONDS.toMillis(1);
 
-  public SetupTestNodeData(String appId, String settingId, String instanceName, InstanceElement instanceElement,
-      String hostExpression, String workflowId, long fromTime, long toTime) {
+  public SetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
+      InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime) {
     this.appId = appId;
     this.settingId = settingId;
     this.instanceName = instanceName;
+    this.isServiceLevel = isServiceLevel;
     this.instanceElement = instanceElement;
     this.hostExpression = hostExpression;
     this.workflowId = workflowId;

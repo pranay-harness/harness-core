@@ -22,9 +22,11 @@ public class SplunkSetupTestNodeData extends SetupTestNodeData {
   private String hostNameField;
 
   @Builder
-  public SplunkSetupTestNodeData(String appId, String settingId, String instanceName, InstanceElement instanceElement,
-      String hostExpression, String workflowId, long fromTime, long toTime, String query, String hostNameField) {
-    super(appId, settingId, instanceName, instanceElement, hostExpression, workflowId, fromTime, toTime);
+  public SplunkSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
+      InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
+      String query, String hostNameField) {
+    super(
+        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
     this.query = query;
     this.hostNameField = hostNameField;
   }

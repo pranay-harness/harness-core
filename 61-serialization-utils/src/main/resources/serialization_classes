@@ -567,3 +567,6 @@ software.wings.beans.delegation.TerraformProvisionParameters$TerraformCommandUni
 software.wings.api.AwsAmiDeployStateExecutionData, 5526
 software.wings.api.PipelineElement, 5527
 software.wings.beans.command.ShellExecutionData, 5528
+software.wings.service.impl.newrelic.NewRelicSetupTestNodeData, 5529
+software.wings.service.impl.analysis.SetupTestNodeData, 5530
+software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData, 5531

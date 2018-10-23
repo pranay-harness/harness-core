@@ -130,7 +130,12 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(AppdynamicsSetupTestNodeData setupTestNodeData) {
-    String hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+    String hostName = null;
+    // check if it is for service level, serviceId is empty then get hostname
+    if (!setupTestNodeData.isServiceLevel()) {
+      hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+    }
+
     try {
       final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
@@ -142,9 +147,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
                                             .build();
       return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
           .getMetricsWithDataForNode((AppDynamicsConfig) settingAttribute.getValue(), encryptionDetails,
-              setupTestNodeData.getApplicationId(), setupTestNodeData.getTierId(), hostName,
-              setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(),
-              apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
+              setupTestNodeData, hostName, apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)

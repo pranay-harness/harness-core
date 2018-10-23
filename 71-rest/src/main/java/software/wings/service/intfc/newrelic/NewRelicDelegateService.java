@@ -11,6 +11,7 @@ import software.wings.service.impl.newrelic.NewRelicApplication;
 import software.wings.service.impl.newrelic.NewRelicApplicationInstance;
 import software.wings.service.impl.newrelic.NewRelicMetric;
 import software.wings.service.impl.newrelic.NewRelicMetricData;
+import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -62,6 +63,6 @@ public interface NewRelicDelegateService {
 
   @DelegateTaskType(TaskType.NEWRELIC_GET_TXNS_WITH_DATA_FOR_NODE)
   VerificationNodeDataSetupResponse getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId, long fromTime,
-      long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException;
+      List<EncryptedDataDetail> encryptedDataDetails, NewRelicSetupTestNodeData setupTestNodeData, long instanceId,
+      ThirdPartyApiCallLog apiCallLog) throws IOException;
 }

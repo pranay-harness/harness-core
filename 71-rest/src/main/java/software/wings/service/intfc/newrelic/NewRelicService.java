@@ -31,8 +31,6 @@ public interface NewRelicService {
   List<NewRelicApplicationInstance> getApplicationInstances(
       @NotNull String settingId, long applicationId, @NotNull StateType stateType);
   List<NewRelicMetric> getTxnsWithData(String settingId, long applicationId, long instanceId);
-  VerificationNodeDataSetupResponse getMetricsWithDataForNode(
-      @NotNull String settingId, long newRelicApplicationId, long instanceId, long fromTime, long toTime);
   RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       NewRelicSetupTestNodeData newRelicSetupTestNodeData);
   Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<Metric> metrics);
