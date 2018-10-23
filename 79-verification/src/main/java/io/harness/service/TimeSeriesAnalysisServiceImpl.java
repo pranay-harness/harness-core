@@ -799,6 +799,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       case APP_DYNAMICS:
         result.put("default", NewRelicMetricValueDefinition.APP_DYNAMICS_VALUES_TO_ANALYZE);
         break;
+      case DYNA_TRACE:
+        result.put("default", DynaTraceTimeSeries.getDefinitionsToAnalyze());
+        break;
       case PROMETHEUS:
         result.put("default", getMetricTemplates(appId, stateType, null, cvConfigId));
         break;

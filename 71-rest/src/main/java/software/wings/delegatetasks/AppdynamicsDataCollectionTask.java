@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 
 import com.google.common.base.Preconditions;
@@ -51,7 +52,6 @@ import java.util.regex.Pattern;
  */
 public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectionTask {
   private static final Logger logger = LoggerFactory.getLogger(AppdynamicsDataCollectionTask.class);
-  public static final int DURATION_TO_ASK_MINUTES = 5;
   private AppdynamicsDataCollectionInfo dataCollectionInfo;
 
   @Inject private AppdynamicsDelegateService appdynamicsDelegateService;

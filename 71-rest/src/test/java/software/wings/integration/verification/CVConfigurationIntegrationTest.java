@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateType.APP_DYNAMICS;
 import static software.wings.sm.StateType.DATA_DOG;
+import static software.wings.sm.StateType.DYNA_TRACE;
 import static software.wings.sm.StateType.NEW_RELIC;
 import static software.wings.sm.StateType.PROMETHEUS;
 
@@ -29,6 +30,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
@@ -50,6 +52,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
   private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
+  private DynaTraceCVServiceConfiguration dynaTraceCVServiceConfiguration;
   private PrometheusCVServiceConfiguration prometheusCVServiceConfiguration;
   private DatadogCVServiceConfiguration datadogCVServiceConfiguration;
 
@@ -78,6 +81,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
     createNewRelicConfig(true);
     createAppDynamicsConfig();
+    createDynaTraceConfig();
     createPrometheusConfig();
     createDatadogConfig();
   }
@@ -107,6 +111,23 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
     appDynamicsCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
+  }
+
+  private void createDynaTraceConfig() {
+    dynaTraceCVServiceConfiguration = new DynaTraceCVServiceConfiguration();
+    dynaTraceCVServiceConfiguration.setAppId(appId);
+    dynaTraceCVServiceConfiguration.setEnvId(envId);
+    dynaTraceCVServiceConfiguration.setServiceId(serviceId);
+    dynaTraceCVServiceConfiguration.setEnabled24x7(true);
+    dynaTraceCVServiceConfiguration.setServiceMethods("SERVICE_METHOD-991CE862F114C79F\n"
+        + "SERVICE_METHOD-65C2EED098275731\n"
+        + "SERVICE_METHOD-9D3499F155C8070D\n"
+        + "SERVICE_METHOD-AECEC4A5C7E348EC\n"
+        + "SERVICE_METHOD-9ACB771237BE05C6\n"
+        + "SERVICE_METHOD-DA487A489220E53D");
+    dynaTraceCVServiceConfiguration.setConnectorId(generateUuid());
+    dynaTraceCVServiceConfiguration.setStateType(APP_DYNAMICS);
+    dynaTraceCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
   }
 
   private void createPrometheusConfig() {
@@ -304,6 +325,35 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
       assertEquals(serviceId, obj.getServiceId());
       assertEquals(PROMETHEUS, obj.getStateType());
       assertEquals(prometheusCVServiceConfiguration.getTimeSeriesToAnalyze(), obj.getTimeSeriesToAnalyze());
+    }
+  }
+
+  @Test
+  public <T extends CVConfiguration> void testDynaTraceConfiguration() {
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + DYNA_TRACE;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(dynaTraceCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<T> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
+    T fetchedObject = getRequestResponse.getResource();
+    if (fetchedObject instanceof DynaTraceCVServiceConfiguration) {
+      DynaTraceCVServiceConfiguration obj = (DynaTraceCVServiceConfiguration) fetchedObject;
+      assertEquals(savedObjectUuid, obj.getUuid());
+      assertEquals(accountId, obj.getAccountId());
+      assertEquals(appId, obj.getAppId());
+      assertEquals(envId, obj.getEnvId());
+      assertEquals(serviceId, obj.getServiceId());
+      assertEquals(DYNA_TRACE, obj.getStateType());
+      assertEquals(dynaTraceCVServiceConfiguration.getServiceMethods(), obj.getServiceMethods());
+      assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
     }
   }
 }

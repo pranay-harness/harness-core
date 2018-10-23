@@ -1,6 +1,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
+import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.common.VerificationConstants.PERIODIC_GAP_IN_DAYS;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.analysis.AnalysisComparisonStrategy.COMPARE_WITH_CURRENT;
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DynaTraceConfig;
+import software.wings.beans.TaskType;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.DataCollectionTaskResult;
 import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollectionTaskStatus;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
@@ -80,7 +83,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
   @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new DynaTraceMetricCollector(dataCollectionInfo, taskResult);
+    return new DynaTraceMetricCollector(
+        dataCollectionInfo, taskResult, this.getTaskType().equals(TaskType.DYNATRACE_COLLECT_24_7_METRIC_DATA.name()));
   }
 
   private class DynaTraceMetricCollector implements Runnable {
@@ -90,15 +94,19 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
     private int dataCollectionMinute;
     private final long collectionStartMinute;
     private Map<String, Long> hostStartTimeMap;
+    private DynaTraceConfig dynaTraceConfig;
+    boolean is247Task;
 
     private DynaTraceMetricCollector(
-        DynaTraceDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
+        DynaTraceDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult, boolean is247Task) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.taskResult = taskResult;
       this.collectionStartMinute = Timestamp.currentMinuteBoundary();
       this.collectionStartTime = Timestamp.minuteBoundary(dataCollectionInfo.getStartTime());
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
       hostStartTimeMap = new HashMap<>();
+      dynaTraceConfig = dataCollectionInfo.getDynaTraceConfig();
+      this.is247Task = is247Task;
     }
 
     @Override
@@ -118,8 +126,9 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                     .workflowId(dataCollectionInfo.getWorkflowId())
                     .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                     .serviceId(dataCollectionInfo.getServiceId())
+                    .cvConfigId(dataCollectionInfo.getCvConfigId())
                     .stateExecutionId(dataCollectionInfo.getStateExecutionId())
-                    .dataCollectionMinute(dataCollectionMinute)
+                    .dataCollectionMinute(getCollectionMinute(System.currentTimeMillis(), null, true))
                     .timeStamp(collectionStartTime)
                     .level(ClusterLevel.H0)
                     .groupName(DEFAULT_GROUP_NAME)
@@ -127,8 +136,8 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
             records.putAll(processMetricData(metricsData));
             List<NewRelicMetricDataRecord> recordsToSave = getAllMetricRecords(records);
-            if (!saveMetrics(dataCollectionInfo.getDynaTraceConfig().getAccountId(),
-                    dataCollectionInfo.getApplicationId(), dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
+            if (!saveMetrics(dynaTraceConfig.getAccountId(), dataCollectionInfo.getApplicationId(),
+                    dataCollectionInfo.getStateExecutionId(), recordsToSave)) {
               logger.error("Error saving metrics to the database. DatacollectionMin: {} StateexecutionId: {}",
                   dataCollectionMinute, dataCollectionInfo.getStateExecutionId());
             } else {
@@ -138,7 +147,7 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
             dataCollectionMinute++;
             collectionStartTime += TimeUnit.MINUTES.toMillis(1);
-            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime()) {
+            if (dataCollectionMinute >= dataCollectionInfo.getCollectionTime() || is247Task) {
               // We are done with all data collection, so setting task status to success and quitting.
               logger.info(
                   "Completed Dynatrace collection task. So setting task status to success and quitting. StateExecutionId {}",
@@ -180,6 +189,40 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
       }
     }
 
+    private int getCollectionMinute(final long metricTimeStamp, String host, boolean isHeartbeat) {
+      boolean isPredictiveAnalysis =
+          dataCollectionInfo.getAnalysisComparisonStrategy().equals(AnalysisComparisonStrategy.PREDICTIVE);
+      int collectionMinute;
+      if (isHeartbeat) {
+        if (is247Task) {
+          collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
+              + dataCollectionInfo.getCollectionTime();
+        } else if (isPredictiveAnalysis) {
+          collectionMinute = dataCollectionMinute + PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
+        } else {
+          collectionMinute = dataCollectionMinute;
+        }
+      } else {
+        if (is247Task) {
+          collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp);
+        } else {
+          long collectionStartTime;
+          if (isPredictiveAnalysis) {
+            collectionStartTime =
+                dataCollectionInfo.getStartTime() - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
+          } else {
+            // This condition is needed as in case of COMPARE_WITH_CURRENT we keep track of startTime for each host.
+            if (hostStartTimeMap.containsKey(host)) {
+              collectionStartTime = hostStartTimeMap.get(host);
+            } else {
+              collectionStartTime = dataCollectionInfo.getStartTime();
+            }
+          }
+          collectionMinute = (int) (TimeUnit.MILLISECONDS.toMinutes(metricTimeStamp - collectionStartTime));
+        }
+      }
+      return collectionMinute;
+    }
     /**
      * Method to fetch metric data
      *
@@ -187,7 +230,6 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
      * @throws IOException
      */
     public List<DynaTraceMetricDataResponse> getMetricsData() throws IOException {
-      final DynaTraceConfig dynaTraceConfig = dataCollectionInfo.getDynaTraceConfig();
       final List<EncryptedDataDetail> encryptionDetails = dataCollectionInfo.getEncryptedDataDetails();
       final List<DynaTraceMetricDataResponse> metricDataResponses = new ArrayList<>();
       List<Callable<DynaTraceMetricDataResponse>> callables = new ArrayList<>();
@@ -241,7 +283,36 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
             }
           }
           break;
+        case PREDICTIVE:
+          int periodToCollect;
+          long startTimeStamp;
+          if (is247Task) {
+            periodToCollect = dataCollectionInfo.getCollectionTime();
+            startTimeStamp = collectionStartTime;
+          } else {
+            if (dataCollectionMinute == 0) {
+              periodToCollect = PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
+            } else {
+              periodToCollect = DURATION_TO_ASK_MINUTES;
+            }
+            startTimeStamp = collectionStartTime - periodToCollect;
+          }
 
+          for (DynaTraceTimeSeries timeSeries : dataCollectionInfo.getTimeSeriesDefinitions()) {
+            callables.add(() -> {
+              DynaTraceMetricDataRequest dataRequest = DynaTraceMetricDataRequest.builder()
+                                                           .timeseriesId(timeSeries.getTimeseriesId())
+                                                           .entities(dataCollectionInfo.getServiceMethods())
+                                                           .aggregationType(timeSeries.getAggregationType())
+                                                           .percentile(timeSeries.getPercentile())
+                                                           .startTimestamp(startTimeStamp)
+                                                           .endTimestamp(collectionStartTime + periodToCollect)
+                                                           .build();
+              return dynaTraceDelegateService.fetchMetricData(dynaTraceConfig, dataRequest, encryptionDetails,
+                  createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+            });
+          }
+          break;
         default:
           throw new WingsException("invalid strategy " + dataCollectionInfo.getAnalysisComparisonStrategy());
       }
@@ -280,10 +351,6 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
 
               NewRelicMetricDataRecord metricDataRecord = records.get(btName, timeStamp.longValue());
               if (metricDataRecord == null) {
-                long startTime = collectionStartTime;
-                if (hostStartTimeMap.containsKey(dataResponse.getResult().getHost())) {
-                  startTime = hostStartTimeMap.get(dataResponse.getResult().getHost());
-                }
                 metricDataRecord =
                     NewRelicMetricDataRecord.builder()
                         .name(btName)
@@ -292,8 +359,9 @@ public class DynaTraceDataCollectionTask extends AbstractDelegateDataCollectionT
                         .workflowExecutionId(dataCollectionInfo.getWorkflowExecutionId())
                         .stateExecutionId(dataCollectionInfo.getStateExecutionId())
                         .serviceId(dataCollectionInfo.getServiceId())
-                        .dataCollectionMinute((int) ((Timestamp.minuteBoundary(timeStamp.longValue()) - startTime)
-                            / TimeUnit.MINUTES.toMillis(1)))
+                        .cvConfigId(dataCollectionInfo.getCvConfigId())
+                        .dataCollectionMinute(getCollectionMinute(
+                            Timestamp.minuteBoundary(timeStamp.longValue()), dataResponse.getResult().getHost(), false))
                         .timeStamp(timeStamp.longValue())
                         .stateType(StateType.DYNA_TRACE)
                         .host(dataResponse.getResult().getHost())

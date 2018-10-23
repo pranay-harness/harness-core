@@ -19,6 +19,7 @@ import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
+import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
@@ -45,6 +46,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case APP_DYNAMICS:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), AppDynamicsCVServiceConfiguration.class);
+        break;
+
+      case DYNA_TRACE:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), DynaTraceCVServiceConfiguration.class);
         break;
 
       case PROMETHEUS:
@@ -94,6 +99,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case APP_DYNAMICS:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), AppDynamicsCVServiceConfiguration.class);
+        break;
+      case DYNA_TRACE:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), DynaTraceCVServiceConfiguration.class);
         break;
       case PROMETHEUS:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), PrometheusCVServiceConfiguration.class);
@@ -156,25 +164,24 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         updateOperations.set("applicationId", ((NewRelicCVServiceConfiguration) cvConfiguration).getApplicationId())
             .set("metrics", ((NewRelicCVServiceConfiguration) cvConfiguration).getMetrics());
         break;
-
       case APP_DYNAMICS:
         updateOperations
             .set("appDynamicsApplicationId",
                 ((AppDynamicsCVServiceConfiguration) cvConfiguration).getAppDynamicsApplicationId())
             .set("tierId", ((AppDynamicsCVServiceConfiguration) cvConfiguration).getTierId());
         break;
-
+      case DYNA_TRACE:
+        updateOperations.set("serviceMethods", ((DynaTraceCVServiceConfiguration) cvConfiguration).getServiceMethods());
+        break;
       case PROMETHEUS:
         updateOperations.set(
             "timeSeriesToAnalyze", ((PrometheusCVServiceConfiguration) cvConfiguration).getTimeSeriesToAnalyze());
         break;
-
       case DATA_DOG:
         updateOperations
             .set("datadogServiceName", ((DatadogCVServiceConfiguration) cvConfiguration).getDatadogServiceName())
             .set("metrics", ((DatadogCVServiceConfiguration) cvConfiguration).getMetrics());
         break;
-
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);
     }
@@ -201,6 +208,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     switch (stateType) {
       case APP_DYNAMICS:
       case NEW_RELIC:
+      case DYNA_TRACE:
         return;
       case PROMETHEUS:
         metricTemplates = PrometheusState.createMetricTemplates(
@@ -236,6 +244,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     switch (stateType) {
       case APP_DYNAMICS:
       case NEW_RELIC:
+      case DYNA_TRACE:
         // Uses default metric template no Metric Template needs to be persisted
         return;
       case PROMETHEUS:
