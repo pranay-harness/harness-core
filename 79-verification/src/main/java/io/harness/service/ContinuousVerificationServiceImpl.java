@@ -131,6 +131,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     String testInputUrl = getDataFetchUrl(cvConfiguration, startMin - PREDECTIVE_HISTORY_MINUTES, endMin);
     String metricAnalysisSaveUrl = getMetricAnalysisSaveUrl(cvConfiguration, endMin, learningTaskId);
+    String historicalAnalysisUrl = getHistoricalAnalysisUrl(cvConfiguration, endMin);
 
     String metricTemplateUrl = getMetricTemplateUrl(accountId, cvConfiguration.getAppId(),
         cvConfiguration.getStateType(), cvConfiguration.getServiceId(), cvConfiguration.getUuid());
@@ -149,6 +150,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .parallel_processes(0)
             .test_input_url(testInputUrl)
             .previous_analysis_url(getPreviousAnalysisUrl(cvConfiguration))
+            .historical_analysis_url(historicalAnalysisUrl)
             .control_input_url("")
             .analysis_save_url(metricAnalysisSaveUrl)
             .metric_template_url(metricTemplateUrl)
@@ -195,5 +197,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
         + "/previous-analysis-247?appId=" + cvConfiguration.getAppId() + "&cvConfigId=" + cvConfiguration.getUuid()
         + "&dataCollectionMin=" + min;
+  }
+
+  private String getHistoricalAnalysisUrl(CVConfiguration cvConfiguration, long minute) {
+    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
+        + "/historical-analysis-24x7?accountId=" + cvConfiguration.getAccountId()
+        + "&applicationId=" + cvConfiguration.getAppId() + "&serviceId=" + cvConfiguration.getServiceId()
+        + "&analysisMinute=" + minute + "&cvConfigId=" + cvConfiguration.getUuid();
   }
 }

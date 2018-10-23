@@ -19,6 +19,7 @@ import software.wings.sm.StateType;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 9/7/18.
@@ -80,5 +81,94 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertNotNull(resultList);
     assertEquals(numOfGroups, resultList.size());
     resultList.forEach(record -> assertEquals(numOfMinutes, record.getAnalysisMinute()));
+  }
+
+  @Test
+  public void testGetHistoricalAnalysis() {
+    // setup
+    int sampleMinute = 1000000;
+    TimeSeriesMLAnalysisRecord testRecord = TimeSeriesMLAnalysisRecord.builder().build();
+    testRecord.setAnalysisMinute(sampleMinute);
+
+    for (int j = 1; j <= 5; j++) {
+      testRecord.setCreatedAt(j);
+      testRecord.setTransactions(Collections.EMPTY_MAP);
+      testRecord.setAppId(appId);
+      testRecord.setCvConfigId(cvConfigId);
+      testRecord.setAnalysisMinute(sampleMinute);
+
+      TimeSeriesMLAnalysisRecord red = wingsPersistence.saveAndGet(TimeSeriesMLAnalysisRecord.class, testRecord);
+      sampleMinute = sampleMinute - (int) TimeUnit.DAYS.toMinutes(7);
+      testRecord = TimeSeriesMLAnalysisRecord.builder().build();
+    }
+
+    // test behavior
+    List<TimeSeriesMLAnalysisRecord> historicalRecords =
+        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, 1000000);
+
+    // verify
+    assertNotNull(historicalRecords);
+    assertEquals("Historical list should be of size 4", 4, historicalRecords.size());
+  }
+
+  @Test
+  public void testGetHistoricalAnalysisNoHistorical() {
+    // setup
+    int sampleMinute = 1000000;
+    TimeSeriesMLAnalysisRecord testRecord = TimeSeriesMLAnalysisRecord.builder().build();
+    testRecord.setAnalysisMinute(sampleMinute);
+
+    for (int j = 1; j <= 5; j++) {
+      testRecord.setCreatedAt(j);
+      testRecord.setTransactions(Collections.EMPTY_MAP);
+      testRecord.setAppId(appId);
+      testRecord.setCvConfigId(cvConfigId);
+      testRecord.setAnalysisMinute(sampleMinute);
+
+      TimeSeriesMLAnalysisRecord red = wingsPersistence.saveAndGet(TimeSeriesMLAnalysisRecord.class, testRecord);
+      sampleMinute = sampleMinute - (int) TimeUnit.DAYS.toMinutes(7);
+      testRecord = TimeSeriesMLAnalysisRecord.builder().build();
+    }
+
+    // test behavior
+    List<TimeSeriesMLAnalysisRecord> historicalRecords =
+        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, 1000);
+
+    // verify
+    assertNotNull(historicalRecords);
+    assertEquals("Historical list should be of size 0", 0, historicalRecords.size());
+  }
+
+  @Test
+  public void testGetHistoricalAnalysisBadAppIdCvConfigId() {
+    // setup
+    int sampleMinute = 1000000;
+    TimeSeriesMLAnalysisRecord testRecord = TimeSeriesMLAnalysisRecord.builder().build();
+    testRecord.setAnalysisMinute(sampleMinute);
+
+    for (int j = 1; j <= 5; j++) {
+      testRecord.setCreatedAt(j);
+      testRecord.setTransactions(Collections.EMPTY_MAP);
+      testRecord.setAppId(appId);
+      testRecord.setCvConfigId(cvConfigId);
+      testRecord.setAnalysisMinute(sampleMinute);
+
+      TimeSeriesMLAnalysisRecord red = wingsPersistence.saveAndGet(TimeSeriesMLAnalysisRecord.class, testRecord);
+      sampleMinute = sampleMinute - (int) TimeUnit.DAYS.toMinutes(7);
+      testRecord = TimeSeriesMLAnalysisRecord.builder().build();
+    }
+
+    // test behavior
+    List<TimeSeriesMLAnalysisRecord> historicalRecordsBadAppId =
+        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId + "-bad", serviceId, cvConfigId, 1000000);
+
+    List<TimeSeriesMLAnalysisRecord> historicalRecordsBadCvConfigId =
+        metricDataAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId + "-bad", 1000000);
+
+    // verify
+    assertNotNull(historicalRecordsBadAppId);
+    assertEquals("Historical list should be of size 0", 0, historicalRecordsBadAppId.size());
+    assertNotNull(historicalRecordsBadCvConfigId);
+    assertEquals("Historical list should be of size 0", 0, historicalRecordsBadCvConfigId.size());
   }
 }
