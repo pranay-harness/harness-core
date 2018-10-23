@@ -2,6 +2,7 @@ package software.wings.service.impl.trigger;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.time.Duration.ofHours;
@@ -46,6 +47,7 @@ import io.harness.exception.WingsException;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.Environment;
 import software.wings.beans.ExecutionArgs;
@@ -75,6 +77,7 @@ import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.WingsExceptionMapper;
 import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
@@ -354,7 +357,14 @@ public class TriggerServiceImpl implements TriggerService {
         logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
             artifacts.stream().map(Artifact::getUuid).collect(toList()));
       }
-      triggerExecution(artifacts, trigger);
+      try {
+        triggerExecution(artifacts, trigger);
+      } catch (WingsException exception) {
+        exception.addContext(Application.class, trigger.getAppId());
+        exception.addContext(ArtifactStream.class, artifactStreamId);
+        exception.addContext(Trigger.class, trigger.getUuid());
+        WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      }
     }
   }
 

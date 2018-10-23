@@ -224,7 +224,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
     Service service = serviceResourceService.get(appId, artifactStream.getServiceId(), false);
     if (service == null) {
       artifactStreamService.delete(appId, artifactStream.getUuid());
-      throw new WingsException(ErrorCode.GENERAL_ERROR)
+      throw new WingsException(ErrorCode.GENERAL_ERROR, USER)
           .addParam("message", format("Artifact stream %s is a zombie.", artifactStream.getUuid()));
     }
     return service;

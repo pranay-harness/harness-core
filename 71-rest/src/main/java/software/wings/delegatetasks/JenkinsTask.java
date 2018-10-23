@@ -124,6 +124,20 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           logger.info(
               "The Jenkins queued url {} and retrieving build information", jenkinsTaskParams.getQueuedBuildUrl());
           Build jenkinsBuild = jenkins.getBuild(new QueueReference(jenkinsTaskParams.getQueuedBuildUrl()));
+          if (jenkinsBuild == null) {
+            logger.error(
+                "Error occurred while retrieving the build {} status.  Job might have been deleted between poll intervals",
+                jenkinsTaskParams.getQueuedBuildUrl());
+            logService.save(getAccountId(),
+                constructLog(jenkinsTaskParams.getActivityId(), jenkinsTaskParams.getUnitName(), getAppId(),
+                    LogLevel.INFO, "Failed to get the build status " + jenkinsTaskParams.getQueuedBuildUrl(),
+                    CommandExecutionStatus.FAILURE));
+            jenkinsExecutionResponse.setErrorMessage(
+                "Failed to get the build status. Job might have been deleted between poll intervals.");
+            jenkinsExecutionResponse.setExecutionStatus(ExecutionStatus.FAILED);
+            return jenkinsExecutionResponse;
+          }
+
           jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
           jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
 

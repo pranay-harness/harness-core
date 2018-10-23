@@ -12,6 +12,7 @@ import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.RUNNING;
+import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -229,7 +230,6 @@ public class JenkinsState extends State {
     Map<String, String> jobParameterMap = isEmpty(jobParameters)
         ? Collections.emptyMap()
         : jobParameters.stream().collect(toMap(ParameterEntry::getKey, ParameterEntry::getValue));
-    final String finalJobName = evaluatedJobName;
 
     Map<String, String> evaluatedParameters = Maps.newHashMap(jobParameterMap);
     evaluatedParameters.forEach(
@@ -248,7 +248,7 @@ public class JenkinsState extends State {
                                               .jenkinsConfig(jenkinsConfig)
                                               .encryptedDataDetails(secretManager.getEncryptionDetails(
                                                   jenkinsConfig, context.getAppId(), context.getWorkflowExecutionId()))
-                                              .jobName(finalJobName)
+                                              .jobName(evaluatedJobName)
                                               .parameters(evaluatedParameters)
                                               .filePathsForAssertion(evaluatedFilePathsForAssertion)
                                               .activityId(activityId)
@@ -269,7 +269,7 @@ public class JenkinsState extends State {
     String delegateTaskId = delegateService.queueTask(delegateTask);
 
     JenkinsExecutionData jenkinsExecutionData = JenkinsExecutionData.builder()
-                                                    .jobName(finalJobName)
+                                                    .jobName(evaluatedJobName)
                                                     .jobParameters(evaluatedParameters)
                                                     .activityId(activityId)
                                                     .build();
@@ -372,10 +372,8 @@ public class JenkinsState extends State {
           .withErrorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
           .build();
     }
+
     jenkinsExecutionResponse = (JenkinsExecutionResponse) notifyResponseData;
-    String activityId = jenkinsExecutionResponse.getActivityId();
-    updateActivityStatus(
-        activityId, ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
     JenkinsExecutionData jenkinsExecutionData = (JenkinsExecutionData) context.getStateExecutionData();
 
     jenkinsExecutionData.setFilePathAssertionMap(jenkinsExecutionResponse.getFilePathAssertionMap());
@@ -392,26 +390,35 @@ public class JenkinsState extends State {
     // Async response for START_TASK received, start POLL_TASK
     if (isNotEmpty(jenkinsExecutionResponse.getSubTaskType().name())
         && jenkinsExecutionResponse.getSubTaskType().name().equals(JenkinsSubTaskType.START_TASK.name())) {
-      if (FAILED.equals(jenkinsExecutionResponse.getExecutionStatus())) {
+      if (!SUCCESS.equals(jenkinsExecutionResponse.getExecutionStatus())) {
+        updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
+            ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
         return anExecutionResponse()
-            .withExecutionStatus(FAILED)
+            .withExecutionStatus(jenkinsExecutionResponse.getExecutionStatus())
             .withStateExecutionData(jenkinsExecutionData)
             .withErrorMessage(jenkinsExecutionResponse.getErrorMessage())
             .build();
       }
       if (isNotEmpty(jenkinsExecutionResponse.getQueuedBuildUrl())) {
         // Set time taken for Start Task
+        updateActivityStatus(
+            jenkinsExecutionResponse.getActivityId(), ((ExecutionContextImpl) context).getApp().getUuid(), RUNNING);
         jenkinsExecutionResponse.setTimeElapsed(System.currentTimeMillis() - jenkinsExecutionData.getStartTs());
         return startJenkinsPollTask(context, response);
       } else {
         // Can not start POLL_TASK
         logger.error("Jenkins Queued Build URL is empty and could not start POLL_TASK", USER);
+        updateActivityStatus(
+            jenkinsExecutionResponse.getActivityId(), ((ExecutionContextImpl) context).getApp().getUuid(), FAILED);
         return anExecutionResponse()
             .withExecutionStatus(FAILED)
             .withStateExecutionData(jenkinsExecutionData)
             .withErrorMessage("Queued build URL is empty. Verify in Jenkins server.")
             .build();
       }
+    } else {
+      updateActivityStatus(jenkinsExecutionResponse.getActivityId(),
+          ((ExecutionContextImpl) context).getApp().getUuid(), jenkinsExecutionResponse.getExecutionStatus());
     }
 
     if (isNotEmpty(sweepingOutputName)) {

@@ -457,11 +457,10 @@ public class JenkinsImpl implements Jenkins {
   @Override
   public Build getBuild(QueueReference queueItem) throws IOException {
     QueueItem queueItem1 = jenkinsServer.getQueueItem(queueItem);
-    if (queueItem1.getExecutable() != null) {
-      return jenkinsServer.getBuild(queueItem1);
-    } else {
+    if (queueItem1 == null || queueItem1.getExecutable() == null) {
       return null;
     }
+    return jenkinsServer.getBuild(queueItem1);
   }
 
   @Override
