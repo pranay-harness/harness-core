@@ -2218,10 +2218,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               (AwsAmiDeployStateExecutionData) next.getStateExecutionData();
           instanceStatusSummaries.addAll(awsAmiDeployStateExecutionData.getNewInstanceStatusSummaries());
         } else if (nextStateType == nextStateType.HELM_DEPLOY) {
-          HelmDeployStateExecutionData helmDeployStateExecutionData =
-              (HelmDeployStateExecutionData) next.getStateExecutionData();
-          if (isNotEmpty(helmDeployStateExecutionData.getNewInstanceStatusSummaries())) {
-            instanceStatusSummaries.addAll(helmDeployStateExecutionData.getNewInstanceStatusSummaries());
+          StateExecutionData stateExecutionData = next.getStateExecutionData();
+          if (stateExecutionData instanceof HelmDeployStateExecutionData) {
+            HelmDeployStateExecutionData helmDeployStateExecutionData =
+                (HelmDeployStateExecutionData) stateExecutionData;
+            if (isNotEmpty(helmDeployStateExecutionData.getNewInstanceStatusSummaries())) {
+              instanceStatusSummaries.addAll(helmDeployStateExecutionData.getNewInstanceStatusSummaries());
+            }
           }
         } else if (nextStateType == nextStateType.KUBERNETES_STEADY_STATE_CHECK) {
           KubernetesSteadyStateCheckExecutionData kubernetesSteadyStateCheckExecutionData =

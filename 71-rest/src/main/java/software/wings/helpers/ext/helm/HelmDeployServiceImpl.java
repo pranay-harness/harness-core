@@ -125,9 +125,13 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           "Timed out waiting for controller to reach in steady state", LogLevel.ERROR);
       return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
     } catch (WingsException e) {
+      StringBuilder stringBuilder = new StringBuilder(e.getMessage()).append(' ').append(Misc.getMessage(e));
+      executionLogCallback.saveExecutionLog(stringBuilder.toString(), LogLevel.ERROR);
       throw e;
     } catch (Exception e) {
-      logger.error(format("Exception in deploying helm chart [%s]", commandRequest.toString()), e);
+      String msg = format("Exception in deploying helm chart [%s]", commandRequest.toString());
+      logger.error(msg, e);
+      executionLogCallback.saveExecutionLog(msg, LogLevel.ERROR);
       return new HelmCommandResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(e));
     } finally {
       if (checkDeleteReleaseNeeded(commandRequest)) {

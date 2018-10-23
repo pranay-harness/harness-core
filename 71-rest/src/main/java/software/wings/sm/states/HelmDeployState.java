@@ -242,7 +242,8 @@ public class HelmDeployState extends State {
   private void validateChartSpecification(HelmChartSpecification chartSpec) {
     if (chartSpec == null || (isEmpty(chartSpec.getChartName()) && isEmpty(chartSpec.getChartUrl()))) {
       throw new InvalidRequestException(
-          "Invalid chart specification " + (chartSpec == null ? "NULL" : chartSpec.toString()));
+          "Invalid chart specification. " + (chartSpec == null ? "Chart Specification is null" : chartSpec.toString()),
+          WingsException.USER);
     }
   }
 
@@ -383,7 +384,7 @@ public class HelmDeployState extends State {
 
     if (executionResponse.getHelmCommandResponse() == null) {
       logger.info("Helm command task failed with status " + executionResponse.getCommandExecutionStatus().toString()
-          + "with error message " + executionResponse.getErrorMessage());
+          + " with error message " + executionResponse.getErrorMessage());
 
       return executionResponseBuilder.build();
     }
@@ -565,7 +566,7 @@ public class HelmDeployState extends State {
       if (notifyResponseData instanceof RemoteMethodReturnValueData) {
         msg += notifyResponseData.toString();
       }
-      throw new InvalidRequestException(msg);
+      throw new InvalidRequestException(msg, WingsException.USER);
     }
 
     return (HelmCommandExecutionResponse) notifyResponseData;
