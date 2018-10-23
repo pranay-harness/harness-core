@@ -3,6 +3,7 @@ package software.wings.service;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,6 +34,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
+import io.harness.persistence.ReadPref;
 import io.harness.persistence.UuidAware;
 import io.harness.queue.Queue;
 import io.harness.rule.RealMongo;
@@ -1719,7 +1721,8 @@ public class KmsTest extends WingsBaseTest {
     assertEquals(kmsConfig.getSecretKey(), savedKmsConfig.getSecretKey());
     assertEquals(kmsConfig.getKmsArn(), savedKmsConfig.getKmsArn());
 
-    KmsConfig encryptedKms = wingsPersistence.getDatastore().createQuery(KmsConfig.class).get();
+    KmsConfig encryptedKms =
+        wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).createQuery(KmsConfig.class).get();
 
     assertNotEquals(encryptedKms.getAccessKey(), savedKmsConfig.getAccessKey());
     assertNotEquals(encryptedKms.getSecretKey(), savedKmsConfig.getSecretKey());

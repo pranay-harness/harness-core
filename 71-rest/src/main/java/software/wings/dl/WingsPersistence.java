@@ -6,7 +6,6 @@ import io.harness.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.ReadPref;
-import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -332,13 +331,6 @@ public interface WingsPersistence extends HPersistence {
    * @return the or create grid fs bucket
    */
   GridFSBucket getOrCreateGridFSBucket(String bucketName);
-
-  /**
-   * Gets datastore.
-   *
-   * @return the datastore
-   */
-  Datastore getDatastore();
 
   /**
    * Close.

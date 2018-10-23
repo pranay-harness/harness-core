@@ -1,6 +1,7 @@
 package software.wings.scheduler;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import com.google.inject.Inject;
 
@@ -9,6 +10,7 @@ import com.mongodb.DBCursor;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.persistence.ReadPref;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -60,7 +62,7 @@ public class PersistentLockCleanupJob implements Job {
                                      .append("lockState", "unlocked")
                                      .append("lastUpdated", new BasicDBObject("$lt", Date.from(date.toInstant())));
 
-    return wingsPersistence.getCollection("locks").find(filter).limit(1000);
+    return wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "locks").find(filter).limit(1000);
   }
 
   @Override

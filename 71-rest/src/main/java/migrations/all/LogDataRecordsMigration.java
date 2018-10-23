@@ -1,6 +1,7 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static software.wings.beans.Base.ID_KEY;
 
 import com.google.inject.Inject;
@@ -10,6 +11,7 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import io.harness.persistence.ReadPref;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,10 +28,10 @@ public class LogDataRecordsMigration implements Migration {
 
   @Override
   public void migrate() {
-    DBCollection collection = wingsPersistence.getCollection("logDataRecords");
+    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "logDataRecords");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-    DBCursor logDataRecords = wingsPersistence.getCollection("logDataRecords").find();
+    DBCursor logDataRecords = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "logDataRecords").find();
 
     logger.info("will go through " + logDataRecords.size() + " records");
 

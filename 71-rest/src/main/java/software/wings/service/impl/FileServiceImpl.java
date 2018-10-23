@@ -5,6 +5,7 @@ import static com.mongodb.client.model.Sorts.descending;
 import static com.mongodb.client.model.Sorts.orderBy;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.FILE_INTEGRITY_CHECK_FAILED;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -21,6 +22,7 @@ import com.mongodb.client.gridfs.model.GridFSFile;
 import com.mongodb.client.gridfs.model.GridFSUploadOptions;
 import com.mongodb.client.model.Filters;
 import io.harness.exception.WingsException;
+import io.harness.persistence.ReadPref;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 import org.slf4j.Logger;
@@ -152,7 +154,9 @@ public class FileServiceImpl implements FileService {
       objIDs.add(new ObjectId(id));
     }
     BasicDBObject query = new BasicDBObject("_id", new BasicDBObject("$in", objIDs));
-    return wingsPersistence.getCollection(fileBucket.representationName() + ".files").find(query).toArray();
+    return wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, fileBucket.representationName() + ".files")
+        .find(query)
+        .toArray();
   }
 
   /**
@@ -191,8 +195,9 @@ public class FileServiceImpl implements FileService {
   @Override
   public boolean updateParentEntityIdAndVersion(Class entityClass, String entityId, Integer version, String fileId,
       Map<String, Object> others, FileBucket fileBucket) {
-    DBCollection collection =
-        wingsPersistence.getDatastore().getDB().getCollection(fileBucket.representationName() + ".files");
+    DBCollection collection = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+                                  .getDB()
+                                  .getCollection(fileBucket.representationName() + ".files");
 
     // TODO: creating this index here makes no sense
     collection.createIndex(

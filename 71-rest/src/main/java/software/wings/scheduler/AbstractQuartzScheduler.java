@@ -1,5 +1,6 @@
 package software.wings.scheduler;
 
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
@@ -16,6 +17,7 @@ import com.mongodb.MongoClientURI;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.mongo.MongoConfig;
+import io.harness.persistence.ReadPref;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -74,7 +76,8 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
       WingsPersistence wingsPersistence = injector.getInstance(Key.get(WingsMongoPersistence.class));
 
       final String prefix = properties.getProperty("org.quartz.jobStore.collectionPrefix");
-      final DBCollection triggers = wingsPersistence.getCollection(prefix + "_triggers");
+      final DBCollection triggers =
+          wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, prefix + "_triggers");
       BasicDBObject jobIdKey = new BasicDBObject("jobId", 1);
       triggers.createIndex(jobIdKey, null, false);
 

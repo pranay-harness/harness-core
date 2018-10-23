@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -18,6 +19,7 @@ import com.mongodb.DBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
+import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.DatastoreImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -114,13 +116,15 @@ public class LogServiceImpl implements LogService {
       List<DBObject> dbObjects = new ArrayList<>(logs.size());
       for (Log log : logs) {
         try {
-          DBObject dbObject = ((DatastoreImpl) wingsPersistence.getDatastore()).getMapper().toDBObject(log);
+          DBObject dbObject = ((DatastoreImpl) wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL))
+                                  .getMapper()
+                                  .toDBObject(log);
           dbObjects.add(dbObject);
         } catch (Exception e) {
           logger.error(format("Exception in saving log [%s]", log), e);
         }
       }
-      wingsPersistence.getCollection("commandLogs").insert(dbObjects);
+      wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "commandLogs").insert(dbObjects);
 
       // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
 

@@ -1,6 +1,7 @@
 package io.harness.limits.configuration;
 
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -10,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
+import io.harness.persistence.ReadPref;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -33,14 +35,14 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   @Before
   public void ensureIndices() throws Exception {
     if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
-      dao.getDatastore().ensureIndexes(ConfiguredLimit.class);
+      dao.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).ensureIndexes(ConfiguredLimit.class);
       indexesEnsured = true;
     }
   }
 
   @After
   public void clearCollection() {
-    Datastore ds = dao.getDatastore();
+    Datastore ds = dao.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
     ds.delete(ds.createQuery(ConfiguredLimit.class).filter("accountId", SOME_ACCOUNT_ID));
   }
 

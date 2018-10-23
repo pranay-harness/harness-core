@@ -1,10 +1,13 @@
 package migrations.all;
 
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
+import io.harness.persistence.ReadPref;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +22,7 @@ public class AuthTokenTtlMigration implements Migration {
   @Inject private WingsPersistence wingsPersistence;
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection("authTokens");
+    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "authTokens");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     bulkWriteOperation.find(wingsPersistence.createQuery(AuthToken.class).field("ttl").doesNotExist().getQueryObject())
         .update(new BasicDBObject(

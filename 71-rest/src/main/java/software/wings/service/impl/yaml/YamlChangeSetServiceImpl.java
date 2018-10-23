@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -18,6 +19,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -90,7 +92,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                            .order("createdAt");
       UpdateOperations<YamlChangeSet> updateOperations =
           wingsPersistence.createUpdateOperations(YamlChangeSet.class).set("status", Status.RUNNING);
-      YamlChangeSet modifiedChangeSet = wingsPersistence.getDatastore().findAndModify(findQuery, updateOperations);
+      YamlChangeSet modifiedChangeSet =
+          wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(findQuery, updateOperations);
 
       if (modifiedChangeSet == null) {
         logger.info("No change set found in queued state");

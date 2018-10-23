@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -18,6 +19,7 @@ import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.persistence.ReadPref;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
@@ -250,7 +252,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
             UpdateOperations<DelegateConnectionResult> updateOperations =
                 wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
                     .set("lastUpdatedAt", clock.millis());
-            DelegateConnectionResult result = wingsPersistence.getDatastore().findAndModify(query, updateOperations);
+            DelegateConnectionResult result =
+                wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(query, updateOperations);
             if (result != null) {
               logger.info("Whitelist entry refreshed for task {} and delegate {}", task.getUuid(), delegateId);
             } else {

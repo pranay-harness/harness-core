@@ -6,6 +6,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.compile;
@@ -49,6 +50,7 @@ import io.harness.beans.PageResponse;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -375,7 +377,7 @@ public class ArtifactServiceImpl implements ArtifactService {
       }
     }
     if (isNotEmpty(artifactIds)) {
-      wingsPersistence.getCollection("artifacts")
+      wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts")
           .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds.toArray())));
     }
     if (isNotEmpty(artifactIdsWithFiles)) {
@@ -561,11 +563,12 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   private void deleteArtifacts(Object[] artifactIds, List<ObjectId> artifactFileUuids) {
     logger.info("Deleting artifactIds of artifacts {}", artifactIds);
-    wingsPersistence.getCollection("artifacts").remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds)));
+    wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts")
+        .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds)));
     if (isNotEmpty(artifactFileUuids)) {
-      wingsPersistence.getCollection("artifacts.files")
+      wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts.files")
           .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
-      wingsPersistence.getCollection("artifacts.chunks")
+      wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts.chunks")
           .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
     }
   }

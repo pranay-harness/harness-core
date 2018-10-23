@@ -1,10 +1,12 @@
 package software.wings.beans.infrastructure.instance.stats;
 
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.ReadPref;
 import lombok.val;
 import org.junit.After;
 import org.junit.Before;
@@ -29,14 +31,14 @@ public class InstanceStatsSnapshotIntegrationTest extends BaseIntegrationTest {
   @Before
   public void ensureIndices() {
     if (!indexesEnsured) {
-      persistence.getDatastore().ensureIndexes(InstanceStatsSnapshot.class);
+      persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).ensureIndexes(InstanceStatsSnapshot.class);
       indexesEnsured = true;
     }
   }
 
   @After
   public void clearCollection() {
-    val ds = persistence.getDatastore();
+    val ds = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
     ds.delete(ds.createQuery(InstanceStatsSnapshot.class).filter("accountId", SOME_ACCOUNT_ID));
   }
 

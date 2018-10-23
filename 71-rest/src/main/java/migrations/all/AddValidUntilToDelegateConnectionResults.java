@@ -1,11 +1,14 @@
 package migrations.all;
 
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
 import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.ReadPref;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +26,8 @@ public class AddValidUntilToDelegateConnectionResults implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection("delegateConnectionResults");
+    final DBCollection collection =
+        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "delegateConnectionResults");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int i = 1;
