@@ -9,6 +9,7 @@ import migrations.all.AddValidUntilToActivity;
 import migrations.all.AddValidUntilToAlert;
 import migrations.all.AddValidUntilToDelegateConnectionResults;
 import migrations.all.AddValidUntilToDelegateTask;
+import migrations.all.AddValidUntilToWaitQueue;
 import migrations.all.AppKeywordsMigration;
 import migrations.all.AuthTokenTtlMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
@@ -134,6 +135,7 @@ public class MigrationList {
         .add(Pair.of(192, SetIsDeletedFlagForInstances.class))
         .add(Pair.of(193, UsageRestrictionsMigration.class))
         .add(Pair.of(194, AddInstanceStatsCollectionJobToAllAccounts.class))
+        .add(Pair.of(195, AddValidUntilToWaitQueue.class))
         .build();
   }
 }
