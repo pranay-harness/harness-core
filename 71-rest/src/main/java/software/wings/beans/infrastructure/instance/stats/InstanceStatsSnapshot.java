@@ -10,10 +10,6 @@ import lombok.Value;
 import lombok.experimental.NonFinal;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Field;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
 
@@ -25,9 +21,6 @@ import java.util.List;
 @Value
 @EqualsAndHashCode(callSuper = false)
 @Entity(value = "instanceStats", noClassnameStored = true)
-@Indexes(@Index(fields = { @Field("timestamp")
-                           , @Field("accountId") },
-    options = @IndexOptions(unique = true, name = "instanceStatsUniqueIdx")))
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class InstanceStatsSnapshot extends Base {
   private static final List<EntityType> ENTITY_TYPES_TO_AGGREGATE_ON = Arrays.asList(EntityType.APPLICATION);
