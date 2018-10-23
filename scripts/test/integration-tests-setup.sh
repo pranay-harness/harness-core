@@ -159,7 +159,7 @@ serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret
 echo $serviceSecret
 server_url=https://$HOSTNAME:7070
 echo $server_url
-docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=integration-tests harness/learning-engine-prod:latest
+docker pull harness/learning-engine-prod:latest && docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=integration-tests harness/learning-engine-prod:latest
 
 echo "listing containers after le_local was launched"
 docker ps
