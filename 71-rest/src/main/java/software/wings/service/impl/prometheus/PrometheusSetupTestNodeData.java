@@ -23,10 +23,11 @@ public class PrometheusSetupTestNodeData extends SetupTestNodeData {
   private List<TimeSeries> timeSeriesToCollect;
 
   @Builder
-  public PrometheusSetupTestNodeData(String appId, String settingId, String instanceName,
+  public PrometheusSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       List<TimeSeries> timeSeriesToCollect) {
-    super(appId, settingId, instanceName, instanceElement, hostExpression, workflowId, fromTime, toTime);
+    super(
+        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
     this.timeSeriesToCollect = timeSeriesToCollect;
   }
 }

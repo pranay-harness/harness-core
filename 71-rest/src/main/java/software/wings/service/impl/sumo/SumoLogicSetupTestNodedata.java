@@ -20,9 +20,11 @@ public class SumoLogicSetupTestNodedata extends SetupTestNodeData {
   private String hostNameField;
 
   @Builder
-  SumoLogicSetupTestNodedata(String appId, String settingId, String instanceName, InstanceElement instanceElement,
-      String hostExpression, String workflowId, long fromTime, long toTime, String query, String hostNameField) {
-    super(appId, settingId, instanceName, instanceElement, hostExpression, workflowId, fromTime, toTime);
+  SumoLogicSetupTestNodedata(String appId, String settingId, String instanceName, boolean isServiceLevel,
+      InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
+      String query, String hostNameField) {
+    super(
+        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
     this.query = query;
     this.hostNameField = hostNameField;
   }

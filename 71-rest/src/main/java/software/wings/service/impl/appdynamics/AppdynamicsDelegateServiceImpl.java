@@ -475,11 +475,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(AppDynamicsConfig appDynamicsConfig,
-      List<EncryptedDataDetail> encryptionDetails, long applicationId, long tierId, String hostName, long fromTime,
-      long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException, CloneNotSupportedException {
-    final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, applicationId, tierId, encryptionDetails);
-    final List<AppdynamicsMetric> tierMetrics =
-        getTierBTMetrics(appDynamicsConfig, applicationId, tierId, encryptionDetails, apiCallLog);
+      List<EncryptedDataDetail> encryptionDetails, AppdynamicsSetupTestNodeData setupTestNodeData, String hostName,
+      ThirdPartyApiCallLog apiCallLog) throws IOException, CloneNotSupportedException {
+    final AppdynamicsTier tier = getAppdynamicsTier(
+        appDynamicsConfig, setupTestNodeData.getApplicationId(), setupTestNodeData.getTierId(), encryptionDetails);
+    final List<AppdynamicsMetric> tierMetrics = getTierBTMetrics(appDynamicsConfig,
+        setupTestNodeData.getApplicationId(), setupTestNodeData.getTierId(), encryptionDetails, apiCallLog);
 
     if (isEmpty(tierMetrics)) {
       return VerificationNodeDataSetupResponse.builder()
@@ -488,12 +489,19 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
           .build();
     }
     final SortedSet<AppdynamicsMetricData> metricsData = new TreeSet<>();
+    if (setupTestNodeData.isServiceLevel()) {
+      return VerificationNodeDataSetupResponse.builder()
+          .providerReachable(true)
+          .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(tierMetrics).build())
+          .dataForNode(metricsData)
+          .build();
+    }
     List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
     for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
       callables.add(
           ()
-              -> getTierBTMetricData(appDynamicsConfig, applicationId, tier.getName(), appdynamicsMetric.getName(),
-                  hostName, DURATION_TO_ASK_MINUTES, encryptionDetails, apiCallLog));
+              -> getTierBTMetricData(appDynamicsConfig, setupTestNodeData.getApplicationId(), tier.getName(),
+                  appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails, apiCallLog));
     }
     List<Optional<List<AppdynamicsMetricData>>> results = dataCollectionService.executeParrallel(callables);
     results.forEach(result -> {

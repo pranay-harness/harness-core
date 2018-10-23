@@ -17,9 +17,11 @@ public class NewRelicSetupTestNodeData extends SetupTestNodeData {
   private long newRelicAppId;
 
   @Builder
-  public NewRelicSetupTestNodeData(String appId, String settingId, String instanceName, InstanceElement instanceElement,
-      String hostExpression, String workflowId, long fromTime, long toTime, long newRelicAppId) {
-    super(appId, settingId, instanceName, instanceElement, hostExpression, workflowId, fromTime, toTime);
+  public NewRelicSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
+      InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
+      long newRelicAppId) {
+    super(
+        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
     this.newRelicAppId = newRelicAppId;
   }
 }

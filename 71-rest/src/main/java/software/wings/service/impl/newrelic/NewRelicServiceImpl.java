@@ -245,10 +245,40 @@ public class NewRelicServiceImpl implements NewRelicService {
   }
 
   @Override
-  public VerificationNodeDataSetupResponse getMetricsWithDataForNode(
-      String settingId, long newRelicApplicationId, long instanceId, long fromTime, long toTime) {
+  public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
+      NewRelicSetupTestNodeData setupTestNodeData) {
+    String hostName;
+    long instanceId = -1;
+    // check if it is for service level, serviceId is empty then get hostname
+    if (!setupTestNodeData.isServiceLevel()) {
+      hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
+      List<NewRelicApplicationInstance> applicationInstances = getApplicationInstances(
+          setupTestNodeData.getSettingId(), setupTestNodeData.getNewRelicAppId(), StateType.NEW_RELIC);
+
+      for (NewRelicApplicationInstance applicationInstance : applicationInstances) {
+        if (applicationInstance.getHost().equals(hostName)) {
+          instanceId = applicationInstance.getId();
+          break;
+        }
+      }
+
+      if (instanceId == -1) {
+        throw new WingsException(ErrorCode.NEWRELIC_CONFIGURATION_ERROR, USER)
+            .addParam("reason", "No node with name " + hostName + " found reporting to new relic");
+      }
+    }
+
+    if (setupTestNodeData.getToTime() <= 0 || setupTestNodeData.getFromTime() <= 0) {
+      setupTestNodeData.setToTime(System.currentTimeMillis());
+      setupTestNodeData.setFromTime(setupTestNodeData.getToTime() - TimeUnit.MINUTES.toMillis(15));
+    }
+    return new RestResponse<>(getMetricsWithDataForNode(setupTestNodeData, instanceId));
+  }
+
+  private VerificationNodeDataSetupResponse getMetricsWithDataForNode(
+      NewRelicSetupTestNodeData setupTestNodeData, long instanceId) {
     try {
-      final SettingAttribute settingAttribute = settingsService.get(settingId);
+      final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       SyncTaskContext syncTaskContext = aContext()
@@ -257,42 +287,13 @@ public class NewRelicServiceImpl implements NewRelicService {
                                             .withTimeout(Constants.DEFAULT_SYNC_CALL_TIMEOUT * 3)
                                             .build();
       return delegateProxyFactory.get(NewRelicDelegateService.class, syncTaskContext)
-          .getMetricsWithDataForNode((NewRelicConfig) settingAttribute.getValue(), encryptionDetails,
-              newRelicApplicationId, instanceId, fromTime, toTime,
-              apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
+          .getMetricsWithDataForNode((NewRelicConfig) settingAttribute.getValue(), encryptionDetails, setupTestNodeData,
+              instanceId, apiCallLogWithDummyStateExecution(settingAttribute.getAccountId()));
     } catch (Exception e) {
       logger.info("error getting metric data for node", e);
       throw new WingsException(ErrorCode.NEWRELIC_ERROR, USER)
           .addParam("message", "Error in getting metric data for the node. " + e.getMessage());
     }
-  }
-
-  @Override
-  public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
-      NewRelicSetupTestNodeData setupTestNodeData) {
-    String hostName = mlServiceUtil.getHostNameFromExpression(setupTestNodeData);
-    List<NewRelicApplicationInstance> applicationInstances = getApplicationInstances(
-        setupTestNodeData.getSettingId(), setupTestNodeData.getNewRelicAppId(), StateType.NEW_RELIC);
-    long instanceId = -1;
-    for (NewRelicApplicationInstance applicationInstance : applicationInstances) {
-      if (applicationInstance.getHost().equals(hostName)) {
-        instanceId = applicationInstance.getId();
-        break;
-      }
-    }
-
-    if (instanceId == -1) {
-      throw new WingsException(ErrorCode.NEWRELIC_CONFIGURATION_ERROR, USER)
-          .addParam("reason", "No node with name " + hostName + " found reporting to new relic");
-    }
-
-    if (setupTestNodeData.getToTime() <= 0 || setupTestNodeData.getFromTime() <= 0) {
-      setupTestNodeData.setToTime(System.currentTimeMillis());
-      setupTestNodeData.setFromTime(setupTestNodeData.getToTime() - TimeUnit.MINUTES.toMillis(15));
-    }
-    return new RestResponse<>(
-        getMetricsWithDataForNode(setupTestNodeData.getSettingId(), setupTestNodeData.getNewRelicAppId(), instanceId,
-            setupTestNodeData.getFromTime(), setupTestNodeData.getToTime()));
   }
 
   public Map<String, TimeSeriesMetricDefinition> metricDefinitions(Collection<Metric> metrics) {

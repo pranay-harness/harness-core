@@ -25,11 +25,12 @@ public class CloudWatchSetupTestNodeData extends SetupTestNodeData {
   private List<CloudWatchMetric> ec2Metrics;
 
   @Builder
-  public CloudWatchSetupTestNodeData(String appId, String settingId, String instanceName,
+  public CloudWatchSetupTestNodeData(String appId, String settingId, String instanceName, boolean isServiceLevel,
       InstanceElement instanceElement, String hostExpression, String workflowId, long fromTime, long toTime,
       String region, String hostName, Map<String, List<CloudWatchMetric>> loadBalancerMetricsByLBName,
       List<CloudWatchMetric> ec2Metrics) {
-    super(appId, settingId, instanceName, instanceElement, hostExpression, workflowId, fromTime, toTime);
+    super(
+        appId, settingId, instanceName, isServiceLevel, instanceElement, hostExpression, workflowId, fromTime, toTime);
     this.region = region;
     this.hostName = hostName;
     this.loadBalancerMetricsByLBName = loadBalancerMetricsByLBName;

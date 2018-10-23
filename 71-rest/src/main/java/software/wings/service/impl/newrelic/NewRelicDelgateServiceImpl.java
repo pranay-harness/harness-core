@@ -552,20 +552,28 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(NewRelicConfig newRelicConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId, long fromTime,
-      long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      List<EncryptedDataDetail> encryptedDataDetails, NewRelicSetupTestNodeData setupTestNodeData, long instanceId,
+      ThirdPartyApiCallLog apiCallLog) throws IOException {
     try {
       List<NewRelicMetric> txnsWithData =
-          getTxnsWithData(newRelicConfig, encryptedDataDetails, newRelicApplicationId, apiCallLog);
+          getTxnsWithData(newRelicConfig, encryptedDataDetails, setupTestNodeData.getNewRelicAppId(), apiCallLog);
       if (isEmpty(txnsWithData)) {
         return VerificationNodeDataSetupResponse.builder()
             .providerReachable(true)
             .loadResponse(VerificationLoadResponse.builder().isLoadPresent(false).build())
             .build();
       }
+      if (setupTestNodeData.isServiceLevel()) {
+        return VerificationNodeDataSetupResponse.builder()
+            .providerReachable(true)
+            .dataForNode(null)
+            .loadResponse(VerificationLoadResponse.builder().isLoadPresent(true).loadResponse(txnsWithData).build())
+            .build();
+      }
       Set<String> metricNames = txnsWithData.stream().map(NewRelicMetric::getName).collect(Collectors.toSet());
-      NewRelicMetricData newRelicMetricData = getMetricData(newRelicConfig, encryptedDataDetails, newRelicApplicationId,
-          instanceId, metricNames, fromTime, toTime, apiCallLog);
+      NewRelicMetricData newRelicMetricData =
+          getMetricData(newRelicConfig, encryptedDataDetails, setupTestNodeData.getNewRelicAppId(), instanceId,
+              metricNames, setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog);
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .dataForNode(newRelicMetricData)
