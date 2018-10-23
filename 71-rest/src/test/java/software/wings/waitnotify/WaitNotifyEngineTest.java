@@ -1,6 +1,7 @@
 package software.wings.waitnotify;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
@@ -11,7 +12,6 @@ import com.google.inject.Inject;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
-import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import org.junit.Before;
 import org.junit.Test;
@@ -20,6 +20,7 @@ import software.wings.core.maintenance.MaintenanceController;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,7 +41,6 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
 
   @Inject private Notifier notifier;
   @Inject private NotifyEventListener notifyEventListener;
-  @Inject private NotifyResponseCleanupHandler notifyResponseCleanupHandler;
 
   /**
    * Setup response map.
@@ -82,7 +82,6 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
   } // realmongo
 
   @Test
-  @RealMongo
   public void stressWaitForCorrelationId() {
     MaintenanceController.forceMaintenance(true);
 
@@ -211,10 +210,18 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     assertThat(callCount.get()).isEqualTo(3);
   }
 
+  @Test
+  public void shouldCleanZombieNotifyResponse() {
+    final NotifyResponse notifyResponse = new NotifyResponse(generateUuid(), null, false);
+    notifyResponse.setCreatedAt(System.currentTimeMillis() - Duration.ofMinutes(6).toMillis());
+    String notificationId = wingsPersistence.save(notifyResponse);
+
+    notifier.executeUnderLock();
+
+    assertThat(wingsPersistence.get(NotifyResponse.class, notificationId)).isNull();
+  }
+
   public static class TestNotifyCallback implements NotifyCallback {
-    /* (non-Javadoc)
-     * @see software.wings.waitnotify.NotifyCallback#notify(java.util.Map)
-     */
     @Override
     public void notify(Map<String, ResponseData> response) {
       callCount.incrementAndGet();

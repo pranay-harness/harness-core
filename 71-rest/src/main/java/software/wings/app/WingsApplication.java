@@ -96,7 +96,6 @@ import software.wings.sm.StateMachineExecutor;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.JsonSubtypeResolver;
 import software.wings.waitnotify.Notifier;
-import software.wings.waitnotify.NotifyResponseCleanupHandler;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 
 import java.util.ArrayList;
@@ -384,8 +383,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Initializing scheduled jobs...");
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifier")))
         .scheduleWithFixedDelay(injector.getInstance(Notifier.class), 0L, 30L, TimeUnit.SECONDS);
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("notifyResponseCleaner")))
-        .scheduleWithFixedDelay(injector.getInstance(NotifyResponseCleanupHandler.class), 0L, 30L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
         .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), 0L, 12L, TimeUnit.SECONDS);
     injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))

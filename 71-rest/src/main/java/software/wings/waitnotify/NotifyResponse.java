@@ -1,11 +1,15 @@
 package software.wings.waitnotify;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.sm.ExecutionStatus;
 
+import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Objects;
 
@@ -26,6 +30,11 @@ public class NotifyResponse<T extends ResponseData> extends Base {
   @Indexed private Date expiryTs;
 
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
+
+  @SchemaIgnore
+  @JsonIgnore
+  @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
 
   /**
    * Instantiates a new notify response.
