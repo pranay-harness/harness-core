@@ -16,6 +16,7 @@ uiimage=$(yq r version.yaml images.ui.repository):$(yq r version.yaml images.ui.
 defaultbackendimage=$(yq r version.yaml images.defaultBackend.repository):$(yq r version.yaml images.defaultBackend.tag)
 ingresscontrollerimage=$(yq r version.yaml images.ingressController.repository):$(yq r version.yaml images.ingressController.tag)
 delegateimage=$(yq r version.yaml images.delegate.repository):$(yq r version.yaml images.delegate.tag)
+busyboximage=$(yq r version.yaml images.busybox.repository):$(yq r version.yaml images.busybox.tag)
 
 INSTALLER_DIR=harness-kubernetes
 ARTIFACT_DIR=$INSTALLER_DIR/artifacts
@@ -44,6 +45,7 @@ function downloadImages(){
    saveImage $ingresscontrollerimage $ARTIFACT_DIR/ingress.tar
    saveImage $defaultbackendimage $ARTIFACT_DIR/defaultbackend.tar
    saveImage $delegateimage $ARTIFACT_DIR/delegate.tar
+   saveImage $busyboximage $ARTIFACT_DIR/busybox.tar
 
 
    curl https://app.harness.io/storage/wingsdelegates/jre/$JREVERSION/$SOLARIS_JRE > $ARTIFACT_DIR/$SOLARIS_JRE

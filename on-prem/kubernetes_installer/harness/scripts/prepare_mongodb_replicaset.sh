@@ -19,6 +19,9 @@ yq w -i ${VALUES_DST} installImage.tag "$(rv images.mongoInstall.tag)"
 yq w -i ${VALUES_DST} image.repository "$(rv images.mongo.repository)"
 yq w -i ${VALUES_DST} image.tag "$(rv images.mongo.tag)"
 
+yq w -i ${VALUES_DST} busyboxImage.repository "$(rv images.busybox.repository)"
+yq w -i ${VALUES_DST} busyboxImage.tag "$(rv images.busybox.tag)"
+
 yq w -i ${VALUES_DST} persistentVolume.enabled true
 yq w -i ${VALUES_DST} persistentVolume.storageClass "$(rv services.mongo.storageClass)"
 yq w -i ${VALUES_DST} persistentVolume.size "$(rv services.mongo.size)"
