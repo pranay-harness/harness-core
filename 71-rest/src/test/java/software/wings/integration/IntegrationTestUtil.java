@@ -7,6 +7,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.util.JSON;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.client.utils.URIBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +16,15 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * Created by anubhaw on 5/11/16.
@@ -87,5 +97,33 @@ public class IntegrationTestUtil {
    */
   public static int randomInt() {
     return randomInt(0, MAX_VALUE);
+  }
+
+  public static boolean isManagerRunning(Client client) throws URISyntaxException {
+    try {
+      String url = buildAbsoluteUrl("/api/version", new HashMap<>());
+      WebTarget target = client.target(url);
+      int status = target.request().get().getStatus();
+      return status == Status.OK.getStatusCode();
+    } catch (ProcessingException e) {
+      if (e.getCause() instanceof ConnectException) {
+        return false;
+      }
+    }
+
+    return false;
+  }
+
+  public static String buildAbsoluteUrl(String path, Map<String, String> params) throws URISyntaxException {
+    URIBuilder uriBuilder = new URIBuilder();
+    String scheme = StringUtils.isBlank(System.getenv().get("BASE_HTTP")) ? "https" : "http";
+    uriBuilder.setScheme(scheme);
+    uriBuilder.setHost("localhost");
+    uriBuilder.setPort(9090);
+    uriBuilder.setPath(path);
+    if (params != null) {
+      params.forEach((name, value) -> uriBuilder.addParameter(name, value.toString()));
+    }
+    return uriBuilder.build().toString();
   }
 }
