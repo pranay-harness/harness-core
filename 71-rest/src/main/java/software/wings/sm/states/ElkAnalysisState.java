@@ -76,6 +76,10 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @DefaultValue("beat.hostname")
   protected String hostnameField;
 
+  @Attributes(required = true, title = "Timestamp Field")
+  @DefaultValue(DEFAULT_TIME_FIELD)
+  protected String timestampField;
+
   @Attributes(required = true, title = "Message Field") @DefaultValue("message") protected String messageField;
 
   @Attributes(required = true, title = "Timestamp format")
@@ -134,6 +138,17 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
 
   public void setHostnameField(String hostnameField) {
     this.hostnameField = hostnameField;
+  }
+
+  public String getTimestampField() {
+    if (timestampField == null) {
+      return DEFAULT_TIME_FIELD;
+    }
+    return timestampField;
+  }
+
+  public void setTimestampField(String timestampField) {
+    this.timestampField = timestampField;
   }
 
   public String getMessageField() {
@@ -226,7 +241,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
   @Override
   protected String triggerAnalysisDataCollection(
       ExecutionContext context, LogAnalysisExecutionData executionData, Set<String> hosts) {
-    final String timestampField = DEFAULT_TIME_FIELD;
+    final String timestampField = getTimestampField();
     final String accountId = appService.get(context.getAppId()).getAccountId();
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams == null ? null : workflowStandardParams.getEnv().getUuid();
