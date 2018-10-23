@@ -73,10 +73,7 @@ public class ContainerDeploymentDelegateHelper {
         String configFilePath = KUBE_CONFIG_DIR + md5Hash;
         File file = new File(configFilePath);
         if (!file.exists()) {
-          if (!file.getParentFile().mkdirs()) {
-            throw new WingsException(ErrorCode.GENERAL_ERROR)
-                .addParam("message", "Failed to create dir " + file.getParentFile().getCanonicalPath());
-          }
+          FileUtils.forceMkdir(file.getParentFile());
           FileUtils.writeStringToFile(file, configFileContent, UTF_8);
         }
         return file.getAbsolutePath();

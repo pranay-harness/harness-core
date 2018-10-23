@@ -89,7 +89,6 @@ import software.wings.service.intfc.yaml.GitClient;
 import software.wings.utils.Misc;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
@@ -286,11 +285,8 @@ public class GitClientImpl implements GitClient {
             try {
               logger.info(
                   getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Adding git file " + gitFileChange.toString());
-              file.getParentFile().mkdirs();
-              file.createNewFile();
-              try (FileWriter writer = new FileWriter(file)) {
-                writer.write(gitFileChange.getFileContent());
-              }
+              FileUtils.forceMkdir(file.getParentFile());
+              FileUtils.writeStringToFile(file, gitFileChange.getFileContent(), UTF_8);
               git.add().addFilepattern(".").call();
               //              commitMessage.append(format("%s: %s\n", gitFileChange.getChangeType(),
               //              gitFileChange.getFilePath()));
@@ -839,13 +835,9 @@ public class GitClientImpl implements GitClient {
 
     File sshDirectory = keyFile.getParentFile();
     if (sshDirectory.exists() || !sshDirectory.isDirectory()) {
-      FileUtils.deleteDirectory(sshDirectory);
+      FileUtils.forceDelete(sshDirectory);
     }
-    if (!sshDirectory.mkdirs()) {
-      throw new WingsException(ErrorCode.GENERAL_ERROR)
-          .addParam("message", "Failed to create dir " + sshDirectory.getCanonicalPath());
-    }
-
+    FileUtils.forceMkdir(sshDirectory);
     FileUtils.writeStringToFile(keyFile, sshKey, UTF_8);
     return keyFilePath;
   }
