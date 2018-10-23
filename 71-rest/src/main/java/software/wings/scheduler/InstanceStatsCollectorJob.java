@@ -3,6 +3,8 @@ package software.wings.scheduler;
 import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -13,10 +15,9 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
-import software.wings.service.intfc.instance.DashboardStatisticsService;
-import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 
+import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,10 +34,9 @@ public class InstanceStatsCollectorJob implements Job {
   // 10 minutes
   private static final int SYNC_INTERVAL = 10;
 
-  @Inject private InstanceStatService statService;
-  @Inject private DashboardStatisticsService dashboardStatisticsService;
   @Inject private ExecutorService executorService;
   @Inject private StatsCollector statsCollector;
+  @Inject private PersistentLocker persistentLocker;
 
   public static void add(QuartzScheduler jobScheduler, Account account) {
     jobScheduler.deleteJob(account.getUuid(), GROUP);
@@ -63,16 +63,22 @@ public class InstanceStatsCollectorJob implements Job {
     String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID);
     Objects.requireNonNull(accountId, "Account Id must be passed in job context");
 
-    executorService.submit(() -> {
-      Stopwatch sw = Stopwatch.createStarted();
-      boolean ranAtLeastOnce = statsCollector.createStats(accountId);
-      if (ranAtLeastOnce) {
-        logger.info("Successfully saves instance history stats. Account Id: {}. Time taken: {} millis", accountId,
-            sw.elapsed(TimeUnit.MILLISECONDS));
-      } else {
-        logger.info("No instance history stats were saved. Account Id: {}. Time taken: {} millis", accountId,
-            sw.elapsed(TimeUnit.MILLISECONDS));
+    try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Account.class, accountId, Duration.ofSeconds(10))) {
+      if (lock == null) {
+        return;
       }
-    });
+
+      executorService.submit(() -> {
+        Stopwatch sw = Stopwatch.createStarted();
+        boolean ranAtLeastOnce = statsCollector.createStats(accountId);
+        if (ranAtLeastOnce) {
+          logger.info("Successfully saved instance history stats. Account Id: {}. Time taken: {} millis", accountId,
+              sw.elapsed(TimeUnit.MILLISECONDS));
+        } else {
+          logger.info("No instance history stats were saved. Account Id: {}. Time taken: {} millis", accountId,
+              sw.elapsed(TimeUnit.MILLISECONDS));
+        }
+      });
+    }
   }
 }
