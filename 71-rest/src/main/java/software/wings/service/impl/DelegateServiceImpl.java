@@ -230,24 +230,35 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
    * @see java.lang.Runnable#run()
    */
   @Override
+  @SuppressWarnings("PMD")
   public void run() {
-    if (isNotEmpty(syncTaskWaitMap)) {
-      List<String> completedSyncTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
-                                            .filter("async", false)
-                                            .field("status")
-                                            .in(TASK_COMPLETED_STATUSES)
-                                            .field(ID_KEY)
-                                            .in(syncTaskWaitMap.keySet())
-                                            .asKeyList()
-                                            .stream()
-                                            .map(key -> key.getId().toString())
-                                            .collect(toList());
-      for (String taskId : completedSyncTasks) {
-        if (syncTaskWaitMap.get(taskId) != null) {
-          synchronized (syncTaskWaitMap.get(taskId)) {
-            syncTaskWaitMap.get(taskId).notifyAll();
+    try {
+      if (isNotEmpty(syncTaskWaitMap)) {
+        List<String> completedSyncTasks = wingsPersistence.createQuery(DelegateTask.class, excludeAuthority)
+                                              .filter("async", false)
+                                              .field("status")
+                                              .in(TASK_COMPLETED_STATUSES)
+                                              .field(ID_KEY)
+                                              .in(syncTaskWaitMap.keySet())
+                                              .asKeyList()
+                                              .stream()
+                                              .map(key -> key.getId().toString())
+                                              .collect(toList());
+        for (String taskId : completedSyncTasks) {
+          if (syncTaskWaitMap.get(taskId) != null) {
+            synchronized (syncTaskWaitMap.get(taskId)) {
+              syncTaskWaitMap.get(taskId).notifyAll();
+            }
           }
         }
+      }
+    } catch (Throwable exception) {
+      logger.error("Exception happened in run.", exception);
+      if (exception instanceof Exception) {
+        logger.warn("Exception is type of Exception. Ignoring.");
+      } else {
+        // Error class. Let it propagate.
+        throw exception;
       }
     }
   }
