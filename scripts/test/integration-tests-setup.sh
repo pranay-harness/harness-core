@@ -47,8 +47,8 @@ echo "remove existing image"
 docker rmi le_local || true
 set -e
 echo "build docker image in background"
-nohup sh -c 'cd python/splunk_intelligence && make init && make dist && docker build --rm -t le_local .' > docker_container_build.log &
-docker_container_build_pid=$!
+#nohup sh -c 'cd python/splunk_intelligence && make init && make dist && docker build --rm -t le_local .' > docker_container_build.log &
+#docker_container_build_pid=$!
 
 if [[ -z "${SERVER_BUILD_DIR}" ]]; then
   echo "SERVER_BUILD_DIR not set, building server code"
@@ -152,14 +152,14 @@ mvn -B test -pl 71-rest -Dtest=software.wings.integration.VaultIntegrationTest -
 export HOSTNAME
 echo "host is $HOSTNAME"
 #wait for docker container to finish
-echo "waiting for docker image to build"
-wait $docker_container_build_pid
-echo "finished waiting for docker image to build"
+#echo "waiting for docker image to build"
+#wait $docker_container_build_pid
+#echo "finished waiting for docker image to build"
 serviceSecret=`mongo harness --eval "db.serviceSecrets.find({ }, { serviceSecret: 1, _id: 0})"| grep serviceSecret | awk '{print $4}' | tr -d '"'`
 echo $serviceSecret
 server_url=https://$HOSTNAME:7070
 echo $server_url
-docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=integration-tests le_local
+docker run -d -e server_url=$server_url -e service_secret=$serviceSecret -e https_port=10800  -e learning_env=integration-tests harness/learning-engine-prod:latest
 
 echo "listing containers after le_local was launched"
 docker ps

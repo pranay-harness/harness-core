@@ -100,6 +100,7 @@ public class CloudWatchDataCollectionTask extends AbstractDelegateDataCollection
         int retry = 0;
         while (!completed.get() && retry < RETRIES) {
           try {
+            dataCollectionInfo.setDataCollectionMinute(dataCollectionMinute);
             TreeBasedTable<String, Long, NewRelicMetricDataRecord> metricDataRecords = getMetricsData();
             // HeartBeat
             metricDataRecords.put(HARNESS_HEARTBEAT_METRIC_NAME, 0L,
