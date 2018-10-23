@@ -31,7 +31,7 @@ public interface IdempotentRegistry<T> {
   /*
    * Register the idempotent operation if possible/needed and returns the current state.
    */
-  Response register(IdempotentId id, Duration ttl) throws UnableToRegisterIdempotentOperationException;
+  Response register(IdempotentId id, Duration ttl);
 
   /*
    * Marks the idempotent operation as successfully done.
@@ -46,11 +46,10 @@ public interface IdempotentRegistry<T> {
   /*
    * Creates idempotent lock object for particular id
    */
-  IdempotentLock create(IdempotentId id) throws UnableToRegisterIdempotentOperationException;
+  IdempotentLock create(IdempotentId id);
 
   /*
    * Creates idempotent lock object for particular id and timeout
    */
-  IdempotentLock create(IdempotentId id, Duration lockTimeout, Duration pollingInterval, Duration ttl)
-      throws UnableToRegisterIdempotentOperationException;
+  IdempotentLock create(IdempotentId id, Duration lockTimeout, Duration pollingInterval, Duration ttl);
 }

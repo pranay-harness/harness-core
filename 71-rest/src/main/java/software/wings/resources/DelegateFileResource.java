@@ -15,7 +15,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
-import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.swagger.annotations.Api;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -73,8 +72,7 @@ public class DelegateFileResource {
   public RestResponse<String> upload(@PathParam("delegateId") String delegateId, @PathParam("taskId") String taskId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("fileBucket") FileBucket fileBucket,
       @FormDataParam("file") InputStream uploadedInputStream,
-      @FormDataParam("file") FormDataContentDisposition fileDetail)
-      throws UnableToRegisterIdempotentOperationException {
+      @FormDataParam("file") FormDataContentDisposition fileDetail) {
     logger.info("Received save artifact request for delegateId : {}, taskId: {}, accountId: {}, fileDetail: {}",
         delegateId, taskId, accountId, fileDetail);
 

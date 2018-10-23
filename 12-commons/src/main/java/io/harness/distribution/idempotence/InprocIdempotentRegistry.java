@@ -45,18 +45,17 @@ public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
   @SuppressWarnings("unchecked") private Map<IdempotentId, Record<T>> map = synchronizedMap(new LRUMap(1000));
 
   @Override
-  public IdempotentLock create(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
+  public IdempotentLock create(IdempotentId id) {
     return IdempotentLock.create(id, this);
   }
 
   @Override
-  public IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval, Duration ttl)
-      throws UnableToRegisterIdempotentOperationException {
+  public IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval, Duration ttl) {
     return IdempotentLock.create(id, this, timeout, pollingInterval, ttl);
   }
 
   @Override
-  public Response register(IdempotentId id, Duration ttl) throws UnableToRegisterIdempotentOperationException {
+  public Response register(IdempotentId id, Duration ttl) {
     final Record<T> record = map.compute(id, (k, v) -> {
       final long now = System.currentTimeMillis();
       if (v == null || v.getValidUntil() < now) {

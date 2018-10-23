@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
+import io.harness.rule.RealMongo;
 import io.harness.threading.Concurrent;
 import org.junit.Before;
 import org.junit.Test;
@@ -81,6 +82,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
   } // realmongo
 
   @Test
+  @RealMongo
   public void stressWaitForCorrelationId() {
     MaintenanceController.forceMaintenance(true);
 

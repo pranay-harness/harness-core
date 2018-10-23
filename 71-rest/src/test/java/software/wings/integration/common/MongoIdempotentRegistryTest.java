@@ -125,7 +125,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   }
 
   @Test
-  public void testMongoUnegisterSucceededAssumptions() {
+  public void testMongoUnregisterSucceededAssumptions() {
     Idempotent doneIdempotent = new Idempotent();
     doneIdempotent.setUuid(id.getValue());
     doneIdempotent.setState(SUCCEEDED);
@@ -146,7 +146,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
 
   int index;
 
-  public String operation(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
+  public String operation(IdempotentId id) {
     try (IdempotentLock<String> idempotent = IdempotentLock.create(id, idempotentRegistry)) {
       if (idempotent.alreadyExecuted()) {
         return idempotent.getResult();
