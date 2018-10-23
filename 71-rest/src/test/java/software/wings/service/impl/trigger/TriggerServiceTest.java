@@ -68,7 +68,6 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.distribution.idempotence.IdempotentLock;
-import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.exception.WingsException;
 import org.junit.Before;
 import org.junit.Test;
@@ -153,7 +152,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   JenkinsArtifactStream artifactStream = buildJenkinsArtifactStream();
 
   @Before
-  public void setUp() throws UnableToRegisterIdempotentOperationException {
+  public void setUp() {
     Pipeline pipeline = buildPipeline();
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, true)).thenReturn(pipeline);
     when(pipelineService.readPipeline(APP_ID, PIPELINE_ID, false)).thenReturn(pipeline);
@@ -1122,7 +1121,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTriggerScheduledExecution() throws UnableToRegisterIdempotentOperationException {
+  public void shouldTriggerScheduledExecution() {
     Artifact artifact = anArtifact()
                             .withAppId(APP_ID)
                             .withUuid(ARTIFACT_ID)
@@ -1143,7 +1142,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTriggerScheduledExecutionIfNoArtifacts() throws UnableToRegisterIdempotentOperationException {
+  public void shouldTriggerScheduledExecutionIfNoArtifacts() {
     scheduledTriggerMocks();
     triggerService.save(scheduledConditionTrigger);
 
@@ -1169,8 +1168,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldTriggerScheduledExecutionWithArtifactSelections()
-      throws UnableToRegisterIdempotentOperationException {
+  public void shouldTriggerScheduledExecutionWithArtifactSelections() {
     Artifact artifact = anArtifact()
                             .withAppId(APP_ID)
                             .withUuid(ARTIFACT_ID)

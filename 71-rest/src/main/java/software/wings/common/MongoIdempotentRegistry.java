@@ -48,13 +48,12 @@ public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
   }
 
   @Override
-  public IdempotentLock create(IdempotentId id) throws UnableToRegisterIdempotentOperationException {
+  public IdempotentLock create(IdempotentId id) {
     return IdempotentLock.create(id, this);
   }
 
   @Override
-  public IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval, Duration ttl)
-      throws UnableToRegisterIdempotentOperationException {
+  public IdempotentLock create(IdempotentId id, Duration timeout, Duration pollingInterval, Duration ttl) {
     return IdempotentLock.create(id, this, timeout, pollingInterval, ttl);
   }
 
@@ -65,7 +64,7 @@ public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
   }
 
   @Override
-  public Response register(IdempotentId id, Duration ttl) throws UnableToRegisterIdempotentOperationException {
+  public Response register(IdempotentId id, Duration ttl) {
     try {
       // Insert new record in the idempotent collection with a tentative state
       final Idempotent idempotent =

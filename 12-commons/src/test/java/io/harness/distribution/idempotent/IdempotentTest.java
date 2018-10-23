@@ -34,7 +34,7 @@ public class IdempotentTest {
       IdempotentRegistry.Response.<Boolean>builder().state(State.DONE).result(Boolean.TRUE).build();
 
   @Test
-  public void testNewIdempotentFailed() throws UnableToRegisterIdempotentOperationException {
+  public void testNewIdempotentFailed() {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
     when(mockIdempotentRegistry.register(any(), any())).thenReturn(newResponse);
@@ -47,7 +47,7 @@ public class IdempotentTest {
   }
 
   @Test
-  public void testNewIdempotentSucceeded() throws UnableToRegisterIdempotentOperationException {
+  public void testNewIdempotentSucceeded() {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
     when(mockIdempotentRegistry.register(any(), any())).thenReturn(newResponse);
@@ -61,7 +61,7 @@ public class IdempotentTest {
   }
 
   @Test
-  public void testFinishedIdempotent() throws UnableToRegisterIdempotentOperationException {
+  public void testFinishedIdempotent() {
     final IdempotentRegistry mockIdempotentRegistry = mock(IdempotentRegistry.class);
 
     when(mockIdempotentRegistry.register(any(), any())).thenReturn(doneResponse);
@@ -75,7 +75,7 @@ public class IdempotentTest {
 
   @Test
   @Ignore // TODO: find more reliable way to test this
-  public void testIdempotentAfterTtl() throws UnableToRegisterIdempotentOperationException {
+  public void testIdempotentAfterTtl() {
     final IdempotentRegistry<Boolean> idempotentRegistry = new InprocIdempotentRegistry<>();
     try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id, ofMillis(1), ofMillis(1), ofMillis(500))) {
       assertNotNull(idempotent);

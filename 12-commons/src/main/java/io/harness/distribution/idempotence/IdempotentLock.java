@@ -27,13 +27,12 @@ public class IdempotentLock<T> implements AutoCloseable {
   private IdempotentRegistry registry;
   private Optional<T> resultData;
 
-  public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry)
-      throws UnableToRegisterIdempotentOperationException {
+  public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry) {
     return create(id, registry, defaultLockTimeout, defaultPollingInterval, defaultTTL);
   }
 
-  public static IdempotentLock create(IdempotentId id, IdempotentRegistry registry, Duration lockTimeout,
-      Duration pollingInterval, Duration ttl) throws UnableToRegisterIdempotentOperationException {
+  public static IdempotentLock create(
+      IdempotentId id, IdempotentRegistry registry, Duration lockTimeout, Duration pollingInterval, Duration ttl) {
     long systemTimeMillis = System.currentTimeMillis();
 
     do {
