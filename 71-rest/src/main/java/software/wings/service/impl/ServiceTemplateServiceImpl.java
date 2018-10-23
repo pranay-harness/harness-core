@@ -350,11 +350,11 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   @Override
   public void createDefaultTemplatesByService(Service service) {
-    List<Environment> environments = environmentService.getEnvByApp(service.getAppId());
+    List<String> environments = environmentService.getEnvIdsByApp(service.getAppId());
     environments.forEach(environment
         -> save(aServiceTemplate()
                     .withAppId(service.getAppId())
-                    .withEnvId(environment.getUuid())
+                    .withEnvId(environment)
                     .withServiceId(service.getUuid())
                     .withName(service.getName())
                     .withDefaultServiceTemplate(true)
