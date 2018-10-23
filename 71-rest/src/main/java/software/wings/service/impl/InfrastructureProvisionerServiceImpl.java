@@ -49,6 +49,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.TerraformInputVariablesTaskResponse;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
@@ -413,20 +414,31 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
             .withTimeout(TimeUnit.SECONDS.toMillis(30))
             .withAsync(false)
             .build();
+
+    ResponseData notifyResponseData;
     try {
-      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
-      if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
-      }
-      TerraformInputVariablesTaskResponse taskResponse = (TerraformInputVariablesTaskResponse) notifyResponseData;
-      if (taskResponse.getTerraformExecutionData().getExecutionStatus() == ExecutionStatus.SUCCESS) {
-        return taskResponse.getVariablesList();
-      } else {
-        throw new WingsException(ErrorCode.GENERAL_ERROR)
-            .addParam("message", taskResponse.getTerraformExecutionData().getErrorMessage());
-      }
+      notifyResponseData = delegateService.executeTask(delegateTask);
     } catch (InterruptedException e) {
-      throw new WingsException(e);
+      Thread.currentThread().interrupt();
+      throw new InvalidRequestException("Thread was interrupted. Please try again.");
+    }
+    if (notifyResponseData instanceof ErrorNotifyResponseData) {
+      throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+    } else if ((notifyResponseData instanceof RemoteMethodReturnValueData)
+        && (((RemoteMethodReturnValueData) notifyResponseData).getException() instanceof InvalidRequestException)) {
+      throw(InvalidRequestException)((RemoteMethodReturnValueData) notifyResponseData).getException();
+    } else if (!(notifyResponseData instanceof TerraformInputVariablesTaskResponse)) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR)
+          .addParam("message", "Unknown Response from delegate")
+          .addContext(ResponseData.class, notifyResponseData);
+    }
+
+    TerraformInputVariablesTaskResponse taskResponse = (TerraformInputVariablesTaskResponse) notifyResponseData;
+    if (taskResponse.getTerraformExecutionData().getExecutionStatus() == ExecutionStatus.SUCCESS) {
+      return taskResponse.getVariablesList();
+    } else {
+      throw new WingsException(ErrorCode.GENERAL_ERROR)
+          .addParam("message", taskResponse.getTerraformExecutionData().getErrorMessage());
     }
   }
 
