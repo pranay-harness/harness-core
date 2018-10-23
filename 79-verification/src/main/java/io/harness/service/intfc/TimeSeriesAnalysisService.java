@@ -100,6 +100,9 @@ public interface TimeSeriesAnalysisService {
 
   TimeSeriesMLAnalysisRecord getPreviousAnalysis(String appId, String cvConfigId, long dataCollectionMin);
 
+  List<TimeSeriesMLAnalysisRecord> getHistoricalAnalysis(
+      String accountId, String appId, String serviceId, String cvConfigId, long analysisMin);
+
   Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
       String appId, String serviceId, String groupName, StateType stateType, String cvConfigId);
 }

@@ -170,6 +170,19 @@ public class TimeSeriesResource {
 
   @Produces({"application/json", "application/v1+json"})
   @POST
+  @Path("/historical-analysis-24x7")
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<List<TimeSeriesMLAnalysisRecord>> getHistoricalAnalysis(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String appId, @QueryParam("analysisMinute") Integer analysisMinute,
+      @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId) {
+    return new RestResponse<>(
+        timeSeriesAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, analysisMinute));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
   @Path("/get-metric-template_24_7")
   @Timed
   @ExceptionMetered

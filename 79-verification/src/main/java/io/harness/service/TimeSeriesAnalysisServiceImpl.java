@@ -28,6 +28,7 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -63,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 9/26/17.
@@ -786,6 +788,27 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .filter("cvConfigId", cvConfigId)
         .filter("analysisMinute", dataCollectionMin)
         .get();
+  }
+
+  @Override
+  public List<TimeSeriesMLAnalysisRecord> getHistoricalAnalysis(
+      String accountId, String appId, String serviceId, String cvConfigId, long analysisMin) {
+    List<Long> historicalAnalysisTimes = new ArrayList<>();
+
+    for (int i = 1; i <= VerificationConstants.CANARY_DAYS_TO_COLLECT; i++) {
+      historicalAnalysisTimes.add(analysisMin - i * TimeUnit.DAYS.toMinutes(7));
+    }
+
+    if (historicalAnalysisTimes.size() == 0) {
+      return new ArrayList<>();
+    }
+
+    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+        .filter("appId", appId)
+        .filter("cvConfigId", cvConfigId)
+        .field("analysisMinute")
+        .in(historicalAnalysisTimes)
+        .asList();
   }
 
   @Override
