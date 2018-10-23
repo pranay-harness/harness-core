@@ -19,6 +19,9 @@ yq w -i ${VALUES_DST} installImage.tag "$(rv images.mongoInstall.tag)"
 yq w -i ${VALUES_DST} image.repository "$(rv images.mongo.repository)"
 yq w -i ${VALUES_DST} image.tag "$(rv images.mongo.tag)"
 
-yq w -i ${VALUES_DST} persistentVolume.enabled false
+yq w -i ${VALUES_DST} persistentVolume.enabled true
+yq w -i ${VALUES_DST} persistentVolume.storageClass "$(rv services.mongo.storageClass)"
+yq w -i ${VALUES_DST} persistentVolume.size "$(rv services.mongo.size)"
 
+helm template -f ${INSTALLER_DIR}/values.internal.yaml . -x ${INSTALLER_DIR}/templates/harness-persistent-volume.yaml > ${INSTALLER_DIR}/output/harness-persistent-volume.yaml
 helm template --name harness -f ${VALUES_DST} ${MONGODB_REPLICASET_DIR} > ${INSTALLER_DIR}/output/harness-mongodb-replicaset.yaml

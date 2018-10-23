@@ -3,7 +3,10 @@
 set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+INSTALLER_DIR=${SCRIPT_DIR}
 source ${SCRIPT_DIR}/scripts/utils.sh
+
+${INSTALLER_DIR}/scripts/verify.sh
 
 echo "Fetching kubernetes cluster information..."
 echo ""

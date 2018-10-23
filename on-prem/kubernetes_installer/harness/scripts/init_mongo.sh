@@ -14,6 +14,7 @@ if [[ !$(kubectl get configmaps -n ${K8S_CLUSTER_NAMESPACE} scripts-configmap) ]
     kubectl apply -f output/harness-configs.yaml
 fi
 
+kubectl apply -n ${K8S_CLUSTER_NAMESPACE} -f output/harness-persistent-volume.yaml
 kubectl apply -n ${K8S_CLUSTER_NAMESPACE} -f output/harness-mongodb-replicaset.yaml
 
 echo "Waiting for mongo replicaset to be ready..."

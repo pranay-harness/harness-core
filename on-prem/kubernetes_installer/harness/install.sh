@@ -3,7 +3,10 @@
 set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+INSTALLER_DIR=${SCRIPT_DIR}
 source ${SCRIPT_DIR}/scripts/utils.sh
+
+${INSTALLER_DIR}/scripts/verify.sh
 
 echo "Fetching kubernetes cluster information..."
 echo ""
@@ -19,7 +22,7 @@ yq m -x -i ${SCRIPT_DIR}/values.internal.yaml ${SCRIPT_DIR}/values.yaml
 
 echo ""
 echo "Looking for existing installation..."
-if [[ $(kubectl get configmaps -n ${K8S_CLUSTER_NAMESPACE} scripts-configmap &> /dev/null) ]]; then
+if $(kubectl get configmaps -n ${K8S_CLUSTER_NAMESPACE} scripts-configmap &> /dev/null); then
     echo "Existing harness installation found in given kubernetes cluster and namespace. Use upgrade.sh to upgrade. Exiting."
     echo ""
     exit 1
