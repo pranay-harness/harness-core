@@ -171,23 +171,6 @@ spec:
 
 ---
 
-## Persistent volume claim ####
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: harness-data
-  namespace: {{ .Values.kubernetesClusterNamespace }}
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 75Gi
-  storageClassName: standard
-
----
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -224,8 +207,6 @@ spec:
           serviceName: harness-manager-nginx
           servicePort: 80
         path: /storage
-
----
 
 ---
 
@@ -273,11 +254,19 @@ spec:
         - mountPath: /etc/nginx/conf.d
           name: harness-nginx-conf
       volumes:
-      - name: harness-data
-        persistentVolumeClaim:
-          claimName: harness-data
       - name: harness-nginx-conf
         configMap:
           name: harness-nginx-conf
       imagePullSecrets:
       - name: regcred
+  volumeClaimTemplates:
+  - metadata:
+      name: harness-data
+      namespace: {{ .Values.kubernetesClusterNamespace }}
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: {{ .Values.services.manager.size }}
+      storageClassName: {{ .Values.services.manager.storageClass }}

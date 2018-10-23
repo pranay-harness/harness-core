@@ -56,3 +56,8 @@ services:
     key: harness
     configMap:
       init:
+    size: 200Gi
+    storageClass: harness-mongo-persistent-volume
+  manager:
+    storageClass: harness-manager-persistent-volume
+    size: 75Gi
