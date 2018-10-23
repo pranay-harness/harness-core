@@ -23,5 +23,10 @@ yq w -i ${VALUES_DST} persistentVolume.enabled true
 yq w -i ${VALUES_DST} persistentVolume.storageClass "$(rv services.mongo.storageClass)"
 yq w -i ${VALUES_DST} persistentVolume.size "$(rv services.mongo.size)"
 
+yq w -i ${VALUES_DST} resources.limits.cpu "$(rv services.mongo.resources.limits.cpu)"
+yq w -i ${VALUES_DST} resources.limits.memory "$(rv services.mongo.resources.limits.memory)"
+yq w -i ${VALUES_DST} resources.requests.cpu "$(rv services.mongo.resources.limits.cpu)"
+yq w -i ${VALUES_DST} resources.requests.memory "$(rv services.mongo.resources.limits.memory)"
+
 helm template -f ${INSTALLER_DIR}/values.internal.yaml . -x ${INSTALLER_DIR}/templates/harness-persistent-volume.yaml > ${INSTALLER_DIR}/output/harness-persistent-volume.yaml
 helm template --name harness -f ${VALUES_DST} ${MONGODB_REPLICASET_DIR} > ${INSTALLER_DIR}/output/harness-mongodb-replicaset.yaml

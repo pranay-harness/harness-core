@@ -159,11 +159,11 @@ spec:
           timeoutSeconds: 1
         resources:
           limits:
-            cpu: "2"
-            memory: 4096Mi
+            cpu: {{ .Values.services.manager.resources.limits.cpu }}
+            memory: {{ .Values.services.manager.resources.limits.memory }}
           requests:
-            cpu: "2"
-            memory: 4096Mi
+            cpu: {{ .Values.services.manager.resources.limits.cpu }}
+            memory: {{ .Values.services.manager.resources.limits.memory }}
       dnsPolicy: ClusterFirst
       imagePullSecrets:
       - name: regcred

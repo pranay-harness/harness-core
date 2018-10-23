@@ -81,8 +81,11 @@ spec:
           protocol: TCP
         resources:
           limits:
-            cpu: 200m
-            memory: 200Mi
+            cpu: {{ .Values.services.ui.resources.limits.cpu }}
+            memory: {{ .Values.services.ui.resources.limits.memory }}
+          requests:
+            cpu: {{ .Values.services.ui.resources.limits.cpu }}
+            memory: {{ .Values.services.ui.resources.limits.memory }}
       dnsPolicy: ClusterFirst
       imagePullSecrets:
       - name: regcred
