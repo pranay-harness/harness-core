@@ -1,11 +1,13 @@
 package software.wings.utils;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.junit.Test;
+import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkLogFetchRequest;
 import software.wings.service.impl.elk.ElkQueryType;
@@ -136,5 +138,20 @@ public class ElkLogFetchRequestTest {
     List<LogElement> logElements = parseElkResponse(map, "info", "@timestamp", "yyyy-MM-dd'T'HH:mm:ss.SSSX",
         "kubernetes.pod.name", "harness-learning-engine", "log", 0, false);
     assertFalse(logElements.isEmpty());
+    assertEquals("Hostname should be correct", "rddashboard-prod-5-67d88f4657-ff7k9", logElements.get(0).getHost());
+  }
+
+  @Test
+  public void testJsonParsing() {
+    String jsonString =
+        "{\"a\" : \"this is a test\", \"b\":[\"test1\", \"test2\", \"test3\"], \"c\":{ \"d\": \"another test\"}}";
+    JSONObject jsonObject = new JSONObject(jsonString);
+    String aValue = ElkLogzDataCollectionTask.parseAndGetValue(jsonObject, "a");
+    String bValue = ElkLogzDataCollectionTask.parseAndGetValue(jsonObject, "b.0");
+    String cValue = ElkLogzDataCollectionTask.parseAndGetValue(jsonObject, "c.d");
+
+    assertEquals("aValue should be same", "this is a test", aValue);
+    assertEquals("bValue should be same", "test1", bValue);
+    assertEquals("cValue should be same", "another test", cValue);
   }
 }

@@ -2,7 +2,6 @@ package software.wings.delegatetasks;
 
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
-import static software.wings.sm.states.ElkAnalysisState.DEFAULT_TIME_FIELD;
 
 import com.google.inject.Inject;
 
@@ -274,13 +273,7 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         continue;
       }
 
-      JSONObject hostObject = source;
-      String[] hostPaths = hostnameField.split("\\.");
-      for (int j = 0; j < hostPaths.length - 1; ++j) {
-        hostObject = hostObject.getJSONObject(hostPaths[j]);
-      }
-      final String host =
-          hostObject == null ? source.getString(hostnameField) : hostObject.getString(hostPaths[hostPaths.length - 1]);
+      final String host = parseAndGetValue(source, hostnameField);
 
       // if this elkResponse doesn't belong to this host, ignore it.
       // We ignore case because we don't know if elasticsearch might just lowercase everything in the index.
@@ -288,22 +281,9 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
         continue;
       }
 
-      JSONObject messageObject = null;
-      String[] messagePaths = messageField.split("\\.");
-      for (int j = 0; j < messagePaths.length - 1; ++j) {
-        messageObject = source.getJSONObject(messagePaths[j]);
-      }
-      final String logMessage = messageObject == null ? source.getString(messageField)
-                                                      : messageObject.getString(messagePaths[messagePaths.length - 1]);
+      final String logMessage = parseAndGetValue(source, messageField);
 
-      JSONObject timeStampObject = null;
-      String[] timeStampPaths = timestampField.split("\\.");
-      for (int j = 0; j < timeStampPaths.length - 1; ++j) {
-        timeStampObject = source.getJSONObject(timeStampPaths[j]);
-      }
-      final String timeStamp = timeStampObject == null
-          ? source.getString(DEFAULT_TIME_FIELD)
-          : timeStampObject.getString(timeStampPaths[timeStampPaths.length - 1]);
+      final String timeStamp = parseAndGetValue(source, timestampField);
       long timeStampValue;
       try {
         timeStampValue = Instant.from(timeFormatter.parse(timeStamp)).toEpochMilli();
@@ -324,5 +304,21 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
     }
 
     return logElements;
+  }
+
+  public static String parseAndGetValue(JSONObject source, String field) {
+    Object messageObject = source;
+    String[] messagePaths = field.split("\\.");
+    for (int j = 0; j < messagePaths.length; ++j) {
+      if (messageObject instanceof JSONObject) {
+        messageObject = ((JSONObject) messageObject).get(messagePaths[j]);
+      } else if (messageObject instanceof JSONArray) {
+        messageObject = ((JSONArray) messageObject).get(Integer.parseInt(messagePaths[j]));
+      }
+    }
+    if (messageObject instanceof String) {
+      return (String) messageObject;
+    }
+    throw new WingsException("Unable to parse JSON response " + source.toString() + " and field " + field);
   }
 }

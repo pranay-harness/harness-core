@@ -2,7 +2,7 @@
   "ui:order" :
       [
         "analysisServerConfigId", "query", "queryType", "indices",
-        "hostnameField", "messageField", "hostnameTemplate", "timestampFormat",
+        "hostnameField", "messageField", "hostnameTemplate", "timestampField", "timestampFormat",
         "timeDuration", "comparisonStrategy", "analysisTolerance",
         "executeWithPreviousSteps", "includePreviousPhaseNodes", "*"
       ],
