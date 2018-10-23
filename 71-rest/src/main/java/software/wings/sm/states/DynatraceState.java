@@ -119,7 +119,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .startTime(dataCollectionStartTimeStamp)
             .collectionTime(Integer.parseInt(timeDuration))
             .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
-            .serviceMethods(getServiceMethodSet())
+            .serviceMethods(splitServiceMethods(serviceMethods))
             .dataCollectionMinute(0)
             .encryptedDataDetails(secretManager.getEncryptionDetails(
                 dynaTraceConfig, context.getAppId(), context.getWorkflowExecutionId()))
@@ -143,7 +143,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
-  private Set<String> getServiceMethodSet() {
+  public static Set<String> splitServiceMethods(String serviceMethods) {
     Set<String> methodNames = new HashSet<>();
     String[] methods = serviceMethods.split("\n");
     for (String method : methods) {

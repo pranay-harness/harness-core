@@ -8,6 +8,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
@@ -23,6 +24,7 @@ import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.SyncTaskContext;
+import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
@@ -31,6 +33,8 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
+import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
+import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
 import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.intfc.DelegateService;
@@ -38,9 +42,11 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.APMVerificationService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
+import software.wings.sm.states.DynatraceState;
 import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -131,6 +137,13 @@ public class APMVerificationServiceImpl implements APMVerificationService {
                 .get();
         task = createNewRelicDelegateTask(nrConfig, waitId, startTime, endTime);
         break;
+      case DYNA_TRACE:
+        DynaTraceCVServiceConfiguration dynaTraceCVServiceConfiguration =
+            (DynaTraceCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
+                .filter("_id", cvConfigId)
+                .get();
+        task = createDynaTraceDelegateTask(dynaTraceCVServiceConfiguration, waitId, startTime, endTime);
+        break;
       case PROMETHEUS:
         PrometheusCVServiceConfiguration prometheusCVServiceConfiguration =
             (PrometheusCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
@@ -147,6 +160,29 @@ public class APMVerificationServiceImpl implements APMVerificationService {
     logger.info("Queuing 24x7 data collection task for {}, cvConfigurationId: {}", stateType, cvConfigId);
     delegateService.queueTask(task);
     return true;
+  }
+
+  private DelegateTask createDynaTraceDelegateTask(
+      DynaTraceCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    DynaTraceConfig dynaTraceConfig = (DynaTraceConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final DynaTraceDataCollectionInfo dataCollectionInfo =
+        DynaTraceDataCollectionInfo.builder()
+            .dynaTraceConfig(dynaTraceConfig)
+            .applicationId(config.getAppId())
+            .serviceId(config.getServiceId())
+            .cvConfigId(config.getUuid())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId())
+            .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
+            .serviceMethods(DynatraceState.splitServiceMethods(config.getServiceMethods()))
+            .startTime(startTime)
+            .collectionTime(timeDuration)
+            .dataCollectionMinute(0)
+            .encryptedDataDetails(secretManager.getEncryptionDetails(dynaTraceConfig, config.getAppId(), null))
+            .analysisComparisonStrategy(AnalysisComparisonStrategy.PREDICTIVE)
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, timeDuration, TaskType.DYNATRACE_COLLECT_24_7_METRIC_DATA);
   }
 
   private DelegateTask createAppDynamicsDelegateTask(
