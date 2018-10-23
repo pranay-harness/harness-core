@@ -4,6 +4,8 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -15,8 +17,12 @@ import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.common.Constants.HARNESS_NAME;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
+import io.harness.beans.PageResponse;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -25,24 +31,36 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.DelegateConfiguration;
+import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
+import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.JobScheduler;
+import software.wings.security.AppPermissionSummary;
+import software.wings.security.AppPermissionSummary.EnvInfo;
+import software.wings.security.PermissionAttribute.Action;
+import software.wings.security.UserPermissionInfo;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -56,6 +74,8 @@ public class AccountServiceTest extends WingsBaseTest {
   @Mock private JobScheduler jobScheduler;
   @Mock private TemplateGalleryService templateGalleryService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private UserPermissionInfo mockUserPermissionInfo;
+  @Mock private AuthService authService;
 
   @InjectMocks @Inject private AccountService accountService;
 
@@ -415,5 +435,82 @@ public class AccountServiceTest extends WingsBaseTest {
     assertThat(account.getDefaults()).isNotEmpty().containsKeys("NAME", "NAME2");
     assertThat(account.getDefaults()).isNotEmpty().containsValues("", "VALUE");
     verify(settingsService).listAccountDefaults(account.getUuid());
+  }
+
+  @Test
+  public void testGetAllServicesForAccount() {
+    String serviceId = UUID.randomUUID().toString();
+    String envId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+    String workflowId = UUID.randomUUID().toString();
+    User user = new User();
+
+    // setup
+    wingsPersistence.saveAndGet(Service.class, Service.builder().name("serviceTest").uuid(serviceId).build());
+    when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
+      { put(appId, buildAppPermissionSummary(serviceId, workflowId, envId)); }
+    });
+
+    when(authService.getUserPermissionInfo(accountId, user)).thenReturn(mockUserPermissionInfo);
+    PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("0").build();
+
+    // test behavior
+    PageResponse<Service> services = accountService.getAllServicesForAccount(accountId, user, request);
+
+    // verify results
+    assertTrue("Service list should not be empty", services.getResponse().size() > 0);
+    assertEquals("Service id should be same", serviceId, services.getResponse().get(0).getUuid());
+    assertEquals("Service name should be same", "serviceTest", services.getResponse().get(0).getName());
+    assertEquals("Offset correct in the page response", services.getOffset(), "1");
+  }
+
+  @Test
+  public void testGetAllServicesForAccountLastOffset() {
+    String serviceId = UUID.randomUUID().toString();
+    String envId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+    String workflowId = UUID.randomUUID().toString();
+    User user = new User();
+
+    // setup
+    wingsPersistence.saveAndGet(Service.class, Service.builder().name("serviceTest").uuid(serviceId).build());
+    when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
+      { put(appId, buildAppPermissionSummary(serviceId, workflowId, envId)); }
+    });
+
+    when(authService.getUserPermissionInfo(accountId, user)).thenReturn(mockUserPermissionInfo);
+    PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("1").build();
+
+    // test behavior
+    PageResponse<Service> services = accountService.getAllServicesForAccount(accountId, user, request);
+
+    // verify results
+    assertTrue("Service list should be empty", services.getResponse().size() == 0);
+  }
+
+  private AppPermissionSummary buildAppPermissionSummary(String serviceId, String workflowId, String envId) {
+    Map<Action, Set<String>> servicePermissions = new HashMap<Action, Set<String>>() {
+      { put(Action.READ, Sets.newHashSet(serviceId)); }
+    };
+    Map<Action, Set<EnvInfo>> envPermissions = new HashMap<Action, Set<EnvInfo>>() {
+      {
+        put(Action.READ, Sets.newHashSet(EnvInfo.builder().envId(envId).envType(EnvironmentType.PROD.name()).build()));
+      }
+    };
+    Map<Action, Set<String>> pipelinePermissions = new HashMap<Action, Set<String>>() {
+      { put(Action.READ, Sets.newHashSet()); }
+    };
+    Map<Action, Set<String>> workflowPermissions = new HashMap<Action, Set<String>>() {
+      { put(Action.READ, Sets.newHashSet(workflowId)); }
+    };
+
+    return AppPermissionSummary.builder()
+        .servicePermissions(servicePermissions)
+        .envPermissions(envPermissions)
+        .workflowPermissions(workflowPermissions)
+        .pipelinePermissions(pipelinePermissions)
+        .build();
   }
 }

@@ -12,6 +12,7 @@ import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.Service;
 import software.wings.beans.User;
 
 import java.util.Collection;
@@ -90,4 +91,6 @@ public interface AccountService {
   Collection<FeatureFlag> getFeatureFlags(@NotBlank String accountId);
 
   boolean isFeatureFlagEnabled(FeatureName featureName, String accountId);
+
+  PageResponse<Service> getAllServicesForAccount(String accountId, User user, PageRequest<String> request);
 }
