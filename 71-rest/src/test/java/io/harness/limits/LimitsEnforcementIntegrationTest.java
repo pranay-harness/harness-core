@@ -15,19 +15,20 @@ import org.junit.Test;
 import org.mongodb.morphia.Datastore;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.rules.Integration;
+import software.wings.integration.IntegrationTestUtil;
 
-@Integration
 public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   @Inject private WingsPersistence dao;
   @Inject private LimitConfigurationService limitConfigSvc;
   @Inject private LimitCheckerFactory limitCheckerFactory;
 
+  // namespacing accountId with class name to prevent collision with other tests
+  private static final String ACCOUNT_ID = "some-account-id-" + LimitsEnforcementIntegrationTest.class.getSimpleName();
   private boolean indexesEnsured;
 
   @Before
-  public void ensureIndices() {
-    if (!indexesEnsured) {
+  public void ensureIndices() throws Exception {
+    if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
       dao.getDatastore().ensureIndexes(Counter.class);
       dao.getDatastore().ensureIndexes(ConfiguredLimit.class);
       indexesEnsured = true;
@@ -37,21 +38,19 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   @After
   public void clearCollection() {
     Datastore ds = dao.getDatastore();
-    ds.delete(ds.createQuery(ConfiguredLimit.class));
-    ds.delete(ds.createQuery(Counter.class));
+    ds.delete(ds.createQuery(ConfiguredLimit.class).filter("accountId", ACCOUNT_ID));
+    ds.delete(ds.createQuery(Counter.class).field("key").startsWith(ACCOUNT_ID));
   }
 
   @Test
   public void testLimitEnforcement() {
-    String accountId = "some-account-id";
-
     // configure limits
     StaticLimit limit = new StaticLimit(0);
-    boolean configured = limitConfigSvc.configure(accountId, CREATE_APPLICATION, limit);
+    boolean configured = limitConfigSvc.configure(ACCOUNT_ID, CREATE_APPLICATION, limit);
     assertTrue(configured);
 
     // check limits
-    LimitChecker checker = limitCheckerFactory.getInstance(new Action(accountId, CREATE_APPLICATION));
+    LimitChecker checker = limitCheckerFactory.getInstance(new Action(ACCOUNT_ID, CREATE_APPLICATION));
     if (checker.checkAndConsume()) {
       Assert.fail("since limit is zero, checkAndConsume should return false");
     }

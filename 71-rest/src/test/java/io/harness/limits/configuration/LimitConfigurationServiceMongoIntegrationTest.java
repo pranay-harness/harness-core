@@ -1,4 +1,4 @@
-package io.harness.limits;
+package io.harness.limits.configuration;
 
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
 import static org.junit.Assert.assertEquals;
@@ -7,7 +7,7 @@ import static org.junit.Assert.assertTrue;
 
 import com.google.inject.Inject;
 
-import io.harness.limits.configuration.LimitConfigurationServiceMongo;
+import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import org.junit.After;
@@ -16,20 +16,23 @@ import org.junit.Test;
 import org.mongodb.morphia.Datastore;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.rules.Integration;
+import software.wings.integration.IntegrationTestUtil;
 
 import java.util.concurrent.TimeUnit;
 
-@Integration
 public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrationTest {
   @Inject private LimitConfigurationServiceMongo configuredLimitService;
   @Inject private WingsPersistence dao;
 
+  // namespacing accountId with class name to prevent collision with other tests
+  private static final String SOME_ACCOUNT_ID =
+      "some-account-id-" + LimitConfigurationServiceMongoIntegrationTest.class.getSimpleName();
+
   private boolean indexesEnsured;
 
   @Before
-  public void ensureIndices() {
-    if (!indexesEnsured) {
+  public void ensureIndices() throws Exception {
+    if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
       dao.getDatastore().ensureIndexes(ConfiguredLimit.class);
       indexesEnsured = true;
     }
@@ -38,17 +41,16 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
   @After
   public void clearCollection() {
     Datastore ds = dao.getDatastore();
-    ds.delete(ds.createQuery(ConfiguredLimit.class));
+    ds.delete(ds.createQuery(ConfiguredLimit.class).filter("accountId", SOME_ACCOUNT_ID));
   }
 
   @Test
   public void testSaveAndGet() {
-    String accountId = "some-account-id";
-    ConfiguredLimit<StaticLimit> cl = new ConfiguredLimit<>(accountId, new StaticLimit(10), CREATE_APPLICATION);
+    ConfiguredLimit<StaticLimit> cl = new ConfiguredLimit<>(SOME_ACCOUNT_ID, new StaticLimit(10), CREATE_APPLICATION);
     boolean configured = configuredLimitService.configure(cl.getAccountId(), CREATE_APPLICATION, cl.getLimit());
     assertTrue(configured);
 
-    ConfiguredLimit fetchedValue = configuredLimitService.get(accountId, CREATE_APPLICATION);
+    ConfiguredLimit fetchedValue = configuredLimitService.get(SOME_ACCOUNT_ID, CREATE_APPLICATION);
     assertEquals(cl, fetchedValue);
 
     fetchedValue = configuredLimitService.get("non-existent-id", CREATE_APPLICATION);
@@ -57,7 +59,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
 
   @Test
   public void testUpsert() {
-    String accountId = "some-account-id";
+    String accountId = SOME_ACCOUNT_ID;
     boolean configured = configuredLimitService.configure(accountId, CREATE_APPLICATION, new StaticLimit(10));
     assertTrue(configured);
     ConfiguredLimit fetchedValue = configuredLimitService.get(accountId, CREATE_APPLICATION);
@@ -76,7 +78,7 @@ public class LimitConfigurationServiceMongoIntegrationTest extends BaseIntegrati
 
   @Test
   public void testUpsertForRateLimits() {
-    String accountId = "some-account-id";
+    String accountId = SOME_ACCOUNT_ID;
 
     RateLimit limit = new RateLimit(10, 2, TimeUnit.MINUTES);
 

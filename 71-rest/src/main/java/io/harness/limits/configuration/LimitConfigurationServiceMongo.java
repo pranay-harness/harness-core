@@ -1,5 +1,6 @@
 package io.harness.limits.configuration;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -15,6 +16,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 
 import javax.annotation.Nullable;
@@ -28,10 +30,25 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   @Inject private WingsPersistence dao;
 
   @Override
-  public @Nullable ConfiguredLimit get(String accountId, ActionType actionType) {
-    return dao.getDatastore()
-        .createQuery(ConfiguredLimit.class)
-        .filter("accountId", accountId)
+  public @Nullable ConfiguredLimit getOrDefault(String accountId, ActionType actionType) {
+    ConfiguredLimit limit = get(accountId, actionType);
+
+    if (null == limit) {
+      limit = getDefaultLimit(actionType);
+    }
+
+    return limit;
+  }
+
+  @VisibleForTesting
+  @Nullable
+  ConfiguredLimit get(String accountId, ActionType actionType) {
+    return dao.createQuery(ConfiguredLimit.class).filter("accountId", accountId).filter("key", actionType).get();
+  }
+
+  private @Nullable ConfiguredLimit getDefaultLimit(ActionType actionType) {
+    return dao.createQuery(ConfiguredLimit.class)
+        .filter("accountId", Base.GLOBAL_ACCOUNT_ID)
         .filter("key", actionType)
         .get();
   }
