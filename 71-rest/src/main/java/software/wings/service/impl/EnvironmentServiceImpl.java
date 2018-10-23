@@ -47,6 +47,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -460,6 +461,14 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   public List<Environment> getEnvByApp(String appId) {
     PageRequest<Environment> pageRequest = aPageRequest().addFilter("appId", EQ, appId).build();
     return wingsPersistence.query(Environment.class, pageRequest).getResponse();
+  }
+
+  @Override
+  public List<String> getEnvIdsByApp(String appId) {
+    List<Key<Environment>> environmentKeyList =
+        wingsPersistence.createQuery(Environment.class).filter("appId", appId).asKeyList();
+    logger.info(environmentKeyList.size() + " environments found for appId " + appId);
+    return environmentKeyList.stream().map(key -> (String) key.getId()).collect(Collectors.toList());
   }
 
   @Override
