@@ -1,6 +1,6 @@
 
 apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: harness-default-cluster-admin
 subjects:
@@ -8,8 +8,8 @@ subjects:
   name: default
   namespace: {{ .Values.kubernetesClusterNamespace }}
 roleRef:
-  kind: ClusterRole
-  name: cluster-admin
+  kind: Role
+  name: admin
   apiGroup: rbac.authorization.k8s.io
 
 ---
@@ -40,13 +40,14 @@ metadata:
     harness-app: harness
     harness-service: manager
   annotations:
-    kubernetes.io/ingress.class: nginx
+    kubernetes.io/ingress.class: {{ .Values.kubernetesClusterNamespace }}
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
   name: harness-manager
   namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   rules:
-  - http:
+  - host: {{ .Values.inframapping.lbhost }}
+    http:
       paths:
       - backend:
           serviceName: harness-manager
@@ -210,13 +211,14 @@ metadata:
     harness-app: harness
     harness-service: harness-manager-nginx
   annotations:
-    kubernetes.io/ingress.class: nginx
+    kubernetes.io/ingress.class: {{ .Values.kubernetesClusterNamespace }}
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
   name: harness-manager-nginx
   namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
   rules:
-  - http:
+  - host: {{ .Values.inframapping.lbhost }}
+    http:
       paths:
       - backend:
           serviceName: harness-manager-nginx

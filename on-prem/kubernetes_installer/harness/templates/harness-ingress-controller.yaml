@@ -94,7 +94,7 @@ spec:
 ---
 
 apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
+kind: RoleBinding
 metadata:
   name: ingress-nginx-cluster-admin
 subjects:
@@ -102,8 +102,8 @@ subjects:
   name: default
   namespace: {{ .Values.kubernetesClusterNamespace }}
 roleRef:
-  kind: ClusterRole
-  name: cluster-admin
+  kind: Role
+  name: admin
   apiGroup: rbac.authorization.k8s.io
 
 ---
@@ -114,6 +114,7 @@ metadata:
   labels:
     harness-app: harness
     harness-service: nginx-ingress-controller
+    kubernetes.io/ingress.class: {{ .Values.kubernetesClusterNamespace }}
   name: nginx-ingress-controller
   namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
@@ -135,6 +136,7 @@ spec:
         - --default-backend-service=$(POD_NAMESPACE)/nginx-default-backend
         - --configmap=$(POD_NAMESPACE)/nginx-ingress-controller
         - --default-ssl-certificate=$(POD_NAMESPACE)/no-secret-map
+        - --ingress-class={{ .Values.kubernetesClusterNamespace }}
         env:
         - name: POD_NAME
           valueFrom:

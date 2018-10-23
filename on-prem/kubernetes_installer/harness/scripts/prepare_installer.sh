@@ -40,7 +40,6 @@ helm template -f values.internal.yaml . -x templates/harness-manager.yaml > outp
 helm template -f values.internal.yaml . -x templates/harness-namespace.yaml > output/harness-namespace.yaml
 helm template -f values.internal.yaml . -x templates/harness-regcred.yaml > output/harness-regcred.yaml
 helm template -f values.internal.yaml . -x templates/harness-ui.yaml > output/harness-ui.yaml
-helm template -f values.internal.yaml . -x templates/harness-mongo.yaml > output/harness-mongo.yaml
 helm template -f ${INSTALLER_DIR}/values.internal.yaml . -x ${INSTALLER_DIR}/templates/init.template.js > ${INSTALLER_DIR}/output/init.js
 # To remove the top 2 unnecessary lines in the generated js using template.
 tail -n +3 ${INSTALLER_DIR}/output/init.js > ${INSTALLER_DIR}/output/init.js.tmp

@@ -19,3 +19,4 @@ docker:
 inframapping:
   lbUrl: http://127.0.0.1
   lbIpAddress: 127.0.0.1
+  lbHost: example.com
