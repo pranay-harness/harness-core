@@ -1,10 +1,12 @@
 package migrations.all;
 
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
+import io.harness.persistence.ReadPref;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +22,7 @@ public class DropOldCollectionMigration implements Migration {
              "containerDeploymentQueue", "entityUpdateListQueue", "history", "metricSummary", "newRelicMetricNames",
              "splunkAnalysisRecords", "splunkLogs")) {
       try {
-        wingsPersistence.getCollection(collection).drop();
+        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, collection).drop();
       } catch (RuntimeException ex) {
         logger.error(format("Drop collection %s error", collection), ex);
       }

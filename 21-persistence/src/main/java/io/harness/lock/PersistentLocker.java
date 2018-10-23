@@ -2,6 +2,7 @@ package io.harness.lock;
 
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.NOBODY;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
@@ -16,6 +17,7 @@ import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.ReadPref;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,7 +89,7 @@ public class PersistentLocker implements Locker {
     // NOTE: DistributedLockSvc destroy does not work. Also it expects the lock to not be acquired which
     //       is design flow. The only safe moment to destroy lock is, when you currently have it acquired.
     final BasicDBObject filter = new BasicDBObject().append("_id", name);
-    persistence.getCollection("locks").remove(filter);
+    persistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "locks").remove(filter);
     acquiredLock.release();
     throw new WingsException(GENERAL_ERROR, NOBODY)
         .addParam("message", format("Acquired distributed lock %s was destroyed and the lock was broken.", name));

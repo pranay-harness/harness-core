@@ -1,11 +1,14 @@
 package io.harness.limits;
 
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+
 import com.google.common.base.Preconditions;
 
 import com.mongodb.MongoCommandException;
 import io.harness.eraro.mongo.MongoError;
 import io.harness.limits.lib.StaticLimit;
 import io.harness.limits.lib.StaticLimitChecker;
+import io.harness.persistence.ReadPref;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.mongodb.morphia.FindAndModifyOptions;
@@ -84,21 +87,22 @@ public class MongoStaticLimitChecker implements StaticLimitChecker {
     Preconditions.checkArgument(change > 0, "use decrementAndGet for -ve change");
 
     try {
-      Query<Counter> q = persistence.getDatastore()
+      Query<Counter> q = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
                              .createQuery(Counter.class)
                              .field("key")
                              .equal(keyToIncrement)
                              .field("value")
                              .lessThan(limit.getCount());
 
-      UpdateOperations<Counter> updateOp =
-          persistence.getDatastore().createUpdateOperations(Counter.class).inc("value", change);
+      UpdateOperations<Counter> updateOp = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+                                               .createUpdateOperations(Counter.class)
+                                               .inc("value", change);
 
       FindAndModifyOptions optns = new FindAndModifyOptions();
       optns.returnNew(true);
       optns.upsert(true);
 
-      return persistence.getDatastore().findAndModify(q, updateOp, optns);
+      return persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(q, updateOp, optns);
     } catch (MongoCommandException e) {
       if (e.getErrorCode() == MongoError.DUPLICATE_KEY.getErrorCode()) {
         log.info(
@@ -112,19 +116,20 @@ public class MongoStaticLimitChecker implements StaticLimitChecker {
 
   private UpdateResponse decrementAndGet(String keyToDecrement, int change) {
     Preconditions.checkArgument(change < 0, "use incrementAndGet for +ve change");
-    Query<Counter> q = persistence.getDatastore()
+    Query<Counter> q = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
                            .createQuery(Counter.class)
                            .field("key")
                            .equal(keyToDecrement)
                            .field("value")
                            .greaterThan(0);
 
-    UpdateOperations<Counter> updateOp =
-        persistence.getDatastore().createUpdateOperations(Counter.class).inc("value", change);
+    UpdateOperations<Counter> updateOp = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+                                             .createUpdateOperations(Counter.class)
+                                             .inc("value", change);
 
     FindAndModifyOptions optns = new FindAndModifyOptions();
     optns.returnNew(true);
-    Counter counter = persistence.getDatastore().findAndModify(q, updateOp, optns);
+    Counter counter = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(q, updateOp, optns);
 
     if (counter == null) {
       log.info("new counter is null. "

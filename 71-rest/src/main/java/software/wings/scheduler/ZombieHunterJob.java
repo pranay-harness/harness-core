@@ -35,6 +35,7 @@ mmmmmmmmmmmmmmmmmshdNm+-hm/`ommmd+`/dmmmdhhmmmmmmmmmmmmmmmmm
 */
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -52,6 +53,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.persistence.ReadPref;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.apache.commons.collections.map.LRUMap;
@@ -208,8 +210,9 @@ public class ZombieHunterJob implements Job {
   }
 
   int huntingExpedition(ZombieType zombieType) {
-    List<DBCollection> owners =
-        zombieType.ownerCollections.stream().map(owner -> wingsPersistence.getCollection(owner)).collect(toList());
+    List<DBCollection> owners = zombieType.ownerCollections.stream()
+                                    .map(owner -> wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, owner))
+                                    .collect(toList());
 
     BasicDBObject select = new BasicDBObject();
     select.put(ID_KEY, 1);
@@ -220,7 +223,8 @@ public class ZombieHunterJob implements Job {
     selectOwner.put(ID_KEY, 1);
 
     int count = 0;
-    final DBCursor dbCursor = wingsPersistence.getCollection(zombieType.collection).find(null, select);
+    final DBCursor dbCursor =
+        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, zombieType.collection).find(null, select);
     while (dbCursor.hasNext()) {
       final DBObject object = dbCursor.next();
       final Object ownerId = object.get(zombieType.ownerFieldName);

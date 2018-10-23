@@ -1,5 +1,6 @@
 package software.wings.dl;
 
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 
 import com.google.common.cache.CacheBuilder;
@@ -8,6 +9,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.persistence.ReadPref;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Account;
@@ -41,7 +43,7 @@ public class GenericDbCache {
                 return accountService.get(uuid);
               }
 
-              return wingsPersistence.getDatastore().get(Class.forName(className), uuid);
+              return wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).get(Class.forName(className), uuid);
             }
           });
 

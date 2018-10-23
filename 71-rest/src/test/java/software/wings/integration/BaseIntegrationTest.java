@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.network.Localhost.getLocalHostName;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -34,6 +35,7 @@ import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.persistence.ReadPref;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.glassfish.jersey.client.ClientConfig;
@@ -190,7 +192,8 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   }
 
   protected void deleteAllDocuments(List<Class> classes) {
-    classes.forEach(cls -> wingsPersistence.getDatastore().delete(wingsPersistence.createQuery(cls)));
+    classes.forEach(
+        cls -> wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).delete(wingsPersistence.createQuery(cls)));
   }
 
   protected Application createApp(String appName) {

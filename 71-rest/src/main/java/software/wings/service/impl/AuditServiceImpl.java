@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
@@ -16,6 +17,7 @@ import com.google.inject.Singleton;
 import com.mongodb.BasicDBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.persistence.ReadPref;
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
@@ -174,20 +176,21 @@ public class AuditServiceImpl implements AuditService {
                     .filter(auditHeader -> auditHeader.getResponsePayloadUuid() != null)
                     .map(auditHeader -> new ObjectId(auditHeader.getResponsePayloadUuid()))
                     .collect(toList());
-            wingsPersistence.getCollection("audits").remove(new BasicDBObject(
-                ID_KEY, new BasicDBObject("$in", auditHeaders.stream().map(AuditHeader::getUuid).toArray())));
+            wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits")
+                .remove(new BasicDBObject(
+                    ID_KEY, new BasicDBObject("$in", auditHeaders.stream().map(AuditHeader::getUuid).toArray())));
 
             if (requestPayloadIds != null) {
-              wingsPersistence.getCollection("audits.files")
+              wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits.files")
                   .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", requestPayloadIds.toArray())));
-              wingsPersistence.getCollection("audits.chunks")
+              wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits.chunks")
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", requestPayloadIds.toArray())));
             }
 
             if (responsePayloadIds != null) {
-              wingsPersistence.getCollection("audits.files")
+              wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits.files")
                   .remove(new BasicDBObject(ID_KEY, new BasicDBObject("$in", responsePayloadIds.toArray())));
-              wingsPersistence.getCollection("audits.chunks")
+              wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "audits.chunks")
                   .remove(new BasicDBObject("files_id", new BasicDBObject("$in", responsePayloadIds.toArray())));
             }
           } catch (Exception ex) {

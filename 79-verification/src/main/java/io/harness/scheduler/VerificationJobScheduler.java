@@ -1,5 +1,7 @@
 package io.harness.scheduler;
 
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -9,6 +11,7 @@ import com.mongodb.DBCollection;
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.persistence.ReadPref;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
@@ -49,7 +52,8 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
 
       WingsPersistence wingsPersistence = injector.getInstance(Key.get(WingsMongoPersistence.class));
 
-      final DBCollection triggers = wingsPersistence.getCollection(prefix + "_triggers");
+      final DBCollection triggers =
+          wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, prefix + "_triggers");
       BasicDBObject jobIdKey = new BasicDBObject("jobId", 1);
       triggers.createIndex(jobIdKey, null, false);
 

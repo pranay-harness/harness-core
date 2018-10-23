@@ -24,6 +24,7 @@ import static io.harness.common.GeneratorConstants.readOnlyPassword;
 import static io.harness.common.GeneratorConstants.readOnlyUserName;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.generator.InfrastructureMappingGenerator.InfrastructureMappings.AWS_SSH_TEST;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.Arrays.asList;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -75,6 +76,7 @@ import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
 import io.harness.mongo.MongoModule;
+import io.harness.persistence.ReadPref;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.rules.TemporaryFolder;
@@ -253,11 +255,11 @@ public class DataGenService {
   }
 
   protected void dropDBAndEnsureIndexes() {
-    wingsPersistence.getDatastore().getDB().dropDatabase();
+    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).getDB().dropDatabase();
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setMapSubPackages(true);
     morphia.mapPackage("software.wings");
-    ensureIndex(morphia, wingsPersistence.getDatastore());
+    ensureIndex(morphia, wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL));
   }
 
   protected void ensureIndex(Morphia morphia, Datastore primaryDatastore) {

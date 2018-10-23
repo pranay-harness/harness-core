@@ -1,6 +1,7 @@
 package software.wings.common.cache;
 
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -13,6 +14,7 @@ import io.harness.cache.Distributable;
 import io.harness.cache.DistributedStore;
 import io.harness.cache.Nominal;
 import io.harness.cache.Ordinal;
+import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.QueryFactory;
@@ -52,11 +54,13 @@ public class MongoStore implements DistributedStore {
 
   private <T extends Distributable> T get(Long contextValue, long algorithmId, long structureHash, String key) {
     try {
-      final Datastore datastore = wingsPersistence.getDatastore();
+      final Datastore datastore = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
       final QueryFactory factory = datastore.getQueryFactory();
 
       final Query<CacheEntity> entityQuery =
-          factory.createQuery(datastore, wingsPersistence.getCollection(collectionName), CacheEntity.class)
+          factory
+              .createQuery(datastore, wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, collectionName),
+                  CacheEntity.class)
               .filter(CacheEntity.CANONICAL_KEY_KEY, canonicalKey(algorithmId, structureHash, key));
 
       if (contextValue != null) {
@@ -86,7 +90,7 @@ public class MongoStore implements DistributedStore {
       contextValue = ((Ordinal) entity).contextOrder();
     }
     try {
-      final Datastore datastore = wingsPersistence.getDatastore();
+      final Datastore datastore = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
       final UpdateOperations<CacheEntity> updateOperations = datastore.createUpdateOperations(CacheEntity.class);
       updateOperations.set(CacheEntity.CONTEXT_VALUE_KEY, contextValue);
       updateOperations.set(CacheEntity.CANONICAL_KEY_KEY, canonicalKey);
