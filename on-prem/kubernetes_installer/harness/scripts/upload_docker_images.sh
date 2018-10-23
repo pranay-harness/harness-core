@@ -35,6 +35,7 @@ function loadDockerImages(){
     docker load --input artifacts/nginx.tar
     docker load --input artifacts/ui.tar
     docker load --input artifacts/delegate.tar
+    docker load --input artifacts/busybox.tar
 }
 
 function prepareandUploadImage(){
@@ -58,6 +59,7 @@ function uploadDockerImages(){
     prepareandUploadImage $ingresscontrollerimage
     prepareandUploadImage $defaultbackendimage
     prepareandUploadImage $delegateimage
+    prepareandUploadImage $busyboximage
 }
 
 echo "# Reading versions from $VERSION_PROPERTY_FILE"
@@ -70,6 +72,7 @@ uiimage=$(rv images.ui.repository):$(rv images.ui.tag)
 defaultbackendimage=$(rv images.defaultBackend.repository):$(rv images.defaultBackend.tag)
 ingresscontrollerimage=$(rv images.ingressController.repository):$(rv images.ingressController.tag)
 delegateimage=$(rv images.delegate.repository):$(rv images.delegate.tag)
+busyboximage=$(rv images.busybox.repository):$(rv images.busybox.tag)
 
 
 echo "#######Version details start #############"

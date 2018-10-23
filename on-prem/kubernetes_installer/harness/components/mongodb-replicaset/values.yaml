@@ -30,6 +30,12 @@ image:
   tag: 3.6
   pullPolicy: IfNotPresent
 
+# Specs for busybox image
+busyboxImage:
+  repository: busybox
+  tag: latest
+  pullPolicy: IfNotPresent
+
 # Additional environment variables to be set in the container
 extraVars: {}
 # - name: TCMALLOC_AGGRESSIVE_DECOMMIT

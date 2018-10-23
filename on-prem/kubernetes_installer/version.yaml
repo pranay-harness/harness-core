@@ -26,3 +26,6 @@ images:
   delegate:
     repository: harness/delegate
     tag: latest
+  busybox:
+    repository: busybox
+    tag: 1.29

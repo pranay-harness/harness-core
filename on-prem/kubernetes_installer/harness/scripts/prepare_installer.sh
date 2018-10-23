@@ -30,6 +30,7 @@ if [[ ${DOCKER_REGISTRY_URL} != "" ]] ; then
     wv images.ingressController.repository ${DOCKER_REGISTRY_URL}/$(rv images.ingressController.repository)
     wv images.nginx.repository ${DOCKER_REGISTRY_URL}/$(rv images.nginx.repository)
     wv images.delegate.repository ${DOCKER_REGISTRY_URL}/$(rv images.delegate.repository)
+    wv images.busybox.repository ${DOCKER_REGISTRY_URL}/$(rv images.busybox.repository)
 fi
 
 mkdir -p output
