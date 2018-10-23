@@ -12,10 +12,13 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AccountService;
 
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -56,5 +59,16 @@ public class AccountResource {
   public RestResponse<Boolean> isFeatureEnabled(
       @QueryParam("featureName") FeatureName featureName, @QueryParam("accountId") String accountId) {
     return new RestResponse<>(accountService.isFeatureFlagEnabled(featureName, accountId));
+  }
+
+  @GET
+  @Path("services")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<PageResponse<Service>> getAllServices(
+      @QueryParam("accountId") String accountId, @BeanParam PageRequest<String> request) {
+    return new RestResponse<>(
+        accountService.getAllServicesForAccount(accountId, UserThreadLocal.get().getPublicUser(), request));
   }
 }

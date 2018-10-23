@@ -35,7 +35,9 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
@@ -59,6 +61,7 @@ import software.wings.beans.LicenseInfo;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
+import software.wings.beans.Service;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
 import software.wings.common.Constants;
@@ -68,12 +71,15 @@ import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
 import software.wings.scheduler.QuartzScheduler;
+import software.wings.security.AppPermissionSummary;
+import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.NotificationSetupService;
 import software.wings.service.intfc.RoleService;
@@ -93,6 +99,7 @@ import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -106,6 +113,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class AccountServiceImpl implements AccountService {
   private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
+  private static final int SIZE_PER_SERVICES_REQUEST = 10;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
@@ -124,6 +132,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private TemplateGalleryService templateGalleryService;
   @Inject private GenericDbCache dbCache;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject protected AuthService authService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -717,5 +726,56 @@ public class AccountServiceImpl implements AccountService {
 
   public boolean isFeatureFlagEnabled(FeatureName featureName, String accountId) {
     return featureFlagService.isEnabled(featureName, accountId);
+  }
+
+  public PageResponse<Service> getAllServicesForAccount(String accountId, User user, PageRequest<String> request) {
+    if (user == null) {
+      logger.info("User is null when requesting for Services info. Returning null");
+    }
+
+    int offset = Integer.parseInt(request.getOffset());
+    List<String> serviceIds = new ArrayList<>();
+    Map<String, AppPermissionSummary> userAppPermissions =
+        authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
+
+    for (Map.Entry<String, AppPermissionSummary> entry : userAppPermissions.entrySet()) {
+      if (entry.getValue().getServicePermissions().size() > 0) {
+        serviceIds.addAll(entry.getValue().getServicePermissions().get(Action.READ));
+      }
+    }
+
+    List<String> servicesToReturn = new ArrayList<>();
+
+    if (offset <= serviceIds.size() && serviceIds.size() >= offset + SIZE_PER_SERVICES_REQUEST) {
+      servicesToReturn = serviceIds.subList(offset, offset + SIZE_PER_SERVICES_REQUEST);
+    } else if (offset <= serviceIds.size()) {
+      servicesToReturn = serviceIds.subList(offset, serviceIds.size());
+    }
+
+    if (servicesToReturn.size() > 0) {
+      PageRequest<Service> serviceListRequest = PageRequestBuilder.aPageRequest()
+                                                    .addFilter("_id", Operator.IN, servicesToReturn.toArray())
+                                                    .addFieldsIncluded("_id", "name")
+                                                    .withOffset("0")
+                                                    .withLimit(String.valueOf(servicesToReturn.size()))
+                                                    .build();
+
+      PageResponse<Service> list = wingsPersistence.query(Service.class, serviceListRequest);
+      logger.info(
+          "Returning {} services for the getAllServicesForAccount call for accountId {} and user {} and offset {}",
+          servicesToReturn.size(), accountId, user, offset);
+      return PageResponseBuilder.aPageResponse()
+          .withResponse(list.getResponse())
+          .withOffset(String.valueOf(offset + servicesToReturn.size()))
+          .build();
+    }
+
+    logger.info(
+        "Returning {} services for the getAllServicesForAccount call for accountId {} and user {} and offset {}",
+        servicesToReturn.size(), accountId, user, offset);
+    return PageResponseBuilder.aPageResponse()
+        .withResponse(new ArrayList())
+        .withOffset(String.valueOf(offset + servicesToReturn.size()))
+        .build();
   }
 }
