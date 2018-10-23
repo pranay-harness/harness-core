@@ -36,11 +36,11 @@ spec:
         name: learning-engine
         resources:
           limits:
-            cpu: "2"
-            memory: 2Gi
+            cpu: {{ .Values.services.learningEngine.resources.limits.cpu }}
+            memory: {{ .Values.services.learningEngine.resources.limits.memory }}
           requests:
-            cpu: "2"
-            memory: 2Gi
+            cpu: {{ .Values.services.learningEngine.resources.limits.cpu }}
+            memory: {{ .Values.services.learningEngine.resources.limits.memory }}
       imagePullSecrets:
       - name: regcred
       restartPolicy: Always

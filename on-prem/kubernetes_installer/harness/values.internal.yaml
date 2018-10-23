@@ -58,6 +58,29 @@ services:
       init:
     size: 200Gi
     storageClass: harness-mongo-persistent-volume
+    resources:
+      limits:
+        cpu: "2"
+        memory: "8Gi"
   manager:
     storageClass: harness-manager-persistent-volume
     size: 75Gi
+    resources:
+      limits:
+        cpu: "2"
+        memory: "5Gi"
+  ui:
+    resources:
+      limits:
+        cpu: "0.2"
+        memory: "0.2Gi"
+  learningEngine:
+    resources:
+      limits:
+        cpu: "8"
+        memory: "2Gi"
+  verificationService:
+    resources:
+      limits:
+        cpu: "1"
+        memory: "3Gi"
