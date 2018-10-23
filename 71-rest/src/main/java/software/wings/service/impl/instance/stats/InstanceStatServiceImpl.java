@@ -5,13 +5,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.impl.instance.stats.collector.SimplePercentile;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
 import java.time.Instant;
@@ -79,6 +79,24 @@ public class InstanceStatServiceImpl implements InstanceStatService {
     return snapshots.get(0).getTimestamp();
   }
 
+  @Nullable
+  @Override
+  public Instant getFirstSnapshotTime(String accountId) {
+    FindOptions options = new FindOptions();
+    options.limit(1);
+
+    List<InstanceStatsSnapshot> snapshots = persistence.createQuery(InstanceStatsSnapshot.class)
+                                                .filter("accountId", accountId)
+                                                .order(Sort.ascending("timestamp"))
+                                                .asList(options);
+
+    if (CollectionUtils.isEmpty(snapshots)) {
+      return null;
+    }
+
+    return snapshots.get(0).getTimestamp();
+  }
+
   @Override
   public double percentile(String accountId, Instant from, Instant to, double p) {
     Preconditions.checkArgument(to.isAfter(from), "'to' timestamp should be after 'from'");
@@ -95,15 +113,6 @@ public class InstanceStatServiceImpl implements InstanceStatService {
 
     List<Integer> counts = dataPoints.stream().map(InstanceStatsSnapshot::getTotal).collect(Collectors.toList());
 
-    if (counts.isEmpty()) {
-      return 0;
-    }
-
-    double[] data = new double[counts.size()];
-    for (int i = 0; i < counts.size(); i++) {
-      data[i] = counts.get(i);
-    }
-
-    return new Percentile().evaluate(data, p);
+    return new SimplePercentile(counts).evaluate(p);
   }
 }

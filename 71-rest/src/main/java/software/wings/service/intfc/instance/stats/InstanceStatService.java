@@ -31,6 +31,11 @@ public interface InstanceStatService {
   @Nullable Instant getLastSnapshotTime(String accountId);
 
   /**
+   * Get the last time stats were saved for this account
+   */
+  @Nullable Instant getFirstSnapshotTime(String accountId);
+
+  /**
    * Calculate percentile of instance usage values
    * @param p percentile number. eg 95 for 95th percentile
    * @return percentile over given time period

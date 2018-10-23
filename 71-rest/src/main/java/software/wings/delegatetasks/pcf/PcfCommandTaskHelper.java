@@ -312,6 +312,7 @@ public class PcfCommandTaskHelper {
 
     String fileName = System.currentTimeMillis() + artifactFiles.get(0).getName();
     File artifactFile = new File(dir.getAbsolutePath() + "/" + fileName);
+
     if (!artifactFile.createNewFile()) {
       throw new WingsException(ErrorCode.GENERAL_ERROR)
           .addParam("message", "Failed to create file " + artifactFile.getCanonicalPath());
