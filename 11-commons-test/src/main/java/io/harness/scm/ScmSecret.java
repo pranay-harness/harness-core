@@ -1,12 +1,11 @@
 package io.harness.scm;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import org.apache.commons.codec.binary.Hex;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Properties;
 import javax.crypto.Cipher;
@@ -34,12 +33,11 @@ public class ScmSecret {
     return decrypt(secrets.getProperty(name.getValue()));
   }
 
-  @SuppressFBWarnings("DM_DEFAULT_ENCODING")
   public byte[] decrypt(String cipheredSecretHex) {
     try {
       if (!isInitialized()) {
         return "You can't decrypt in this environment. You need to set HARNESS_GENERATION_PASSPHRASE in your environment!"
-            .getBytes("UTF-8");
+            .getBytes(StandardCharsets.UTF_8);
       }
       Key aesKey = new SecretKeySpec(Hex.decodeHex(passphrase.toCharArray()), "AES");
       Cipher cipher = Cipher.getInstance("AES");
@@ -55,11 +53,7 @@ public class ScmSecret {
   }
 
   public String decryptToString(String cipheredSecretHex) {
-    try {
-      return new String(decrypt(cipheredSecretHex), "UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new RuntimeException(e);
-    }
+    return new String(decrypt(cipheredSecretHex), StandardCharsets.UTF_8);
   }
 
   public char[] decryptToCharArray(SecretName name) {

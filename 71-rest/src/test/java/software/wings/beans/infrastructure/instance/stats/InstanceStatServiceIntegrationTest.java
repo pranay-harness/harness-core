@@ -8,7 +8,6 @@ import static org.junit.Assert.assertTrue;
 import com.google.inject.Inject;
 
 import lombok.val;
-import org.apache.commons.math3.stat.descriptive.rank.Percentile;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -114,7 +113,7 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
     val accountId = statsToSave.get(0).getAccountId();
     double percentile = statService.percentile(accountId, from, to, 95.0);
     double expected =
-        percentile(statsToSave.stream().map(InstanceStatsSnapshot::getTotal).collect(Collectors.toList()), 95.0);
+        statsToSave.stream().map(InstanceStatsSnapshot::getTotal).sorted().collect(Collectors.toList()).get(95);
 
     assertEquals(expected, percentile, 0.01);
   }
@@ -155,14 +154,5 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
 
     assertTrue(lastTs.isAfter(before));
     assertTrue(lastTs.isBefore(after));
-  }
-
-  private Double percentile(List<Integer> list, double p) {
-    double[] data = new double[list.size()];
-    for (int i = 0; i < list.size(); i++) {
-      data[i] = list.get(i);
-    }
-
-    return new Percentile().evaluate(data, p);
   }
 }

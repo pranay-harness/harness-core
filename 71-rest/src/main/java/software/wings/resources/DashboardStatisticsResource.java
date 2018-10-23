@@ -11,9 +11,13 @@ import software.wings.beans.EntityType;
 import software.wings.beans.RestResponse;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.AggregateCount;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStats;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
+import software.wings.resources.stats.model.InstanceTimeline;
+import software.wings.resources.stats.model.TimeRange;
+import software.wings.resources.stats.service.TimeRangeProvider;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
@@ -23,6 +27,9 @@ import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
 import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -167,9 +174,32 @@ public class DashboardStatisticsResource {
     // this filtering can be done at DB level using $unwind and $aggregation but that would complicate what is
     // currently a simple find() query. So, keeping this logic at controller layer.
     List<InstanceStatsSnapshot> timelineWithOnlyApps =
-        timeline.stream().map(snapshot -> filterEntities(snapshot, EntityType.APPLICATION)).collect(toList());
+        timeline.stream().map(snapshot -> filterAndSortEntities(snapshot, EntityType.APPLICATION)).collect(toList());
 
     return new RestResponse<>(InstanceTimeline.from(timelineWithOnlyApps));
+  }
+
+  /**
+   * Used to provide dropdown information for instance history graph.
+   */
+  @GET
+  @Path("instance-history-ranges")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<TimeRange>> getTimeRanges(@QueryParam("accountId") String accountId) {
+    Instant firstTs = instanceStatService.getFirstSnapshotTime(accountId);
+    if (null == firstTs) {
+      return new RestResponse<>(Collections.emptyList());
+    }
+
+    List<TimeRange> ranges = new TimeRangeProvider(ZoneOffset.UTC)
+                                 .monthlyRanges(firstTs, Instant.now())
+                                 .stream()
+                                 .sorted(Comparator.comparing(TimeRange::getFrom).reversed())
+                                 .limit(5)
+                                 .collect(toList());
+
+    return new RestResponse<>(ranges);
   }
 
   @GET
@@ -195,11 +225,13 @@ public class DashboardStatisticsResource {
   /**
    * filters aggregations only for given entityType
    */
-  private static InstanceStatsSnapshot filterEntities(InstanceStatsSnapshot snapshot, EntityType entityType) {
+  private static InstanceStatsSnapshot filterAndSortEntities(InstanceStatsSnapshot snapshot, EntityType entityType) {
     return new InstanceStatsSnapshot(snapshot.getTimestamp(), snapshot.getAccountId(),
         snapshot.getAggregateCounts()
             .stream()
             .filter(ac -> ac.getEntityType() == EntityType.APPLICATION)
+            .sorted(Comparator.comparingInt(AggregateCount::getCount).reversed())
+            .limit(5)
             .collect(toList()));
   }
 }

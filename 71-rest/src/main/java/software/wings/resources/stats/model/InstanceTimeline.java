@@ -1,4 +1,4 @@
-package software.wings.resources;
+package software.wings.resources.stats.model;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

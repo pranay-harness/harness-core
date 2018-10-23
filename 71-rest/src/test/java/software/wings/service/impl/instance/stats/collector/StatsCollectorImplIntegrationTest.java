@@ -18,8 +18,8 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
-import software.wings.resources.InstanceTimeline;
-import software.wings.resources.InstanceTimeline.DataPoint;
+import software.wings.resources.stats.model.InstanceTimeline;
+import software.wings.resources.stats.model.InstanceTimeline.DataPoint;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 import software.wings.utils.WingsTestConstants;
 

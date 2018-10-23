@@ -23,7 +23,6 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.Key;
@@ -442,7 +441,6 @@ public class AwsAmiServiceDeployState extends State {
         .build();
   }
 
-  @SuppressFBWarnings("DLS_DEAD_LOCAL_STORE")
   protected List<InstanceElement> handleAsyncInternal(AwsAmiServiceDeployResponse amiServiceDeployResponse,
       ExecutionContext context, AmiServiceSetupElement serviceSetupElement,
       ManagerExecutionLogCallback executionLogCallback) {
