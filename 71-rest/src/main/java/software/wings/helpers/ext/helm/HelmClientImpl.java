@@ -18,8 +18,6 @@ import static software.wings.helpers.ext.helm.HelmConstants.HELM_VERSION_COMMAND
 
 import com.google.inject.Singleton;
 
-import io.harness.eraro.ErrorCode;
-import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -216,10 +214,7 @@ public class HelmClientImpl implements HelmClient {
         synchronized (lockObjects.get(md5Hash)) {
           File overrideFile = new File(overrideFilePath);
           if (!overrideFile.exists()) {
-            if (!overrideFile.getParentFile().mkdirs()) {
-              throw new WingsException(ErrorCode.GENERAL_ERROR)
-                  .addParam("message", "Failed to create dir " + overrideFile.getParentFile().getCanonicalPath());
-            }
+            FileUtils.forceMkdir(overrideFile.getParentFile());
             FileUtils.writeStringToFile(overrideFile, yamlFileContent, UTF_8);
           }
           fileOverrides.append(" -f").append(overrideFilePath);
