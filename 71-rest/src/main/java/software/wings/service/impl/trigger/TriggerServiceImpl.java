@@ -479,10 +479,7 @@ public class TriggerServiceImpl implements TriggerService {
           appId, artifactSelection.getArtifactStreamId(), artifactStream.getSourceName());
       if (lastCollectedArtifact != null
           && lastCollectedArtifact.getServiceIds().contains(artifactSelection.getServiceId())) {
-        if (checkArtifactMatchesArtifactFilter(
-                lastCollectedArtifact, artifactSelection.getArtifactFilter(), artifactSelection.isRegex())) {
-          artifacts.add(lastCollectedArtifact);
-        }
+        artifacts.add(lastCollectedArtifact);
       }
     } else {
       lastCollectedArtifact = artifactService.getArtifactByBuildNumber(appId, artifactSelection.getArtifactStreamId(),
