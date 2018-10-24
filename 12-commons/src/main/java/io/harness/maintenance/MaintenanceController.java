@@ -1,9 +1,7 @@
-package software.wings.core.maintenance;
+package io.harness.maintenance;
 
 import static io.harness.threading.Morpheus.sleep;
 import static java.util.Collections.synchronizedSet;
-import static software.wings.common.Constants.MAINTENANCE;
-import static software.wings.common.Constants.SHUTDOWN;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -20,12 +18,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Created by brett on 9/15/17
- */
 @Singleton
 public class MaintenanceController implements Managed {
   private static final Logger logger = LoggerFactory.getLogger(MaintenanceController.class);
+
+  private static final String MAINTENANCE = "maintenance";
+  private static final String SHUTDOWN = "shutdown";
 
   private static Boolean forceMaintenance;
   private static final AtomicBoolean maintenance = new AtomicBoolean(true);

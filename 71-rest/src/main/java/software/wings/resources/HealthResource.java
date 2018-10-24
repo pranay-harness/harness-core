@@ -2,7 +2,7 @@ package software.wings.resources;
 
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.exception.WingsException.USER;
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
+import static io.harness.maintenance.MaintenanceController.isMaintenance;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;

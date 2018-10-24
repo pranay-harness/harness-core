@@ -3,10 +3,10 @@ package software.wings.waitnotify;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.maintenance.MaintenanceController.isMaintenance;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.inject.Inject;

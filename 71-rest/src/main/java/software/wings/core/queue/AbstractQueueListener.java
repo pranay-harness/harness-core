@@ -3,9 +3,9 @@ package software.wings.core.queue;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.govern.Switch.noop;
+import static io.harness.maintenance.MaintenanceController.isMaintenance;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

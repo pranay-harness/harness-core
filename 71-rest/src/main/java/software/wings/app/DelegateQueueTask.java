@@ -2,6 +2,7 @@ package software.wings.app;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.maintenance.MaintenanceController.isMaintenance;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -9,7 +10,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.DelegateTask.Status.ERROR;
 import static software.wings.beans.DelegateTask.Status.QUEUED;
 import static software.wings.beans.DelegateTask.Status.STARTED;
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 import static software.wings.service.impl.DelegateServiceImpl.VALIDATION_TIMEOUT;
 
 import com.google.common.util.concurrent.TimeLimiter;

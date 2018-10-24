@@ -1,9 +1,9 @@
 package software.wings.scheduler;
 
+import static io.harness.maintenance.MaintenanceController.isMaintenance;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static software.wings.core.maintenance.MaintenanceController.isMaintenance;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -16,6 +16,8 @@ import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.maintenance.MaintenanceController;
+import io.harness.maintenance.MaintenanceListener;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.ReadPref;
 import org.quartz.JobDetail;
@@ -29,8 +31,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.app.GuiceQuartzJobFactory;
 import software.wings.app.SchedulerConfig;
-import software.wings.core.maintenance.MaintenanceController;
-import software.wings.core.maintenance.MaintenanceListener;
 import software.wings.core.managerConfiguration.ConfigChangeEvent;
 import software.wings.core.managerConfiguration.ConfigChangeListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
