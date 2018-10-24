@@ -200,6 +200,7 @@ public class SecretManagementResource {
       @BeanParam PageRequest<EncryptedData> pageRequest) {
     try {
       pageRequest.addFilter("type", Operator.EQ, type);
+      pageRequest.addFilter("accountId", Operator.EQ, accountId);
       return new RestResponse<>(secretManager.listSecrets(accountId, pageRequest, currentAppId, currentEnvId, details));
     } catch (IllegalAccessException e) {
       throw new WingsException(e);
@@ -215,6 +216,7 @@ public class SecretManagementResource {
       @BeanParam PageRequest<EncryptedData> pageRequest) {
     try {
       pageRequest.addFilter("type", Operator.EQ, type);
+      pageRequest.addFilter("accountId", Operator.EQ, accountId);
       return new RestResponse<>(secretManager.listSecretsMappedToAccount(accountId, pageRequest, details));
     } catch (IllegalAccessException e) {
       throw new WingsException(e);

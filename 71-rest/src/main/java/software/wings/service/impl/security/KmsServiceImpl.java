@@ -291,7 +291,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
     try {
-      KmsConfig kmsConfig = getSecretConfig(accountId);
+      KmsConfig kmsConfig = getKmsConfig(accountId, encryptedData.getKmsId());
       Preconditions.checkNotNull(kmsConfig);
       Preconditions.checkNotNull(encryptedData);
       byte[] bytes = Files.toByteArray(file);
@@ -309,7 +309,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   @Override
   public void decryptToStream(File file, String accountId, EncryptedData encryptedData, OutputStream output) {
     try {
-      KmsConfig kmsConfig = getSecretConfig(accountId);
+      KmsConfig kmsConfig = getKmsConfig(accountId, encryptedData.getKmsId());
       Preconditions.checkNotNull(kmsConfig);
       Preconditions.checkNotNull(encryptedData);
       byte[] bytes = Files.toByteArray(file);
