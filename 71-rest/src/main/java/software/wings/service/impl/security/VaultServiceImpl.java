@@ -297,7 +297,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public File decryptFile(File file, String accountId, EncryptedData encryptedData) {
     try {
-      VaultConfig vaultConfig = getSecretConfig(accountId);
+      VaultConfig vaultConfig = getVaultConfig(accountId, encryptedData.getKmsId());
       Preconditions.checkNotNull(vaultConfig);
       Preconditions.checkNotNull(encryptedData);
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);
@@ -313,7 +313,7 @@ public class VaultServiceImpl extends AbstractSecretServiceImpl implements Vault
   @Override
   public void decryptToStream(String accountId, EncryptedData encryptedData, OutputStream output) {
     try {
-      VaultConfig vaultConfig = getSecretConfig(accountId);
+      VaultConfig vaultConfig = getVaultConfig(accountId, encryptedData.getKmsId());
       Preconditions.checkNotNull(vaultConfig);
       Preconditions.checkNotNull(encryptedData);
       char[] decrypt = decrypt(encryptedData, accountId, vaultConfig);

@@ -513,7 +513,7 @@ public class SecretManagerImpl implements SecretManager {
         toConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
 
     if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
-      changeFileSecretManager(accountId, encryptedData, toEncryptionType, toConfig);
+      changeFileSecretManager(accountId, encryptedData, fromEncryptionType, toEncryptionType, toConfig);
       return;
     }
 
@@ -555,26 +555,29 @@ public class SecretManagerImpl implements SecretManager {
     wingsPersistence.save(encryptedData);
   }
 
-  private void changeFileSecretManager(
-      String accountId, EncryptedData encryptedData, EncryptionType toEncryptionType, EncryptionConfig toConfig) {
+  private void changeFileSecretManager(String accountId, EncryptedData encryptedData, EncryptionType fromEncryptionType,
+      EncryptionType toEncryptionType, EncryptionConfig toConfig) {
     byte[] decryptedFileContent = getFileContents(accountId, encryptedData.getUuid());
-    String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
     EncryptedData encryptedFileData;
     switch (toEncryptionType) {
       case KMS:
         encryptedFileData = kmsService.encryptFile(accountId, (KmsConfig) toConfig, encryptedData.getName(),
             new BoundedInputStream(new ByteArrayInputStream(decryptedFileContent)));
-        fileService.deleteFile(savedFileId, CONFIGS);
         break;
 
       case VAULT:
-        encryptedFileData =
-            vaultService.encryptFile(accountId, vaultService.getSecretConfig(accountId), encryptedData.getName(),
-                new BoundedInputStream(new ByteArrayInputStream(decryptedFileContent)), encryptedData);
+        encryptedFileData = vaultService.encryptFile(accountId, (VaultConfig) toConfig, encryptedData.getName(),
+            new BoundedInputStream(new ByteArrayInputStream(decryptedFileContent)), encryptedData);
         break;
 
       default:
-        throw new IllegalArgumentException("Invalid type " + toEncryptionType);
+        throw new IllegalArgumentException("Invalid target encryption type " + toEncryptionType);
+    }
+
+    // Delete file from file service only if the source secret manager is of KMS type.
+    if (fromEncryptionType == EncryptionType.KMS) {
+      String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
+      fileService.deleteFile(savedFileId, CONFIGS);
     }
 
     encryptedData.setEncryptionKey(encryptedFileData.getEncryptionKey());
