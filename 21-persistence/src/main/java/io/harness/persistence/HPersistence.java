@@ -16,6 +16,20 @@ public interface HPersistence {
   AdvancedDatastore getDatastore(Store store, ReadPref readPref);
 
   /**
+   * Gets the datastore.
+   *
+   * @param entity the entity
+   * @param readPref the readPref
+   * @return the datastore
+   */
+  default AdvancedDatastore getDatastore(Entity entity, ReadPref readPref) {
+    if (entity instanceof StoreSelector) {
+      return getDatastore(((StoreSelector) entity).getStore(), readPref);
+    }
+    return getDatastore(DEFAULT_STORE, readPref);
+  }
+
+  /**
    * Gets the collection.
    *
    * @param collectionName the collection name

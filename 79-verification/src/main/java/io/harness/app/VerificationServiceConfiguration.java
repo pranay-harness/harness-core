@@ -42,7 +42,7 @@ public class VerificationServiceConfiguration extends Configuration implements A
           .build();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
-  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = new MongoConfig();
+  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
   private int applicationPort;
   private boolean sslEnabled;
   private String managerUrl;

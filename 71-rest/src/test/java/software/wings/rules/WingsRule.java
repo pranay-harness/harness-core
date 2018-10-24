@@ -56,6 +56,7 @@ import io.dropwizard.Configuration;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.exception.WingsException;
 import io.harness.factory.ClosingFactory;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
@@ -281,8 +282,8 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     configuration.getPortal().setAllowedDomains("wings.software");
     configuration.getPortal().setUrl(PORTAL_URL);
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
-    configuration.getMongoConnectionFactory().setUri(
-        System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName));
+    configuration.setMongoConnectionFactory(
+        MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
     configuration.getSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
       configuration.getSchedulerConfig().setAutoStart("true");
