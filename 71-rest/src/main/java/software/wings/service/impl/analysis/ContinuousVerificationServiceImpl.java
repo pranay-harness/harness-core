@@ -270,6 +270,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
     }
 
+    if (isEmpty(deploymentData)) {
+      logger.info("There are no deployments with CV for service {}", serviceId);
+      return new ArrayList<>();
+    }
     // find the statuses of all the workflows we have.
     PageRequest<WorkflowExecution> workflowExecutionPageRequest =
         PageRequestBuilder.aPageRequest()
