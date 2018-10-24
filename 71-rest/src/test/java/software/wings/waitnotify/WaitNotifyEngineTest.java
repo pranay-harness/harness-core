@@ -10,13 +10,13 @@ import static software.wings.waitnotify.StringNotifyResponseData.Builder.aString
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.maintenance.MaintenanceController;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
 import io.harness.threading.Concurrent;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.core.maintenance.MaintenanceController;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 

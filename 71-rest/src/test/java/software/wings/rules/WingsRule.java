@@ -1,9 +1,9 @@
 package software.wings.rules;
 
+import static io.harness.maintenance.MaintenanceController.forceMaintenance;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.mock;
 import static software.wings.app.LoggingInitializer.initializeLogging;
-import static software.wings.core.maintenance.MaintenanceController.forceMaintenance;
 import static software.wings.utils.WingsTestConstants.PORTAL_URL;
 import static software.wings.utils.WingsTestConstants.VERIFICATION_PATH;
 
