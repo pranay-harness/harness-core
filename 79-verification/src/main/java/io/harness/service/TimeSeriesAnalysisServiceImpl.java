@@ -775,7 +775,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         .field("name")
         .notEqual(HARNESS_HEARTBEAT_METRIC_NAME)
         .field("dataCollectionMinute")
-        .greaterThanOrEq(analysisStartMinute)
+        .greaterThan(analysisStartMinute)
         .field("dataCollectionMinute")
         .lessThanOrEq(analysisEndMinute)
         .asList();

@@ -7,7 +7,7 @@ import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.PREDECTIVE_HISTORY_MINUTES;
-import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
+import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.TIMESERIES_24x7;
 import static software.wings.sm.states.AbstractMetricAnalysisState.COMPARISON_WINDOW;
 import static software.wings.sm.states.AbstractMetricAnalysisState.MIN_REQUESTS_PER_MINUTE;
 import static software.wings.sm.states.AbstractMetricAnalysisState.PARALLEL_PROCESSES;
@@ -142,7 +142,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .state_execution_id(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid() + "-" + generateUuid())
             .analysis_start_min((int) startMin - PREDECTIVE_HISTORY_MINUTES)
             .analysis_minute((int) endMin)
-            .analysis_start_time((int) startMin)
+            .prediction_start_time((int) startMin)
             .smooth_window(0)
             .tolerance(0)
             .min_rpm(0)
@@ -158,7 +158,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .test_nodes(Sets.newHashSet("dummy"))
             .stateType(cvConfiguration.getStateType())
             .ml_analysis_type(MLAnalysisType.TIME_SERIES)
-            .time_series_ml_analysis_type(PREDICTIVE)
+            .time_series_ml_analysis_type(TIMESERIES_24x7)
             .smooth_window(SMOOTH_WINDOW)
             .tolerance(cvConfiguration.getAnalysisTolerance().tolerance())
             .min_rpm(MIN_REQUESTS_PER_MINUTE)
