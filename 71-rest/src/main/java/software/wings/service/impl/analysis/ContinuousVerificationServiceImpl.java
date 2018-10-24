@@ -30,6 +30,7 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
+import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.TimeSeriesDataPoint;
@@ -438,6 +439,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         createMockAppDynamicsCVServiceConfiguration(appId, serviceId);
     heatMap.setCvConfiguration(appDynamicsCVServiceConfiguration);
     heatMap.setRiskLevelSummary(new ArrayList<>());
+    heatMap.setCvConfiguration(appDynamicsCVServiceConfiguration);
 
     long currentTs = startTime;
     long nextTs = currentTs + TimeUnit.MINUTES.toMillis(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
@@ -468,7 +470,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
     appDynamicsCVServiceConfiguration.setName("App Dynamics Service Config " + UUID.randomUUID().toString());
     appDynamicsCVServiceConfiguration.setConnectorName("Connector " + UUID.randomUUID().toString());
-    return appDynamicsCVServiceConfiguration;
+    return (AppDynamicsCVServiceConfiguration) wingsPersistence.saveAndGet(
+        CVConfiguration.class, appDynamicsCVServiceConfiguration);
   }
 
   public Map<String, List<HeatMap>> getHeatMap(
@@ -492,7 +495,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         }
         summary.add(heatMap);
       }
-      resp.put("Environment Name " + UUID.randomUUID().toString(), summary);
+      resp.put("Environment Name/" + summary.get(0).getCvConfiguration().getEnvId(), summary);
     }
     return resp;
   }
