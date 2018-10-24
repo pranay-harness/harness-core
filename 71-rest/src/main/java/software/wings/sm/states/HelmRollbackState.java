@@ -9,6 +9,7 @@ import software.wings.api.HelmDeployStateExecutionData;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.ImageDetails;
@@ -96,6 +97,11 @@ public class HelmRollbackState extends HelmDeployState {
   @SchemaIgnore
   public String getHelmReleaseNamePrefix() {
     return super.getHelmReleaseNamePrefix();
+  }
+
+  @SchemaIgnore
+  public GitFileConfig getGitFileConfig() {
+    return super.getGitFileConfig();
   }
 
   @Override
