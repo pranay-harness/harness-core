@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static software.wings.api.PhaseElement.PhaseElementBuilder.aPhaseElement;
 import static software.wings.api.PhaseExecutionData.PhaseExecutionDataBuilder.aPhaseExecutionData;
 
@@ -99,18 +100,18 @@ public class PhaseSubWorkflow extends SubWorkflowState {
     }
     if (serviceIdExpression != null) {
       if (infraMappingIdExpression == null) {
-        throw new WingsException("Service templatized so service infrastructure should be templatized");
+        throw new WingsException("Service templatized so service infrastructure should be templatized", USER);
       }
     } else {
       if (serviceId != null) {
         service = serviceResourceService.get(app.getAppId(), serviceId, false);
-        Validator.notNullCheck("Service", service);
+        Validator.notNullCheck("Service might have been deleted", service, USER);
       }
     }
     if (infraMappingIdExpression == null) {
       if (infraMappingId != null) {
         infrastructureMapping = infrastructureMappingService.get(app.getAppId(), infraMappingId);
-        Validator.notNullCheck("InfrastructureMapping", infrastructureMapping);
+        Validator.notNullCheck("Service Infrastructure might have been deleted", infrastructureMapping, USER);
       }
     }
 

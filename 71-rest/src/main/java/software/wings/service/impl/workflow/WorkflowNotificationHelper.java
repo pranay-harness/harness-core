@@ -2,6 +2,7 @@ package software.wings.service.impl.workflow;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.util.Collections.emptySet;
@@ -18,6 +19,7 @@ import static software.wings.sm.ExecutionStatus.RESUMED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateType.PHASE;
 import static software.wings.utils.Misc.getDurationString;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
@@ -321,7 +323,8 @@ public class WorkflowNotificationHelper {
     List<String> serviceMsgs = new ArrayList<>();
     for (String serviceId : serviceIds) {
       StringBuilder serviceMsg = new StringBuilder();
-      Service service = serviceResourceService.get(context.getAppId(), serviceId);
+      Service service = serviceResourceService.get(context.getAppId(), serviceId, false);
+      notNullCheck("Service might have been deleted", service, USER);
       serviceMsg.append(service.getName()).append(": ");
       if (serviceIdArtifacts.containsKey(serviceId)) {
         Artifact artifact = serviceIdArtifacts.get(serviceId);
