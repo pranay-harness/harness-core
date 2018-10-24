@@ -143,6 +143,13 @@ public class ActivityServiceImpl implements ActivityService {
                      .commandUnitType(activity.getCommandUnitType())
                      .build());
           break;
+        case KUBERNETES:
+          rv.add(CommandUnitDetails.builder()
+                     .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
+                     .name(activity.getCommandName())
+                     .commandUnitType(activity.getCommandUnitType())
+                     .build());
+          break;
         default:
           throw new IllegalStateException("Invalid command type: " + activity.getCommandUnitType());
       }

@@ -570,3 +570,12 @@ software.wings.beans.command.ShellExecutionData, 5528
 software.wings.service.impl.newrelic.NewRelicSetupTestNodeData, 5529
 software.wings.service.impl.analysis.SetupTestNodeData, 5530
 software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData, 5531
+software.wings.helpers.ext.k8s.request.K8sCommandRequest, 5532
+software.wings.helpers.ext.k8s.request.K8sCommandRequest$K8sCommandType, 5533
+software.wings.helpers.ext.k8s.request.K8sDeploymentRollingSetupRequest, 5534
+software.wings.helpers.ext.k8s.response.K8sCommandExecutionResponse, 5535
+software.wings.helpers.ext.k8s.request.K8sClusterConfig, 5536
+software.wings.beans.GcpKubernetesCluster, 5537
+software.wings.beans.AzureKubernetesCluster, 5538
+software.wings.beans.appmanifest.ManifestFile, 5539
+software.wings.beans.appmanifest.StoreType, 5540

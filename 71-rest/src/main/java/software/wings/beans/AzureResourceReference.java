@@ -8,6 +8,7 @@ import lombok.Data;
 public class AzureResourceReference {
   private String name;
   private String resourceGroup;
+  private String subscriptionId;
   private String type;
   private String resourceId;
 }

@@ -18,6 +18,7 @@ import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
 import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
+import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
 import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
@@ -29,6 +30,7 @@ import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.AWS_CODE_DEPLOY;
 import static software.wings.common.Constants.AWS_LAMBDA;
 import static software.wings.common.Constants.DE_PROVISION_CLOUD_FORMATION;
+import static software.wings.common.Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK;
 import static software.wings.common.Constants.KUBERNETES_SERVICE_SETUP;
 import static software.wings.common.Constants.PCF_UNMAP_ROUT;
 import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
@@ -52,6 +54,7 @@ import static software.wings.stencils.StencilCategory.COMMANDS;
 import static software.wings.stencils.StencilCategory.CONTROLS;
 import static software.wings.stencils.StencilCategory.ENVIRONMENTS;
 import static software.wings.stencils.StencilCategory.FLOW_CONTROLS;
+import static software.wings.stencils.StencilCategory.KUBERNETES;
 import static software.wings.stencils.StencilCategory.OTHERS;
 import static software.wings.stencils.StencilCategory.PROVISIONERS;
 import static software.wings.stencils.StencilCategory.VERIFICATIONS;
@@ -130,6 +133,7 @@ import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
+import software.wings.sm.states.k8s.K8sDeploymentRollingSetup;
 import software.wings.sm.states.pcf.MapRouteState;
 import software.wings.sm.states.pcf.PcfDeployState;
 import software.wings.sm.states.pcf.PcfRollbackState;
@@ -473,7 +477,17 @@ public enum StateType implements StateTypeDescriptor {
       singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   TERRAFORM_ROLLBACK(TerraformRollbackState.class, PROVISIONERS, ROLLBACK_TERRAFORM_NAME,
-      singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS);
+      singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
+
+  K8S_DEPLOYMENT_ROLLING(K8sDeploymentRollingSetup.class, KUBERNETES, Constants.K8S_DEPLOYMENT_ROLLING,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sDeploymentRollingSetup.class, KUBERNETES, K8S_DEPLOYMENT_ROLLING_ROLLBAK,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

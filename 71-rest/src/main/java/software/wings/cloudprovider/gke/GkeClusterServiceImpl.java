@@ -207,6 +207,12 @@ public class GkeClusterServiceImpl implements GkeClusterService {
   public KubernetesConfig getCluster(SettingAttribute computeProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, String locationClusterName, String namespace) {
     GcpConfig gcpConfig = validateAndGetCredentials(computeProviderSetting);
+    return getCluster(gcpConfig, encryptedDataDetails, locationClusterName, namespace);
+  }
+
+  @Override
+  public KubernetesConfig getCluster(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String locationClusterName, String namespace) {
     Container gkeContainerService = gcpHelperService.getGkeContainerService(gcpConfig, encryptedDataDetails);
     String projectId = getProjectIdFromCredentials(gcpConfig.getServiceAccountKeyFileContent());
     String[] locationCluster = locationClusterName.split(LOCATION_DELIMITER);

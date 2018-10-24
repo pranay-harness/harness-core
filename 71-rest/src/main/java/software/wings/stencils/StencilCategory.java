@@ -78,7 +78,9 @@ public enum StencilCategory {
   /**
    * Provisioners stencil category.
    */
-  PROVISIONERS(0);
+  PROVISIONERS(0),
+
+  KUBERNETES("Kubernetes", 3);
 
   private String displayName;
 

@@ -45,7 +45,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
                                                                .build();
 
   private static ManifestFile manifestFile =
-      ManifestFile.builder().filePath("deploy.yaml").fileContent("deployment spec").build();
+      ManifestFile.builder().fileName("deploy.yaml").fileContent("deployment spec").build();
 
   @Test
   public void createShouldFailIfServiceDoesNotExist() {

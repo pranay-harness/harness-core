@@ -34,9 +34,11 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.settings.SettingValue;
 import software.wings.utils.Misc;
 
 import java.io.File;
@@ -62,10 +64,15 @@ public class ContainerDeploymentDelegateHelper {
       CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
 
   public String createAndGetKubeConfigLocation(ContainerServiceParams containerServiceParam) {
-    try {
-      KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
-      encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
+    return createKubeConfig(getKubernetesConfig(containerServiceParam));
+  }
 
+  public String getKubeconfigFileContent(K8sClusterConfig k8sClusterConfig) {
+    return getConfigFileContent(getKubernetesConfig(k8sClusterConfig));
+  }
+
+  private String createKubeConfig(KubernetesConfig kubernetesConfig) {
+    try {
       String configFileContent = getConfigFileContent(kubernetesConfig);
       String md5Hash = DigestUtils.md5Hex(configFileContent);
 
@@ -150,6 +157,32 @@ public class ContainerDeploymentDelegateHelper {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam(
               "args", "Unknown kubernetes cloud provider setting value: " + settingAttribute.getValue().getType());
+    }
+    return kubernetesConfig;
+  }
+
+  public KubernetesConfig getKubernetesConfig(K8sClusterConfig k8sClusterConfig) {
+    SettingValue cloudProvider = k8sClusterConfig.getCloudProvider();
+    List<EncryptedDataDetail> encryptedDataDetails = k8sClusterConfig.getCloudProviderEncryptionDetails();
+    String namespace = k8sClusterConfig.getNamespace();
+
+    KubernetesConfig kubernetesConfig;
+    if (cloudProvider instanceof KubernetesConfig) {
+      kubernetesConfig = (KubernetesConfig) cloudProvider;
+    } else if (cloudProvider instanceof KubernetesClusterConfig) {
+      kubernetesConfig = ((KubernetesClusterConfig) cloudProvider).createKubernetesConfig(namespace);
+    } else if (cloudProvider instanceof GcpConfig) {
+      kubernetesConfig = gkeClusterService.getCluster((GcpConfig) cloudProvider, encryptedDataDetails,
+          k8sClusterConfig.getGcpKubernetesCluster().getClusterName(), namespace);
+      kubernetesConfig.setDecrypted(true);
+    } else if (cloudProvider instanceof AzureConfig) {
+      AzureConfig azureConfig = (AzureConfig) cloudProvider;
+      kubernetesConfig = azureHelperService.getKubernetesClusterConfig(
+          azureConfig, encryptedDataDetails, k8sClusterConfig.getAzureKubernetesCluster(), namespace);
+      kubernetesConfig.setDecrypted(true);
+    } else {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT)
+          .addParam("args", "Unknown kubernetes cloud provider setting value: " + cloudProvider.getType());
     }
     return kubernetesConfig;
   }

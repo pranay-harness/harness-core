@@ -47,6 +47,7 @@ import software.wings.delegatetasks.collect.artifacts.BambooCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.JenkinsCollectionTask;
 import software.wings.delegatetasks.collect.artifacts.NexusCollectionTask;
 import software.wings.delegatetasks.helm.HelmCommandTask;
+import software.wings.delegatetasks.k8s.K8sCommandTask;
 import software.wings.delegatetasks.pcf.PcfCommandTask;
 import software.wings.delegatetasks.validation.APMValidation;
 import software.wings.delegatetasks.validation.AcrValidation;
@@ -69,6 +70,7 @@ import software.wings.delegatetasks.validation.HelmCommandValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
 import software.wings.delegatetasks.validation.HttpValidation;
 import software.wings.delegatetasks.validation.JenkinsValidation;
+import software.wings.delegatetasks.validation.K8sCommandValidation;
 import software.wings.delegatetasks.validation.KmsValidation;
 import software.wings.delegatetasks.validation.KubernetesSteadyStateCheckValidation;
 import software.wings.delegatetasks.validation.KubernetesSwapServiceSelectorsValidation;
@@ -263,7 +265,8 @@ public enum TaskType {
   AWS_LAMBDA_TASK(TaskGroup.AWS, AwsLambdaTask.class, AwsConnectionValidation.class),
   AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AwsConnectionValidation.class),
   AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class),
-  AWS_CF_TASK(TaskGroup.AWS, AwsCFTask.class, AwsConnectionValidation.class);
+  AWS_CF_TASK(TaskGroup.AWS, AwsCFTask.class, AwsConnectionValidation.class),
+  K8S_COMMAND_TASK(TaskGroup.K8S, K8sCommandTask.class, K8sCommandValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
