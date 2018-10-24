@@ -1296,7 +1296,7 @@ public class UserServiceImpl implements UserService {
     } catch (UnsupportedEncodingException | JWTCreationException exception) {
       throw new WingsException(GENERAL_ERROR, exception).addParam("message", "JWTToken validation failed");
     } catch (JWTDecodeException | SignatureVerificationException e) {
-      throw new WingsException(INVALID_CREDENTIAL)
+      throw new WingsException(INVALID_CREDENTIAL, USER)
           .addParam("message", "Invalid JWTToken received, failed to decode the token");
     }
   }

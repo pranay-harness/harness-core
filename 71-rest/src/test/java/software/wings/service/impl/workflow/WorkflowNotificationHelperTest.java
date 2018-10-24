@@ -125,9 +125,9 @@ public class WorkflowNotificationHelperTest extends WingsBaseTest {
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
-    when(serviceResourceService.get(APP_ID, "service-1"))
+    when(serviceResourceService.get(APP_ID, "service-1", false))
         .thenReturn(Service.builder().uuid("service-1").name("Service One").build());
-    when(serviceResourceService.get(APP_ID, "service-2"))
+    when(serviceResourceService.get(APP_ID, "service-2", false))
         .thenReturn(Service.builder().uuid("service-2").name("Service Two").build());
     when(wingsPersistence.createQuery(StateExecutionInstance.class)).thenReturn(stateExecutionInstanceQuery);
     when(stateExecutionInstanceQuery.filter(any(), any())).thenReturn(stateExecutionInstanceQuery);
