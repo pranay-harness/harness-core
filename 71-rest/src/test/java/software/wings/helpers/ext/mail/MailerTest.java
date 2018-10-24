@@ -52,6 +52,7 @@ public class MailerTest extends WingsBaseTest {
    * @throws MessagingException the messaging exception
    */
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void shouldSendNormalEmail() throws MessagingException {
     mailer.send(SmtpConfig.builder()
                     .fromAddress(EMAIL)
