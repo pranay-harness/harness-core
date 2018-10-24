@@ -426,6 +426,12 @@ public class AzureHelperService {
   }
 
   public KubernetesConfig getKubernetesClusterConfig(AzureConfig azureConfig,
+      List<EncryptedDataDetail> encryptionDetails, AzureKubernetesCluster azureKubernetesCluster, String namespace) {
+    return getKubernetesClusterConfig(azureConfig, encryptionDetails, azureKubernetesCluster.getSubscriptionId(),
+        azureKubernetesCluster.getResourceGroup(), azureKubernetesCluster.getName(), namespace);
+  }
+
+  public KubernetesConfig getKubernetesClusterConfig(AzureConfig azureConfig,
       List<EncryptedDataDetail> encryptionDetails, String subscriptionId, String resourceGroup, String clusterName,
       String namespace) {
     encryptionService.decrypt(azureConfig, encryptionDetails);

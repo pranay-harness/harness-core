@@ -2,6 +2,7 @@ package software.wings.cloudprovider.gke;
 
 import com.google.api.services.container.model.NodePoolAutoscaling;
 
+import software.wings.beans.GcpConfig;
 import software.wings.beans.KubernetesConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -32,6 +33,9 @@ public interface GkeClusterService {
    */
   KubernetesConfig getCluster(SettingAttribute computeProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
       String zoneClusterName, String namespace);
+
+  KubernetesConfig getCluster(GcpConfig gcpConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String locationClusterName, String namespace);
 
   /**
    * Lists the available clusters

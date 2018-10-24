@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class AzureKubernetesCluster extends AzureResourceReference {
   @Builder
-  private AzureKubernetesCluster(String name, String resourceGroup, String type, String id) {
-    super(name, resourceGroup, type, id);
+  private AzureKubernetesCluster(String name, String resourceGroup, String subscriptionId, String type, String id) {
+    super(name, resourceGroup, subscriptionId, type, id);
   };
 }

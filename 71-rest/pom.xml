@@ -52,6 +52,13 @@
             <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>20-k8s-helpers</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>21-persistence</artifactId>
@@ -659,7 +666,6 @@
         <dependency>
             <groupId>com.esotericsoftware.yamlbeans</groupId>
             <artifactId>yamlbeans</artifactId>
-            <version>1.08</version>
         </dependency>
 
         <dependency>

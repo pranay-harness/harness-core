@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class ManifestFile {
-  private String filePath;
+  private String fileName;
   private String fileContent;
 }

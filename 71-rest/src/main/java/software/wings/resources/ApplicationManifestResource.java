@@ -61,7 +61,7 @@ public class ApplicationManifestResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
-  public RestResponse<ApplicationManifest> updatePcfServiceSpecification(@QueryParam("appId") String appId,
+  public RestResponse<ApplicationManifest> updateApplicationManifest(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, ApplicationManifest applicationManifest) {
     applicationManifest.setAppId(appId);
     applicationManifest.setServiceId(serviceId);

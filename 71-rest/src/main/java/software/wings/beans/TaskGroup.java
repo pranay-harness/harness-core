@@ -41,5 +41,6 @@ public enum TaskGroup {
   CLOUD_FORMATION,
   TERRAFORM,
   AWS,
-  LDAP
+  LDAP,
+  K8S
 }

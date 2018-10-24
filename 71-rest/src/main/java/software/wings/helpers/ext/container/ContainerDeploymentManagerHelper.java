@@ -29,12 +29,14 @@ import software.wings.api.ServiceElement;
 import software.wings.api.ServiceTemplateElement;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
+import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.GcpKubernetesCluster;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
@@ -57,6 +59,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrService;
+import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.ContainerServiceParams;
@@ -186,6 +189,48 @@ public class ContainerDeploymentManagerHelper {
         .region(region)
         .subscriptionId(subscriptionId)
         .resourceGroup(resourceGroup)
+        .build();
+  }
+
+  public K8sClusterConfig getK8sClusterConfig(ContainerInfrastructureMapping containerInfraMapping) {
+    SettingAttribute settingAttribute;
+    AzureKubernetesCluster azureKubernetesCluster = null;
+    GcpKubernetesCluster gcpKubernetesCluster = null;
+    String namespace = null;
+    if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
+      DirectKubernetesInfrastructureMapping directInfraMapping =
+          (DirectKubernetesInfrastructureMapping) containerInfraMapping;
+      settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
+          ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
+          : settingsService.get(directInfraMapping.getComputeProviderSettingId());
+      namespace = directInfraMapping.getNamespace();
+    } else {
+      settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
+      if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
+        gcpKubernetesCluster =
+            GcpKubernetesCluster.builder().clusterName(containerInfraMapping.getClusterName()).build();
+        namespace = containerInfraMapping.getNamespace();
+      } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+        azureKubernetesCluster =
+            AzureKubernetesCluster.builder()
+                .subscriptionId(((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId())
+                .resourceGroup(((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup())
+                .name(containerInfraMapping.getClusterName())
+                .build();
+        namespace = containerInfraMapping.getNamespace();
+      }
+    }
+    Validator.notNullCheck("SettingAttribute", settingAttribute);
+
+    List<EncryptedDataDetail> encryptionDetails = secretManager.getEncryptionDetails(
+        (EncryptableSetting) settingAttribute.getValue(), containerInfraMapping.getAppId(), null);
+
+    return K8sClusterConfig.builder()
+        .cloudProvider(settingAttribute.getValue())
+        .cloudProviderEncryptionDetails(encryptionDetails)
+        .azureKubernetesCluster(azureKubernetesCluster)
+        .gcpKubernetesCluster(gcpKubernetesCluster)
+        .namespace(namespace)
         .build();
   }
 

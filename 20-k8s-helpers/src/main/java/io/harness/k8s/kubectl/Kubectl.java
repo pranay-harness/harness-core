@@ -15,15 +15,15 @@ public class Kubectl {
     return new Kubectl(kubectlPath, configPath);
   }
 
-  VersionCommand version() {
+  public VersionCommand version() {
     return new VersionCommand(this);
   }
 
-  ApplyCommand apply() {
+  public ApplyCommand apply() {
     return new ApplyCommand(this);
   }
 
-  GetCommand get() {
+  public GetCommand get() {
     return new GetCommand(this);
   }
 

@@ -214,6 +214,8 @@ public interface Constants {
 
   String DEPLOY = "Deploy";
 
+  String VERIFY = "Verify";
+
   String PCF_SETUP = "App Setup";
 
   String PCF_RESIZE = "App Resize";
@@ -229,6 +231,10 @@ public interface Constants {
   String PCF_BG_SWAP_ROUTE = "Swap Routes";
 
   String PCF_UNMAP_ROUT = "Unmap Route";
+
+  String K8S_DEPLOYMENT_ROLLING = "Rollout Deployment";
+  String K8S_DEPLOYMENT_ROLLING_ROLLBAK = "Rollback Deployment";
+
   /**
    * The constant KUBERNETES_SERVICE_SETUP.
    */

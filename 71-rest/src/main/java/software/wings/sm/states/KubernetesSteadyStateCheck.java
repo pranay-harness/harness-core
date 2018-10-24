@@ -91,7 +91,59 @@ public class KubernetesSteadyStateCheck extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      return executeInternal(context);
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      Application app = appService.get(context.getAppId());
+      Environment env = workflowStandardParams.getEnv();
+      ContainerInfrastructureMapping containerInfraMapping =
+          (ContainerInfrastructureMapping) infrastructureMappingService.get(
+              app.getUuid(), phaseElement.getInfraMappingId());
+
+      if (CollectionUtils.isEmpty(labels)) {
+        throw new InvalidRequestException("Labels cannot be empty.");
+      }
+
+      labels.forEach(label -> label.setValue(context.renderExpression(label.getValue())));
+
+      Map<String, String> labelMap =
+          labels.stream().collect(Collectors.toMap(label -> label.getName(), label -> label.getValue()));
+
+      Activity activity = createActivity(context);
+      KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams =
+          KubernetesSteadyStateCheckParams.builder()
+              .accountId(app.getAccountId())
+              .appId(app.getUuid())
+              .activityId(activity.getUuid())
+              .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
+              .containerServiceParams(
+                  containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, ""))
+              .labels(labelMap)
+              .timeoutMillis(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
+              .build();
+      DelegateTask delegateTask =
+          aDelegateTask()
+              .withAccountId(app.getAccountId())
+              .withAppId(app.getUuid())
+              .withTaskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK)
+              .withWaitId(activity.getUuid())
+              .withParameters(new Object[] {kubernetesSteadyStateCheckParams})
+              .withEnvId(env.getUuid())
+              .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
+              .withInfrastructureMappingId(containerInfraMapping.getUuid())
+              .build();
+      String delegateTaskId = delegateService.queueTask(delegateTask);
+      return ExecutionResponse.Builder.anExecutionResponse()
+          .withAsync(true)
+          .withCorrelationIds(Arrays.asList(activity.getUuid()))
+          .withStateExecutionData(KubernetesSteadyStateCheckExecutionData.builder()
+                                      .activityId(activity.getUuid())
+                                      .labels(labels)
+                                      .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
+                                      .build())
+          .withDelegateTaskId(delegateTaskId)
+          .build();
+    } catch (WingsException e) {
+      throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(Misc.getMessage(e), e);
     }
@@ -103,43 +155,39 @@ public class KubernetesSteadyStateCheck extends State {
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     try {
-      return handleAsyncInternal(context, response);
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      String appId = workflowStandardParams.getAppId();
+      String activityId = response.keySet().iterator().next();
+      KubernetesSteadyStateCheckResponse executionResponse =
+          (KubernetesSteadyStateCheckResponse) response.values().iterator().next();
+      activityService.updateStatus(activityId, appId, executionResponse.getExecutionStatus());
+
+      KubernetesSteadyStateCheckExecutionData stateExecutionData =
+          (KubernetesSteadyStateCheckExecutionData) context.getStateExecutionData();
+      stateExecutionData.setStatus(executionResponse.getExecutionStatus());
+
+      List<InstanceStatusSummary> instanceStatusSummaries = containerDeploymentManagerHelper.getInstanceStatusSummaries(
+          context, executionResponse.getContainerInfoList());
+      stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
+
+      List<InstanceElement> instanceElements =
+          instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
+      InstanceElementListParam instanceElementListParam =
+          InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
+
+      stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
+
+      return anExecutionResponse()
+          .withExecutionStatus(executionResponse.getExecutionStatus())
+          .withStateExecutionData(context.getStateExecutionData())
+          .addContextElement(instanceElementListParam)
+          .addNotifyElement(instanceElementListParam)
+          .build();
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(Misc.getMessage(e), e);
     }
-  }
-
-  private ExecutionResponse handleAsyncInternal(ExecutionContext context, Map<String, ResponseData> response) {
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    String appId = workflowStandardParams.getAppId();
-    String activityId = response.keySet().iterator().next();
-    KubernetesSteadyStateCheckResponse executionResponse =
-        (KubernetesSteadyStateCheckResponse) response.values().iterator().next();
-    activityService.updateStatus(activityId, appId, executionResponse.getExecutionStatus());
-
-    KubernetesSteadyStateCheckExecutionData stateExecutionData =
-        (KubernetesSteadyStateCheckExecutionData) context.getStateExecutionData();
-    stateExecutionData.setStatus(executionResponse.getExecutionStatus());
-
-    List<InstanceStatusSummary> instanceStatusSummaries =
-        containerDeploymentManagerHelper.getInstanceStatusSummaries(context, executionResponse.getContainerInfoList());
-    stateExecutionData.setNewInstanceStatusSummaries(instanceStatusSummaries);
-
-    List<InstanceElement> instanceElements =
-        instanceStatusSummaries.stream().map(InstanceStatusSummary::getInstanceElement).collect(toList());
-    InstanceElementListParam instanceElementListParam =
-        InstanceElementListParamBuilder.anInstanceElementListParam().withInstanceElements(instanceElements).build();
-
-    stateExecutionData.setDelegateMetaInfo(executionResponse.getDelegateMetaInfo());
-
-    return anExecutionResponse()
-        .withExecutionStatus(executionResponse.getExecutionStatus())
-        .withStateExecutionData(context.getStateExecutionData())
-        .addContextElement(instanceElementListParam)
-        .addNotifyElement(instanceElementListParam)
-        .build();
   }
 
   protected Activity createActivity(ExecutionContext executionContext) {
@@ -179,59 +227,5 @@ public class KubernetesSteadyStateCheck extends State {
     }
     Activity activity = activityBuilder.build();
     return activityService.save(activity);
-  }
-
-  private ExecutionResponse executeInternal(ExecutionContext context) {
-    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-    WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
-    Application app = appService.get(context.getAppId());
-    Environment env = workflowStandardParams.getEnv();
-    ContainerInfrastructureMapping containerInfraMapping =
-        (ContainerInfrastructureMapping) infrastructureMappingService.get(
-            app.getUuid(), phaseElement.getInfraMappingId());
-
-    if (CollectionUtils.isEmpty(labels)) {
-      throw new InvalidRequestException("Labels cannot be empty.");
-    }
-
-    labels.forEach(label -> label.setValue(context.renderExpression(label.getValue())));
-
-    Map<String, String> labelMap =
-        labels.stream().collect(Collectors.toMap(label -> label.getName(), label -> label.getValue()));
-
-    Activity activity = createActivity(context);
-    KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams =
-        KubernetesSteadyStateCheckParams.builder()
-            .accountId(app.getAccountId())
-            .appId(app.getUuid())
-            .activityId(activity.getUuid())
-            .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
-            .containerServiceParams(
-                containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, ""))
-            .labels(labelMap)
-            .timeoutMillis(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
-            .build();
-    DelegateTask delegateTask =
-        aDelegateTask()
-            .withAccountId(app.getAccountId())
-            .withAppId(app.getUuid())
-            .withTaskType(TaskType.KUBERNETES_STEADY_STATE_CHECK_TASK)
-            .withWaitId(activity.getUuid())
-            .withParameters(new Object[] {kubernetesSteadyStateCheckParams})
-            .withEnvId(env.getUuid())
-            .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
-            .withInfrastructureMappingId(containerInfraMapping.getUuid())
-            .build();
-    String delegateTaskId = delegateService.queueTask(delegateTask);
-    return ExecutionResponse.Builder.anExecutionResponse()
-        .withAsync(true)
-        .withCorrelationIds(Arrays.asList(activity.getUuid()))
-        .withStateExecutionData(KubernetesSteadyStateCheckExecutionData.builder()
-                                    .activityId(activity.getUuid())
-                                    .labels(labels)
-                                    .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
-                                    .build())
-        .withDelegateTaskId(delegateTaskId)
-        .build();
   }
 }

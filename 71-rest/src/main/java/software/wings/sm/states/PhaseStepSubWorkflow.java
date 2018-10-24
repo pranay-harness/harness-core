@@ -368,6 +368,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case PCF_ROUTE_UPDATE:
       case PCF_SWICH_ROUTES:
       case ROUTE_UPDATE:
+      case K8S_PHASE_STEP:
         noop();
         break;
 

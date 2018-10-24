@@ -6,7 +6,7 @@ import lombok.Data;
 @Data
 public class AzureAvailabilitySet extends AzureResourceReference {
   @Builder
-  private AzureAvailabilitySet(String name, String resourceGroup, String type, String id) {
-    super(name, resourceGroup, type, id);
+  private AzureAvailabilitySet(String name, String resourceGroup, String subscriptionId, String type, String id) {
+    super(name, resourceGroup, subscriptionId, type, id);
   }
 }

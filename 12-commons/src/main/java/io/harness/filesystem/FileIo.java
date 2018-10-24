@@ -1,6 +1,7 @@
 package io.harness.filesystem;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -14,7 +15,7 @@ public class FileIo {
     Path path = Paths.get(directoryPath);
     try {
       if (!Files.exists(path)) {
-        Files.createDirectory(path);
+        Files.createDirectories(path);
       }
     } catch (FileAlreadyExistsException e) {
       // Ignore.
@@ -42,5 +43,13 @@ public class FileIo {
         return FileVisitResult.CONTINUE;
       }
     });
+  }
+
+  public static void writeUtf8StringToFile(final String directoryPath, String content) throws IOException {
+    Files.write(Paths.get(directoryPath), content.getBytes(StandardCharsets.UTF_8));
+  }
+
+  public static void writeFile(final String directoryPath, byte[] content) throws IOException {
+    Files.write(Paths.get(directoryPath), content);
   }
 }

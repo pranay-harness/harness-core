@@ -22,6 +22,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.container.KubernetesSwapServiceSelectorsParams;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
+import software.wings.service.impl.ContainerServiceParams;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.KubernetesSwapServiceSelectorsResponse;
 
@@ -49,7 +50,7 @@ public class KubernetesSwapServiceSelectorsTaskTest extends WingsBaseTest {
     Service service1 = createService("service1", ImmutableMap.of("label", "A"));
     Service service2 = createService("service2", ImmutableMap.of("label", "B"));
 
-    when(containerDeploymentDelegateHelper.getKubernetesConfig(any())).thenReturn(null);
+    when(containerDeploymentDelegateHelper.getKubernetesConfig(any(ContainerServiceParams.class))).thenReturn(null);
     when(kubernetesContainerService.getService(any(), any(), eq(service1.getMetadata().getName())))
         .thenReturn(service1);
     when(kubernetesContainerService.getService(any(), any(), eq(service2.getMetadata().getName())))
