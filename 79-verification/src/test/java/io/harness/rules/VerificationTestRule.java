@@ -11,6 +11,7 @@ import io.harness.VerificationTestModule;
 import io.harness.app.VerificationQueueModule;
 import io.harness.app.VerificationServiceConfiguration;
 import io.harness.app.VerificationServiceModule;
+import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import software.wings.rules.SetupScheduler;
 import software.wings.rules.WingsRule;
@@ -25,8 +26,8 @@ public class VerificationTestRule extends WingsRule {
   @Override
   protected Configuration getConfiguration(List<Annotation> annotations, String dbName) {
     VerificationServiceConfiguration configuration = new VerificationServiceConfiguration();
-    configuration.getMongoConnectionFactory().setUri(
-        System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName));
+    configuration.setMongoConnectionFactory(
+        MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
     configuration.getSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     configuration.getSchedulerConfig().setSchedulerName("verification_scheduler");
     configuration.getSchedulerConfig().setInstanceId("verification");

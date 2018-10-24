@@ -85,23 +85,30 @@ public class MongoModule extends AbstractModule {
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
     MongoClient mongoClient = new MongoClient(uri);
 
-    this.primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
+    primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
+    primaryDatastore.setQueryFactory(new QueryFactory());
+
+    MongoClientURI locksUri = uri;
+    MongoClient mongoLocksClient = mongoClient;
+    if (isNotEmpty(mongoConfig.getLocksUri())) {
+      locksUri = new MongoClientURI(mongoConfig.getLocksUri(), mongoClientOptions);
+      mongoLocksClient = new MongoClient(locksUri);
+    }
+
     DistributedLockSvcOptions distributedLockSvcOptions =
-        new DistributedLockSvcOptions(mongoClient, uri.getDatabase(), "locks");
+        new DistributedLockSvcOptions(mongoLocksClient, locksUri.getDatabase(), "locks");
     distributedLockSvcOptions.setEnableHistory(false);
     distributedLockSvc = new DistributedLockSvcFactory(distributedLockSvcOptions).getLockSvc();
 
     if (uri.getHosts().size() > 1) {
-      this.secondaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
+      secondaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
+      secondaryDatastore.setQueryFactory(new QueryFactory());
     } else {
-      this.secondaryDatastore = primaryDatastore;
+      secondaryDatastore = primaryDatastore;
     }
 
     JAVA_PACKAGES_TO_SCAN.forEach(morphia::mapPackage);
     ensureIndex(morphia);
-
-    this.primaryDatastore.setQueryFactory(new QueryFactory());
-    this.secondaryDatastore.setQueryFactory(new QueryFactory());
   }
 
   /**
