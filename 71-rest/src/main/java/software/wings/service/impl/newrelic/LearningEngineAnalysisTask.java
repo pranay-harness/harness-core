@@ -65,6 +65,7 @@ public class LearningEngineAnalysisTask extends Base {
   @Default private String group_name = NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
   private TimeSeriesMlAnalysisType time_series_ml_analysis_type;
   private int analysis_start_time;
+  private int prediction_start_time;
   private double sim_threshold;
   private Integer cluster_level;
   private List<String> query;

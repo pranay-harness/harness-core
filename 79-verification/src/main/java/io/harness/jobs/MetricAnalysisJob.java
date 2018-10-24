@@ -293,6 +293,10 @@ public class MetricAnalysisJob implements Job {
       learningEngineAnalysisTask.setAppId(context.getAppId());
       learningEngineAnalysisTask.setUuid(uuid);
 
+      if (mlAnalysisType.equals(TimeSeriesMlAnalysisType.PREDICTIVE)) {
+        learningEngineAnalysisTask.setPrediction_start_time(PREDECTIVE_HISTORY_MINUTES);
+      }
+
       logger.info("Queueing for analysis {}", learningEngineAnalysisTask);
       return learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
     }
