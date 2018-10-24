@@ -2,6 +2,9 @@
 
 set -ex
 
+docker stop $(docker ps -aq) || true
+docker rm $(docker ps -aq) || true
+
 sudo service mongod stop
 sleep 5
 docker run -p 27017:27017 -d --rm mongo:3.6 || true

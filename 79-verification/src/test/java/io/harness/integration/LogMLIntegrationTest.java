@@ -364,7 +364,6 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void testFirstLevelClustering() throws Exception {
     for (String host : hosts) {
       File file = new File(getClass().getClassLoader().getResource("./elk/" + host + ".json").getFile());
