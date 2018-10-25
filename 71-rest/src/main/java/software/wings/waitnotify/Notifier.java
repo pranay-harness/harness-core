@@ -16,6 +16,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
+import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -74,7 +75,7 @@ public class Notifier implements Runnable {
     final List<NotifyResponse> notifyResponses = wingsPersistence.createQuery(NotifyResponse.class, excludeAuthority)
                                                      .project(NotifyResponse.ID_KEY, true)
                                                      .project(NotifyResponse.CREATED_AT_KEY, true)
-                                                     .asList();
+                                                     .asList(new FindOptions().limit(1000));
 
     if (isEmpty(notifyResponses)) {
       logger.debug("There are no NotifyResponse entries to process");
