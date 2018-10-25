@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 @Value
 @Builder
 public class TerraformProvisionParameters {
-  private static final long TIMEOUT_MILLIS = 10;
+  private static final long TIMEOUT_IN_MINUTES = 30;
 
   public enum TerraformCommand { APPLY, DESTROY }
 
@@ -36,5 +36,5 @@ public class TerraformProvisionParameters {
 
   private final TerraformCommand command;
   private final TerraformCommandUnit commandUnit;
-  private final long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_MILLIS);
+  private final long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES);
 }
