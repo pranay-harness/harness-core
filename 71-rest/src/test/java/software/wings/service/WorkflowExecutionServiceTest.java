@@ -572,9 +572,9 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   private PipelineExecution createPipelineExecution(ApprovalStateExecutionData approvalStateExecutionData) {
-    PipelineStageExecution pipelineStageExecution = PipelineStageExecution.Builder.aPipelineStageExecution()
-                                                        .withStatus(ExecutionStatus.PAUSED)
-                                                        .withStateExecutionData(approvalStateExecutionData)
+    PipelineStageExecution pipelineStageExecution = PipelineStageExecution.builder()
+                                                        .status(ExecutionStatus.PAUSED)
+                                                        .stateExecutionData(approvalStateExecutionData)
                                                         .build();
     return PipelineExecution.Builder.aPipelineExecution()
         .withPipelineStageExecutions(com.google.common.collect.Lists.newArrayList(pipelineStageExecution))

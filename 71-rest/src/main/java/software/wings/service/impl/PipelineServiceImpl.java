@@ -7,6 +7,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static io.harness.exception.WingsException.USER;
@@ -33,6 +34,7 @@ import com.google.inject.name.Named;
 import de.danielbechler.util.Collections;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -676,6 +678,10 @@ public class PipelineServiceImpl implements PipelineService {
         throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid pipeline stage");
       }
       for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
+        if (stageElement.getName() == null || !EntityNameValidator.isValid(stageElement.getName())) {
+          throw new WingsException(INVALID_ARGUMENT, USER)
+              .addParam("args", "Invalid pipeline stage name " + ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE);
+        }
         if (!ENV_STATE.name().equals(stageElement.getType())) {
           continue;
         }

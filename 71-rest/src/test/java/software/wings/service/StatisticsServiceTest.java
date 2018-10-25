@@ -15,7 +15,6 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.beans.Environment.EnvironmentType.PROD;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
-import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
@@ -40,6 +39,7 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.Environment.EnvironmentType;
+import software.wings.beans.PipelineStageExecution;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.stats.DeploymentStatistics;
 import software.wings.beans.stats.DeploymentStatistics.AggregatedDayStats;
@@ -316,18 +316,18 @@ public class StatisticsServiceTest extends WingsBaseTest {
         .withWorkflowType(PIPELINE)
         .withPipelineExecution(
             aPipelineExecution()
-                .withPipelineStageExecutions(asList(
-                    aPipelineStageExecution()
-                        .withWorkflowExecutions(asList(aWorkflowExecution()
-                                                           .withAppId(APP_ID)
-                                                           .withEnvType(NON_PROD)
-                                                           .withAppName(APP_NAME)
-                                                           .withStatus(executionStatus)
-                                                           .withWorkflowType(PIPELINE)
-                                                           .withServiceExecutionSummaries(serviceExecutionSummaries)
-                                                           .withCreatedAt(getStartEpoch())
-                                                           .build()))
-                        .build()))
+                .withPipelineStageExecutions(
+                    asList(PipelineStageExecution.builder()
+                               .workflowExecutions(asList(aWorkflowExecution()
+                                                              .withAppId(APP_ID)
+                                                              .withEnvType(NON_PROD)
+                                                              .withAppName(APP_NAME)
+                                                              .withStatus(executionStatus)
+                                                              .withWorkflowType(PIPELINE)
+                                                              .withServiceExecutionSummaries(serviceExecutionSummaries)
+                                                              .withCreatedAt(getStartEpoch())
+                                                              .build()))
+                               .build()))
                 .build())
         .withCreatedAt(getStartEpoch())
         .build();
