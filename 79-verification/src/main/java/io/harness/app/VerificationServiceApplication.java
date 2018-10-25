@@ -140,7 +140,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
                                                  }))
                                                  .build(),
         new ValidationModule(validatorFactory), databaseModule, new VerificationServiceModule(configuration),
-        new VerificationServiceSechedulerModule(configuration),
+        new VerificationServiceSchedulerModule(configuration),
         new VerificationManagerClientModule(configuration.getManagerUrl()));
 
     wingsPersistence = injector.getInstance(WingsPersistence.class);
