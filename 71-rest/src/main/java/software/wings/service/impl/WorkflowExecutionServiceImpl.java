@@ -10,7 +10,7 @@ import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.beans.SearchFilter.Operator.GE;
 import static io.harness.beans.SearchFilter.Operator.IN;
-import static io.harness.beans.SearchFilter.Operator.LT;
+import static io.harness.beans.SearchFilter.Operator.LT_EQ;
 import static io.harness.beans.SearchFilter.Operator.NOT_EXISTS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -2607,9 +2607,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
     PageRequestBuilder pageRequestBuilder =
         aPageRequest()
+            .addFieldsIncluded(WorkflowExecution.APP_ID_KEY, WorkflowExecution.STATUS_KEY,
+                WorkflowExecution.WORKFLOW_ID_KEY, WorkflowExecution.CREATED_AT_KEY, WorkflowExecution.ID_KEY,
+                WorkflowExecution.START_TS_KEY, WorkflowExecution.END_TS_KEY, WorkflowExecution.DISPLAY_NAME_KEY,
+                WorkflowExecution.NAME_KEY)
             .addFilter(WorkflowExecution.APP_ID_KEY, EQ, appId)
             .addFilter(WorkflowExecution.STATUS_KEY, IN, ExecutionStatus.activeStatuses().toArray())
-            .addFilter(WorkflowExecution.CREATED_AT_KEY, LT, workflowExecution.getCreatedAt())
+            .addFilter(WorkflowExecution.CREATED_AT_KEY, LT_EQ, workflowExecution.getCreatedAt())
             .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.ASC)
             .addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, workflowExecution.getWorkflowId());
 

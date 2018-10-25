@@ -2218,7 +2218,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     List<WorkflowExecution> waitingOnDeployments =
         workflowExecutionService.listWaitingOnDeployments(appId, execution.getUuid());
-    assertThat(waitingOnDeployments).isNotEmpty().hasSize(1);
+    assertThat(waitingOnDeployments).isNotEmpty().hasSize(2);
   }
 
   @Test

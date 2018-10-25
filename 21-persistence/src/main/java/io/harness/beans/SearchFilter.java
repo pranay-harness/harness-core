@@ -10,6 +10,7 @@ public class SearchFilter {
     EQ,
     NOT_EQ,
     LT,
+    LT_EQ,
     GE,
     GT,
     CONTAINS,

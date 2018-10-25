@@ -51,6 +51,8 @@ public class WorkflowExecution extends Base {
   public static final String INFRAMAPPING_IDS_KEY = "infraMappingIds";
   public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
   public static final String TRIGGERED_BY = "triggeredBy";
+  public static final String NAME_KEY = "name";
+  public static final String DISPLAY_NAME_KEY = "displayName";
 
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);

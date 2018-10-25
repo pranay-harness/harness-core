@@ -183,6 +183,10 @@ public class PageController {
         assertOne(filter.getFieldValues());
         return fieldEnd.lessThan(filter.getFieldValues()[0]);
 
+      case LT_EQ:
+        assertOne(filter.getFieldValues());
+        return fieldEnd.lessThanOrEq(filter.getFieldValues()[0]);
+
       case GT:
         assertOne(filter.getFieldValues());
         return fieldEnd.greaterThan(filter.getFieldValues()[0]);
