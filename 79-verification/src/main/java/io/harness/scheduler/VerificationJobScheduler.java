@@ -17,7 +17,6 @@ import org.quartz.SchedulerException;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.GuiceQuartzJobFactory;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.AbstractQuartzScheduler;
@@ -62,7 +61,7 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
       fireKeys.append("nextFireTime", 1);
       triggers.createIndex(fireKeys, "fire", false);
 
-      scheduler.setJobFactory(injector.getInstance(GuiceQuartzJobFactory.class));
+      scheduler.setJobFactory(injector.getInstance(InjectorJobFactory.class));
       scheduler.start();
       this.scheduler = scheduler;
     } catch (SchedulerException exception) {
