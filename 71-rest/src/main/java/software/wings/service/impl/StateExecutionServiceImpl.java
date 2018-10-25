@@ -167,6 +167,7 @@ public class StateExecutionServiceImpl implements StateExecutionService {
             .filter(StateExecutionInstance.APP_ID_KEY, appId)
             .filter(StateExecutionInstance.EXECUTION_UUID_KEY, executionUuid)
             .filter(StateExecutionInstance.DISPLAY_NAME_KEY, phaseName)
+            .filter(StateExecutionInstance.STATE_TYPE_KEY, PHASE)
             .project(StateExecutionInstance.DISPLAY_NAME_KEY, true)
             .project(StateExecutionInstance.STATE_EXECUTION_MAP_KEY, true)
             .get();
