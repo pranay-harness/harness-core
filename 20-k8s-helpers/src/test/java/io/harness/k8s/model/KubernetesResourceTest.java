@@ -43,6 +43,26 @@ public class KubernetesResourceTest {
   }
 
   @Test
+  public void arrayFieldsSetAndGetTest() throws Exception {
+    URL url = this.getClass().getResource("/two-containers.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
+
+    String containerName = (String) resource.getField("spec.containers[0].name");
+    assertThat(containerName).isEqualTo("nginx-container");
+
+    containerName = (String) resource.getField("spec.containers[1].name");
+    assertThat(containerName).isEqualTo("debian-container");
+
+    Object obj = resource.getField("spec.containers[0]");
+    assertThat(obj).isInstanceOf(Map.class);
+
+    resource.setField("spec.containers[0].name", "hello");
+    containerName = (String) resource.getField("spec.containers[0].name");
+    assertThat(containerName).isEqualTo("hello");
+  }
+
+  @Test
   public void addAnnotationTest() throws Exception {
     URL url = this.getClass().getResource("/deploy.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);

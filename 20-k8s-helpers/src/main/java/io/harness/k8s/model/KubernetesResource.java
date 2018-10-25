@@ -1,7 +1,9 @@
 package io.harness.k8s.model;
 
+import io.harness.exception.InvalidArgumentsException;
 import lombok.Builder;
 import lombok.Data;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,25 +18,47 @@ public class KubernetesResource {
 
   private static final String dotMatch = "\\.";
 
+  private static boolean isCollection(String str) {
+    return str.endsWith("]");
+  }
+
+  private static String getCollectionName(String str) {
+    return str.split("\\[")[0];
+  }
+
+  private static int getIndex(String str) {
+    // assumes index is valid in format like: containers[1]
+    String num = str.split("\\[")[1].split("]")[0];
+    return Integer.parseInt(num);
+  }
+
   public Object getField(String key) {
     Object object = this.getValue();
 
     List<String> keyList = Arrays.asList(key.split(dotMatch));
 
-    for (int i = 0; i < keyList.size() - 1; i++) {
+    for (int i = 0; i < keyList.size(); i++) {
       String item = keyList.get(i);
-      if (object instanceof Map && ((Map) object).containsKey(item)) {
-        object = ((Map) object).get(item);
+
+      if (isCollection(item)) {
+        String collectionName = getCollectionName(item);
+        object = ((Map) object).get(collectionName);
+        if (object instanceof List) {
+          int index = getIndex(item);
+          object = ((List) object).get(index);
+        } else {
+          return null;
+        }
       } else {
-        return null;
+        if (object instanceof Map && ((Map) object).containsKey(item)) {
+          object = ((Map) object).get(item);
+        } else {
+          return null;
+        }
       }
     }
 
-    if (object instanceof Map) {
-      return ((Map) object).get(keyList.get(keyList.size() - 1));
-    }
-
-    return null;
+    return object;
   }
 
   public KubernetesResource setField(String key, Object newValue) {
@@ -48,10 +72,21 @@ public class KubernetesResource {
 
     for (int i = 0; i < keyList.size() - 1; i++) {
       String item = keyList.get(i);
-      if (objectMap.containsKey(item)) {
-        objectMap = (Map) objectMap.get(item);
+      if (isCollection(item)) {
+        String collectionName = getCollectionName(item);
+        Object object = objectMap.get(collectionName);
+        if (object instanceof List) {
+          int index = getIndex(item);
+          objectMap = (Map) ((List) object).get(index);
+        } else {
+          throw new InvalidArgumentsException(Pair.of(key, "collection not found"));
+        }
       } else {
-        objectMap.put(item, new HashMap<>());
+        if (objectMap.containsKey(item)) {
+          objectMap = (Map) objectMap.get(item);
+        } else {
+          objectMap.put(item, new HashMap<>());
+        }
       }
     }
 
