@@ -62,7 +62,6 @@ logging:
 
 mongo:
   uri: mongodb://localhost:27017/harness
-  locksUri: mongodb://localhost:27017/locks
 
 watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
 delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
