@@ -1,5 +1,6 @@
 package software.wings.integration.common;
 
+import static io.harness.eraro.mongo.MongoError.DUPLICATE_KEY;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofMillis;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -99,7 +100,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
                                idempotentRegistry.registerUpdateOperation(IdempotentLock.defaultTTL),
                                MongoIdempotentRegistry.registerOptions))
         .isInstanceOf(MongoCommandException.class)
-        .hasMessageContaining("E11000 ");
+        .hasMessageContaining("E" + DUPLICATE_KEY.getErrorCode() + " ");
 
     assertEquals(SUCCEEDED, wingsPersistence.get(Idempotent.class, id.getValue()).getState());
   }
