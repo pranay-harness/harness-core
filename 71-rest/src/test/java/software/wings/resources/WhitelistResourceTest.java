@@ -154,4 +154,21 @@ public class WhitelistResourceTest extends WingsBaseTest {
     assertThat(restResponse).isNotNull().hasFieldOrPropertyWithValue("resource", WHITELIST);
     verify(WHITELIST_SERVICE).get(ACCOUNT_ID, WHITELIST_ID);
   }
+
+  /**
+   * Should read whitelist config.
+   */
+  @Test
+  public void isIpWhitelisted() {
+    when(WHITELIST_SERVICE.isValidIPAddress(ACCOUNT_ID, "127.0.0.1")).thenReturn(true);
+
+    RestResponse<Boolean> restResponse =
+        RESOURCES.client()
+            .target(format("/whitelist/ip-address-whitelisted?accountId=%s&ipAddress=%s", ACCOUNT_ID, "127.0.0.1"))
+            .request()
+            .get(new GenericType<RestResponse<Boolean>>() {});
+
+    assertThat(restResponse.getResource()).isEqualTo(Boolean.TRUE);
+    verify(WHITELIST_SERVICE).isValidIPAddress(ACCOUNT_ID, "127.0.0.1");
+  }
 }

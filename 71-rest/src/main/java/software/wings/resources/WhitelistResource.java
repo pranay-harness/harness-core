@@ -85,6 +85,22 @@ public class WhitelistResource {
   }
 
   /**
+   * Checks if the given ip address is already whitelisted.
+   *
+   * @param accountId   the account id
+   * @param ipAddress  the ip address
+   * @return the rest response
+   */
+  @GET
+  @Path("ip-address-whitelisted")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> isIpAddressWhitelisted(
+      @QueryParam("accountId") String accountId, @QueryParam("ipAddress") String ipAddress) {
+    return new RestResponse<>(whitelistService.isValidIPAddress(accountId, ipAddress));
+  }
+
+  /**
    * Gets the whitelist config.
    *
    * @param accountId   the account id
