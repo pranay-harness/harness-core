@@ -28,6 +28,12 @@ xxxxxxxx
         key: 9a3e6eac4dcdbdc41a93ca99100537df
         programName: verification-saas-accesslogs
 
+scheduler:
+  schedulerName: verification_scheduler
+  instanceId: verification
+  tablePrefix: quartz_verification
+  threadCount: 25
+
 logging:
   level: INFO
   loggers:
