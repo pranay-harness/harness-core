@@ -12,6 +12,8 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.configuration.LimitConfigurationServiceMongo;
+import io.harness.limits.defaults.service.DefaultLimitsService;
+import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import ro.fortsoft.pf4j.DefaultPluginManager;
@@ -544,6 +546,8 @@ public class WingsModule extends DependencyModule {
 
     bind(LimitCheckerFactory.class).to(LimitCheckerFactoryImpl.class);
     bind(LimitConfigurationService.class).to(LimitConfigurationServiceMongo.class);
+
+    bind(DefaultLimitsService.class).to(DefaultLimitsServiceImpl.class);
   }
 
   @Override

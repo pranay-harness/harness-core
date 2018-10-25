@@ -1,3 +1,3 @@
 package io.harness.limits;
 
-public enum ActionType { CREATE_APPLICATION }
+public enum ActionType { CREATE_APPLICATION, DEPLOY }
