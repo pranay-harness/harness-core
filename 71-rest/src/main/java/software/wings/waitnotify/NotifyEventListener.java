@@ -3,6 +3,7 @@ package software.wings.waitnotify;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -60,12 +61,24 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
     WaitInstance waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
 
-    if (waitInstance == null) {
-      logger.info("waitInstance not found for waitInstanceId: {}", waitInstanceId);
-      return;
-    }
+    if (waitInstance == null || waitInstance.getStatus() != ExecutionStatus.NEW) {
+      // this is considered anomaly that could happened only after database malfunction.
+      // if this error is observed frequently, something at design level is wrong.
+      if (waitInstance == null) {
+        logger.error("WaitInstance not found: {}", waitInstanceId);
+      } else {
+        logger.error("WaitInstance already handled: {}", waitInstanceId);
+      }
 
-    if (waitInstance.getStatus() != ExecutionStatus.NEW) {
+      // Removing the wait queues that are for instance that does not exist. It is safe, because the instance is
+      // added to the DB first ... and we adding 30 seconds buffer.
+      wingsPersistence.delete(wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
+                                  .filter(WaitQueue.WAIT_INSTANCE_ID_KEY, waitInstanceId)
+                                  .field(WaitQueue.CREATED_AT_KEY)
+                                  .lessThan(System.currentTimeMillis() - ofSeconds(30).toMillis()));
+
+      // Note that we do not need to remove the responses from here. They will go away as soon as they are selected the
+      // next time and no wait queue is found for them.
       return;
     }
 

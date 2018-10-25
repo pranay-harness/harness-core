@@ -3,8 +3,10 @@ package software.wings.waitnotify;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
+import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.inject.Inject;
@@ -219,6 +221,20 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     notifier.executeUnderLock();
 
     assertThat(wingsPersistence.get(NotifyResponse.class, notificationId)).isNull();
+  }
+
+  @Test
+  public void shouldCleanZombieWaitQueue() {
+    final WaitQueue waitQueue = new WaitQueue(generateUuid(), generateUuid());
+    waitQueue.setCreatedAt(System.currentTimeMillis() - Duration.ofMinutes(1).toMillis());
+    String waitQueueId = wingsPersistence.save(waitQueue);
+
+    notifyEventListener.onMessage(aNotifyEvent()
+                                      .withWaitInstanceId(waitQueue.getWaitInstanceId())
+                                      .withCorrelationIds(asList(waitQueue.getCorrelationId()))
+                                      .build());
+
+    assertThat(wingsPersistence.get(WaitQueue.class, waitQueueId)).isNull();
   }
 
   public static class TestNotifyCallback implements NotifyCallback {
