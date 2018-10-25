@@ -28,6 +28,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -305,16 +306,21 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       timestamp = System.currentTimeMillis();
     }
 
+    Set<Instance> instanceSet = new HashSet<>();
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.field("accountId").equal(accountId);
-
     query.field("createdAt").lessThanOrEq(timestamp);
-
     query.and(
         query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
 
-    List<Instance> instanceList = query.asList();
-    return new HashSet<>(instanceList);
+    try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
+      while (iterator.hasNext()) {
+        Instance instance = iterator.next();
+        instanceSet.add(instance);
+      }
+    }
+
+    return instanceSet;
   }
 
   @Override
