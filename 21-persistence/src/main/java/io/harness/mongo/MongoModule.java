@@ -27,7 +27,6 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
-import io.harness.persistence.HPersistence;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -379,7 +378,10 @@ public class MongoModule extends AbstractModule {
     bind(AdvancedDatastore.class).annotatedWith(Names.named("primaryDatastore")).toInstance(primaryDatastore);
     bind(AdvancedDatastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
-    bind(HPersistence.class).to(MongoPersistence.class);
+
+    // TODO: this is should be enabled when all wingsPersistence functionality is promoted to MongoPersistence and the
+    //       class is removed. Till then we are binding the HPersistence to the wingsPersistence instance.
+    // bind(HPersistence.class).to(MongoPersistence.class);
   }
 
   /**

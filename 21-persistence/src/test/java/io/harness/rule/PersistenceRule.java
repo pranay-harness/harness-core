@@ -2,14 +2,17 @@ package io.harness.rule;
 
 import static java.util.Arrays.asList;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.MongoClient;
 import io.harness.factory.ClosingFactory;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import lombok.Getter;
@@ -39,7 +42,15 @@ public class PersistenceRule implements MethodRule, InjectorRuleMixin, MongoRule
 
     DistributedLockSvc distributedLockSvc = distributedLockSvc(mongoClient, databaseName, closingFactory);
 
-    return asList(new VersionModule(), new TimeModule(), new MongoModule(datastore, datastore, distributedLockSvc));
+    Module dummyMongo = new AbstractModule() {
+      @Override
+      protected void configure() {
+        bind(HPersistence.class).to(MongoPersistence.class);
+      }
+    };
+
+    return asList(
+        new VersionModule(), new TimeModule(), new MongoModule(datastore, datastore, distributedLockSvc), dummyMongo);
   }
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {

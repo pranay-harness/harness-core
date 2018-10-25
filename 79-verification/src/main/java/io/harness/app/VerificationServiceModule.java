@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 
+import io.harness.persistence.HPersistence;
 import io.harness.security.NoOpSecretManagerImpl;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.LearningEngineAnalysisServiceImpl;
@@ -57,6 +58,7 @@ public class VerificationServiceModule extends AbstractModule {
   protected void configure() {
     bind(VerificationServiceConfiguration.class).toInstance(configuration);
     bind(PluginManager.class).to(DefaultPluginManager.class).asEagerSingleton();
+    bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(LearningEngineService.class).to(LearningEngineAnalysisServiceImpl.class);
     bind(SecretManager.class).to(NoOpSecretManagerImpl.class);
