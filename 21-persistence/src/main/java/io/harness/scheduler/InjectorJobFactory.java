@@ -1,4 +1,4 @@
-package software.wings.app;
+package io.harness.scheduler;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -10,10 +10,7 @@ import org.quartz.SchedulerException;
 import org.quartz.spi.JobFactory;
 import org.quartz.spi.TriggerFiredBundle;
 
-/**
- * Created by anubhaw on 11/8/16.
- */
-public class GuiceQuartzJobFactory implements JobFactory {
+public class InjectorJobFactory implements JobFactory {
   @Inject private Injector injector;
 
   @Override

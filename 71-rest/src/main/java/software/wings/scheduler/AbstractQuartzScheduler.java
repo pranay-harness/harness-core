@@ -20,6 +20,7 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.maintenance.MaintenanceListener;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.ReadPref;
+import io.harness.scheduler.InjectorJobFactory;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -29,7 +30,6 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.GuiceQuartzJobFactory;
 import software.wings.app.SchedulerConfig;
 import software.wings.core.managerConfiguration.ConfigChangeEvent;
 import software.wings.core.managerConfiguration.ConfigChangeListener;
@@ -86,7 +86,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
       fireKeys.append("nextFireTime", 1);
       triggers.createIndex(fireKeys, "fire", false);
 
-      scheduler.setJobFactory(injector.getInstance(GuiceQuartzJobFactory.class));
+      scheduler.setJobFactory(injector.getInstance(InjectorJobFactory.class));
       ConfigurationController configurationController = injector.getInstance(Key.get(ConfigurationController.class));
       if (!isMaintenance() && configurationController.isPrimary()) {
         scheduler.start();
