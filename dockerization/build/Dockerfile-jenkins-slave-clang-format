@@ -7,4 +7,13 @@ RUN echo "deb http://ftp.de.debian.org/debian sid main" >> /etc/apt/sources.list
     apt-get install -y clang-format-7 && \
     cp /usr/bin/clang-format-7 /usr/bin/clang-format
 
-USER jenkins
+ARG user=clang
+ARG group=clang
+ARG uid=1000
+ARG gid=1000
+
+ENV HOME /home/${user}
+RUN groupadd -g ${gid} ${group}
+RUN useradd -c "Clang user" -d $HOME -u ${uid} -g ${gid} -m ${user}
+
+USER clang
