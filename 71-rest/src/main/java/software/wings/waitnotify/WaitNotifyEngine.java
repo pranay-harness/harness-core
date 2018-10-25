@@ -67,6 +67,8 @@ public class WaitNotifyEngine {
       logger.debug("Received waitForAll on - correlationIds : {}", Arrays.toString(correlationIds));
     }
 
+    // It is important we to save the wait instance first and then the wait queues. From now on we will
+    // assume that wait queue without an instance is a zombie and we are going to remove it.
     String waitInstanceId = wingsPersistence.save(new WaitInstance(callback, correlationIds));
 
     // create queue

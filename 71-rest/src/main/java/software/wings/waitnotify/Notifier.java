@@ -82,13 +82,6 @@ public class Notifier implements Runnable {
       return;
     }
 
-    if (notifyResponses.size() > 750) {
-      logger.error(
-          "No entry in the waitQueue found for dangerously big number {} of correlationIds", notifyResponses.size());
-    } else if (notifyResponses.size() > 200) {
-      logger.warn("No entry in the waitQueue found for {} correlationIds", notifyResponses.size());
-    }
-
     logger.info("Notifier responses {}", notifyResponses.size());
 
     Set<String> correlationIds = notifyResponses.stream().map(NotifyResponse::getUuid).collect(toSet());
