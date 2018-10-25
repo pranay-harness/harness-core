@@ -14,6 +14,7 @@ import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.configuration.LimitConfigurationServiceMongo;
 import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
+import io.harness.persistence.HPersistence;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import ro.fortsoft.pf4j.DefaultPluginManager;
@@ -365,6 +366,7 @@ public class WingsModule extends DependencyModule {
   protected void configure() {
     bind(AuthService.class).to(AuthServiceImpl.class);
     bind(MainConfiguration.class).toInstance(configuration);
+    bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(AppService.class).to(AppServiceImpl.class);
     bind(ApplicationManifestService.class).to(ApplicationManifestServiceImpl.class);

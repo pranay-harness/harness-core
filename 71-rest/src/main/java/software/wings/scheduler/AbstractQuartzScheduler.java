@@ -19,6 +19,7 @@ import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.maintenance.MaintenanceListener;
 import io.harness.mongo.MongoConfig;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.scheduler.InjectorJobFactory;
 import org.quartz.JobDetail;
@@ -34,8 +35,6 @@ import software.wings.app.SchedulerConfig;
 import software.wings.core.managerConfiguration.ConfigChangeEvent;
 import software.wings.core.managerConfiguration.ConfigChangeListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.dl.WingsMongoPersistence;
-import software.wings.dl.WingsPersistence;
 
 import java.util.Date;
 import java.util.List;
@@ -73,11 +72,10 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
       // by default scheduler does not create all needed mongo indexes.
       // it is a bit hack but we are going to add them from here
 
-      WingsPersistence wingsPersistence = injector.getInstance(Key.get(WingsMongoPersistence.class));
+      HPersistence hPersistence = injector.getInstance(Key.get(HPersistence.class));
 
       final String prefix = properties.getProperty("org.quartz.jobStore.collectionPrefix");
-      final DBCollection triggers =
-          wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, prefix + "_triggers");
+      final DBCollection triggers = hPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, prefix + "_triggers");
       BasicDBObject jobIdKey = new BasicDBObject("jobId", 1);
       triggers.createIndex(jobIdKey, null, false);
 
