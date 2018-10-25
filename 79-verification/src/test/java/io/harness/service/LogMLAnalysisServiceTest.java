@@ -1,4 +1,4 @@
-package software.wings.service;
+package io.harness.service;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -7,18 +7,18 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.VerificationBaseTest;
+import io.harness.managerclient.VerificationManagerClient;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
-import io.harness.scm.ScmSecret;
-import io.harness.scm.SecretName;
+import io.harness.service.intfc.LogAnalysisService;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -27,21 +27,18 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.WingsBaseTest;
+import retrofit2.Call;
+import retrofit2.Response;
 import software.wings.api.PhaseElement.PhaseElementBuilder;
 import software.wings.api.ServiceElement;
-import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.ElkConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SplunkConfig;
-import software.wings.beans.SumoConfig;
+import software.wings.beans.RestResponse;
 import software.wings.beans.WorkflowExecution;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
+import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
-import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.analysis.LogMLAnalysisRecord;
@@ -50,14 +47,9 @@ import software.wings.service.impl.analysis.LogMLClusterSummary;
 import software.wings.service.impl.analysis.LogMLFeedback;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
+import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.service.intfc.elk.ElkAnalysisService;
-import software.wings.service.intfc.elk.ElkDelegateService;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.KmsService;
-import software.wings.service.intfc.splunk.SplunkDelegateService;
-import software.wings.service.intfc.sumo.SumoDelegateService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
@@ -86,7 +78,7 @@ import java.util.UUID;
 /**
  * Created by rsingh on 9/27/17.
  */
-public class LogMLAnalysisServiceTest extends WingsBaseTest {
+public class LogMLAnalysisServiceTest extends VerificationBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(LogMLAnalysisServiceTest.class);
 
   private String accountId;
@@ -99,18 +91,12 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   private Random r;
 
   @Mock private DelegateProxyFactory delegateProxyFactory;
-  @Inject private AnalysisService analysisService;
+  @Inject private LogAnalysisService analysisService;
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private ElkAnalysisService elkAnalysisService;
-  @Inject private KmsService kmsService;
-  @Inject private EncryptionService encryptionService;
-  @Inject private SplunkDelegateService splunkDelegateService;
-  @Inject private ElkDelegateService elkDelegateService;
-  @Inject private SumoDelegateService sumoDelegateService;
-  @Inject private ScmSecret scmSecret;
+  @Mock VerificationManagerClient verificationManagerClient;
 
   @Before
-  public void setup() {
+  public void setup() throws IOException {
     long seed = System.currentTimeMillis();
     logger.info("random seed: " + seed);
     r = new Random(seed);
@@ -122,55 +108,11 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     serviceId = UUID.randomUUID().toString();
     delegateTaskId = UUID.randomUUID().toString();
     MockitoAnnotations.initMocks(this);
-  }
 
-  @Test
-  @Ignore("Unit tests should not depend on external resources")
-  public void testValidateSplunkConfig() throws Exception {
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(splunkDelegateService);
-    setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(splunkDelegateService, "encryptionService", encryptionService);
-    final SplunkConfig splunkConfig =
-        SplunkConfig.builder()
-            .accountId(accountId)
-            .splunkUrl("https://ec2-52-54-103-49.compute-1.amazonaws.com:8089")
-            .username("admin")
-            .password(scmSecret.decryptToCharArray(new SecretName("splunk_config_password")))
-            .build();
-
-    final SettingAttribute settingAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(splunkConfig).build();
-    analysisService.validateConfig(settingAttribute, StateType.SPLUNKV2, Collections.emptyList());
-  }
-
-  @Test
-  @Ignore("Unit tests should not access external resources")
-  public void testVersion() throws Exception {
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(elkDelegateService);
-    setInternalState(elkAnalysisService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(elkDelegateService, "encryptionService", encryptionService);
-    ElkConfig elkConfig = new ElkConfig();
-    elkConfig.setElkUrl("http://ec2-34-207-78-53.compute-1.amazonaws.com:5601/app/kibana");
-    elkConfig.setElkConnector(ElkConnector.KIBANA_SERVER);
-    String version = elkAnalysisService.getVersion(accountId, elkConfig, null);
-    assertEquals("5.5.2", version);
-  }
-
-  @Test
-  @Ignore("Unit tests should not access external resources")
-  public void testValidateSumoLogicConfig() throws Exception {
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(sumoDelegateService);
-    setInternalState(analysisService, "delegateProxyFactory", delegateProxyFactory);
-    setInternalState(splunkDelegateService, "encryptionService", encryptionService);
-    final SumoConfig sumoConfig = new SumoConfig();
-    sumoConfig.setAccountId(accountId);
-    sumoConfig.setSumoUrl("https://api.us2.sumologic.com:443/api/v1/");
-    sumoConfig.setAccessId("su6JaFdOBOOsnM".toCharArray());
-    sumoConfig.setAccessKey(scmSecret.decryptToCharArray(new SecretName("sumo_config_access_key")));
-
-    final SettingAttribute settingAttribute =
-        SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withValue(sumoConfig).build();
-    analysisService.validateConfig(settingAttribute, StateType.SUMO, Collections.emptyList());
+    Call<RestResponse<Boolean>> managerCall = mock(Call.class);
+    when(managerCall.execute()).thenReturn(Response.success(new RestResponse<>(true)));
+    when(verificationManagerClient.isStateValid(appId, stateExecutionId)).thenReturn(managerCall);
+    setInternalState(analysisService, "managerClient", verificationManagerClient);
   }
 
   @Test
@@ -462,12 +404,6 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void testIsBaseLineCreatedNoWorkFlowExecutions() throws Exception {
-    assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId));
-  }
-
-  @Test
   @RealMongo
   @Ignore
   public void testIsBaseLineCreatedNoRecords() throws Exception {
@@ -514,8 +450,13 @@ public class LogMLAnalysisServiceTest extends WingsBaseTest {
     analysisService.saveLogData(StateType.SPLUNKV2, accountId, appId, stateExecutionId, workflowId, workflowExecutionId,
         serviceId, ClusterLevel.L1, delegateTaskId, logElements);
 
-    assertFalse(analysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS, StateType.SPLUNKV2,
-        appId, workflowId, workflowExecutionId, serviceId));
+    AnalysisService managerAnalysisService = new AnalysisServiceImpl();
+    setInternalState(managerAnalysisService, "wingsPersistence", wingsPersistence);
+    WorkflowExecutionService workflowExecutionService = new WorkflowExecutionServiceImpl();
+    setInternalState(workflowExecutionService, "wingsPersistence", wingsPersistence);
+    setInternalState(managerAnalysisService, "workflowExecutionService", workflowExecutionService);
+    assertFalse(managerAnalysisService.isBaselineCreated(AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS,
+        StateType.SPLUNKV2, appId, workflowId, workflowExecutionId, serviceId));
   }
 
   @Test

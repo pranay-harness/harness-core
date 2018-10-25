@@ -139,7 +139,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     LearningEngineAnalysisTask learningEngineAnalysisTask =
         LearningEngineAnalysisTask.builder()
             .service_id(cvConfiguration.getServiceId())
-            .state_execution_id(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid() + "-" + generateUuid())
+            .state_execution_id(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid() + "-" + endMin)
             .analysis_start_min((int) startMin - PREDECTIVE_HISTORY_MINUTES)
             .analysis_minute((int) endMin)
             .prediction_start_time((int) startMin)

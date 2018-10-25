@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.security.VerificationAuthInterceptor;
 import io.harness.security.VerificationTokenGenerator;
@@ -75,7 +74,6 @@ public class VerificationManagerClientFactory implements Provider<VerificationMa
           .retryOnConnectionFailure(true)
           .addInterceptor(new VerificationAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
-          .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
           .hostnameVerifier((hostname, session) -> true)
           .build();
     } catch (Exception e) {
