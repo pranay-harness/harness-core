@@ -3,11 +3,13 @@ package io.harness.limits.configuration;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
+import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
@@ -19,9 +21,12 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Base;
+import software.wings.beans.Account;
+import software.wings.beans.AccountType;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.AccountService;
 
+import java.util.Objects;
 import javax.annotation.Nullable;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -31,13 +36,15 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   private static final Logger log = LoggerFactory.getLogger(LimitConfigurationServiceMongo.class);
 
   @Inject private WingsPersistence dao;
+  @Inject private AccountService accountService;
+  @Inject private DefaultLimitsService defaultLimits;
 
   @Override
   public @Nullable ConfiguredLimit getOrDefault(String accountId, ActionType actionType) {
     ConfiguredLimit limit = get(accountId, actionType);
 
     if (null == limit) {
-      limit = getDefaultLimit(actionType);
+      limit = getDefaultLimit(actionType, accountId);
     }
 
     return limit;
@@ -49,11 +56,31 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
     return dao.createQuery(ConfiguredLimit.class).filter("accountId", accountId).filter("key", actionType).get();
   }
 
-  private @Nullable ConfiguredLimit getDefaultLimit(ActionType actionType) {
-    return dao.createQuery(ConfiguredLimit.class)
-        .filter("accountId", Base.GLOBAL_ACCOUNT_ID)
-        .filter("key", actionType)
-        .get();
+  private @Nullable ConfiguredLimit getDefaultLimit(ActionType actionType, String accountId) {
+    Account account = accountService.get(accountId);
+    Objects.requireNonNull(account, "account should not be null. AccountId: " + accountId);
+
+    String accountType;
+    if (null != account.getLicenseInfo()) {
+      accountType = account.getLicenseInfo().getAccountType();
+    } else {
+      // LicenseInfo can be null for some accounts. We haven't set the license info for some old accounts yet.
+      // Defaulting to PAID
+      accountType = AccountType.PAID;
+    }
+
+    Preconditions.checkArgument(
+        AccountType.isValid(accountType), "accountType should be valid. AccountId: " + accountId);
+
+    Limit limit = defaultLimits.get(actionType, accountType);
+    if (null == limit) {
+      log.error(
+          "Default limit is null. Action Type: {}, Account Type: {}. Please configure the same in DefaultLimitsImpl class",
+          actionType, accountType);
+      return null;
+    }
+
+    return new ConfiguredLimit<>(accountId, limit, actionType);
   }
 
   @Override
