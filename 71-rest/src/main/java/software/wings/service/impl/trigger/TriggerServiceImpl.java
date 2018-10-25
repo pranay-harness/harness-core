@@ -334,6 +334,8 @@ public class TriggerServiceImpl implements TriggerService {
           logger.info(
               "Matched artifacts {}. Selecting the latest artifact", matchedArtifacts.get(matchedArtifacts.size() - 1));
           artifacts.add(matchedArtifacts.get(matchedArtifacts.size() - 1));
+        } else {
+          logger.info("Artifacts {} not matched with the given artifact filter", artifacts);
         }
       }
       if (isEmpty(artifactSelections)) {
@@ -344,7 +346,7 @@ public class TriggerServiceImpl implements TriggerService {
           continue;
         }
       } else {
-        logger.info("Artifact selections found collecting artifacts as per artifactStream selections ");
+        logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
         if (addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts)) {
           if (isEmpty(artifacts)) {
             logger.warn(
@@ -356,14 +358,17 @@ public class TriggerServiceImpl implements TriggerService {
       if (isNotEmpty(artifacts)) {
         logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
             artifacts.stream().map(Artifact::getUuid).collect(toList()));
-      }
-      try {
-        triggerExecution(artifacts, trigger);
-      } catch (WingsException exception) {
-        exception.addContext(Application.class, trigger.getAppId());
-        exception.addContext(ArtifactStream.class, artifactStreamId);
-        exception.addContext(Trigger.class, trigger.getUuid());
-        WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+        try {
+          triggerExecution(artifacts, trigger);
+        } catch (WingsException exception) {
+          exception.addContext(Application.class, trigger.getAppId());
+          exception.addContext(ArtifactStream.class, artifactStreamId);
+          exception.addContext(Trigger.class, trigger.getUuid());
+          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+        }
+      } else {
+        logger.info("No Artifacts matched. Hence Skipping the deployment");
+        continue;
       }
     }
   }
