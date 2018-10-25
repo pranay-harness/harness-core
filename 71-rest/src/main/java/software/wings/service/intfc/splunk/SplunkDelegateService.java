@@ -49,5 +49,5 @@ public interface SplunkDelegateService {
   @DelegateTaskType(TaskType.SPLUNK_GET_HOST_RECORDS)
   List<LogElement> getLogResults(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String basicQuery, String hostNameField, String host, long startTime, long endTime,
-      ThirdPartyApiCallLog apiCallLog);
+      ThirdPartyApiCallLog apiCallLog, int logCollectionMinute);
 }

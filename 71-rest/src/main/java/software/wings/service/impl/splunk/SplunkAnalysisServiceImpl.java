@@ -58,7 +58,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
     List<LogElement> responseWithoutHost =
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,
-                setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), null, fromTime, toTime, apiCallLog);
+                setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), null, fromTime, toTime, apiCallLog,
+                0);
     if (isEmpty(responseWithoutHost)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
@@ -71,7 +72,7 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,
                 setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), hostName,
-                setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog);
+                setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, 0);
 
     return VerificationNodeDataSetupResponse.builder()
         .providerReachable(true)

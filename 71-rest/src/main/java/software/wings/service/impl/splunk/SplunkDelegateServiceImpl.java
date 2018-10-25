@@ -68,7 +68,7 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
   @Override
   public List<LogElement> getLogResults(SplunkConfig splunkConfig, List<EncryptedDataDetail> encryptedDataDetails,
       String basicQuery, String hostNameField, String host, long startTime, long endTime,
-      ThirdPartyApiCallLog apiCallLog) {
+      ThirdPartyApiCallLog apiCallLog, int logCollectionMinute) {
     Service splunkService = initSplunkService(splunkConfig, encryptedDataDetails);
     String query = getQuery(basicQuery, hostNameField, host);
     JobArgs jobargs = new JobArgs();
@@ -117,13 +117,13 @@ public class SplunkDelegateServiceImpl implements SplunkDelegateService {
       Event event;
       while ((event = resultsReader.getNextEvent()) != null) {
         final LogElement splunkLogElement = new LogElement();
-        splunkLogElement.setQuery(query);
+        splunkLogElement.setQuery(basicQuery);
         splunkLogElement.setClusterLabel(event.get("cluster_label"));
         splunkLogElement.setHost(host);
         splunkLogElement.setCount(Integer.parseInt(event.get("cluster_count")));
         splunkLogElement.setLogMessage(event.get("_raw"));
         splunkLogElement.setTimeStamp(SPLUNK_DATE_FORMATER.parse(event.get("_time")).getTime());
-        splunkLogElement.setLogCollectionMinute((int) startTime);
+        splunkLogElement.setLogCollectionMinute(logCollectionMinute);
         logElements.add(splunkLogElement);
       }
       resultsReader.close();

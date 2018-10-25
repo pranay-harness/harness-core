@@ -122,7 +122,7 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
               splunkHeartBeatElement.setTimeStamp(0);
               splunkHeartBeatElement.setLogCollectionMinute(logCollectionMinute);
               logElements.add(splunkHeartBeatElement);
-              callables.add(() -> fetchLogsForHost(host, query));
+              callables.add(() -> fetchLogsForHost(host, query, logCollectionMinute));
             }
 
             List<Optional<List<LogElement>>> results = executeParrallel(callables);
@@ -197,11 +197,11 @@ public class SplunkDataCollectionTask extends AbstractDelegateDataCollectionTask
       }
     }
 
-    private List<LogElement> fetchLogsForHost(String host, String query) {
+    private List<LogElement> fetchLogsForHost(String host, String query, int logCollectionMinute) {
       ThirdPartyApiCallLog apiCallLog = createApiCallLog(dataCollectionInfo.getStateExecutionId());
       return splunkDelegateService.getLogResults(dataCollectionInfo.getSplunkConfig(),
           dataCollectionInfo.getEncryptedDataDetails(), query, dataCollectionInfo.getHostnameField(), host, startTime,
-          endTime, apiCallLog);
+          endTime, apiCallLog, logCollectionMinute);
     }
   }
 }
