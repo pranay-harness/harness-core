@@ -41,7 +41,6 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.EntityType.DEPLOYMENT;
 import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
-import static software.wings.beans.PipelineStageExecution.Builder.aPipelineStageExecution;
 import static software.wings.beans.WorkflowExecution.PIPELINE_EXECUTION_ID_KEY;
 import static software.wings.beans.WorkflowExecution.STATUS_KEY;
 import static software.wings.beans.WorkflowExecution.WORKFLOW_ID_KEY;
@@ -518,21 +517,27 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           StateExecutionInstance stateExecutionInstance = stateExecutionInstanceMap.get(pipelineStageElement.getName());
 
           if (stateExecutionInstance == null) {
-            stageExecutionDataList.add(aPipelineStageExecution()
-                                           .withStateType(pipelineStageElement.getType())
-                                           .withStateName(pipelineStageElement.getName())
-                                           .withStatus(ExecutionStatus.QUEUED)
-                                           .withEstimatedTime(pipelineExecution.getPipeline().getStateEtaMap().get(
-                                               pipelineStageElement.getName()))
+            Long estimatedTime = pipeline.getStateEtaMap().get(pipelineStageElement.getUuid());
+            // required for backward compatibility, Can be removed later
+            if (estimatedTime == null) {
+              estimatedTime = pipeline.getStateEtaMap().get(pipelineStageElement.getName());
+            }
+            stageExecutionDataList.add(PipelineStageExecution.builder()
+                                           .stateUuid(pipelineStageElement.getUuid())
+                                           .stateType(pipelineStageElement.getType())
+                                           .stateName(pipelineStageElement.getName())
+                                           .status(ExecutionStatus.QUEUED)
+                                           .estimatedTime(estimatedTime)
                                            .build());
 
           } else if (APPROVAL.name().equals(stateExecutionInstance.getStateType())) {
-            PipelineStageExecution stageExecution = aPipelineStageExecution()
-                                                        .withStateType(stateExecutionInstance.getStateType())
-                                                        .withStatus(stateExecutionInstance.getStatus())
-                                                        .withStateName(stateExecutionInstance.getDisplayName())
-                                                        .withStartTs(stateExecutionInstance.getStartTs())
-                                                        .withEndTs(stateExecutionInstance.getEndTs())
+            PipelineStageExecution stageExecution = PipelineStageExecution.builder()
+                                                        .stateUuid(pipelineStageElement.getUuid())
+                                                        .stateType(stateExecutionInstance.getStateType())
+                                                        .status(stateExecutionInstance.getStatus())
+                                                        .stateName(stateExecutionInstance.getDisplayName())
+                                                        .startTs(stateExecutionInstance.getStartTs())
+                                                        .endTs(stateExecutionInstance.getEndTs())
                                                         .build();
             StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
 
@@ -551,12 +556,13 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
             stageExecutionDataList.add(stageExecution);
 
           } else if (ENV_STATE.name().equals(stateExecutionInstance.getStateType())) {
-            PipelineStageExecution stageExecution = aPipelineStageExecution()
-                                                        .withStateType(pipelineStageElement.getType())
-                                                        .withStateName(pipelineStageElement.getName())
-                                                        .withStatus(stateExecutionInstance.getStatus())
-                                                        .withStartTs(stateExecutionInstance.getStartTs())
-                                                        .withEndTs(stateExecutionInstance.getEndTs())
+            PipelineStageExecution stageExecution = PipelineStageExecution.builder()
+                                                        .stateUuid(pipelineStageElement.getUuid())
+                                                        .stateType(pipelineStageElement.getType())
+                                                        .stateName(pipelineStageElement.getName())
+                                                        .status(stateExecutionInstance.getStatus())
+                                                        .startTs(stateExecutionInstance.getStartTs())
+                                                        .endTs(stateExecutionInstance.getEndTs())
                                                         .build();
             StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
 
@@ -620,13 +626,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                   .withLimit("5")
                                   .build();
     List<WorkflowExecution> workflowExecutions = wingsPersistence.query(WorkflowExecution.class, pageRequest);
-
+    // Adding check for pse.getStateUuid() == null for backward compatibility. Can be removed later
     Map<String, LongSummaryStatistics> stateEstimatesSum =
         workflowExecutions.stream()
             .map(we -> we.getPipelineExecution())
             .flatMap(pe -> pe.getPipelineStageExecutions().stream())
-            .collect(Collectors.groupingBy(
-                PipelineStageExecution::getStateName, Collectors.summarizingLong(this ::getEstimate)));
+            .collect(Collectors.groupingBy(pse
+                -> (pse.getStateUuid() == null) ? pse.getStateName() : pse.getStateUuid(),
+                Collectors.summarizingLong(this ::getEstimate)));
 
     Map<String, Long> newEstimates = new HashMap<>();
 

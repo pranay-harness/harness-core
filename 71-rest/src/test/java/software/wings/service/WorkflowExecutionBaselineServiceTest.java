@@ -127,7 +127,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     WorkflowExecution workflowExecution =
         aWorkflowExecution().withWorkflowId(workflowId).withWorkflowType(WorkflowType.PIPELINE).build();
     workflowExecution.setAppId(appId);
-    PipelineStageExecution pipelineStageExecution = PipelineStageExecution.Builder.aPipelineStageExecution().build();
+    PipelineStageExecution pipelineStageExecution = PipelineStageExecution.builder().build();
     PipelineExecution pipelineExecution = PipelineExecution.Builder.aPipelineExecution()
                                               .withPipelineStageExecutions(Lists.newArrayList(pipelineStageExecution))
                                               .build();
@@ -193,7 +193,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
                                               .build();
     workflowExecution.setAppId(appId);
     PipelineStageExecution pipelineStageExecution =
-        PipelineStageExecution.Builder.aPipelineStageExecution().withWorkflowExecutions(workflowExecutions).build();
+        PipelineStageExecution.builder().workflowExecutions(workflowExecutions).build();
     PipelineExecution pipelineExecution = PipelineExecution.Builder.aPipelineExecution()
                                               .withPipelineStageExecutions(Lists.newArrayList(pipelineStageExecution))
                                               .build();
@@ -322,7 +322,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
                                                 .build();
       workflowExecution.setAppId(appId);
       PipelineStageExecution pipelineStageExecution =
-          PipelineStageExecution.Builder.aPipelineStageExecution().withWorkflowExecutions(workflowExecutions).build();
+          PipelineStageExecution.builder().workflowExecutions(workflowExecutions).build();
       PipelineExecution pipelineExecution = PipelineExecution.Builder.aPipelineExecution()
                                                 .withPipelineStageExecutions(Lists.newArrayList(pipelineStageExecution))
                                                 .build();
@@ -541,7 +541,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
                                                .build();
     piplelineExecution.setAppId(appId);
     PipelineStageExecution pipelineStageExecution =
-        PipelineStageExecution.Builder.aPipelineStageExecution().withWorkflowExecutions(workflowExecutions).build();
+        PipelineStageExecution.builder().workflowExecutions(workflowExecutions).build();
     PipelineExecution pipelineExecution = PipelineExecution.Builder.aPipelineExecution()
                                               .withPipelineStageExecutions(Lists.newArrayList(pipelineStageExecution))
                                               .build();
@@ -688,7 +688,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
                                               .build();
     workflowExecution.setAppId(appId);
     PipelineStageExecution pipelineStageExecution =
-        PipelineStageExecution.Builder.aPipelineStageExecution().withWorkflowExecutions(workflowExecutions).build();
+        PipelineStageExecution.builder().workflowExecutions(workflowExecutions).build();
     PipelineExecution pipelineExecution = PipelineExecution.Builder.aPipelineExecution()
                                               .withPipelineStageExecutions(Lists.newArrayList(pipelineStageExecution))
                                               .build();
