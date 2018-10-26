@@ -628,29 +628,90 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions) {
-    EncryptionType encryptionType = getEncryptionType(accountId);
-    return processEncryption(accountId, name, value, encryptionType, usageRestrictions);
+    return upsertSecretInternal(accountId, null, name, value, getEncryptionType(accountId),
+        SettingVariableTypes.SECRET_TEXT, usageRestrictions, false, true);
   }
 
-  private String processEncryption(
-      String accountId, String name, String value, EncryptionType encryptionType, UsageRestrictions usageRestrictions) {
-    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
-    EncryptedData encryptedData = encrypt(encryptionType, accountId, SettingVariableTypes.SECRET_TEXT,
-        value.toCharArray(), null, name, usageRestrictions);
-    encryptedData.addSearchTag(name);
+  @Override
+  public String saveSecretUsingLocalMode(
+      String accountId, String name, String value, UsageRestrictions usageRestrictions) {
+    return upsertSecretInternal(accountId, null, name, value, EncryptionType.LOCAL, SettingVariableTypes.SECRET_TEXT,
+        usageRestrictions, false, true);
+  }
+
+  @Override
+  public boolean updateSecret(
+      String accountId, String uuId, String name, String value, UsageRestrictions usageRestrictions) {
+    String encryptedDataId = upsertSecretInternal(accountId, uuId, name, value, getEncryptionType(accountId),
+        SettingVariableTypes.SECRET_TEXT, usageRestrictions, false, true);
+    return encryptedDataId != null;
+  }
+
+  /**
+   * This API is to combine multiple secret operations such as INSERT/UPDATE/UPSERT.
+   *
+   * If 'uuid' passed in is null, this is an INSERT operation. If 'upsert' flag is true, it's an UPSERT operation it
+   * will UPDATE if the record already exists, and INSERT if it doesn't exists.
+   *
+   * It will return the generated UUID in a INSERT operation, and return null in the UPDATE operation if the record
+   * doesn't exist.
+   */
+  private String upsertSecretInternal(String accountId, String uuid, String name, String value,
+      EncryptionType encryptionType, SettingVariableTypes settingVariableType, UsageRestrictions usageRestrictions,
+      boolean upsert, boolean audit) {
+    String description;
     String encryptedDataId;
-    try {
-      encryptedDataId = wingsPersistence.save(encryptedData);
-    } catch (DuplicateKeyException e) {
-      String reason = "Variable " + name + " already exists";
-      throw new KmsOperationException(reason);
+    EncryptedData savedData;
+    if (isEmpty(uuid)) {
+      // INSERT use case
+      description = "Created";
+
+      EncryptedData encryptedData =
+          encrypt(encryptionType, accountId, settingVariableType, value.toCharArray(), null, name, usageRestrictions);
+      encryptedData.addSearchTag(name);
+      try {
+        encryptedDataId = wingsPersistence.save(encryptedData);
+      } catch (DuplicateKeyException e) {
+        String reason = "Variable " + name + " already exists";
+        throw new KmsOperationException(reason);
+      }
+    } else {
+      savedData = wingsPersistence.get(EncryptedData.class, uuid);
+      if (!upsert && savedData == null) {
+        // UPDATE use case. Return directly when record doesn't exist.
+        return null;
+      }
+
+      // validate usage restriction.
+      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+          accountId, savedData.getUsageRestrictions(), usageRestrictions);
+
+      encryptedDataId = uuid;
+      description = value.equals(SECRET_MASK) ? "Changed name" : "Changed name & value";
+      if (usageRestrictions != null) {
+        description += " & usage restrictions";
+      }
+
+      savedData.removeSearchTag(null, savedData.getName(), null);
+      savedData.setName(name);
+      savedData.addSearchTag(name);
+      if (!value.equals(SECRET_MASK)) {
+        EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, settingVariableType,
+            value.toCharArray(), savedData, name, usageRestrictions);
+        savedData.setEncryptionKey(encryptedData.getEncryptionKey());
+        savedData.setEncryptedValue(encryptedData.getEncryptedValue());
+        savedData.setEncryptionType(encryptedData.getEncryptionType());
+        savedData.setKmsId(encryptedData.getKmsId());
+      }
+      savedData.setUsageRestrictions(usageRestrictions);
+      wingsPersistence.save(savedData);
     }
 
-    if (UserThreadLocal.get() != null) {
+    if (audit && UserThreadLocal.get() != null) {
       wingsPersistence.save(SecretChangeLog.builder()
                                 .accountId(accountId)
                                 .encryptedDataId(encryptedDataId)
-                                .description("Created")
+                                .description(description)
                                 .user(EmbeddedUser.builder()
                                           .uuid(UserThreadLocal.get().getUuid())
                                           .email(UserThreadLocal.get().getEmail())
@@ -660,56 +721,6 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     return encryptedDataId;
-  }
-
-  @Override
-  public String saveSecretUsingLocalMode(
-      String accountId, String name, String value, UsageRestrictions usageRestrictions) {
-    return processEncryption(accountId, name, value, EncryptionType.LOCAL, usageRestrictions);
-  }
-
-  @Override
-  public boolean updateSecret(
-      String accountId, String uuId, String name, String value, UsageRestrictions usageRestrictions) {
-    EncryptedData savedData = wingsPersistence.get(EncryptedData.class, uuId);
-    if (savedData == null) {
-      return false;
-    }
-
-    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-        accountId, savedData.getUsageRestrictions(), usageRestrictions);
-
-    String description = value.equals(SECRET_MASK) ? "Changed name" : "Changed name & value";
-    if (usageRestrictions != null) {
-      description += " & usage restrictions";
-    }
-    savedData.removeSearchTag(null, savedData.getName(), null);
-    savedData.setName(name);
-    savedData.addSearchTag(name);
-    if (!value.equals(SECRET_MASK)) {
-      EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.SECRET_TEXT,
-          value.toCharArray(), savedData, name, usageRestrictions);
-      savedData.setEncryptionKey(encryptedData.getEncryptionKey());
-      savedData.setEncryptedValue(encryptedData.getEncryptedValue());
-      savedData.setEncryptionType(encryptedData.getEncryptionType());
-      savedData.setKmsId(encryptedData.getKmsId());
-    }
-    savedData.setUsageRestrictions(usageRestrictions);
-    wingsPersistence.save(savedData);
-
-    if (UserThreadLocal.get() != null) {
-      wingsPersistence.save(SecretChangeLog.builder()
-                                .accountId(accountId)
-                                .encryptedDataId(uuId)
-                                .description(description)
-                                .user(EmbeddedUser.builder()
-                                          .uuid(UserThreadLocal.get().getUuid())
-                                          .email(UserThreadLocal.get().getEmail())
-                                          .name(UserThreadLocal.get().getName())
-                                          .build())
-                                .build());
-    }
-    return true;
   }
 
   @Override
@@ -774,71 +785,7 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public String saveFile(
       String accountId, String name, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
-    usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
-    EncryptionType encryptionType = getEncryptionType(accountId);
-    EncryptedData encryptedData;
-    switch (encryptionType) {
-      case LOCAL:
-        try {
-          byte[] inputBytes = ByteStreams.toByteArray(inputStream);
-          byte[] base64Encoded = encodeBase64ToByteArray(inputBytes);
-          byte[] encryptedFileContent = EncryptionUtils.encrypt(base64Encoded, accountId);
-          try (InputStream encryptedInputStream = new ByteArrayInputStream(encryptedFileContent)) {
-            BaseFile baseFile = new BaseFile();
-            baseFile.setFileName(name);
-            String fileId = fileService.saveFile(baseFile, encryptedInputStream, CONFIGS);
-            encryptedData = EncryptedData.builder()
-                                .accountId(accountId)
-                                .name(name)
-                                .encryptionKey(accountId)
-                                .encryptedValue(fileId.toCharArray())
-                                .encryptionType(LOCAL)
-                                .kmsId(null)
-                                .type(SettingVariableTypes.CONFIG_FILE)
-                                .fileSize(inputStream.getTotalBytesRead())
-                                .enabled(true)
-                                .base64Encoded(true)
-                                .build();
-          }
-        } catch (IOException e) {
-          throw new WingsException(DEFAULT_ERROR_CODE, e);
-        }
-        break;
-
-      case KMS:
-        encryptedData = kmsService.encryptFile(accountId, kmsService.getSecretConfig(accountId), name, inputStream);
-        break;
-
-      case VAULT:
-        encryptedData =
-            vaultService.encryptFile(accountId, vaultService.getSecretConfig(accountId), name, inputStream, null);
-        break;
-
-      default:
-        throw new IllegalArgumentException("Invalid type " + encryptionType);
-    }
-
-    encryptedData.setUsageRestrictions(usageRestrictions);
-    String recordId;
-    try {
-      recordId = wingsPersistence.save(encryptedData);
-    } catch (DuplicateKeyException e) {
-      throw new KmsOperationException("File " + name + " already exists");
-    }
-
-    if (UserThreadLocal.get() != null) {
-      wingsPersistence.save(SecretChangeLog.builder()
-                                .accountId(accountId)
-                                .encryptedDataId(recordId)
-                                .description("File uploaded")
-                                .user(EmbeddedUser.builder()
-                                          .uuid(UserThreadLocal.get().getUuid())
-                                          .email(UserThreadLocal.get().getEmail())
-                                          .name(UserThreadLocal.get().getName())
-                                          .build())
-                                .build());
-    }
-    return recordId;
+    return upsertFileInternal(accountId, name, null, usageRestrictions, inputStream, false, true);
   }
 
   @Override
@@ -867,9 +814,13 @@ public class SecretManagerImpl implements SecretManager {
   public byte[] getFileContents(String accountId, String uuid) {
     EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
     Preconditions.checkNotNull(encryptedData, "could not find file with id " + uuid);
+    return getFileContents(accountId, encryptedData);
+  }
+
+  private byte[] getFileContents(String accountId, EncryptedData encryptedData) {
     EncryptionType encryptionType = encryptedData.getEncryptionType();
+    File file = null;
     try (ByteArrayOutputStream output = new ByteArrayOutputStream()) {
-      File file;
       switch (encryptionType) {
         case LOCAL:
           file = new File(Files.createTempDir(), generateUuid());
@@ -897,21 +848,60 @@ public class SecretManagerImpl implements SecretManager {
       return output.toByteArray();
     } catch (IOException e) {
       throw new WingsException(INVALID_ARGUMENT, e).addParam("args", "Failed to get content");
+    } finally {
+      // Delete temporary file if it exists.
+      if (file != null && file.exists()) {
+        boolean deleted = file.delete();
+        if (!deleted) {
+          logger.warn("Temporary file {} can't be deleted.", file.getAbsolutePath());
+        }
+      }
     }
   }
 
   @Override
   public boolean updateFile(
       String accountId, String name, String uuid, UsageRestrictions usageRestrictions, BoundedInputStream inputStream) {
-    EncryptedData encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
-    Preconditions.checkNotNull(encryptedData, "could not find file with id " + uuid);
-    String oldName = encryptedData.getName();
+    String recordId = upsertFileInternal(accountId, name, uuid, usageRestrictions, inputStream, false, true);
+    return recordId != null;
+  }
 
-    usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
-        accountId, encryptedData.getUsageRestrictions(), usageRestrictions);
+  /**
+   * This internal method should be able to handle the UPSERT of encrypted record. It will UPDATE the existing record if
+   * the uuid exists, and INSERT if this record is new. The refactoring of this method helps taking care of the IMPORT
+   * use case in which we would like to preserve the 'uuid' field while importing the exported encrypted keys from other
+   * system.
+   */
+  private String upsertFileInternal(String accountId, String name, String uuid, UsageRestrictions usageRestrictions,
+      BoundedInputStream inputStream, boolean upsert, boolean audit) {
+    boolean update = false;
+    String oldName = null;
+    String savedFileId = null;
+    EncryptedData encryptedData = null;
+    final EncryptionType encryptionType;
 
-    String savedFileId = String.valueOf(encryptedData.getEncryptedValue());
-    EncryptionType encryptionType = encryptedData.getEncryptionType();
+    if (isNotEmpty(uuid)) {
+      encryptedData = wingsPersistence.get(EncryptedData.class, uuid);
+      if (encryptedData == null && !upsert) {
+        // Pure UPDATE case, need to throw exception is the record doesn't exist.
+        throw new WingsException(DEFAULT_ERROR_CODE, "could not find file with id " + uuid);
+      }
+    }
+
+    if (encryptedData == null) {
+      // INSERT in UPSERT case, get the system default encryption type.
+      encryptionType = getEncryptionType(accountId);
+      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
+    } else {
+      // UPDATE in UPSERT case
+      update = true;
+      usageRestrictionsService.validateUsageRestrictionsOnEntityUpdate(
+          accountId, encryptedData.getUsageRestrictions(), usageRestrictions);
+      oldName = encryptedData.getName();
+      savedFileId = String.valueOf(encryptedData.getEncryptedValue());
+      encryptionType = encryptedData.getEncryptionType();
+    }
+
     EncryptedData encryptedFileData;
     switch (encryptionType) {
       case LOCAL:
@@ -925,7 +915,9 @@ public class SecretManagerImpl implements SecretManager {
             String fileId = fileService.saveFile(baseFile, encryptedInputStream, CONFIGS);
             encryptedFileData =
                 EncryptedData.builder().encryptionKey(accountId).encryptedValue(fileId.toCharArray()).build();
-            fileService.deleteFile(savedFileId, CONFIGS);
+            if (update) {
+              fileService.deleteFile(savedFileId, CONFIGS);
+            }
           }
         } catch (IOException e) {
           throw new WingsException(DEFAULT_ERROR_CODE, e);
@@ -934,7 +926,9 @@ public class SecretManagerImpl implements SecretManager {
 
       case KMS:
         encryptedFileData = kmsService.encryptFile(accountId, kmsService.getSecretConfig(accountId), name, inputStream);
-        fileService.deleteFile(savedFileId, CONFIGS);
+        if (update) {
+          fileService.deleteFile(savedFileId, CONFIGS);
+        }
         break;
 
       case VAULT:
@@ -946,39 +940,61 @@ public class SecretManagerImpl implements SecretManager {
         throw new IllegalArgumentException("Invalid type " + encryptionType);
     }
 
-    encryptedData.setEncryptionKey(encryptedFileData.getEncryptionKey());
-    encryptedData.setEncryptedValue(encryptedFileData.getEncryptedValue());
+    if (update) {
+      encryptedData.setEncryptionKey(encryptedFileData.getEncryptionKey());
+      encryptedData.setEncryptedValue(encryptedFileData.getEncryptedValue());
+    } else {
+      encryptedData = encryptedFileData;
+      encryptedData.setUuid(uuid);
+      encryptedData.setType(SettingVariableTypes.CONFIG_FILE);
+      encryptedData.setAccountId(accountId);
+      encryptedData.setBase64Encoded(true);
+    }
     encryptedData.setName(name);
+    encryptedData.setEncryptionType(encryptionType);
     encryptedData.setFileSize(inputStream.getTotalBytesRead());
     encryptedData.setUsageRestrictions(usageRestrictions);
-    encryptedData.setBase64Encoded(true);
-    wingsPersistence.save(encryptedData);
 
-    // update parent's file size
-    Set<Parent> parents = new HashSet<>();
-    if (isNotEmpty(encryptedData.getParentIds())) {
-      for (String parentId : encryptedData.getParentIds()) {
-        parents.add(
-            Parent.builder()
-                .id(parentId)
-                .variableType(SettingVariableTypes.CONFIG_FILE)
-                .encryptionDetail(EncryptionDetail.builder().encryptionType(encryptedData.getEncryptionType()).build())
-                .build());
-      }
+    String recordId;
+    try {
+      recordId = wingsPersistence.save(encryptedData);
+    } catch (DuplicateKeyException e) {
+      throw new KmsOperationException("File " + name + " already exists");
     }
-    List<UuidAware> configFiles = fetchParents(accountId, parents);
-    configFiles.forEach(configFile -> {
-      ((ConfigFile) configFile).setSize(inputStream.getTotalBytesRead());
-      wingsPersistence.save((ConfigFile) configFile);
-    });
+
+    if (update) {
+      // update parent's file size
+      Set<Parent> parents = new HashSet<>();
+      if (isNotEmpty(encryptedData.getParentIds())) {
+        for (String parentId : encryptedData.getParentIds()) {
+          parents.add(Parent.builder()
+                          .id(parentId)
+                          .variableType(SettingVariableTypes.CONFIG_FILE)
+                          .encryptionDetail(
+                              EncryptionDetail.builder().encryptionType(encryptedData.getEncryptionType()).build())
+                          .build());
+        }
+      }
+      List<UuidAware> configFiles = fetchParents(accountId, parents);
+      configFiles.forEach(configFile -> {
+        ((ConfigFile) configFile).setSize(inputStream.getTotalBytesRead());
+        wingsPersistence.save((ConfigFile) configFile);
+      });
+    }
 
     // Logging the secret file changes.
-    if (UserThreadLocal.get() != null) {
-      String description = oldName.equals(name) ? "Changed File" : "Changed Name and File";
-      description = usageRestrictions == null ? description : description + " or Usage Restrictions";
+    if (audit && UserThreadLocal.get() != null) {
+      String description;
+      if (update) {
+        description = (isNotEmpty(oldName) && oldName.equals(name)) ? "Changed File" : "Changed Name and File";
+        description = usageRestrictions == null ? description : description + " or Usage Restrictions";
+      } else {
+        description = "File uploaded";
+      }
       wingsPersistence.save(SecretChangeLog.builder()
                                 .accountId(accountId)
                                 .encryptedDataId(uuid)
+                                .encryptedDataId(recordId)
                                 .description(description)
                                 .user(EmbeddedUser.builder()
                                           .uuid(UserThreadLocal.get().getUuid())
@@ -988,7 +1004,7 @@ public class SecretManagerImpl implements SecretManager {
                                 .build());
     }
 
-    return true;
+    return recordId;
   }
 
   @SuppressFBWarnings("SBSC_USE_STRINGBUFFER_CONCATENATION")

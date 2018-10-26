@@ -48,13 +48,27 @@ public class SimpleEncryptionTest {
   }
 
   @Test
+  public void testEncryptDecryptCharsWithCustomKey() {
+    String testInput = "test";
+    SimpleEncryption encryption = new SimpleEncryption("kmpySmUISimoRrJL6NL73w");
+    char[] encryptedChars = encryption.encryptChars(testInput.toCharArray());
+    String encryptedString = new String(encryptedChars);
+    logger.info("encryptedString: {}", encryptedString);
+    assertThat(testInput).isNotEqualTo(encryptedString);
+    char[] decryptedChars = encryption.decryptChars(encryptedString.toCharArray());
+    String decryptedString = new String(decryptedChars);
+    logger.info("decryptedString: {}", decryptedString);
+    assertThat(testInput).isEqualTo(decryptedString);
+  }
+
+  @Test
   public void shouldFailWithIncorrectKeyLength() {
     thrown.expect(WingsException.class);
     thrown.expectMessage(EncryptionUtils.DEFAULT_SALT_SIZE + " characters");
     char[] KEY = "abc".toCharArray();
     String testInput = "abc";
     SimpleEncryption encryption = new SimpleEncryption(KEY);
-    byte[] encryptedBytes = encryption.encrypt(testInput.getBytes(StandardCharsets.ISO_8859_1));
+    encryption.encrypt(testInput.getBytes(StandardCharsets.ISO_8859_1));
   }
 
   @Test
