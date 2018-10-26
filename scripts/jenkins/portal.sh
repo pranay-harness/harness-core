@@ -23,9 +23,9 @@ cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
 cd ../..
 
-mkdir -p dist/verification ;
+mkdir -p dist/verification-service ;
 
-cd dist/verification
+cd dist/verification-service
 
 cp ../../79-verification/target/verification-capsule.jar .
 cp ../../79-verification/keystore.jks .
