@@ -41,6 +41,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.expression.SecretFunctor;
 import software.wings.expression.SweepingOutputFunctor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -584,6 +585,16 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
             .workflowExecutionId(sweepingOutput.getWorkflowExecutionId())
             .phaseExecutionId(sweepingOutput.getPhaseExecutionId())
             .build());
+
+    Application app = getApp();
+    if (app != null) {
+      context.put("secrets",
+          SecretFunctor.builder()
+              .managerDecryptionService(managerDecryptionService)
+              .secretManager(secretManager)
+              .accountId(app.getAccountId())
+              .build());
+    }
 
     return context;
   }
