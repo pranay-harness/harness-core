@@ -12,11 +12,11 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
-import software.wings.beans.Service;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.AccountService;
+import software.wings.verification.CVConfiguration;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -62,13 +62,13 @@ public class AccountResource {
   }
 
   @GET
-  @Path("services")
+  @Path("cv-services")
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<PageResponse<Service>> getAllServices(
+  public RestResponse<PageResponse<CVConfiguration>> getAllCVServices(
       @QueryParam("accountId") String accountId, @BeanParam PageRequest<String> request) {
     return new RestResponse<>(
-        accountService.getAllServicesForAccount(accountId, UserThreadLocal.get().getPublicUser(), request));
+        accountService.getAllCVServicesForAccount(accountId, UserThreadLocal.get().getPublicUser(), request));
   }
 }

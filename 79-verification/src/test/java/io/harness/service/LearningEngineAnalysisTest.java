@@ -317,8 +317,8 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
       assertEquals(currentMinute - i * CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
       assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
           analysisTask.getAnalysis_start_min());
-      assertEquals(analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES + 1,
-          analysisTask.getPrediction_start_time());
+      assertEquals(
+          analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
     }
 
     continuousVerificationService.triggerDataAnalysis(accountId);
@@ -333,8 +333,8 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
       assertEquals(currentMinute - i * CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
       assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
           analysisTask.getAnalysis_start_min());
-      assertEquals(analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES + 1,
-          analysisTask.getPrediction_start_time());
+      assertEquals(
+          analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
     }
   }
 }
