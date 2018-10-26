@@ -44,6 +44,9 @@ public class OwnerRule extends RepeatRule {
     // If there is email, it should match
     final String prEmail = System.getenv("ghprbPullAuthorEmail");
     if (prEmail == null) {
+      if (owner.intermittent()) {
+        return RepeatRule.RepeatStatement.builder().build();
+      }
       return statement;
     }
 
