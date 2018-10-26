@@ -21,6 +21,11 @@ cp ../../dockerization/manager/Dockerfile-manager-jenkins-k8-gcr ./Dockerfile-gc
 cp -r ../../dockerization/manager/scripts/ .
 cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
 cd ../..
 
 mkdir -p dist/verification-service ;
@@ -37,6 +42,11 @@ cp ../../dockerization/verification/Dockerfile-verification-jenkins-k8-gcr ./Doc
 cp -R ../../dockerization/verification/scripts/ .
 cp -r ../../dockerization/common-resources/ .
 echo ${VERSION} > version.txt
+if [ ! -z ${PURPOSE} ]
+then
+    echo ${PURPOSE} > purpose.txt
+fi
+
 cd ../..
 
 
