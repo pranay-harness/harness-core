@@ -7,7 +7,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.PIPELINE_EXECUTION_IN_PROGRESS;
 import static io.harness.exception.WingsException.USER;
@@ -27,6 +26,8 @@ import static software.wings.sm.StateType.ENV_STATE;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -34,7 +35,6 @@ import com.google.inject.name.Named;
 import de.danielbechler.util.Collections;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -91,6 +91,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class PipelineServiceImpl implements PipelineService {
   private static final Logger logger = LoggerFactory.getLogger(PipelineServiceImpl.class);
+  private static final Set<Character> ALLOWED_CHARS_SET_PIPELINE_STAGE =
+      Sets.newHashSet(Lists.charactersOf("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_ ()"));
 
   @Inject private AppService appService;
   @Inject private ExecutorService executorService;
@@ -678,9 +680,9 @@ public class PipelineServiceImpl implements PipelineService {
         throw new WingsException(INVALID_ARGUMENT, USER).addParam("args", "Invalid pipeline stage");
       }
       for (PipelineStageElement stageElement : pipelineStage.getPipelineStageElements()) {
-        if (stageElement.getName() == null || !EntityNameValidator.isValid(stageElement.getName())) {
+        if (!isValidPipelineStageName(stageElement.getName())) {
           throw new WingsException(INVALID_ARGUMENT, USER)
-              .addParam("args", "Invalid pipeline stage name " + ALLOWED_CHARS_SERVICE_VARIABLE_MESSAGE);
+              .addParam("args", "Pipeline stage name can only have a-z, A-Z, 0-9, -, (, ) and _");
         }
         if (!ENV_STATE.name().equals(stageElement.getType())) {
           continue;
@@ -728,6 +730,13 @@ public class PipelineServiceImpl implements PipelineService {
           .addParam("args", "A pipeline may only have one environment expression across all workflows");
     }
     keywords.addAll(services.stream().map(service -> service.getName()).distinct().collect(toList()));
+  }
+
+  private boolean isValidPipelineStageName(String name) {
+    if (isEmpty(name)) {
+      return false;
+    }
+    return ALLOWED_CHARS_SET_PIPELINE_STAGE.containsAll(Sets.newHashSet(Lists.charactersOf(name)));
   }
 
   private boolean prunePipeline(String appId, String pipelineId) {
