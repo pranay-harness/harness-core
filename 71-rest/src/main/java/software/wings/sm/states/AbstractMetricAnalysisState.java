@@ -79,7 +79,9 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       getLogger().info("id: {} context: {}", context.getStateExecutionInstanceId(), analysisContext);
       saveMetaDataForDashboard(analysisContext.getAccountId(), context);
 
-      if (isDemoPath(analysisContext.getAccountId()) && getStateType().equals(StateType.NEW_RELIC.name())) {
+      if (isDemoPath(analysisContext.getAccountId())
+          && (getStateType().equals(StateType.NEW_RELIC.name())
+                 || getStateType().equals(StateType.APP_DYNAMICS.name()))) {
         if (settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("dev")
             || settingsService.get(getAnalysisServerConfigId()).getName().toLowerCase().endsWith("prod")) {
           boolean failedState =

@@ -246,6 +246,19 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
       }
     }
 
+    if (stateExecutionInstance.getStateType().equals(StateType.APP_DYNAMICS.name())) {
+      if (settingAttribute.getName().toLowerCase().endsWith("dev")
+          || settingAttribute.getName().toLowerCase().endsWith("prod")) {
+        if (stateExecutionInstance.getStatus() == ExecutionStatus.SUCCESS) {
+          return getMetricsAnalysis(
+              "CV-Demo-" + stateExecutionInstance.getStateType(), "CV-Demo-TS-Success-Appdynamics", "CV-Demo");
+        } else {
+          return getMetricsAnalysis(
+              "CV-Demo-" + stateExecutionInstance.getStateType(), "CV-Demo-TS-Failure-Appdynamics", "CV-Demo");
+        }
+      }
+    }
+
     return getMetricsAnalysis(appId, stateExecutionId, workflowExecutionId);
   }
 
