@@ -226,6 +226,18 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
   }
 
+  public List<String> listElasticBalancers(SettingAttribute computeProviderSetting, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsElbHelperServiceManager.listElasticLoadBalancers(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+  }
+
+  public List<String> listNetworkBalancers(SettingAttribute computeProviderSetting, String region) {
+    AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
+    return awsElbHelperServiceManager.listNetworkLoadBalancers(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+  }
+
   public List<String> listClassicLoadBalancers(SettingAttribute computeProviderSetting, String region) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsElbHelperServiceManager.listClassicLoadBalancers(

@@ -17,6 +17,8 @@ import software.wings.service.impl.aws.model.AwsElbListAppElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListAppElbsResponse;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListClassicElbsResponse;
+import software.wings.service.impl.aws.model.AwsElbListElbsRequest;
+import software.wings.service.impl.aws.model.AwsElbListNetworkElbsRequest;
 import software.wings.service.impl.aws.model.AwsElbListTargetGroupsRequest;
 import software.wings.service.impl.aws.model.AwsElbListTargetGroupsResponse;
 import software.wings.service.impl.aws.model.AwsElbRequest;
@@ -51,6 +53,30 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsElbListAppElbsRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .build());
+    return ((AwsElbListAppElbsResponse) response).getAppElbs();
+  }
+
+  @Override
+  public List<String> listElasticLoadBalancers(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsElbListElbsRequest.builder()
+            .awsConfig(awsConfig)
+            .encryptionDetails(encryptionDetails)
+            .region(region)
+            .build());
+    return ((AwsElbListAppElbsResponse) response).getAppElbs();
+  }
+
+  @Override
+  public List<String> listNetworkLoadBalancers(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+    AwsResponse response = executeTask(awsConfig.getAccountId(),
+        AwsElbListNetworkElbsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)

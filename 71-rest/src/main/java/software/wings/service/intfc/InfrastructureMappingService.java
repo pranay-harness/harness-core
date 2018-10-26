@@ -96,6 +96,8 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   List<String> listElasticLoadBalancer(
       @NotNull String accessKey, @NotNull char[] secretKey, @NotNull String region, @NotEmpty String accountId);
 
+  Map<String, String> listNetworkLoadBalancers(String appId, String infraMappingId);
+
   List<String> listCodeDeployApplicationNames(String computeProviderId, String region);
 
   List<String> listCodeDeployDeploymentGroups(String computeProviderId, String region, String applicationName);
@@ -103,6 +105,8 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
   List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region);
 
   Map<String, String> listLoadBalancers(String appId, String infraMappingId);
+
+  Map<String, String> listElasticLoadBalancers(String appId, String infraMappingId);
 
   Map<String, String> listTargetGroups(String appId, String infraMappingId, String loadbalancerName);
 

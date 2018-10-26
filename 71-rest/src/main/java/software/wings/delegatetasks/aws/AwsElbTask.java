@@ -50,6 +50,16 @@ public class AwsElbTask extends AbstractDelegateRunnableTask {
               request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
           return AwsElbListAppElbsResponse.builder().appElbs(applicationLbs).executionStatus(SUCCESS).build();
         }
+        case LIST_NETWORK_LBS: {
+          List<String> applicationLbs = elbHelperServiceDelegate.listNetworkLoadBalancers(
+              request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
+          return AwsElbListAppElbsResponse.builder().appElbs(applicationLbs).executionStatus(SUCCESS).build();
+        }
+        case LIST_ELB_LBS: {
+          List<String> applicationLbs = elbHelperServiceDelegate.listElasticLoadBalancers(
+              request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion());
+          return AwsElbListAppElbsResponse.builder().appElbs(applicationLbs).executionStatus(SUCCESS).build();
+        }
         case LIST_TARGET_GROUPS_FOR_ALBS: {
           Map<String, String> targetGroups =
               elbHelperServiceDelegate.listTargetGroupsForAlb(request.getAwsConfig(), request.getEncryptionDetails(),

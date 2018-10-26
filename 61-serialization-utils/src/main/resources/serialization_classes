@@ -579,3 +579,5 @@ software.wings.beans.GcpKubernetesCluster, 5537
 software.wings.beans.AzureKubernetesCluster, 5538
 software.wings.beans.appmanifest.ManifestFile, 5539
 software.wings.beans.appmanifest.StoreType, 5540
+software.wings.service.impl.aws.model.AwsElbListElbsRequest, 5541
+software.wings.service.impl.aws.model.AwsElbListNetworkElbsRequest, 5542

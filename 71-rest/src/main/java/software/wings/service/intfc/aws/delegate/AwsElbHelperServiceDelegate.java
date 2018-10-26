@@ -11,6 +11,10 @@ public interface AwsElbHelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
   List<String> listApplicationLoadBalancers(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+  List<String> listNetworkLoadBalancers(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+  List<String> listElasticLoadBalancers(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
   Map<String, String> listTargetGroupsForAlb(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName);
 }

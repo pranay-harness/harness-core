@@ -57,7 +57,8 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeLoadBalancersResult().withLoadBalancers(
                  new LoadBalancer().withLoadBalancerName("lb1").withType("application"),
-                 new LoadBalancer().withLoadBalancerName("lb2").withType("application")))
+                 new LoadBalancer().withLoadBalancerName("lb2").withType("application"),
+                 new LoadBalancer().withLoadBalancerName("lb3").withType("network")))
         .when(mockV2Client)
         .describeLoadBalancers(any());
     List<String> appLbNames =
@@ -66,6 +67,48 @@ public class AwsElbHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(appLbNames.size()).isEqualTo(2);
     assertThat(appLbNames.get(0)).isEqualTo("lb1");
     assertThat(appLbNames.get(1)).isEqualTo("lb2");
+  }
+
+  @Test
+  public void testListEleasticLoadBalancers() {
+    AmazonElasticLoadBalancingClient mockV2Client = mock(AmazonElasticLoadBalancingClient.class);
+    doReturn(mockV2Client)
+        .when(awsElbHelperServiceDelegate)
+        .getAmazonElasticLoadBalancingClientV2(any(), anyString(), any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(new DescribeLoadBalancersResult().withLoadBalancers(
+                 new LoadBalancer().withLoadBalancerName("lb1").withType("application"),
+                 new LoadBalancer().withLoadBalancerName("lb2").withType("application"),
+                 new LoadBalancer().withLoadBalancerName("lb3").withType("network")))
+        .when(mockV2Client)
+        .describeLoadBalancers(any());
+    List<String> appLbNames =
+        awsElbHelperServiceDelegate.listElasticLoadBalancers(AwsConfig.builder().build(), emptyList(), "us-east-1");
+    assertThat(appLbNames).isNotNull();
+    assertThat(appLbNames.size()).isEqualTo(3);
+    assertThat(appLbNames.get(0)).isEqualTo("lb1");
+    assertThat(appLbNames.get(1)).isEqualTo("lb2");
+    assertThat(appLbNames.get(2)).isEqualTo("lb3");
+  }
+
+  @Test
+  public void testListNetworkLoadBalancers() {
+    AmazonElasticLoadBalancingClient mockv2Client = mock(AmazonElasticLoadBalancingClient.class);
+    doReturn(mockv2Client)
+        .when(awsElbHelperServiceDelegate)
+        .getAmazonElasticLoadBalancingClientV2(any(), anyString(), any());
+    doReturn(new DescribeLoadBalancersResult().withLoadBalancers(
+                 new LoadBalancer().withLoadBalancerName("lb1").withType("application"),
+                 new LoadBalancer().withLoadBalancerName("lb2").withType("application"),
+                 new LoadBalancer().withLoadBalancerName("lb3").withType("network")))
+        .when(mockv2Client)
+        .describeLoadBalancers(any());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    List<String> appLbNames =
+        awsElbHelperServiceDelegate.listNetworkLoadBalancers(AwsConfig.builder().build(), emptyList(), "us-east-1");
+    assertThat(appLbNames).isNotNull();
+    assertThat(appLbNames.size()).isEqualTo(1);
+    assertThat(appLbNames.get(0)).isEqualTo("lb3");
   }
 
   @Test

@@ -317,6 +317,26 @@ public class InfrastructureMappingResource {
   }
 
   @GET
+  @Path("{infraMappingId}/aws-elastic-balancers")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getAwsLoadBalancers(
+      @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.listElasticLoadBalancers(appId, infraMappingId));
+  }
+
+  @GET
+  @Path("{infraMappingId}/aws-network-balancers")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
+  public RestResponse<Map<String, String>> getAwsNetworkLoadBalancers(
+      @QueryParam("appId") String appId, @PathParam("infraMappingId") String infraMappingId) {
+    return new RestResponse<>(infrastructureMappingService.listNetworkLoadBalancers(appId, infraMappingId));
+  }
+
+  @GET
   @Path("{infraMappingId}/load-balancers/{loadbalancerName}/target-groups")
   @Timed
   @ExceptionMetered

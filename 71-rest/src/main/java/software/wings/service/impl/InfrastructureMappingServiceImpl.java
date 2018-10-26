@@ -1370,6 +1370,50 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
+  public Map<String, String> listElasticLoadBalancers(String appId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    notNullCheck("Service Infrastructure", infrastructureMapping);
+
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (infrastructureMapping instanceof EcsInfrastructureMapping
+        || infrastructureMapping instanceof AwsInfrastructureMapping) {
+      String region = infrastructureMapping instanceof EcsInfrastructureMapping
+          ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
+          : ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
+
+      return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
+          .listElasticBalancers(computeProviderSetting, region)
+          .stream()
+          .collect(toMap(s -> s, s -> s));
+    }
+    return Collections.emptyMap();
+  }
+
+  @Override
+  public Map<String, String> listNetworkLoadBalancers(String appId, String infraMappingId) {
+    InfrastructureMapping infrastructureMapping = get(appId, infraMappingId);
+    notNullCheck("Service Infrastructure", infrastructureMapping);
+
+    SettingAttribute computeProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+    notNullCheck("Compute Provider", computeProviderSetting);
+
+    if (infrastructureMapping instanceof EcsInfrastructureMapping
+        || infrastructureMapping instanceof AwsInfrastructureMapping) {
+      String region = infrastructureMapping instanceof EcsInfrastructureMapping
+          ? ((EcsInfrastructureMapping) infrastructureMapping).getRegion()
+          : ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
+
+      return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
+          .listNetworkBalancers(computeProviderSetting, region)
+          .stream()
+          .collect(toMap(s -> s, s -> s));
+    }
+    return Collections.emptyMap();
+  }
+
+  @Override
   public List<String> listClassicLoadBalancers(String appId, String computeProviderId, String region) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);
