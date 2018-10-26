@@ -447,7 +447,9 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   dataCollectionInfo.getOptions(), metricInfoEntry.getKey(), metricInfoEntry.getValue(),
                   dataCollectionInfo.getStrategy()));
             }
-            Set<String> groupNameSet = new HashSet<>();
+            Set<String> groupNameSet = dataCollectionInfo.getHosts() != null
+                ? new HashSet<>(dataCollectionInfo.getHosts().values())
+                : new HashSet<>();
             Collection<NewRelicMetricDataRecord> newRelicMetricDataRecords =
                 new APMResponseParser().extract(apmResponseDataList);
 
