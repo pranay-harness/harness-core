@@ -19,6 +19,8 @@ public class ContainerRollbackRequestElement implements ContextElement {
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
   private String controllerNamePrefix;
+  private String previousEcsServiceSnapshotJson;
+  private String ecsServiceArn;
 
   @Override
   public ContextElementType getElementType() {

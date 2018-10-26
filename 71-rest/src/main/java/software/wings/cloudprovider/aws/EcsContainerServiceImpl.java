@@ -76,6 +76,7 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -962,6 +963,26 @@ public class EcsContainerServiceImpl implements EcsContainerService {
     AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
     awsHelperService.deleteService(region, awsConfig, encryptedDataDetails,
         new DeleteServiceRequest().withCluster(clusterName).withService(serviceName));
+  }
+
+  @Override
+  public List<ContainerInfo> waitForDaemonServiceToReachSteadyState(String region, SettingAttribute connectorConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback) {
+    AwsConfig awsConfig = awsHelperService.validateAndGetAwsConfig(connectorConfig, encryptedDataDetails);
+
+    Service service = awsHelperService
+                          .describeServices(region, awsConfig, encryptedDataDetails,
+                              new DescribeServicesRequest().withCluster(clusterName).withServices(serviceName))
+                          .getServices()
+                          .get(0);
+
+    waitForTasksToBeInRunningStateButDontThrowException(region, awsConfig, encryptedDataDetails, clusterName,
+        serviceName, executionLogCallback, service.getDesiredCount());
+    waitForServiceToReachSteadyState(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
+        serviceSteadyStateTimeout, executionLogCallback);
+    return getContainerInfosAfterEcsWait(region, awsConfig, encryptedDataDetails, clusterName, serviceName,
+        Collections.EMPTY_LIST, executionLogCallback, false);
   }
 
   @Override

@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.ClusterElement;
 import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContainerServiceData;
 import software.wings.api.ContainerServiceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.PhaseElement;
@@ -44,6 +45,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
+import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
@@ -69,6 +71,7 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -273,6 +276,15 @@ public abstract class ContainerServiceSetup extends State {
             .build();
 
     if (executionResult != null) {
+      ContainerSetupCommandUnitExecutionData setupExecutionData =
+          (ContainerSetupCommandUnitExecutionData) executionResult.getCommandExecutionData();
+      if (setupExecutionData != null) {
+        // This will be non-null, when its ECS Daemon workflow
+        executionData.setPreviousEcsServiceSnapshotJson(setupExecutionData.getPreviousEcsServiceSnapshotJson());
+        executionData.setEcsServiceArn(setupExecutionData.getEcsServiceArn());
+        executionData.setNewInstanceData(
+            Arrays.asList(ContainerServiceData.builder().name(setupExecutionData.getContainerServiceName()).build()));
+      }
       executionData.setDelegateMetaInfo(executionResult.getDelegateMetaInfo());
     }
 

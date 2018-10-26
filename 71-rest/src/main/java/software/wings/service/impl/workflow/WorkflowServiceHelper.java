@@ -2,6 +2,7 @@ package software.wings.service.impl.workflow;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newHashMap;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -44,6 +45,7 @@ import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
+import static software.wings.common.Constants.ECS_DAEMON_SCHEDULING_STRATEGY;
 import static software.wings.common.Constants.PRIMARY_SERVICE_NAME_EXPRESSION;
 import static software.wings.common.Constants.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
 import static software.wings.common.Constants.ROLLBACK_SERVICE;
@@ -65,9 +67,11 @@ import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
 import static software.wings.sm.StateType.AWS_NODE_SELECT;
 import static software.wings.sm.StateType.COMMAND;
 import static software.wings.sm.StateType.DC_NODE_SELECT;
+import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.ECS_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP_ROLLBACK;
 import static software.wings.sm.StateType.ELASTIC_LOAD_BALANCER;
 import static software.wings.sm.StateType.GCP_CLUSTER_SETUP;
 import static software.wings.sm.StateType.HELM_DEPLOY;
@@ -119,6 +123,7 @@ import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.common.Constants;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
@@ -137,6 +142,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Singleton
 public class WorkflowServiceHelper {
@@ -476,33 +483,72 @@ public class WorkflowServiceHelper {
     return Collections.emptyMap();
   }
 
-  public void generateNewWorkflowPhaseStepsForECS(
-      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+  public void generateNewWorkflowPhaseStepsForECS(String appId, WorkflowPhase workflowPhase,
+      boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
+    boolean isDaemonEcsWorkflow = isDaemonSchedulingStrategy(appId, workflowPhase, orchestrationWorkflowType);
     if (serviceSetupRequired) {
-      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+      if (isDaemonEcsWorkflow) {
+        workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                                       .addStep(aGraphNode()
+                                                    .withId(generateUuid())
+                                                    .withType(ECS_DAEMON_SERVICE_SETUP.name())
+                                                    .withName(Constants.ECS_DAEMON_SERVICE_SETUP)
+                                                    .build())
+                                       .build());
+      } else {
+        workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                                       .addStep(aGraphNode()
+                                                    .withId(generateUuid())
+                                                    .withType(ECS_SERVICE_SETUP.name())
+                                                    .withName(Constants.ECS_SERVICE_SETUP)
+                                                    .build())
+                                       .build());
+      }
+    }
+
+    if (!isDaemonEcsWorkflow) {
+      workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())
-                                                  .withType(ECS_SERVICE_SETUP.name())
-                                                  .withName(Constants.ECS_SERVICE_SETUP)
+                                                  .withType(ECS_SERVICE_DEPLOY.name())
+                                                  .withName(Constants.UPGRADE_CONTAINERS)
                                                   .build())
                                      .build());
     }
-    workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                                   .addStep(aGraphNode()
-                                                .withId(generateUuid())
-                                                .withType(ECS_SERVICE_DEPLOY.name())
-                                                .withName(Constants.UPGRADE_CONTAINERS)
-                                                .build())
-                                   .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                                    .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
                                    .build());
 
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+  }
+
+  private boolean isDaemonSchedulingStrategy(
+      String appId, WorkflowPhase workflowPhase, OrchestrationWorkflowType orchestrationWorkflowType) {
+    boolean isDaemonSchedulingStrategy = false;
+
+    // DaemonSchedulingStrategy is only allowed for Basic workflow
+    if (OrchestrationWorkflowType.BASIC.equals(orchestrationWorkflowType)) {
+      String serviceId = workflowPhase.getServiceId();
+      EcsServiceSpecification serviceSpecification =
+          serviceResourceService.getEcsServiceSpecification(appId, serviceId);
+
+      if (serviceSpecification != null) {
+        if (isEmpty(serviceSpecification.getServiceSpecJson())) {
+          isDaemonSchedulingStrategy =
+              ECS_DAEMON_SCHEDULING_STRATEGY.equals(serviceSpecification.getSchedulingStrategy());
+        } else {
+          Pattern pattern = Pattern.compile("\"schedulingStrategy\":\\s*\"DAEMON\"\\s*", Pattern.CASE_INSENSITIVE);
+          Matcher matcher = pattern.matcher(serviceSpecification.getServiceSpecJson());
+          isDaemonSchedulingStrategy = matcher.find();
+        }
+      }
+    }
+
+    return isDaemonSchedulingStrategy;
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForPCFBlueGreen(
@@ -1019,35 +1065,57 @@ public class WorkflowServiceHelper {
         .build();
   }
 
-  public WorkflowPhase generateRollbackWorkflowPhaseForEcs(WorkflowPhase workflowPhase) {
-    return aWorkflowPhase()
-        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
-        .withRollback(true)
-        .withServiceId(workflowPhase.getServiceId())
-        .withComputeProviderId(workflowPhase.getComputeProviderId())
-        .withInfraMappingName(workflowPhase.getInfraMappingName())
-        .withPhaseNameForRollback(workflowPhase.getName())
-        .withDeploymentType(workflowPhase.getDeploymentType())
-        .withInfraMappingId(workflowPhase.getInfraMappingId())
-        .addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
-                          .addStep(aGraphNode()
-                                       .withId(generateUuid())
-                                       .withType(ECS_SERVICE_ROLLBACK.name())
-                                       .withName(Constants.ROLLBACK_CONTAINERS)
-                                       .withRollback(true)
-                                       .build())
-                          .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
-                          .withStatusForRollback(ExecutionStatus.SUCCESS)
-                          .withRollback(true)
-                          .build())
-        // When we rolling back the verification steps the same criterie to run if deployment is needed should be used
+  public WorkflowPhase generateRollbackWorkflowPhaseForEcs(
+      String appId, WorkflowPhase workflowPhase, OrchestrationWorkflowType orchestrationWorkflowType) {
+    WorkflowPhaseBuilder phaseBuilder = aWorkflowPhase()
+                                            .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+                                            .withRollback(true)
+                                            .withServiceId(workflowPhase.getServiceId())
+                                            .withComputeProviderId(workflowPhase.getComputeProviderId())
+                                            .withInfraMappingName(workflowPhase.getInfraMappingName())
+                                            .withPhaseNameForRollback(workflowPhase.getName())
+                                            .withDeploymentType(workflowPhase.getDeploymentType())
+                                            .withInfraMappingId(workflowPhase.getInfraMappingId());
+
+    boolean isDaemonSchedulingStrategy = isDaemonSchedulingStrategy(appId, workflowPhase, orchestrationWorkflowType);
+
+    if (!isDaemonSchedulingStrategy) {
+      phaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
+                                    .addStep(aGraphNode()
+                                                 .withId(generateUuid())
+                                                 .withType(ECS_SERVICE_ROLLBACK.name())
+                                                 .withName(Constants.ROLLBACK_CONTAINERS)
+                                                 .withRollback(true)
+                                                 .build())
+                                    .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
+                                    .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                    .withRollback(true)
+                                    .build());
+    } else {
+      // For Daemon ECS workflow, need to add Setup rollback state
+      phaseBuilder.addPhaseStep(aPhaseStep(CONTAINER_SETUP, Constants.SETUP_CONTAINER)
+                                    .addStep(aGraphNode()
+                                                 .withId(generateUuid())
+                                                 .withType(ECS_SERVICE_SETUP_ROLLBACK.name())
+                                                 .withName(Constants.ROLLBACK_CONTAINERS)
+                                                 .withRollback(true)
+                                                 .build())
+                                    .withPhaseStepNameForRollback(Constants.SETUP_CONTAINER)
+                                    .withStatusForRollback(ExecutionStatus.SUCCESS)
+                                    .withRollback(true)
+                                    .build());
+    }
+
+    // Verification
+    phaseBuilder
         .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
                           .withPhaseStepNameForRollback(Constants.DEPLOY_CONTAINERS)
                           .withStatusForRollback(ExecutionStatus.SUCCESS)
                           .withRollback(true)
                           .build())
-        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
-        .build();
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build());
+
+    return phaseBuilder.build();
   }
 
   public WorkflowPhase generateRollbackWorkflowPhaseForAwsCodeDeploy(WorkflowPhase workflowPhase) {

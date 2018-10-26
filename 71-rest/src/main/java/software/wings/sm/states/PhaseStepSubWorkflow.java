@@ -245,9 +245,12 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
           return null;
         }
         CommandStepExecutionSummary commandStepExecutionSummary = (CommandStepExecutionSummary) first.get();
-        return singletonList(ContainerRollbackRequestElement.builder()
-                                 .controllerNamePrefix(commandStepExecutionSummary.getControllerNamePrefix())
-                                 .build());
+        return singletonList(
+            ContainerRollbackRequestElement.builder()
+                .controllerNamePrefix(commandStepExecutionSummary.getControllerNamePrefix())
+                .previousEcsServiceSnapshotJson(commandStepExecutionSummary.getPreviousEcsServiceSnapshotJson())
+                .ecsServiceArn(commandStepExecutionSummary.getEcsServiceArn())
+                .build());
       }
       case ROUTE_UPDATE: {
         return singletonList(RouteUpdateRollbackElement.builder().build());

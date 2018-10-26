@@ -3,6 +3,7 @@ package software.wings.beans.command;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.container.ContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
 
 @Data
@@ -22,6 +23,11 @@ public class EcsSetupParams extends ContainerSetupParams {
   private String launchType;
   private String targetContainerName;
   private String targetPort;
+  private boolean rollback;
+  private String previousEcsServiceSnapshotJson;
+  private String ecsServiceArn;
+  private EcsServiceSpecification ecsServiceSpecification;
+  private boolean isDaemonSchedulingStrategy;
 
   public static final class EcsSetupParamsBuilder {
     private String taskFamily;
@@ -46,6 +52,11 @@ public class EcsSetupParams extends ContainerSetupParams {
     private String launchType;
     private String targetContainerName;
     private String targetPort;
+    private boolean rollback;
+    private String previousEcsServiceSnapshotJson;
+    private String ecsServiceArn;
+    private EcsServiceSpecification ecsServiceSpecification;
+    private boolean isDaemonSchedulingStrategy;
 
     private EcsSetupParamsBuilder() {}
 
@@ -163,6 +174,31 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withRollback(boolean rollback) {
+      this.rollback = rollback;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withPreviousEcsServiceSnapshotJson(String previousEcsServiceSnapshotJson) {
+      this.previousEcsServiceSnapshotJson = previousEcsServiceSnapshotJson;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withEcsServiceSpecification(EcsServiceSpecification ecsServiceSpecification) {
+      this.ecsServiceSpecification = ecsServiceSpecification;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withEcsServiceArn(String ecsServiceArn) {
+      this.ecsServiceArn = ecsServiceArn;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withIsDaemonSchedulingStrategy(boolean isDaemonSchedulingStrategy) {
+      this.isDaemonSchedulingStrategy = isDaemonSchedulingStrategy;
+      return this;
+    }
+
     public EcsSetupParams build() {
       EcsSetupParams ecsSetupParams = new EcsSetupParams();
       ecsSetupParams.setTaskFamily(taskFamily);
@@ -187,6 +223,11 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setLaunchType(launchType);
       ecsSetupParams.setTargetContainerName(targetContainerName);
       ecsSetupParams.setTargetPort(targetPort);
+      ecsSetupParams.setRollback(rollback);
+      ecsSetupParams.setPreviousEcsServiceSnapshotJson(previousEcsServiceSnapshotJson);
+      ecsSetupParams.setEcsServiceSpecification(ecsServiceSpecification);
+      ecsSetupParams.setEcsServiceArn(ecsServiceArn);
+      ecsSetupParams.setDaemonSchedulingStrategy(isDaemonSchedulingStrategy);
       return ecsSetupParams;
     }
   }

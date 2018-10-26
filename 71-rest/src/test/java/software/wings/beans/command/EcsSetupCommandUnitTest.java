@@ -27,6 +27,7 @@ import static software.wings.utils.WingsTestConstants.TASK_FAMILY;
 import static software.wings.utils.WingsTestConstants.TASK_REVISION;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ecs.model.AssignPublicIp;
@@ -41,12 +42,13 @@ import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
-import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.SettingAttribute;
@@ -77,8 +79,9 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
   public static final String DOCKER_IMG_NAME = "dockerImgName";
   public static final String DOCKER_DOMAIN_NAME = "dockerDomainName";
   @Mock private AwsClusterService awsClusterService;
-
-  @InjectMocks private EcsSetupCommandUnit ecsSetupCommandUnit = new EcsSetupCommandUnit();
+  @InjectMocks @Inject private EcsSetupCommandUnit ecsSetupCommandUnit;
+  @Inject private EcsCommandUnitHelper ecsCommandUnitHelper;
+  private static Logger logger = LoggerFactory.getLogger(EcsSetupCommandUnitTest.class);
 
   private final String fargateConfigYaml = "{\n"
       + "  \"networkMode\": \"awsvpc\", \n"
@@ -221,10 +224,10 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
   @Test
   public void testIsFargateTaskLauchType() throws Exception {
     setupParams.setLaunchType(LaunchType.FARGATE.name());
-    assertTrue((boolean) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "isFargateTaskLauchType", setupParams));
+    assertTrue(ecsCommandUnitHelper.isFargateTaskLauchType(setupParams));
 
     setupParams.setLaunchType(LaunchType.EC2.name());
-    assertFalse((boolean) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "isFargateTaskLauchType", setupParams));
+    assertFalse(ecsCommandUnitHelper.isFargateTaskLauchType(setupParams));
   }
 
   @Test
@@ -239,62 +242,49 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
                                         .withLaunchType(LaunchType.FARGATE.name())
                                         .build();
 
-    assertEquals(StringUtils.EMPTY,
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+    assertEquals(StringUtils.EMPTY, ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     ecsSetupParams.setSubnetIds(new String[] {"subnet_1", "subnet_2"});
-    assertEquals(StringUtils.EMPTY,
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+    assertEquals(StringUtils.EMPTY, ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     ecsSetupParams.setVpcId(null);
     assertEquals("VPC Id is required for fargate task",
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+        ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     ecsSetupParams.setVpcId("");
     assertEquals("VPC Id is required for fargate task",
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+        ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     ecsSetupParams.setVpcId("vpc_id");
     ecsSetupParams.setSubnetIds(null);
     assertEquals("At least 1 subnetId is required for mentioned VPC",
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+        ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     ecsSetupParams.setSubnetIds(new String[] {null});
     assertEquals("At least 1 subnetId is required for mentioned VPC",
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+        ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     ecsSetupParams.setSubnetIds(new String[] {"subnet_id"});
     ecsSetupParams.setSecurityGroupIds(new String[0]);
     assertEquals("At least 1 security Group is required for mentioned VPC",
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+        ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     ecsSetupParams.setSecurityGroupIds(null);
     assertEquals("At least 1 security Group is required for mentioned VPC",
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+        ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     ecsSetupParams.setSecurityGroupIds(new String[] {null});
     assertEquals("At least 1 security Group is required for mentioned VPC",
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+        ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     ecsSetupParams.setSecurityGroupIds(new String[] {"sg_id"});
     taskDefinition.setExecutionRoleArn(null);
     assertEquals("Execution Role ARN is required for Fargate tasks",
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+        ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
 
     taskDefinition.setExecutionRoleArn("");
     assertEquals("Execution Role ARN is required for Fargate tasks",
-        (String) MethodUtils.invokeMethod(
-            ecsSetupCommandUnit, true, "isValidateSetupParamasForECS", new Object[] {taskDefinition, ecsSetupParams}));
+        ecsCommandUnitHelper.isValidateSetupParamasForECS(taskDefinition, ecsSetupParams));
   }
 
   @Test
@@ -353,9 +343,8 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
         .thenReturn(targetGroup);
 
     CreateServiceRequest createServiceRequest =
-        (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "getCreateServiceRequest",
-            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME,
-                executionLogCallback});
+        ecsCommandUnitHelper.getCreateServiceRequest(computeProvider, encryptedDataDetails, setupParams, taskDefinition,
+            CONTAINER_SERVICE_NAME, awsClusterService, executionLogCallback, logger);
 
     assertNotNull(createServiceRequest);
 
@@ -408,9 +397,8 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
         .thenReturn(targetGroup);
 
     CreateServiceRequest createServiceRequest =
-        (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "getCreateServiceRequest",
-            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME,
-                executionLogCallback});
+        ecsCommandUnitHelper.getCreateServiceRequest(computeProvider, encryptedDataDetails, setupParams, taskDefinition,
+            CONTAINER_SERVICE_NAME, awsClusterService, executionLogCallback, logger);
 
     assertCreateServiceRequestObject(taskDefinition, createServiceRequest);
   }
@@ -440,7 +428,6 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
     assertEquals(80, loadBalancer.getContainerPort().intValue());
   }
 
-  @NotNull
   private TargetGroup getTargetGroup() {
     TargetGroup targetGroup = new TargetGroup();
     targetGroup.setPort(80);
@@ -479,9 +466,8 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
         .thenReturn(targetGroup);
 
     CreateServiceRequest createServiceRequest =
-        (CreateServiceRequest) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "getCreateServiceRequest",
-            new Object[] {computeProvider, encryptedDataDetails, setupParams, taskDefinition, CONTAINER_SERVICE_NAME,
-                executionLogCallback});
+        ecsCommandUnitHelper.getCreateServiceRequest(computeProvider, encryptedDataDetails, setupParams, taskDefinition,
+            CONTAINER_SERVICE_NAME, awsClusterService, executionLogCallback, logger);
 
     assertNotNull(createServiceRequest.getNetworkConfiguration());
     assertNotNull(createServiceRequest.getNetworkConfiguration().getAwsvpcConfiguration());
@@ -512,10 +498,9 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     SettingAttribute settingAttribute = new SettingAttribute();
 
-    TaskDefinition taskDefinition =
-        (TaskDefinition) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "createTaskDefinition",
-            new Object[] {ecsContainerTask, CONTAINER_NAME, DOCKER_IMG_NAME, setupParams, settingAttribute,
-                new HashMap<>(), new HashMap<>(), encryptedDataDetails, executionLogCallback, DOCKER_DOMAIN_NAME});
+    TaskDefinition taskDefinition = ecsCommandUnitHelper.createTaskDefinition(ecsContainerTask, CONTAINER_NAME,
+        DOCKER_IMG_NAME, setupParams, settingAttribute, new HashMap<>(), new HashMap<>(), encryptedDataDetails,
+        executionLogCallback, DOCKER_DOMAIN_NAME, awsClusterService);
 
     // Capture RegisterTaskDefinitionRequest arg that was passed to "awsClusterService.createTask" and assert it
     ArgumentCaptor<RegisterTaskDefinitionRequest> captor = ArgumentCaptor.forClass(RegisterTaskDefinitionRequest.class);
@@ -553,10 +538,9 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
     SettingAttribute settingAttribute = new SettingAttribute();
 
-    TaskDefinition taskDefinition =
-        (TaskDefinition) MethodUtils.invokeMethod(ecsSetupCommandUnit, true, "createTaskDefinition",
-            new Object[] {ecsContainerTask, CONTAINER_NAME, DOCKER_IMG_NAME, setupParams, settingAttribute,
-                new HashMap<>(), new HashMap<>(), encryptedDataDetails, executionLogCallback, DOCKER_DOMAIN_NAME});
+    TaskDefinition taskDefinition = ecsCommandUnitHelper.createTaskDefinition(ecsContainerTask, CONTAINER_NAME,
+        DOCKER_IMG_NAME, setupParams, settingAttribute, new HashMap<>(), new HashMap<>(), encryptedDataDetails,
+        executionLogCallback, DOCKER_DOMAIN_NAME, awsClusterService);
 
     // Capture RegisterTaskDefinitionRequest arg that was passed to "awsClusterService.createTask" and assert it
     ArgumentCaptor<RegisterTaskDefinitionRequest> captorArg =
