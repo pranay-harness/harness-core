@@ -33,4 +33,5 @@ public class CVConfiguration extends Base {
 
   @Transient @SchemaIgnore private String connectorName;
   @Transient @SchemaIgnore private String serviceName;
+  @Transient @SchemaIgnore private String appName;
 }

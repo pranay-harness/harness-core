@@ -6,6 +6,7 @@ import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
@@ -198,6 +199,11 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     SettingAttribute settingAttribute = wingsPersistence.get(SettingAttribute.class, cvConfiguration.getConnectorId());
     if (settingAttribute != null) {
       cvConfiguration.setConnectorName(settingAttribute.getName());
+    }
+
+    Application app = wingsPersistence.get(Application.class, cvConfiguration.getAppId());
+    if (app != null) {
+      cvConfiguration.setAppName(app.getName());
     }
   }
 
