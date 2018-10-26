@@ -9,6 +9,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.sm.ExecutionStatus;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Objects;
@@ -23,6 +24,8 @@ import java.util.Objects;
 public class NotifyResponse<T extends ResponseData> extends Base {
   public static final String STATUS_KEY = "status";
 
+  public static final Duration TTL = WaitQueue.TTL.plusDays(7);
+
   private T response;
 
   private boolean error;
@@ -34,7 +37,7 @@ public class NotifyResponse<T extends ResponseData> extends Base {
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   /**
    * Instantiates a new notify response.

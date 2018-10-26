@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.sm.ExecutionStatus;
 
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.List;
@@ -22,6 +23,8 @@ import java.util.Objects;
  */
 @Entity(value = "waitInstances", noClassnameStored = true)
 public class WaitInstance extends Base {
+  public static final Duration TTL = WaitQueue.TTL.plusDays(7);
+
   private List<String> correlationIds;
 
   private NotifyCallback callback;
@@ -33,7 +36,7 @@ public class WaitInstance extends Base {
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
-  private Date validUntil = Date.from(OffsetDateTime.now().plusWeeks(1).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   /**
    * Instantiates a new wait instance.
