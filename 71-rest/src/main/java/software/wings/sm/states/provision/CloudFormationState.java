@@ -120,13 +120,15 @@ public abstract class CloudFormationState extends State {
         executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                              : ExecutionStatus.FAILED;
     activityService.updateStatus(activityId, context.getAppId(), executionStatus);
-    List<CloudFormationElement> elements = handleResponse(executionResponse.getCommandResponse(), context);
     ExecutionResponse.Builder builder = anExecutionResponse().withExecutionStatus(executionStatus);
-    if (isNotEmpty(elements)) {
-      elements.forEach(element -> {
-        builder.addContextElement(element);
-        builder.addNotifyElement(element);
-      });
+    if (ExecutionStatus.SUCCESS.equals(executionStatus)) {
+      List<CloudFormationElement> elements = handleResponse(executionResponse.getCommandResponse(), context);
+      if (isNotEmpty(elements)) {
+        elements.forEach(element -> {
+          builder.addContextElement(element);
+          builder.addNotifyElement(element);
+        });
+      }
     }
     return builder.build();
   }
