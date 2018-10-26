@@ -150,11 +150,13 @@ public class ShellExecutor {
         try (BufferedReader br =
                  new BufferedReader(new InputStreamReader(new FileInputStream(envVariablesOutputFile), "UTF-8"))) {
           String sCurrentLine;
-          saveExecutionLog("Script output: ", INFO);
+          saveExecutionLog("Script Output: ", INFO);
           while ((sCurrentLine = br.readLine()) != null) {
             String[] parts = sCurrentLine.split("=");
-            envVariablesMap.put(parts[0], parts[1].trim());
-            saveExecutionLog(parts[0] + "=" + parts[1].trim(), INFO);
+            if (parts.length == 2) {
+              envVariablesMap.put(parts[0], parts[1].trim());
+              saveExecutionLog(parts[0] + "=" + parts[1].trim(), INFO);
+            }
           }
 
         } catch (IOException e) {

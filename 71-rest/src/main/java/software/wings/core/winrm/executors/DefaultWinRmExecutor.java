@@ -134,6 +134,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
     WinRmSession session = null;
     ExecutionLogWriter outputWriter = null;
     ExecutionLogWriter errorWriter = null;
+    Map<String, String> envVariablesMap = new HashMap<>();
     try {
       session = new WinRmSession(config);
       saveExecutionLog(format("Connected to %s", config.getHostname()), INFO);
@@ -164,7 +165,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       command = addEnvVariablesCollector(command, envVariablesToCollect, envVariablesOutputFile);
       int exitCode = session.executeCommandString(psWrappedCommand(command), outputWriter, errorWriter);
       commandExecutionStatus = (exitCode == 0 && !errorWriter.didWriteGetCalled()) ? SUCCESS : FAILURE;
-      Map<String, String> envVariablesMap = new HashMap<>();
+
       if (commandExecutionStatus == SUCCESS && envVariablesOutputFile != null) {
         command = "$base64string = [Convert]::ToBase64String([IO.File]::ReadAllBytes('" + envVariablesOutputFile
             + "'))\n"
@@ -178,11 +179,13 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         String fileContents =
             new String(decodedBytes, Charset.forName("UTF-8")).replace("\uFEFF", "").replace("\uEFBBBF", "");
         String[] lines = fileContents.split("\n");
-        saveExecutionLog("Script output: ", INFO);
+        saveExecutionLog("Script Output: ", INFO);
         for (String line : lines) {
           String[] parts = line.split("=");
-          envVariablesMap.put(parts[0], parts[1].trim().replace("\r", ""));
-          saveExecutionLog(parts[0] + "=" + parts[1].trim(), INFO);
+          if (parts.length == 2) {
+            envVariablesMap.put(parts[0].trim(), parts[1].trim().replace("\r", ""));
+            saveExecutionLog(parts[0].trim() + "=" + parts[1].trim(), INFO);
+          }
         }
       }
       executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
@@ -192,6 +195,7 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
       return commandExecutionResult.build();
     } catch (Exception e) {
       commandExecutionStatus = FAILURE;
+      executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
       logger.error("Error while executing command", e);
       ResponseMessage details = GetErrorDetailsFromWinRmClientException(e);
       saveExecutionLog(

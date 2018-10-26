@@ -47,7 +47,7 @@ public class ScriptStateExecutionData extends StateExecutionData implements Resp
     if (isNotEmpty(sweepingOutputEnvVariables)) {
       putNotNull(executionDetails, "sweepingOutputEnvVariables",
           ExecutionDataValue.builder()
-              .displayName("Script output")
+              .displayName("Script Output")
               .value(removeNullValues(sweepingOutputEnvVariables))
               .build());
     }
