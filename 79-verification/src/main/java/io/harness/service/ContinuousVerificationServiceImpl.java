@@ -145,7 +145,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .state_execution_id(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid() + "-" + endMin)
             .analysis_start_min((int) startMin - PREDECTIVE_HISTORY_MINUTES)
             .analysis_minute((int) endMin)
-            .prediction_start_time((int) startMin)
+            .prediction_start_time((int) startMin - 1)
             .smooth_window(0)
             .tolerance(0)
             .min_rpm(0)

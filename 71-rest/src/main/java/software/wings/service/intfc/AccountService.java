@@ -12,8 +12,8 @@ import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
-import software.wings.beans.Service;
 import software.wings.beans.User;
+import software.wings.verification.CVConfiguration;
 
 import java.util.Collection;
 import java.util.List;
@@ -92,5 +92,5 @@ public interface AccountService {
 
   boolean isFeatureFlagEnabled(FeatureName featureName, String accountId);
 
-  PageResponse<Service> getAllServicesForAccount(String accountId, User user, PageRequest<String> request);
+  PageResponse<CVConfiguration> getAllCVServicesForAccount(String accountId, User user, PageRequest<String> request);
 }

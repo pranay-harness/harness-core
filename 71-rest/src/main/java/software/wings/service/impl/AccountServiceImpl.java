@@ -35,7 +35,6 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.beans.SearchFilter.Operator;
@@ -61,7 +60,6 @@ import software.wings.beans.LicenseInfo;
 import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
-import software.wings.beans.Service;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
 import software.wings.common.Constants;
@@ -89,7 +87,9 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.utils.Validator;
+import software.wings.verification.CVConfiguration;
 
 import java.lang.reflect.Field;
 import java.nio.charset.Charset;
@@ -98,10 +98,12 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
@@ -133,6 +135,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private GenericDbCache dbCache;
   @Inject private FeatureFlagService featureFlagService;
   @Inject protected AuthService authService;
+  @Inject private CVConfigurationService cvConfigurationService;
 
   @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
 
@@ -728,54 +731,49 @@ public class AccountServiceImpl implements AccountService {
     return featureFlagService.isEnabled(featureName, accountId);
   }
 
-  public PageResponse<Service> getAllServicesForAccount(String accountId, User user, PageRequest<String> request) {
+  public PageResponse<CVConfiguration> getAllCVServicesForAccount(
+      String accountId, User user, PageRequest<String> request) {
     if (user == null) {
       logger.info("User is null when requesting for Services info. Returning null");
     }
 
     int offset = Integer.parseInt(request.getOffset());
-    List<String> serviceIds = new ArrayList<>();
     Map<String, AppPermissionSummary> userAppPermissions =
         authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
 
-    for (Map.Entry<String, AppPermissionSummary> entry : userAppPermissions.entrySet()) {
-      if (entry.getValue().getServicePermissions().size() > 0) {
-        serviceIds.addAll(entry.getValue().getServicePermissions().get(Action.READ));
+    Set<String> appIds = userAppPermissions.keySet();
+    List<CVConfiguration> cvConfigList = new ArrayList<>();
+    for (String appId : appIds) {
+      cvConfigList.addAll(cvConfigurationService.listConfigurations(accountId, appId));
+    }
+
+    // filter the services for which the user has permissions.
+    List<CVConfiguration> finalReturnList = new ArrayList<>();
+    Set<String> serviceIds = new HashSet<>();
+    for (CVConfiguration cvConfiguration : cvConfigList) {
+      serviceIds.addAll(userAppPermissions.get(cvConfiguration.getAppId()).getServicePermissions().get(Action.READ));
+      if (serviceIds.contains(cvConfiguration.getServiceId())) {
+        finalReturnList.add(cvConfiguration);
       }
     }
 
-    List<String> servicesToReturn = new ArrayList<>();
-
-    if (offset <= serviceIds.size() && serviceIds.size() >= offset + SIZE_PER_SERVICES_REQUEST) {
-      servicesToReturn = serviceIds.subList(offset, offset + SIZE_PER_SERVICES_REQUEST);
-    } else if (offset <= serviceIds.size()) {
-      servicesToReturn = serviceIds.subList(offset, serviceIds.size());
+    if (offset <= finalReturnList.size() && finalReturnList.size() >= offset + SIZE_PER_SERVICES_REQUEST) {
+      finalReturnList = finalReturnList.subList(offset, offset + SIZE_PER_SERVICES_REQUEST);
+    } else if (offset <= finalReturnList.size()) {
+      finalReturnList = finalReturnList.subList(offset, finalReturnList.size());
+    } else {
+      finalReturnList = new ArrayList<>();
     }
 
-    if (servicesToReturn.size() > 0) {
-      PageRequest<Service> serviceListRequest = PageRequestBuilder.aPageRequest()
-                                                    .addFilter("_id", Operator.IN, servicesToReturn.toArray())
-                                                    .addFieldsIncluded("_id", "name")
-                                                    .withOffset("0")
-                                                    .withLimit(String.valueOf(servicesToReturn.size()))
-                                                    .build();
-
-      PageResponse<Service> list = wingsPersistence.query(Service.class, serviceListRequest);
-      logger.info(
-          "Returning {} services for the getAllServicesForAccount call for accountId {} and user {} and offset {}",
-          servicesToReturn.size(), accountId, user, offset);
+    if (finalReturnList.size() > 0) {
       return PageResponseBuilder.aPageResponse()
-          .withResponse(list.getResponse())
-          .withOffset(String.valueOf(offset + servicesToReturn.size()))
+          .withResponse(finalReturnList)
+          .withOffset(String.valueOf(offset + finalReturnList.size()))
           .build();
     }
-
-    logger.info(
-        "Returning {} services for the getAllServicesForAccount call for accountId {} and user {} and offset {}",
-        servicesToReturn.size(), accountId, user, offset);
     return PageResponseBuilder.aPageResponse()
-        .withResponse(new ArrayList())
-        .withOffset(String.valueOf(offset + servicesToReturn.size()))
+        .withResponse(new ArrayList<>())
+        .withOffset(String.valueOf(offset + finalReturnList.size()))
         .build();
   }
 }

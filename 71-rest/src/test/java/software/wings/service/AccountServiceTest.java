@@ -52,6 +52,8 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateGalleryService;
+import software.wings.verification.CVConfiguration;
+import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Calendar;
@@ -444,25 +446,21 @@ public class AccountServiceTest extends WingsBaseTest {
     String accountId = UUID.randomUUID().toString();
     String appId = UUID.randomUUID().toString();
     String workflowId = UUID.randomUUID().toString();
+    String cvConfigId = UUID.randomUUID().toString();
     User user = new User();
 
     // setup
-    wingsPersistence.saveAndGet(Service.class, Service.builder().name("serviceTest").uuid(serviceId).build());
-    when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
-      { put(appId, buildAppPermissionSummary(serviceId, workflowId, envId)); }
-    });
-
-    when(authService.getUserPermissionInfo(accountId, user)).thenReturn(mockUserPermissionInfo);
+    setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
     PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("0").build();
 
     // test behavior
-    PageResponse<Service> services = accountService.getAllServicesForAccount(accountId, user, request);
+    PageResponse<CVConfiguration> cvConfigs = accountService.getAllCVServicesForAccount(accountId, user, request);
 
     // verify results
-    assertTrue("Service list should not be empty", services.getResponse().size() > 0);
-    assertEquals("Service id should be same", serviceId, services.getResponse().get(0).getUuid());
-    assertEquals("Service name should be same", "serviceTest", services.getResponse().get(0).getName());
-    assertEquals("Offset correct in the page response", services.getOffset(), "1");
+    assertTrue("Service list should not be empty", cvConfigs.getResponse().size() > 0);
+    assertEquals("Service id should be same", cvConfigId, cvConfigs.getResponse().get(0).getUuid());
+    assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
+    assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getServiceName());
   }
 
   @Test
@@ -472,22 +470,36 @@ public class AccountServiceTest extends WingsBaseTest {
     String accountId = UUID.randomUUID().toString();
     String appId = UUID.randomUUID().toString();
     String workflowId = UUID.randomUUID().toString();
+    String cvConfigId = UUID.randomUUID().toString();
     User user = new User();
 
     // setup
+    setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
+    PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("1").build();
+
+    // test behavior
+    PageResponse<CVConfiguration> services = accountService.getAllCVServicesForAccount(accountId, user, request);
+
+    // verify results
+    assertTrue("Service list should be empty", services.getResponse().size() == 0);
+  }
+
+  private void setupCvServicesTests(
+      String accountId, String serviceId, String envId, String appId, String cvConfigId, String workflowId, User user) {
+    CVConfiguration config = NewRelicCVServiceConfiguration.builder().build();
+    config.setAccountId(accountId);
+    config.setServiceId(serviceId);
+    config.setEnvId(envId);
+    config.setAppId(appId);
+    config.setUuid(cvConfigId);
+
     wingsPersistence.saveAndGet(Service.class, Service.builder().name("serviceTest").uuid(serviceId).build());
+    wingsPersistence.save(config);
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
       { put(appId, buildAppPermissionSummary(serviceId, workflowId, envId)); }
     });
 
     when(authService.getUserPermissionInfo(accountId, user)).thenReturn(mockUserPermissionInfo);
-    PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("1").build();
-
-    // test behavior
-    PageResponse<Service> services = accountService.getAllServicesForAccount(accountId, user, request);
-
-    // verify results
-    assertTrue("Service list should be empty", services.getResponse().size() == 0);
   }
 
   private AppPermissionSummary buildAppPermissionSummary(String serviceId, String workflowId, String envId) {
