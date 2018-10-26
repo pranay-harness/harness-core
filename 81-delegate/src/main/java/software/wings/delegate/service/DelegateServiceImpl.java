@@ -840,6 +840,8 @@ public class DelegateServiceImpl implements DelegateService {
         }
       } catch (UncheckedTimeoutException tex) {
         logger.warn("Timed out fetching delegate task events");
+      } catch (InterruptedException ie) {
+        logger.warn("Delegate service is being shut down, this task is being interrupted.");
       } catch (Exception e) {
         logger.error("Exception while decoding task", e);
       }
