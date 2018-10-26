@@ -20,19 +20,24 @@ import com.amazonaws.services.elasticloadbalancingv2.model.DescribeLoadBalancers
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsRequest;
 import com.amazonaws.services.elasticloadbalancingv2.model.DescribeTargetGroupsResult;
 import com.amazonaws.services.elasticloadbalancingv2.model.LoadBalancer;
-import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Singleton
 public class AwsElbHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsElbHelperServiceDelegate {
+  public static final String ALB = "application";
+  public static final String NLB = "network";
+
   @VisibleForTesting
   com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient getClassicElbClient(
       Regions region, String accessKey, char[] secretKey) {
@@ -85,6 +90,23 @@ public class AwsElbHelperServiceDelegateImpl
   @Override
   public List<String> listApplicationLoadBalancers(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+    return generateLoadBalancersList(awsConfig, encryptionDetails, region, new HashSet<>(Arrays.asList(ALB)));
+  }
+
+  @Override
+  public List<String> listNetworkLoadBalancers(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+    return generateLoadBalancersList(awsConfig, encryptionDetails, region, new HashSet<>(Arrays.asList(NLB)));
+  }
+
+  @Override
+  public List<String> listElasticLoadBalancers(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+    return generateLoadBalancersList(awsConfig, encryptionDetails, region, new HashSet<>(Arrays.asList(ALB, NLB)));
+  }
+
+  private List<String> generateLoadBalancersList(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, Set<String> neededTypes) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       List<String> result = new ArrayList<>();
@@ -98,7 +120,7 @@ public class AwsElbHelperServiceDelegateImpl
             amazonElasticLoadBalancingClient.describeLoadBalancers(describeLoadBalancersRequest);
         result.addAll(describeLoadBalancersResult.getLoadBalancers()
                           .stream()
-                          .filter(loadBalancer -> StringUtils.equalsIgnoreCase(loadBalancer.getType(), "application"))
+                          .filter(loadBalancer -> isNeededLoadBalancer(loadBalancer, neededTypes))
                           .map(LoadBalancer::getLoadBalancerName)
                           .collect(toList()));
         nextMarker = describeLoadBalancersResult.getNextMarker();
@@ -108,6 +130,11 @@ public class AwsElbHelperServiceDelegateImpl
       handleAmazonServiceException(amazonServiceException);
     }
     return emptyList();
+  }
+
+  private boolean isNeededLoadBalancer(LoadBalancer loadBalancer, Set<String> typesNeeded) {
+    String type = loadBalancer.getType();
+    return typesNeeded.contains(type.toLowerCase());
   }
 
   @Override
