@@ -222,28 +222,9 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         }
       }
     } catch (RuntimeException | JSchException | IOException ex) {
+      handleException(ex);
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       logger.error("Command execution failed with error", ex);
-      RuntimeException rethrow = null;
-      if (ex instanceof JSchException) {
-        saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
-      } else if (ex instanceof IOException) {
-        logger.error("Exception in reading InputStream", ex);
-      } else if (ex instanceof RuntimeException) {
-        rethrow = (RuntimeException) ex;
-      }
-      int i = 0;
-      Throwable t = ex;
-      while (t != null && i++ < Misc.MAX_CAUSES) {
-        String msg = getMessage(t);
-        if (isNotBlank(msg)) {
-          saveExecutionLogError(msg);
-        }
-        t = t instanceof JSchException ? null : t.getCause();
-      }
-      if (rethrow != null) {
-        throw rethrow;
-      }
       return commandExecutionStatus;
     } finally {
       if (channel != null && !channel.isClosed()) {
@@ -260,6 +241,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
     CommandExecutionStatus commandExecutionStatus = FAILURE;
     Channel channel = null;
     long start = System.currentTimeMillis();
+    Map<String, String> envVariablesMap = new HashMap<>();
     try {
       saveExecutionLog(format("Initializing SSH connection to %s ....", config.getHost()));
       channel = getCachedSession(this.config).openChannel("exec");
@@ -311,32 +293,38 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           if (channel.isClosed()) {
             commandExecutionStatus = channel.getExitStatus() == 0 ? SUCCESS : FAILURE;
             saveExecutionLog("Command finished with status " + commandExecutionStatus, commandExecutionStatus);
-            Map<String, String> envVariablesMap = new HashMap<>();
+
             if (commandExecutionStatus == SUCCESS && envVariablesFilename != null) {
-              channel = getCachedSession(this.config).openChannel("sftp");
-              channel.connect();
-              ((ChannelSftp) channel).cd(directoryPath);
-              BoundedInputStream stream =
-                  new BoundedInputStream(((ChannelSftp) channel).get(envVariablesFilename), CHUNK_SIZE);
               BufferedReader br = null;
-              saveExecutionLog("Script output: ");
               try {
+                channel = getCachedSession(this.config).openChannel("sftp");
+                channel.connect();
+                ((ChannelSftp) channel).cd(directoryPath);
+                BoundedInputStream stream =
+                    new BoundedInputStream(((ChannelSftp) channel).get(envVariablesFilename), CHUNK_SIZE);
+                saveExecutionLog("Script Output: ");
+
                 br = new BufferedReader(new InputStreamReader(stream, Charset.forName("UTF-8")));
                 String line;
                 while ((line = br.readLine()) != null) {
                   String[] parts = line.split("=");
-                  envVariablesMap.put(parts[0], parts[1].trim());
-                  saveExecutionLog(parts[0] + "=" + parts[1].trim());
+                  if (parts.length == 2) {
+                    envVariablesMap.put(parts[0].trim(), parts[1].trim());
+                    saveExecutionLog(parts[0].trim() + "=" + parts[1].trim());
+                  }
                 }
-              } catch (IOException e) {
-                saveExecutionLogError(
-                    "Exception occurred during reading file from SFTP server due to " + e.getMessage());
+              } catch (JSchException | SftpException | IOException e) {
+                logger.error("Exception occurred during reading file from SFTP server due to " + e.getMessage());
               } finally {
                 if (br != null) {
                   br.close();
                 }
                 if (envVariablesFilename != null) {
-                  ((ChannelSftp) channel).rm(envVariablesFilename);
+                  try {
+                    ((ChannelSftp) channel).rm(envVariablesFilename);
+                  } catch (SftpException e) {
+                    logger.error("Failed to delete file " + envVariablesFilename);
+                  }
                 }
               }
             }
@@ -348,29 +336,11 @@ public abstract class AbstractSshExecutor implements SshExecutor {
           sleep(Duration.ofSeconds(1));
         }
       }
-    } catch (RuntimeException | JSchException | IOException | SftpException ex) {
+    } catch (RuntimeException | JSchException | IOException ex) {
+      handleException(ex);
       logger.error("ex-Session fetched in " + (System.currentTimeMillis() - start) / 1000);
       logger.error("Command execution failed with error", ex);
-      RuntimeException rethrow = null;
-      if (ex instanceof JSchException) {
-        saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
-      } else if (ex instanceof IOException) {
-        logger.error("Exception in reading InputStream", ex);
-      } else if (ex instanceof RuntimeException) {
-        rethrow = (RuntimeException) ex;
-      }
-      int i = 0;
-      Throwable t = ex;
-      while (t != null && i++ < Misc.MAX_CAUSES) {
-        String msg = getMessage(t);
-        if (isNotBlank(msg)) {
-          saveExecutionLogError(msg);
-        }
-        t = t instanceof JSchException ? null : t.getCause();
-      }
-      if (rethrow != null) {
-        throw rethrow;
-      }
+      executionDataBuilder.sweepingOutputEnvVariables(envVariablesMap);
       commandExecutionResult.withStatus(commandExecutionStatus);
       commandExecutionResult.withCommandExecutionData(executionDataBuilder.build());
       return commandExecutionResult.build();
@@ -379,6 +349,29 @@ public abstract class AbstractSshExecutor implements SshExecutor {
         logger.info("Disconnect channel if still open post execution command");
         channel.disconnect();
       }
+    }
+  }
+
+  private void handleException(Exception ex) {
+    RuntimeException rethrow = null;
+    if (ex instanceof JSchException) {
+      saveExecutionLogError("Command execution failed with error " + normalizeError((JSchException) ex));
+    } else if (ex instanceof IOException) {
+      logger.error("Exception in reading InputStream", ex);
+    } else if (ex instanceof RuntimeException) {
+      rethrow = (RuntimeException) ex;
+    }
+    int i = 0;
+    Throwable t = ex;
+    while (t != null && i++ < Misc.MAX_CAUSES) {
+      String msg = getMessage(t);
+      if (isNotBlank(msg)) {
+        saveExecutionLogError(msg);
+      }
+      t = t instanceof JSchException ? null : t.getCause();
+    }
+    if (rethrow != null) {
+      throw rethrow;
     }
   }
 
