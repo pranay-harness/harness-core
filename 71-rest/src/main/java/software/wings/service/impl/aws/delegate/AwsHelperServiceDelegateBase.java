@@ -1,5 +1,7 @@
 package software.wings.service.impl.aws.delegate;
 
+import static java.lang.String.format;
+
 import com.google.inject.Inject;
 
 import com.amazonaws.AmazonServiceException;
@@ -36,8 +38,16 @@ class AwsHelperServiceDelegateBase {
       throw new WingsException(ErrorCode.AWS_SERVICE_NOT_FOUND)
           .addParam("message", amazonServiceException.getMessage());
     } else if (amazonServiceException instanceof AmazonAutoScalingException) {
-      logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
-      throw amazonServiceException;
+      if (amazonServiceException.getMessage().contains(
+              "Trying to remove Target Groups that are not part of the group")) {
+        logger.info(format("Target Group already not attached: [%s]", amazonServiceException.getMessage()));
+      } else if (amazonServiceException.getMessage().contains(
+                     "Trying to remove Load Balancers that are not part of the group")) {
+        logger.info(format("Classic load balancer already not attached: [%s]", amazonServiceException.getMessage()));
+      } else {
+        logger.warn(amazonServiceException.getErrorMessage(), amazonServiceException);
+        throw amazonServiceException;
+      }
     } else if (amazonServiceException instanceof AmazonECSException
         || amazonServiceException instanceof AmazonECRException) {
       if (amazonServiceException instanceof ClientException) {

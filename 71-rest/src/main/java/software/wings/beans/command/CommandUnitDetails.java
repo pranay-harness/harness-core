@@ -1,5 +1,6 @@
 package software.wings.beans.command;
 
+import static software.wings.sm.states.AwsAmiSwitchRoutesState.SWAP_AUTO_SCALING_ROUTES;
 import static software.wings.sm.states.EcsSteadyStateCheck.ECS_STEADY_STATE_CHECK_COMMAND_NAME;
 import static software.wings.sm.states.HelmDeployState.HELM_COMMAND_NAME;
 import static software.wings.sm.states.JenkinsState.COMMAND_UNIT_NAME;
@@ -39,7 +40,8 @@ public class CommandUnitDetails {
     PCF_MAP_ROUTE(PCF_MAP_ROUTE_COMMAND),
     PCF_BG_SWAP_ROUTE(PCF_BG_SWAP_ROUTE_COMMAND),
     KUBERNETES_SWAP_SERVICE_SELECTORS(KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME),
-    KUBERNETES("KUBERNETES");
+    KUBERNETES("KUBERNETES"),
+    AWS_AMI_SWITCH_ROUTES(SWAP_AUTO_SCALING_ROUTES);
 
     private String name;
 

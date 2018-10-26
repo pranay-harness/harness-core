@@ -20,6 +20,8 @@ import static org.mockito.Mockito.verify;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.HARNESS_AUTOSCALING_GROUP_TAG;
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.NAME_TAG;
 
+import com.google.common.collect.ImmutableMap;
+
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.BlockDeviceMapping;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
@@ -38,7 +40,11 @@ import software.wings.service.impl.aws.model.AwsAmiPreDeploymentData;
 import software.wings.service.impl.aws.model.AwsAmiResizeData;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
+import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
+import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
+import software.wings.service.intfc.security.EncryptionService;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
@@ -48,8 +54,97 @@ import java.util.concurrent.ExecutorService;
 public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private ExecutorService mockExecutorService;
   @Mock private AwsAsgHelperServiceDelegate mockAwsAsgHelperServiceDelegate;
+  @Mock private AwsElbHelperServiceDelegate mockAwsElbHelperServiceDelegate;
+  @Mock private EncryptionService mockEncryptionService;
 
   @InjectMocks private AwsAmiHelperServiceDelegateImpl awsAmiHelperServiceDelegate;
+
+  @Test
+  public void testSwitchAmiRoutes() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    AwsAmiSwitchRoutesRequest request = AwsAmiSwitchRoutesRequest.builder()
+                                            .awsConfig(AwsConfig.builder().build())
+                                            .encryptionDetails(emptyList())
+                                            .region("us-east-1")
+                                            .primaryClassicLBs(singletonList("primaryClassicLB"))
+                                            .primaryTargetGroupARNs(singletonList("primaryTargetGpArn"))
+                                            .stageClassicLBs(singletonList("stageClassicLB"))
+                                            .stageTargetGroupARNs(singletonList("stageTargetGroupArn"))
+                                            .registrationTimeout(10)
+                                            .oldAsgName("Old_Asg")
+                                            .newAsgName("New_Asg")
+                                            .downscaleOldAsg(true)
+                                            .build();
+    AwsAmiSwitchRoutesResponse response = awsAmiHelperServiceDelegate.switchAmiRoutes(request, mockCallback);
+    verify(mockAwsAsgHelperServiceDelegate)
+        .registerAsgWithTargetGroups(any(), anyList(), anyString(), anyString(), anyList(), any());
+    verify(mockAwsElbHelperServiceDelegate)
+        .waitForAsgInstancesToRegisterWithTargetGroup(
+            any(), anyList(), anyString(), anyString(), anyString(), anyInt(), any());
+    verify(mockAwsAsgHelperServiceDelegate)
+        .registerAsgWithClassicLBs(any(), anyList(), anyString(), anyString(), anyList(), any());
+    verify(mockAwsElbHelperServiceDelegate)
+        .waitForAsgInstancesToRegisterWithClassicLB(
+            any(), anyList(), anyString(), anyString(), anyString(), anyInt(), any());
+    verify(mockAwsAsgHelperServiceDelegate, times(2))
+        .deRegisterAsgWithTargetGroups(any(), anyList(), anyString(), anyString(), anyList(), any());
+    verify(mockAwsAsgHelperServiceDelegate, times(2))
+        .deRegisterAsgWithClassicLBs(any(), anyList(), anyString(), anyString(), anyList(), any());
+    verify(mockAwsAsgHelperServiceDelegate)
+        .setAutoScalingGroupLimits(any(), anyList(), anyString(), anyString(), anyInt(), any());
+    verify(mockAwsAsgHelperServiceDelegate)
+        .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
+  }
+
+  @Test
+  public void testRollbackSwitchAmiRoutes() {
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    AwsAmiPreDeploymentData preDeploymentData = AwsAmiPreDeploymentData.builder()
+                                                    .asgNameToMinCapacity(ImmutableMap.of("Old_Asg", 0))
+                                                    .asgNameToDesiredCapacity(ImmutableMap.of("Old_Asg", 1))
+                                                    .build();
+    AwsAmiSwitchRoutesRequest request = AwsAmiSwitchRoutesRequest.builder()
+                                            .awsConfig(AwsConfig.builder().build())
+                                            .encryptionDetails(emptyList())
+                                            .region("us-east-1")
+                                            .primaryClassicLBs(singletonList("primaryClassicLB"))
+                                            .primaryTargetGroupARNs(singletonList("primaryTargetGpArn"))
+                                            .stageClassicLBs(singletonList("stageClassicLB"))
+                                            .stageTargetGroupARNs(singletonList("stageTargetGroupArn"))
+                                            .registrationTimeout(10)
+                                            .oldAsgName("Old_Asg")
+                                            .newAsgName("New_Asg")
+                                            .downscaleOldAsg(true)
+                                            .preDeploymentData(preDeploymentData)
+                                            .build();
+    AwsAmiSwitchRoutesResponse response = awsAmiHelperServiceDelegate.rollbackSwitchAmiRoutes(request, mockCallback);
+    verify(mockAwsAsgHelperServiceDelegate, times(2))
+        .setAutoScalingGroupLimits(any(), anyList(), anyString(), anyString(), anyInt(), any());
+    verify(mockAwsAsgHelperServiceDelegate, times(2))
+        .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+            any(), anyList(), anyString(), anyString(), anyInt(), any(), anyInt());
+    verify(mockAwsAsgHelperServiceDelegate)
+        .setMinInstancesForAsg(any(), anyList(), anyString(), anyString(), anyInt(), any());
+    verify(mockAwsAsgHelperServiceDelegate)
+        .registerAsgWithTargetGroups(any(), anyList(), anyString(), anyString(), anyList(), any());
+    verify(mockAwsElbHelperServiceDelegate)
+        .waitForAsgInstancesToRegisterWithTargetGroup(
+            any(), anyList(), anyString(), anyString(), anyString(), anyInt(), any());
+    verify(mockAwsAsgHelperServiceDelegate)
+        .registerAsgWithClassicLBs(any(), anyList(), anyString(), anyString(), anyList(), any());
+    verify(mockAwsElbHelperServiceDelegate)
+        .waitForAsgInstancesToRegisterWithClassicLB(
+            any(), anyList(), anyString(), anyString(), anyString(), anyInt(), any());
+    verify(mockAwsAsgHelperServiceDelegate)
+        .deRegisterAsgWithTargetGroups(any(), anyList(), anyString(), anyString(), anyList(), any());
+    verify(mockAwsAsgHelperServiceDelegate)
+        .deRegisterAsgWithClassicLBs(any(), anyList(), anyString(), anyString(), anyList(), any());
+  }
 
   @Test
   public void testResizeAsgs() {
@@ -63,7 +158,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
       invokeMethod(awsAmiHelperServiceDelegate, true, "resizeAsgs",
           new Object[] {"us-east-1", AwsConfig.builder().build(), emptyList(), "newName", 2,
               singletonList(AwsAmiResizeData.builder().asgName("oldName").desiredCount(0).build()), mockCallback, true,
-              10, 2, 0, AwsAmiPreDeploymentData.builder().build()});
+              10, 2, 0, AwsAmiPreDeploymentData.builder().build(), emptyList(), emptyList(), false});
     } catch (Exception ex) {
       fail(format("Exception: [%s]", ex.getMessage()));
     }

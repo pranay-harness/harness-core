@@ -9,6 +9,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.AwsCodeDeployRequestElement.AwsCodeDeployRequestElementBuilder.anAwsCodeDeployRequestElement;
@@ -288,6 +289,11 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         }
         PcfRouteSwapExecutionSummary pcfRouteSwapExecutionSummary = (PcfRouteSwapExecutionSummary) first.get();
         return asList(pcfRouteSwapExecutionSummary.getPcfRouteSwapContextForRollback());
+      }
+      case AMI_SWITCH_AUTOSCALING_GROUP_ROUTES: {
+        // All the data required is already there on the service setup element.
+        // We don't need to pass something unnecessarily.
+        return emptyList();
       }
       default:
         unhandled(phaseStepType);

@@ -34,6 +34,7 @@ public class AmiServiceSetupElement implements ContextElement {
   private int minInstances;
   private List<String> oldAsgNames;
   private AwsAmiPreDeploymentData preDeploymentData;
+  private boolean blueGreen;
   private ResizeStrategy resizeStrategy;
 
   @Override

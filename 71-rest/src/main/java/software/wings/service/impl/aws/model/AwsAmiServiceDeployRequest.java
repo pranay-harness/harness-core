@@ -27,13 +27,17 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
   private int minInstances;
   private int maxInstances;
   private AwsAmiPreDeploymentData preDeploymentData;
+  private List<String> infraMappingClassisLbs;
+  private List<String> infraMappingTargetGroupArns;
+  private boolean rollback;
 
   @Builder
   public AwsAmiServiceDeployRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String accountId, String appId, String activityId, String commandName, boolean resizeNewFirst,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, String oldAutoScalingGroupName,
       Integer oldAsgFinalDesiredCount, Integer autoScalingSteadyStateTimeout, boolean lastDeployStep, int minInstances,
-      List<AwsAmiResizeData> asgDesiredCounts, int maxInstances, AwsAmiPreDeploymentData preDeploymentData) {
+      List<AwsAmiResizeData> asgDesiredCounts, int maxInstances, AwsAmiPreDeploymentData preDeploymentData,
+      List<String> infraMappingClassisLbs, List<String> infraMappingTargetGroupArns, boolean rollback) {
     super(awsConfig, encryptionDetails, EXECUTE_AMI_SERVICE_DEPLOY, region);
     this.accountId = accountId;
     this.appId = appId;
@@ -49,5 +53,8 @@ public class AwsAmiServiceDeployRequest extends AwsAmiRequest {
     this.asgDesiredCounts = asgDesiredCounts;
     this.maxInstances = maxInstances;
     this.preDeploymentData = preDeploymentData;
+    this.infraMappingClassisLbs = infraMappingClassisLbs;
+    this.infraMappingTargetGroupArns = infraMappingTargetGroupArns;
+    this.rollback = rollback;
   }
 }

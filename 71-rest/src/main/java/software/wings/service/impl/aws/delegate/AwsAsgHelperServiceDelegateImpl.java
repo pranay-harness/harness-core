@@ -28,6 +28,8 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
 import com.amazonaws.services.autoscaling.model.Activity;
+import com.amazonaws.services.autoscaling.model.AttachLoadBalancerTargetGroupsRequest;
+import com.amazonaws.services.autoscaling.model.AttachLoadBalancersRequest;
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupResult;
@@ -40,6 +42,8 @@ import com.amazonaws.services.autoscaling.model.DescribeAutoScalingGroupsResult;
 import com.amazonaws.services.autoscaling.model.DescribeLaunchConfigurationsRequest;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesRequest;
 import com.amazonaws.services.autoscaling.model.DescribeScalingActivitiesResult;
+import com.amazonaws.services.autoscaling.model.DetachLoadBalancerTargetGroupsRequest;
+import com.amazonaws.services.autoscaling.model.DetachLoadBalancersRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
 import com.amazonaws.services.autoscaling.model.SetDesiredCapacityRequest;
 import com.amazonaws.services.autoscaling.model.UpdateAutoScalingGroupRequest;
@@ -499,5 +503,79 @@ public class AwsAsgHelperServiceDelegateImpl
           + Joiner.on(",").withKeyValueSeparator("=").join(instanceStateCountMap));
     }
     return allRunning;
+  }
+
+  @Override
+  public void registerAsgWithTargetGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, List<String> targetGroupARNs, ExecutionLogCallback logCallback) {
+    try {
+      if (isEmpty(targetGroupARNs)) {
+        logCallback.saveExecutionLog(format("No Target Groups to attach to: [%s]", asgName));
+        return;
+      }
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AttachLoadBalancerTargetGroupsRequest request =
+          new AttachLoadBalancerTargetGroupsRequest().withAutoScalingGroupName(asgName).withTargetGroupARNs(
+              targetGroupARNs);
+      amazonAutoScalingClient.attachLoadBalancerTargetGroups(request);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+  }
+
+  @Override
+  public void registerAsgWithClassicLBs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, List<String> classicLBs, ExecutionLogCallback logCallback) {
+    try {
+      if (isEmpty(classicLBs)) {
+        logCallback.saveExecutionLog(format("No classic load balancers to attach to: [%s]", asgName));
+        return;
+      }
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AttachLoadBalancersRequest request =
+          new AttachLoadBalancersRequest().withAutoScalingGroupName(asgName).withLoadBalancerNames(classicLBs);
+      amazonAutoScalingClient.attachLoadBalancers(request);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+  }
+
+  @Override
+  public void deRegisterAsgWithTargetGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, List<String> targetGroupARNs, ExecutionLogCallback logCallback) {
+    try {
+      if (isEmpty(targetGroupARNs)) {
+        logCallback.saveExecutionLog(format("No Target Groups to attach to: [%s]", asgName));
+        return;
+      }
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      DetachLoadBalancerTargetGroupsRequest request =
+          new DetachLoadBalancerTargetGroupsRequest().withAutoScalingGroupName(asgName).withTargetGroupARNs(
+              targetGroupARNs);
+      amazonAutoScalingClient.detachLoadBalancerTargetGroups(request);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
+  }
+
+  @Override
+  public void deRegisterAsgWithClassicLBs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String asgName, List<String> classicLBs, ExecutionLogCallback logCallback) {
+    try {
+      if (isEmpty(classicLBs)) {
+        logCallback.saveExecutionLog(format("No classic load balancers to detach to: [%s]", asgName));
+        return;
+      }
+      AmazonAutoScalingClient amazonAutoScalingClient =
+          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      DetachLoadBalancersRequest request =
+          new DetachLoadBalancersRequest().withAutoScalingGroupName(asgName).withLoadBalancerNames(classicLBs);
+      amazonAutoScalingClient.detachLoadBalancers(request);
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    }
   }
 }

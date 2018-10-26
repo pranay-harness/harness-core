@@ -33,6 +33,10 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
   private List<String> targetGroupArns;
   private String hostNameConvention;
 
+  // Variables for B/G type Ami deployment
+  private List<String> stageClassicLoadBalancers;
+  private List<String> stageTargetGroupArns;
+
   public AwsAmiInfrastructureMapping() {
     super(InfrastructureMappingType.AWS_AMI.name());
   }
@@ -54,7 +58,6 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
         this.getRegion()));
   }
-
   public String getRegion() {
     return region;
   }
@@ -95,6 +98,22 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
     this.hostNameConvention = hostNameConvention;
   }
 
+  public List<String> getStageClassicLoadBalancers() {
+    return stageClassicLoadBalancers;
+  }
+
+  public void setStageClassicLoadBalancers(List<String> stageClassicLoadBalancers) {
+    this.stageClassicLoadBalancers = stageClassicLoadBalancers;
+  }
+
+  public List<String> getStageTargetGroupArns() {
+    return stageTargetGroupArns;
+  }
+
+  public void setStageTargetGroupArns(List<String> stageTargetGroupArns) {
+    this.stageTargetGroupArns = stageTargetGroupArns;
+  }
+
   public static final class Builder {
     private AwsAmiInfrastructureMapping awsAmiInfrastructureMapping;
 
@@ -123,6 +142,16 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
 
     public Builder withTargetGroupArns(List<String> targetGroupArns) {
       awsAmiInfrastructureMapping.setTargetGroupArns(targetGroupArns);
+      return this;
+    }
+
+    public Builder withStageClassicLoadBalancers(List<String> stageClassicLoadBalancers) {
+      awsAmiInfrastructureMapping.setStageClassicLoadBalancers(stageClassicLoadBalancers);
+      return this;
+    }
+
+    public Builder withStageTargetGroupArns(List<String> stageTargetGroupArns) {
+      awsAmiInfrastructureMapping.setStageTargetGroupArns(stageTargetGroupArns);
       return this;
     }
 
@@ -225,12 +254,14 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
     private List<String> classicLoadBalancers;
     private List<String> targetGroupArns;
     private String hostNameConvention;
+    private List<String> stageClassicLoadBalancers;
+    private List<String> stageTargetGroupArns;
 
     @lombok.Builder
     public Yaml(String type, String harnessApiVersion, String computeProviderType, String serviceName,
         String infraMappingType, String deploymentType, String computeProviderName, String region,
         String autoScalingGroupName, List<String> classicLoadBalancers, List<String> targetGroupArns,
-        String hostNameConvention) {
+        String hostNameConvention, List<String> stageClassicLoadBalancers, List<String> stageTargetGroupArns) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName);
       this.region = region;
@@ -238,6 +269,8 @@ public class AwsAmiInfrastructureMapping extends InfrastructureMapping {
       this.classicLoadBalancers = classicLoadBalancers;
       this.targetGroupArns = targetGroupArns;
       this.hostNameConvention = hostNameConvention;
+      this.stageClassicLoadBalancers = stageClassicLoadBalancers;
+      this.stageTargetGroupArns = stageTargetGroupArns;
     }
   }
 }

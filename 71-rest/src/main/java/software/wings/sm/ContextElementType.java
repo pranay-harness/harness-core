@@ -81,6 +81,8 @@ public enum ContextElementType {
                        * Artifact context element type.
                        */
 
+  AMI_SWITCH_ROUTES,
+
   PCF_SERVICE_SETUP,
 
   PCF_SERVICE_DEPLOY,

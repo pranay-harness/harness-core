@@ -45,4 +45,12 @@ public interface AwsAsgHelperServiceDelegate {
       String autoScalingGroupName, Integer desiredCapacity, ExecutionLogCallback logCallback);
   void setMinInstancesForAsg(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       String autoScalingGroupName, int minCapacity, ExecutionLogCallback logCallback);
+  void registerAsgWithTargetGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, List<String> targetGroupARNs, ExecutionLogCallback logCallback);
+  void registerAsgWithClassicLBs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, List<String> classicLBs, ExecutionLogCallback logCallback);
+  void deRegisterAsgWithTargetGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, List<String> targetGroupARNs, ExecutionLogCallback logCallback);
+  void deRegisterAsgWithClassicLBs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String asgName, List<String> classicLBs, ExecutionLogCallback logCallback);
 }

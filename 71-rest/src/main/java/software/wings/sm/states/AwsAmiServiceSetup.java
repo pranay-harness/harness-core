@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Log.Builder.aLog;
@@ -76,6 +77,7 @@ public class AwsAmiServiceSetup extends State {
   private int maxInstances;
   private int minInstances;
   private ResizeStrategy resizeStrategy;
+  private boolean blueGreen;
 
   @Inject @Transient protected transient SettingsService settingsService;
   @Inject @Transient protected transient ServiceResourceService serviceResourceService;
@@ -130,6 +132,7 @@ public class AwsAmiServiceSetup extends State {
             .oldAutoScalingGroupName(amiServiceSetupResponse.getLastDeployedAsgName())
             .maxInstances(maxInstances)
             .minInstances(minInstances)
+            .blueGreen(amiServiceSetupResponse.isBlueGreen())
             .resizeStrategy(getResizeStrategy() == null ? RESIZE_NEW_FIRST : getResizeStrategy())
             .autoScalingSteadyStateTimeout(autoScalingSteadyStateTimeout)
             .commandName(commandName)
@@ -212,6 +215,17 @@ public class AwsAmiServiceSetup extends State {
     try {
       executionLogCallback.saveExecutionLog("Starting AWS AMI Setup");
 
+      List<String> classicLbs = emptyList();
+      List<String> targetGroupARNs = emptyList();
+      if (blueGreen) {
+        // The new ASG should point to stage LBs and Target Groups
+        classicLbs = infrastructureMapping.getStageClassicLoadBalancers();
+        targetGroupARNs = infrastructureMapping.getStageTargetGroupArns();
+      } else {
+        classicLbs = infrastructureMapping.getClassicLoadBalancers();
+        targetGroupARNs = infrastructureMapping.getTargetGroupArns();
+      }
+
       AwsAmiServiceSetupRequestBuilder requestBuilder =
           AwsAmiServiceSetupRequest.builder()
               .accountId(awsConfig.getAccountId())
@@ -223,9 +237,10 @@ public class AwsAmiServiceSetup extends State {
               .region(region)
               .infraMappingAsgName(infrastructureMapping.getAutoScalingGroupName())
               .infraMappingId(infrastructureMapping.getUuid())
-              .infraMappingClassisLbs(infrastructureMapping.getClassicLoadBalancers())
-              .infraMappingTargetGroupArns(infrastructureMapping.getTargetGroupArns())
-              .artifactRevision(artifact.getRevision());
+              .infraMappingClassisLbs(classicLbs)
+              .infraMappingTargetGroupArns(targetGroupARNs)
+              .artifactRevision(artifact.getRevision())
+              .blueGreen(blueGreen);
 
       UserDataSpecification userDataSpecification =
           serviceResourceService.getUserDataSpecification(app.getUuid(), serviceId);
@@ -365,5 +380,13 @@ public class AwsAmiServiceSetup extends State {
 
   public void setCommandName(String commandName) {
     this.commandName = commandName;
+  }
+
+  public boolean isBlueGreen() {
+    return blueGreen;
+  }
+
+  public void setBlueGreen(boolean blueGreen) {
+    this.blueGreen = blueGreen;
   }
 }

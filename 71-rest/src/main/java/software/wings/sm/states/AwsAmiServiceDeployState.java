@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -16,14 +17,15 @@ import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import static software.wings.utils.Misc.getMessage;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.github.reinert.jjschema.Attributes;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.annotations.Transient;
@@ -98,6 +100,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 12/19/17.
@@ -146,15 +149,20 @@ public class AwsAmiServiceDeployState extends State {
 
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
-    Activity activity = crateActivity(context);
-    AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = prepareStateExecutionData(context, activity);
-
-    return anExecutionResponse()
-        .withAsync(true)
-        .withStateExecutionData(awsAmiDeployStateExecutionData)
-        .withExecutionStatus(ExecutionStatus.SUCCESS)
-        .addCorrelationIds(activity.getUuid())
-        .build();
+    try {
+      Activity activity = crateActivity(context);
+      AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData = prepareStateExecutionData(context, activity);
+      return anExecutionResponse()
+          .withAsync(true)
+          .withStateExecutionData(awsAmiDeployStateExecutionData)
+          .withExecutionStatus(ExecutionStatus.SUCCESS)
+          .addCorrelationIds(activity.getUuid())
+          .build();
+    } catch (WingsException e) {
+      throw e;
+    } catch (Exception e) {
+      throw new InvalidRequestException(getMessage(e), e);
+    }
   }
 
   protected Activity crateActivity(ExecutionContext context) {
@@ -209,6 +217,7 @@ public class AwsAmiServiceDeployState extends State {
   protected AwsAmiDeployStateExecutionData prepareStateExecutionData(ExecutionContext context, Activity activity) {
     PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
     AmiServiceSetupElement serviceSetupElement = context.getContextElement(ContextElementType.AMI_SERVICE_SETUP);
+    boolean blueGreen = serviceSetupElement.isBlueGreen();
 
     AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData;
     AwsAmiInfrastructureMapping infrastructureMapping = (AwsAmiInfrastructureMapping) infrastructureMappingService.get(
@@ -229,9 +238,10 @@ public class AwsAmiServiceDeployState extends State {
     } else {
       totalExpectedCount = getInstanceCount();
     }
+
     List<String> oldAsgNames = serviceSetupElement.getOldAsgNames();
-    List<String> gpNames = Lists.newArrayList();
-    if (isNotEmpty(oldAsgNames)) {
+    List<String> gpNames = newArrayList();
+    if (isNotEmpty(oldAsgNames) && !blueGreen) {
       gpNames.addAll(oldAsgNames);
     }
     String newAutoScalingGroupName = serviceSetupElement.getNewAutoScalingGroupName();
@@ -251,22 +261,33 @@ public class AwsAmiServiceDeployState extends State {
                                                                    .desiredCount(newAsgFinalDesiredCount)
                                                                    .previousCount(newAutoScalingGroupDesiredCapacity)
                                                                    .build());
-
-    List<AwsAmiResizeData> newDesiredCapacities = getNewDesiredCounts(
-        totalNewInstancesToBeAdded, serviceSetupElement.getOldAsgNames(), existingDesiredCapacities);
-
-    List<ContainerServiceData> oldInstanceData = Lists.newArrayList();
-    if (isNotEmpty(newDesiredCapacities)) {
-      newDesiredCapacities.forEach(newDesiredCapacity -> {
-        String asgName = newDesiredCapacity.getAsgName();
-        int newCount = newDesiredCapacity.getDesiredCount();
-        Integer oldCount = existingDesiredCapacities.get(asgName);
-        if (oldCount == null) {
-          oldCount = 0;
-        }
-        oldInstanceData.add(
-            ContainerServiceData.builder().name(asgName).desiredCount(newCount).previousCount(oldCount).build());
-      });
+    // If the deployment is of B/G type, we will not downscale the old ASGs.
+    // For canary Wfs we will downscale old ASGs
+    List<AwsAmiResizeData> newDesiredCapacities = emptyList();
+    List<ContainerServiceData> oldInstanceData = newArrayList();
+    List<String> classicLbs = newArrayList();
+    List<String> targetGroupArns = newArrayList();
+    if (blueGreen) {
+      // TODO: fix me
+      classicLbs = infrastructureMapping.getStageClassicLoadBalancers();
+      targetGroupArns = infrastructureMapping.getStageTargetGroupArns();
+    } else {
+      newDesiredCapacities = getNewDesiredCounts(
+          totalNewInstancesToBeAdded, serviceSetupElement.getOldAsgNames(), existingDesiredCapacities);
+      if (isNotEmpty(newDesiredCapacities)) {
+        newDesiredCapacities.forEach(newDesiredCapacity -> {
+          String asgName = newDesiredCapacity.getAsgName();
+          int newCount = newDesiredCapacity.getDesiredCount();
+          Integer oldCount = existingDesiredCapacities.get(asgName);
+          if (oldCount == null) {
+            oldCount = 0;
+          }
+          oldInstanceData.add(
+              ContainerServiceData.builder().name(asgName).desiredCount(newCount).previousCount(oldCount).build());
+        });
+      }
+      classicLbs = infrastructureMapping.getClassicLoadBalancers();
+      targetGroupArns = infrastructureMapping.getTargetGroupArns();
     }
 
     awsAmiDeployStateExecutionData = prepareStateExecutionData(activity.getUuid(), serviceSetupElement,
@@ -277,14 +298,14 @@ public class AwsAmiServiceDeployState extends State {
         infrastructureMapping.getAppId(), activity.getUuid(), getCommandName(), resizeNewFirst, newAutoScalingGroupName,
         newAsgFinalDesiredCount, newDesiredCapacities, serviceSetupElement.getAutoScalingSteadyStateTimeout(),
         infrastructureMapping.getEnvId(), serviceSetupElement.getMinInstances(), serviceSetupElement.getMaxInstances(),
-        serviceSetupElement.getPreDeploymentData());
+        serviceSetupElement.getPreDeploymentData(), classicLbs, targetGroupArns, false);
     return awsAmiDeployStateExecutionData;
   }
 
   private List<AwsAmiResizeData> getNewDesiredCounts(
       int instancesToBeAdded, List<String> oldAsgNames, Map<String, Integer> existingDesiredCapacities) {
     int n = instancesToBeAdded;
-    List<AwsAmiResizeData> desiredCapacities = Lists.newArrayList();
+    List<AwsAmiResizeData> desiredCapacities = newArrayList();
     if (isNotEmpty(oldAsgNames)) {
       for (String oldAsgName : oldAsgNames) {
         Integer n1 = existingDesiredCapacities.get(oldAsgName);
@@ -308,7 +329,8 @@ public class AwsAmiServiceDeployState extends State {
       String region, String accountId, String appId, String activityId, String commandName, boolean resizeNewFirst,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, List<AwsAmiResizeData> resizeData,
       Integer autoScalingSteadyStateTimeout, String envId, int minInstaces, int maxInstances,
-      AwsAmiPreDeploymentData preDeploymentData) {
+      AwsAmiPreDeploymentData preDeploymentData, List<String> classicLBs, List<String> targetGroupArns,
+      boolean rollback) {
     AwsAmiServiceDeployRequest request = AwsAmiServiceDeployRequest.builder()
                                              .awsConfig(awsConfig)
                                              .encryptionDetails(encryptionDetails)
@@ -324,12 +346,16 @@ public class AwsAmiServiceDeployState extends State {
                                              .minInstances(minInstaces)
                                              .maxInstances(maxInstances)
                                              .preDeploymentData(preDeploymentData)
+                                             .rollback(rollback)
                                              .asgDesiredCounts(resizeData)
+                                             .infraMappingClassisLbs(classicLBs)
+                                             .infraMappingTargetGroupArns(targetGroupArns)
                                              .build();
     DelegateTask delegateTask = aDelegateTask()
                                     .withAccountId(accountId)
                                     .withAppId(appId)
                                     .withWaitId(activityId)
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(autoScalingSteadyStateTimeout))
                                     .withParameters(new Object[] {request})
                                     .withTaskType(AWS_AMI_ASYNC_TASK)
                                     .withAsync(true)
