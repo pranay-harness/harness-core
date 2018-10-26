@@ -20,5 +20,8 @@ public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData
   private List<String[]> activeServiceCounts;
   private List<String[]> trafficWeights;
   private String autoscalerYaml;
+  // Following 2 fields are required while Daemon ECS service rollback
+  private String previousEcsServiceSnapshotJson;
+  private String ecsServiceArn;
   private List<Label> lookupLabels;
 }

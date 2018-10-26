@@ -584,3 +584,4 @@ software.wings.service.impl.aws.model.AwsElbListNetworkElbsRequest, 5542
 software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest, 5543
 software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse, 5544
 software.wings.api.AwsAmiSwitchRoutesStateExecutionData, 5545
+software.wings.beans.container.EcsServiceSpecification, 5546

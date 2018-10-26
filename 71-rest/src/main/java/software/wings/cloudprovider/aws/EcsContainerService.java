@@ -83,4 +83,8 @@ public interface EcsContainerService {
 
   TaskDefinition getTaskDefinitionFromService(String region, SettingAttribute cloudProviderSetting,
       List<EncryptedDataDetail> encryptedDataDetails, Service service);
+
+  List<ContainerInfo> waitForDaemonServiceToReachSteadyState(String region, SettingAttribute connectorConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String clusterName, String serviceName,
+      int serviceSteadyStateTimeout, ExecutionLogCallback executionLogCallback);
 }

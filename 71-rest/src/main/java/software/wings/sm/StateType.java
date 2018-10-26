@@ -102,9 +102,11 @@ import software.wings.sm.states.CustomLogVerificationState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DcNodeSelectState;
 import software.wings.sm.states.DynatraceState;
+import software.wings.sm.states.EcsDaemonServiceSetup;
 import software.wings.sm.states.EcsServiceDeploy;
 import software.wings.sm.states.EcsServiceRollback;
 import software.wings.sm.states.EcsServiceSetup;
+import software.wings.sm.states.EcsSetupRollback;
 import software.wings.sm.states.EcsSteadyStateCheck;
 import software.wings.sm.states.ElasticLoadBalancerState;
 import software.wings.sm.states.ElkAnalysisState;
@@ -400,6 +402,12 @@ public enum StateType implements StateTypeDescriptor {
       ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Constants.ECS_SERVICE_SETUP,
+      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+
+  ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, CLOUD, Constants.ROLLBACK_ECS_SETUP,
+      Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
+
+  ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, CLOUD, Constants.ECS_DAEMON_SERVICE_SETUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   ECS_SERVICE_DEPLOY(EcsServiceDeploy.class, COMMANDS, UPGRADE_CONTAINERS,

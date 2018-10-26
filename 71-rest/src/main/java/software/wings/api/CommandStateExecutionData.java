@@ -16,6 +16,7 @@ import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.ContainerSetupParams;
+import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ContextElement;
@@ -52,6 +53,9 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
+  // Following 2 fields are required while Daemon ECS service rollback
+  private String previousEcsServiceSnapshotJson;
+  private String ecsServiceArn;
   private boolean downsize;
   private String clusterName;
 
@@ -137,6 +141,12 @@ public class CommandStateExecutionData extends StateExecutionData {
       KubernetesSetupParams kubernetesSetupParams = (KubernetesSetupParams) containerSetupParams;
       commandStepExecutionSummary.setControllerNamePrefix(kubernetesSetupParams.getControllerNamePrefix());
     }
+
+    if (containerSetupParams instanceof EcsSetupParams) {
+      commandStepExecutionSummary.setPreviousEcsServiceSnapshotJson(previousEcsServiceSnapshotJson);
+      commandStepExecutionSummary.setEcsServiceArn(ecsServiceArn);
+    }
+
     commandStepExecutionSummary.setClusterName(clusterName);
     commandStepExecutionSummary.setServiceId(serviceId);
     commandStepExecutionSummary.setCodeDeployParams(codeDeployParams);

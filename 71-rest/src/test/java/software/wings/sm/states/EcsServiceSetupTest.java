@@ -258,16 +258,17 @@ public class EcsServiceSetupTest extends WingsBaseTest {
         .thenReturn(safeDisplayServiceVariableList);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     setInternalState(ecsServiceSetup, "secretManager", secretManager);
+    setInternalState(ecsServiceSetup, "ecsStateHelper", new EcsStateHelper());
     when(workflowExecutionService.getExecutionDetails(anyString(), anyString(), anyBoolean(), anySet()))
         .thenReturn(aWorkflowExecution().build());
-    context = new ExecutionContextImpl(stateExecutionInstance);
-    on(context).set("variableProcessor", variableProcessor);
-    on(context).set("evaluator", evaluator);
-    when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
-    when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
     PortalConfig portalConfig = new PortalConfig();
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
+    context = new ExecutionContextImpl(stateExecutionInstance);
+    on(context).set("evaluator", evaluator);
+    on(context).set("variableProcessor", variableProcessor);
+    when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
+    when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
   }
 
   @Test

@@ -39,6 +39,8 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   AWS_LAMBDA(AwsLambdaCommandUnit.class, "AWS Lambda", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
   AWS_AMI(AmiCommandUnit.class, "AWS AMI", StencilCategory.COMMANDS, DEFAULT_DISPLAY_ORDER),
   ECS_SETUP(EcsSetupCommandUnit.class, "Setup ECS Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
+  ECS_SETUP_DAEMON_SCHEDULING_TYPE(
+      EcsSetupCommandUnit.class, "Setup ECS Daemon Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
   KUBERNETES_SETUP(
       KubernetesSetupCommandUnit.class, "Setup Kubernetes Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
   RESIZE(ResizeCommandUnit.class, "Resize ECS Service", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
