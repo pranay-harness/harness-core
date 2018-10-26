@@ -15,6 +15,7 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.aws.model.AwsAmiRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
+import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 
 public class AwsAmiAsyncTaskTest extends WingsBaseTest {
@@ -39,5 +40,11 @@ public class AwsAmiAsyncTaskTest extends WingsBaseTest {
     request = AwsAmiServiceDeployRequest.builder().build();
     task.run(new Object[] {request});
     verify(mockAwsAmiHelperServiceDelegate).deployAmiService(any(), any());
+    request = AwsAmiSwitchRoutesRequest.builder().rollback(false).build();
+    task.run(new Object[] {request});
+    verify(mockAwsAmiHelperServiceDelegate).switchAmiRoutes(any(), any());
+    request = AwsAmiSwitchRoutesRequest.builder().rollback(true).build();
+    task.run(new Object[] {request});
+    verify(mockAwsAmiHelperServiceDelegate).rollbackSwitchAmiRoutes(any(), any());
   }
 }

@@ -581,3 +581,6 @@ software.wings.beans.appmanifest.ManifestFile, 5539
 software.wings.beans.appmanifest.StoreType, 5540
 software.wings.service.impl.aws.model.AwsElbListElbsRequest, 5541
 software.wings.service.impl.aws.model.AwsElbListNetworkElbsRequest, 5542
+software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest, 5543
+software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse, 5544
+software.wings.api.AwsAmiSwitchRoutesStateExecutionData, 5545

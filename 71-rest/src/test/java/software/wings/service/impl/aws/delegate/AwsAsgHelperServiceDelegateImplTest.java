@@ -258,4 +258,52 @@ public class AwsAsgHelperServiceDelegateImplTest extends WingsBaseTest {
       Assert.fail(format("Exception: [%s]", ex.getMessage()));
     }
   }
+
+  @Test
+  public void testRegisterAsgWithClassicLBs() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), anyString(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    awsAsgHelperServiceDelegate.registerAsgWithClassicLBs(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "Asg", singletonList("classicLbs"), mockCallback);
+    verify(mockClient).attachLoadBalancers(any());
+  }
+
+  @Test
+  public void testRegisterAsgWithTargetGroups() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), anyString(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    awsAsgHelperServiceDelegate.registerAsgWithTargetGroups(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "Asg", singletonList("targetGroups"), mockCallback);
+    verify(mockClient).attachLoadBalancerTargetGroups(any());
+  }
+
+  @Test
+  public void testDeRegisterAsgWithTargetGroups() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), anyString(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    awsAsgHelperServiceDelegate.deRegisterAsgWithTargetGroups(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "Asg", singletonList("targetGroups"), mockCallback);
+    verify(mockClient).detachLoadBalancerTargetGroups(any());
+  }
+
+  @Test
+  public void testDeRegisterAsgWithClassicLBs() {
+    AmazonAutoScalingClient mockClient = mock(AmazonAutoScalingClient.class);
+    doReturn(mockClient).when(awsAsgHelperServiceDelegate).getAmazonAutoScalingClient(any(), anyString(), any());
+    ExecutionLogCallback mockCallback = mock(ExecutionLogCallback.class);
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doNothing().when(mockCallback).saveExecutionLog(anyString());
+    awsAsgHelperServiceDelegate.deRegisterAsgWithClassicLBs(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "Asg", singletonList("classicLBs"), mockCallback);
+    verify(mockClient).detachLoadBalancers(any());
+  }
 }

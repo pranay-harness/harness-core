@@ -1784,7 +1784,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == AWS_LAMBDA) {
       workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSLambda(appId, envId, workflowPhase);
     } else if (deploymentType == AMI) {
-      workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmi(appId, workflowPhase, !serviceRepeat);
+      if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+        workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(appId, workflowPhase, !serviceRepeat);
+      } else {
+        workflowServiceHelper.generateNewWorkflowPhaseStepsForAWSAmi(appId, workflowPhase, !serviceRepeat);
+      }
     } else if (deploymentType == PCF) {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
         workflowServiceHelper.generateNewWorkflowPhaseStepsForPCFBlueGreen(appId, workflowPhase, !serviceRepeat);
@@ -1814,7 +1818,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     } else if (deploymentType == AWS_LAMBDA) {
       return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsLambda(workflowPhase);
     } else if (deploymentType == AMI) {
-      return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
+      if (BLUE_GREEN.equals(orchestrationWorkflowType)) {
+        return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsAmiBlueGreen(workflowPhase);
+      } else {
+        return workflowServiceHelper.generateRollbackWorkflowPhaseForAwsAmi(workflowPhase);
+      }
     } else if (deploymentType == HELM) {
       return workflowServiceHelper.generateRollbackWorkflowPhaseForHelm(workflowPhase);
     } else if (deploymentType == PCF) {
@@ -1926,7 +1934,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         if (!(InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
                 || InfrastructureMappingType.GCP_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
                 || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
-                || InfrastructureMappingType.PCF_PCF.name().equals(infrastructureMapping.getInfraMappingType()))) {
+                || InfrastructureMappingType.PCF_PCF.name().equals(infrastructureMapping.getInfraMappingType())
+                || InfrastructureMappingType.AWS_AMI.name().equals(infrastructureMapping.getInfraMappingType()))) {
           throw new InvalidRequestException(
               "Requested Infrastructure Type is not supported using Blue/Green Deployment", USER);
         }

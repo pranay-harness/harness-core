@@ -527,6 +527,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       if (awsAmiInfrastructureMapping.getTargetGroupArns() != null) {
         keyValuePairs.put("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
       }
+      if (awsAmiInfrastructureMapping.getStageClassicLoadBalancers() != null) {
+        keyValuePairs.put("stageClassicLoadBalancers", awsAmiInfrastructureMapping.getStageClassicLoadBalancers());
+      }
+      if (awsAmiInfrastructureMapping.getStageTargetGroupArns() != null) {
+        keyValuePairs.put("stageTargetGroupArns", awsAmiInfrastructureMapping.getStageTargetGroupArns());
+      }
       if (awsAmiInfrastructureMapping.getHostNameConvention() != null) {
         keyValuePairs.put("hostNameConvention", awsAmiInfrastructureMapping.getHostNameConvention());
       } else {

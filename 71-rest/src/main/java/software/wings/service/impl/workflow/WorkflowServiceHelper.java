@@ -1,6 +1,7 @@
 package software.wings.service.impl.workflow;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Maps.newHashMap;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -24,6 +25,7 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
+import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
@@ -43,12 +45,19 @@ import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.PRIMARY_SERVICE_NAME_EXPRESSION;
+import static software.wings.common.Constants.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
+import static software.wings.common.Constants.ROLLBACK_SERVICE;
 import static software.wings.common.Constants.STAGE_SERVICE_NAME_EXPRESSION;
+import static software.wings.common.Constants.SWAP_AUTOSCALING_GROUP_ROUTE;
+import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP_ROUTE;
+import static software.wings.common.Constants.VERIFY_STAGING;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.sm.StateType.ARTIFACT_CHECK;
+import static software.wings.sm.StateType.AWS_AMI_ROLLBACK_SWITCH_ROUTES;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_ROLLBACK;
 import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
+import static software.wings.sm.StateType.AWS_AMI_SWITCH_ROUTES;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_ROLLBACK;
 import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
 import static software.wings.sm.StateType.AWS_LAMBDA_ROLLBACK;
@@ -316,6 +325,53 @@ public class WorkflowServiceHelper {
     workflowPhase.setDeploymentType(DeploymentType.valueOf(infrastructureMapping.getDeploymentType()));
   }
 
+  public void generateNewWorkflowPhaseStepsForAWSAmiBlueGreen(
+      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+    Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
+    Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
+
+    if (serviceSetupRequired) {
+      InfrastructureMapping infraMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
+      if (infraMapping instanceof AwsAmiInfrastructureMapping) {
+        Map<String, Object> defaultData = newHashMap();
+        defaultData.put("maxInstances", 10);
+        defaultData.put("autoScalingSteadyStateTimeout", 10);
+        defaultData.put("blueGreen", true);
+        workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
+                                       .addStep(aGraphNode()
+                                                    .withId(generateUuid())
+                                                    .withType(AWS_AMI_SERVICE_SETUP.name())
+                                                    .withName("AWS AutoScaling Group Setup")
+                                                    .withProperties(defaultData)
+                                                    .build())
+                                       .build());
+      }
+    }
+    workflowPhase.addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.DEPLOY_SERVICE)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(AWS_AMI_SERVICE_DEPLOY.name())
+                                                .withName(Constants.UPGRADE_AUTOSCALING_GROUP)
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(
+        aPhaseStep(VERIFY_SERVICE, VERIFY_STAGING).addAllSteps(commandNodes(commandMap, CommandType.VERIFY)).build());
+
+    Map<String, Object> defaultDataSwitchRoutes = newHashMap();
+    defaultDataSwitchRoutes.put("downsizeOldAsg", true);
+    workflowPhase.addPhaseStep(aPhaseStep(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, SWAP_AUTOSCALING_GROUP_ROUTE)
+                                   .addStep(aGraphNode()
+                                                .withId(generateUuid())
+                                                .withType(AWS_AMI_SWITCH_ROUTES.name())
+                                                .withName(UPGRADE_AUTOSCALING_GROUP_ROUTE)
+                                                .withProperties(defaultDataSwitchRoutes)
+                                                .build())
+                                   .build());
+
+    workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
+  }
+
   public void generateNewWorkflowPhaseStepsForAWSAmi(
       String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
@@ -327,6 +383,7 @@ public class WorkflowServiceHelper {
         Map<String, Object> defaultData = new HashMap<>();
         defaultData.put("maxInstances", 10);
         defaultData.put("autoScalingSteadyStateTimeout", 10);
+        defaultData.put("blueGreen", false);
         workflowPhase.addPhaseStep(aPhaseStep(AMI_AUTOSCALING_GROUP_SETUP, Constants.SETUP_AUTOSCALING_GROUP)
                                        .addStep(aGraphNode()
                                                     .withId(generateUuid())
@@ -546,9 +603,8 @@ public class WorkflowServiceHelper {
                                    .build());
 
     // Verify
-    workflowPhase.addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_STAGING)
-                                   .addAllSteps(commandNodes(commandMap, CommandType.VERIFY))
-                                   .build());
+    workflowPhase.addPhaseStep(
+        aPhaseStep(VERIFY_SERVICE, VERIFY_STAGING).addAllSteps(commandNodes(commandMap, CommandType.VERIFY)).build());
 
     // Swap Routes
     Map<String, Object> defaultRouteUpdateProperties = new HashMap<>();
@@ -880,11 +936,42 @@ public class WorkflowServiceHelper {
         .withPhaseNameForRollback(workflowPhase.getName())
         .withDeploymentType(workflowPhase.getDeploymentType())
         .withInfraMappingId(workflowPhase.getInfraMappingId())
-        .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, Constants.ROLLBACK_SERVICE)
+        .addPhaseStep(aPhaseStep(AMI_DEPLOY_AUTOSCALING_GROUP, ROLLBACK_SERVICE)
                           .addStep(aGraphNode()
                                        .withId(generateUuid())
                                        .withType(AWS_AMI_SERVICE_ROLLBACK.name())
                                        .withName(Constants.ROLLBACK_AWS_AMI_CLUSTER)
+                                       .withRollback(true)
+                                       .build())
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(VERIFY_SERVICE, Constants.VERIFY_SERVICE)
+                          .withRollback(true)
+                          .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)
+                          .withStatusForRollback(ExecutionStatus.SUCCESS)
+                          .withRollback(true)
+                          .build())
+        .addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).withRollback(true).build())
+        .build();
+  }
+
+  public WorkflowPhase generateRollbackWorkflowPhaseForAwsAmiBlueGreen(WorkflowPhase workflowPhase) {
+    return aWorkflowPhase()
+        .withName(Constants.ROLLBACK_PREFIX + workflowPhase.getName())
+        .withRollback(true)
+        .withServiceId(workflowPhase.getServiceId())
+        .withComputeProviderId(workflowPhase.getComputeProviderId())
+        .withInfraMappingName(workflowPhase.getInfraMappingName())
+        .withPhaseNameForRollback(workflowPhase.getName())
+        .withDeploymentType(workflowPhase.getDeploymentType())
+        .withInfraMappingId(workflowPhase.getInfraMappingId())
+        .addPhaseStep(aPhaseStep(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES, ROLLBACK_SERVICE)
+                          .addStep(aGraphNode()
+                                       .withId(generateUuid())
+                                       .withType(AWS_AMI_ROLLBACK_SWITCH_ROUTES.name())
+                                       .withName(ROLLBACK_AUTOSCALING_GROUP_ROUTE)
                                        .withRollback(true)
                                        .build())
                           .withPhaseStepNameForRollback(Constants.DEPLOY_SERVICE)

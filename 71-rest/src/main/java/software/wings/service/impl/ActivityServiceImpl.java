@@ -126,6 +126,7 @@ public class ActivityServiceImpl implements ActivityService {
         case HELM:
         case KUBERNETES_STEADY_STATE_CHECK:
         case ECS_STEADY_STATE_CHECK:
+        case AWS_AMI_SWITCH_ROUTES:
         case KUBERNETES_SWAP_SERVICE_SELECTORS:
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))

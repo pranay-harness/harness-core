@@ -10,6 +10,7 @@ import java.util.Map;
 public class AwsAmiPreDeploymentData {
   private Map<String, Integer> asgNameToMinCapacity;
   private Map<String, Integer> asgNameToDesiredCapacity;
+  private static final int DEFAULT_DESIRED_COUNT = 10;
 
   public int getPreDeploymentMinCapacity(String asgName) {
     if (asgNameToMinCapacity == null) {
@@ -17,6 +18,14 @@ public class AwsAmiPreDeploymentData {
     }
     Integer minCapacity = asgNameToMinCapacity.get(asgName);
     return minCapacity == null ? 0 : minCapacity;
+  }
+
+  public int getPreDeploymentDesiredCapacity(String asgName) {
+    if (asgNameToDesiredCapacity == null) {
+      return DEFAULT_DESIRED_COUNT;
+    }
+    Integer minCapacity = asgNameToDesiredCapacity.get(asgName);
+    return minCapacity == null ? DEFAULT_DESIRED_COUNT : minCapacity;
   }
 
   public boolean hasAsgReachedPreDeploymentCount(String asgName, int desiredCount) {

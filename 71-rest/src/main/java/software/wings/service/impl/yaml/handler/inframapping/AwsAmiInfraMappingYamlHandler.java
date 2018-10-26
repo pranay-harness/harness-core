@@ -29,6 +29,8 @@ public class AwsAmiInfraMappingYamlHandler
     yaml.setClassicLoadBalancers(bean.getClassicLoadBalancers());
     yaml.setTargetGroupArns(bean.getTargetGroupArns());
     yaml.setHostNameConvention(bean.getHostNameConvention());
+    yaml.setStageClassicLoadBalancers(bean.getStageClassicLoadBalancers());
+    yaml.setStageTargetGroupArns(bean.getStageTargetGroupArns());
     return yaml;
   }
 
@@ -69,6 +71,8 @@ public class AwsAmiInfraMappingYamlHandler
     bean.setClassicLoadBalancers(infraMappingYaml.getClassicLoadBalancers());
     bean.setTargetGroupArns(infraMappingYaml.getTargetGroupArns());
     bean.setHostNameConvention(infraMappingYaml.getHostNameConvention());
+    bean.setStageClassicLoadBalancers(infraMappingYaml.getStageClassicLoadBalancers());
+    bean.setStageTargetGroupArns(infraMappingYaml.getStageTargetGroupArns());
   }
 
   @Override

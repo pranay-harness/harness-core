@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.delegate;
 
+import static com.google.common.base.Joiner.on;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
@@ -41,8 +42,11 @@ import software.wings.service.impl.aws.model.AwsAmiServiceDeployResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiServiceSetupResponseBuilder;
+import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
+import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.utils.AsgConvention;
 
 import java.util.Arrays;
@@ -62,6 +66,225 @@ public class AwsAmiHelperServiceDelegateImpl
   private static final int MAX_OLD_ASG_VERSION_TO_KEEP = 3;
   @Inject private ExecutorService executorService;
   @Inject private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
+  @Inject private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
+
+  @Override
+  public AwsAmiSwitchRoutesResponse switchAmiRoutes(
+      AwsAmiSwitchRoutesRequest request, ExecutionLogCallback logCallback) {
+    try {
+      AwsConfig awsConfig = request.getAwsConfig();
+      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      String region = request.getRegion();
+      logCallback.saveExecutionLog("Starting to switch routes in AMI Deploy", INFO);
+      List<String> primaryClassicLBs = request.getPrimaryClassicLBs();
+      List<String> primaryTargetGroupARNs = request.getPrimaryTargetGroupARNs();
+      List<String> stageClassicLBs = request.getStageClassicLBs();
+      List<String> stageTargetGroupARNs = request.getStageTargetGroupARNs();
+      int timeout = request.getRegistrationTimeout();
+      String oldAsgName = request.getOldAsgName();
+      String newAsgName = request.getNewAsgName();
+
+      logCallback.saveExecutionLog("Starting Ami B/G swap");
+      if (isNotEmpty(newAsgName)) {
+        if (isNotEmpty(stageTargetGroupARNs)) {
+          logCallback.saveExecutionLog(format("Sending request to detach target groups:[%s] from Asg:[%s]",
+              on(",").join(stageTargetGroupARNs), newAsgName));
+          awsAsgHelperServiceDelegate.deRegisterAsgWithTargetGroups(
+              awsConfig, encryptionDetails, region, newAsgName, stageTargetGroupARNs, logCallback);
+          stageTargetGroupARNs.forEach(arn -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for Asg: [%s] to de register with target group: [%s]", newAsgName, arn));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToDeRegisterWithTargetGroup(
+                awsConfig, encryptionDetails, region, arn, newAsgName, timeout, logCallback);
+          });
+        }
+
+        if (isNotEmpty(stageClassicLBs)) {
+          logCallback.saveExecutionLog(format(
+              "Sending request to detach classic LBs:[%s] from Asg:[%s]", on(",").join(stageClassicLBs), newAsgName));
+          awsAsgHelperServiceDelegate.deRegisterAsgWithClassicLBs(
+              awsConfig, encryptionDetails, region, newAsgName, stageClassicLBs, logCallback);
+          stageClassicLBs.forEach(classsicLb -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for Asg: [%s] to de register with classic Lb: [%s]", newAsgName, classsicLb));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToDeRegisterWithClassicLB(
+                awsConfig, encryptionDetails, region, classsicLb, newAsgName, timeout, logCallback);
+          });
+        }
+
+        if (isNotEmpty(primaryTargetGroupARNs)) {
+          logCallback.saveExecutionLog(format("Sending request to attach target groups:[%s] to Asg:[%s]",
+              on(",").join(primaryTargetGroupARNs), newAsgName));
+          awsAsgHelperServiceDelegate.registerAsgWithTargetGroups(
+              awsConfig, encryptionDetails, region, newAsgName, primaryTargetGroupARNs, logCallback);
+          primaryTargetGroupARNs.forEach(group -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for Target Group: [%s] to have all instances of Asg: [%s]", group, newAsgName));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToRegisterWithTargetGroup(
+                awsConfig, encryptionDetails, region, group, newAsgName, timeout, logCallback);
+          });
+        }
+
+        if (isNotEmpty(primaryClassicLBs)) {
+          logCallback.saveExecutionLog(format("Sending request to attach classic load balancers:[%s] to Asg:[%s]",
+              on(",").join(primaryClassicLBs), newAsgName));
+          awsAsgHelperServiceDelegate.registerAsgWithClassicLBs(
+              awsConfig, encryptionDetails, region, newAsgName, primaryClassicLBs, logCallback);
+          primaryClassicLBs.forEach(classicLB -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for classic Lb: [%s] to have all the instances of Asg: [%s]", classicLB, newAsgName));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToRegisterWithClassicLB(
+                awsConfig, encryptionDetails, region, classicLB, newAsgName, timeout, logCallback);
+          });
+        }
+      }
+
+      if (isNotEmpty(oldAsgName)) {
+        if (isNotEmpty(primaryTargetGroupARNs)) {
+          logCallback.saveExecutionLog(format("Sending request to detach target groups:[%s] from Asg:[%s]",
+              on(",").join(primaryTargetGroupARNs), oldAsgName));
+          awsAsgHelperServiceDelegate.deRegisterAsgWithTargetGroups(
+              awsConfig, encryptionDetails, region, oldAsgName, primaryTargetGroupARNs, logCallback);
+          primaryTargetGroupARNs.forEach(arn -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for Asg: [%s] to deregister with target group: [%s]", oldAsgName, arn));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToDeRegisterWithTargetGroup(
+                awsConfig, encryptionDetails, region, arn, oldAsgName, timeout, logCallback);
+          });
+        }
+
+        if (isNotEmpty(primaryClassicLBs)) {
+          logCallback.saveExecutionLog(format(
+              "Sending request to detach classic LBs:[%s] from Asg:[%s]", on(",").join(primaryClassicLBs), oldAsgName));
+          awsAsgHelperServiceDelegate.deRegisterAsgWithClassicLBs(
+              awsConfig, encryptionDetails, region, oldAsgName, primaryClassicLBs, logCallback);
+          primaryClassicLBs.forEach(classicLb -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for Asg: [%s] to de register with classicLb: [%s]", oldAsgName, classicLb));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToDeRegisterWithClassicLB(
+                awsConfig, encryptionDetails, region, classicLb, oldAsgName, timeout, logCallback);
+          });
+        }
+
+        if (request.isDownscaleOldAsg()) {
+          logCallback.saveExecutionLog(format("Downscaling autoScaling Group [%s]", oldAsgName));
+          awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
+              awsConfig, encryptionDetails, region, oldAsgName, 0, logCallback);
+          awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+              awsConfig, encryptionDetails, region, oldAsgName, 0, logCallback, timeout);
+        }
+      }
+
+      logCallback.saveExecutionLog("Completed switch routes");
+      return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
+    } catch (Exception ex) {
+      String errorMessage = getMessage(ex);
+      logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
+      logger.error(errorMessage, ex);
+      return AwsAmiSwitchRoutesResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
+    }
+  }
+
+  @Override
+  public AwsAmiSwitchRoutesResponse rollbackSwitchAmiRoutes(
+      AwsAmiSwitchRoutesRequest request, ExecutionLogCallback logCallback) {
+    try {
+      AwsConfig awsConfig = request.getAwsConfig();
+      List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      String region = request.getRegion();
+      logCallback.saveExecutionLog("Starting to switch routes in AMI Deploy", INFO);
+      List<String> primaryClassicLBs = request.getPrimaryClassicLBs();
+      List<String> primaryTargetGroupARNs = request.getPrimaryTargetGroupARNs();
+      int timeout = request.getRegistrationTimeout();
+      String oldAsgName = request.getOldAsgName();
+      String newAsgName = request.getNewAsgName();
+      AwsAmiPreDeploymentData preDeploymentData = request.getPreDeploymentData();
+
+      logCallback.saveExecutionLog("Rolling back Ami B/G swap");
+
+      if (isNotEmpty(oldAsgName)) {
+        logCallback.saveExecutionLog(format("Upgrading old Asg: [%s] back to initial state", oldAsgName));
+        int desiredCount = preDeploymentData.getPreDeploymentDesiredCapacity(oldAsgName);
+        int minCount = preDeploymentData.getPreDeploymentMinCapacity(oldAsgName);
+        awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
+            awsConfig, encryptionDetails, region, oldAsgName, desiredCount, logCallback);
+        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+            awsConfig, encryptionDetails, region, oldAsgName, desiredCount, logCallback, timeout);
+        awsAsgHelperServiceDelegate.setMinInstancesForAsg(
+            awsConfig, encryptionDetails, region, oldAsgName, minCount, logCallback);
+
+        if (isNotEmpty(primaryTargetGroupARNs)) {
+          logCallback.saveExecutionLog(format("Sending request to attach target groups:[%s] to Asg:[%s]",
+              on(",").join(primaryTargetGroupARNs), oldAsgName));
+          awsAsgHelperServiceDelegate.registerAsgWithTargetGroups(
+              awsConfig, encryptionDetails, region, oldAsgName, primaryTargetGroupARNs, logCallback);
+          primaryTargetGroupARNs.forEach(group -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for Target Group: [%s] to have all instances of Asg: [%s]", group, oldAsgName));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToRegisterWithTargetGroup(
+                awsConfig, encryptionDetails, region, group, oldAsgName, timeout, logCallback);
+          });
+        }
+
+        if (isNotEmpty(primaryClassicLBs)) {
+          logCallback.saveExecutionLog(format("Sending request to attach classic load balancers:[%s] to Asg:[%s]",
+              on(",").join(primaryClassicLBs), oldAsgName));
+          awsAsgHelperServiceDelegate.registerAsgWithClassicLBs(
+              awsConfig, encryptionDetails, region, oldAsgName, primaryClassicLBs, logCallback);
+          primaryClassicLBs.forEach(classicLB -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for classic Lb: [%s] to have all the instances of Asg: [%s]", classicLB, oldAsgName));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToRegisterWithClassicLB(
+                awsConfig, encryptionDetails, region, classicLB, oldAsgName, timeout, logCallback);
+          });
+        }
+      }
+
+      if (isNotEmpty(newAsgName)) {
+        if (isNotEmpty(primaryTargetGroupARNs)) {
+          logCallback.saveExecutionLog(format("Sending request to detach target groups:[%s] from Asg:[%s]",
+              on(",").join(primaryTargetGroupARNs), newAsgName));
+          awsAsgHelperServiceDelegate.deRegisterAsgWithTargetGroups(
+              awsConfig, encryptionDetails, region, newAsgName, primaryTargetGroupARNs, logCallback);
+          primaryTargetGroupARNs.forEach(arn -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for Asg: [%s] to de register with target group: [%s]", newAsgName, arn));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToDeRegisterWithTargetGroup(
+                awsConfig, encryptionDetails, region, arn, newAsgName, timeout, logCallback);
+          });
+        }
+
+        if (isNotEmpty(primaryClassicLBs)) {
+          logCallback.saveExecutionLog(format(
+              "Sending request to detach classic LBs:[%s] from Asg:[%s]", on(",").join(primaryClassicLBs), newAsgName));
+          awsAsgHelperServiceDelegate.deRegisterAsgWithClassicLBs(
+              awsConfig, encryptionDetails, region, newAsgName, primaryClassicLBs, logCallback);
+          primaryClassicLBs.forEach(classicLb -> {
+            logCallback.saveExecutionLog(
+                format("Waiting for Asg: [%s] to de register with classic Lb: [%s]", newAsgName, classicLb));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToDeRegisterWithClassicLB(
+                awsConfig, encryptionDetails, region, classicLb, newAsgName, timeout, logCallback);
+          });
+        }
+
+        logCallback.saveExecutionLog(format("Downscaling autoScaling Group [%s]", newAsgName));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
+            awsConfig, encryptionDetails, region, newAsgName, 0, logCallback);
+        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(
+            awsConfig, encryptionDetails, region, newAsgName, 0, logCallback, timeout);
+      }
+
+      logCallback.saveExecutionLog("Completed rollback switch routes");
+      return AwsAmiSwitchRoutesResponse.builder().executionStatus(SUCCESS).build();
+    } catch (Exception ex) {
+      String errorMessage = getMessage(ex);
+      logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
+      logger.error(errorMessage, ex);
+      return AwsAmiSwitchRoutesResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
+    }
+  }
 
   @Override
   public AwsAmiServiceDeployResponse deployAmiService(
@@ -80,7 +303,8 @@ public class AwsAmiHelperServiceDelegateImpl
       resizeAsgs(request.getRegion(), awsConfig, encryptionDetails, request.getNewAutoScalingGroupName(),
           request.getNewAsgFinalDesiredCount(), request.getAsgDesiredCounts(), logCallback, request.isResizeNewFirst(),
           request.getAutoScalingSteadyStateTimeout(), request.getMaxInstances(), request.getMinInstances(),
-          request.getPreDeploymentData());
+          request.getPreDeploymentData(), request.getInfraMappingTargetGroupArns(), request.getInfraMappingClassisLbs(),
+          request.isRollback());
 
       List<Instance> allInstancesOfNewAsg = awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
           awsConfig, encryptionDetails, request.getRegion(), request.getNewAutoScalingGroupName());
@@ -89,77 +313,111 @@ public class AwsAmiHelperServiceDelegateImpl
                                           .collect(toList());
       return AwsAmiServiceDeployResponse.builder().instancesAdded(instancesAdded).executionStatus(SUCCESS).build();
     } catch (Exception ex) {
-      logCallback.saveExecutionLog(format("Exception: [%s].", getMessage(ex)), ERROR);
-      logger.error(ex.getMessage(), ex);
-      return AwsAmiServiceDeployResponse.builder().errorMessage(getMessage(ex)).executionStatus(FAILED).build();
+      String errorMessage = getMessage(ex);
+      logCallback.saveExecutionLog(format("Exception: [%s].", errorMessage), ERROR);
+      logger.error(errorMessage, ex);
+      return AwsAmiServiceDeployResponse.builder().errorMessage(errorMessage).executionStatus(FAILED).build();
+    }
+  }
+
+  private void resizeNewAsgAndWait(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, ExecutionLogCallback executionLogCallback,
+      Integer autoScalingSteadyStateTimeout, int maxInstances, int minInstances, List<String> targetGroupsArns,
+      List<String> classicLBs, boolean rollback) {
+    if (isNotBlank(newAutoScalingGroupName)) {
+      executionLogCallback.saveExecutionLog(
+          format("Resizing AutoScaling Group: [%s] to [%d]", newAutoScalingGroupName, newAsgFinalDesiredCount));
+      awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
+          awsConfig, encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
+      awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, encryptionDetails,
+          region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback,
+          autoScalingSteadyStateTimeout);
+      if (newAsgFinalDesiredCount == maxInstances) {
+        awsAsgHelperServiceDelegate.setMinInstancesForAsg(
+            awsConfig, encryptionDetails, region, newAutoScalingGroupName, minInstances, executionLogCallback);
+      }
+      if (!rollback) {
+        if (isNotEmpty(targetGroupsArns)) {
+          targetGroupsArns.forEach(arn -> {
+            executionLogCallback.saveExecutionLog(format(
+                "Waiting for Target Group: [%s] to have all instances of Asg: [%s]", arn, newAutoScalingGroupName));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToRegisterWithTargetGroup(awsConfig, encryptionDetails,
+                region, arn, newAutoScalingGroupName, autoScalingSteadyStateTimeout, executionLogCallback);
+          });
+        }
+        if (isNotEmpty(classicLBs)) {
+          classicLBs.forEach(classicLB -> {
+            executionLogCallback.saveExecutionLog(
+                format("Waiting for classic Lb: [%s] to have all the instances of Asg: [%s]", classicLB,
+                    newAutoScalingGroupName));
+            awsElbHelperServiceDelegate.waitForAsgInstancesToRegisterWithClassicLB(awsConfig, encryptionDetails, region,
+                classicLB, newAutoScalingGroupName, autoScalingSteadyStateTimeout, executionLogCallback);
+          });
+        }
+      }
+    }
+  }
+
+  private void resizeOldAsgsAndWait(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      List<AwsAmiResizeData> oldAsgsDesiredCounts, ExecutionLogCallback executionLogCallback,
+      Integer autoScalingSteadyStateTimeout, AwsAmiPreDeploymentData preDeploymentData, List<String> targetGroupsArns,
+      List<String> classicLBs, boolean rollback) {
+    if (isNotEmpty(oldAsgsDesiredCounts)) {
+      oldAsgsDesiredCounts.forEach(count -> {
+        executionLogCallback.saveExecutionLog(
+            format("Resizing AutoScaling Group: [%s] to [%d]", count.getAsgName(), count.getDesiredCount()));
+        awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
+            awsConfig, encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback);
+        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
+            encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback,
+            autoScalingSteadyStateTimeout);
+        if (preDeploymentData.hasAsgReachedPreDeploymentCount(count.getAsgName(), count.getDesiredCount())) {
+          awsAsgHelperServiceDelegate.setMinInstancesForAsg(awsConfig, encryptionDetails, region, count.getAsgName(),
+              preDeploymentData.getPreDeploymentMinCapacity(count.getAsgName()), executionLogCallback);
+        }
+        if (rollback) {
+          if (isNotEmpty(targetGroupsArns)) {
+            targetGroupsArns.forEach(arn -> {
+              executionLogCallback.saveExecutionLog(
+                  format("Waiting for Target Group: [%s] to have all instances of Asg: [%s]", arn, count.getAsgName()));
+              awsElbHelperServiceDelegate.waitForAsgInstancesToRegisterWithTargetGroup(awsConfig, encryptionDetails,
+                  region, arn, count.getAsgName(), autoScalingSteadyStateTimeout, executionLogCallback);
+            });
+          }
+          if (isNotEmpty(classicLBs)) {
+            classicLBs.forEach(classicLB -> {
+              executionLogCallback.saveExecutionLog(
+                  format("Waiting for classic Lb: [%s] to have all the instances of Asg: [%s]", classicLB,
+                      count.getAsgName()));
+              awsElbHelperServiceDelegate.waitForAsgInstancesToRegisterWithClassicLB(awsConfig, encryptionDetails,
+                  region, classicLB, count.getAsgName(), autoScalingSteadyStateTimeout, executionLogCallback);
+            });
+          }
+        }
+      });
     }
   }
 
   private void resizeAsgs(String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
       String newAutoScalingGroupName, Integer newAsgFinalDesiredCount, List<AwsAmiResizeData> oldAsgsDesiredCounts,
       ExecutionLogCallback executionLogCallback, boolean resizeNewFirst, Integer autoScalingSteadyStateTimeout,
-      int maxInstances, int minInstances, AwsAmiPreDeploymentData preDeploymentData) {
+      int maxInstances, int minInstances, AwsAmiPreDeploymentData preDeploymentData, List<String> targetGroupsArns,
+      List<String> classicLBs, boolean rollback) {
     if (isBlank(newAutoScalingGroupName) && isEmpty(oldAsgsDesiredCounts)) {
       throw new InvalidRequestException("At least one AutoScaling Group must be present");
     }
     if (resizeNewFirst) {
-      if (isNotBlank(newAutoScalingGroupName)) {
-        executionLogCallback.saveExecutionLog(
-            format("Resizing AutoScaling Group: [%s] to [%d]", newAutoScalingGroupName, newAsgFinalDesiredCount));
-        awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(awsConfig, encryptionDetails, region,
-            newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
-        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
-            encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback,
-            autoScalingSteadyStateTimeout);
-        if (newAsgFinalDesiredCount == maxInstances) {
-          awsAsgHelperServiceDelegate.setMinInstancesForAsg(
-              awsConfig, encryptionDetails, region, newAutoScalingGroupName, minInstances, executionLogCallback);
-        }
-      }
-      if (isNotEmpty(oldAsgsDesiredCounts)) {
-        oldAsgsDesiredCounts.forEach(count -> {
-          executionLogCallback.saveExecutionLog(
-              format("Resizing AutoScaling Group: [%s] to [%d]", count.getAsgName(), count.getDesiredCount()));
-          awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
-              awsConfig, encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback);
-          awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
-              encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback,
-              autoScalingSteadyStateTimeout);
-          if (preDeploymentData.hasAsgReachedPreDeploymentCount(count.getAsgName(), count.getDesiredCount())) {
-            awsAsgHelperServiceDelegate.setMinInstancesForAsg(awsConfig, encryptionDetails, region, count.getAsgName(),
-                preDeploymentData.getPreDeploymentMinCapacity(count.getAsgName()), executionLogCallback);
-          }
-        });
-      }
+      resizeNewAsgAndWait(region, awsConfig, encryptionDetails, newAutoScalingGroupName, newAsgFinalDesiredCount,
+          executionLogCallback, autoScalingSteadyStateTimeout, maxInstances, minInstances, targetGroupsArns, classicLBs,
+          rollback);
+      resizeOldAsgsAndWait(region, awsConfig, encryptionDetails, oldAsgsDesiredCounts, executionLogCallback,
+          autoScalingSteadyStateTimeout, preDeploymentData, targetGroupsArns, classicLBs, rollback);
     } else {
-      if (isNotEmpty(oldAsgsDesiredCounts)) {
-        oldAsgsDesiredCounts.forEach(count -> {
-          executionLogCallback.saveExecutionLog(
-              format("Resizing AutoScaling Group: [%s] to [%d]", count.getAsgName(), count.getDesiredCount()));
-          awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(
-              awsConfig, encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback);
-          awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
-              encryptionDetails, region, count.getAsgName(), count.getDesiredCount(), executionLogCallback,
-              autoScalingSteadyStateTimeout);
-          if (preDeploymentData.hasAsgReachedPreDeploymentCount(count.getAsgName(), count.getDesiredCount())) {
-            awsAsgHelperServiceDelegate.setMinInstancesForAsg(awsConfig, encryptionDetails, region, count.getAsgName(),
-                preDeploymentData.getPreDeploymentMinCapacity(count.getAsgName()), executionLogCallback);
-          }
-        });
-      }
-      if (isNotBlank(newAutoScalingGroupName)) {
-        executionLogCallback.saveExecutionLog(
-            format("Resizing AutoScaling Group: [%s] to [%d]", newAutoScalingGroupName, newAsgFinalDesiredCount));
-        awsAsgHelperServiceDelegate.setAutoScalingGroupLimits(awsConfig, encryptionDetails, region,
-            newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback);
-        awsAsgHelperServiceDelegate.setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig,
-            encryptionDetails, region, newAutoScalingGroupName, newAsgFinalDesiredCount, executionLogCallback,
-            autoScalingSteadyStateTimeout);
-        if (newAsgFinalDesiredCount == maxInstances) {
-          awsAsgHelperServiceDelegate.setMinInstancesForAsg(
-              awsConfig, encryptionDetails, region, newAutoScalingGroupName, minInstances, executionLogCallback);
-        }
-      }
+      resizeOldAsgsAndWait(region, awsConfig, encryptionDetails, oldAsgsDesiredCounts, executionLogCallback,
+          autoScalingSteadyStateTimeout, preDeploymentData, targetGroupsArns, classicLBs, rollback);
+      resizeNewAsgAndWait(region, awsConfig, encryptionDetails, newAutoScalingGroupName, newAsgFinalDesiredCount,
+          executionLogCallback, autoScalingSteadyStateTimeout, maxInstances, minInstances, targetGroupsArns, classicLBs,
+          rollback);
     }
   }
 
@@ -217,7 +475,8 @@ public class AwsAmiHelperServiceDelegateImpl
                                                       .executionStatus(SUCCESS)
                                                       .lastDeployedAsgName(lastDeployedAsgName)
                                                       .newAsgName(newAutoScalingGroupName)
-                                                      .harnessRevision(harnessRevision);
+                                                      .harnessRevision(harnessRevision)
+                                                      .blueGreen(request.isBlueGreen());
       populatePreDeploymentData(harnessManagedAutoScalingGroups, builder);
 
       logCallback.saveExecutionLog("Sending request to delete old auto scaling groups to executor");

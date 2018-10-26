@@ -15,16 +15,18 @@ public class AwsAmiServiceSetupResponse extends AwsResponse {
   private Integer harnessRevision;
   private List<String> oldAsgNames;
   private AwsAmiPreDeploymentData preDeploymentData;
+  private boolean blueGreen;
 
   @Builder
   public AwsAmiServiceSetupResponse(ExecutionStatus executionStatus, String errorMessage, String newAsgName,
       String lastDeployedAsgName, Integer harnessRevision, AwsAmiPreDeploymentData preDeploymentData,
-      List<String> oldAsgNames) {
+      List<String> oldAsgNames, boolean blueGreen) {
     super(executionStatus, errorMessage);
     this.newAsgName = newAsgName;
     this.lastDeployedAsgName = lastDeployedAsgName;
     this.harnessRevision = harnessRevision;
     this.preDeploymentData = preDeploymentData;
     this.oldAsgNames = oldAsgNames;
+    this.blueGreen = blueGreen;
   }
 }

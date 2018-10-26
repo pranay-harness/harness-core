@@ -257,6 +257,12 @@ public interface Constants {
    * The constant UPGRADE_AUTOSCALING_GROUP.
    */
   String UPGRADE_AUTOSCALING_GROUP = "Upgrade AutoScaling Group";
+
+  String UPGRADE_AUTOSCALING_GROUP_ROUTE = "Switch AutoScaling Group Route";
+
+  String SWAP_AUTOSCALING_GROUP_ROUTE = "Swap Routes";
+
+  String ROLLBACK_AUTOSCALING_GROUP_ROUTE = "Rollback AutoScaling Group Route";
   /**
    * The constant AWS_CODE_DEPLOY.
    */

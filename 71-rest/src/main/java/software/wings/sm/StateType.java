@@ -9,6 +9,7 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.joor.Reflect.on;
 import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
+import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
 import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
 import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
 import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
@@ -34,6 +35,7 @@ import static software.wings.common.Constants.K8S_DEPLOYMENT_ROLLING_ROLLBAK;
 import static software.wings.common.Constants.KUBERNETES_SERVICE_SETUP;
 import static software.wings.common.Constants.PCF_UNMAP_ROUT;
 import static software.wings.common.Constants.PROVISION_CLOUD_FORMATION;
+import static software.wings.common.Constants.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
 import static software.wings.common.Constants.ROLLBACK_AWS_AMI_CLUSTER;
 import static software.wings.common.Constants.ROLLBACK_AWS_CODE_DEPLOY;
 import static software.wings.common.Constants.ROLLBACK_AWS_LAMBDA;
@@ -43,6 +45,7 @@ import static software.wings.common.Constants.ROLLBACK_KUBERNETES_SETUP;
 import static software.wings.common.Constants.ROLLBACK_TERRAFORM_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
 import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP;
+import static software.wings.common.Constants.UPGRADE_AUTOSCALING_GROUP_ROUTE;
 import static software.wings.common.Constants.UPGRADE_CONTAINERS;
 import static software.wings.sm.StateTypeScope.COMMON;
 import static software.wings.sm.StateTypeScope.NONE;
@@ -79,9 +82,11 @@ import software.wings.sm.states.AppDynamicsState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.ArtifactCheckState;
 import software.wings.sm.states.ArtifactCollectionState;
+import software.wings.sm.states.AwsAmiRollbackSwitchRoutesState;
 import software.wings.sm.states.AwsAmiServiceDeployState;
 import software.wings.sm.states.AwsAmiServiceRollback;
 import software.wings.sm.states.AwsAmiServiceSetup;
+import software.wings.sm.states.AwsAmiSwitchRoutesState;
 import software.wings.sm.states.AwsCodeDeployRollback;
 import software.wings.sm.states.AwsCodeDeployState;
 import software.wings.sm.states.AwsLambdaRollback;
@@ -380,6 +385,14 @@ public enum StateType implements StateTypeDescriptor {
 
   AWS_AMI_SERVICE_DEPLOY(AwsAmiServiceDeployState.class, COMMANDS, UPGRADE_AUTOSCALING_GROUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_AMI), asList(AMI_DEPLOY_AUTOSCALING_GROUP),
+      ORCHESTRATION_STENCILS),
+
+  AWS_AMI_SWITCH_ROUTES(AwsAmiSwitchRoutesState.class, FLOW_CONTROLS, UPGRADE_AUTOSCALING_GROUP_ROUTE,
+      Lists.newArrayList(InfrastructureMappingType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
+      ORCHESTRATION_STENCILS),
+
+  AWS_AMI_ROLLBACK_SWITCH_ROUTES(AwsAmiRollbackSwitchRoutesState.class, FLOW_CONTROLS, ROLLBACK_AUTOSCALING_GROUP_ROUTE,
+      Lists.newArrayList(InfrastructureMappingType.AWS_AMI), singletonList(AMI_SWITCH_AUTOSCALING_GROUP_ROUTES),
       ORCHESTRATION_STENCILS),
 
   AWS_AMI_SERVICE_ROLLBACK(AwsAmiServiceRollback.class, COMMANDS, ROLLBACK_AWS_AMI_CLUSTER,

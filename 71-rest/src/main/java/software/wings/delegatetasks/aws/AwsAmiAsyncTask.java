@@ -17,6 +17,7 @@ import software.wings.service.impl.aws.model.AwsAmiRequest.AwsAmiRequestType;
 import software.wings.service.impl.aws.model.AwsAmiServiceDeployRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupRequest;
 import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse;
+import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 
@@ -50,6 +51,17 @@ public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
           ExecutionLogCallback logCallback = new ExecutionLogCallback(delegateLogService, deployRequest.getAccountId(),
               deployRequest.getAppId(), deployRequest.getActivityId(), deployRequest.getCommandName());
           return awsAmiHelperServiceDelegate.deployAmiService(deployRequest, logCallback);
+        }
+        case EXECUTE_AMI_SWITCH_ROUTE: {
+          AwsAmiSwitchRoutesRequest switchRoutesRequest = (AwsAmiSwitchRoutesRequest) request;
+          ExecutionLogCallback logCallback = new ExecutionLogCallback(delegateLogService,
+              switchRoutesRequest.getAccountId(), switchRoutesRequest.getAppId(), switchRoutesRequest.getActivityId(),
+              switchRoutesRequest.getCommandName());
+          if (switchRoutesRequest.isRollback()) {
+            return awsAmiHelperServiceDelegate.rollbackSwitchAmiRoutes(switchRoutesRequest, logCallback);
+          } else {
+            return awsAmiHelperServiceDelegate.switchAmiRoutes(switchRoutesRequest, logCallback);
+          }
         }
         default: {
           throw new InvalidRequestException("Invalid request type [" + requestType + "]", WingsException.USER);
