@@ -107,6 +107,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               : lastCVAnalysisMinute;
           long endMinute = analysisStartMinute + TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL);
 
+          // since analysis startMin is inclusive in LE, we  need to add 1.
+          analysisStartMinute += 1;
+
           LearningEngineAnalysisTask learningEngineAnalysisTask =
               createLearningEngineAnalysisTask(accountId, cvConfiguration, analysisStartMinute, endMinute);
 
