@@ -659,13 +659,11 @@ public class SecretManagerImpl implements SecretManager {
   private String upsertSecretInternal(String accountId, String uuid, String name, String value,
       EncryptionType encryptionType, SettingVariableTypes settingVariableType, UsageRestrictions usageRestrictions,
       boolean upsert, boolean audit) {
-    String description;
+    String auditMessage;
     String encryptedDataId;
-    EncryptedData savedData;
     if (isEmpty(uuid)) {
       // INSERT use case
-      description = "Created";
-
+      usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
       EncryptedData encryptedData =
           encrypt(encryptionType, accountId, settingVariableType, value.toCharArray(), null, name, usageRestrictions);
       encryptedData.addSearchTag(name);
@@ -675,8 +673,11 @@ public class SecretManagerImpl implements SecretManager {
         String reason = "Variable " + name + " already exists";
         throw new KmsOperationException(reason);
       }
+
+      auditMessage = "Created";
     } else {
-      savedData = wingsPersistence.get(EncryptedData.class, uuid);
+      // UPDATE use case
+      EncryptedData savedData = wingsPersistence.get(EncryptedData.class, uuid);
       if (!upsert && savedData == null) {
         // UPDATE use case. Return directly when record doesn't exist.
         return null;
@@ -687,9 +688,9 @@ public class SecretManagerImpl implements SecretManager {
           accountId, savedData.getUsageRestrictions(), usageRestrictions);
 
       encryptedDataId = uuid;
-      description = value.equals(SECRET_MASK) ? "Changed name" : "Changed name & value";
+      auditMessage = value.equals(SECRET_MASK) ? "Changed name" : "Changed name & value";
       if (usageRestrictions != null) {
-        description += " & usage restrictions";
+        auditMessage += " & usage restrictions";
       }
 
       savedData.removeSearchTag(null, savedData.getName(), null);
@@ -711,7 +712,7 @@ public class SecretManagerImpl implements SecretManager {
       wingsPersistence.save(SecretChangeLog.builder()
                                 .accountId(accountId)
                                 .encryptedDataId(encryptedDataId)
-                                .description(description)
+                                .description(auditMessage)
                                 .user(EmbeddedUser.builder()
                                           .uuid(UserThreadLocal.get().getUuid())
                                           .email(UserThreadLocal.get().getEmail())
@@ -984,18 +985,18 @@ public class SecretManagerImpl implements SecretManager {
 
     // Logging the secret file changes.
     if (audit && UserThreadLocal.get() != null) {
-      String description;
+      String auditMessage;
       if (update) {
-        description = (isNotEmpty(oldName) && oldName.equals(name)) ? "Changed File" : "Changed Name and File";
-        description = usageRestrictions == null ? description : description + " or Usage Restrictions";
+        auditMessage = (isNotEmpty(oldName) && oldName.equals(name)) ? "Changed File" : "Changed Name and File";
+        auditMessage = usageRestrictions == null ? auditMessage : auditMessage + " or Usage Restrictions";
       } else {
-        description = "File uploaded";
+        auditMessage = "File uploaded";
       }
       wingsPersistence.save(SecretChangeLog.builder()
                                 .accountId(accountId)
                                 .encryptedDataId(uuid)
                                 .encryptedDataId(recordId)
-                                .description(description)
+                                .description(auditMessage)
                                 .user(EmbeddedUser.builder()
                                           .uuid(UserThreadLocal.get().getUuid())
                                           .email(UserThreadLocal.get().getEmail())
