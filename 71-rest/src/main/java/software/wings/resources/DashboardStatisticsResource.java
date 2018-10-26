@@ -7,11 +7,9 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.swagger.annotations.Api;
-import software.wings.beans.EntityType;
 import software.wings.beans.RestResponse;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
-import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot.AggregateCount;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
 import software.wings.beans.instance.dashboard.InstanceSummaryStats;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
@@ -171,12 +169,7 @@ public class DashboardStatisticsResource {
 
     List<InstanceStatsSnapshot> timeline = instanceStatService.aggregate(accountId, from, to);
 
-    // this filtering can be done at DB level using $unwind and $aggregation but that would complicate what is
-    // currently a simple find() query. So, keeping this logic at controller layer.
-    List<InstanceStatsSnapshot> timelineWithOnlyApps =
-        timeline.stream().map(snapshot -> filterAndSortEntities(snapshot, EntityType.APPLICATION)).collect(toList());
-
-    return new RestResponse<>(InstanceTimeline.from(timelineWithOnlyApps));
+    return new RestResponse<>(InstanceTimeline.from(timeline));
   }
 
   /**
@@ -220,18 +213,5 @@ public class DashboardStatisticsResource {
     response.put("percentile", p);
 
     return new RestResponse<>(response);
-  }
-
-  /**
-   * filters aggregations only for given entityType
-   */
-  private static InstanceStatsSnapshot filterAndSortEntities(InstanceStatsSnapshot snapshot, EntityType entityType) {
-    return new InstanceStatsSnapshot(snapshot.getTimestamp(), snapshot.getAccountId(),
-        snapshot.getAggregateCounts()
-            .stream()
-            .filter(ac -> ac.getEntityType() == EntityType.APPLICATION)
-            .sorted(Comparator.comparingInt(AggregateCount::getCount).reversed())
-            .limit(5)
-            .collect(toList()));
   }
 }
