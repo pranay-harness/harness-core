@@ -333,30 +333,13 @@ public class ContainerInstanceHandler extends InstanceHandler {
           String clusterName = commandStepExecutionSummary.getClusterName();
           Set<String> containerSvcNameSet = Sets.newHashSet();
 
-          if (commandStepExecutionSummary.getOldInstanceData() != null) {
-            containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
-                                           .stream()
-                                           .map(ContainerServiceData::getName)
-                                           .collect(toList()));
-          }
-
-          if (commandStepExecutionSummary.getNewInstanceData() != null) {
-            List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
-                                                    .stream()
-                                                    .map(ContainerServiceData::getName)
-                                                    .collect(toList());
-            containerSvcNameSet.addAll(newcontainerSvcNames);
-          }
-
-          if (containerSvcNameSet.isEmpty()) {
-            logger.warn(
-                "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
-                stateExecutionInstanceId);
+          if (checkIfContainerServiceDataAvailable(
+                  stateExecutionInstanceId, commandStepExecutionSummary, containerSvcNameSet)) {
             return Optional.empty();
           }
 
           List<DeploymentInfo> containerDeploymentInfoWithNames =
-              getContainerDeploymentInfos(clusterName, containerSvcNameSet);
+              getContainerDeploymentInfos(clusterName, commandStepExecutionSummary);
 
           return Optional.of(containerDeploymentInfoWithNames);
 
@@ -392,6 +375,36 @@ public class ContainerInstanceHandler extends InstanceHandler {
     return Optional.empty();
   }
 
+  private boolean checkIfContainerServiceDataAvailable(String stateExecutionInstanceId,
+      CommandStepExecutionSummary commandStepExecutionSummary, Set<String> containerSvcNameSet) {
+    if (commandStepExecutionSummary.getOldInstanceData() != null) {
+      containerSvcNameSet.addAll(commandStepExecutionSummary.getOldInstanceData()
+                                     .stream()
+                                     .map(ContainerServiceData::getName)
+                                     .collect(toList()));
+    }
+
+    if (commandStepExecutionSummary.getNewInstanceData() != null) {
+      List<String> newcontainerSvcNames = commandStepExecutionSummary.getNewInstanceData()
+                                              .stream()
+                                              .map(ContainerServiceData::getName)
+                                              .collect(toList());
+      containerSvcNameSet.addAll(newcontainerSvcNames);
+    }
+
+    // Filter out null values
+    List<String> serviceNames =
+        containerSvcNameSet.stream().filter(serviceName -> isNotEmpty(serviceName)).collect(toList());
+
+    if (isEmpty(serviceNames)) {
+      logger.warn(
+          "Both old and new container services are empty. Cannot proceed for phase step for state execution instance: {}",
+          stateExecutionInstanceId);
+      return true;
+    }
+    return false;
+  }
+
   private DeploymentInfo getContainerDeploymentInfosWithLables(String clusterName, List<Label> labels) {
     return ContainerDeploymentInfoWithLabels.builder().clusterName(clusterName).labels(labels).build();
   }
@@ -407,14 +420,27 @@ public class ContainerInstanceHandler extends InstanceHandler {
         .build();
   }
 
-  private List<DeploymentInfo> getContainerDeploymentInfos(String clusterName, Set<String> containerSvcNameSet) {
+  private List<DeploymentInfo> getContainerDeploymentInfos(
+      String clusterName, CommandStepExecutionSummary commandStepExecutionSummary) {
     List<DeploymentInfo> containerDeploymentInfoWithNames = new ArrayList<>();
-    containerSvcNameSet.forEach(containerSvcName
-        -> containerDeploymentInfoWithNames.add(ContainerDeploymentInfoWithNames.builder()
-                                                    .containerSvcName(containerSvcName)
-                                                    .clusterName(clusterName)
-                                                    .build()));
+    addToDeploymentInfoWithNames(
+        clusterName, commandStepExecutionSummary.getNewInstanceData(), containerDeploymentInfoWithNames);
+    addToDeploymentInfoWithNames(
+        clusterName, commandStepExecutionSummary.getOldInstanceData(), containerDeploymentInfoWithNames);
+
     return containerDeploymentInfoWithNames;
+  }
+
+  private void addToDeploymentInfoWithNames(String clusterName, List<ContainerServiceData> containerServiceDataList,
+      List<DeploymentInfo> containerDeploymentInfoWithNames) {
+    if (isNotEmpty(containerServiceDataList)) {
+      containerServiceDataList.forEach(containerServiceData
+          -> containerDeploymentInfoWithNames.add(ContainerDeploymentInfoWithNames.builder()
+                                                      .containerSvcName(containerServiceData.getName())
+                                                      .uniqueNameIdentifier(containerServiceData.getUniqueIdentifier())
+                                                      .clusterName(clusterName)
+                                                      .build()));
+    }
   }
 
   private String getContainerId(ContainerInfo containerInfo) {
@@ -606,9 +632,12 @@ public class ContainerInstanceHandler extends InstanceHandler {
   @Override
   public DeploymentKey generateDeploymentKey(DeploymentInfo deploymentInfo) {
     if (deploymentInfo instanceof ContainerDeploymentInfoWithNames) {
-      return ContainerDeploymentKey.builder()
-          .containerServiceName(((ContainerDeploymentInfoWithNames) deploymentInfo).getContainerSvcName())
-          .build();
+      ContainerDeploymentInfoWithNames deploymentInfoWithNames = (ContainerDeploymentInfoWithNames) deploymentInfo;
+      String keyName = isNotEmpty(deploymentInfoWithNames.getUniqueNameIdentifier())
+          ? deploymentInfoWithNames.getUniqueNameIdentifier()
+          : deploymentInfoWithNames.getContainerSvcName();
+
+      return ContainerDeploymentKey.builder().containerServiceName(keyName).build();
     } else if (deploymentInfo instanceof ContainerDeploymentInfoWithLabels) {
       ContainerDeploymentInfoWithLabels info = (ContainerDeploymentInfoWithLabels) deploymentInfo;
       ContainerDeploymentKey key = ContainerDeploymentKey.builder().labels(info.getLabels()).build();

@@ -53,9 +53,10 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
-  // Following 2 fields are required while Daemon ECS service rollback
+  // Following 3 fields are required while Daemon ECS service rollback
   private String previousEcsServiceSnapshotJson;
   private String ecsServiceArn;
+  private String ecsTaskDefiniton;
   private boolean downsize;
   private String clusterName;
 
@@ -145,6 +146,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     if (containerSetupParams instanceof EcsSetupParams) {
       commandStepExecutionSummary.setPreviousEcsServiceSnapshotJson(previousEcsServiceSnapshotJson);
       commandStepExecutionSummary.setEcsServiceArn(ecsServiceArn);
+      commandStepExecutionSummary.setEcsTaskDefintion(ecsTaskDefiniton);
     }
 
     commandStepExecutionSummary.setClusterName(clusterName);

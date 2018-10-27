@@ -282,8 +282,10 @@ public abstract class ContainerServiceSetup extends State {
         // This will be non-null, when its ECS Daemon workflow
         executionData.setPreviousEcsServiceSnapshotJson(setupExecutionData.getPreviousEcsServiceSnapshotJson());
         executionData.setEcsServiceArn(setupExecutionData.getEcsServiceArn());
-        executionData.setNewInstanceData(
-            Arrays.asList(ContainerServiceData.builder().name(setupExecutionData.getContainerServiceName()).build()));
+        executionData.setNewInstanceData(Arrays.asList(ContainerServiceData.builder()
+                                                           .name(setupExecutionData.getContainerServiceName())
+                                                           .uniqueIdentifier(setupExecutionData.getEcsTaskDefintion())
+                                                           .build()));
       }
       executionData.setDelegateMetaInfo(executionResult.getDelegateMetaInfo());
     }
