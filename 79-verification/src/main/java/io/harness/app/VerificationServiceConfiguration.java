@@ -21,9 +21,9 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.mongo.MongoConfig;
+import io.harness.scheduler.SchedulerConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.app.SchedulerConfig;
 
 import java.util.Optional;
 

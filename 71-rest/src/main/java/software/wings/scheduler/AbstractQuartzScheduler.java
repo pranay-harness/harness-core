@@ -22,6 +22,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.scheduler.InjectorJobFactory;
+import io.harness.scheduler.SchedulerConfig;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -31,7 +32,6 @@ import org.quartz.TriggerKey;
 import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.SchedulerConfig;
 import software.wings.core.managerConfiguration.ConfigChangeEvent;
 import software.wings.core.managerConfiguration.ConfigChangeListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -98,7 +98,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
 
   protected Properties getDefaultProperties() {
     Properties props = new Properties();
-    if (schedulerConfig.getJobstoreclass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
+    if (schedulerConfig.getJobStoreClass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
       Builder mongoClientOptions = MongoClientOptions.builder()
                                        .connectTimeout(30000)
                                        .serverSelectionTimeout(90000)
@@ -106,7 +106,7 @@ public class AbstractQuartzScheduler implements QuartzScheduler, MaintenanceList
                                        .connectionsPerHost(50)
                                        .socketKeepAlive(true);
       MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
-      props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobstoreclass());
+      props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobStoreClass());
       props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
       props.setProperty("org.quartz.jobStore.dbName", uri.getDatabase());
       props.setProperty("org.quartz.jobStore.collectionPrefix", schedulerConfig.getTablePrefix());
