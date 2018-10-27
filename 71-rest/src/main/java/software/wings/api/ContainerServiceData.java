@@ -11,6 +11,8 @@ import lombok.Data;
 public class ContainerServiceData {
   private String name;
   private String image;
+  // Use this if name can not be unique, like in case of ECS daemonSet
+  private String uniqueIdentifier;
   private int previousCount;
   private int desiredCount;
   private int previousTraffic;

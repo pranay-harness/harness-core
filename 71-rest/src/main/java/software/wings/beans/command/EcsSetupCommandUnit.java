@@ -72,7 +72,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       // setup state. in this case, we dont need to launch actual tasks, as ECS will schedule 1 task per instance in
       // cluster so only thing we need to do is, create taskDefinition and service.
       if (setupParams.isRollback()) {
-        handleRollback(setupParams, cloudProviderSetting, encryptedDataDetails, executionLogCallback);
+        handleRollback(
+            setupParams, cloudProviderSetting, commandExecutionDataBuilder, encryptedDataDetails, executionLogCallback);
       } else {
         String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
         String containerName = EcsConvention.getContainerName(dockerImageName);
@@ -151,6 +152,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   }
 
   private void handleRollback(EcsSetupParams setupParams, SettingAttribute cloudProviderSetting,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
     if (setupParams.isDaemonSchedulingStrategy()) {
       try {
@@ -173,7 +175,9 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
           ecsContainerService.waitForDaemonServiceToReachSteadyState(setupParams.getRegion(), cloudProviderSetting,
               encryptedDataDetails, setupParams.getClusterName(), previousServiceSnapshot.getServiceName(),
               setupParams.getServiceSteadyStateTimeout(), executionLogCallback);
-
+          commandExecutionDataBuilder.containerServiceName(previousServiceSnapshot.getServiceName())
+              .ecsTaskDefintion(previousServiceSnapshot.getTaskDefinition())
+              .ecsServiceArn(previousServiceSnapshot.getServiceArn());
         } else {
           // For Daemon service, if first launch of the service fails, we delete that service, as there is no way to set
           // 0 tasks for such service. If we dont delete it, ECS will keep trying scheduling tasks on all instances with
@@ -215,8 +219,10 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     if (existingServiceMetadataSnapshot.isPresent()) {
       Service service = existingServiceMetadataSnapshot.get();
       // Store existing service json spec, so it can be used if rollback is required
-      commandExecutionDataBuilder.previousEcsServiceSnapshotJson(
-          ecsCommandUnitHelper.getJsonForAwsServiceConfig(service, logger));
+      commandExecutionDataBuilder
+          .previousEcsServiceSnapshotJson(ecsCommandUnitHelper.getJsonForAwsServiceConfig(service, logger))
+          .containerServiceName(service.getServiceName())
+          .ecsTaskDefintion(service.getTaskDefinition());
       commandExecutionDataBuilder.ecsServiceArn(service.getServiceArn());
       // Update existing service
       UpdateServiceRequest updateServiceRequest =
@@ -233,7 +239,9 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     } else {
       CreateServiceResult createServiceResult = awsHelperService.createService(setupParams.getRegion(),
           (AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails, createServiceRequest);
-      commandExecutionDataBuilder.ecsServiceArn(createServiceResult.getService().getServiceArn());
+      commandExecutionDataBuilder.ecsServiceArn(createServiceResult.getService().getServiceArn())
+          .containerServiceName(createServiceResult.getService().getServiceName())
+          .ecsTaskDefintion(createServiceResult.getService().getTaskDefinition());
     }
 
     // Wait for all tasks to be up and service to reach steady state

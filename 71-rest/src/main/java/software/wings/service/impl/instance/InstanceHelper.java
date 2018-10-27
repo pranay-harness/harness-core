@@ -497,11 +497,13 @@ public class InstanceHelper {
         //      case DE_PROVISION_NODE:
       case DEPLOY_SERVICE:
       case CONTAINER_DEPLOY:
+      case CONTAINER_SETUP:
       case PCF_RESIZE:
       case DEPLOY_AWSCODEDEPLOY:
       case DEPLOY_AWS_LAMBDA:
       case AMI_DEPLOY_AUTOSCALING_GROUP:
       case HELM_DEPLOY:
+      case CLUSTER_SETUP:
         return true;
       default:
         return false;
