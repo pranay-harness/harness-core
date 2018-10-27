@@ -1,5 +1,7 @@
 package software.wings.service.impl.yaml.handler;
 
+import static software.wings.common.Constants.ECS_SERVICE_SPEC;
+
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -369,6 +371,8 @@ public class YamlHandlerFactory {
       return DeploymentType.AMI.name();
     } else if (entity instanceof EcsContainerTask) {
       return DeploymentType.ECS.name();
+    } else if (entity instanceof EcsServiceSpecification) {
+      return ECS_SERVICE_SPEC;
     } else if (entity instanceof KubernetesContainerTask) {
       return DeploymentType.KUBERNETES.name();
     }
@@ -389,8 +393,8 @@ public class YamlHandlerFactory {
         "TerraformInfrastructureProvisioner", "CloudFormationInfrastructureProvisioner", "JenkinsArtifactStream",
         "NexusArtifactStream", "GcsArtifactStream", "GcrArtifactStream", "EcrArtifactStream", "DockerArtifactStream",
         "BambooArtifactStream", "ArtifactoryArtifactStream", "AmiArtifactStream", "AmazonS3ArtifactStream",
-        "AcrArtifactStream", "HelmChartSpecification", "PcfServiceSpecification", "LambdaSpecification",
-        "UserDataSpecification", "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute",
-        "ServiceCommand");
+        "AcrArtifactStream", "HelmChartSpecification", "EcsServiceSpecification", "PcfServiceSpecification",
+        "LambdaSpecification", "UserDataSpecification", "EcsContainerTask", "KubernetesContainerTask", "ConfigFile",
+        "SettingAttribute", "ServiceCommand");
   }
 }

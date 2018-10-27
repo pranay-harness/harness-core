@@ -432,7 +432,7 @@ public interface ServiceResourceService extends OwnedByApplication {
 
   EcsServiceSpecification getExistingOrDefaultEcsServiceSpecification(String appId, String serviceId);
 
-  EcsServiceSpecification resetToDefaultEcsServiceSpecification(EcsServiceSpecification ecsServiceSpecification);
+  EcsServiceSpecification resetToDefaultEcsServiceSpecification(String appId, String serviceId);
   /***
    * Get command categories equivalent to stencils call
    * @param appId

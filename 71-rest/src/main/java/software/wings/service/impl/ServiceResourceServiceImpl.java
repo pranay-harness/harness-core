@@ -828,14 +828,22 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   @Override
-  public EcsServiceSpecification resetToDefaultEcsServiceSpecification(
-      EcsServiceSpecification ecsServiceSpecification) {
-    boolean exist = exist(ecsServiceSpecification.getAppId(), ecsServiceSpecification.getServiceId());
+  public EcsServiceSpecification resetToDefaultEcsServiceSpecification(String appId, String serviceId) {
+    boolean exist = exist(appId, serviceId);
     if (!exist) {
       throw new InvalidRequestException("Service doesn't exist");
     }
-    ecsServiceSpecification.resetToDefaultSpecification();
-    return upsertEcsServiceSpecification(ecsServiceSpecification, false);
+
+    EcsServiceSpecification specification = getEcsServiceSpecification(appId, serviceId);
+    if (specification == null) {
+      EcsServiceSpecification ecsServiceSpecification = EcsServiceSpecification.builder().serviceId(serviceId).build();
+      ecsServiceSpecification.setAppId(appId);
+      ecsServiceSpecification.resetToDefaultSpecification();
+      return ecsServiceSpecification;
+    } else {
+      specification.resetToDefaultSpecification();
+      return upsertEcsServiceSpecification(specification, false);
+    }
   }
 
   @Override
@@ -880,6 +888,15 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (!exist) {
       throw new InvalidRequestException("Service doesn't exist");
     }
+
+    Type type = Type.CREATE;
+    EcsServiceSpecification specification =
+        getEcsServiceSpecification(ecsServiceSpecification.getAppId(), ecsServiceSpecification.getServiceId());
+    if (specification != null) {
+      ecsServiceSpecification.setUuid(specification.getUuid());
+      type = Type.UPDATE;
+    }
+
     EcsServiceSpecification serviceSpecification =
         wingsPersistence.saveAndGet(EcsServiceSpecification.class, ecsServiceSpecification);
 
@@ -887,7 +904,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     String accountId = appService.getAccountIdByAppId(appId);
     Service service = get(appId, serviceSpecification.getServiceId());
 
-    Type type = isCreate ? Type.CREATE : Type.UPDATE;
     yamlPushService.pushYamlChangeSet(
         accountId, service, serviceSpecification, type, serviceSpecification.isSyncFromGit());
 
