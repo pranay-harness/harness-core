@@ -423,7 +423,7 @@ public class ServiceResource {
   }
 
   @POST
-  @Path("{serviceId}/ecsspecification")
+  @Path("{serviceId}/ecsSpecification")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.CREATE)
@@ -453,7 +453,6 @@ public class ServiceResource {
       EcsServiceSpecification ecsServiceSpecification) {
     ecsServiceSpecification.setAppId(appId);
     ecsServiceSpecification.setServiceId(serviceId);
-    ecsServiceSpecification.setUuid(ecsSpecificationId);
     return new RestResponse<>(serviceResourceService.updateEcsServiceSpecification(ecsServiceSpecification));
   }
 
@@ -462,11 +461,9 @@ public class ServiceResource {
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
-  public RestResponse<EcsServiceSpecification> resetToDefaultEcsServiceSpecification(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, EcsServiceSpecification ecsServiceSpecification) {
-    ecsServiceSpecification.setAppId(appId);
-    ecsServiceSpecification.setServiceId(serviceId);
-    return new RestResponse<>(serviceResourceService.resetToDefaultEcsServiceSpecification(ecsServiceSpecification));
+  public RestResponse<EcsServiceSpecification> resetToDefaultEcsServiceSpecification(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(serviceResourceService.resetToDefaultEcsServiceSpecification(appId, serviceId));
   }
 
   @POST
