@@ -152,10 +152,12 @@ public class ShellExecutor {
           String sCurrentLine;
           saveExecutionLog("Script Output: ", INFO);
           while ((sCurrentLine = br.readLine()) != null) {
-            String[] parts = sCurrentLine.split("=");
-            if (parts.length == 2) {
-              envVariablesMap.put(parts[0], parts[1].trim());
-              saveExecutionLog(parts[0] + "=" + parts[1].trim(), INFO);
+            int index = sCurrentLine.indexOf('=');
+            if (index != -1) {
+              String key = sCurrentLine.substring(0, index).trim();
+              String value = sCurrentLine.substring(index + 1).trim();
+              envVariablesMap.put(key, value);
+              saveExecutionLog(key + "=" + value, INFO);
             }
           }
 

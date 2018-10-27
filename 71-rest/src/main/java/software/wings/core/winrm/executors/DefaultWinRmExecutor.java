@@ -181,10 +181,12 @@ public class DefaultWinRmExecutor implements WinRmExecutor {
         String[] lines = fileContents.split("\n");
         saveExecutionLog("Script Output: ", INFO);
         for (String line : lines) {
-          String[] parts = line.split("=");
-          if (parts.length == 2) {
-            envVariablesMap.put(parts[0].trim(), parts[1].trim().replace("\r", ""));
-            saveExecutionLog(parts[0].trim() + "=" + parts[1].trim(), INFO);
+          int index = line.indexOf('=');
+          if (index != -1) {
+            String key = line.substring(0, index).trim();
+            String value = line.substring(index + 1).trim().replace("\r", "");
+            envVariablesMap.put(key, value);
+            saveExecutionLog(key + "=" + value, INFO);
           }
         }
       }
