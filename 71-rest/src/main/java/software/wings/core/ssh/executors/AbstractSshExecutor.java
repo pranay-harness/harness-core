@@ -307,10 +307,12 @@ public abstract class AbstractSshExecutor implements SshExecutor {
                 br = new BufferedReader(new InputStreamReader(stream, Charset.forName("UTF-8")));
                 String line;
                 while ((line = br.readLine()) != null) {
-                  String[] parts = line.split("=");
-                  if (parts.length == 2) {
-                    envVariablesMap.put(parts[0].trim(), parts[1].trim());
-                    saveExecutionLog(parts[0].trim() + "=" + parts[1].trim());
+                  int index = line.indexOf('=');
+                  if (index != -1) {
+                    String key = line.substring(0, index).trim();
+                    String value = line.substring(index + 1).trim();
+                    envVariablesMap.put(key, value);
+                    saveExecutionLog(key + "=" + value);
                   }
                 }
               } catch (JSchException | SftpException | IOException e) {
