@@ -10,6 +10,7 @@ import io.harness.k8s.manifest.ManifestHelper;
 import org.junit.Test;
 
 import java.net.URL;
+import java.util.List;
 import java.util.Map;
 
 public class KubernetesResourceTest {
@@ -56,6 +57,9 @@ public class KubernetesResourceTest {
 
     Object obj = resource.getField("spec.containers[0]");
     assertThat(obj).isInstanceOf(Map.class);
+
+    obj = resource.getFields("spec.containers[]");
+    assertThat(obj).isInstanceOf(List.class);
 
     resource.setField("spec.containers[0].name", "hello");
     containerName = (String) resource.getField("spec.containers[0].name");
