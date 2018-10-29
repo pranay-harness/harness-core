@@ -7,6 +7,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
+import static software.wings.sm.states.DatadogState.metricEndpointsInfo;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -17,11 +18,13 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.APMFetchConfig;
+import software.wings.annotation.EncryptableSetting;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.Base;
+import software.wings.beans.DatadogConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DynaTraceConfig;
@@ -31,8 +34,11 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
+import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
+import software.wings.service.impl.datadog.DataDogFetchConfig;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
 import software.wings.service.impl.dynatrace.DynaTraceTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
@@ -40,6 +46,7 @@ import software.wings.service.impl.prometheus.PrometheusDataCollectionInfo;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.APMVerificationService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
 import software.wings.sm.states.DynatraceState;
@@ -51,8 +58,12 @@ import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 import software.wings.waitnotify.WaitNotifyEngine;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -60,46 +71,87 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class APMVerificationServiceImpl implements APMVerificationService {
+  private static final Logger logger = LoggerFactory.getLogger(APMVerificationServiceImpl.class);
   @Inject private SettingsService settingsService;
   @Inject private DelegateProxyFactory delegateProxyFactory;
   @Inject private SecretManager secretManager;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private DelegateService delegateService;
   @Inject private WingsPersistence wingsPersistence;
-
-  private static final Logger logger = LoggerFactory.getLogger(APMVerificationServiceImpl.class);
+  @Inject private EncryptionService encryptionService;
 
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(
-      String accountId, String serverConfigId, APMFetchConfig fetchConfig) {
+      String accountId, String serverConfigId, Object fetchConfig, StateType type) {
     try {
       if (isEmpty(serverConfigId) || fetchConfig == null) {
         throw new WingsException("Invalid Parameters passed while trying to get test data for APM");
       }
       SettingAttribute settingAttribute = settingsService.get(serverConfigId);
-      APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
-      APMValidateCollectorConfig apmValidateCollectorConfig =
-          APMValidateCollectorConfig.builder()
-              .baseUrl(apmVerificationConfig.getUrl())
-              .headers(apmVerificationConfig.collectionHeaders())
-              .options(apmVerificationConfig.collectionParams())
-              .url(fetchConfig.getUrl())
-              .body(fetchConfig.getBody())
-              .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
-              .build();
-      SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
-      String apmResponse =
-          delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
-      // if response is an empty JSON, we will tag it as no-load.
-      JSONObject jsonObject = new JSONObject(apmResponse);
-      boolean hasLoad = false;
-      if (jsonObject.length() != 0) {
-        hasLoad = true;
-      }
-      VerificationLoadResponse loadResponse =
-          VerificationLoadResponse.builder().loadResponse(apmResponse).isLoadPresent(hasLoad).build();
-      return VerificationNodeDataSetupResponse.builder().loadResponse(loadResponse).dataForNode(apmResponse).build();
+      APMValidateCollectorConfig apmValidateCollectorConfig;
+      switch (type) {
+        case DATA_DOG:
+          DataDogFetchConfig config = (DataDogFetchConfig) fetchConfig;
+          DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
+          List<EncryptedDataDetail> encryptedDataDetails =
+              secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
+          apmValidateCollectorConfig = datadogConfig.createAPMValidateCollectorConfig();
+          apmValidateCollectorConfig.setEncryptedDataDetails(encryptedDataDetails);
+          apmValidateCollectorConfig.getOptions().put("from", String.valueOf(config.getFromtime()));
+          apmValidateCollectorConfig.getOptions().put("to", String.valueOf(config.getToTime()));
+
+          Map<String, List<APMMetricInfo>> metricInfoByQuery =
+              metricEndpointsInfo(config.getDatadogServiceName(), Arrays.asList(config.getMetrics().split(",")));
+          List<Object> loadResponse = new ArrayList<>();
+
+          // loop for each metric
+          for (Entry<String, List<APMMetricInfo>> entry : metricInfoByQuery.entrySet()) {
+            String url = entry.getKey();
+            if (url.contains("${host}")) {
+              url = url.replace("${host}", config.getHostName());
+            }
+            apmValidateCollectorConfig.setUrl(url);
+            VerificationNodeDataSetupResponse verificationNodeDataSetupResponse =
+                getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
+            if (!verificationNodeDataSetupResponse.isProviderReachable()) {
+              // if not reachable then directly return. no need to process further
+              return VerificationNodeDataSetupResponse.builder().providerReachable(false).build();
+            }
+            // add load response only for metrics containing nodedata.
+            if (verificationNodeDataSetupResponse.getLoadResponse().isLoadPresent()) {
+              loadResponse.add(verificationNodeDataSetupResponse);
+            }
+          }
+
+          VerificationLoadResponse response = VerificationLoadResponse.builder()
+                                                  .loadResponse(loadResponse)
+                                                  .isLoadPresent(!isEmpty(loadResponse))
+                                                  .build();
+
+          return VerificationNodeDataSetupResponse.builder()
+              .providerReachable(true)
+              .loadResponse(response)
+              .dataForNode(loadResponse)
+              .build();
+
+        case APM_VERIFICATION:
+          APMFetchConfig apmFetchConfig = (APMFetchConfig) fetchConfig;
+          APMVerificationConfig apmVerificationConfig = (APMVerificationConfig) settingAttribute.getValue();
+          apmValidateCollectorConfig =
+              APMValidateCollectorConfig.builder()
+                  .baseUrl(apmVerificationConfig.getUrl())
+                  .headers(apmVerificationConfig.collectionHeaders())
+                  .options(apmVerificationConfig.collectionParams())
+                  .url(apmFetchConfig.getUrl())
+                  .body(apmFetchConfig.getBody())
+                  .encryptedDataDetails(apmVerificationConfig.encryptedDataDetails(secretManager))
+                  .build();
+
+          return getVerificationNodeDataResponse(accountId, apmValidateCollectorConfig);
+        default:
+          throw new WingsException("Invalid StateType provided" + type);
+      }
     } catch (Exception e) {
       String errorMsg = e.getCause() != null ? Misc.getMessage(e.getCause()) : Misc.getMessage(e);
       throw new WingsException(ErrorCode.APM_CONFIGURATION_ERROR, USER).addParam("reason", errorMsg);
@@ -268,6 +320,25 @@ public class APMVerificationServiceImpl implements APMVerificationService {
         .withParameters(dataCollectionInfo)
         .withEnvId(request.getEnvId())
         .withTimeout(TimeUnit.MINUTES.toMillis(timeDuration + 120))
+        .build();
+  }
+
+  private VerificationNodeDataSetupResponse getVerificationNodeDataResponse(
+      String accountId, APMValidateCollectorConfig apmValidateCollectorConfig) {
+    SyncTaskContext syncTaskContext = aContext().withAccountId(accountId).withAppId(Base.GLOBAL_APP_ID).build();
+    String apmResponse =
+        delegateProxyFactory.get(APMDelegateService.class, syncTaskContext).fetch(apmValidateCollectorConfig);
+    JSONObject jsonObject = new JSONObject(apmResponse);
+    boolean hasLoad = false;
+    if (jsonObject.length() != 0) {
+      hasLoad = true;
+    }
+    VerificationLoadResponse loadResponse =
+        VerificationLoadResponse.builder().loadResponse(apmResponse).isLoadPresent(hasLoad).build();
+    return VerificationNodeDataSetupResponse.builder()
+        .providerReachable(hasLoad)
+        .loadResponse(loadResponse)
+        .dataForNode(apmResponse)
         .build();
   }
 }
