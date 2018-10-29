@@ -25,7 +25,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.persistence.HIterator;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
@@ -43,7 +42,6 @@ import software.wings.beans.ElkConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
-import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.config.LogzConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -80,10 +78,8 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -175,127 +171,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     // delete experimental log analysis records
     wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
                                 .filter("stateExecutionId", stateExecutionId));
-  }
-
-  @Override
-  public Boolean saveLogData(StateType stateType, String accountId, String appId, String stateExecutionId,
-      String workflowId, String workflowExecutionId, String serviceId, ClusterLevel clusterLevel, String delegateTaskId,
-      List<LogElement> logData) {
-    try {
-      if (!isStateValid(appId, stateExecutionId)) {
-        logger.warn(
-            "State is no longer active " + stateExecutionId + ". Sending delegate abort request " + delegateTaskId);
-        delegateService.abortTask(accountId, delegateTaskId);
-        return false;
-      }
-      logger.info("inserting " + logData.size() + " pieces of log data");
-
-      if (logData.isEmpty()) {
-        return true;
-      }
-
-      boolean hasHeartBeat =
-          logData.stream().anyMatch((LogElement data) -> Integer.parseInt(data.getClusterLabel()) < 0);
-
-      /*
-       * LOGZ, ELK, SUMO report cluster level L0. This is then clustered twice
-       * in python and reported here as L1 and L2. Only L0 will have the heartbeat
-       */
-      if (clusterLevel == ClusterLevel.L0 && !hasHeartBeat) {
-        logger.error("Delegate reporting log records without a "
-            + "heartbeat for state " + stateType + " : id " + stateExecutionId);
-        return false;
-      }
-
-      /*
-       * The only time we see data for Splunk is from the delegate at level L2. There is no
-       * additional clustering for Splunk
-       */
-      if (stateType == StateType.SPLUNKV2 && !hasHeartBeat) {
-        logger.error("Delegate reporting log records without a "
-            + "heartbeat for state " + stateType + " : id " + stateExecutionId);
-
-        return false;
-      }
-
-      List<LogDataRecord> logDataRecords =
-          LogDataRecord.generateDataRecords(stateType, appId, stateExecutionId, workflowId, workflowExecutionId,
-              serviceId, clusterLevel, ClusterLevel.getHeartBeatLevel(clusterLevel), logData);
-      wingsPersistence.saveIgnoringDuplicateKeys(logDataRecords);
-      logger.info("inserted " + logDataRecords.size() + " LogDataRecord to persistence layer.");
-
-      // bump the level for clustered data
-      int logCollectionMinute = logData.get(0).getLogCollectionMinute();
-      String query = logData.get(0).getQuery();
-      switch (clusterLevel) {
-        case L0:
-          break;
-        case L1:
-          String node = logData.get(0).getHost();
-          bumpClusterLevel(stateType, stateExecutionId, appId, query, Collections.singleton(node), logCollectionMinute,
-              ClusterLevel.getHeartBeatLevel(ClusterLevel.L0), ClusterLevel.getHeartBeatLevel(ClusterLevel.L1));
-          deleteClusterLevel(stateType, stateExecutionId, appId, query, Collections.singleton(node),
-              logCollectionMinute, ClusterLevel.L0);
-          learningEngineService.markCompleted(
-              workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L1);
-          break;
-        case L2:
-          bumpClusterLevel(stateType, stateExecutionId, appId, query, emptySet(), logCollectionMinute,
-              ClusterLevel.getHeartBeatLevel(ClusterLevel.L1), ClusterLevel.getHeartBeatLevel(ClusterLevel.L2));
-          deleteClusterLevel(
-              stateType, stateExecutionId, appId, query, emptySet(), logCollectionMinute, ClusterLevel.L1);
-          learningEngineService.markCompleted(
-              workflowExecutionId, stateExecutionId, logCollectionMinute, MLAnalysisType.LOG_CLUSTER, ClusterLevel.L2);
-          break;
-        default:
-          throw new WingsException("Bad cluster level {} " + clusterLevel.name());
-      }
-      return true;
-    } catch (Exception ex) {
-      logger.error("Save log data failed " + ex);
-      return false;
-    }
-  }
-
-  @Override
-  public List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
-      ClusterLevel clusterLevel, StateType stateType) {
-    Query<LogDataRecord> recordQuery;
-    if (compareCurrent) {
-      recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                        .filter("stateType", stateType)
-                        .filter("stateExecutionId", logRequest.getStateExecutionId())
-                        .filter("workflowExecutionId", workflowExecutionId)
-                        .filter("appId", logRequest.getApplicationId())
-                        .filter("query", logRequest.getQuery())
-                        .filter("serviceId", logRequest.getServiceId())
-                        .filter("clusterLevel", clusterLevel)
-                        .filter("logCollectionMinute", logRequest.getLogCollectionMinute())
-                        .field("host")
-                        .hasAnyOf(logRequest.getNodes());
-
-    } else {
-      recordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                        .filter("stateType", stateType)
-                        .filter("workflowExecutionId", workflowExecutionId)
-                        .filter("appId", logRequest.getApplicationId())
-                        .filter("query", logRequest.getQuery())
-                        .filter("serviceId", logRequest.getServiceId())
-                        .filter("clusterLevel", clusterLevel)
-                        .filter("logCollectionMinute", logRequest.getLogCollectionMinute());
-    }
-
-    List<LogDataRecord> rv = new ArrayList<>();
-    try (HIterator<LogDataRecord> records = new HIterator<>(recordQuery.fetch())) {
-      while (records.hasNext()) {
-        rv.add(records.next());
-      }
-    }
-
-    if (logger.isDebugEnabled()) {
-      logger.debug("returning " + rv.size() + " records for request: " + logRequest);
-    }
-    return rv;
   }
 
   private boolean deleteFeedbackHelper(String feedbackId) {
@@ -433,18 +308,6 @@ public class AnalysisServiceImpl implements AnalysisService {
   }
 
   @Override
-  public boolean isLogDataCollected(
-      String appId, String stateExecutionId, String query, int logCollectionMinute, StateType stateType) {
-    Query<LogDataRecord> splunkLogDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class)
-                                                        .filter("stateType", stateType)
-                                                        .filter("stateExecutionId", stateExecutionId)
-                                                        .filter("appId", appId)
-                                                        .filter("query", query)
-                                                        .filter("logCollectionMinute", logCollectionMinute);
-    return !splunkLogDataRecordQuery.asList().isEmpty();
-  }
-
-  @Override
   public boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
       String workflowId, String workflowExecutionId, String serviceId) {
     if (comparisonStrategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
@@ -538,22 +401,6 @@ public class AnalysisServiceImpl implements AnalysisService {
       learningEngineService.markCompleted(taskId.get());
     }
     return true;
-  }
-
-  @Override
-  public LogMLAnalysisRecord getLogAnalysisRecords(String appId, String stateExecutionId, String query,
-      StateType stateType, Integer logCollectionMinute) throws IOException {
-    LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
-                                                  .filter("stateExecutionId", stateExecutionId)
-                                                  .filter("appId", appId)
-                                                  .filter("query", query)
-                                                  .filter("stateType", stateType)
-                                                  .field("logCollectionMinute")
-                                                  .lessThanOrEq(logCollectionMinute)
-                                                  .order("-logCollectionMinute")
-                                                  .get();
-    decompressLogAnalysisRecord(logMLAnalysisRecord);
-    return logMLAnalysisRecord;
   }
 
   private void decompressLogAnalysisRecord(LogMLAnalysisRecord logMLAnalysisRecord) {
@@ -989,26 +836,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     return coordinate + (adjustmentBase * sprinkleRatio) / 100;
   }
 
-  @Override
-  public boolean purgeLogs() {
-    final PageRequest<Workflow> workflowRequest = aPageRequest().build();
-    PageResponse<Workflow> workflows = wingsPersistence.query(Workflow.class, workflowRequest);
-    for (Workflow workflow : workflows) {
-      final PageRequest<WorkflowExecution> workflowExecutionRequest =
-          aPageRequest()
-              .addFilter("workflowId", Operator.EQ, workflow.getUuid())
-              .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
-              .addOrder("createdAt", OrderType.DESC)
-              .build();
-      final PageResponse<WorkflowExecution> workflowExecutions =
-          workflowExecutionService.listExecutions(workflowExecutionRequest, false, true, false, false);
-      for (StateType stateType : logAnalysisStates) {
-        purgeLogs(stateType, workflowExecutions);
-      }
-    }
-    return true;
-  }
-
   private void purgeLogs(StateType stateType, PageResponse<WorkflowExecution> workflowExecutions) {
     for (WorkflowExecution workflowExecution : workflowExecutions) {
       if (logExist(stateType, workflowExecution)) {
@@ -1063,109 +890,6 @@ public class AnalysisServiceImpl implements AnalysisService {
     return stateExecutionInstance != null && !ExecutionStatus.isFinalStatus(stateExecutionInstance.getStatus());
   }
 
-  @Override
-  public int getCollectionMinuteForLevel(String query, String appId, String stateExecutionId, StateType type,
-      ClusterLevel clusterLevel, Set<String> nodes) {
-    ClusterLevel heartBeat = ClusterLevel.getHeartBeatLevel(clusterLevel);
-
-    while (true) {
-      /**
-       * Get the heartbeat records for L1.
-       */
-      try (HIterator<LogDataRecord> logHeartBeatRecordsIterator =
-               new HIterator<>(wingsPersistence.createQuery(LogDataRecord.class)
-                                   .filter("appId", appId)
-                                   .filter("stateExecutionId", stateExecutionId)
-                                   .filter("stateType", type)
-                                   .filter("clusterLevel", heartBeat)
-                                   .filter("query", query)
-                                   .field("host")
-                                   .in(nodes)
-                                   .order("logCollectionMinute")
-                                   .fetch())) {
-        if (!logHeartBeatRecordsIterator.hasNext()) {
-          return -1;
-        }
-
-        int logCollectionMinute = -1;
-        Set<String> hosts;
-
-        {
-          LogDataRecord logDataRecord = logHeartBeatRecordsIterator.next();
-          logCollectionMinute = logDataRecord.getLogCollectionMinute();
-
-          hosts = Sets.newHashSet(logDataRecord.getHost());
-          while (logHeartBeatRecordsIterator.hasNext()) {
-            LogDataRecord dataRecord = logHeartBeatRecordsIterator.next();
-            if (dataRecord.getLogCollectionMinute() == logCollectionMinute) {
-              hosts.add(dataRecord.getHost());
-            }
-          }
-        }
-
-        if (deleteIfStale(
-                query, appId, stateExecutionId, type, hosts, logCollectionMinute, ClusterLevel.L1, heartBeat)) {
-          continue;
-        }
-
-        Set<String> lookupNodes = new HashSet<>(nodes);
-
-        for (String node : hosts) {
-          lookupNodes.remove(node);
-        }
-
-        if (!lookupNodes.isEmpty()) {
-          logger.info(
-              "Still waiting for data for " + Arrays.toString(lookupNodes.toArray()) + " for " + stateExecutionId);
-        }
-
-        return lookupNodes.isEmpty() ? logCollectionMinute : -1;
-      }
-    }
-  }
-
-  @Override
-  public boolean hasDataRecords(String query, String appId, String stateExecutionId, StateType type, Set<String> nodes,
-      ClusterLevel level, int logCollectionMinute) {
-    /**
-     * Get the data records for the found heartbeat.
-     */
-    return wingsPersistence.createQuery(LogDataRecord.class)
-               .filter("appId", appId)
-               .filter("stateExecutionId", stateExecutionId)
-               .filter("stateType", type)
-               .filter("clusterLevel", level)
-               .filter("logCollectionMinute", logCollectionMinute)
-               .filter("query", query)
-               .field("host")
-               .in(nodes)
-               .count(new CountOptions().limit(1))
-        > 0;
-  }
-
-  @Override
-  public Optional<LogDataRecord> getHearbeatRecordForL0(
-      String appId, String stateExecutionId, StateType type, String host) {
-    /**
-     * Find heartbeat for L0 records. L0 heartbeat is H0.
-     */
-    Query<LogDataRecord> query = wingsPersistence.createQuery(LogDataRecord.class)
-                                     .filter("appId", appId)
-                                     .filter("stateExecutionId", stateExecutionId)
-                                     .filter("stateType", type)
-                                     .filter("clusterLevel", ClusterLevel.getHeartBeatLevel(ClusterLevel.L0))
-                                     .order("logCollectionMinute");
-
-    if (isNotEmpty(host)) {
-      query = query.filter("host", host);
-    }
-
-    final LogDataRecord logDataRecords = query.get();
-
-    // Nothing more to process. break.
-    return logDataRecords == null ? Optional.empty() : Optional.of(logDataRecords);
-  }
-
   private int getLastProcessedMinute(String query, String appId, String stateExecutionId, StateType type) {
     LogDataRecord logDataRecords = wingsPersistence.createQuery(LogDataRecord.class)
                                        .filter("appId", appId)
@@ -1176,12 +900,6 @@ public class AnalysisServiceImpl implements AnalysisService {
                                        .order("-logCollectionMinute")
                                        .get();
     return logDataRecords == null ? -1 : logDataRecords.getLogCollectionMinute();
-  }
-
-  @Override
-  public boolean isProcessingComplete(
-      String query, String appId, String stateExecutionId, StateType type, int timeDurationMins) {
-    return getLastProcessedMinute(query, appId, stateExecutionId, type) >= timeDurationMins - 1;
   }
 
   @Override

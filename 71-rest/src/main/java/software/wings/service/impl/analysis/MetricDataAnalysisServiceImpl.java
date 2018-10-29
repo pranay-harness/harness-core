@@ -527,5 +527,9 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     // delete the metric groups
     wingsPersistence.delete(
         wingsPersistence.createQuery(TimeSeriesMetricGroup.class).filter("stateExecutionId", stateExecutionId));
+
+    // delete verification service tasks
+    wingsPersistence.delete(
+        wingsPersistence.createQuery(AnalysisContext.class).filter("stateExecutionId", stateExecutionId));
   }
 }
