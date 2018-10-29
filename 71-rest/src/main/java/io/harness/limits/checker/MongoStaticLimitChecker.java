@@ -1,11 +1,14 @@
-package io.harness.limits;
+package io.harness.limits.checker;
 
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
 import com.mongodb.MongoCommandException;
 import io.harness.eraro.mongo.MongoError;
+import io.harness.limits.Action;
+import io.harness.limits.Counter;
 import io.harness.limits.lib.StaticLimit;
 import io.harness.limits.lib.StaticLimitChecker;
 import io.harness.persistence.ReadPref;
@@ -32,8 +35,20 @@ public class MongoStaticLimitChecker implements StaticLimitChecker {
   private final WingsPersistence persistence;
   private final String key;
 
-  public MongoStaticLimitChecker(StaticLimit limit, WingsPersistence persistence, String key) {
-    Preconditions.checkArgument(limit.getCount() >= 0, "limits can only be non-zero");
+  public MongoStaticLimitChecker(StaticLimit limit, WingsPersistence persistence, Action action) {
+    Preconditions.checkArgument(limit.getCount() >= 0, "limits can only be non-negative");
+    this.persistence = persistence;
+    this.limit = limit;
+    this.key = action.key();
+  }
+
+  /**
+   * @deprecated use {@link #MongoStaticLimitChecker(StaticLimit, WingsPersistence, Action)} instead.
+   */
+  @Deprecated
+  @VisibleForTesting
+  MongoStaticLimitChecker(StaticLimit limit, WingsPersistence persistence, String key) {
+    Preconditions.checkArgument(limit.getCount() >= 0, "limits can only be non-negative");
     this.persistence = persistence;
     this.limit = limit;
     this.key = key;

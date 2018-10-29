@@ -14,7 +14,7 @@ import software.wings.service.intfc.instance.stats.collector.StatsCollector;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.Set;
@@ -57,7 +57,7 @@ public class StatsCollectorImpl implements StatsCollector {
 
   // see tests for behaviour
   static Instant alignedWithMinute(Instant instant, int minuteToTruncateTo) {
-    if (LocalDateTime.ofInstant(instant, ZoneId.of("UTC")).getMinute() % minuteToTruncateTo == 0) {
+    if (LocalDateTime.ofInstant(instant, ZoneOffset.UTC).getMinute() % minuteToTruncateTo == 0) {
       return instant.truncatedTo(ChronoUnit.MINUTES);
     }
 
