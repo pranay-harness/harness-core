@@ -757,6 +757,8 @@ public class AccountServiceImpl implements AccountService {
       }
     }
 
+    int totalSize = finalReturnList.size();
+
     if (offset <= finalReturnList.size() && finalReturnList.size() >= offset + SIZE_PER_SERVICES_REQUEST) {
       finalReturnList = finalReturnList.subList(offset, offset + SIZE_PER_SERVICES_REQUEST);
     } else if (offset <= finalReturnList.size()) {
@@ -769,11 +771,13 @@ public class AccountServiceImpl implements AccountService {
       return PageResponseBuilder.aPageResponse()
           .withResponse(finalReturnList)
           .withOffset(String.valueOf(offset + finalReturnList.size()))
+          .withTotal(totalSize)
           .build();
     }
     return PageResponseBuilder.aPageResponse()
         .withResponse(new ArrayList<>())
         .withOffset(String.valueOf(offset + finalReturnList.size()))
+        .withTotal(totalSize)
         .build();
   }
 }
