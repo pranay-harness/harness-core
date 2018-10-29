@@ -2,6 +2,7 @@ package io.harness.limits;
 
 import io.harness.limits.lib.LimitChecker;
 
+import javax.annotation.Nonnull;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 /**
@@ -9,5 +10,5 @@ import javax.annotation.ParametersAreNonnullByDefault;
  */
 @ParametersAreNonnullByDefault
 public interface LimitCheckerFactory {
-  LimitChecker getInstance(Action action);
+  @Nonnull LimitChecker getInstance(Action action);
 }
