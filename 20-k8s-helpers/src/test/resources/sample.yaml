@@ -1,0 +1,13 @@
+persons:
+- name: joe
+  favorites:
+    fruits: [mango]
+    drinks: [tea, coffee]
+- name: nick
+  favorites:
+    fruits: [kiwi, apple]
+    drinks: [tea]
+- name: john
+  favorites:
+    fruits: [mango]
+    drinks: [coffee]

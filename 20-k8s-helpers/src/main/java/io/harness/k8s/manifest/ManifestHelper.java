@@ -1,47 +1,15 @@
 package io.harness.k8s.manifest;
 
-import com.esotericsoftware.yamlbeans.YamlConfig;
-import com.esotericsoftware.yamlbeans.YamlConfig.WriteClassName;
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
-import com.esotericsoftware.yamlbeans.YamlWriter;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class ManifestHelper {
-  private static final YamlConfig yamlConfig = defaultYamlConfig();
-
-  private static YamlConfig defaultYamlConfig() {
-    YamlConfig yamlConfig = new YamlConfig();
-    yamlConfig.writeConfig.setIndentSize(2);
-    yamlConfig.writeConfig.setWriteClassname(WriteClassName.NEVER);
-    return yamlConfig;
-  }
-
-  public static String toYaml(Object resource) {
-    try {
-      YamlConfig yamlConfig = new YamlConfig();
-      yamlConfig.writeConfig.setIndentSize(2);
-      yamlConfig.writeConfig.setWriteClassname(WriteClassName.NEVER);
-
-      StringWriter out = new StringWriter();
-      YamlWriter yamlWriter = new YamlWriter(out, yamlConfig);
-
-      yamlWriter.write(resource);
-      yamlWriter.close();
-
-      return out.toString();
-    } catch (YamlException e) {
-      throw new KubernetesYamlException("Failed to serialize manifest", e);
-    }
-  }
-
   public static List<KubernetesResource> processYaml(String yamlString) {
     YamlReader reader = new YamlReader(yamlString);
 

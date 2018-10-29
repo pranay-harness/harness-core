@@ -1,9 +1,7 @@
-package io.harness.k8s.manifest;
+package io.harness.k8s.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.harness.k8s.model.KubernetesResource;
-import io.harness.k8s.model.KubernetesResourceId;
 import org.junit.Test;
 
 import java.util.ArrayList;
