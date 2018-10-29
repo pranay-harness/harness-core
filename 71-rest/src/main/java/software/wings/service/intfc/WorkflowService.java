@@ -149,6 +149,8 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
 
   String resolveEnvironmentId(Workflow workflow, Map<String, String> workflowVariables);
 
+  String obtainTemplatedEnvironmentId(Workflow workflow, Map<String, String> workflowVariables);
+
   GraphNode readGraphNode(@NotEmpty String appId, @NotEmpty String workflowId, @NotEmpty String nodeId);
 
   List<EntityType> getRequiredEntities(String appId, String workflowId);

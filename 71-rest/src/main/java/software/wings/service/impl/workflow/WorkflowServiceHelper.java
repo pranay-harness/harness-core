@@ -237,6 +237,24 @@ public class WorkflowServiceHelper {
     }
   }
 
+  public String obtainTemplatedEnvironmentId(Workflow workflow, Map<String, String> workflowVariables) {
+    OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
+    if (!workflow.checkEnvironmentTemplatized()) {
+      return workflow.getEnvId();
+    } else {
+      if (isNotEmpty(workflowVariables)) {
+        String envName =
+            WorkflowServiceTemplateHelper.getTemplatizedEnvVariableName(orchestrationWorkflow.getUserVariables());
+        if (envName != null) {
+          if (workflowVariables.get(envName) != null) {
+            return workflowVariables.get(envName);
+          }
+        }
+      }
+    }
+    return null;
+  }
+
   public String resolveEnvironmentId(Workflow workflow, Map<String, String> workflowVariables) {
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     if (!workflow.checkEnvironmentTemplatized()) {
@@ -253,7 +271,7 @@ public class WorkflowServiceHelper {
       }
     }
     throw new WingsException(
-        "Workflow [" + workflow.getName() + "] environment parameterized. However, the value not supplied");
+        "Workflow [" + workflow.getName() + "] environment parameterized. However, the value not supplied", USER);
   }
 
   public List<String> getKeywords(Workflow workflow) {
