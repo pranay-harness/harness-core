@@ -140,6 +140,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
                   completed.set(true);
                   break;
                 }
+                sleep(RETRY_SLEEP);
                 continue;
               }
             }
@@ -174,7 +175,8 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
               if (retry == 1) {
                 taskResult.setErrorMessage(Misc.getMessage(e));
               }
-              logger.warn("error fetching sumo logs. retrying in " + RETRY_SLEEP + "s", e);
+              logger.warn("error fetching sumo logs for stateExecutionId {}. retrying in {}s",
+                  dataCollectionInfo.getStateExecutionId(), RETRY_SLEEP, e);
               sleep(RETRY_SLEEP);
             }
           }
@@ -197,7 +199,7 @@ public class SumoDataCollectionTask extends AbstractDelegateDataCollectionTask {
           taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
           taskResult.setErrorMessage("error fetching sumo logs for minute " + logCollectionMinute);
         }
-        logger.error("error fetching sumo logs", e);
+        logger.error("error fetching sumo logs  for stateExecutionId {}", dataCollectionInfo.getStateExecutionId(), e);
       }
 
       if (completed.get()) {
