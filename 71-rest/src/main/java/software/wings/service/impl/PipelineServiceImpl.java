@@ -706,7 +706,7 @@ public class PipelineServiceImpl implements PipelineService {
               .addParam("args", "Environment can not be null for non-build state");
         }
 
-        String envId = workflowService.resolveEnvironmentId(workflow, stageElement.getWorkflowVariables());
+        String envId = workflowService.obtainTemplatedEnvironmentId(workflow, stageElement.getWorkflowVariables());
         if (envId != null && matchesVariablePattern(envId)) {
           parameterizedEnvIds.add(envId);
         }

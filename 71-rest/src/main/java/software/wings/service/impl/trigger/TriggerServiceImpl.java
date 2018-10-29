@@ -423,7 +423,8 @@ public class TriggerServiceImpl implements TriggerService {
       if (idempotent.alreadyExecuted()) {
         return;
       }
-      logger.info("Received scheduled trigger for appId {} and Trigger Id {}", trigger.getAppId(), trigger.getUuid());
+      logger.info("Received scheduled trigger for appId {} and Trigger Id {} with the scheduled fire time {} ",
+          trigger.getAppId(), trigger.getUuid(), scheduledFireTime.getTime());
       List<Artifact> lastDeployedArtifacts =
           getLastDeployedArtifacts(trigger.getAppId(), trigger.getWorkflowId(), null);
       ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();

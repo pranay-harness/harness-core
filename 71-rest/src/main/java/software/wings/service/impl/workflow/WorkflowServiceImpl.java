@@ -2097,6 +2097,11 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
+  public String obtainTemplatedEnvironmentId(Workflow workflow, Map<String, String> workflowVariables) {
+    return workflowServiceHelper.obtainTemplatedEnvironmentId(workflow, workflowVariables);
+  }
+
+  @Override
   public GraphNode readGraphNode(String appId, String workflowId, String nodeId) {
     Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
     Validator.notNullCheck("Workflow was deleted", workflow, WingsException.USER);
