@@ -16,8 +16,10 @@ import org.mongodb.morphia.annotations.Indexes;
  */
 @Entity(value = "timeSeriesAnalysisRecords", noClassnameStored = true)
 @Indexes(@Index(fields =
-    { @Field("workflowExecutionId")
-      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName") },
+    {
+      @Field("workflowExecutionId")
+      , @Field("stateExecutionId"), @Field("analysisMinute"), @Field("groupName"), @Field("cvConfigId")
+    },
     options = @IndexOptions(unique = true, name = "MetricAnalysisUniqueIdx")))
 @Data
 @EqualsAndHashCode(callSuper = true)
