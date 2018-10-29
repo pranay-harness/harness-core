@@ -46,6 +46,7 @@ import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
+import migrations.all.RemoveDupInstanceStats;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
 import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
@@ -136,6 +137,7 @@ public class MigrationList {
         .add(Pair.of(193, UsageRestrictionsMigration.class))
         .add(Pair.of(194, AddInstanceStatsCollectionJobToAllAccounts.class))
         .add(Pair.of(195, AddValidUntilToWaitQueue.class))
+        .add(Pair.of(196, RemoveDupInstanceStats.class))
         .build();
   }
 }
