@@ -16,6 +16,7 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -112,8 +113,14 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     if (isNotEmpty(host)) {
       query = query.field("host").in(host);
     }
-    wingsPersistence.update(
-        query, wingsPersistence.createUpdateOperations(LogDataRecord.class).set("clusterLevel", toLevel));
+    try {
+      wingsPersistence.update(
+          query, wingsPersistence.createUpdateOperations(LogDataRecord.class).set("clusterLevel", toLevel));
+    } catch (DuplicateKeyException e) {
+      logger.warn(
+          "duplicate update operation for state: {}, stateExecutionId: {}, searchQuery: {}, hosts: {}, logCollectionMinute: {}, from: {}, to: {}",
+          stateType, stateExecutionId, searchQuery, host, logCollectionMinute, fromLevel, toLevel);
+    }
   }
 
   @Override

@@ -13,7 +13,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -34,9 +33,7 @@ import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.LogAnalysisService;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mongodb.morphia.query.Query;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
 import org.quartz.JobExecutionContext;
@@ -48,7 +45,6 @@ import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -69,7 +65,6 @@ import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;
-import software.wings.sm.states.AbstractLogAnalysisState;
 import software.wings.sm.states.ApprovalState;
 import software.wings.utils.JsonUtils;
 
@@ -84,7 +79,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
@@ -409,13 +403,13 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         final LogRequest logRequest = new LogRequest(
             query, appId, stateExecutionId, workflowId, serviceId, Collections.singleton(host), logCollectionMinute);
 
-        WebTarget getTarget = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+        WebTarget getTarget = client.target(VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
             + LogAnalysisResource.ANALYSIS_STATE_GET_LOG_URL + "?accountId=" + accountId
             + "&clusterLevel=" + ClusterLevel.L1.name()
             + "&compareCurrent=true&workflowExecutionId=" + workflowExecutionId + "&stateType=" + StateType.ELK);
         boolean succeess = false;
         for (int i = 0; i < 10; i++) {
-          RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(getTarget).post(
+          RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(getTarget).post(
               entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
           if (restResponse.getResource().size() == 15) {
             succeess = true;
@@ -459,69 +453,6 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
         logDataRecord.setStateExecutionId(stateExecutionId);
       });
       return rv;
-    }
-  }
-
-  // TODO Disabled test. Enable when purge is revisited
-  @Test
-  @Ignore
-  public void testPurge() throws Exception {
-    final String sameAppId = "some-application";
-    final String sameServiceId = "some-service";
-    int numOfWorkFlows = 3;
-    int numOfExecutionPerWorkFlow = 5;
-    int numOfMinutes = 10;
-    int numOfLogs = 12;
-
-    Map<String, String> workFlowToExecution = new HashMap<>();
-    Map<String, String> workFlowToStateExecution = new HashMap<>();
-    int totalRecordsInserted = 0;
-    for (int workflowNum = 0; workflowNum < numOfWorkFlows; workflowNum++) {
-      Workflow workflow = aWorkflow().withAppId(sameAppId).withName("workflow-" + workflowNum).build();
-      String workFlowId = wingsPersistence.save(workflow);
-      for (int executionNum = 0; executionNum < numOfExecutionPerWorkFlow; executionNum++) {
-        WorkflowExecution workflowExecution = aWorkflowExecution()
-                                                  .withWorkflowId(workFlowId)
-                                                  .withAppId(sameAppId)
-                                                  .withName(workFlowId + "-execution-" + executionNum)
-                                                  .withStatus(ExecutionStatus.SUCCESS)
-                                                  .build();
-        String workFlowExecutionId = wingsPersistence.save(workflowExecution);
-        workFlowToExecution.put(workFlowId, workFlowExecutionId);
-        final String stateExecutionId = workFlowExecutionId + "-state-execution-" + executionNum;
-        workFlowToStateExecution.put(workFlowId, stateExecutionId);
-        for (StateType stateType : logAnalysisStates) {
-          for (String host : hosts) {
-            Map<Integer, List<LogElement>> recordsByMinute = generateLogElements(host, numOfMinutes, numOfLogs);
-            WebTarget target = client.target(API_BASE + "/" + AbstractLogAnalysisState.getStateBaseUrl(stateType)
-                + LogAnalysisResource.ANALYSIS_STATE_SAVE_LOG_URL + "?accountId=" + accountId
-                + "&clusterLevel=" + ClusterLevel.L2.name() + "&stateExecutionId=" + stateExecutionId
-                + "&workflowId=" + workFlowId + "&workflowExecutionId=" + workFlowExecutionId + "&appId=" + sameAppId
-                + "&serviceId=" + sameServiceId);
-
-            for (Entry<Integer, List<LogElement>> entry : recordsByMinute.entrySet()) {
-              totalRecordsInserted += entry.getValue().size();
-              RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
-                  entity(entry.getValue(), APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-              assertTrue(restResponse.getResource());
-            }
-          }
-        }
-        logger.info("done for workFlow: " + workFlowId + " execution: " + workFlowExecutionId);
-      }
-    }
-
-    Query<LogDataRecord> logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class);
-    assertEquals(totalRecordsInserted, logDataRecordQuery.count());
-    analysisService.purgeLogs();
-    logDataRecordQuery = wingsPersistence.createQuery(LogDataRecord.class);
-    List<LogDataRecord> logDataRecords = logDataRecordQuery.asList();
-    assertEquals(
-        numOfMinutes * numOfLogs * hosts.size() * logAnalysisStates.length * numOfWorkFlows, logDataRecords.size());
-
-    for (LogDataRecord logDataRecord : logDataRecords) {
-      assertEquals(workFlowToExecution.get(logDataRecord.getWorkflowId()), logDataRecord.getWorkflowExecutionId());
-      assertEquals(workFlowToStateExecution.get(logDataRecord.getWorkflowId()), logDataRecord.getStateExecutionId());
     }
   }
 
@@ -1130,11 +1061,12 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     }
 
     for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
-      WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS + "/get-logs?accountId="
-          + accountId + "&clusterLevel=" + ClusterLevel.L0.name() + "&compareCurrent=true&workflowExecutionId="
-          + workflowExecution.getUuid() + "&stateType=" + StateType.SPLUNKV2);
+      WebTarget target = client.target(VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+          + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name()
+          + "&compareCurrent=true&workflowExecutionId=" + workflowExecution.getUuid()
+          + "&stateType=" + StateType.SPLUNKV2);
       final LogRequest logRequest = new LogRequest(query, appId, "se2", workflowId, serviceId, hosts, collectionMinute);
-      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
+      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
           entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
       assertEquals(
           "failed for minute " + collectionMinute, addedMessages.get(2, collectionMinute), restResponse.getResource());
@@ -1214,12 +1146,13 @@ public class LogMLIntegrationTest extends VerificationBaseIntegrationTest {
     }
 
     for (int collectionMinute = 0; collectionMinute < numOfMinutes; collectionMinute++) {
-      WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS + "/get-logs?accountId="
-          + accountId + "&clusterLevel=" + ClusterLevel.L0.name() + "&compareCurrent=false&workflowExecutionId="
-          + workflowExecution.getUuid() + "&stateType=" + StateType.SPLUNKV2);
+      WebTarget target = client.target(VERIFICATION_API_BASE + "/" + LogAnalysisResource.LOG_ANALYSIS
+          + "/get-logs?accountId=" + accountId + "&clusterLevel=" + ClusterLevel.L0.name()
+          + "&compareCurrent=false&workflowExecutionId=" + workflowExecution.getUuid()
+          + "&stateType=" + StateType.SPLUNKV2);
       final LogRequest logRequest =
           new LogRequest(query, appId, UUID.randomUUID().toString(), workflowId, serviceId, hosts, collectionMinute);
-      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithAuthHeader(target).post(
+      RestResponse<List<LogDataRecord>> restResponse = getRequestBuilderWithLearningAuthHeader(target).post(
           entity(logRequest, APPLICATION_JSON), new GenericType<RestResponse<List<LogDataRecord>>>() {});
       assertEquals("failed for minute " + collectionMinute, addedMessages.get(numOfExecutions, collectionMinute),
           restResponse.getResource());

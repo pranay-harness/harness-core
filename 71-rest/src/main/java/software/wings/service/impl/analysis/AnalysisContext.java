@@ -31,7 +31,7 @@ import java.util.Map;
 @Entity(value = "verificationServiceTask", noClassnameStored = true)
 @Indexes({
   @Index(fields = {
-    @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("executionStatus")
+    @Field("workflowExecutionId"), @Field("stateExecutionId"), @Field("serviceId"), @Field("executionStatus")
   }, options = @IndexOptions(unique = true, name = "taskUniqueIdx"))
 })
 @Data
