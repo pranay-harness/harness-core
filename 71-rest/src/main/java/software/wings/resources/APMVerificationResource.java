@@ -42,7 +42,8 @@ public class APMVerificationResource {
   public RestResponse<VerificationNodeDataSetupResponse> getMetricsWithDataForNode(
       @QueryParam("accountId") final String accountId, @QueryParam("serverConfigId") String serverConfigId,
       APMFetchConfig fetchConfig) {
-    return new RestResponse<>(apmVerificationService.getMetricsWithDataForNode(accountId, serverConfigId, fetchConfig));
+    return new RestResponse<>(apmVerificationService.getMetricsWithDataForNode(
+        accountId, serverConfigId, fetchConfig, StateType.APM_VERIFICATION));
   }
 
   @POST

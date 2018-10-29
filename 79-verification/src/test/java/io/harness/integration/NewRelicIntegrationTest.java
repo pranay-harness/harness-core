@@ -550,7 +550,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
                         .build());
     optionsList.add(APMVerificationConfig.KeyValues.builder()
                         .key("application_key")
-                        .value(scmSecret.decryptToString(new SecretName("apm_verfication_config_app_key")))
+                        .value(scmSecret.decryptToString(new SecretName("datadog_application_key")))
                         .encrypted(false)
                         .build());
     config.setOptionsList(optionsList);

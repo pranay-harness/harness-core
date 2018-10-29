@@ -19,6 +19,7 @@ import software.wings.beans.APMVerificationConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.intfc.SettingsService;
+import software.wings.sm.StateType;
 
 /**
  * @author Praveen 9/6/18
@@ -52,7 +53,7 @@ public class APMVerificationServiceImplTest {
 
     // execute
     VerificationNodeDataSetupResponse response =
-        service.getMetricsWithDataForNode("accountId", "serverConfigId", fetchConfig);
+        service.getMetricsWithDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
 
     // verify
     assertNotNull(response);
@@ -77,7 +78,7 @@ public class APMVerificationServiceImplTest {
 
     // execute
     VerificationNodeDataSetupResponse response =
-        service.getMetricsWithDataForNode("accountId", "serverConfigId", fetchConfig);
+        service.getMetricsWithDataForNode("accountId", "serverConfigId", fetchConfig, StateType.APM_VERIFICATION);
 
     // verify
     assertNotNull(response);
@@ -101,7 +102,8 @@ public class APMVerificationServiceImplTest {
     when(mockDelegateService.fetch(any(APMValidateCollectorConfig.class))).thenReturn(dummyResponseString);
 
     // execute
-    VerificationNodeDataSetupResponse response = service.getMetricsWithDataForNode("accountId", null, fetchConfig);
+    VerificationNodeDataSetupResponse response =
+        service.getMetricsWithDataForNode("accountId", null, fetchConfig, StateType.APM_VERIFICATION);
   }
 
   @Test(expected = WingsException.class)
@@ -121,7 +123,8 @@ public class APMVerificationServiceImplTest {
     when(mockDelegateService.fetch(any(APMValidateCollectorConfig.class))).thenReturn(dummyResponseString);
 
     // execute
-    VerificationNodeDataSetupResponse response = service.getMetricsWithDataForNode("accountId", "serverId", null);
+    VerificationNodeDataSetupResponse response =
+        service.getMetricsWithDataForNode("accountId", "serverId", null, StateType.APM_VERIFICATION);
   }
 
   @Test(expected = WingsException.class)
@@ -141,6 +144,7 @@ public class APMVerificationServiceImplTest {
     when(mockDelegateService.fetch(any(APMValidateCollectorConfig.class))).thenThrow(new WingsException(""));
 
     // execute
-    VerificationNodeDataSetupResponse response = service.getMetricsWithDataForNode("accountId", "serverId", null);
+    VerificationNodeDataSetupResponse response =
+        service.getMetricsWithDataForNode("accountId", "serverId", null, StateType.APM_VERIFICATION);
   }
 }

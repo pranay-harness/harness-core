@@ -59,8 +59,10 @@ public class DatadogConfig extends SettingValue implements EncryptableSetting {
 
   private Map<String, String> optionsMap() {
     Map<String, String> paramsMap = new HashMap<>();
-    paramsMap.put("api_key", new String(apiKey));
-    paramsMap.put("application_key", new String(applicationKey));
+    // check for apiKey. If not empty populate the value else populate default value.
+    paramsMap.put("api_key", apiKey != null ? new String(apiKey) : "${apiKey}");
+    // check for applicationKey. If not empty populate the value else populate default value.
+    paramsMap.put("application_key", applicationKey != null ? new String(applicationKey) : "${applicationKey}");
     paramsMap.put("from", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
     paramsMap.put("to", String.valueOf(System.currentTimeMillis() / TimeUnit.SECONDS.toMillis(1)));
     return paramsMap;

@@ -26,7 +26,6 @@ import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.sm.StateType;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Pranjal on 08/31/2018
@@ -40,8 +39,6 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
       String accountId, SplunkSetupTestNodeData setupTestNodeData) {
     logger.info("Starting Log Data collection by Host for account Id : {}, SplunkSetupTestNodeData : {}", accountId,
         setupTestNodeData);
-    long toTime = System.currentTimeMillis();
-    long fromTime = toTime - TimeUnit.MINUTES.toMillis(5);
 
     // gets the settings attributes for given settings id
     final SettingAttribute settingAttribute = settingsService.get(setupTestNodeData.getSettingId());
@@ -58,8 +55,8 @@ public class SplunkAnalysisServiceImpl extends AnalysisServiceImpl implements Sp
     List<LogElement> responseWithoutHost =
         delegateProxyFactory.get(SplunkDelegateService.class, taskContext)
             .getLogResults((SplunkConfig) settingAttribute.getValue(), encryptedDataDetails,
-                setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), null, fromTime, toTime, apiCallLog,
-                0);
+                setupTestNodeData.getQuery(), setupTestNodeData.getHostNameField(), null,
+                setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, 0);
     if (isEmpty(responseWithoutHost)) {
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
