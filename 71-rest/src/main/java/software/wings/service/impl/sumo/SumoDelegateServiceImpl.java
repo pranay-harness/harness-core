@@ -1,13 +1,16 @@
 package software.wings.service.impl.sumo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.Constants.URL_STRING;
+import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import static software.wings.service.impl.ThirdPartyApiCallLog.apiCallLogWithDummyStateExecution;
 
 import com.google.inject.Inject;
 
 import com.sumologic.client.Credentials;
 import com.sumologic.client.SumoLogicClient;
+import com.sumologic.client.SumoServerException;
 import com.sumologic.client.model.LogMessage;
 import com.sumologic.client.searchjob.model.GetMessagesForSearchJobResponse;
 import com.sumologic.client.searchjob.model.GetSearchJobStatusResponse;
@@ -33,11 +36,13 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
 
 import java.net.MalformedURLException;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -48,6 +53,7 @@ import java.util.concurrent.TimeUnit;
 public class SumoDelegateServiceImpl implements SumoDelegateService {
   private static final Logger logger = LoggerFactory.getLogger(SumoDelegateServiceImpl.class);
   private static final long DEFAULT_SLEEP_TIME_IN_MILLIS = 5000;
+  private static final int SUMO_RATE_LIMIT_STATUS = 429;
   @Inject private EncryptionService encryptionService;
   @Inject private DelegateLogService delegateLogService;
 
@@ -168,6 +174,17 @@ public class SumoDelegateServiceImpl implements SumoDelegateService {
           query, hostName, messageCount, sumoClient, searchJobId, 0, 0, Math.min(messageCount, 5), logCollectionMinute);
     } catch (InterruptedException e) {
       throw new WingsException("Unable to get client for given config");
+    } catch (SumoServerException sumoServerException) {
+      if (sumoServerException.getHTTPStatus() == SUMO_RATE_LIMIT_STATUS) {
+        saveThirdPartyCallLogs(apiCallLog, config, query, String.valueOf(startTime), String.valueOf(endTime),
+            sumoServerException.getErrorMessage(), requestTimeStamp, OffsetDateTime.now().toInstant().toEpochMilli(),
+            HttpStatus.SC_BAD_REQUEST, FieldType.TEXT);
+        int randomNum = ThreadLocalRandom.current().nextInt(1, 11);
+        logger.info("Encountered Rate limiting from sumo. Sleeping {}seconds for logCollectionMin {}", 30 + randomNum,
+            logCollectionMinute);
+        sleep(RETRY_SLEEP.plus(Duration.ofSeconds(randomNum)));
+      }
+      throw sumoServerException;
     } catch (Exception e) {
       saveThirdPartyCallLogs(apiCallLog, config, query, String.valueOf(startTime), String.valueOf(endTime),
           ExceptionUtils.getStackTrace(e), requestTimeStamp, OffsetDateTime.now().toInstant().toEpochMilli(),
