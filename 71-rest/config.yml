@@ -27,6 +27,13 @@ xxxxxxxx
         key: 9a3e6eac4dcdbdc41a93ca99100537df
         programName: manager-saas-accesslogs
 
+scheduler:
+  schedulerName: automation_scheduler
+  instanceId: automation
+  tablePrefix: quartz
+  threadCount: 1
+  #mongoUri: mongodb://localhost:27017/impermanent
+
 smtp:
   type: SMTP
   host: host_placeholder
@@ -62,6 +69,7 @@ logging:
 
 mongo:
   uri: mongodb://localhost:27017/harness
+  #locksUri: mongodb://localhost:27017/impermanent
 
 watcherMetadataUrl: https://ci.harness.io/storage/wingswatchers/watcherci.txt
 delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt

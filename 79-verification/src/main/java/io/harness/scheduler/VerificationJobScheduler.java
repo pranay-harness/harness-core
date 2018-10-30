@@ -23,7 +23,7 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
    */
   @Inject
   private VerificationJobScheduler(Injector injector, VerificationServiceConfiguration configuration) {
-    super(injector, configuration.getSchedulerConfig(), configuration.getMongoConnectionFactory());
+    super(injector, configuration.getSchedulerConfig(), configuration.getMongoConnectionFactory().getUri());
     try {
       final Properties properties = getDefaultProperties();
       properties.setProperty("org.quartz.jobStore.collectionPrefix", "quartz_verification");

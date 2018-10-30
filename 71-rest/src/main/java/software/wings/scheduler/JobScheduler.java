@@ -28,7 +28,7 @@ public class JobScheduler extends AbstractQuartzScheduler implements ConfigChang
 
   @Inject
   public JobScheduler(Injector injector, MainConfiguration configuration) {
-    super(injector, configuration.getSchedulerConfig(), configuration.getMongoConnectionFactory());
+    super(injector, configuration.getSchedulerConfig(), configuration.getMongoConnectionFactory().getUri());
     try {
       if (configuration.getSchedulerConfig().getAutoStart().equals("true")) {
         injector.getInstance(MaintenanceController.class).register(this);
