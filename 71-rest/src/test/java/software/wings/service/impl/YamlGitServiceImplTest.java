@@ -1,12 +1,10 @@
 package software.wings.service.impl;
 
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -15,7 +13,6 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import io.harness.exception.WingsException;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,9 +20,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import software.wings.beans.Account;
-import software.wings.beans.GitConfig;
-import software.wings.beans.yaml.GitCommandExecutionResponse;
-import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.YamlGitServiceImpl;
 import software.wings.service.intfc.AccountService;
@@ -86,48 +80,6 @@ public class YamlGitServiceImplTest {
       assertTrue(ex.getTargetException().getMessage().contains(
           "Invalid entity name, entity can not contain / in the name. Caused invalid file path:"));
     }
-  }
-
-  @Test
-  public void testValidateGit() throws Exception {
-    doReturn(GitCommandExecutionResponse.builder()
-                 .gitCommandStatus(GitCommandStatus.FAILURE)
-                 .errorMessage("Invalid Repo")
-                 .build())
-        .doReturn(GitCommandExecutionResponse.builder()
-                      .gitCommandStatus(GitCommandStatus.SUCCESS)
-                      .errorMessage(StringUtils.EMPTY)
-                      .build())
-        .when(delegateService)
-        .executeTask(any());
-
-    doReturn(null).when(alertService).openAlert(any(), any(), any(), any());
-    doNothing().when(alertService).closeAlert(any(), any(), any(), any());
-    doReturn(null).when(secretManager).getEncryptionDetails(any(), any(), any());
-
-    try {
-      MethodUtils.invokeMethod(yamlGitService, true, "validateGit",
-          new Object[] {GitConfig.builder()
-                            .accountId("ACCOUNT_ID")
-                            .repoUrl(TEST_GIT_REPO_URL)
-                            .username(TEST_GIT_REPO_USER)
-                            .password(TEST_GIT_REPO_PASSWORD.toCharArray())
-                            .build()});
-      fail("Was Expected to fail");
-    } catch (Exception e) {
-      assertTrue((((InvocationTargetException) e).getTargetException()) instanceof WingsException);
-    }
-
-    verify(alertService).openAlert(any(), any(), any(), any());
-    verify(alertService, times(0)).closeAlert(any(), any(), any(), any());
-    MethodUtils.invokeMethod(yamlGitService, true, "validateGit",
-        new Object[] {GitConfig.builder()
-                          .accountId("ACCOUNT_ID")
-                          .repoUrl(TEST_GIT_REPO_URL)
-                          .username(TEST_GIT_REPO_USER)
-                          .password(TEST_GIT_REPO_PASSWORD.toCharArray())
-                          .build()});
-    verify(alertService).closeAlert(any(), any(), any(), any());
   }
 
   @Test

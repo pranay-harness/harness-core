@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.beans.SearchFilter.Operator.EQ;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeValidate;
@@ -55,6 +56,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
+import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -79,6 +81,7 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.CacheHelper;
+import software.wings.utils.CryptoUtil;
 import software.wings.utils.Misc;
 
 import java.util.Collections;
@@ -236,7 +239,9 @@ public class SettingsServiceImpl implements SettingsService {
   @ValidationGroups(Create.class)
   public SettingAttribute save(SettingAttribute settingAttribute, boolean pushToGit) {
     settingValidationService.validate(settingAttribute);
-
+    // e.g. User is saving GitConnector and setWebhookToken is needed.
+    // This fields is populated by us and not by user
+    autoGenerateFieldsIfRequired(settingAttribute);
     SettingAttribute newSettingAttribute = forceSave(settingAttribute);
 
     if (shouldBeSynced(newSettingAttribute, pushToGit)) {
@@ -245,6 +250,16 @@ public class SettingsServiceImpl implements SettingsService {
     }
 
     return newSettingAttribute;
+  }
+
+  private void autoGenerateFieldsIfRequired(SettingAttribute settingAttribute) {
+    if (settingAttribute.getValue() instanceof GitConfig) {
+      GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
+
+      if (gitConfig.isGenerateWebhookUrl() && isEmpty(gitConfig.getWebhookToken())) {
+        gitConfig.setWebhookToken(CryptoUtil.secureRandAlphaNumString(40));
+      }
+    }
   }
 
   private boolean shouldBeSynced(SettingAttribute settingAttribute, boolean pushToGit) {
@@ -313,7 +328,9 @@ public class SettingsServiceImpl implements SettingsService {
 
     settingAttribute.setAccountId(existingSetting.getAccountId());
     settingAttribute.setAppId(existingSetting.getAppId());
-
+    // e.g. User is saving GitConnector and setWebhookToken is needed.
+    // This fields is populated by us and not by user
+    autoGenerateFieldsIfRequired(settingAttribute);
     if (EncryptableSetting.class.isInstance(existingSetting.getValue())) {
       EncryptableSetting object = (EncryptableSetting) existingSetting.getValue();
       object.setDecrypted(false);

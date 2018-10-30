@@ -23,8 +23,6 @@ import software.wings.beans.SettingAttribute;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
-import javax.validation.constraints.NotNull;
-
 @Entity(value = "yamlGitConfig", noClassnameStored = true)
 @Indexes(@Index(
     options = @IndexOptions(name = "locate", unique = true), fields = { @Field("accountId")
@@ -34,17 +32,18 @@ import javax.validation.constraints.NotNull;
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class YamlGitConfig extends Base implements EncryptableSetting {
-  @NotEmpty private String url;
+  private String url;
   @NotEmpty private String branchName;
   private String username;
 
   @Encrypted @JsonView(JsonViews.Internal.class) private char[] password;
   private String sshSettingId;
   private boolean keyAuth;
+  private String gitConnectorId;
 
   @SchemaIgnore @JsonIgnore private String encryptedPassword;
 
-  @NotNull private SyncMode syncMode;
+  private SyncMode syncMode;
   private boolean enabled;
   private String webhookToken;
 

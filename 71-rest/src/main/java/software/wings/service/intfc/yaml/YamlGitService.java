@@ -7,6 +7,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.GitCommit;
 import software.wings.beans.RestResponse;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.AlertData;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.yaml.Change;
@@ -185,4 +186,6 @@ public interface YamlGitService {
   RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds);
 
   RestResponse discardAllGitSyncError(String accountId);
+
+  SettingAttribute getAndDecryptSettingAttribute(String sshSettingId);
 }

@@ -4,6 +4,7 @@ import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectUtils.getEncryptedFields;
 import static io.harness.reflection.ReflectUtils.getEncryptedRefField;
 import static java.util.Collections.emptyList;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 
 import com.google.inject.Inject;
@@ -53,11 +54,13 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.elk.ElkAnalysisService;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
@@ -91,6 +94,8 @@ public class SettingValidationService {
   @Inject private EncryptionService encryptionService;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private GitConfigHelperService gitConfigHelperService;
+  @Inject private SettingsService settingsService;
+  @Inject private ManagerDecryptionService managerDecryptionService;
 
   public boolean validate(SettingAttribute settingAttribute) {
     // Name has leading/trailing spaces
@@ -225,7 +230,8 @@ public class SettingValidationService {
   private void validateGitConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
-      gitConfigHelperService.validateGitConfig(gitConfig, encryptedDataDetails);
+      gitConfig.setDecrypted(true);
+      gitConfigHelperService.validateGitConfig(gitConfig, fetchEncryptionDetails(gitConfig));
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -251,5 +257,16 @@ public class SettingValidationService {
     }
 
     return Collections.emptyList();
+  }
+
+  // For accountLevel Setting Attributes
+  public SettingAttribute getAndDecryptSettingAttribute(String settingAttributeId) {
+    SettingAttribute settingAttribute = settingsService.get(settingAttributeId);
+    if (settingAttribute != null && settingAttribute.getValue() instanceof EncryptableSetting) {
+      List<EncryptedDataDetail> encryptionDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), GLOBAL_APP_ID, null);
+      managerDecryptionService.decrypt((EncryptableSetting) settingAttribute.getValue(), encryptionDetails);
+    }
+    return settingAttribute;
   }
 }
