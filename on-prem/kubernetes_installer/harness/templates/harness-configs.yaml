@@ -97,6 +97,7 @@ stringData:
   jwtPasswordSecret: {{ .Values.secrets.jwtPasswordSecret }}
   jwtSsoRedirectSecret: {{ .Values.secrets.jwtSsoRedirectSecret }}
   jwtZendeskSecret: {{ .Values.secrets.jwtZendeskSecret }}
+  LICENSE_INFO: {{ .Values.secrets.licenseInfo }}
 kind: Secret
 metadata:
   name: harness-manager

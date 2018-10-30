@@ -122,6 +122,11 @@ spec:
             secretKeyRef:
               key: MONGO_DB_URL
               name: harness-manager
+        - name: LICENSE_INFO
+          valueFrom:
+            secretKeyRef:
+              key: LICENSE_INFO
+              name: harness-manager
         envFrom:
         - configMapRef:
             name: harness-manager
