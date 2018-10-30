@@ -21,8 +21,8 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 
 @JsonTypeName("GIT")
 @Data
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = false, exclude = {"sshSettingAttribute"})
+@ToString(exclude = {"password", "sshSettingAttribute"})
 public class GitConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Username", required = true) private String username;
 

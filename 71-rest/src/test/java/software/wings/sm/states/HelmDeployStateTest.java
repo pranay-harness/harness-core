@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -79,6 +80,7 @@ import software.wings.helpers.ext.helm.request.HelmCommandRequest.HelmCommandTyp
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandResponse;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -121,6 +123,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Mock private SettingsService settingsService;
+  @Mock private GitConfigHelperService gitConfigHelperService;
 
   @InjectMocks HelmDeployState helmDeployState = new HelmDeployState("helmDeployState");
 
@@ -288,6 +291,7 @@ public class HelmDeployStateTest extends WingsBaseTest {
     when(settingsService.get(GIT_CONNECTOR_ID))
         .thenReturn(SettingAttribute.Builder.aSettingAttribute().withValue(GitConfig.builder().build()).build());
 
+    doNothing().when(gitConfigHelperService).setSshKeySettingAttributeIfNeeded(any());
     helmDeployState.setGitFileConfig(GitFileConfig.builder().connectorId(GIT_CONNECTOR_ID).build());
     ExecutionResponse executionResponse = helmDeployState.execute(context);
     assertThat(executionResponse.isAsync()).isEqualTo(true);

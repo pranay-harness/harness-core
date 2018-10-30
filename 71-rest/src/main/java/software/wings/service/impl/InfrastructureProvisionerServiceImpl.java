@@ -94,6 +94,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject YamlPushService yamlPushService;
   @Inject private DelegateService delegateService;
   @Inject private SecretManager secretManager;
+  @Inject private GitConfigHelperService gitConfigHelperService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -399,6 +400,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     terraformDirectory = handleUserInput(terraformDirectory);
     GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
+    gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
     gitConfig.setGitRepoType(GitRepositoryType.TERRAFORM);
     DelegateTask delegateTask =
         aDelegateTask()
