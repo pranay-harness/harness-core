@@ -90,9 +90,12 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     doReturn(resultList)
         .when(mockAwsEc2HelperServiceManager)
         .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
-            singletonList(filter));
-    AwsInfrastructureMapping awsInfrastructureMapping =
-        anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
+            singletonList(filter), APP_ID);
+    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
+                                                            .withRegion(Regions.US_EAST_1.getName())
+                                                            .withUsePublicDns(true)
+                                                            .withAppId(APP_ID)
+                                                            .build();
     doReturn(singletonList(new Filter("instance-state-name", asList("running"))))
         .when(mockAwsUtils)
         .getAwsFilters(awsInfrastructureMapping);
@@ -105,7 +108,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .isEqualTo(asList("HOST_NAME_1", "HOST_NAME_2"));
     verify(mockAwsEc2HelperServiceManager)
         .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
-            singletonList(filter));
+            singletonList(filter), APP_ID);
   }
 
   @Test
@@ -116,9 +119,12 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     doReturn(resultList)
         .when(mockAwsEc2HelperServiceManager)
         .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
-            singletonList(filter));
-    AwsInfrastructureMapping awsInfrastructureMapping =
-        anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(false).build();
+            singletonList(filter), APP_ID);
+    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
+                                                            .withRegion(Regions.US_EAST_1.getName())
+                                                            .withUsePublicDns(false)
+                                                            .withAppId(APP_ID)
+                                                            .build();
     doReturn(singletonList(new Filter("instance-state-name", asList("running"))))
         .when(mockAwsUtils)
         .getAwsFilters(awsInfrastructureMapping);
@@ -131,7 +137,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         .isEqualTo(asList("HOST_NAME_1", "HOST_NAME_2"));
     verify(mockAwsEc2HelperServiceManager)
         .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
-            singletonList(filter));
+            singletonList(filter), APP_ID);
   }
 
   @Test
@@ -140,9 +146,12 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
     doReturn(emptyList())
         .when(mockAwsEc2HelperServiceManager)
         .listEc2Instances((AwsConfig) awsSetting.getValue(), Collections.emptyList(), Regions.US_EAST_1.getName(),
-            singletonList(filter));
-    AwsInfrastructureMapping awsInfrastructureMapping =
-        anAwsInfrastructureMapping().withRegion(Regions.US_EAST_1.getName()).withUsePublicDns(true).build();
+            singletonList(filter), APP_ID);
+    AwsInfrastructureMapping awsInfrastructureMapping = anAwsInfrastructureMapping()
+                                                            .withRegion(Regions.US_EAST_1.getName())
+                                                            .withUsePublicDns(true)
+                                                            .withAppId(APP_ID)
+                                                            .build();
     doReturn(singletonList(new Filter("instance-state-name", asList("running"))))
         .when(mockAwsUtils)
         .getAwsFilters(awsInfrastructureMapping);
@@ -150,7 +159,8 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
         awsInfrastructureMapping, awsSetting, Collections.emptyList(), new PageRequest<>());
     assertThat(hosts).hasSize(0);
     verify(mockAwsEc2HelperServiceManager)
-        .listEc2Instances(awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(), singletonList(filter));
+        .listEc2Instances(
+            awsConfig, Collections.emptyList(), Regions.US_EAST_1.getName(), singletonList(filter), APP_ID);
   }
 
   @Test

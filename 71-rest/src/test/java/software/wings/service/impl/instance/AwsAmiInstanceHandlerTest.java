@@ -262,7 +262,9 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(pageResponse).when(instanceService).list(any());
     doReturn(new DescribeInstancesResult()).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
-    doReturn(emptyList()).when(mockAwsEc2HelperServiceManager).listEc2Instances(any(), any(), any(), any());
+    doReturn(emptyList())
+        .when(mockAwsEc2HelperServiceManager)
+        .listEc2Instances(any(), any(), any(), any(), anyString());
 
     com.amazonaws.services.ec2.model.Instance ec2Instance1 = new com.amazonaws.services.ec2.model.Instance();
     ec2Instance1.setPrivateDnsName(PRIVATE_DNS_1);
@@ -387,7 +389,9 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(pageResponse).when(instanceService).list(any());
     doReturn(new DescribeInstancesResult()).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
-    doReturn(emptyList()).when(mockAwsEc2HelperServiceManager).listEc2Instances(any(), any(), any(), any());
+    doReturn(emptyList())
+        .when(mockAwsEc2HelperServiceManager)
+        .listEc2Instances(any(), any(), any(), any(), anyString());
 
     com.amazonaws.services.ec2.model.Instance ec2Instance1 = new com.amazonaws.services.ec2.model.Instance();
     ec2Instance1.setPrivateDnsName(PRIVATE_DNS_1);

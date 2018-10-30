@@ -235,7 +235,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
     doReturn(singletonList(instance3))
         .when(mockAwsEc2HelperServiceManager)
-        .listEc2Instances(any(), any(), any(), any());
+        .listEc2Instances(any(), any(), any(), any(), anyString());
 
     awsCodeDeployInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
     ArgumentCaptor<Set> captor = ArgumentCaptor.forClass(Set.class);
@@ -307,7 +307,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
     doReturn(asList(instance1, instance3))
         .when(mockAwsEc2HelperServiceManager)
-        .listEc2Instances(any(), any(), any(), any());
+        .listEc2Instances(any(), any(), any(), any(), anyString());
 
     awsCodeDeployInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
@@ -401,7 +401,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
     doReturn(asList(instance1, instance3))
         .when(mockAwsEc2HelperServiceManager)
-        .listEc2Instances(any(), any(), any(), any());
+        .listEc2Instances(any(), any(), any(), any(), anyString());
 
     awsCodeDeployInstanceHandler.handleNewDeployment(
         Arrays.asList(DeploymentSummary.builder()
