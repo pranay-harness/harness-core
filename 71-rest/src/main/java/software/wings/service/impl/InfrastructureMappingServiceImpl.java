@@ -1106,7 +1106,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       try {
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
         return awsEc2HelperServiceManager.listRegions(
-            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), appId);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -1157,7 +1157,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       try {
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
         return awsEc2HelperServiceManager.listTags(
-            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -1250,7 +1250,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       try {
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
         return awsEc2HelperServiceManager.listVPCs(
-            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -1301,7 +1301,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       try {
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
         return awsEc2HelperServiceManager.listSGs(
-            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, vpcIds, appId);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -1319,7 +1319,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       try {
         AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
         return awsEc2HelperServiceManager.listSubnets(
-            awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, vpcIds);
+            awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, vpcIds, appId);
       } catch (Exception e) {
         logger.warn(Misc.getMessage(e), e);
         throw new InvalidRequestException(Misc.getMessage(e), USER);

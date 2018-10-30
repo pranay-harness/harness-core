@@ -225,7 +225,7 @@ public class AwsInstanceHandlerTest extends WingsBaseTest {
     doReturn(result).when(awsHelperService).describeEc2Instances(any(), any(), any(), any());
     doReturn(singletonList(instance1))
         .when(mockAwsEc2HelperServiceManager)
-        .listEc2Instances(any(), any(), any(), any());
+        .listEc2Instances(any(), any(), any(), any(), anyString());
 
     awsInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
 

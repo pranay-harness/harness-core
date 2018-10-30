@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -51,85 +52,93 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
   @Override
   public void validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
-        AwsEc2ValidateCredentialsRequest.builder().awsConfig(awsConfig).encryptionDetails(encryptionDetails).build());
+        AwsEc2ValidateCredentialsRequest.builder().awsConfig(awsConfig).encryptionDetails(encryptionDetails).build(),
+        "");
     if (!((AwsEc2ValidateCredentialsResponse) response).isValid()) {
       throw new WingsException(ErrorCode.INVALID_CLOUD_PROVIDER).addParam("message", "Invalid AWS credentials.");
     }
   }
 
   @Override
-  public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
+  public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
-        AwsEc2ListRegionsRequest.builder().awsConfig(awsConfig).encryptionDetails(encryptionDetails).build());
+        AwsEc2ListRegionsRequest.builder().awsConfig(awsConfig).encryptionDetails(encryptionDetails).build(), appId);
     return ((AwsEc2ListRegionsResponse) response).getRegions();
   }
 
   @Override
-  public List<String> listVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+  public List<String> listVPCs(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEc2ListVpcsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsEc2ListVpcsResponse) response).getVpcs();
   }
 
   @Override
-  public List<String> listSubnets(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
+  public List<String> listSubnets(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      List<String> vpcIds, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEc2ListSubnetsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .vpcIds(vpcIds)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsEc2ListSubnetsResponse) response).getSubnets();
   }
 
   @Override
-  public List<String> listSGs(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
+  public List<String> listSGs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      List<String> vpcIds, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEc2ListSGsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .vpcIds(vpcIds)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsEc2ListSGsResponse) response).getSecurityGroups();
   }
 
   @Override
-  public Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+  public Set<String> listTags(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEc2ListTagsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsEc2ListTagsResponse) response).getTags();
   }
 
   @Override
-  public List<Instance> listEc2Instances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<Filter> filters) {
+  public List<Instance> listEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, List<Filter> filters, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEc2ListInstancesRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
             .filters(filters)
-            .build());
+            .build(),
+        appId);
     return ((AwsEc2ListInstancesResponse) response).getInstances();
   }
 
-  private AwsResponse executeTask(String accountId, AwsEc2Request request) {
+  private AwsResponse executeTask(String accountId, AwsEc2Request request, String appId) {
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.AWS_EC2_TASK)
                                     .withAccountId(accountId)
-                                    .withAppId(GLOBAL_APP_ID)
+                                    .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
                                     .withAsync(false)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                     .withParameters(new Object[] {request})

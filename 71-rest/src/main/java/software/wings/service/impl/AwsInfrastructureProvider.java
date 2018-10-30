@@ -149,8 +149,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       List<EncryptedDataDetail> encryptedDataDetails) {
     List<Filter> filters = awsUtils.getAwsFilters(awsInfrastructureMapping);
     try {
-      return awsEc2HelperServiceManager.listEc2Instances(
-          awsConfig, encryptedDataDetails, awsInfrastructureMapping.getRegion(), filters);
+      return awsEc2HelperServiceManager.listEc2Instances(awsConfig, encryptedDataDetails,
+          awsInfrastructureMapping.getRegion(), filters, awsInfrastructureMapping.getAppId());
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
@@ -278,7 +278,7 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     try {
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
       return awsEc2HelperServiceManager.listTags(
-          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, "");
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
