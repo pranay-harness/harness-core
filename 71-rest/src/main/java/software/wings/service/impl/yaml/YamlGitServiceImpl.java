@@ -6,7 +6,6 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -21,7 +20,6 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -42,8 +40,6 @@ import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitCommand.GitCommandType;
-import software.wings.beans.yaml.GitCommandExecutionResponse;
-import software.wings.beans.yaml.GitCommandExecutionResponse.GitCommandStatus;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffRequest;
 import software.wings.beans.yaml.GitFileChange;
@@ -128,26 +124,44 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public YamlGitConfig save(YamlGitConfig ygs) {
     GitConfig gitConfig = getGitConfig(ygs);
-    gitConfig.setDecrypted(true);
-    validateGit(gitConfig);
-    gitConfig.setDecrypted(false);
-
+    ygs.setWebhookToken(gitConfig.getWebhookToken());
     YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
     executorService.submit(() -> fullSync(ygs.getAccountId(), true));
     return yamlGitSync;
   }
 
   private GitConfig getGitConfig(YamlGitConfig ygs) {
-    SettingAttribute settingAttribute = null;
-    if (!EmptyPredicate.isEmpty(ygs.getSshSettingId())) {
-      settingAttribute = settingsService.get(ygs.getSshSettingId());
-      HostConnectionAttributes attributeValue = (HostConnectionAttributes) settingAttribute.getValue();
-      List<EncryptedDataDetail> encryptionDetails =
-          secretManager.getEncryptionDetails(attributeValue, GLOBAL_APP_ID, null);
-      managerDecryptionService.decrypt(attributeValue, encryptionDetails);
+    GitConfig gitConfig = null;
+    if (EmptyPredicate.isNotEmpty(ygs.getGitConnectorId())) {
+      SettingAttribute settingAttributeForGitConnector = settingsService.get(ygs.getGitConnectorId());
+      gitConfig = (GitConfig) settingAttributeForGitConnector.getValue();
+      if (gitConfig != null) {
+        gitConfig.setBranch(ygs.getBranchName());
+        if (EmptyPredicate.isNotEmpty(gitConfig.getSshSettingId())) {
+          SettingAttribute settingAttributeForSshKey = getAndDecryptSettingAttribute(gitConfig.getSshSettingId());
+          gitConfig.setSshSettingAttribute(settingAttributeForSshKey);
+        }
+      }
+    } else {
+      // This is to support backward compatibility. Should be removed once we move to using gitConnector completely
+      if (EmptyPredicate.isNotEmpty(ygs.getSshSettingId())) {
+        SettingAttribute settingAttributeForSshKey = getAndDecryptSettingAttribute(ygs.getSshSettingId());
+        gitConfig = ygs.getGitConfig(settingAttributeForSshKey);
+      } else {
+        gitConfig = ygs.getGitConfig(null);
+      }
     }
 
-    return ygs.getGitConfig(settingAttribute);
+    return gitConfig;
+  }
+
+  public SettingAttribute getAndDecryptSettingAttribute(String sshSettingId) {
+    SettingAttribute settingAttributeForSshKey = settingsService.get(sshSettingId);
+    HostConnectionAttributes attributeValue = (HostConnectionAttributes) settingAttributeForSshKey.getValue();
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails(attributeValue, GLOBAL_APP_ID, null);
+    managerDecryptionService.decrypt(attributeValue, encryptionDetails);
+    return settingAttributeForSshKey;
   }
 
   /**
@@ -159,54 +173,6 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Override
   public YamlGitConfig update(YamlGitConfig ygs) {
     return save(ygs);
-  }
-
-  private void validateGit(GitConfig gitConfig) {
-    /*
-    1. Invalid repoUrl
-    2. Invalid credentials
-    3. No write access
-    4. Branch doesn't exist
-    */
-
-    // Validate if SSH key is present
-    if (gitConfig.isKeyAuth()) {
-      if (gitConfig.getSshSettingAttribute() == null) {
-        throw new InvalidRequestException("SSH key can not be empty");
-      }
-    }
-    // Validate if username and password present
-    else {
-      if (gitConfig.getUsername() == null || gitConfig.getPassword() == null) {
-        throw new InvalidRequestException("Username and password can not be empty", USER);
-      }
-    }
-
-    try {
-      GitCommandExecutionResponse gitCommandExecutionResponse =
-          delegateService.executeTask(aDelegateTask()
-                                          .withTaskType(TaskType.GIT_COMMAND)
-                                          .withAccountId(gitConfig.getAccountId())
-                                          .withAppId(GLOBAL_APP_ID)
-                                          .withAsync(false)
-                                          .withTimeout(TimeUnit.SECONDS.toMillis(60))
-                                          .withParameters(new Object[] {GitCommandType.VALIDATE, gitConfig,
-                                              secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null)})
-                                          .build());
-      logger.info(GIT_YAML_LOG_PREFIX + "GitConfigValidation [{}]", gitCommandExecutionResponse);
-      if (gitCommandExecutionResponse.getGitCommandStatus().equals(GitCommandStatus.FAILURE)) {
-        raiseAlertForGitFailure(gitConfig.getAccountId(), GLOBAL_APP_ID, ErrorCode.GIT_CONNECTION_ERROR,
-            gitCommandExecutionResponse.getErrorMessage());
-        throw new InvalidRequestException(gitCommandExecutionResponse.getErrorMessage(), WingsException.USER);
-      } else {
-        closeAlertForGitFailureIfOpen(gitConfig.getAccountId(), GLOBAL_APP_ID, AlertType.GitConnectionError,
-            GitConnectionErrorAlert.builder().accountId(gitConfig.getAccountId()).build());
-      }
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new InvalidRequestException(
-          "Thread was interrupted. Please try again. " + e.getMessage(), WingsException.USER);
-    }
   }
 
   @Override

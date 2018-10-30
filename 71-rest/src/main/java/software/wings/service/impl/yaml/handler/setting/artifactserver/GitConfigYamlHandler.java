@@ -26,6 +26,9 @@ public class GitConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, GitCon
         .username(gitConfig.getUsername())
         .password(getEncryptedValue(gitConfig, "password", false))
         .branch(gitConfig.getBranch())
+        .keyAuth(gitConfig.isKeyAuth())
+        .sshSettingId(gitConfig.getSshSettingId())
+        .description(gitConfig.getDescription())
         .build();
   }
 
@@ -41,6 +44,8 @@ public class GitConfigYamlHandler extends ArtifactServerYamlHandler<Yaml, GitCon
                            .branch(yaml.getBranch())
                            .encryptedPassword(yaml.getPassword())
                            .username(yaml.getUsername())
+                           .keyAuth(yaml.isKeyAuth())
+                           .sshSettingId(yaml.getSshSettingId())
                            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }

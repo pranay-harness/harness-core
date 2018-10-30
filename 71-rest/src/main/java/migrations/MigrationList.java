@@ -59,6 +59,7 @@ import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
 import migrations.all.UnregisteredUserNameMigration;
 import migrations.all.UsageRestrictionsMigration;
+import migrations.all.YamlGitConfigRefactoringMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.List;
@@ -138,6 +139,7 @@ public class MigrationList {
         .add(Pair.of(194, AddInstanceStatsCollectionJobToAllAccounts.class))
         .add(Pair.of(195, AddValidUntilToWaitQueue.class))
         .add(Pair.of(196, RemoveDupInstanceStats.class))
+        .add(Pair.of(197, YamlGitConfigRefactoringMigration.class))
         .build();
   }
 }

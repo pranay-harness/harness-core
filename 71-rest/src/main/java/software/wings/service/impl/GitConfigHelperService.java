@@ -38,11 +38,20 @@ public class GitConfigHelperService {
   @Inject private SettingsService settingsService;
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private SecretManager secretManager;
+  @Inject private SettingValidationService settingValidationService;
 
   public void validateGitConfig(GitConfig gitConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (gitConfig.isKeyAuth()) {
-      if (gitConfig.getSshSettingAttribute() == null) {
-        throw new InvalidRequestException("SSH key can not be empty");
+      if (gitConfig.getSshSettingId() == null) {
+        throw new InvalidRequestException("SSH SettingId can not be empty");
+      }
+
+      SettingAttribute sshSettingAttribute =
+          settingValidationService.getAndDecryptSettingAttribute(gitConfig.getSshSettingId());
+      if (sshSettingAttribute == null) {
+        throw new InvalidRequestException("Could not find SettingAttribute for Id: " + gitConfig.getSshSettingId());
+      } else {
+        gitConfig.setSshSettingAttribute(sshSettingAttribute);
       }
     } else {
       if (gitConfig.getUsername() == null || gitConfig.getPassword() == null) {

@@ -29,17 +29,19 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Password", required = true) @Encrypted private char[] password;
   @NotEmpty @Attributes(title = "Git Repo Url", required = true) private String repoUrl;
 
-  @NotEmpty @Attributes(title = "Git Branch", required = true) private String branch;
+  @Attributes(title = "Git Branch", required = true) private String branch;
   @SchemaIgnore private String reference;
 
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
-  @SchemaIgnore private String sshSettingId;
+  private String sshSettingId;
   @SchemaIgnore @Transient private SettingAttribute sshSettingAttribute;
-  @SchemaIgnore private boolean keyAuth;
-
+  private boolean keyAuth;
+  @Attributes(title = "Description") private String description;
+  private String webhookToken;
   @SchemaIgnore @Transient private GitRepositoryType gitRepoType;
+  @SchemaIgnore @Transient private boolean generateWebhookUrl;
 
   public enum GitRepositoryType { YAML, TERRAFORM }
 
@@ -52,8 +54,9 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   @Builder
-  public GitConfig(String username, char[] password, String repoUrl, String branch, String reference, String accountId,
-      String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth) {
+  public GitConfig(String username, char[] password, String repoUrl, String branch, String accountId,
+      String encryptedPassword, String sshSettingId, SettingAttribute sshSettingAttribute, boolean keyAuth,
+      String description, String webhookToken, String reference, boolean generateWebhookUrl) {
     super(SettingVariableTypes.GIT.name());
     this.username = username;
     this.password = password;
@@ -65,6 +68,9 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
     this.sshSettingId = sshSettingId;
     this.sshSettingAttribute = sshSettingAttribute;
     this.keyAuth = keyAuth;
+    this.description = description;
+    this.generateWebhookUrl = generateWebhookUrl;
+    this.webhookToken = webhookToken;
   }
 
   @Data
@@ -73,13 +79,24 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   public static final class Yaml extends ArtifactServerYaml {
     private String branch;
     private String reference;
+    private String repoUrl;
+    private String username;
+    private String password;
+    private boolean keyAuth;
+    private String sshSettingId;
+    private String description;
+    private String webhookToken;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password, String branch,
-        String reference, UsageRestrictions usageRestrictions) {
+        String reference, UsageRestrictions usageRestrictions, boolean keyAuth, String sshSettingId,
+        String description) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.branch = branch;
       this.reference = reference;
+      this.keyAuth = keyAuth;
+      this.sshSettingId = sshSettingId;
+      this.description = description;
     }
   }
 }
