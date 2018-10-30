@@ -295,7 +295,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(asList(ec2Instance2))
         .when(mockAwsCodeDeployHelperServiceManager)
-        .listDeploymentInstances(any(), any(), any(), any());
+        .listDeploymentInstances(any(), any(), any(), any(), anyString());
     doReturn(HOST_NAME_IP3).when(awsHelperService).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
     doReturn(HOST_NAME_IP3).when(mockAwsUtils).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
 
@@ -389,7 +389,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(asList(ec2Instance2))
         .when(mockAwsCodeDeployHelperServiceManager)
-        .listDeploymentInstances(any(), any(), any(), any());
+        .listDeploymentInstances(any(), any(), any(), any(), anyString());
     doReturn(HOST_NAME_IP3).when(awsHelperService).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
     doReturn(HOST_NAME_IP3).when(mockAwsUtils).getHostnameFromPrivateDnsName(PRIVATE_DNS_3);
 

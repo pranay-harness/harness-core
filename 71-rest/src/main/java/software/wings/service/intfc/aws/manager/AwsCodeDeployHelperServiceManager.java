@@ -8,13 +8,14 @@ import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
 import java.util.List;
 
 public interface AwsCodeDeployHelperServiceManager {
-  List<String> listApplications(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
+  List<String> listApplications(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId);
   List<String> listDeploymentConfiguration(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region);
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String appId);
   List<String> listDeploymentGroups(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String appName);
-  List<Instance> listDeploymentInstances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String deploymentId);
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String appName, String appId);
+  List<Instance> listDeploymentInstances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String region, String deploymentId, String appId);
   AwsCodeDeployS3LocationData listAppRevision(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String region, String appName, String deploymentGroupName);
+      String region, String appName, String deploymentGroupName, String appId);
 }

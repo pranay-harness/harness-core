@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -41,57 +42,62 @@ public class AwsCodeDeployHelperServiceManagerImpl implements AwsCodeDeployHelpe
 
   @Override
   public List<String> listApplications(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCodeDeployListAppRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsCodeDeployListAppResponse) response).getApplications();
   }
 
   @Override
   public List<String> listDeploymentConfiguration(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCodeDeployListDeploymentConfigRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptedDataDetails)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsCodeDeployListDeploymentConfigResponse) response).getDeploymentConfig();
   }
 
   @Override
-  public List<String> listDeploymentGroups(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String appName) {
+  public List<String> listDeploymentGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String region, String appName, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCodeDeployListDeploymentGroupRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptedDataDetails)
             .region(region)
             .appName(appName)
-            .build());
+            .build(),
+        appId);
     return ((AwsCodeDeployListDeploymentGroupResponse) response).getDeploymentGroups();
   }
 
   @Override
-  public List<Instance> listDeploymentInstances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails, String region, String deploymentId) {
+  public List<Instance> listDeploymentInstances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String region, String deploymentId, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCodeDeployListDeploymentInstancesRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptedDataDetails)
             .region(region)
             .deploymentId(deploymentId)
-            .build());
+            .build(),
+        appId);
     return ((AwsCodeDeployListDeploymentInstancesResponse) response).getInstances();
   }
 
   @Override
   public AwsCodeDeployS3LocationData listAppRevision(AwsConfig awsConfig,
-      List<EncryptedDataDetail> encryptedDataDetails, String region, String appName, String deploymentGroupName) {
+      List<EncryptedDataDetail> encryptedDataDetails, String region, String appName, String deploymentGroupName,
+      String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCodeDeployListAppRevisionRequest.builder()
             .awsConfig(awsConfig)
@@ -99,15 +105,16 @@ public class AwsCodeDeployHelperServiceManagerImpl implements AwsCodeDeployHelpe
             .region(region)
             .appName(appName)
             .deploymentGroupName(deploymentGroupName)
-            .build());
+            .build(),
+        appId);
     return ((AwsCodeDeployListAppRevisionResponse) response).getS3LocationData();
   }
 
-  private AwsResponse executeTask(String accountId, AwsCodeDeployRequest request) {
+  private AwsResponse executeTask(String accountId, AwsCodeDeployRequest request, String appId) {
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.AWS_CODE_DEPLOY_TASK)
                                     .withAccountId(accountId)
-                                    .withAppId(GLOBAL_APP_ID)
+                                    .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
                                     .withAsync(false)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                     .withParameters(new Object[] {request})

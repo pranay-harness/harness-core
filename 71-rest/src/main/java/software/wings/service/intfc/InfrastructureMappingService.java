@@ -98,11 +98,12 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
 
   Map<String, String> listNetworkLoadBalancers(String appId, String infraMappingId);
 
-  List<String> listCodeDeployApplicationNames(String computeProviderId, String region);
+  List<String> listCodeDeployApplicationNames(String computeProviderId, String region, String appId);
 
-  List<String> listCodeDeployDeploymentGroups(String computeProviderId, String region, String applicationName);
+  List<String> listCodeDeployDeploymentGroups(
+      String computeProviderId, String region, String applicationName, String appId);
 
-  List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region);
+  List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region, String appId);
 
   Map<String, String> listLoadBalancers(String appId, String infraMappingId);
 
