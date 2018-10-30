@@ -3,6 +3,7 @@ package software.wings.service.impl.analysis;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.User;
+import software.wings.beans.WorkflowExecution;
 import software.wings.sm.ExecutionStatus;
 import software.wings.verification.HeatMap;
 import software.wings.verification.TimeSeriesDataPoint;
@@ -21,6 +22,9 @@ public interface ContinuousVerificationService {
   getCVExecutionMetaData(String accountId, long beginEpochTs, long endEpochTs, User user) throws ParseException;
 
   List<CVDeploymentData> getCVDeploymentData(
+      String accountId, long startTime, long endTime, User user, String serviceId);
+
+  List<WorkflowExecution> getDeploymentsForService(
       String accountId, long startTime, long endTime, User user, String serviceId);
 
   void setMetaDataExecutionStatus(String stateExecutionId, ExecutionStatus status);

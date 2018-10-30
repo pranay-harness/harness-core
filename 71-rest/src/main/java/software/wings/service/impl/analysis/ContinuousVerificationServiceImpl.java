@@ -29,6 +29,7 @@ import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
@@ -61,6 +62,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
   private static final int DURATION_IN_MINUTES = 10;
+  private static final int PAGE_LIMIT = 500;
+  private static final int START_OFFSET = 0;
 
   @Override
   public void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData) {
@@ -278,7 +281,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     PageRequest<WorkflowExecution> workflowExecutionPageRequest =
         PageRequestBuilder.aPageRequest()
             .addFilter("_id", Operator.IN, deploymentData.keySet().toArray())
-            .addFieldsIncluded("_id", "status", "startTs", "endTs", "name")
+            .addFieldsIncluded("_id", "status", "startTs", "endTs", "name", "pipelineSummary")
             .withLimit("500")
             .withOffset("0")
             .build();
@@ -295,8 +298,54 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     for (WorkflowExecution execution : workflowExecutionList) {
       deploymentData.get(execution.getUuid()).setStatus(execution.getStatus());
+      deploymentData.get(execution.getUuid()).setWorkflowName(execution.getName());
+      PipelineSummary ps = execution.getPipelineSummary();
+      if (ps != null) {
+        deploymentData.get(execution.getUuid()).setPipelineName(ps.getPipelineName());
+      }
     }
     return new ArrayList(deploymentData.values());
+  }
+
+  @Override
+  public List<WorkflowExecution> getDeploymentsForService(
+      String accountId, long startTime, long endTime, User user, String serviceId) {
+    List<WorkflowExecution> results = new ArrayList<>();
+    if (user == null) {
+      // user is null, we can't validate permissions. Returning empty.
+      logger.warn("Returning empty results from getCVDeploymentData since user was null");
+      return results;
+    }
+    List<String> allowedApplications = getAllowedApplicationsForUser(user, accountId);
+    if (isEmpty(allowedApplications)) {
+      logger.info(
+          "Returning empty results from getCVDeploymentData since user {} does not have permissions for any applications",
+          user);
+      return results;
+    }
+    PageRequest<WorkflowExecution> workflowExecutionPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .addFilter("appId", Operator.IN, allowedApplications.toArray())
+            .addFilter("serviceIds", Operator.CONTAINS, serviceId)
+            .addFieldsExcluded("serviceExecutionSummaries", "executionArgs", "keywords", "breakdown")
+            .addFilter("startTs", Operator.GE, startTime)
+            .addFilter("startTs", Operator.LT, endTime)
+            .withLimit(String.valueOf(PAGE_LIMIT))
+            .withOffset(String.valueOf(START_OFFSET))
+            .build();
+
+    int previousOffSet = 0;
+
+    PageResponse<WorkflowExecution> workflowExecutionResponse =
+        wingsPersistence.query(WorkflowExecution.class, workflowExecutionPageRequest);
+    while (!workflowExecutionResponse.isEmpty()) {
+      results.addAll(workflowExecutionResponse.getResponse());
+      previousOffSet += workflowExecutionResponse.size();
+      workflowExecutionPageRequest.setOffset(String.valueOf(previousOffSet));
+      workflowExecutionResponse = wingsPersistence.query(WorkflowExecution.class, workflowExecutionPageRequest);
+    }
+
+    return results;
   }
 
   /**

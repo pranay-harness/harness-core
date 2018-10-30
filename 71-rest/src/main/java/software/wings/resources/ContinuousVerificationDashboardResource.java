@@ -12,6 +12,7 @@ import io.harness.beans.PageResponse;
 import io.swagger.annotations.Api;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.RestResponse;
+import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.Scope;
@@ -118,6 +119,17 @@ public class ContinuousVerificationDashboardResource {
       @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime,
       @QueryParam("serviceId") String serviceId) {
     return new RestResponse<>(continuousVerificationService.getCVDeploymentData(
+        accountId, startTime, endTime, UserThreadLocal.get().getPublicUser(), serviceId));
+  }
+
+  @GET
+  @Path(VerificationConstants.GET_DEPLOYMENTS_SERVICE_24_7)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<WorkflowExecution>> getAllDeploymentsForService(@QueryParam("accountId") String accountId,
+      @QueryParam("startTime") long startTime, @QueryParam("endTime") long endTime,
+      @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(continuousVerificationService.getDeploymentsForService(
         accountId, startTime, endTime, UserThreadLocal.get().getPublicUser(), serviceId));
   }
 
