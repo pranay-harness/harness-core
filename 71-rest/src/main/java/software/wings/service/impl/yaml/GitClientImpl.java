@@ -26,6 +26,7 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.filesystem.FileIo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -835,7 +836,7 @@ public class GitClientImpl implements GitClient {
 
     File sshDirectory = keyFile.getParentFile();
     if (sshDirectory.exists() || !sshDirectory.isDirectory()) {
-      FileUtils.forceDelete(sshDirectory);
+      FileIo.deleteFileIfExists(sshDirectory.getAbsolutePath());
     }
     FileUtils.forceMkdir(sshDirectory);
     FileUtils.writeStringToFile(keyFile, sshKey, UTF_8);
