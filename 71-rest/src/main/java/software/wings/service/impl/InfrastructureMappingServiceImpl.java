@@ -1497,40 +1497,41 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   @Override
-  public List<String> listCodeDeployApplicationNames(String computeProviderId, String region) {
+  public List<String> listCodeDeployApplicationNames(String computeProviderId, String region, String appId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
       return awsCodeDeployHelperServiceManager.listApplications(
-          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
     }
     return ImmutableList.of();
   }
 
   @Override
-  public List<String> listCodeDeployDeploymentGroups(String computeProviderId, String region, String applicationName) {
+  public List<String> listCodeDeployDeploymentGroups(
+      String computeProviderId, String region, String applicationName, String appId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
       return awsCodeDeployHelperServiceManager.listDeploymentGroups(
-          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, applicationName);
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, applicationName, appId);
     }
     return ImmutableList.of();
   }
 
   @Override
-  public List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region) {
+  public List<String> listCodeDeployDeploymentConfigs(String computeProviderId, String region, String appId) {
     SettingAttribute computeProviderSetting = settingsService.get(computeProviderId);
     notNullCheck("Compute Provider", computeProviderSetting);
 
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
       return awsCodeDeployHelperServiceManager.listDeploymentConfiguration(
-          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
     }
     return ImmutableList.of();
   }

@@ -407,7 +407,8 @@ public class InfrastructureMappingResource {
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getCodeDeployApplicationNames(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listCodeDeployApplicationNames(computeProviderId, region));
+    return new RestResponse<>(
+        infrastructureMappingService.listCodeDeployApplicationNames(computeProviderId, region, appId));
   }
 
   @GET
@@ -419,7 +420,7 @@ public class InfrastructureMappingResource {
       @QueryParam("region") String region, @QueryParam("applicationName") String applicationName,
       @PathParam("computeProviderId") String computeProviderId) {
     return new RestResponse<>(
-        infrastructureMappingService.listCodeDeployDeploymentGroups(computeProviderId, region, applicationName));
+        infrastructureMappingService.listCodeDeployDeploymentGroups(computeProviderId, region, applicationName, appId));
   }
 
   @GET
@@ -429,7 +430,8 @@ public class InfrastructureMappingResource {
   @AuthRule(permissionType = ENV, action = READ, skipAuth = true)
   public RestResponse<List<String>> getCodeDeployDeploymentConfigs(@QueryParam("appId") String appId,
       @QueryParam("region") String region, @PathParam("computeProviderId") String computeProviderId) {
-    return new RestResponse<>(infrastructureMappingService.listCodeDeployDeploymentConfigs(computeProviderId, region));
+    return new RestResponse<>(
+        infrastructureMappingService.listCodeDeployDeploymentConfigs(computeProviderId, region, appId));
   }
 
   @GET

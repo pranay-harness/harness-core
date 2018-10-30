@@ -240,9 +240,10 @@ public class AwsCodeDeployState extends State {
                                             .build();
     executionDataBuilder.withCodeDeployParams(codeDeployParams);
 
-    AwsCodeDeployS3LocationData s3LocationData = awsCodeDeployHelperServiceManager.listAppRevision(
-        (AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails, codeDeployParams.getRegion(),
-        codeDeployParams.getApplicationName(), codeDeployParams.getDeploymentGroupName());
+    AwsCodeDeployS3LocationData s3LocationData =
+        awsCodeDeployHelperServiceManager.listAppRevision((AwsConfig) cloudProviderSetting.getValue(),
+            encryptedDataDetails, codeDeployParams.getRegion(), codeDeployParams.getApplicationName(),
+            codeDeployParams.getDeploymentGroupName(), infrastructureMapping.getAppId());
     if (s3LocationData != null) {
       CodeDeployParams oldCodeDeployParams =
           CodeDeployParams.builder()

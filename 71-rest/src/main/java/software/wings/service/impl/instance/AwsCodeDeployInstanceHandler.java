@@ -143,8 +143,8 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
 
         // This will create filter for "instance-state-name" = "running"
         List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances =
-            awsCodeDeployHelperServiceManager.listDeploymentInstances(
-                awsConfig, encryptedDataDetails, region, awsCodeDeployDeploymentInfo.getDeploymentId());
+            awsCodeDeployHelperServiceManager.listDeploymentInstances(awsConfig, encryptedDataDetails, region,
+                awsCodeDeployDeploymentInfo.getDeploymentId(), codeDeployInfraMapping.getAppId());
         Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
             latestEc2Instances.stream().collect(
                 Collectors.toMap(com.amazonaws.services.ec2.model.Instance::getInstanceId, ec2Instance -> ec2Instance));
