@@ -49,6 +49,7 @@ secrets:
   jwtPasswordSecret:
   jwtSsoRedirectSecret:
   jwtZendeskSecret:
+  licenseInfo:
 services:
   mongo:
     adminUser: admin
