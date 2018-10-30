@@ -12,6 +12,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -27,7 +28,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.FeatureName;
-import software.wings.scheduler.QuartzScheduler;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -48,7 +48,7 @@ public class VerificationJob implements Job {
   // Cron Group name
   public static final String VERIFICATION_CRON_GROUP = "VERIFICATION_CRON_GROUP";
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
   private static final Logger logger = LoggerFactory.getLogger(VerificationJob.class);
 
   @Inject private VerificationManagerClient verificationManagerClient;
@@ -98,7 +98,7 @@ public class VerificationJob implements Job {
     lastAvailableAccounts = accountsFetched;
   }
 
-  public static void addJob(QuartzScheduler jobScheduler) {
+  public static void addJob(PersistentScheduler jobScheduler) {
     if (!jobScheduler.checkExists(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP)) {
       JobDetail job = JobBuilder.newJob(VerificationJob.class)
                           .withIdentity(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP)
@@ -189,7 +189,7 @@ public class VerificationJob implements Job {
   }
 
   @VisibleForTesting
-  public void setQuartzScheduler(QuartzScheduler jobScheduler) {
+  public void setQuartzScheduler(PersistentScheduler jobScheduler) {
     this.jobScheduler = jobScheduler;
   }
 }

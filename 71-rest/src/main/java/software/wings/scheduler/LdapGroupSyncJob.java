@@ -13,6 +13,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -67,7 +68,7 @@ public class LdapGroupSyncJob implements Job {
   public static final String GROUP = "LDAP_GROUP_SYNC_CRON_JOB";
   private static final int POLL_INTERVAL = 600; // Seconds
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
   @Inject private PersistentLocker persistentLocker;
   @Inject private ExecutorService executorService;
   @Inject private SSOSettingService ssoSettingService;
@@ -77,7 +78,7 @@ public class LdapGroupSyncJob implements Job {
   @Inject private UserService userService;
   @Inject private UserGroupService userGroupService;
 
-  public static void add(QuartzScheduler jobScheduler, String accountId, String ssoId) {
+  public static void add(PersistentScheduler jobScheduler, String accountId, String ssoId) {
     jobScheduler.deleteJob(ssoId, GROUP);
 
     JobDetail job = JobBuilder.newJob(LdapGroupSyncJob.class)
@@ -96,7 +97,7 @@ public class LdapGroupSyncJob implements Job {
   }
 
   public static void delete(
-      QuartzScheduler jobScheduler, SSOSettingService ssoSettingService, String accountId, String ssoId) {
+      PersistentScheduler jobScheduler, SSOSettingService ssoSettingService, String accountId, String ssoId) {
     jobScheduler.deleteJob(ssoId, GROUP);
     ssoSettingService.closeSyncFailureAlertIfOpen(accountId, ssoId);
   }

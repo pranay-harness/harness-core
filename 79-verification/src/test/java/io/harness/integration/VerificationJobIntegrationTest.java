@@ -12,6 +12,7 @@ import com.google.inject.name.Named;
 import io.harness.VerificationBaseIntegrationTest;
 import io.harness.jobs.MetricDataProcessorJob;
 import io.harness.jobs.VerificationJob;
+import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -23,7 +24,6 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.LicenseInfo;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.LicenseUtil;
 
@@ -40,7 +40,7 @@ import java.util.concurrent.TimeoutException;
 public class VerificationJobIntegrationTest extends VerificationBaseIntegrationTest {
   private static final Logger logger = LoggerFactory.getLogger(VerificationJobIntegrationTest.class);
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private VerificationJob job;
 

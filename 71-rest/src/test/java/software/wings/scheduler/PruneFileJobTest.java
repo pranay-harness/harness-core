@@ -13,6 +13,7 @@ import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -39,7 +40,7 @@ public class PruneFileJobTest extends WingsBaseTest {
 
   @Mock private FileService fileService;
 
-  @Mock private QuartzScheduler jobScheduler;
+  @Mock private PersistentScheduler jobScheduler;
 
   @Inject @InjectMocks PruneFileJob job;
 

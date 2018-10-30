@@ -36,6 +36,7 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.mongo.MongoModule;
 import io.harness.resources.LogVerificationResource;
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.VerificationServiceExecutorService;
 import io.harness.security.VerificationServiceAuthenticationFilter;
 import io.harness.service.intfc.LearningEngineService;
@@ -55,7 +56,6 @@ import software.wings.exception.GenericExceptionMapper;
 import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.utils.JsonSubtypeResolver;
 
 import java.util.Set;
@@ -210,8 +210,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
   private void registerCronJobs(Injector injector) {
     logger.info("Register cron jobs...");
-    final QuartzScheduler jobScheduler =
-        injector.getInstance(Key.get(QuartzScheduler.class, Names.named("JobScheduler")));
+    final PersistentScheduler jobScheduler =
+        injector.getInstance(Key.get(PersistentScheduler.class, Names.named("JobScheduler")));
 
     PersistentLocker persistentLocker = injector.getInstance(Key.get(PersistentLocker.class));
 

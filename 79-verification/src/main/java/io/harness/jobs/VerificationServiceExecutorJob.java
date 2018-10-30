@@ -3,6 +3,7 @@ package io.harness.jobs;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.service.intfc.LearningEngineService;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
@@ -17,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.utils.JsonUtils;
 
@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 public class VerificationServiceExecutorJob implements Job {
   private static final String VERIFICATION_CRON_NAME = "VERIFICATION_SERVICE_EXECUTOR_CRON_NAME";
   private static final String VERIFICATION_CRON_GROUP = "VERIFICATION_SERVICE_EXECUTOR_CRON_GROUP";
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceExecutorJob.class);
 
   @Inject private LearningEngineService learningEngineService;
@@ -135,7 +135,7 @@ public class VerificationServiceExecutorJob implements Job {
     logger.info("Scheduled Log Analysis cluster Job with details : {}", job);
   }
 
-  public static void addJob(QuartzScheduler jobScheduler) {
+  public static void addJob(PersistentScheduler jobScheduler) {
     jobScheduler.deleteJob(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP);
     JobDetail job = JobBuilder.newJob(VerificationServiceExecutorJob.class)
                         .withIdentity(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP)

@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.VerificationBaseTest;
+import io.harness.scheduler.PersistentScheduler;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -21,7 +22,6 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.LicenseUtil;
 
@@ -35,7 +35,7 @@ import java.util.UUID;
  */
 @Ignore
 public class VerificationJobTest extends VerificationBaseTest {
-  @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
   @Inject private VerificationJob job;
   JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
 

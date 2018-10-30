@@ -14,6 +14,7 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -30,7 +31,6 @@ import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.PruneEntityJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
@@ -56,7 +56,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private EventEmitter eventEmitter;
   private static final Logger logger = LoggerFactory.getLogger(ActivityServiceImpl.class);
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {

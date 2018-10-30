@@ -11,6 +11,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.ReadPref;
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -40,7 +41,7 @@ public class PersistentLockCleanupJob implements Job {
   @Inject private PersistentLocker persistentLocker;
   @Inject private ExecutorService executorService;
 
-  public static void add(QuartzScheduler jobScheduler) {
+  public static void add(PersistentScheduler jobScheduler) {
     jobScheduler.deleteJob(NAME, GROUP);
 
     JobDetail job = JobBuilder.newJob(PersistentLockCleanupJob.class).withIdentity(NAME, GROUP).build();

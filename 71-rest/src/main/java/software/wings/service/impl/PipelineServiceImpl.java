@@ -38,6 +38,7 @@ import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -61,7 +62,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.trigger.Trigger;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.PruneEntityJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
@@ -103,7 +103,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private YamlPushService yamlPushService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   /**
    * {@inheritDoc}

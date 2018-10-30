@@ -27,6 +27,7 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +52,6 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.HarnessException;
 import software.wings.exception.WingsExceptionMapper;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.EcsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -78,7 +78,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock protected EnvironmentService environmentService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ContainerService containerService;
-  @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
 
   @InjectMocks @Inject protected YamlHelper yamlHelper;

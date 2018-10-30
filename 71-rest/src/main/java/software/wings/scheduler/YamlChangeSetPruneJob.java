@@ -11,6 +11,7 @@ import com.google.inject.name.Named;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -50,11 +51,11 @@ public class YamlChangeSetPruneJob implements Job {
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private AccountService accountService;
   @Inject private PersistentLocker persistentLocker;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private ExecutorService executorService;
 
-  public static void add(QuartzScheduler jobScheduler) {
+  public static void add(PersistentScheduler jobScheduler) {
     jobScheduler.deleteJob(NAME, GROUP);
 
     JobDetail job = JobBuilder.newJob(YamlChangeSetPruneJob.class).withIdentity(NAME, GROUP).build();

@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -38,7 +39,6 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.HarnessException;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.AzureKubernetesInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -64,7 +64,7 @@ public class AzureKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandlerT
   @Mock protected EnvironmentService environmentService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ContainerService containerService;
-  @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
 
   @InjectMocks @Inject protected YamlHelper yamlHelper;

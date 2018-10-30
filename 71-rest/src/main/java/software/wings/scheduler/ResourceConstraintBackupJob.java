@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.fabric8.utils.Strings;
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -38,7 +39,7 @@ public class ResourceConstraintBackupJob implements Job {
         .build();
   }
 
-  public static void addJob(QuartzScheduler jobScheduler) {
+  public static void addJob(PersistentScheduler jobScheduler) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
     jobScheduler.deleteJob(NAME, GROUP);
 

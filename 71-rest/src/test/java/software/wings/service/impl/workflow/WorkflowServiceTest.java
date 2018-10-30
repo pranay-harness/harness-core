@@ -163,6 +163,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -221,7 +222,6 @@ import software.wings.common.Constants;
 import software.wings.common.TemplateConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.StaticMap;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -283,7 +283,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private ArtifactStream artifactStream;
   @Mock private TriggerService triggerService;
   @Mock private EnvironmentService environmentService;
-  @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
   @Mock private TemplateService templateService;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;

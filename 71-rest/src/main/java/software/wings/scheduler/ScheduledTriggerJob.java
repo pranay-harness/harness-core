@@ -5,6 +5,7 @@ import static software.wings.beans.trigger.TriggerConditionType.SCHEDULED;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.CronScheduleBuilder;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -33,7 +34,7 @@ public class ScheduledTriggerJob implements Job {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TriggerService triggerService;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   public static org.quartz.Trigger getQuartzTrigger(Trigger trigger) {
     return TriggerBuilder.newTrigger()
@@ -43,7 +44,7 @@ public class ScheduledTriggerJob implements Job {
         .build();
   }
 
-  public static void add(QuartzScheduler jobScheduler, String appId, String triggerId, org.quartz.Trigger trigger) {
+  public static void add(PersistentScheduler jobScheduler, String appId, String triggerId, org.quartz.Trigger trigger) {
     JobDetail job = JobBuilder.newJob(ScheduledTriggerJob.class)
                         .withIdentity(triggerId, ScheduledTriggerJob.GROUP)
                         .usingJobData(TRIGGER_ID_KEY, triggerId)

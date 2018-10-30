@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.delegatetasks.SplunkDataCollectionTask;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.analysis.AnalysisContext;
 import software.wings.utils.JsonUtils;
 
@@ -35,7 +34,7 @@ public class VerificationServiceExecutorService {
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceExecutorService.class);
 
   @Inject @Named("verificationServiceExecutor") protected ScheduledExecutorService taskPollService;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private LearningEngineService learningEngineService;
 
@@ -142,7 +141,7 @@ public class VerificationServiceExecutorService {
     logger.info("Scheduled Log Analysis cluster Job with details : {}", job);
   }
 
-  public static void addJob(QuartzScheduler jobScheduler) {
+  public static void addJob(PersistentScheduler jobScheduler) {
     jobScheduler.deleteJob(VERIFICATION_CRON_NAME, VERIFICATION_CRON_GROUP);
   }
 }

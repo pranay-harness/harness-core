@@ -29,6 +29,7 @@ import io.harness.beans.PageResponse;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -43,7 +44,6 @@ import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.InstanceSyncJob;
 import software.wings.scheduler.PruneEntityJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -96,7 +96,7 @@ public class AppServiceImpl implements AppService {
   @Inject private YamlPushService yamlPushService;
   @Inject private GenericDbCache dbCache;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   private void validateAppName(Application app) {
     if (app != null) {

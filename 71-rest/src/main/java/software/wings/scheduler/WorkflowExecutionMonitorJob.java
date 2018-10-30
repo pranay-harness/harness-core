@@ -18,6 +18,7 @@ import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.scheduler.PersistentScheduler;
 import org.mongodb.morphia.query.Sort;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -52,9 +53,9 @@ public class WorkflowExecutionMonitorJob implements Job {
   @Inject private ExecutorService executorService;
   @Inject private StateMachineExecutor stateMachineExecutor;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
-  public static void add(QuartzScheduler jobScheduler) {
+  public static void add(PersistentScheduler jobScheduler) {
     jobScheduler.deleteJob(NAME, GROUP);
     JobDetail job = JobBuilder.newJob(WorkflowExecutionMonitorJob.class).withIdentity(NAME, GROUP).build();
 

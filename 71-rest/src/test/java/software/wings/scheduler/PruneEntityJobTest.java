@@ -16,6 +16,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -48,7 +49,7 @@ public class PruneEntityJobTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private EnvironmentService environmentService;
 
-  @Mock private QuartzScheduler jobScheduler;
+  @Mock private PersistentScheduler jobScheduler;
 
   @Inject @InjectMocks PruneEntityJob job;
 
