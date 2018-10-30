@@ -57,6 +57,7 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
@@ -72,7 +73,9 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.BastionConnectionAttributes;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -374,6 +377,40 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     doReturn(settingAttribute).when(spyQuery).get();
 
     settingsService.update(settingAttribute, false);
+  }
+
+  @Test
+  public void updateShouldMaskHostConnectionPrivateKey() {
+    final String uuid = UUID.randomUUID().toString();
+    HostConnectionAttributes hostConnectionAttributes = HostConnectionAttributes.Builder.aHostConnectionAttributes()
+                                                            .withAccessType(AccessType.KEY)
+                                                            .withAccountId(UUIDGenerator.generateUuid())
+                                                            .withConnectionType(ConnectionType.SSH)
+                                                            .withKey("Test Private Key".toCharArray())
+                                                            .withKeyless(false)
+                                                            .withUserName("TestUser")
+                                                            .build();
+    SettingAttribute settingAttribute = aSettingAttribute()
+                                            .withUuid(uuid)
+                                            .withAppId(APP_ID)
+                                            .withAccountId(ACCOUNT_ID)
+                                            .withName("MY_SSH_KEY")
+                                            .withCategory(Category.SETTING)
+                                            .withValue(hostConnectionAttributes)
+                                            .build();
+
+    when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
+
+    doReturn(settingAttribute).when(wingsPersistence).get(SettingAttribute.class, uuid);
+    doReturn(settingAttribute).when(spyQuery).get();
+
+    SettingAttribute updatedSettingAttribute = settingsService.update(settingAttribute);
+    assertThat(updatedSettingAttribute).isNotNull();
+
+    HostConnectionAttributes updatedHostConnectionAttributes =
+        (HostConnectionAttributes) updatedSettingAttribute.getValue();
+    assertThat(updatedHostConnectionAttributes.getKey()).isEqualTo(SecretManager.ENCRYPTED_FIELD_MASK);
   }
 
   @Test

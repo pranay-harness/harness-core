@@ -55,6 +55,7 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -345,12 +346,23 @@ public class SettingsServiceImpl implements SettingsService {
 
     SettingAttribute updatedSettingAttribute = wingsPersistence.get(SettingAttribute.class, settingAttribute.getUuid());
 
+    // Need to mask the privatey key field value before the value is returned.
+    // This will avoid confusing the user that the key field is empty when it's not.
+    SettingValue updatedSettingValue = updatedSettingAttribute.getValue();
+    if (updatedSettingValue instanceof HostConnectionAttributes) {
+      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) updatedSettingValue;
+      if (!hostConnectionAttributes.isKeyless()) {
+        hostConnectionAttributes.setKey(SecretManager.ENCRYPTED_FIELD_MASK);
+      }
+    }
+
     if (shouldBeSynced(updatedSettingAttribute, pushToGit)) {
       boolean isRename = !savedSettingAttributes.getName().equals(updatedSettingAttribute.getName());
       yamlPushService.pushYamlChangeSet(settingAttribute.getAccountId(), savedSettingAttributes,
           updatedSettingAttribute, Type.UPDATE, settingAttribute.isSyncFromGit(), isRename);
     }
     cacheHelper.getNewRelicApplicationCache().remove(updatedSettingAttribute.getUuid());
+
     return updatedSettingAttribute;
   }
 

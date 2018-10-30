@@ -58,6 +58,8 @@ public class EncryptionServiceImpl implements EncryptionService {
       } catch (DelegateRetryableException e) {
         throw e;
       } catch (Exception e) {
+        // Log the root cause exception of failed decryption attempts.
+        logger.error("Failed to decrypt encrypted settings.", e);
         throw new KmsOperationException(Misc.getMessage(e), USER);
       }
     }

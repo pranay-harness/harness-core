@@ -9,6 +9,7 @@ import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -31,6 +32,7 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElkConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
+import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
@@ -166,6 +168,8 @@ public class SettingValidationService {
       newRelicService.validateConfig(settingAttribute, StateType.PROMETHEUS, encryptedDataDetails);
     } else if (settingValue instanceof GitConfig) {
       validateGitConfig(settingAttribute, encryptedDataDetails);
+    } else if (settingValue instanceof HostConnectionAttributes) {
+      validateHostConnectionAttributes((HostConnectionAttributes) settingValue);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {
@@ -225,6 +229,18 @@ public class SettingValidationService {
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);
+    }
+  }
+
+  private void validateHostConnectionAttributes(HostConnectionAttributes hostConnectionAttributes) {
+    if (hostConnectionAttributes.isKeyless()) {
+      if (EmptyPredicate.isEmpty(hostConnectionAttributes.getKeyPath())) {
+        throw new InvalidRequestException("Private key file path is not specified", USER);
+      }
+    } else {
+      if (EmptyPredicate.isEmpty(hostConnectionAttributes.getKey())) {
+        throw new InvalidRequestException("Private key is not specified", USER);
+      }
     }
   }
 
