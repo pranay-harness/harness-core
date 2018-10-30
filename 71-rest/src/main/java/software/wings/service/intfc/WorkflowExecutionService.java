@@ -5,6 +5,7 @@ import io.harness.beans.PageResponse;
 import io.harness.persistence.HIterator;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
@@ -139,4 +140,6 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   List<WorkflowExecution> listWaitingOnDeployments(String appId, String workflowExecutionId);
 
   Long fetchWorkflowExecutionStartTs(String appId, String workflowExecutionId);
+
+  ApprovalAuthorization getApprovalAuthorization(String appId, List<String> userGroupIds);
 }

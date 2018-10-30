@@ -7,6 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.security.PermissionAttribute.Action.EXECUTE;
 import static software.wings.security.PermissionAttribute.Action.READ;
 import static software.wings.security.PermissionAttribute.PermissionType.DEPLOYMENT;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 
@@ -15,8 +16,10 @@ import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
@@ -422,5 +425,29 @@ public class ExecutionResource {
   public RestResponse<List<WorkflowExecution>> getWaitingOnDeployments(
       @QueryParam("appId") String appId, @PathParam("workflowExecutionId") String workflowExecutionId) {
     return new RestResponse<>(workflowExecutionService.listWaitingOnDeployments(appId, workflowExecutionId));
+  }
+
+  @GET
+  @Path("{workflowExecutionId}/approvalAuthorization")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = DEPLOYMENT, action = EXECUTE, skipAuth = true)
+  public RestResponse<ApprovalAuthorization> getApprovalAuthorization(@QueryParam("appId") String appId,
+      @PathParam("workflowExecutionId") String workflowExecutionId, @QueryParam("userGroups") List<String> userGroups) {
+    // In case of approvals with no user groups, we want to make sure that the user has permission to access that
+    // workflow/pipeline. Below empty check does that
+    notNullCheck("App cannot be null", appId);
+
+    if (isEmpty(userGroups)) {
+      try {
+        authorize(appId, workflowExecutionId, EXECUTE);
+      } catch (WingsException e) {
+        ApprovalAuthorization approvalAuthorization = new ApprovalAuthorization();
+        approvalAuthorization.setAuthorized(false);
+        return new RestResponse<>(approvalAuthorization);
+      }
+    }
+
+    return new RestResponse<>(workflowExecutionService.getApprovalAuthorization(appId, userGroups));
   }
 }
