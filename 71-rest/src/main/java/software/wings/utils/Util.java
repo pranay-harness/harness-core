@@ -108,13 +108,15 @@ public class Util {
       int revision;
       if (existing.equals(defaultName)) {
         revision = 0;
-      } else {
+      } else if (existing.startsWith(defaultName)) {
         String rev = existing.substring(defaultName.length() + 1);
         try {
           revision = Integer.parseInt(rev);
         } catch (NumberFormatException ex) {
           revision = -1;
         }
+      } else {
+        revision = -1;
       }
       if (revision > maxRevision) {
         maxRevision = revision;
