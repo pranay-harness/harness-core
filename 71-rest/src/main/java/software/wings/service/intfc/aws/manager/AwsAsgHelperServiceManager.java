@@ -9,9 +9,9 @@ import java.util.Map;
 
 public interface AwsAsgHelperServiceManager {
   List<String> listAutoScalingGroupNames(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region);
-  List<Instance> listAutoScalingGroupInstances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName);
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId);
+  List<Instance> listAutoScalingGroupInstances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String autoScalingGroupName, String appId);
   Map<String, Integer> getDesiredCapacitiesOfAsgs(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs);
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs, String appId);
 }
