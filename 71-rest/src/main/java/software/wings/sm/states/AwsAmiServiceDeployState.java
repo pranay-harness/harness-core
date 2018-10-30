@@ -249,8 +249,8 @@ public class AwsAmiServiceDeployState extends State {
       gpNames.add(newAutoScalingGroupName);
     }
 
-    Map<String, Integer> existingDesiredCapacities =
-        awsAsgHelperServiceManager.getDesiredCapacitiesOfAsgs(awsConfig, encryptionDetails, region, gpNames);
+    Map<String, Integer> existingDesiredCapacities = awsAsgHelperServiceManager.getDesiredCapacitiesOfAsgs(
+        awsConfig, encryptionDetails, region, gpNames, infrastructureMapping.getAppId());
 
     Integer newAutoScalingGroupDesiredCapacity =
         isNotEmpty(newAutoScalingGroupName) ? existingDesiredCapacities.get(newAutoScalingGroupName) : 0;

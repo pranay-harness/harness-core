@@ -135,7 +135,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
       return instances;
     } else {
       return awsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig, encryptedDataDetails,
-          awsInfrastructureMapping.getRegion(), awsInfrastructureMapping.getAutoScalingGroupName());
+          awsInfrastructureMapping.getRegion(), awsInfrastructureMapping.getAutoScalingGroupName(),
+          awsInfrastructureMapping.getAppId());
     }
   }
 
@@ -193,7 +194,8 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     }
 
     List<Instance> instances = awsAsgHelperServiceManager.listAutoScalingGroupInstances(awsConfig, encryptionDetails,
-        infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName());
+        infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(),
+        infrastructureMapping.getAppId());
     return instances.stream()
         .map(instance
             -> aHost()
@@ -283,11 +285,11 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     }
   }
 
-  public List<String> listAutoScalingGroups(SettingAttribute computeProviderSetting, String region) {
+  public List<String> listAutoScalingGroups(SettingAttribute computeProviderSetting, String region, String appId) {
     try {
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
       return awsAsgHelperServiceManager.listAutoScalingGroupNames(
-          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);

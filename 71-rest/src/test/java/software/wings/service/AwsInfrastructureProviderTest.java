@@ -185,6 +185,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                                                          .withRegion(region)
                                                          .withProvisionInstances(true)
                                                          .withAutoScalingGroupName("AUTOSCALING_GROUP")
+                                                         .withAppId(APP_ID)
                                                          .withSetDesiredCapacity(true)
                                                          .withDesiredCapacity(1)
                                                          .build();
@@ -195,7 +196,7 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
                         .withState(new InstanceState().withName("running"))))
         .when(mockAwsAsgHelperServiceManager)
         .listAutoScalingGroupInstances(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
-            infrastructureMapping.getAutoScalingGroupName());
+            infrastructureMapping.getAutoScalingGroupName(), APP_ID);
     doReturn(HOST_NAME).when(mockAwsUtils).getHostnameFromPrivateDnsName(HOST_NAME);
     doNothing()
         .when(awsHelperService)
@@ -204,17 +205,20 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
             infrastructureMapping.getDesiredCapacity(), new ManagerExecutionLogCallback());
     List<Host> hosts =
         infrastructureProvider.maybeSetAutoScaleCapacityAndGetHosts(null, null, infrastructureMapping, awsSetting);
-    assertThat(hosts)
-        .hasSize(1)
-        .hasOnlyElementsOfType(Host.class)
-        .isEqualTo(singletonList(
-            aHost().withHostName(HOST_NAME).withEc2Instance(new Instance().withInstanceId("INSTANCE_ID")).build()));
+    assertThat(hosts).isNotNull();
+    assertThat(hosts.size()).isEqualTo(1);
+    Host host = hosts.get(0);
+    assertThat(host).isNotNull();
+    assertThat(host.getHostName()).isEqualTo(HOST_NAME);
+    Instance instance = host.getEc2Instance();
+    assertThat(instance).isNotNull();
+    assertThat(instance.getInstanceId()).isEqualTo("INSTANCE_ID");
     verify(awsHelperService)
         .setAutoScalingGroupCapacityAndWaitForInstancesReadyState(awsConfig, Collections.emptyList(),
             infrastructureMapping.getRegion(), infrastructureMapping.getAutoScalingGroupName(),
             infrastructureMapping.getDesiredCapacity(), new ManagerExecutionLogCallback());
     verify(mockAwsAsgHelperServiceManager)
         .listAutoScalingGroupInstances(awsConfig, Collections.emptyList(), infrastructureMapping.getRegion(),
-            infrastructureMapping.getAutoScalingGroupName());
+            infrastructureMapping.getAutoScalingGroupName(), APP_ID);
   }
 }

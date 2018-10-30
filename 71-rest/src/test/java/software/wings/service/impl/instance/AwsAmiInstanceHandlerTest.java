@@ -275,7 +275,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(asList(ec2Instance1, ec2Instance2))
         .when(mockAwsAsgHelperServiceManager)
-        .listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString());
+        .listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString(), anyString());
 
     awsAmiInstanceHandler.syncInstances(APP_ID, INFRA_MAPPING_ID);
 
@@ -400,7 +400,7 @@ public class AwsAmiInstanceHandlerTest extends WingsBaseTest {
 
     doReturn(asList(ec2Instance1, ec2Instance2))
         .when(mockAwsAsgHelperServiceManager)
-        .listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString());
+        .listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString(), anyString());
 
     awsAmiInstanceHandler.handleNewDeployment(
         Arrays.asList(

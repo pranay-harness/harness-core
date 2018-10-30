@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -40,47 +41,50 @@ public class AwsAsgHelperServiceManagerImpl implements AwsAsgHelperServiceManage
 
   @Override
   public List<String> listAutoScalingGroupNames(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsAsgListAllNamesRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsAsgListAllNamesResponse) response).getASgNames();
   }
 
   @Override
-  public List<Instance> listAutoScalingGroupInstances(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
+  public List<Instance> listAutoScalingGroupInstances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String autoScalingGroupName, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsAsgListInstancesRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
             .autoScalingGroupName(autoScalingGroupName)
-            .build());
+            .build(),
+        appId);
     return ((AwsAsgListInstancesResponse) response).getInstances();
   }
 
   @Override
-  public Map<String, Integer> getDesiredCapacitiesOfAsgs(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs) {
+  public Map<String, Integer> getDesiredCapacitiesOfAsgs(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptionDetails, String region, List<String> asgs, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsAsgListDesiredCapacitiesRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
             .asgs(asgs)
-            .build());
+            .build(),
+        appId);
     return ((AwsAsgListDesiredCapacitiesResponse) response).getCapacities();
   }
 
-  private AwsResponse executeTask(String accountId, AwsAsgRequest request) {
+  private AwsResponse executeTask(String accountId, AwsAsgRequest request, String appId) {
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.AWS_ASG_TASK)
                                     .withAccountId(accountId)
-                                    .withAppId(GLOBAL_APP_ID)
+                                    .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
                                     .withAsync(false)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                     .withParameters(new Object[] {request})

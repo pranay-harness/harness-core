@@ -1210,7 +1210,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listAutoScalingGroups(computeProviderSetting, region);
+      return infrastructureProvider.listAutoScalingGroups(computeProviderSetting, region, appId);
     }
     return emptyList();
   }

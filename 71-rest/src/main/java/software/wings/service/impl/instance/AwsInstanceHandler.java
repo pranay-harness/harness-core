@@ -152,8 +152,8 @@ public class AwsInstanceHandler extends InstanceHandler {
     // This is to handle the case of the instances stored in the new schema.
     if (asgInstanceMap.size() > 0) {
       asgInstanceMap.keySet().forEach(autoScalingGroupName -> {
-        List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances =
-            getEc2InstancesFromAutoScalingGroup(region, autoScalingGroupName, awsConfig, encryptedDataDetails);
+        List<com.amazonaws.services.ec2.model.Instance> latestEc2Instances = getEc2InstancesFromAutoScalingGroup(
+            region, autoScalingGroupName, awsConfig, encryptedDataDetails, infrastructureMapping.getAppId());
 
         Map<String, com.amazonaws.services.ec2.model.Instance> latestEc2InstanceMap =
             latestEc2Instances.stream().collect(
@@ -345,9 +345,9 @@ public class AwsInstanceHandler extends InstanceHandler {
     }
   }
 
-  protected List<com.amazonaws.services.ec2.model.Instance> getEc2InstancesFromAutoScalingGroup(
-      String region, String autoScalingGroupName, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
+  protected List<com.amazonaws.services.ec2.model.Instance> getEc2InstancesFromAutoScalingGroup(String region,
+      String autoScalingGroupName, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String appId) {
     return awsAsgHelperServiceManager.listAutoScalingGroupInstances(
-        awsConfig, encryptionDetails, region, autoScalingGroupName);
+        awsConfig, encryptionDetails, region, autoScalingGroupName, appId);
   }
 }
