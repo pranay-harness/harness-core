@@ -1,21 +1,22 @@
 package io.harness.scheduler;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
+import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientOptions.Builder;
 import com.mongodb.MongoClientURI;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.IndexOptions;
 import io.harness.maintenance.MaintenanceListener;
 import io.harness.mongo.MongoConfig;
-import io.harness.persistence.HPersistence;
-import io.harness.persistence.ReadPref;
+import io.harness.mongo.MongoModule;
+import org.bson.Document;
 import org.quartz.JobDetail;
 import org.quartz.JobKey;
 import org.quartz.Scheduler;
@@ -51,17 +52,24 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
     // by default scheduler does not create all needed mongo indexes.
     // it is a bit hack but we are going to add them from here
 
-    HPersistence hPersistence = injector.getInstance(Key.get(HPersistence.class));
+    if (schedulerConfig.getJobStoreClass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
+      MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), MongoModule.mongoClientOptions);
+      try (MongoClient mongoClient = new MongoClient(uri)) {
+        final MongoDatabase database = mongoClient.getDatabase(uri.getDatabase());
 
-    final String prefix = properties.getProperty("org.quartz.jobStore.collectionPrefix");
-    final DBCollection triggers = hPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, prefix + "_triggers");
-    BasicDBObject jobIdKey = new BasicDBObject("jobId", 1);
-    triggers.createIndex(jobIdKey, null, false);
+        final String prefix = properties.getProperty("org.quartz.jobStore.collectionPrefix");
 
-    BasicDBObject fireKeys = new BasicDBObject();
-    fireKeys.append("state", 1);
-    fireKeys.append("nextFireTime", 1);
-    triggers.createIndex(fireKeys, "fire", false);
+        final MongoCollection<Document> collection = database.getCollection(prefix + "_triggers");
+
+        BasicDBObject jobIdKey = new BasicDBObject("jobId", 1);
+        collection.createIndex(jobIdKey, new IndexOptions().background(false));
+
+        BasicDBObject fireKeys = new BasicDBObject();
+        fireKeys.append("state", 1);
+        fireKeys.append("nextFireTime", 1);
+        collection.createIndex(fireKeys, new IndexOptions().background(false).name("fire"));
+      }
+    }
 
     scheduler.setJobFactory(injector.getInstance(InjectorJobFactory.class));
     return scheduler;
