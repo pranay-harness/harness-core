@@ -93,7 +93,8 @@ public interface AccountService {
 
   boolean isFeatureFlagEnabled(FeatureName featureName, String accountId);
 
-  PageResponse<CVConfiguration> getAllCVServicesForAccount(String accountId, User user, PageRequest<String> request);
+  PageResponse<CVConfiguration> getAllCVServicesForAccount(
+      String accountId, User user, PageRequest<String> request, String serviceId);
 
   PageResponse<CVEnabledService> getServicesForAccount(
       String accountId, User user, PageRequest<String> request, String serviceId);

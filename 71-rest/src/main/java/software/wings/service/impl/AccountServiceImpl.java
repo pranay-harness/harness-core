@@ -799,7 +799,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   public PageResponse<CVConfiguration> getAllCVServicesForAccount(
-      String accountId, User user, PageRequest<String> request) {
+      String accountId, User user, PageRequest<String> request, String serviceId) {
     if (user == null) {
       logger.info("User is null when requesting for Services info. Returning null");
     }
@@ -812,6 +812,16 @@ public class AccountServiceImpl implements AccountService {
     List<CVConfiguration> cvConfigList = new ArrayList<>();
     for (String appId : appIds) {
       cvConfigList.addAll(cvConfigurationService.listConfigurations(accountId, appId));
+    }
+
+    if (serviceId != null) {
+      List<CVConfiguration> finalCVConfigList = new ArrayList<>();
+      for (CVConfiguration configuration : cvConfigList) {
+        if (configuration.getServiceId().equals(serviceId)) {
+          finalCVConfigList.add(configuration);
+        }
+      }
+      cvConfigList = finalCVConfigList;
     }
 
     // filter the services for which the user has permissions.

@@ -1,11 +1,14 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.Math.ceil;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
-import static software.wings.sm.StateType.APP_DYNAMICS;
-import static software.wings.verification.HeatMapResolution.getResolution;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
@@ -13,8 +16,10 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.persistence.HIterator;
 import io.harness.time.Timestamp;
 import org.jetbrains.annotations.NotNull;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,11 +28,13 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
+import software.wings.metrics.RiskLevel;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateType;
@@ -35,7 +42,8 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.TimeSeriesDataPoint;
-import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.TimeSeriesOfMetric;
+import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.dashboard.HeatMapUnit;
 
 import java.text.ParseException;
@@ -44,21 +52,22 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.NoSuchElementException;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @ValidateOnExecution
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
-  @Inject protected WingsPersistence wingsPersistence;
-  @Inject protected AuthService authService;
-  @Inject protected FeatureFlagService featureFlagService;
+  @Inject private WingsPersistence wingsPersistence;
+  @Inject private AuthService authService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private CVConfigurationService cvConfigurationService;
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
   private static final int DURATION_IN_MINUTES = 10;
@@ -443,177 +452,330 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return new ArrayList<>(userApps.keySet());
   }
 
-  private HeatMapUnit getMockHeatMapUnit(long startEpoch, long endEpoch, HeatMapResolution heatMapResolution) {
+  @Override
+  public List<HeatMap> getHeatMap(
+      String accountId, String appId, String serviceId, long startTime, long endTime, boolean detailed) {
+    List<HeatMap> rv = new ArrayList<>();
+    try (HIterator<CVConfiguration> cvConfigurations =
+             new HIterator<>(wingsPersistence.createQuery(CVConfiguration.class)
+                                 .filter("appId", appId)
+                                 .filter("serviceId", serviceId)
+                                 .fetch())) {
+      if (!cvConfigurations.hasNext()) {
+        logger.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
+        return new ArrayList<>();
+      }
+      while (cvConfigurations.hasNext()) {
+        CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigurations.next().getUuid());
+        String envName = cvConfiguration.getEnvName();
+        logger.info("Environment name = " + envName);
+        final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfiguration).build();
+        rv.add(heatMap);
+
+        List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfiguration);
+        List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
+        heatMap.getRiskLevelSummary().addAll(resolvedUnits);
+      }
+    }
+
+    return rv;
+  }
+
+  /**
+   *
+   * @param units - List of heat map units with the smallest possible size (currently = 1 cron job interval)
+   * @param startTime - in ms
+   * @param endTime - in ms
+   * @return - List of heatmap units based on resolution determined by startTime, endTime
+   */
+  private List<HeatMapUnit> resolveHeatMapUnits(List<HeatMapUnit> units, long startTime, long endTime) {
+    List<HeatMapUnit> resolvedUnits = new ArrayList<>();
+    HeatMapResolution heatMapResolution = HeatMapResolution.getResolution(startTime, endTime);
+
+    // time duration represented by each read unit
+    int unitDuration = heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution);
+
+    // number of small units to be merged into one reqd unit
     int eventsPerUnit = heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution);
-    final int NUM_CLASSES = 4; // low / med / high / na
 
-    int low = 0, medium = 0, high = 0, na = 0;
+    // total number of read units
+    int numberOfUnits = (int) ceil((double) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime) / unitDuration);
 
-    Random random = new Random();
+    logger.info("total small units = {}, number of required units = {}", units.size(), numberOfUnits);
 
-    if (eventsPerUnit == 1) {
-      int randomNum = random.nextInt(NUM_CLASSES);
-      if (randomNum == 0) {
-        low = 1;
-      } else if (randomNum == 1) {
-        medium = 1;
-      } else if (randomNum == 2) {
-        high = 1;
-      } else {
-        na = 1;
+    for (int i = 0; i < numberOfUnits; i++) {
+      // merge [i * eventsPerUnit, (i + 1) * eventsPerUnit)
+      // [x, y) denotes x inclusive, y exclusive
+      // Note: This works because the smallest unit is composed of exactly 1 event
+      int startIndex = i * eventsPerUnit;
+      int endIndex = min((i + 1) * eventsPerUnit, units.size());
+
+      if (startIndex >= endIndex) {
+        continue;
+      }
+      List<HeatMapUnit> subList = units.subList(startIndex, endIndex);
+      if (subList.size() > 0) {
+        resolvedUnits.add(merge(subList));
+      }
+    }
+    return resolvedUnits;
+  }
+
+  private HeatMapUnit merge(List<HeatMapUnit> units) {
+    HeatMapUnit mergedUnit = new HeatMapUnit();
+    mergedUnit.setStartTime(units.get(0).getStartTime());
+    mergedUnit.setEndTime(units.get(units.size() - 1).getEndTime());
+    units.forEach(unit -> {
+      mergedUnit.setHighRisk(mergedUnit.getHighRisk() + unit.getHighRisk());
+      mergedUnit.setMediumRisk(mergedUnit.getMediumRisk() + unit.getMediumRisk());
+      mergedUnit.setLowRisk(mergedUnit.getLowRisk() + unit.getLowRisk());
+      mergedUnit.setNa(mergedUnit.getNa() + unit.getNa());
+    });
+    return mergedUnit;
+  }
+
+  private List<HeatMapUnit> createAllHeatMapUnits(
+      String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
+    long cronPollIntervalMs = TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
+    Preconditions.checkState((endTime - startTime) >= cronPollIntervalMs);
+    List<TimeSeriesMLAnalysisRecord> records =
+        getAnalysisRecordsInTimeRange(appId, startTime, endTime, cvConfiguration);
+
+    long startMinute = TimeUnit.MILLISECONDS.toMinutes(startTime);
+    long endMinute = TimeUnit.MILLISECONDS.toMinutes(endTime);
+
+    List<HeatMapUnit> units = new ArrayList<>();
+    if (isEmpty(records)) {
+      while (endMinute > startMinute) {
+        units.add(HeatMapUnit.builder()
+                      .startTime(TimeUnit.MINUTES.toMillis(startMinute))
+                      .endTime(TimeUnit.MINUTES.toMillis(startMinute + CRON_POLL_INTERVAL_IN_MINUTES))
+                      .na(1)
+                      .build());
+        startMinute += CRON_POLL_INTERVAL_IN_MINUTES;
       }
 
-      return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, na, null);
+      return units;
     }
 
-    int randomNum = random.nextInt(eventsPerUnit);
-    if (randomNum % 2 == 0) {
-      low = randomNum;
-    } else {
-      medium = randomNum;
+    List<HeatMapUnit> unitsFromDB = new ArrayList<>();
+    records.forEach(record -> {
+      HeatMapUnit heatMapUnit =
+          HeatMapUnit.builder()
+              .startTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+              .endTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()))
+              .build();
+      heatMapUnit.increment(getRiskLevel(getMaxRiskLevel(record)));
+      unitsFromDB.add(heatMapUnit);
+    });
+
+    // find the actual start time so that we fill from there
+    HeatMapUnit heatMapUnit = unitsFromDB.get(0);
+    long actualUnitStartTime = heatMapUnit.getStartTime();
+    while (startTime < actualUnitStartTime - cronPollIntervalMs) {
+      actualUnitStartTime -= cronPollIntervalMs;
     }
-    eventsPerUnit -= randomNum;
-    if (eventsPerUnit > 0) {
-      high = random.nextInt(eventsPerUnit);
-      eventsPerUnit -= high;
+
+    int dbUnitIndex = 0;
+    for (long unitTime = actualUnitStartTime; unitTime + cronPollIntervalMs <= endTime;
+         unitTime += cronPollIntervalMs) {
+      heatMapUnit = dbUnitIndex < unitsFromDB.size() ? unitsFromDB.get(dbUnitIndex) : null;
+      if (heatMapUnit != null && unitTime == heatMapUnit.getStartTime()) {
+        units.add(heatMapUnit);
+        dbUnitIndex++;
+        continue;
+      }
+
+      units.add(HeatMapUnit.builder().endTime(unitTime).startTime(unitTime - cronPollIntervalMs + 1).na(1).build());
     }
-    if (eventsPerUnit > 0) {
-      na = random.nextInt(eventsPerUnit);
-    }
-    return new HeatMapUnit(startEpoch, endEpoch, low, medium, high, na, null);
+    return units;
   }
 
   @NotNull
-  private HeatMap generateMockHeatMap(long startTime, long endTime, String appId, String serviceId) {
-    HeatMapResolution heatMapResolution = getResolution(startTime, endTime);
-    HeatMap heatMap = new HeatMap();
-
-    AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration =
-        createMockAppDynamicsCVServiceConfiguration(appId, serviceId);
-    heatMap.setCvConfiguration(appDynamicsCVServiceConfiguration);
-    heatMap.setRiskLevelSummary(new ArrayList<>());
-    heatMap.setCvConfiguration(appDynamicsCVServiceConfiguration);
-
-    long currentTs = startTime;
-    long nextTs = currentTs + TimeUnit.MINUTES.toMillis(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
-    int totalMinutes = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
-    int datapoints = totalMinutes / heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution);
-    logger.info("No. of heatmap datapoints = " + datapoints);
-
-    for (int i = 0; i < datapoints; i++) {
-      heatMap.getRiskLevelSummary().add(getMockHeatMapUnit(currentTs, nextTs, heatMapResolution));
-      currentTs = nextTs;
-      nextTs = currentTs + TimeUnit.MINUTES.toMillis(heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+  private List<TimeSeriesMLAnalysisRecord> getAnalysisRecordsInTimeRange(
+      String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
+    // Get all records in memory
+    List<TimeSeriesMLAnalysisRecord> records = new ArrayList<>();
+    try (HIterator<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
+             new HIterator<>(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                 .filter("appId", appId)
+                                 .filter("cvConfigId", cvConfiguration.getUuid())
+                                 .field("analysisMinute")
+                                 .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
+                                 .field("analysisMinute")
+                                 .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+                                 .order("analysisMinute")
+                                 .fetch())) {
+      while (timeSeriesMLAnalysisRecords.hasNext()) {
+        records.add(timeSeriesMLAnalysisRecords.next());
+      }
+    } catch (NoSuchElementException e) {
+      logger.warn("No time series analysis record found for minute greater than equal to "
+          + TimeUnit.MILLISECONDS.toMinutes(startTime) + ", less than " + TimeUnit.MILLISECONDS.toMinutes(endTime));
     }
-    return heatMap;
+    return records;
   }
 
-  @NotNull
-  private AppDynamicsCVServiceConfiguration createMockAppDynamicsCVServiceConfiguration(
-      String appId, String serviceId) {
-    AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
-    appDynamicsCVServiceConfiguration = new AppDynamicsCVServiceConfiguration();
-    appDynamicsCVServiceConfiguration.setAppId(appId);
-    appDynamicsCVServiceConfiguration.setEnvId(generateUuid());
-    appDynamicsCVServiceConfiguration.setServiceId(serviceId);
-    appDynamicsCVServiceConfiguration.setEnabled24x7(true);
-    appDynamicsCVServiceConfiguration.setAppDynamicsApplicationId(generateUuid());
-    appDynamicsCVServiceConfiguration.setTierId(generateUuid());
-    appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
-    appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
-    appDynamicsCVServiceConfiguration.setName("App Dynamics Service Config " + UUID.randomUUID().toString());
-    appDynamicsCVServiceConfiguration.setConnectorName("Connector " + UUID.randomUUID().toString());
-    return (AppDynamicsCVServiceConfiguration) wingsPersistence.saveAndGet(
-        CVConfiguration.class, appDynamicsCVServiceConfiguration);
-  }
-
-  public Map<String, List<HeatMap>> getHeatMap(
-      String accountId, String serviceId, long startTime, long endTime, boolean detailed) {
-    // TODO: Fetch all CV configs of given serviceId and generate heatmaps for those configs
-
-    final int NUM_SERVICE_CONFIGS = 2;
-
-    // TODO: assert that (end - begin) == resolution
-
-    Map<String, List<HeatMap>> resp = new LinkedHashMap<>();
-
-    for (int i = 0; i < 3; i++) {
-      List<HeatMap> summary = new ArrayList<>();
-      String appId = UUID.randomUUID().toString();
-      for (int num = 0; num < NUM_SERVICE_CONFIGS; num++) {
-        HeatMap heatMap = generateMockHeatMap(startTime, endTime, appId, serviceId);
-        if (detailed) {
-          heatMap.setObservedTimeSeries(getRandomTimeSeries(startTime, endTime));
-          heatMap.setPredictedTimeSeries(getRandomTimeSeries(startTime, endTime));
+  private int getMaxRiskLevel(TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord) {
+    int maxRiskLevel = -1;
+    if (isEmpty(timeSeriesMLAnalysisRecord.getTransactions())) {
+      return maxRiskLevel;
+    }
+    for (TimeSeriesMLTxnSummary timeSeriesMLTxnSummary : timeSeriesMLAnalysisRecord.getTransactions().values()) {
+      if (isNotEmpty(timeSeriesMLTxnSummary.getMetrics())) {
+        for (TimeSeriesMLMetricSummary timeSeriesMLMetricSummary : timeSeriesMLTxnSummary.getMetrics().values()) {
+          if (isNotEmpty(timeSeriesMLTxnSummary.getMetrics())) {
+            if (isNotEmpty(timeSeriesMLMetricSummary.getResults())) {
+              for (TimeSeriesMLHostSummary timeSeriesMLHostSummary : timeSeriesMLMetricSummary.getResults().values()) {
+                if (timeSeriesMLHostSummary != null) {
+                  maxRiskLevel = max(maxRiskLevel, timeSeriesMLHostSummary.getRisk());
+                } else {
+                  logger.warn("results is null for timeSeriesAnalysisRecord {}", timeSeriesMLAnalysisRecord.getUuid());
+                }
+              }
+            }
+          } else {
+            logger.warn("timeSeriesMLMetricSummary is null for timeSeriesAnalysisRecord with uuid={}",
+                timeSeriesMLAnalysisRecord.getUuid());
+          }
         }
-        summary.add(heatMap);
       }
-      resp.put("Environment Name/" + summary.get(0).getCvConfiguration().getEnvId(), summary);
     }
-    return resp;
+    return maxRiskLevel;
   }
 
-  private Map<String, Map<String, List<TimeSeriesDataPoint>>> getRandomTimeSeries(long startTime, long endTime) {
-    int minutes = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
-    logger.info("Minutes = " + minutes);
-    int NUM_TRANSACTIONS = 2;
-    List<String> metrics = Arrays.asList("requestsPerMinute", "averageResponseTime");
+  private List<TimeSeriesDataPoint> getPreInitializeTimeSeries(long startTime, long endTime) {
+    return TimeSeriesDataPoint.initializeTimeSeriesDataPointsList(startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1);
+  }
 
-    Map<String, Map<String, List<TimeSeriesDataPoint>>> timeSeriesMap = new HashMap<>();
-    for (int i = 0; i < NUM_TRANSACTIONS; i++) {
-      String transactionName = "WebTransaction/Servlet/" + generateUuid();
-      Map<String, List<TimeSeriesDataPoint>> metricTimeSeries = new HashMap<>();
-      for (String metric : metrics) {
-        metricTimeSeries.put(metric, generateRandomTimeSeriesWithNDataPoints(startTime, minutes));
+  @NotNull
+  public Map<String, Map<String, TimeSeriesOfMetric>> fetchObservedTimeSeries(
+      long startTime, long endTime, CVConfiguration cvConfiguration) {
+    // The object to be returned which contains the map txn => metrics => timeseries per metric
+    Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries = new HashMap<>();
+    try (HIterator<TimeSeriesMLAnalysisRecord> timeSeriesAnalysisRecords =
+             new HIterator<>(getTimeSeriesAnalysisRecordIterator(startTime, endTime, cvConfiguration))) {
+      while (timeSeriesAnalysisRecords.hasNext()) {
+        TimeSeriesMLAnalysisRecord record = timeSeriesAnalysisRecords.next();
+        int analysisMinute = record.getAnalysisMinute();
+        record.getTransactions().forEach((transactionKey, transaction) -> {
+          String transactionName = transaction.getTxn_name();
+
+          // Add empty hashmap corresponding to txn name if not already present in observedTimeSeries hashmap
+          if (!observedTimeSeries.containsKey(transactionName)) {
+            observedTimeSeries.put(transactionName, new HashMap<>());
+          }
+
+          transaction.getMetrics().forEach((metricKey, metric) -> {
+            // Add empty arraylist corresponding to current metric name, for above transaction name
+            if (!observedTimeSeries.get(transactionName).containsKey(metric.getMetric_name())) {
+              observedTimeSeries.get(transactionName)
+                  .put(metric.getMetric_name(),
+                      TimeSeriesOfMetric.builder()
+                          .metricName(metric.getMetric_name())
+                          .timeSeries(getPreInitializeTimeSeries(startTime, endTime))
+                          .risk(metric.getMax_risk())
+                          .build());
+            }
+
+            // Logic to insert time series data points
+
+            Map<String, TimeSeriesMLHostSummary> results = metric.getResults();
+            Map.Entry<String, TimeSeriesMLHostSummary> metricHostResultsEntry;
+            if (isEmpty(results)) {
+              logger.info("results is empty for time series analysis record with uuid {}", record.getUuid());
+            } else {
+              // For CV 24x7, there has to exist exactly one host
+              if (results.size() > 1) {
+                logger.info("More than 1 host found for time series analysis record {}", record.getUuid());
+              }
+
+              // Here we get the iterator to the first entry and dereference it and ignore other entries
+              metricHostResultsEntry = results.entrySet().iterator().next();
+
+              // size of list = CRON INTERVAL IN MINUTES
+              // contains value at each minute
+              List<Double> datapoints = metricHostResultsEntry.getValue().getTest_data();
+
+              Iterator<TimeSeriesDataPoint> existingPoints =
+                  observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getTimeSeries().iterator();
+
+              long period = TimeUnit.MINUTES.toMillis(1);
+              for (long i = startTime, j = 0; existingPoints.hasNext() && i + period <= endTime; i += period, j++) {
+                TimeSeriesDataPoint timeSeriesDataPoint = existingPoints.next();
+                if (timeSeriesDataPoint.getTimestamp() == i) {
+                  if (j < datapoints.size()) {
+                    timeSeriesDataPoint.setValue(datapoints.get((int) j));
+                  }
+                }
+              }
+            }
+          });
+        });
       }
-      timeSeriesMap.put(transactionName, metricTimeSeries);
     }
-    return timeSeriesMap;
+    return observedTimeSeries;
   }
 
-  private List<TimeSeriesDataPoint> generateRandomTimeSeriesWithNDataPoints(long startTime, int count) {
-    Random random = new Random();
-    List<TimeSeriesDataPoint> timeSeries = new ArrayList<>();
-    long currentTs = startTime;
-    for (int i = 0; i < count; i++) {
-      timeSeries.add(new TimeSeriesDataPoint(currentTs, random.nextFloat() * random.nextInt(10)));
-      currentTs = currentTs + TimeUnit.MINUTES.toMillis(1);
-    }
-    return timeSeries;
+  private MorphiaIterator<TimeSeriesMLAnalysisRecord, TimeSeriesMLAnalysisRecord> getTimeSeriesAnalysisRecordIterator(
+      long startTime, long endTime, CVConfiguration cvConfiguration) {
+    // TODO (VT): Refactor
+    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+        .filter("appId", cvConfiguration.getAppId())
+        .filter("cvConfigId", cvConfiguration.getUuid())
+        .field("analysisMinute")
+        .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
+        .field("analysisMinute")
+        .lessThan(TimeUnit.MILLISECONDS.toMinutes(endTime) + VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES)
+        .order("analysisMinute")
+        .fetch();
   }
 
-  public Map<String, Map<String, List<TimeSeriesDataPoint>>> getTimeSeriesOfHeatMapUnit(
+  private RiskLevel getRiskLevel(int risk) {
+    RiskLevel riskLevel;
+    switch (risk) {
+      case -1:
+        riskLevel = RiskLevel.NA;
+        break;
+      case 0:
+        riskLevel = RiskLevel.LOW;
+        break;
+      case 1:
+        riskLevel = RiskLevel.MEDIUM;
+        break;
+      case 2:
+        riskLevel = RiskLevel.HIGH;
+        break;
+      default:
+        throw new IllegalArgumentException("Unknown risk level " + risk);
+    }
+    return riskLevel;
+  }
+
+  public List<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
       String accountId, String cvConfigId, long startTime, long endTime) {
-    // TODO: RBAC check on cvConfigId
-    int minutes = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
-
-    int NUM_TRANSACTIONS = 3;
-    List<String> metrics = Arrays.asList("apdexScore", "requestsPerMinute", "averageResponseTime");
-
-    Map<String, Map<String, List<TimeSeriesDataPoint>>> timeSeriesMap = new HashMap<>();
-    for (int i = 0; i < NUM_TRANSACTIONS; i++) {
-      String transactionName = "WebTransaction/Servlet/" + generateUuid();
-      Map<String, List<TimeSeriesDataPoint>> metricTimeSeries = new HashMap<>();
-      for (String metric : metrics) {
-        metricTimeSeries.put(metric, getTimeSeriesDataPointsFor24Hours(startTime, minutes));
-      }
-      timeSeriesMap.put(transactionName, metricTimeSeries);
+    CVConfiguration cvConfiguration =
+        wingsPersistence.createQuery(CVConfiguration.class).filter("_id", cvConfigId).get();
+    if (cvConfiguration == null) {
+      logger.info("No cvConfig found for cvConfigId={}", cvConfigId);
+      return new ArrayList<>();
     }
-    return timeSeriesMap;
+    return convertTimeSeriesResponse(fetchObservedTimeSeries(startTime, endTime, cvConfiguration));
   }
 
-  private List<TimeSeriesDataPoint> getTimeSeriesDataPointsFor24Hours(long startTime, int durationOfCurrentSquare) {
-    List<TimeSeriesDataPoint> resp = new ArrayList<>();
-    List<TimeSeriesDataPoint> before =
-        generateRandomTimeSeriesWithNDataPoints(startTime - TimeUnit.HOURS.toMillis(12), 12 * 60);
-    List<TimeSeriesDataPoint> timeSeriesForGivenSquare =
-        generateRandomTimeSeriesWithNDataPoints(startTime, durationOfCurrentSquare);
-    List<TimeSeriesDataPoint> after = generateRandomTimeSeriesWithNDataPoints(
-        startTime + TimeUnit.MINUTES.toMillis(durationOfCurrentSquare), (12 * 60) - durationOfCurrentSquare);
-    resp.addAll(before);
-    resp.addAll(timeSeriesForGivenSquare);
-    resp.addAll(after);
-    logger.info("Response size = " + resp.size());
+  private List<TransactionTimeSeries> convertTimeSeriesResponse(
+      Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries) {
+    List<TransactionTimeSeries> resp = new ArrayList<>();
+    for (Map.Entry<String, Map<String, TimeSeriesOfMetric>> txnEntry : observedTimeSeries.entrySet()) {
+      TransactionTimeSeries txnTimeSeries = new TransactionTimeSeries();
+      txnTimeSeries.setTransactionName(txnEntry.getKey());
+      txnTimeSeries.setMetricTimeSeries(new ArrayList<>());
+      for (Map.Entry<String, TimeSeriesOfMetric> metricEntry : txnEntry.getValue().entrySet()) {
+        txnTimeSeries.getMetricTimeSeries().add(metricEntry.getValue());
+      }
+      resp.add(txnTimeSeries);
+    }
+    logger.info("Timeseries response = {}", resp);
     return resp;
   }
 }

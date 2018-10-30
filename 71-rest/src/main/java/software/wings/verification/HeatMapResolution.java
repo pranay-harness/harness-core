@@ -1,7 +1,6 @@
 package software.wings.verification;
 
-import io.harness.exception.WingsException;
-import software.wings.common.VerificationConstants;
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,34 +13,31 @@ import java.util.concurrent.TimeUnit;
  */
 
 public enum HeatMapResolution {
-  /*
-  SMALL => [0, 1] days
-  MEDIUM => (1, 7] days
-  LARGE => (7, 30] days
-   */
-  SMALL,
-  MEDIUM,
-  LARGE;
+  TWELVE_HOURS,
+  ONE_DAY,
+  SEVEN_DAYS,
+  THIRTY_DAYS;
 
   private static Map<HeatMapResolution, Integer> scale;
   static {
     Map<HeatMapResolution, Integer> scaleMap = new HashMap<>();
-    scaleMap.put(HeatMapResolution.SMALL, 15);
-    scaleMap.put(HeatMapResolution.MEDIUM, 180);
-    scaleMap.put(HeatMapResolution.LARGE, 480);
+    scaleMap.put(HeatMapResolution.TWELVE_HOURS, CRON_POLL_INTERVAL_IN_MINUTES); // 4 per hour
+    scaleMap.put(HeatMapResolution.ONE_DAY, CRON_POLL_INTERVAL_IN_MINUTES * 2); // 2 per hour
+    scaleMap.put(HeatMapResolution.SEVEN_DAYS, CRON_POLL_INTERVAL_IN_MINUTES * 16); // 6 per day <=> 1 per 4hrs
+    scaleMap.put(HeatMapResolution.THIRTY_DAYS, CRON_POLL_INTERVAL_IN_MINUTES * 48); // 2 per day <=> 1 per 12hrs
     scale = Collections.unmodifiableMap(scaleMap);
   }
 
   public static HeatMapResolution getResolution(long startTime, long endTime) {
-    int days = (int) TimeUnit.MILLISECONDS.toDays(endTime - startTime);
-    if (days <= 1) {
-      return HeatMapResolution.SMALL;
-    } else if (days <= 7) {
-      return HeatMapResolution.MEDIUM;
-    } else if (days <= 30) {
-      return HeatMapResolution.LARGE;
+    int hours = (int) TimeUnit.MILLISECONDS.toHours(endTime - startTime);
+    if (hours <= 12) {
+      return HeatMapResolution.TWELVE_HOURS;
+    } else if (hours <= 24) {
+      return HeatMapResolution.ONE_DAY;
+    } else if (hours <= 168) {
+      return HeatMapResolution.SEVEN_DAYS;
     } else {
-      throw new WingsException("Unsupported Resolution Provided");
+      return HeatMapResolution.THIRTY_DAYS;
     }
   }
 
@@ -57,6 +53,6 @@ public enum HeatMapResolution {
    * @return Number of events to be shown within a heat map unit
    */
   public int getEventsPerHeatMapUnit(HeatMapResolution resolution) {
-    return scale.get(resolution) / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+    return scale.get(resolution) / CRON_POLL_INTERVAL_IN_MINUTES;
   }
 }
