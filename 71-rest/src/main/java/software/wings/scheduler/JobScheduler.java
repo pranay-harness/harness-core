@@ -32,7 +32,7 @@ public class JobScheduler extends AbstractQuartzScheduler implements ConfigChang
     try {
       if (configuration.getSchedulerConfig().getAutoStart().equals("true")) {
         injector.getInstance(MaintenanceController.class).register(this);
-        scheduler = createScheduler();
+        scheduler = createScheduler(getDefaultProperties());
         injector.getInstance(ConfigurationController.class).register(this, asList(ConfigChangeEvent.PrimaryChanged));
 
         ConfigurationController configurationController = injector.getInstance(Key.get(ConfigurationController.class));

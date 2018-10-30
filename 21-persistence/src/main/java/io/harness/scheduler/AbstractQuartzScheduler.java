@@ -44,8 +44,7 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
     this.mongoConfig = mongoConfig;
   }
 
-  protected Scheduler createScheduler() throws SchedulerException {
-    final Properties properties = getDefaultProperties();
+  protected Scheduler createScheduler(Properties properties) throws SchedulerException {
     StdSchedulerFactory factory = new StdSchedulerFactory(properties);
     Scheduler scheduler = factory.getScheduler();
 
