@@ -66,8 +66,6 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
       // if this error is observed frequently, something at design level is wrong.
       if (waitInstance == null) {
         logger.error("WaitInstance not found: {}", waitInstanceId);
-      } else {
-        logger.error("WaitInstance already handled: {}", waitInstanceId);
       }
 
       // Removing the wait queues that are for instance that does not exist. It is safe, because the instance is
