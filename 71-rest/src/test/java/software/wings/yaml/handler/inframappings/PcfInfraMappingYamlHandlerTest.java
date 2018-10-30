@@ -21,6 +21,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -41,7 +42,6 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.exception.HarnessException;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PcfInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -67,7 +67,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private EnvironmentService environmentService;
   @Mock private YamlChangeSetService yamlChangeSetService;
   @Mock private YamlDirectoryService yamlDirectoryService;
-  @Mock @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: PCF_PCF\n"

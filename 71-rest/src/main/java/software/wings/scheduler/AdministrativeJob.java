@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import com.google.inject.Inject;
 
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -35,7 +36,7 @@ public class AdministrativeJob implements Job {
     logger.info("Administrative Job complete");
   }
 
-  public static void addJob(QuartzScheduler jobScheduler) {
+  public static void addJob(PersistentScheduler jobScheduler) {
     jobScheduler.deleteJob(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP);
     JobDetail job = JobBuilder.newJob(AdministrativeJob.class)
                         .withIdentity(ADMINISTRATIVE_CRON_NAME, ADMINISTRATIVE_CRON_GROUP)

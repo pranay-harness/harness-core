@@ -13,6 +13,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -51,11 +52,11 @@ public class InstanceSyncJob implements Job {
   @Inject private InstanceHelper instanceHelper;
   @Inject private WingsPersistence wingsPersistence;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
   @Inject private PersistentLocker persistentLocker;
   @Inject private ExecutorService executorService;
 
-  public static void add(QuartzScheduler jobScheduler, String appId) {
+  public static void add(PersistentScheduler jobScheduler, String appId) {
     jobScheduler.deleteJob(appId, GROUP);
 
     JobDetail job =

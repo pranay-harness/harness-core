@@ -23,6 +23,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -53,7 +54,6 @@ import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.scheduler.PruneEntityJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -98,7 +98,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Inject private WingsPersistence wingsPersistence;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   @ValidationGroups(Create.class)

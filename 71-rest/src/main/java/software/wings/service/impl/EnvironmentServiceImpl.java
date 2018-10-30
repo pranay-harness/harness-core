@@ -45,6 +45,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
@@ -68,7 +69,6 @@ import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.PruneEntityJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
@@ -121,7 +121,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private PersistentLocker persistentLocker;
   @Inject private WorkflowService workflowService;
   @Inject private TriggerService triggerService;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
   @Inject private YamlPushService yamlPushService;
 
   /**

@@ -7,19 +7,19 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import software.wings.common.Constants;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ReminderNotifyJob;
 
 import java.util.Date;
 import java.util.Map;
 
 public class CronUtil {
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   public String scheduleReminder(long waitMillis) {
     return scheduleReminder(waitMillis, null);

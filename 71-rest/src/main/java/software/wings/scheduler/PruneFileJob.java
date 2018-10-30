@@ -5,6 +5,7 @@ import static java.time.Duration.ofSeconds;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -39,7 +40,7 @@ public class PruneFileJob implements Job {
 
   @Inject private FileService fileService;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   public static Trigger defaultTrigger(String id, Duration delay) {
     final TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger().withIdentity(id, GROUP).withSchedule(
@@ -49,7 +50,8 @@ public class PruneFileJob implements Job {
     return builder.build();
   }
 
-  public static void addDefaultJob(QuartzScheduler jobScheduler, Class cls, String entityId, FileBucket fileBucket) {
+  public static void addDefaultJob(
+      PersistentScheduler jobScheduler, Class cls, String entityId, FileBucket fileBucket) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
     jobScheduler.deleteJob(entityId, GROUP);
 

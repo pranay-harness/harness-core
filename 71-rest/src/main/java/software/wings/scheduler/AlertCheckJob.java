@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.collections.CollectionUtils;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -52,11 +53,11 @@ public class AlertCheckJob implements Job {
   @Inject private DelegateService delegateService;
   @Inject private EmailHelperUtil emailHelperUtil;
   @Inject private MainConfiguration mainConfiguration;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private ExecutorService executorService;
 
-  public static void add(QuartzScheduler jobScheduler, Account account) {
+  public static void add(PersistentScheduler jobScheduler, Account account) {
     jobScheduler.deleteJob(account.getUuid(), GROUP);
     JobDetail job = JobBuilder.newJob(AlertCheckJob.class)
                         .withIdentity(account.getUuid(), GROUP)

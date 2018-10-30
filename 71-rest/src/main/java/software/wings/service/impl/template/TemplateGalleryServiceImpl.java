@@ -20,6 +20,7 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.data.structure.ListUtils;
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.mongodb.morphia.query.Query;
@@ -35,7 +36,6 @@ import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.TemplateVersion;
 import software.wings.beans.template.VersionedTemplate;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
@@ -53,7 +53,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   @Inject private TemplateService templateService;
   @Inject private AccountService accountService;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public PageResponse<TemplateGallery> list(PageRequest<TemplateGallery> pageRequest) {

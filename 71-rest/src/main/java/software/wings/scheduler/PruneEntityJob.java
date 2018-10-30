@@ -9,6 +9,7 @@ import com.google.inject.name.Named;
 
 import io.harness.exception.CauseCollection;
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
@@ -74,7 +75,7 @@ public class PruneEntityJob implements Job {
   @Inject private WorkflowService workflowService;
   @Inject private ExecutorService executorService;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   static Random randomizer = new Random();
   static RateLimiter pruneRateLimiter = RateLimiter.create(5);
@@ -97,7 +98,7 @@ public class PruneEntityJob implements Job {
   }
 
   public static void addDefaultJob(
-      QuartzScheduler jobScheduler, Class cls, String appId, String entityId, Duration delay, Duration optional) {
+      PersistentScheduler jobScheduler, Class cls, String appId, String entityId, Duration delay, Duration optional) {
     Trigger trigger = defaultTrigger(entityId, delay, optional);
     Date scheduled = jobScheduler.rescheduleJob(triggerKey(entityId, GROUP), trigger);
 

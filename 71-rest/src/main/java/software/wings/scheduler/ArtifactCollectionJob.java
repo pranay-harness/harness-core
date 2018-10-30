@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -46,9 +47,9 @@ public class ArtifactCollectionJob implements Job {
   @Inject private TriggerService triggerService;
   @Inject private ArtifactCollectionService artifactCollectionService;
   @Inject @Named("artifactCollectionExecutor") private ExecutorService artifactCollectionExecutor;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
-  public static void addDefaultJob(QuartzScheduler jobScheduler, String appId, String artifactStreamId) {
+  public static void addDefaultJob(PersistentScheduler jobScheduler, String appId, String artifactStreamId) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.
     jobScheduler.deleteJob(artifactStreamId, GROUP);
 

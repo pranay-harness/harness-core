@@ -20,6 +20,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
+import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.mongodb.morphia.query.Query;
@@ -31,7 +32,6 @@ import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.LdapGroupSyncJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -64,7 +64,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private AuthService authService;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AlertService alertService;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public UserGroup save(UserGroup userGroup) {

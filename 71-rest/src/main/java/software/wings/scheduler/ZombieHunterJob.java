@@ -54,6 +54,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.ReadPref;
+import io.harness.scheduler.PersistentScheduler;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.apache.commons.collections.map.LRUMap;
@@ -113,7 +114,7 @@ public class ZombieHunterJob implements Job {
 
   @Inject private AppService appService;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @AllArgsConstructor
   @Value
@@ -164,7 +165,7 @@ public class ZombieHunterJob implements Job {
     return builder.build();
   }
 
-  public static void scheduleJobs(QuartzScheduler jobScheduler) {
+  public static void scheduleJobs(PersistentScheduler jobScheduler) {
     // Scheduling a job for every zombie type on an `interval` distance from each other.
     // The algorithm preserves the schedule from execution to execution to avoid restarting
     // the cycle after every deploy. This will be broken only if new zombie types are

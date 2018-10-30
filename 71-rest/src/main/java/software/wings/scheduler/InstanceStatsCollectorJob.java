@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
@@ -38,7 +39,7 @@ public class InstanceStatsCollectorJob implements Job {
   @Inject private StatsCollector statsCollector;
   @Inject private PersistentLocker persistentLocker;
 
-  public static void add(QuartzScheduler jobScheduler, Account account) {
+  public static void add(PersistentScheduler jobScheduler, Account account) {
     jobScheduler.deleteJob(account.getUuid(), GROUP);
     JobDetail job = JobBuilder.newJob(InstanceStatsCollectorJob.class)
                         .withIdentity(account.getUuid(), GROUP)
@@ -54,7 +55,7 @@ public class InstanceStatsCollectorJob implements Job {
     jobScheduler.scheduleJob(job, trigger);
   }
 
-  public static void delete(QuartzScheduler jobScheduler, String accountId) {
+  public static void delete(PersistentScheduler jobScheduler, String accountId) {
     jobScheduler.deleteJob(accountId, GROUP);
   }
 

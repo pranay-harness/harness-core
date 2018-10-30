@@ -16,6 +16,7 @@ import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -24,7 +25,6 @@ import software.wings.api.ArtifactCollectionExecutionData;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.impl.ArtifactSourceProvider;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.ArtifactService;
@@ -61,7 +61,7 @@ public class ArtifactCollectionState extends State {
   @Transient @Inject private ArtifactStreamService artifactStreamService;
   @Transient @Inject private ArtifactService artifactService;
   @Transient @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject @Named("JobScheduler") private transient QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private transient PersistentScheduler jobScheduler;
   @Inject private transient DelayEventHelper delayEventHelper;
   @Inject private transient FeatureFlagService featureFlagService;
 

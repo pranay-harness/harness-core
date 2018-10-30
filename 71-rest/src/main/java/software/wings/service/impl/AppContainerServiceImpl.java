@@ -16,12 +16,12 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
+import io.harness.scheduler.PersistentScheduler;
 import org.mongodb.morphia.mapping.Mapper;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Service;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.PruneFileJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppContainerService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FileService;
@@ -51,7 +51,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private AppService appService;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   /**
    * {@inheritDoc}

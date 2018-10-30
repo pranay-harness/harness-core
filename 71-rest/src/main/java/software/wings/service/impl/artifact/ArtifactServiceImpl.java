@@ -52,6 +52,7 @@ import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.bson.types.ObjectId;
@@ -71,7 +72,6 @@ import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.collect.CollectEvent;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -116,7 +116,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#list(software.wings.dl.PageRequest)

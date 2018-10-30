@@ -19,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.AbstractQuartzScheduler;
 
 import java.util.Properties;
 
@@ -35,10 +34,6 @@ public class VerificationJobScheduler extends AbstractQuartzScheduler {
   @Inject
   private VerificationJobScheduler(Injector injector, VerificationServiceConfiguration configuration) {
     super(injector, configuration.getSchedulerConfig(), configuration.getMongoConnectionFactory());
-  }
-
-  @Override
-  protected void setupScheduler() {
     try {
       final String prefix = "quartz_verification";
       final Properties properties = getDefaultProperties();

@@ -52,6 +52,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -103,7 +104,6 @@ import software.wings.common.NotificationMessageResolver.NotificationMessageType
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.scheduler.PruneEntityJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.command.CommandHelper;
 import software.wings.service.intfc.AppService;
@@ -175,7 +175,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private WorkflowService workflowService;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceHelper serviceHelper;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
   @Inject private CommandHelper commandHelper;
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;

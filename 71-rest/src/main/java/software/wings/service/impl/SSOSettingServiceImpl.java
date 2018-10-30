@@ -15,6 +15,7 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
+import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotBlank;
 import software.wings.beans.Delegate;
 import software.wings.beans.NotificationGroup;
@@ -27,7 +28,6 @@ import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.LdapGroupSyncJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
@@ -53,7 +53,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private NotificationService notificationService;
   @Inject private DelegateService delegateService;
   @Inject private AccountService accountService;
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public SamlSettings getSamlSettingsByIdpUrl(String idpUrl) {

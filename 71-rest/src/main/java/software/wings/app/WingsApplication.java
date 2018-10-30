@@ -40,6 +40,7 @@ import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoModule;
+import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
@@ -73,7 +74,6 @@ import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.PersistentLockCleanupJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.scheduler.ResourceConstraintBackupJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
 import software.wings.scheduler.YamlChangeSetPruneJob;
@@ -404,8 +404,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerCronJobs(Injector injector) {
     logger.info("Register cron jobs...");
-    final QuartzScheduler jobScheduler =
-        injector.getInstance(Key.get(QuartzScheduler.class, Names.named("JobScheduler")));
+    final PersistentScheduler jobScheduler =
+        injector.getInstance(Key.get(PersistentScheduler.class, Names.named("JobScheduler")));
 
     PersistentLocker persistentLocker = injector.getInstance(Key.get(PersistentLocker.class));
 

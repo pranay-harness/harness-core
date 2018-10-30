@@ -15,6 +15,7 @@ import io.harness.limits.configuration.LimitConfigurationServiceMongo;
 import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.persistence.HPersistence;
+import io.harness.scheduler.PersistentScheduler;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import ro.fortsoft.pf4j.DefaultPluginManager;
@@ -73,7 +74,6 @@ import software.wings.licensing.LicenseManager;
 import software.wings.licensing.LicenseManagerImpl;
 import software.wings.licensing.LicenseProvider;
 import software.wings.scheduler.JobScheduler;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
@@ -531,7 +531,10 @@ public class WingsModule extends DependencyModule {
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 
-    bind(QuartzScheduler.class).annotatedWith(Names.named("JobScheduler")).to(JobScheduler.class).asEagerSingleton();
+    bind(PersistentScheduler.class)
+        .annotatedWith(Names.named("JobScheduler"))
+        .to(JobScheduler.class)
+        .asEagerSingleton();
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);

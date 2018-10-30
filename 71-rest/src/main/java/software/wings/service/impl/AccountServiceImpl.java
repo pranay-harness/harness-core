@@ -41,6 +41,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.mapping.Mapper;
@@ -68,7 +69,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
-import software.wings.scheduler.QuartzScheduler;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptionUtils;
@@ -137,7 +137,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject protected AuthService authService;
   @Inject private CVConfigurationService cvConfigurationService;
 
-  @Inject @Named("JobScheduler") private QuartzScheduler jobScheduler;
+  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public Account save(@Valid Account account) {
