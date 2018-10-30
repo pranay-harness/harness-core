@@ -60,15 +60,12 @@ public class ExpressionEvaluator {
   }
 
   public Object evaluate(String expression, JexlContext context) {
-    logger.debug("evaluate request - expression: {}, context: {}", expression, context);
     if (expression == null) {
       return null;
     }
 
     JexlExpression jexlExpression = engine.createExpression(expression);
-    Object retValue = jexlExpression.evaluate(context);
-    logger.debug("evaluate request - return value: {}", retValue);
-    return retValue;
+    return jexlExpression.evaluate(context);
   }
 
   public String normalizeExpression(String expression, Map<String, Object> context, String defaultObjectPrefix) {
