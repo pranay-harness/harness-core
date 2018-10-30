@@ -7,6 +7,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
@@ -201,6 +202,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
       cvConfiguration.setConnectorName(settingAttribute.getName());
     }
 
+    Environment environment = wingsPersistence.get(Environment.class, cvConfiguration.getEnvId());
+    if (environment != null) {
+      cvConfiguration.setEnvName(environment.getName());
+    }
     Application app = wingsPersistence.get(Application.class, cvConfiguration.getAppId());
     if (app != null) {
       cvConfiguration.setAppName(app.getName());

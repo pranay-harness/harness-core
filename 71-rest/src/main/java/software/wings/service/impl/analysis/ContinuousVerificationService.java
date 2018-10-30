@@ -5,8 +5,10 @@ import io.harness.beans.PageResponse;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.sm.ExecutionStatus;
+import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
-import software.wings.verification.TimeSeriesDataPoint;
+import software.wings.verification.TimeSeriesOfMetric;
+import software.wings.verification.TransactionTimeSeries;
 
 import java.text.ParseException;
 import java.util.LinkedHashMap;
@@ -31,8 +33,10 @@ public interface ContinuousVerificationService {
   PageResponse<ContinuousVerificationExecutionMetaData> getAllCVExecutionsForTime(String accountId, long beginEpochTs,
       long endEpochTs, boolean isTimeSeries, PageRequest<ContinuousVerificationExecutionMetaData> pageRequest);
 
-  Map<String, List<HeatMap>> getHeatMap(
-      String accountId, String serviceId, long startTime, long endTime, boolean detailed);
-  Map<String, Map<String, List<TimeSeriesDataPoint>>> getTimeSeriesOfHeatMapUnit(
+  List<HeatMap> getHeatMap(
+      String accountId, String appId, String serviceId, long startTime, long endTime, boolean detailed);
+  List<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
       String accountId, String cvConfigId, long startTime, long endTime);
+  Map<String, Map<String, TimeSeriesOfMetric>> fetchObservedTimeSeries(
+      long startTime, long endTime, CVConfiguration cvConfiguration);
 }

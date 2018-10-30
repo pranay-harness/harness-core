@@ -1,11 +1,11 @@
 package software.wings.verification.dashboard;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.verification.TimeSeriesDataPoint;
-
-import java.util.List;
+import org.jetbrains.annotations.NotNull;
+import software.wings.metrics.RiskLevel;
 
 /**
  * @author Vaibhav Tulsyan
@@ -15,12 +15,37 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class HeatMapUnit {
+@Builder
+public class HeatMapUnit implements Comparable<HeatMapUnit> {
   private long startTime;
   private long endTime;
+
   private int highRisk;
   private int mediumRisk;
   private int lowRisk;
-  private int NA;
-  private List<TimeSeriesDataPoint> timeSeries;
+  private int na;
+
+  @Override
+  public int compareTo(@NotNull HeatMapUnit o) {
+    return (int) (this.startTime - o.startTime);
+  }
+
+  public void increment(RiskLevel riskLevel) {
+    switch (riskLevel) {
+      case HIGH:
+        highRisk++;
+        break;
+      case MEDIUM:
+        mediumRisk++;
+        break;
+      case LOW:
+        lowRisk++;
+        break;
+      case NA:
+        na++;
+        break;
+      default:
+        throw new IllegalStateException("Invalid risklevel " + riskLevel);
+    }
+  }
 }

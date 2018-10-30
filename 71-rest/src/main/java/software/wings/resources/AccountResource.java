@@ -67,10 +67,10 @@ public class AccountResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
-  public RestResponse<PageResponse<CVConfiguration>> getAllCVServices(
-      @QueryParam("accountId") String accountId, @BeanParam PageRequest<String> request) {
-    return new RestResponse<>(
-        accountService.getAllCVServicesForAccount(accountId, UserThreadLocal.get().getPublicUser(), request));
+  public RestResponse<PageResponse<CVConfiguration>> getAllCVServices(@QueryParam("accountId") String accountId,
+      @QueryParam("serviceId") String serviceId, @BeanParam PageRequest<String> request) {
+    return new RestResponse<>(accountService.getAllCVServicesForAccount(
+        accountId, UserThreadLocal.get().getPublicUser(), request, serviceId));
   }
 
   @GET

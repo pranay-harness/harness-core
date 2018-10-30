@@ -191,35 +191,45 @@ public class ContinuousVerificationServiceImplTest extends WingsBaseTest {
   @Test
   public void testHeatMapResolutionEnum() {
     long endTime = System.currentTimeMillis();
+
+    long twelveHours = endTime - TimeUnit.HOURS.toMillis(12);
+    HeatMapResolution heatMapResolution = HeatMapResolution.getResolution(twelveHours, endTime);
+    assertEquals(HeatMapResolution.TWELVE_HOURS, heatMapResolution);
+
+    int twelveHoursResolutionDurationInMinutes = VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+    assertEquals(twelveHoursResolutionDurationInMinutes, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+
+    assertEquals(twelveHoursResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
+        heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
+
     long oneDay = endTime - TimeUnit.DAYS.toMillis(1);
-    HeatMapResolution heatMapResolution = HeatMapResolution.getResolution(oneDay, endTime);
-    assertEquals(HeatMapResolution.SMALL, heatMapResolution);
+    heatMapResolution = HeatMapResolution.getResolution(oneDay, endTime);
+    assertEquals(HeatMapResolution.ONE_DAY, heatMapResolution);
 
-    int smallResolutionDuration = 15;
-    assertEquals(smallResolutionDuration, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+    int oneDayResolutionDurationInMinutes = 2 * VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+    assertEquals(oneDayResolutionDurationInMinutes, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
 
-    // With CRON INTERVAL IN MINUTES set to 15, this should result in 96 datapoints.
-    assertEquals(smallResolutionDuration / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
+    assertEquals(oneDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
         heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
 
     long sevenDays = endTime - TimeUnit.DAYS.toMillis(7);
     heatMapResolution = HeatMapResolution.getResolution(sevenDays, endTime);
-    assertEquals(HeatMapResolution.MEDIUM, heatMapResolution);
+    assertEquals(HeatMapResolution.SEVEN_DAYS, heatMapResolution);
 
-    int mediumResolutionDuration = 180;
-    assertEquals(mediumResolutionDuration, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+    int sevenDayResolutionDurationInMinutes = 16 * VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+    assertEquals(sevenDayResolutionDurationInMinutes, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
 
-    assertEquals(mediumResolutionDuration / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
+    assertEquals(sevenDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
         heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
 
     long thirtyDays = endTime - TimeUnit.DAYS.toMillis(30);
     heatMapResolution = HeatMapResolution.getResolution(thirtyDays, endTime);
-    assertEquals(HeatMapResolution.LARGE, heatMapResolution);
+    assertEquals(HeatMapResolution.THIRTY_DAYS, heatMapResolution);
 
-    int largeResolutionDuration = 480;
-    assertEquals(largeResolutionDuration, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
+    int thirtyDayResolutionDurationInMinutes = 48 * VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+    assertEquals(thirtyDayResolutionDurationInMinutes, heatMapResolution.getDurationOfHeatMapUnit(heatMapResolution));
 
-    assertEquals(largeResolutionDuration / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
+    assertEquals(thirtyDayResolutionDurationInMinutes / VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES,
         heatMapResolution.getEventsPerHeatMapUnit(heatMapResolution));
   }
 }

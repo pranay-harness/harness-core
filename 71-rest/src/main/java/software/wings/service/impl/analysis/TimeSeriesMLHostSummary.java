@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.util.List;
@@ -8,6 +9,7 @@ import java.util.List;
  * Created by sriram_parthasarathy on 9/24/17.
  */
 @Data
+@Builder
 public class TimeSeriesMLHostSummary {
   private List<Double> distance;
   private List<Double> control_data;

@@ -26,6 +26,8 @@ public class VerificationConstants {
   public static final String CV_24x7_STATE_EXECUTION = "CV_24x7_EXECUTION";
   public static final String HEATMAP = "/heatmap";
   public static final String VERIFICATION_SERVICE_BASE_URL = "/verification";
+  public static final String HEATMAP_SUMMARY = "/heatmap-summary";
+  public static final String TIMESERIES = "/timeseries";
 
   public static final int DURATION_TO_ASK_MINUTES = 5;
   public static final int CANARY_DAYS_TO_COLLECT = 7;
@@ -34,6 +36,9 @@ public class VerificationConstants {
 
   public static final int CRON_POLL_INTERVAL_IN_MINUTES = 15;
   public static final long CRON_POLL_INTERVAL = TimeUnit.MINUTES.toSeconds(CRON_POLL_INTERVAL_IN_MINUTES); // in seconds
+
+  public static final int MIN_TIMESERIES_QUERY_INTERVAL_IN_HOURS = 1;
+  public static final int MAX_TIMESERIES_QUERY_INTERVAL_IN_HOURS = 12;
 
   private VerificationConstants() {}
 
