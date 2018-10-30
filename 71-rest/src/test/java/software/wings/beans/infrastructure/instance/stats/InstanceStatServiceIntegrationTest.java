@@ -13,11 +13,14 @@ import lombok.val;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mongodb.morphia.query.Query;
 import software.wings.beans.EntityType;
 import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.integration.IntegrationTestUtil;
 import software.wings.service.impl.instance.stats.InstanceStatServiceImpl;
 
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,8 +40,8 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   private boolean indexesEnsured;
 
   @Before
-  public void ensureIndices() {
-    if (!indexesEnsured) {
+  public void ensureIndices() throws URISyntaxException {
+    if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
       persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).ensureIndexes(InstanceStatsSnapshot.class);
       indexesEnsured = true;
     }
@@ -47,20 +50,24 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   @After
   public void clearCollection() {
     val ds = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
-    ds.delete(ds.createQuery(InstanceStatsSnapshot.class).filter("accountId", SOME_ACCOUNT_ID));
+    ds.delete(fetchQuery());
   }
 
   @Test
   public void testSave() {
     val stats = sampleSnapshot();
     val ds = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
-    val initialCount = ds.getCount(ds.createQuery(InstanceStatsSnapshot.class));
+    val initialCount = ds.getCount(fetchQuery());
 
     val saved = statService.save(stats);
     assertTrue("stats should be saved", saved);
 
-    val finalCount = ds.getCount(ds.createQuery(InstanceStatsSnapshot.class));
+    val finalCount = ds.getCount(fetchQuery());
     assertEquals("since one item was saved, count should be incremented by one", initialCount + 1, finalCount);
+  }
+
+  private Query<InstanceStatsSnapshot> fetchQuery() {
+    return persistence.createQuery(InstanceStatsSnapshot.class).filter("accountId", SOME_ACCOUNT_ID);
   }
 
   @Test
