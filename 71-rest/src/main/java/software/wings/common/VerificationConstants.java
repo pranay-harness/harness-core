@@ -19,6 +19,7 @@ public class VerificationConstants {
   public static final String NOTIFY_LOG_STATE = "/notify-log-state";
   public static final String CHECK_STATE_VALID = "/state-valid";
   public static final String GET_DEPLOYMENTS_24_7 = "/cv24-7-deployment-list";
+  public static final String GET_DEPLOYMENTS_SERVICE_24_7 = "/service-deployment-list";
   public static final String GET_ALL_CV_EXECUTIONS = "/get-all-cv-executions";
   public static final String CV_DASH_GET_RECORDS = "/get-records";
   public static final String WORKFLOW_FOR_STATE_EXEC = "/workflow-execution-for-state-execution";

@@ -29,11 +29,13 @@ import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
 import software.wings.sm.ExecutionStatus;
+import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateType;
 import software.wings.utils.WingsIntegrationTestConstants;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -213,6 +215,39 @@ public class ContinuousVerificationDashboardIntegrationTest extends BaseIntegrat
     assertTrue("There's atleast one cv deployment execution", workflowExecutionList.size() > 0);
     assertEquals("ExecutionId matches", workflowExecutionId, workflowExecutionList.get(0).getWorkflowExecutionId());
     assertEquals("Status is success", ExecutionStatus.SUCCESS, workflowExecutionList.get(0).getStatus());
+  }
+
+  @Test
+  public void getAllDeploymentRecords() {
+    // Setup
+    long now = System.currentTimeMillis();
+
+    WorkflowExecution execution1 =
+        WorkflowExecutionBuilder.aWorkflowExecution()
+            .withAppId(appId)
+            .withUuid(workflowExecutionId)
+            .withStatus(ExecutionStatus.SUCCESS)
+            .withStartTs(now)
+            .withServiceIds(Arrays.asList(serviceId))
+            .withPipelineSummary(
+                PipelineSummary.builder().pipelineId("pipelineId").pipelineName("pipelineName").build())
+            .build();
+    wingsPersistence.save(execution1);
+
+    // Call
+
+    long before = now - TimeUnit.MINUTES.toMillis(1), after = now + TimeUnit.MINUTES.toMillis(5);
+    List<WorkflowExecution> workflowExecutionList = continuousVerificationService.getDeploymentsForService(
+        accountId, before, after, userService.getUserByEmail(WingsIntegrationTestConstants.adminUserEmail), serviceId);
+
+    // Verify
+    assertTrue("There's atleast one deployment execution", workflowExecutionList.size() > 0);
+    assertEquals("ExecutionId matches", workflowExecutionId, workflowExecutionList.get(0).getUuid());
+    assertEquals("Status is success", ExecutionStatus.SUCCESS, workflowExecutionList.get(0).getStatus());
+    assertEquals(
+        "pipeline id matches", "pipelineId", workflowExecutionList.get(0).getPipelineSummary().getPipelineId());
+    assertEquals(
+        "pipeline name matches", "pipelineName", workflowExecutionList.get(0).getPipelineSummary().getPipelineName());
   }
 
   @Test

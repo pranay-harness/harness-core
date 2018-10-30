@@ -20,6 +20,8 @@ public class CVDeploymentData {
   long startTs;
   String workflowExecutionId;
   String pipelineExecutionId;
+  String workflowName;
+  String pipelineName;
 
   public CVDeploymentData(ContinuousVerificationExecutionMetaData cvMetadata) {
     this.accountId = cvMetadata.getAccountId();
