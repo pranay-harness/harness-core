@@ -55,6 +55,7 @@ import software.wings.beans.infrastructure.TerraformfConfig;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -109,6 +110,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject @Transient protected transient DelegateService delegateService;
   @Inject @Transient protected transient FileService fileService;
   @Inject @Transient protected transient SecretManager secretManager;
+  @Inject @Transient protected transient GitConfigHelperService gitConfigHelperService;
 
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
@@ -303,7 +305,9 @@ public abstract class TerraformProvisionState extends State {
       throw new InvalidRequestException("");
     }
 
-    return (GitConfig) gitSettingAttribute.getValue();
+    GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
+    gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
+    return gitConfig;
   }
 
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {

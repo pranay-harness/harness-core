@@ -21,6 +21,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.HelmDeployContextElement;
@@ -62,6 +63,7 @@ import software.wings.helpers.ext.helm.response.HelmReleaseHistoryCommandRespons
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
+import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
@@ -109,6 +111,7 @@ public class HelmDeployState extends State {
   @Inject private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Inject private transient SettingsService settingsService;
   @Inject private transient SecretManager secretManager;
+  @Inject @Transient protected transient GitConfigHelperService gitConfigHelperService;
 
   @DefaultValue("10") private int steadyStateTimeout; // Minutes
 
@@ -548,7 +551,10 @@ public class HelmDeployState extends State {
     if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
       throw new InvalidRequestException("Git connector not found");
     }
-    return (GitConfig) gitSettingAttribute.getValue();
+
+    GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
+    gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
+    return gitConfig;
   }
 
   private List<EncryptedDataDetail> fetchEncryptedDataDetail(ExecutionContext context, GitConfig gitConfig) {
