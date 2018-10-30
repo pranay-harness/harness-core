@@ -9,6 +9,8 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.data.structure.UUIDGenerator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -17,6 +19,9 @@ import org.mockito.Mock;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.HostConnectionAttributes;
+import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -56,6 +61,29 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(elkConfig);
     thrown.expect(WingsException.class);
+    settingValidationService.validate(attribute);
+  }
+
+  @Test
+  public void testHostConnectionValidation() {
+    HostConnectionAttributes.Builder hostConnectionAttributes =
+        HostConnectionAttributes.Builder.aHostConnectionAttributes()
+            .withAccessType(AccessType.KEY)
+            .withAccountId(UUIDGenerator.generateUuid())
+            .withConnectionType(ConnectionType.SSH)
+            .withKeyless(false)
+            .withUserName("TestUser");
+
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(hostConnectionAttributes.build());
+
+    thrown.expect(InvalidRequestException.class);
+    settingValidationService.validate(attribute);
+
+    hostConnectionAttributes.withKey("Test Private Key".toCharArray());
+    attribute.setValue(hostConnectionAttributes.build());
+
+    thrown = ExpectedException.none();
     settingValidationService.validate(attribute);
   }
 }

@@ -107,8 +107,6 @@ import java.util.stream.Collectors;
  * Created by rsingh on 10/30/17.
  */
 public class SecretManagerImpl implements SecretManager {
-  public static final String HARNESS_DEFAULT_SECRET_MANAGER = "Harness Manager";
-  @SuppressFBWarnings("MS_MUTABLE_ARRAY") public static final char[] ENCRYPTED_FIELD_MASK = "*******".toCharArray();
   protected static final Logger logger = LoggerFactory.getLogger(SecretManagerImpl.class);
 
   @Inject private WingsPersistence wingsPersistence;
