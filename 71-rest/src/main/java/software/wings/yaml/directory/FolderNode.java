@@ -1,6 +1,9 @@
 package software.wings.yaml.directory;
 
+import lombok.Getter;
+import lombok.Setter;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +12,7 @@ public class FolderNode extends DirectoryNode {
   private boolean defaultToClosed;
   private List<DirectoryNode> children = new ArrayList<>();
   private String appId;
+  @Getter @Setter private transient YamlGitConfig yamlGitConfig;
 
   public FolderNode() {
     this.setType(NodeType.FOLDER);

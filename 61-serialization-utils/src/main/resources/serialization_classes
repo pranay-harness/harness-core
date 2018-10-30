@@ -585,3 +585,5 @@ software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest, 5543
 software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse, 5544
 software.wings.api.AwsAmiSwitchRoutesStateExecutionData, 5545
 software.wings.beans.container.EcsServiceSpecification, 5546
+software.wings.yaml.gitSync.YamlGitConfig, 5547
+software.wings.yaml.gitSync.YamlGitConfig$SyncMode, 5548

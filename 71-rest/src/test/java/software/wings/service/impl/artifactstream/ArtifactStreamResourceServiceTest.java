@@ -5,6 +5,7 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.Application.Builder.anApplication;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
@@ -48,7 +49,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
    */
   @Before
   public void setUp() {
-    wingsRule.getDatastore().save(anApplication().withUuid(APP_ID).build());
+    wingsRule.getDatastore().save(anApplication().withUuid(APP_ID).withAccountId(ACCOUNT_ID).build());
     wingsRule.getDatastore().save(Service.builder().uuid(SERVICE_ID).appId(APP_ID).build());
   }
 

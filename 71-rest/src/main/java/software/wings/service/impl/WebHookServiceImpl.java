@@ -43,6 +43,9 @@ import javax.ws.rs.core.HttpHeaders;
 @ValidateOnExecution
 public class WebHookServiceImpl implements WebHookService {
   public static final String X_GIT_HUB_EVENT = "X-GitHub-Event";
+  public static final String X_GIT_LAB_EVENT = "X-Gitlab-Event";
+  public static final String X_BIT_BUCKET_EVENT = "X-Event-Key";
+
   @Inject private TriggerService triggerService;
   @Inject private AppService appService;
   @Inject private MainConfiguration configuration;

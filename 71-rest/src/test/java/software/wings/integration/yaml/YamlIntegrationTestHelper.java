@@ -26,6 +26,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.CloudFormationInfrastructureProvisioner;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.GitConfig;
@@ -91,7 +92,7 @@ public class YamlIntegrationTestHelper {
 
   public YamlGitConfig createYamlGitConfig(
       String accountId, YamlGitService yamlGitService, WingsPersistence wingsPersistence, ScmSecret scmSecret) {
-    YamlGitConfig yamlGitConfig = yamlGitService.get(accountId, accountId);
+    YamlGitConfig yamlGitConfig = yamlGitService.get(accountId, accountId, EntityType.ACCOUNT);
 
     if (yamlGitConfig == null) {
       yamlGitConfig = YamlGitConfig.builder()

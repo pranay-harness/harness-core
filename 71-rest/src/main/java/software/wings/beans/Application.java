@@ -6,7 +6,9 @@ import com.google.common.base.MoreObjects;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -16,6 +18,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.yaml.BaseEntityYaml;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,6 +50,8 @@ public class Application extends Base {
   @Transient private List<WorkflowExecution> recentExecutions;
   @Transient private List<Notification> notifications;
   @Transient private long nextDeploymentOn;
+  @Getter @Setter private transient YamlGitConfig yamlGitConfig;
+
   private transient Map<String, String> defaults = new HashMap<>();
 
   public Map<String, String> getDefaults() {
@@ -266,6 +271,7 @@ public class Application extends Base {
         .add("recentExecutions", recentExecutions)
         .add("notifications", notifications)
         .add("nextDeploymentOn", nextDeploymentOn)
+        .add("yamlGitConfig", yamlGitConfig)
         .toString();
   }
 
@@ -289,6 +295,7 @@ public class Application extends Base {
     private EmbeddedUser lastUpdatedBy;
     private long lastUpdatedAt;
     private Map<String, String> defaults;
+    private YamlGitConfig yamlGitConfig;
 
     private Builder() {}
 
@@ -376,6 +383,11 @@ public class Application extends Base {
       return this;
     }
 
+    public Builder withYamlGitConfig(YamlGitConfig yamlGitConfig) {
+      this.yamlGitConfig = yamlGitConfig;
+      return this;
+    }
+
     public Builder but() {
       return anApplication()
           .withName(name)
@@ -392,7 +404,8 @@ public class Application extends Base {
           .withCreatedBy(createdBy)
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
-          .withLastUpdatedAt(lastUpdatedAt);
+          .withLastUpdatedAt(lastUpdatedAt)
+          .withYamlGitConfig(yamlGitConfig);
     }
 
     public Application build() {
@@ -413,6 +426,7 @@ public class Application extends Base {
       application.setLastUpdatedBy(lastUpdatedBy);
       application.setLastUpdatedAt(lastUpdatedAt);
       application.setDefaults(defaults);
+      application.setYamlGitConfig(yamlGitConfig);
       return application;
     }
   }

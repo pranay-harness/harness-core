@@ -58,7 +58,10 @@ import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
 import migrations.all.UnregisteredUserNameMigration;
+import migrations.all.UpdateGitSyncErrorMigration;
 import migrations.all.UsageRestrictionsMigration;
+import migrations.all.YamlGitConfigAppMigration;
+import migrations.all.YamlGitConfigMigration;
 import migrations.all.YamlGitConfigRefactoringMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -140,6 +143,9 @@ public class MigrationList {
         .add(Pair.of(195, AddValidUntilToWaitQueue.class))
         .add(Pair.of(196, RemoveDupInstanceStats.class))
         .add(Pair.of(197, YamlGitConfigRefactoringMigration.class))
+        .add(Pair.of(198, YamlGitConfigMigration.class))
+        .add(Pair.of(199, YamlGitConfigAppMigration.class))
+        .add(Pair.of(200, UpdateGitSyncErrorMigration.class))
         .build();
   }
 }

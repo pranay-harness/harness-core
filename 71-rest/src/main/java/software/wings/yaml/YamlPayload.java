@@ -2,7 +2,6 @@ package software.wings.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import software.wings.beans.ResponseMessage;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +16,6 @@ public class YamlPayload {
   private String path;
 
   @JsonIgnore private List<ResponseMessage> responseMessages = new ArrayList<>();
-
-  private YamlGitConfig gitSync;
 
   // required no arg constructor
   public YamlPayload() {}
@@ -58,13 +55,5 @@ public class YamlPayload {
   @JsonIgnore
   public void setResponseMessages(List<ResponseMessage> responseMessages) {
     this.responseMessages = responseMessages;
-  }
-
-  public YamlGitConfig getGitSync() {
-    return gitSync;
-  }
-
-  public void setGitSync(YamlGitConfig gitSync) {
-    this.gitSync = gitSync;
   }
 }

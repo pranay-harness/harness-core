@@ -5,6 +5,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 /**
  * Created by anubhaw on 10/16/17.
@@ -15,6 +16,7 @@ import lombok.ToString;
 public class GitFileChange extends Change {
   private String commitId;
   private String objectId;
+  private transient YamlGitConfig yamlGitConfig;
 
   public static final class Builder {
     private String commitId;
@@ -25,6 +27,7 @@ public class GitFileChange extends Change {
     private ChangeType changeType;
     private String oldFilePath;
     @JsonIgnore @SchemaIgnore private boolean syncFromGit;
+    private transient YamlGitConfig yamlGitConfig;
 
     private Builder() {}
 
@@ -72,6 +75,11 @@ public class GitFileChange extends Change {
       return this;
     }
 
+    public Builder withYamlGitConfig(YamlGitConfig yamlGitConfig) {
+      this.yamlGitConfig = yamlGitConfig;
+      return this;
+    }
+
     public Builder but() {
       return aGitFileChange()
           .withCommitId(commitId)
@@ -81,7 +89,8 @@ public class GitFileChange extends Change {
           .withAccountId(accountId)
           .withOldFilePath(oldFilePath)
           .withChangeType(changeType)
-          .withSyncFromGit(syncFromGit);
+          .withSyncFromGit(syncFromGit)
+          .withYamlGitConfig(yamlGitConfig);
     }
 
     public GitFileChange build() {
@@ -94,6 +103,7 @@ public class GitFileChange extends Change {
       gitFileChange.setChangeType(changeType);
       gitFileChange.setOldFilePath(oldFilePath);
       gitFileChange.setSyncFromGit(syncFromGit);
+      gitFileChange.setYamlGitConfig(yamlGitConfig);
       return gitFileChange;
     }
   }

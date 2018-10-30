@@ -26,14 +26,13 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.FeatureFlagService;
+import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
-import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
 import software.wings.yaml.gitSync.YamlGitConfig;
@@ -55,7 +54,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject private YamlGitService yamlGitService;
+  @Inject private EntityUpdateService entityUpdateService;
 
   private static final Logger logger = LoggerFactory.getLogger(YamlChangeSetServiceImpl.class);
 
@@ -290,9 +289,9 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  public void saveChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> gitFileChanges) {
+  public <T> YamlChangeSet saveChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> gitFileChanges, T entity) {
     if (isEmpty(gitFileChanges)) {
-      return;
+      return null;
     }
 
     YamlChangeSet yamlChangeSet = YamlChangeSet.builder()
@@ -301,8 +300,9 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                       .status(Status.QUEUED)
                                       .queuedOn(System.currentTimeMillis())
                                       .build();
-    yamlChangeSet.setAppId(Base.GLOBAL_APP_ID);
-    save(yamlChangeSet);
+
+    yamlChangeSet.setAppId(entityUpdateService.obtainAppIdFromEntity(entity));
+    return save(yamlChangeSet);
   }
 
   private boolean updateStatusForYamlChangeSets(Status desiredStatus, Query<YamlChangeSet> query) {

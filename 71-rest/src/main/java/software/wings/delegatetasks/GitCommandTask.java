@@ -62,6 +62,8 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
           GitCommitRequest gitCommitRequest = (GitCommitRequest) parameters[3];
           logger.info(GIT_YAML_LOG_PREFIX + "COMMIT_AND_PUSH: [{}]", gitCommitRequest);
           GitCommitAndPushResult gitCommitAndPushResult = gitClient.commitAndPush(gitConfig, gitCommitRequest);
+          gitCommitAndPushResult.setYamlGitConfig(gitCommitRequest.getYamlGitConfig());
+
           return GitCommandExecutionResponse.builder()
               .gitCommandRequest(gitCommitRequest)
               .gitCommandResult(gitCommitAndPushResult)
@@ -71,6 +73,8 @@ public class GitCommandTask extends AbstractDelegateRunnableTask {
           GitDiffRequest gitDiffRequest = (GitDiffRequest) parameters[3];
           logger.info(GIT_YAML_LOG_PREFIX + "DIFF: [{}]", gitDiffRequest);
           GitDiffResult gitDiffResult = gitClient.diff(gitConfig, gitDiffRequest.getLastProcessedCommitId());
+          gitDiffResult.setYamlGitConfig(gitDiffRequest.getYamlGitConfig());
+
           return GitCommandExecutionResponse.builder()
               .gitCommandRequest(gitDiffRequest)
               .gitCommandResult(gitDiffResult)

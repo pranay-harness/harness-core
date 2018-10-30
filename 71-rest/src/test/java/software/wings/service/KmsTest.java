@@ -3131,7 +3131,8 @@ public class KmsTest extends WingsBaseTest {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
-    String appId = wingsPersistence.save(anApplication().withUuid(UUID.randomUUID().toString()).build());
+    String appId =
+        wingsPersistence.save(anApplication().withUuid(UUID.randomUUID().toString()).withAccountId(accountId).build());
 
     String serviceId = wingsPersistence.save(Service.builder().appId(appId).name(UUID.randomUUID().toString()).build());
     String serviceTemplateId = wingsPersistence.save(

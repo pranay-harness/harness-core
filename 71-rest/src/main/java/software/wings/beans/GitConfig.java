@@ -41,7 +41,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Description") private String description;
   private String webhookToken;
   @SchemaIgnore @Transient private GitRepositoryType gitRepoType;
-  @SchemaIgnore @Transient private boolean generateWebhookUrl;
+  @Transient private boolean generateWebhookUrl;
 
   public enum GitRepositoryType { YAML, TERRAFORM }
 

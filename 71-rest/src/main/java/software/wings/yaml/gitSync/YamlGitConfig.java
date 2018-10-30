@@ -18,20 +18,29 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.Base;
+import software.wings.beans.EntityType;
 import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.jersey.JsonViews;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
+import javax.validation.constraints.NotNull;
+
 @Entity(value = "yamlGitConfig", noClassnameStored = true)
-@Indexes(@Index(
-    options = @IndexOptions(name = "locate", unique = true), fields = { @Field("accountId")
-                                                                        , @Field("entityId") }))
+@Indexes(@Index(options = @IndexOptions(name = "locate", unique = true),
+    fields = { @Field("accountId")
+               , @Field("entityId"), @Field("entityType") }))
 @Data
 @EqualsAndHashCode(callSuper = false)
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class YamlGitConfig extends Base implements EncryptableSetting {
+  public static final String ENTITY_ID_KEY = "entityId";
+  public static final String ENTITY_TYPE_KEY = "entityType";
+  public static final String WEBHOOK_TOKEN_KEY = "webhookToken";
+  public static final String GIT_CONNECTOR_ID_KEY = "gitConnectorId";
+  public static final String BRANCH_NAME_KEY = "branchName";
+
   private String url;
   @NotEmpty private String branchName;
   private String username;
@@ -48,6 +57,9 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
   private String webhookToken;
 
   @SchemaIgnore @NotEmpty private String accountId;
+
+  @NotEmpty private String entityId;
+  @NotNull private EntityType entityType;
 
   @Override
   public SettingVariableTypes getSettingType() {

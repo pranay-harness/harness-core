@@ -28,6 +28,10 @@ import java.util.List;
                            , @Field("commitId") },
     options = @IndexOptions(name = "gitCommitIdx", unique = true, dropDups = true)))
 public class GitCommit extends Base {
+  public static final String YAML_GIT_CONFIG_ID_KEY = "yamlGitConfigId";
+  public static final String YAML_GIT_CONFIG_IDS_KEY = "yamlGitConfigIds";
+  public static final String STATUS_KEY = "status";
+
   private String accountId;
   private String yamlGitConfigId;
   private String commitId;
@@ -36,6 +40,7 @@ public class GitCommit extends Base {
   private Status status;
   private FailureReason failureReason;
   private List<String> yamlChangeSetsProcessed;
+  private List<String> yamlGitConfigIds;
 
   public enum Status { QUEUED, RUNNING, COMPLETED, FAILED }
 

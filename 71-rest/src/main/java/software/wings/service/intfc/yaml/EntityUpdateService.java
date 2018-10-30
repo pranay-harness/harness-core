@@ -26,4 +26,6 @@ public interface EntityUpdateService {
       String accountId, SettingAttribute oldSettingAttribute, SettingAttribute newSettingAttribute);
 
   List<GitFileChange> obtainDefaultVariableChangeSet(String accountId, String appId, ChangeType changeType);
+
+  <T> String obtainAppIdFromEntity(T entity);
 }

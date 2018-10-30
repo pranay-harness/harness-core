@@ -1,10 +1,12 @@
 package software.wings.service.impl.yaml;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static io.harness.exception.WingsException.SRE;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -14,6 +16,7 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
+import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -261,5 +264,19 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       return new String(outputStream.toByteArray(), UTF_8);
     }
     return null;
+  }
+
+  @Override
+  public <T> String obtainAppIdFromEntity(T entity) {
+    String appId = null;
+
+    if (entity instanceof Base) {
+      appId = ((Base) entity).getAppId();
+    } else if (entity instanceof String) { // Special handling for DefaultVariables
+      appId = (String) entity;
+    }
+
+    notNullCheck("Application id cannot be null", appId, SRE);
+    return appId;
   }
 }

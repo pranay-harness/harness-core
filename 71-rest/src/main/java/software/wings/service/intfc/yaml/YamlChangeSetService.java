@@ -74,7 +74,7 @@ public interface YamlChangeSetService {
    * @param yamlGitConfig       the yamlGitConfig
    * @param changeSet the change set
    */
-  void saveChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> changeSet);
+  <T> YamlChangeSet saveChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> changeSet, T entity);
 
   boolean updateStatusForGivenYamlChangeSets(
       String accountId, Status newStatus, List<Status> currentStatus, List<String> yamlChangeSetIds);

@@ -18,13 +18,16 @@ import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.security.AppPermissionSummary;
 import software.wings.security.UserPermissionInfo;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.directory.DirectoryNode;
+import software.wings.yaml.directory.DirectoryPath;
 import software.wings.yaml.directory.FolderNode;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -54,7 +57,7 @@ public interface YamlDirectoryService {
   FolderNode getDirectory(
       @NotEmpty String accountId, String entityId, boolean applyPermissions, UserPermissionInfo userPermissionInfo);
 
-  YamlGitConfig weNeedToPushChanges(String accountId);
+  YamlGitConfig weNeedToPushChanges(String accountId, String entityId);
 
   List<GitFileChange> traverseDirectory(List<GitFileChange> gitFileChanges, String accountId, FolderNode fn,
       String path, boolean includeFiles, boolean failFast, Optional<List<String>> listOfYamlErrors);
@@ -110,4 +113,8 @@ public interface YamlDirectoryService {
   <R, T> String obtainEntityRootPath(R helperEntity, T entity);
 
   DirectoryNode getApplicationYamlFolderNode(@NotEmpty String accountId, @NotEmpty String applicationId);
+
+  FolderNode doApplication(String applicationId, boolean applyPermissions,
+      Map<String, AppPermissionSummary> appPermissionSummaryMap, FolderNode applicationsFolder,
+      DirectoryPath directoryPath);
 }

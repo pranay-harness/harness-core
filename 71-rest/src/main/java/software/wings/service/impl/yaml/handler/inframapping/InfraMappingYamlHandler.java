@@ -140,7 +140,7 @@ public abstract class InfraMappingYamlHandler<Y extends InfrastructureMapping.Ya
 
     if (previous != null) {
       current.setUuid(previous.getUuid());
-      return (T) infraMappingService.update(current);
+      return (T) infraMappingService.update(current, true);
     } else {
       return (T) infraMappingService.save(current, true);
     }

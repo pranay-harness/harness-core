@@ -1,7 +1,13 @@
 package software.wings.service.impl.yaml;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.exception.WingsException.USER;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.Base.ID_KEY;
+import static software.wings.utils.Validator.notNullCheck;
+import static software.wings.yaml.gitSync.YamlGitConfig.BRANCH_NAME_KEY;
+import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
 import com.google.inject.Inject;
 
@@ -9,6 +15,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.FeatureName;
 import software.wings.beans.GitCommit;
@@ -23,17 +30,24 @@ import software.wings.beans.yaml.GitCommitAndPushResult;
 import software.wings.beans.yaml.GitCommitRequest;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
+import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.sync.YamlService;
 import software.wings.waitnotify.NotifyCallback;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by anubhaw on 10/27/17.
@@ -58,6 +72,9 @@ public class GitCommandCallback implements NotifyCallback {
 
   @Transient @Inject private transient YamlGitService yamlGitService;
   @Transient @Inject private FeatureFlagService featureFlagService;
+  @Transient @Inject private AppService appService;
+  @Transient @Inject private YamlDirectoryService yamlDirectoryService;
+  @Transient @Inject private WingsPersistence wingsPersistence;
 
   @Override
   public void notify(Map<String, ResponseData> response) {
@@ -96,10 +113,14 @@ public class GitCommandCallback implements NotifyCallback {
           if (gitCommitAndPushResult.getGitCommitResult().getCommitId() != null) {
             List<String> yamlSetIdsProcessed =
                 ((GitCommitRequest) gitCommandExecutionResponse.getGitCommandRequest()).getYamlChangeSetIds();
+
+            List<String> yamlGitConfigIds =
+                obtainYamlGitConfigIds(accountId, gitCommitAndPushResult.getYamlGitConfig().getBranchName(),
+                    gitCommitAndPushResult.getYamlGitConfig().getGitConnectorId());
             yamlGitService.saveCommit(GitCommit.builder()
                                           .accountId(accountId)
                                           .yamlChangeSet(yamlChangeSet)
-                                          .yamlGitConfigId(yamlGitConfigId)
+                                          .yamlGitConfigIds(yamlGitConfigIds)
                                           .status(GitCommit.Status.COMPLETED)
                                           .commitId(gitCommitAndPushResult.getGitCommitResult().getCommitId())
                                           .gitCommandResult(gitCommitAndPushResult)
@@ -110,7 +131,10 @@ public class GitCommandCallback implements NotifyCallback {
         }
       } else if (gitCommandResult.getGitCommandType().equals(GitCommandType.DIFF)) {
         GitDiffResult gitDiffResult = (GitDiffResult) gitCommandResult;
-        List<GitFileChange> gitFileChangeList = gitDiffResult.getGitFileChanges();
+
+        List<GitFileChange> gitFileChangeList = obtainValidGitFileChangesBasedOnYamlGitConfig(
+            gitDiffResult.getYamlGitConfig(), gitDiffResult.getGitFileChanges());
+
         applySyncFromGit(gitFileChangeList);
 
         try {
@@ -125,6 +149,9 @@ public class GitCommandCallback implements NotifyCallback {
 
           List<ChangeContext> fileChangeContexts = yamlService.processChangeSet(gitFileChangeList);
           logger.info("Processed ChangeSet [{}] for account {}", fileChangeContexts, accountId);
+
+          List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
+              gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
           yamlGitService.saveCommit(GitCommit.builder()
                                         .accountId(accountId)
                                         .yamlChangeSet(YamlChangeSet.builder()
@@ -134,7 +161,7 @@ public class GitCommandCallback implements NotifyCallback {
                                                            .status(Status.COMPLETED)
                                                            .gitFileChanges(gitDiffResult.getGitFileChanges())
                                                            .build())
-                                        .yamlGitConfigId(yamlGitConfigId)
+                                        .yamlGitConfigIds(yamlGitConfigIds)
                                         .status(GitCommit.Status.COMPLETED)
                                         .commitId(gitDiffResult.getCommitId())
                                         .gitCommandResult(gitDiffResult)
@@ -174,5 +201,70 @@ public class GitCommandCallback implements NotifyCallback {
     for (GitFileChange gitFileChange : gitFileChangeList) {
       gitFileChange.setSyncFromGit(true);
     }
+  }
+
+  private List<GitFileChange> obtainValidGitFileChangesBasedOnYamlGitConfig(
+      YamlGitConfig yamlGitConfig, List<GitFileChange> gitFileChanges) {
+    List<GitFileChange> gitFileChangeList = new ArrayList<>();
+    Map<String, YamlGitConfig> appMap = new HashMap<>();
+
+    if (isEmpty(gitFileChanges)) {
+      return gitFileChangeList;
+    }
+
+    for (GitFileChange gitFileChange : gitFileChanges) {
+      if (yamlGitService.checkApplicationChange(gitFileChange)) {
+        // Handles application
+
+        String appName = yamlGitService.obtainAppNameFromGitFileChange(gitFileChange);
+        notNullCheck("Application name cannot be null", USER);
+
+        if (!appMap.containsKey(appName)) {
+          Application app = appService.getAppByName(gitFileChange.getAccountId(), appName);
+
+          if (app != null) {
+            YamlGitConfig appYamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId, app.getUuid());
+            appMap.put(appName, appYamlGitConfig);
+          } else {
+            // New app is created on git side. We need to consume those changes
+
+            gitFileChange.setYamlGitConfig(yamlGitConfig);
+            gitFileChangeList.add(gitFileChange);
+            continue;
+          }
+        }
+
+        YamlGitConfig appYamlGitConfig = appMap.get(appName);
+        if (appYamlGitConfig != null) {
+          if (yamlGitConfig.getGitConnectorId().equals(appYamlGitConfig.getGitConnectorId())
+              && yamlGitConfig.getBranchName().equals(appYamlGitConfig.getBranchName())) {
+            gitFileChangeList.add(gitFileChange);
+          }
+        }
+      } else {
+        // Handle account level entities
+        // This check is there to make sure that the yamlGitConfig is not disabled. If its disabled then we don't need
+        // to process this change.
+
+        YamlGitConfig accountLevelYamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId, GLOBAL_APP_ID);
+        if (accountLevelYamlGitConfig != null) {
+          gitFileChangeList.add(gitFileChange);
+        }
+      }
+    }
+
+    return gitFileChangeList;
+  }
+
+  private List<String> obtainYamlGitConfigIds(String accountId, String branchName, String gitConnectorId) {
+    return wingsPersistence.createQuery(YamlGitConfig.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
+        .filter(BRANCH_NAME_KEY, branchName)
+        .project(ID_KEY, true)
+        .asList()
+        .stream()
+        .map(yamlGitConfig -> yamlGitConfig.getUuid())
+        .collect(Collectors.toList());
   }
 }

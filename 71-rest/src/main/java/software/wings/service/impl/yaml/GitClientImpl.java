@@ -254,7 +254,7 @@ public class GitClientImpl implements GitClient {
             + "Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
       }
 
-      String gitRef = gitConfig.getReference();
+      String gitRef = gitConfig.getReference() != null ? gitConfig.getReference() : gitConfig.getBranch();
       if (StringUtils.isNotEmpty(gitRef)) {
         git.checkout().setName(gitRef).call();
       }
