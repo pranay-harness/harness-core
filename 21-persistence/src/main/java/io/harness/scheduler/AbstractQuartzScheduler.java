@@ -1,5 +1,6 @@
 package io.harness.scheduler;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -14,7 +15,6 @@ import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.IndexOptions;
 import io.harness.maintenance.MaintenanceListener;
-import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import org.bson.Document;
 import org.quartz.JobDetail;
@@ -35,14 +35,22 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
 
   protected Injector injector;
   protected Scheduler scheduler;
+
   private SchedulerConfig schedulerConfig;
-  private MongoConfig mongoConfig;
+  private String defaultMongoUri;
 
   @Inject
-  public AbstractQuartzScheduler(Injector injector, SchedulerConfig schedulerConfig, MongoConfig mongoConfig) {
+  public AbstractQuartzScheduler(Injector injector, SchedulerConfig schedulerConfig, String defaultMongoUri) {
     this.injector = injector;
     this.schedulerConfig = schedulerConfig;
-    this.mongoConfig = mongoConfig;
+    this.defaultMongoUri = defaultMongoUri;
+  }
+
+  private String getMongoUri() {
+    if (isEmpty(schedulerConfig.getMongoUri())) {
+      return defaultMongoUri;
+    }
+    return schedulerConfig.getMongoUri();
   }
 
   protected Scheduler createScheduler(Properties properties) throws SchedulerException {
@@ -53,7 +61,7 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
     // it is a bit hack but we are going to add them from here
 
     if (schedulerConfig.getJobStoreClass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
-      MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), MongoModule.mongoClientOptions);
+      MongoClientURI uri = new MongoClientURI(getMongoUri(), MongoModule.mongoClientOptions);
       try (MongoClient mongoClient = new MongoClient(uri)) {
         final MongoDatabase database = mongoClient.getDatabase(uri.getDatabase());
 
@@ -83,7 +91,7 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
                                        .serverSelectionTimeout(90000)
                                        .maxConnectionIdleTime(600000)
                                        .connectionsPerHost(50);
-      MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
+      MongoClientURI uri = new MongoClientURI(getMongoUri(), mongoClientOptions);
       props.setProperty("org.quartz.jobStore.class", schedulerConfig.getJobStoreClass());
       props.setProperty("org.quartz.jobStore.mongoUri", uri.getURI());
       props.setProperty("org.quartz.jobStore.dbName", uri.getDatabase());

@@ -2,9 +2,6 @@ package io.harness.scheduler;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-/**
- * Created by anubhaw on 11/9/16.
- */
 public class SchedulerConfig {
   @JsonProperty(defaultValue = "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")
   private String jobStoreClass = "com.novemberain.quartz.mongodb.DynamicMongoDBJobStore";
@@ -12,10 +9,12 @@ public class SchedulerConfig {
   @JsonProperty(defaultValue = "1") private String threadCount = "1";
   @JsonProperty(defaultValue = "10000") private String idleWaitTime = "10000";
   @JsonProperty(defaultValue = "true") private String autoStart = "true";
-  @JsonProperty(defaultValue = "automation_scheduler") private String schedulerName = "automation_scheduler";
-  @JsonProperty(defaultValue = "automation") private String instanceId = "automation";
+  @JsonProperty(defaultValue = "scheduler") private String schedulerName = "scheduler";
+  @JsonProperty(defaultValue = "scheduler") private String instanceId = "scheduler";
   @JsonProperty(defaultValue = "quartz") private String tablePrefix = "quartz";
   @JsonProperty(defaultValue = "true") private boolean isClustered;
+
+  private String mongoUri;
   @JsonProperty(defaultValue = "20000") private String mongoOptionWriteConcernTimeoutMillis = "20000";
 
   public String getJobStoreClass() {
@@ -80,6 +79,14 @@ public class SchedulerConfig {
 
   public void setClustered(boolean clustered) {
     isClustered = clustered;
+  }
+
+  public String getMongoUri() {
+    return mongoUri;
+  }
+
+  public void setMongoUri(String mongoUri) {
+    this.mongoUri = mongoUri;
   }
 
   public String getMongoOptionWriteConcernTimeoutMillis() {
