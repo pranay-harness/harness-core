@@ -119,6 +119,7 @@ import software.wings.api.SimpleWorkflowParam;
 import software.wings.api.WorkflowElement;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
+import software.wings.beans.ApprovalAuthorization;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -2634,5 +2635,19 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                               .filter(WorkflowExecution.ID_KEY, workflowExecutionId)
                                               .get();
     return workflowExecution == null ? null : workflowExecution.getStartTs();
+  }
+
+  @Override
+  public ApprovalAuthorization getApprovalAuthorization(String appId, List<String> userGroupIds) {
+    ApprovalAuthorization approvalAuthorization = new ApprovalAuthorization();
+    approvalAuthorization.setAuthorized(true);
+
+    if (isNotEmpty(userGroupIds)) {
+      if (!verifyAuthorizedToAcceptOrReject(userGroupIds, asList(appId), null)) {
+        approvalAuthorization.setAuthorized(false);
+      }
+    }
+
+    return approvalAuthorization;
   }
 }
