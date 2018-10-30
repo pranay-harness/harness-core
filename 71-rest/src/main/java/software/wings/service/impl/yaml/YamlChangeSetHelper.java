@@ -15,6 +15,7 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.service.intfc.yaml.YamlGitService;
+import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.ArrayList;
@@ -39,12 +40,12 @@ public class YamlChangeSetHelper {
   }
 
   public void defaultVariableChangeSet(String accountId, String appId, ChangeType changeType) {
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
     if (ygs != null) {
       List<GitFileChange> gitFileChanges =
           entityUpdateService.obtainDefaultVariableChangeSet(accountId, appId, changeType);
 
-      yamlChangeSetService.saveChangeSet(ygs, gitFileChanges);
+      yamlChangeSetService.saveChangeSet(ygs, gitFileChanges, appId);
     }
   }
 
@@ -61,12 +62,14 @@ public class YamlChangeSetHelper {
   }
 
   public <T> void entityYamlChangeSet(String accountId, Service service, T entity, ChangeType crudType) {
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    String appId = entityUpdateService.obtainAppIdFromEntity(entity);
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
 
     if (ygs != null) {
       List<GitFileChange> changeSet =
           entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, service, entity, crudType);
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+
+      yamlChangeSetService.saveChangeSet(ygs, changeSet, entity);
     }
   }
 
@@ -79,7 +82,8 @@ public class YamlChangeSetHelper {
   }
 
   private <T> void nonLeafEntityRenameYamlChange(String accountId, T oldEntity, T newEntity) {
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    String appId = entityUpdateService.obtainAppIdFromEntity(newEntity);
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
 
     if (ygs != null) {
       String oldPath = yamlDirectoryService.obtainEntityRootPath(null, oldEntity);
@@ -94,14 +98,20 @@ public class YamlChangeSetHelper {
                         .build());
       changeSet.addAll(
           entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, newEntity, ChangeType.MODIFY));
-      changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
+      YamlChangeSet savedChangeSet = yamlChangeSetService.saveChangeSet(ygs, changeSet, newEntity);
+      String parentYamlChangeSetId = savedChangeSet.getUuid();
 
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+      List<YamlChangeSet> yamlChangeSets = yamlGitService.obtainChangeSetFromFullSyncDryRun(accountId);
+      for (YamlChangeSet yamlChangeSet : yamlChangeSets) {
+        yamlChangeSet.setParentYamlChangeSetId(parentYamlChangeSetId);
+        yamlChangeSetService.save(yamlChangeSet);
+      }
     }
   }
 
   private <T> void leafEntityRenameYamlChange(String accountId, T oldEntity, T newEntity) {
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId);
+    String appId = entityUpdateService.obtainAppIdFromEntity(newEntity);
+    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
 
     if (ygs != null) {
       List<GitFileChange> changeSet = new ArrayList<>();
@@ -116,9 +126,14 @@ public class YamlChangeSetHelper {
         changeSet.addAll(
             entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, newEntity, ChangeType.ADD));
       }
+      YamlChangeSet savedChangeSet = yamlChangeSetService.saveChangeSet(ygs, changeSet, newEntity);
+      String parentYamlChangeSetId = savedChangeSet.getUuid();
 
-      changeSet.addAll(yamlGitService.performFullSyncDryRun(accountId));
-      yamlChangeSetService.saveChangeSet(ygs, changeSet);
+      List<YamlChangeSet> yamlChangeSets = yamlGitService.obtainChangeSetFromFullSyncDryRun(accountId);
+      for (YamlChangeSet yamlChangeSet : yamlChangeSets) {
+        yamlChangeSet.setParentYamlChangeSetId(parentYamlChangeSetId);
+        yamlChangeSetService.save(yamlChangeSet);
+      }
     }
   }
 }

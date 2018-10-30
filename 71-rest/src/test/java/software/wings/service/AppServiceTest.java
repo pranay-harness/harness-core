@@ -69,6 +69,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
@@ -114,6 +115,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private TriggerService triggerService;
   @Mock private WorkflowService workflowService;
+  @Mock private YamlGitService yamlGitService;
 
   @Mock private JobScheduler jobScheduler;
 

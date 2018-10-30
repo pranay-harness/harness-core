@@ -153,7 +153,7 @@ public class MigrationServiceImpl implements MigrationService {
             while (accounts.hasNext()) {
               Account account = accounts.next();
               try {
-                yamlGitService.fullSync(account.getUuid(), false);
+                yamlGitService.fullSyncForEntireAccount(account.getUuid());
               } catch (Exception ex) {
                 logger.error("Git full sync failed for account: {}. Reason is: {}", account.getAccountName(),
                     Misc.getMessage(ex));

@@ -15,4 +15,5 @@ public class YamlDirectoryFetchPayload {
   private boolean applyPermissions;
   private UserPermissionInfo userPermissionInfo;
   private boolean appLevelYamlTreeOnly;
+  private boolean addApplication;
 }

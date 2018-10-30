@@ -1,12 +1,8 @@
 package software.wings.yaml.directory;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonValue;
 import software.wings.service.intfc.yaml.YamlGitService;
-import software.wings.yaml.gitSync.YamlGitConfig;
-import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
 public class DirectoryNode {
   private String accountId;
@@ -17,8 +13,6 @@ public class DirectoryNode {
   private String shortClassName;
   private String restName;
   private DirectoryPath directoryPath;
-  private SyncMode syncMode;
-  private boolean syncEnabled;
 
   public DirectoryNode() {}
 
@@ -66,8 +60,6 @@ public class DirectoryNode {
     this(accountId, name, theClass);
     this.directoryPath = directoryPath;
     this.type = type;
-
-    determineSyncMode(yamlGitSyncService);
   }
 
   public enum NodeType {
@@ -84,31 +76,6 @@ public class DirectoryNode {
     @JsonValue
     public String getDisplayName() {
       return displayName;
-    }
-  }
-
-  private void determineSyncMode(YamlGitService yamlGitSyncService) {
-    // we need to check YamlGitSync by using the directoryPath as the EntityId for a folder, or the last part of the
-    // path for everything else
-    String path = this.directoryPath.getPath();
-    String[] pathParts = path.split("/");
-    String entityId = accountId;
-
-    if (isEmpty(pathParts)) {
-      this.syncMode = SyncMode.NONE;
-    } else {
-      if (type == NodeType.FOLDER) {
-        entityId = this.directoryPath.getPath();
-      }
-
-      YamlGitConfig ygs = yamlGitSyncService.get(accountId, entityId);
-
-      if (ygs != null) {
-        this.syncMode = ygs.getSyncMode();
-        this.syncEnabled = ygs.isEnabled();
-      } else {
-        this.syncMode = SyncMode.NONE;
-      }
     }
   }
 
@@ -174,21 +141,5 @@ public class DirectoryNode {
 
   public void setDirectoryPath(DirectoryPath directoryPath) {
     this.directoryPath = directoryPath;
-  }
-
-  public SyncMode getSyncMode() {
-    return syncMode;
-  }
-
-  public void setSyncMode(SyncMode syncMode) {
-    this.syncMode = syncMode;
-  }
-
-  public boolean isSyncEnabled() {
-    return syncEnabled;
-  }
-
-  public void setSyncEnabled(boolean syncEnabled) {
-    this.syncEnabled = syncEnabled;
   }
 }

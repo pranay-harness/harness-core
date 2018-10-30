@@ -4,6 +4,7 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.MULTIPART_FORM_DATA;
 import static software.wings.security.PermissionAttribute.ResourceType.SETTING;
+import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Charsets;
 import com.google.inject.Inject;
@@ -23,6 +24,7 @@ import software.wings.app.MainConfiguration;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.Pipeline;
@@ -40,7 +42,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.PublicApi;
 import software.wings.security.annotations.Scope;
-import software.wings.service.impl.yaml.YamlWebHookPayload;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
@@ -63,6 +64,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.List;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -71,6 +73,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.HttpHeaders;
 
 /**
  * Created by bsollish
@@ -543,11 +547,12 @@ public class YamlResource {
    * @return the rest response
    */
   @POST
-  @Path("full-sync")
+  @Path("full-sync/{entityId}")
   @Timed
   @ExceptionMetered
-  public RestResponse pushDirectory(@QueryParam("accountId") String accountId) {
-    yamlGitService.fullSync(accountId, true);
+  public RestResponse pushDirectory(@PathParam("entityId") String entityId, @QueryParam("accountId") String accountId,
+      @QueryParam("entityType") EntityType entityType) {
+    yamlGitService.fullSync(accountId, entityId, entityType, true);
     return new RestResponse<>();
   }
 
@@ -759,7 +764,6 @@ public class YamlResource {
   public RestResponse<YamlGitConfig> saveGitConfig(
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
-    yamlGitSync.setAppId(Base.GLOBAL_APP_ID);
     return new RestResponse<>(yamlGitService.save(yamlGitSync));
   }
 
@@ -774,9 +778,19 @@ public class YamlResource {
   @Path("git-config/{entityId}")
   @Timed
   @ExceptionMetered
-  public RestResponse<YamlGitConfig> get(
-      @PathParam("entityId") String entityId, @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(yamlGitService.get(accountId, entityId));
+  public RestResponse<YamlGitConfig> get(@PathParam("entityId") String entityId,
+      @QueryParam("accountId") String accountId, @QueryParam("entityType") EntityType entityType) {
+    return new RestResponse<>(yamlGitService.get(accountId, entityId, entityType));
+  }
+
+  @DELETE
+  @Path("git-config/{entityId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<YamlGitConfig> delete(@PathParam("entityId") String entityId,
+      @QueryParam("accountId") String accountId, @QueryParam("entityType") EntityType entityType) {
+    yamlGitService.delete(accountId, entityId, entityType);
+    return new RestResponse();
   }
 
   /**
@@ -794,7 +808,6 @@ public class YamlResource {
   public RestResponse<YamlGitConfig> updateGitConfig(
       @QueryParam("accountId") String accountId, YamlGitConfig yamlGitSync) {
     yamlGitSync.setAccountId(accountId);
-    yamlGitSync.setAppId(Base.GLOBAL_APP_ID);
     return new RestResponse<>(yamlGitService.update(yamlGitSync));
   }
 
@@ -812,8 +825,9 @@ public class YamlResource {
   @ExceptionMetered
   @PublicApi
   public RestResponse webhookCatcher(@QueryParam("accountId") String accountId,
-      @PathParam("entityToken") String entityToken, YamlWebHookPayload yamlWebHookPayload) {
-    yamlGitService.processWebhookPost(accountId, entityToken, yamlWebHookPayload);
+      @PathParam("entityToken") String entityToken, String yamlWebHookPayload, @Context HttpHeaders httpHeaders) {
+    notNullCheck("webhook token", entityToken);
+    yamlGitService.processWebhookPost(accountId, entityToken, yamlWebHookPayload, httpHeaders);
     return new RestResponse();
   }
 

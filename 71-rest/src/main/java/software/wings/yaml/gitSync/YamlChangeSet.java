@@ -34,12 +34,13 @@ public class YamlChangeSet extends Base {
   private boolean forcePush;
   @Indexed private long queuedOn = System.currentTimeMillis();
   private boolean fullSync;
+  private String parentYamlChangeSetId;
 
   public enum Status { QUEUED, RUNNING, FAILED, COMPLETED, SKIPPED }
 
   @Builder
   public YamlChangeSet(String appId, String accountId, List<GitFileChange> gitFileChanges, Status status,
-      boolean gitToHarness, boolean forcePush, long queuedOn, boolean fullSync) {
+      boolean gitToHarness, boolean forcePush, long queuedOn, boolean fullSync, String parentYamlChangeSetId) {
     this.appId = appId;
     this.accountId = accountId;
     this.gitFileChanges = gitFileChanges;
@@ -48,5 +49,6 @@ public class YamlChangeSet extends Base {
     this.forcePush = forcePush;
     this.queuedOn = queuedOn;
     this.fullSync = fullSync;
+    this.parentYamlChangeSetId = parentYamlChangeSetId;
   }
 }

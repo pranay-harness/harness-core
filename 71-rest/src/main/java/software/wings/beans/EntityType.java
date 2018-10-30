@@ -154,5 +154,7 @@ public enum EntityType {
   /**
    * NewRelic AppId
    */
-  NEWRELIC_MARKER_APPID
+  NEWRELIC_MARKER_APPID,
+
+  ACCOUNT
 }

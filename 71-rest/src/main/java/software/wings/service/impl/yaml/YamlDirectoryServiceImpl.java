@@ -45,6 +45,7 @@ import software.wings.api.DeploymentType;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
+import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.FeatureName;
 import software.wings.beans.InfrastructureMapping;
@@ -153,12 +154,18 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   @Inject private ExecutorService executorService;
 
   @Override
-  public YamlGitConfig weNeedToPushChanges(String accountId) {
-    // for now, we are only checking the top level (full tree/directory)
-    YamlGitConfig ygs = yamlGitSyncService.get(accountId, SETUP_FOLDER);
+  public YamlGitConfig weNeedToPushChanges(String accountId, String appId) {
+    EntityType entityType = GLOBAL_APP_ID.equals(appId) ? EntityType.ACCOUNT : EntityType.APPLICATION;
+    String entityId = GLOBAL_APP_ID.equals(appId) ? accountId : appId;
 
-    if (ygs != null && ygs.isEnabled() && ygs.getSyncMode() != SyncMode.GIT_TO_HARNESS) {
-      return ygs;
+    YamlGitConfig yamlGitConfig = yamlGitSyncService.get(accountId, entityId, entityType);
+
+    return validateYamlGitConfig(yamlGitConfig);
+  }
+
+  private YamlGitConfig validateYamlGitConfig(YamlGitConfig yamlGitConfig) {
+    if (yamlGitConfig != null && yamlGitConfig.isEnabled() && yamlGitConfig.getSyncMode() != SyncMode.GIT_TO_HARNESS) {
+      return yamlGitConfig;
     }
 
     return null;
@@ -337,6 +344,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                             .applyPermissions(enabled)
                             .userPermissionInfo(getUserPermissionInfo(accountId))
                             .appLevelYamlTreeOnly(true)
+                            .addApplication(true)
                             .appId(appId)
                             .build());
   }
@@ -350,6 +358,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
                             .applyPermissions(applyPermissions)
                             .userPermissionInfo(userPermissionInfo)
                             .appLevelYamlTreeOnly(false)
+                            .addApplication(false)
                             .appId(null)
                             .build());
   }
@@ -365,19 +374,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     configFolder.addChild(new YamlNode(accountId, GLOBAL_APP_ID, defaultVarsYamlFileName, Defaults.class,
         directoryPath.clone().add(defaultVarsYamlFileName), yamlGitSyncService, Type.ACCOUNT_DEFAULTS));
 
-    Map<String, AppPermissionSummary> appPermissionMap = null;
-    if (yamlDirectoryFetchPayload.isApplyPermissions() && yamlDirectoryFetchPayload.getUserPermissionInfo() != null) {
-      appPermissionMap = yamlDirectoryFetchPayload.getUserPermissionInfo().getAppPermissionMapInternal();
-    }
-
-    Map<String, AppPermissionSummary> appPermissionMapFinal = appPermissionMap;
-
     List<Future<FolderNode>> futureList = new ArrayList<>();
-    futureList.add(executorService.submit(
-        ()
-            -> doApplicationsYamlTree(accountId, directoryPath.clone(), yamlDirectoryFetchPayload.isApplyPermissions(),
-                appPermissionMapFinal, yamlDirectoryFetchPayload.isAppLevelYamlTreeOnly(),
-                yamlDirectoryFetchPayload.getAppId())));
+
+    if (yamlDirectoryFetchPayload.isAddApplication()) {
+      futureList.add(executorService.submit(
+          ()
+              -> doApplicationsYamlTree(accountId, directoryPath.clone(),
+                  yamlDirectoryFetchPayload.isApplyPermissions(), yamlDirectoryFetchPayload.getUserPermissionInfo(),
+                  yamlDirectoryFetchPayload.isAppLevelYamlTreeOnly(), yamlDirectoryFetchPayload.getAppId())));
+    }
 
     futureList.add(executorService.submit(() -> doCloudProviders(accountId, directoryPath.clone())));
 
@@ -411,7 +416,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     }
 
     // this controls the returned order
-    configFolder.addChild(map.get(APPLICATIONS_FOLDER));
+    if (yamlDirectoryFetchPayload.isAddApplication()) {
+      configFolder.addChild(map.get(APPLICATIONS_FOLDER));
+    }
     configFolder.addChild(map.get(CLOUD_PROVIDERS_FOLDER));
     configFolder.addChild(map.get(ARTIFACT_SOURCES_FOLDER));
     configFolder.addChild(map.get(COLLABORATION_PROVIDERS_FOLDER));
@@ -491,6 +498,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         DirectoryPath appPath = directoryPath.clone();
         FolderNode appFolder = new FolderNode(
             accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid(), yamlGitSyncService);
+        setApplicationGitConfig(accountId, app.getUuid(), appFolder);
         applicationsFolder.addChild(appFolder);
       }
     }
@@ -505,7 +513,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
    * @param appPermissionSummaryMap
    * @return
    */
-  private FolderNode doApplication(String applicationId, boolean applyPermissions,
+
+  @Override
+  public FolderNode doApplication(String applicationId, boolean applyPermissions,
       final Map<String, AppPermissionSummary> appPermissionSummaryMap, FolderNode applicationsFolder,
       DirectoryPath directoryPath) {
     Application app = appService.get(applicationId);
@@ -524,6 +534,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     DirectoryPath appPath = directoryPath.clone();
     FolderNode appFolder = new FolderNode(
         accountId, app.getName(), Application.class, appPath.add(app.getName()), app.getUuid(), yamlGitSyncService);
+
+    setApplicationGitConfig(accountId, applicationId, appFolder);
 
     applicationsFolder.addChild(appFolder);
     String yamlFileName = INDEX_YAML;
@@ -634,19 +646,24 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private FolderNode doApplicationsYamlTree(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
-      Map<String, AppPermissionSummary> appPermissionSummaryMap, boolean appLevelYamlTreeOnly, String appId) {
+      UserPermissionInfo userPermissionInfo, boolean appLevelYamlTreeOnly, String appId) {
+    Map<String, AppPermissionSummary> appPermissionMap = null;
+
+    if (applyPermissions && userPermissionInfo != null) {
+      appPermissionMap = userPermissionInfo.getAppPermissionMapInternal();
+    }
+
     if (appLevelYamlTreeOnly) {
-      return doApplicationLevelOnly(accountId, directoryPath, applyPermissions, appPermissionSummaryMap, appId);
+      return doApplicationLevelOnly(accountId, directoryPath, applyPermissions, appPermissionMap, appId);
     } else {
-      return doApplications(accountId, directoryPath, applyPermissions, appPermissionSummaryMap);
+      return doApplications(accountId, directoryPath, applyPermissions, appPermissionMap);
     }
   }
+
   private FolderNode doApplications(String accountId, DirectoryPath directoryPath, boolean applyPermissions,
       Map<String, AppPermissionSummary> appPermissionSummaryMap) {
     FolderNode applicationsFolder = new FolderNode(
         accountId, APPLICATIONS_FOLDER, Application.class, directoryPath.add(APPLICATIONS_FOLDER), yamlGitSyncService);
-
-    List<Application> apps = appService.getAppsByAccountId(accountId);
 
     Set<String> allowedAppIds = null;
     if (applyPermissions) {
@@ -659,6 +676,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       }
     }
 
+    List<Application> apps = appService.getAppsByAccountId(accountId);
     // iterate over applications
     for (Application app : apps) {
       doApplication(app.getUuid(), applyPermissions, appPermissionSummaryMap, applicationsFolder, directoryPath);
@@ -1465,5 +1483,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private String getEntitySpecPathByService(Service service) {
     return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
+  }
+
+  private void setApplicationGitConfig(String accountId, String applicationId, FolderNode appFolder) {
+    // Setting app git sync
+    YamlGitConfig yamlGitConfig = yamlGitService.get(accountId, applicationId, EntityType.APPLICATION);
+    appFolder.setYamlGitConfig(yamlGitConfig);
   }
 }

@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -123,9 +122,9 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
         .thenReturn(Arrays.asList(new Key(ServiceTemplate.class, "serviceTemplates", SERVICE_ID)));
     when(serviceTemplateService.get(anyString(), anyString()))
         .thenReturn(ServiceTemplate.Builder.aServiceTemplate().withUuid("uuid").withName("name").build());
-    doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());
-    doNothing().when(yamlChangeSetService).saveChangeSet(any(), any());
-    when(yamlDirectoryService.weNeedToPushChanges(any())).thenReturn(null);
+    when(yamlChangeSetService.saveChangeSet(any(), any(), any())).thenReturn(null);
+    when(yamlChangeSetService.saveChangeSet(any(), any(), any())).thenReturn(null);
+    when(yamlDirectoryService.weNeedToPushChanges(any(), any())).thenReturn(null);
   }
 
   private Service getService() {

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Fail.failBecauseExceptionWasNotThrown;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -167,7 +168,7 @@ public class PipelineYamlHandlerTest extends BaseYamlHandlerTest {
     when(infrastructureMappingService.getInfraMappingByName(anyString(), anyString(), anyString()))
         .thenReturn(awsInfrastructureMapping);
 
-    when(yamlGitService.get(anyString(), anyString())).thenReturn(null);
+    when(yamlGitService.get(anyString(), anyString(), any())).thenReturn(null);
 
     pipeline = Pipeline.builder()
                    .appId(APP_ID)

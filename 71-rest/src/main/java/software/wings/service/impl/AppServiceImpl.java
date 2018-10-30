@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -37,6 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
+import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
 import software.wings.beans.Role;
 import software.wings.common.NotificationMessageResolver.NotificationMessageType;
@@ -63,7 +65,9 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
@@ -95,6 +99,7 @@ public class AppServiceImpl implements AppService {
   @Inject private WorkflowService workflowService;
   @Inject private YamlPushService yamlPushService;
   @Inject private GenericDbCache dbCache;
+  @Inject private YamlGitService yamlGitService;
 
   @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
 
@@ -114,6 +119,7 @@ public class AppServiceImpl implements AppService {
     notNullCheck("accountId", app.getAccountId());
     validateAppName(app);
     app.setKeywords(trimList(app.generateKeywords()));
+
     Application application =
         duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
     createDefaultRoles(app);
@@ -121,6 +127,17 @@ public class AppServiceImpl implements AppService {
         application.getUuid(), application.getAccountId(), app.isSyncFromGit());
     sendNotification(application, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
     InstanceSyncJob.add(jobScheduler, application.getUuid());
+
+    // Save the Git Configuration for application if not null
+    YamlGitConfig yamlGitConfig = app.getYamlGitConfig();
+    if (yamlGitConfig != null) {
+      setAppYamlGitConfigDefaults(application.getAccountId(), application.getUuid(), yamlGitConfig);
+
+      // We are disabling git fullsync when the app is created on git side. The reason we have to to do this is that the
+      // fullsync for an app deletes the original app folder and creates new one. If the app is created on git side,
+      // then we dont need fullsync again.
+      yamlGitService.save(yamlGitConfig, !app.isSyncFromGit());
+    }
 
     yamlPushService.pushYamlChangeSet(app.getAccountId(), null, application, Type.CREATE, app.isSyncFromGit(), false);
 
@@ -186,6 +203,16 @@ public class AppServiceImpl implements AppService {
     PermissionAttribute envPermissionAttribute = new PermissionAttribute(PermissionType.ENV, Action.READ);
     authHandler.setEntityIdFilterIfUserAction(asList(envPermissionAttribute), appIdList);
 
+    applicationList.forEach(application -> {
+      // We cannot assume that the application always have accountId and applicationId
+      // Adding null checks to take care of that
+      if (isNotEmpty(application.getAccountId()) && isNotEmpty(application.getUuid())) {
+        YamlGitConfig yamlGitConfig =
+            yamlGitService.get(application.getAccountId(), application.getUuid(), EntityType.APPLICATION);
+        application.setYamlGitConfig(yamlGitConfig);
+      }
+    });
+
     if (details) {
       applicationList.forEach(application -> {
         try {
@@ -222,6 +249,10 @@ public class AppServiceImpl implements AppService {
     if (application == null) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "Application " + uuid + " doesn't exist");
     }
+
+    application.setYamlGitConfig(
+        yamlGitService.get(application.getAccountId(), application.getUuid(), EntityType.APPLICATION));
+
     return application;
   }
 
@@ -255,6 +286,9 @@ public class AppServiceImpl implements AppService {
 
     wingsPersistence.update(query, operations);
     dbCache.invalidate(Application.class, app.getUuid());
+
+    updateAppYamlGitConfig(savedApp, app, !app.isSyncFromGit());
+
     Application updatedApp = get(app.getUuid());
 
     boolean isRename = !savedApp.getName().equals(app.getName());
@@ -372,5 +406,36 @@ public class AppServiceImpl implements AppService {
     Application app = get(appId);
 
     return app.getAccountId();
+  }
+
+  private void updateAppYamlGitConfig(Application savedApp, Application app, boolean performFullSync) {
+    YamlGitConfig savedYamlGitConfig = savedApp.getYamlGitConfig();
+
+    YamlGitConfig yamlGitConfig = app.getYamlGitConfig();
+
+    if (savedYamlGitConfig != null) {
+      if (yamlGitConfig != null) {
+        // Forcing the yamlGitConfig to have correct values set.
+        setAppYamlGitConfigDefaults(savedApp.getAccountId(), savedApp.getUuid(), yamlGitConfig);
+        // Its an update operation, but we don't want it to do full sync. That's we are directly calling the save with
+        // fullsync disabled
+        yamlGitService.save(yamlGitConfig, performFullSync);
+      } else {
+        yamlGitService.delete(savedApp.getAccountId(), savedApp.getUuid(), EntityType.APPLICATION);
+      }
+    } else {
+      if (yamlGitConfig != null) {
+        // Forcing the yamlGitConfig to have correct values set.
+        setAppYamlGitConfigDefaults(savedApp.getAccountId(), savedApp.getUuid(), yamlGitConfig);
+        yamlGitService.save(yamlGitConfig, performFullSync);
+      }
+    }
+  }
+
+  private void setAppYamlGitConfigDefaults(String accountId, String appId, YamlGitConfig yamlGitConfig) {
+    yamlGitConfig.setAccountId(accountId);
+    yamlGitConfig.setEntityId(appId);
+    yamlGitConfig.setAppId(appId);
+    yamlGitConfig.setEntityType(EntityType.APPLICATION);
   }
 }

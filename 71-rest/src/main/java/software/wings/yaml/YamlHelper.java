@@ -31,7 +31,6 @@ import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.YamlVersion.Type;
 import software.wings.yaml.gitSync.GitSyncWebhook;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
@@ -114,14 +113,6 @@ public class YamlHelper {
     String dumpedYaml = toYamlString(theYaml);
     YamlPayload yp = new YamlPayload(dumpedYaml);
     yp.setName(payloadName);
-
-    // add the YamlGitSync instance (if found) to the payload
-    if (yamlGitSyncService != null) {
-      YamlGitConfig ygs = yamlGitSyncService.get(accountId, entityId);
-      if (ygs != null) {
-        yp.setGitSync(ygs);
-      }
-    }
 
     rr.setResponseMessages(yp.getResponseMessages());
 

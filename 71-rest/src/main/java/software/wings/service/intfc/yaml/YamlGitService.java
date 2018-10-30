@@ -5,7 +5,9 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
+import software.wings.beans.GitConfig;
 import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.alert.AlertData;
@@ -13,7 +15,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.yaml.Change;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
-import software.wings.service.impl.yaml.YamlWebHookPayload;
 import software.wings.yaml.errorhandling.GitSyncError;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlChangeSet;
@@ -22,6 +23,8 @@ import software.wings.yaml.gitSync.YamlGitConfig;
 import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.HttpHeaders;
 
 /**
  * The interface Yaml git sync service.
@@ -34,7 +37,7 @@ public interface YamlGitService {
    * @param entityId  the entity id
    * @return the rest response
    */
-  YamlGitConfig get(@NotEmpty String accountId, @NotEmpty String entityId);
+  YamlGitConfig get(@NotEmpty String accountId, @NotEmpty String entityId, @Valid EntityType entityType);
 
   /**
    * Creates a new yaml git sync info by object type and entitytId (uuid)
@@ -58,16 +61,8 @@ public interface YamlGitService {
    * @param accountId the account id
    * @param forcePush force push
    */
-  void fullSync(@NotEmpty String accountId, boolean forcePush);
-
-  /**
-   * Sync files.
-   *
-   * @param accountId         the account id
-   * @param gitFileChangeList the git file change list
-   * @param forcePush         force push
-   */
-  void syncFiles(String accountId, List<GitFileChange> gitFileChangeList, boolean forcePush);
+  void fullSync(
+      @NotEmpty String accountId, @NotEmpty String entityId, @NotNull EntityType entityType, boolean forcePush);
 
   /**
    * Perform full sync dry run list.
@@ -89,14 +84,7 @@ public interface YamlGitService {
    */
   boolean handleChangeSet(List<YamlChangeSet> yamlChangeSet, String accountId);
 
-  /**
-   * Process webhook post.
-   *
-   * @param accountId          the account id
-   * @param webhookToken       the webhook token
-   * @param yamlWebHookPayload the yaml web hook payload
-   */
-  void processWebhookPost(String accountId, String webhookToken, YamlWebHookPayload yamlWebHookPayload);
+  void processWebhookPost(String accountId, String webhookToken, String yamlWebHookPayload, HttpHeaders headers);
 
   /**
    * Is commit already processed boolean.
@@ -188,4 +176,18 @@ public interface YamlGitService {
   RestResponse discardAllGitSyncError(String accountId);
 
   SettingAttribute getAndDecryptSettingAttribute(String sshSettingId);
+
+  List<YamlChangeSet> obtainChangeSetFromFullSyncDryRun(String accountId);
+
+  boolean checkApplicationChange(GitFileChange gitFileChange);
+
+  String obtainAppNameFromGitFileChange(GitFileChange gitFileChange);
+
+  void delete(String accountId, String entityId, EntityType entityType);
+
+  GitConfig getGitConfig(YamlGitConfig ygs);
+
+  YamlGitConfig save(YamlGitConfig ygs, boolean performFullSync);
+
+  void fullSyncForEntireAccount(String accountId);
 }
