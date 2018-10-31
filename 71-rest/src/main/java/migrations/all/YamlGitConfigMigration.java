@@ -1,5 +1,10 @@
 package migrations.all;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_ID_KEY;
+import static software.wings.yaml.gitSync.YamlGitConfig.ENTITY_TYPE_KEY;
+import static software.wings.yaml.gitSync.YamlGitConfig.SYNC_MODE_KEY;
+
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
@@ -8,17 +13,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.yaml.gitSync.YamlGitConfig;
 import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class YamlGitConfigMigration implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(YamlGitConfigMigration.class);
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private SecretManager secretManager;
-  @Inject private EncryptionService encryptionService;
 
   @Override
   public void migrate() {
@@ -28,8 +32,6 @@ public class YamlGitConfigMigration implements Migration {
              new HIterator<>(wingsPersistence.createQuery(YamlGitConfig.class).fetch())) {
       while (yamlGitConfigHIterator.hasNext()) {
         YamlGitConfig yamlGitConfig = yamlGitConfigHIterator.next();
-        encryptionService.decrypt(
-            yamlGitConfig, secretManager.getEncryptionDetails(yamlGitConfig, "_GLOBAL_APP_ID_", null));
         updateYamlGitConfig(yamlGitConfig);
       }
     }
@@ -38,9 +40,13 @@ public class YamlGitConfigMigration implements Migration {
   }
 
   private void updateYamlGitConfig(YamlGitConfig yamlGitConfig) {
-    yamlGitConfig.setSyncMode(SyncMode.BOTH);
-    yamlGitConfig.setEntityType(EntityType.ACCOUNT);
-    yamlGitConfig.setEntityId(yamlGitConfig.getAccountId());
-    wingsPersistence.saveAndGet(YamlGitConfig.class, yamlGitConfig);
+    if (isEmpty(yamlGitConfig.getEntityId()) && yamlGitConfig.getEntityType() == null) {
+      Map<String, Object> keyValuePairs = new HashMap<>();
+      keyValuePairs.put(SYNC_MODE_KEY, SyncMode.BOTH);
+      keyValuePairs.put(ENTITY_ID_KEY, yamlGitConfig.getAccountId());
+      keyValuePairs.put(ENTITY_TYPE_KEY, EntityType.ACCOUNT);
+
+      wingsPersistence.updateFields(YamlGitConfig.class, yamlGitConfig.getUuid(), keyValuePairs);
+    }
   }
 }
