@@ -90,6 +90,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     String newRelicApplicationId = generateUuid();
 
     newRelicCVServiceConfiguration = new NewRelicCVServiceConfiguration();
+    newRelicCVServiceConfiguration.setName("Config 1");
     newRelicCVServiceConfiguration.setAppId(appId);
     newRelicCVServiceConfiguration.setEnvId(envId);
     newRelicCVServiceConfiguration.setServiceId(serviceId);
@@ -216,10 +217,12 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     assertEquals(serviceId, obj.getServiceId());
     assertEquals(NEW_RELIC, obj.getStateType());
     assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
+    assertEquals("Config 1", obj.getName());
 
     url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
         + "&stateType=" + NEW_RELIC + "&serviceConfigurationId=" + savedObjectUuid;
     target = client.target(url);
+    newRelicCVServiceConfiguration.setName("Config 2");
     newRelicCVServiceConfiguration.setEnabled24x7(false);
     newRelicCVServiceConfiguration.setMetrics(Collections.singletonList("requestsPerMinute"));
     newRelicCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
@@ -230,6 +233,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     fetchedObject = getRequestResponse.getResource();
     assertFalse(fetchedObject.isEnabled24x7());
     assertEquals(AnalysisTolerance.LOW, fetchedObject.getAnalysisTolerance());
+    assertEquals("Config 2", fetchedObject.getName());
 
     String delete_url =
         API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId;
