@@ -110,6 +110,14 @@ public class TerraformRollbackState extends TerraformProvisionState {
     Map<String, EncryptedDataDetail> encryptedTextVariables =
         extractEncryptedTextVariables(allVariables.stream(), context);
 
+    List<NameValuePair> allBackendConfigs = configParameter.getBackendConfigs();
+    Map<String, String> backendConfigs = null;
+    Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
+    if (allBackendConfigs != null) {
+      backendConfigs = extractTextVariables(allBackendConfigs.stream(), context);
+      encryptedBackendConfigs = extractEncryptedTextVariables(allBackendConfigs.stream(), context);
+    }
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParameters parameters =
         TerraformProvisionParameters.builder()
@@ -125,6 +133,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .scriptPath(terraformProvisioner.getPath())
             .variables(textVariables)
             .encryptedVariables(encryptedTextVariables)
+            .backendConfigs(backendConfigs)
+            .encryptedBackendConfigs(encryptedBackendConfigs)
             .build();
 
     DelegateTask delegateTask = aDelegateTask()

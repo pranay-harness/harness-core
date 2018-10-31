@@ -27,6 +27,7 @@ public class TerraformExecutionData extends StateExecutionData implements Respon
   private String outputs;
   private TerraformCommand commandExecuted;
   private List<NameValuePair> variables;
+  private List<NameValuePair> backendConfigs;
 
   private String sourceRepoReference;
 

@@ -94,7 +94,9 @@ public abstract class TerraformProvisionState extends State {
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionState.class);
 
   private static final String VARIABLES_KEY = "variables";
+  private static final String BACKEND_CONFIGS_KEY = "backend_configs";
   private static final String ENCRYPTED_VARIABLES_KEY = "encrypted_variables";
+  private static final String ENCRYPTED_BACKEND_CONFIGS_KEY = "encrypted_backend_configs";
   private static final int DEFAULT_TERRAFORM_ASYNC_CALL_TIMEOUT = 30 * 60 * 1000; // 10 minutes
 
   @Inject @Transient private transient AppService appService;
@@ -115,6 +117,7 @@ public abstract class TerraformProvisionState extends State {
   @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
   @Attributes(title = "Variables") @Getter @Setter private List<NameValuePair> variables;
+  @Attributes(title = "Backend Configs") @Getter @Setter private List<NameValuePair> backendConfigs;
 
   /**
    * Instantiates a new state.
@@ -178,6 +181,8 @@ public abstract class TerraformProvisionState extends State {
     if (!(this instanceof DestroyTerraformProvisionState)) {
       final Collection<NameValuePair> variables =
           validateAndFilterVariables(getVariables(), terraformProvisioner.getVariables());
+      Collection<NameValuePair> backendConfigs = terraformExecutionData.getBackendConfigs();
+
       others = ImmutableMap.<String, Object>builder()
                    .put(VARIABLES_KEY,
                        variables.stream()
@@ -186,6 +191,16 @@ public abstract class TerraformProvisionState extends State {
                            .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
                    .put(ENCRYPTED_VARIABLES_KEY,
                        variables.stream()
+                           .filter(item -> item.getValue() != null)
+                           .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
+                           .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
+                   .put(BACKEND_CONFIGS_KEY,
+                       backendConfigs.stream()
+                           .filter(item -> item.getValue() != null)
+                           .filter(item -> "TEXT".equals(item.getValueType()))
+                           .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
+                   .put(ENCRYPTED_BACKEND_CONFIGS_KEY,
+                       backendConfigs.stream()
                            .filter(item -> item.getValue() != null)
                            .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
                            .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
@@ -322,6 +337,8 @@ public abstract class TerraformProvisionState extends State {
 
     Map<String, String> variables = null;
     Map<String, EncryptedDataDetail> encryptedVariables = null;
+    Map<String, String> backendConfigs = null;
+    Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
 
     if (this instanceof DestroyTerraformProvisionState && fileId != null) {
       final GridFSFile gridFsFile = fileService.getGridFsFile(fileId, FileBucket.TERRAFORM_STATE);
@@ -335,6 +352,16 @@ public abstract class TerraformProvisionState extends State {
                                                   .build()),
           context);
 
+      final Map<String, Object> rawBackendConfigs =
+          (Map<String, Object>) gridFsFile.getExtraElements().get(BACKEND_CONFIGS_KEY);
+      backendConfigs = extractTextVariables(rawBackendConfigs.entrySet().stream().map(entry
+                                                -> NameValuePair.builder()
+                                                       .valueType("TEXT")
+                                                       .name(entry.getKey())
+                                                       .value((String) entry.getValue())
+                                                       .build()),
+          context);
+
       final Map<String, Object> rawEncryptedVariables =
           (Map<String, Object>) gridFsFile.getExtraElements().get(ENCRYPTED_VARIABLES_KEY);
       encryptedVariables = extractEncryptedTextVariables(rawEncryptedVariables.entrySet().stream().map(entry
@@ -344,12 +371,27 @@ public abstract class TerraformProvisionState extends State {
                                                                     .value((String) entry.getValue())
                                                                     .build()),
           context);
+
+      final Map<String, Object> rawEncryptedBackendConfigs =
+          (Map<String, Object>) gridFsFile.getExtraElements().get(ENCRYPTED_BACKEND_CONFIGS_KEY);
+      encryptedBackendConfigs = extractEncryptedTextVariables(rawEncryptedBackendConfigs.entrySet().stream().map(entry
+                                                                  -> NameValuePair.builder()
+                                                                         .valueType("ENCRYPTED_TEXT")
+                                                                         .name(entry.getKey())
+                                                                         .value((String) entry.getValue())
+                                                                         .build()),
+          context);
     } else {
       final Collection<NameValuePair> validVariables =
-          validateAndFilterVariables(getVariables(), terraformProvisioner.getVariables());
+          validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
 
       variables = extractTextVariables(validVariables.stream(), context);
       encryptedVariables = extractEncryptedTextVariables(validVariables.stream(), context);
+
+      if (this.backendConfigs != null) {
+        backendConfigs = extractTextVariables(this.backendConfigs.stream(), context);
+        encryptedBackendConfigs = extractEncryptedTextVariables(this.backendConfigs.stream(), context);
+      }
     }
 
     TerraformProvisionParameters parameters =
@@ -366,6 +408,8 @@ public abstract class TerraformProvisionState extends State {
             .scriptPath(terraformProvisioner.getPath())
             .variables(variables)
             .encryptedVariables(encryptedVariables)
+            .backendConfigs(backendConfigs)
+            .encryptedBackendConfigs(encryptedBackendConfigs)
             .build();
 
     DelegateTask delegateTask = aDelegateTask()
@@ -389,6 +433,15 @@ public abstract class TerraformProvisionState extends State {
         .build();
   }
 
+  /**
+   * getVariables() returns all variables including backend configs.
+   * for just the variables, this method should be called.
+   * @return
+   */
+  private List<NameValuePair> getAllVariables() {
+    return variables;
+  }
+
   protected void saveTerraformConfig(
       ExecutionContext context, TerraformInfrastructureProvisioner provisioner, TerraformExecutionData executionData) {
     TerraformfConfig terraformfConfig = TerraformfConfig.builder()
@@ -396,6 +449,7 @@ public abstract class TerraformProvisionState extends State {
                                             .sourceRepoSettingId(provisioner.getSourceRepoSettingId())
                                             .sourceRepoReference(executionData.getSourceRepoReference())
                                             .variables(executionData.getVariables())
+                                            .backendConfigs(executionData.getBackendConfigs())
                                             .workflowExecutionId(context.getWorkflowExecutionId())
                                             .build();
 

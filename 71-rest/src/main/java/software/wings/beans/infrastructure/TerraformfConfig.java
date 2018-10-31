@@ -29,6 +29,7 @@ public class TerraformfConfig extends Base {
    * Encrypted variables are not persisted in plain text. The uuid of the corresponding EncryptedRecord is stored.
    */
   private final List<NameValuePair> variables;
+  private final List<NameValuePair> backendConfigs;
 
   @Indexed private final String entityId;
   @Indexed private final String workflowExecutionId;
