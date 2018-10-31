@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -38,70 +39,75 @@ public class AwsElbHelperServiceManagerImpl implements AwsElbHelperServiceManage
 
   @Override
   public List<String> listClassicLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsElbListClassicElbsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsElbListClassicElbsResponse) response).getClassicElbs();
   }
 
   @Override
   public List<String> listApplicationLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsElbListAppElbsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsElbListAppElbsResponse) response).getAppElbs();
   }
 
   @Override
   public List<String> listElasticLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsElbListElbsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsElbListAppElbsResponse) response).getAppElbs();
   }
 
   @Override
   public List<String> listNetworkLoadBalancers(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsElbListNetworkElbsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
-            .build());
+            .build(),
+        appId);
     return ((AwsElbListAppElbsResponse) response).getAppElbs();
   }
 
   @Override
-  public Map<String, String> listTargetGroupsForAlb(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String loadBalancerName) {
+  public Map<String, String> listTargetGroupsForAlb(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String region, String loadBalancerName, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsElbListTargetGroupsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
             .loadBalancerName(loadBalancerName)
-            .build());
+            .build(),
+        appId);
     return ((AwsElbListTargetGroupsResponse) response).getTargetGroups();
   }
 
-  private AwsResponse executeTask(String accountId, AwsElbRequest request) {
+  private AwsResponse executeTask(String accountId, AwsElbRequest request, String appId) {
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.AWS_ELB_TASK)
                                     .withAccountId(accountId)
-                                    .withAppId(GLOBAL_APP_ID)
+                                    .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
                                     .withAsync(false)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                     .withParameters(new Object[] {request})

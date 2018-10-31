@@ -1226,7 +1226,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listTargetGroups(computeProviderSetting, region, null);
+      return infrastructureProvider.listTargetGroups(computeProviderSetting, region, null, appId);
     }
     return emptyMap();
   }
@@ -1339,7 +1339,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listLoadBalancers(computeProviderSetting, Regions.US_EAST_1.getName())
+      return infrastructureProvider.listLoadBalancers(computeProviderSetting, Regions.US_EAST_1.getName(), appId)
           .stream()
           .collect(toMap(s -> s, s -> s));
     } else if (PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
@@ -1366,7 +1366,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           : ((EcsInfrastructureMapping) infrastructureMapping).getRegion();
 
       return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
-          .listLoadBalancers(computeProviderSetting, region)
+          .listLoadBalancers(computeProviderSetting, region, appId)
           .stream()
           .collect(toMap(s -> s, s -> s));
     } else if (PHYSICAL_DATA_CENTER.name().equals(computeProviderSetting.getValue().getType())) {
@@ -1393,7 +1393,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           : ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
 
       return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
-          .listElasticBalancers(computeProviderSetting, region)
+          .listElasticBalancers(computeProviderSetting, region, appId)
           .stream()
           .collect(toMap(s -> s, s -> s));
     }
@@ -1415,7 +1415,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           : ((AwsInfrastructureMapping) infrastructureMapping).getRegion();
 
       return ((AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name()))
-          .listNetworkBalancers(computeProviderSetting, region)
+          .listNetworkBalancers(computeProviderSetting, region, appId)
           .stream()
           .collect(toMap(s -> s, s -> s));
     }
@@ -1430,7 +1430,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listClassicLoadBalancers(computeProviderSetting, region);
+      return infrastructureProvider.listClassicLoadBalancers(computeProviderSetting, region, appId);
     }
     return emptyList();
   }
@@ -1445,7 +1445,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
       return infrastructureProvider.listTargetGroups(
-          computeProviderSetting, Regions.US_EAST_1.getName(), loadBalancerName);
+          computeProviderSetting, Regions.US_EAST_1.getName(), loadBalancerName, appId);
     }
     return Collections.emptyMap();
   }
@@ -1465,7 +1465,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           : ((EcsInfrastructureMapping) infrastructureMapping).getRegion();
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listTargetGroups(computeProviderSetting, region, loadbalancerName);
+      return infrastructureProvider.listTargetGroups(computeProviderSetting, region, loadbalancerName, appId);
     }
     return Collections.emptyMap();
   }
