@@ -222,41 +222,41 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
         awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
   }
 
-  public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region) {
+  public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsElbHelperServiceManager.listApplicationLoadBalancers(
-        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+    return awsElbHelperServiceManager.listApplicationLoadBalancers(awsConfig,
+        secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : null, null), region, appId);
   }
 
-  public List<String> listElasticBalancers(SettingAttribute computeProviderSetting, String region) {
+  public List<String> listElasticBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsElbHelperServiceManager.listElasticLoadBalancers(
-        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
   }
 
-  public List<String> listNetworkBalancers(SettingAttribute computeProviderSetting, String region) {
+  public List<String> listNetworkBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsElbHelperServiceManager.listNetworkLoadBalancers(
-        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
   }
 
-  public List<String> listClassicLoadBalancers(SettingAttribute computeProviderSetting, String region) {
+  public List<String> listClassicLoadBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsElbHelperServiceManager.listClassicLoadBalancers(
-        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+    return awsElbHelperServiceManager.listClassicLoadBalancers(awsConfig,
+        secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : null, null), region, appId);
   }
 
   public List<String> listClassicLoadBalancers(String accessKey, char[] secretKey, String region) {
     AwsConfig awsConfig = AwsConfig.builder().accessKey(accessKey).secretKey(secretKey).build();
     return awsElbHelperServiceManager.listApplicationLoadBalancers(
-        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, "");
   }
 
   public Map<String, String> listTargetGroups(
-      SettingAttribute computeProviderSetting, String region, String loadBalancerName) {
+      SettingAttribute computeProviderSetting, String region, String loadBalancerName, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsElbHelperServiceManager.listTargetGroupsForAlb(
-        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, loadBalancerName);
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, loadBalancerName, appId);
   }
 
   private void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
