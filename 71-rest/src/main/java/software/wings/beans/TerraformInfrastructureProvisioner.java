@@ -18,6 +18,7 @@ import java.util.List;
 public class TerraformInfrastructureProvisioner extends InfrastructureProvisioner {
   @NotEmpty private String sourceRepoSettingId;
   private String path;
+  private List<NameValuePair> backendConfigs;
 
   @Override
   public String variableKey() {
@@ -32,11 +33,12 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
   private TerraformInfrastructureProvisioner(String uuid, String appId, String name, String sourceRepoSettingId,
       String path, List<NameValuePair> variables, List<InfrastructureMappingBlueprint> mappingBlueprints,
       String description, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy, long lastUpdatedAt,
-      List<String> keywords, String entityYamlPath) {
+      List<String> keywords, String entityYamlPath, List<NameValuePair> backendConfigs) {
     super(name, description, TERRAFORM.name(), variables, mappingBlueprints, uuid, appId, createdBy, createdAt,
         lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     setSourceRepoSettingId(sourceRepoSettingId);
     setPath(path);
+    this.backendConfigs = backendConfigs;
   }
 
   /**
@@ -49,14 +51,17 @@ public class TerraformInfrastructureProvisioner extends InfrastructureProvisione
   public static final class Yaml extends InfrastructureProvisioner.Yaml {
     private String sourceRepoSettingName;
     private String path;
+    private List<NameValuePair.Yaml> backendConfigs;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String name, String description,
         String infrastructureProvisionerType, List<NameValuePair.Yaml> variables,
-        List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, String sourceRepoSettingName, String path) {
+        List<InfrastructureMappingBlueprint.Yaml> mappingBlueprints, String sourceRepoSettingName, String path,
+        List<NameValuePair.Yaml> backendConfigs) {
       super(type, harnessApiVersion, name, description, infrastructureProvisionerType, variables, mappingBlueprints);
       this.sourceRepoSettingName = sourceRepoSettingName;
       this.path = path;
+      this.backendConfigs = backendConfigs;
     }
   }
 }

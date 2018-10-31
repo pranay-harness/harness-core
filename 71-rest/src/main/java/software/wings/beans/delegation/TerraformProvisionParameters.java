@@ -34,6 +34,9 @@ public class TerraformProvisionParameters {
   private final Map<String, String> variables;
   private final Map<String, EncryptedDataDetail> encryptedVariables;
 
+  private final Map<String, String> backendConfigs;
+  private final Map<String, EncryptedDataDetail> encryptedBackendConfigs;
+
   private final TerraformCommand command;
   private final TerraformCommandUnit commandUnit;
   private final long timeoutInMillis = TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES);

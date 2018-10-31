@@ -12,7 +12,11 @@ import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.inject.Inject;
 
+import com.bertramlabs.plugins.hcl4j.HCLParser;
+import com.bertramlabs.plugins.hcl4j.HCLParserException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -47,11 +51,14 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -64,6 +71,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   private static final Logger logger = LoggerFactory.getLogger(TerraformProvisionTask.class);
   private static final String TERRAFORM_STATE_FILE_NAME = "terraform.tfstate";
   private static final String TERRAFORM_VARIABLES_FILE_NAME = "terraform.tfvars";
+  private static final String TERRAFORM_SCRIPT_FILE_EXTENSION = "tf";
+  private static final String TERRAFORM_BACKEND_CONFIGS_FILE_NAME = "backend_configs";
 
   @Inject private GitClient gitClient;
   @Inject private GitClientHelper gitClientHelper;
@@ -114,16 +123,22 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
 
     File tfVariablesFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
-    try {
-      File tfStateFile = Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile();
+    File tfBackendConfigsFile = Paths.get(scriptDirectory, TERRAFORM_BACKEND_CONFIGS_FILE_NAME).toFile();
 
-      if (parameters.getCurrentStateFileId() != null) {
-        try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
-                 FileBucket.TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId())) {
-          FileUtils.copyInputStreamToFile(stateRemoteInputStream, tfStateFile);
+    boolean usingRemoteState = isRemoteStateConfigured(scriptDirectory);
+
+    try {
+      if (!usingRemoteState) {
+        File tfStateFile = Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile();
+
+        if (parameters.getCurrentStateFileId() != null) {
+          try (InputStream stateRemoteInputStream = delegateFileManager.downloadByFileId(
+                   FileBucket.TERRAFORM_STATE, parameters.getCurrentStateFileId(), parameters.getAccountId())) {
+            FileUtils.copyInputStreamToFile(stateRemoteInputStream, tfStateFile);
+          }
+        } else {
+          FileUtils.deleteQuietly(tfStateFile);
         }
-      } else {
-        FileUtils.deleteQuietly(tfStateFile);
       }
 
       if (isNotEmpty(parameters.getVariables()) || isNotEmpty(parameters.getEncryptedVariables())) {
@@ -145,17 +160,36 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         FileUtils.deleteQuietly(tfVariablesFile);
       }
 
+      if (isNotEmpty(parameters.getBackendConfigs())) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tfBackendConfigsFile))) {
+          for (Entry<String, String> entry : parameters.getBackendConfigs().entrySet()) {
+            saveVariable(writer, entry.getKey(), entry.getValue());
+          }
+        }
+      }
+
+      if (isNotEmpty(parameters.getEncryptedBackendConfigs())) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(tfBackendConfigsFile))) {
+          for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedBackendConfigs().entrySet()) {
+            String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue()));
+            saveVariable(writer, entry.getKey(), value);
+          }
+        }
+      }
+
       File tfOutputsFile = Paths.get(scriptDirectory, TERRAFORM_VARIABLES_FILE_NAME).toFile();
 
       String joinedCommands;
       switch (parameters.getCommand()) {
         case APPLY:
-          joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
+          joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory,
+              "terraform init -input=false -backend-config=" + tfBackendConfigsFile.getAbsolutePath(),
               "terraform refresh -input=false", "terraform plan -out=tfplan -input=false",
               "terraform apply -input=false tfplan", "(terraform output --json > " + tfOutputsFile.toString() + ")"));
           break;
         case DESTROY:
-          joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory, "terraform init -input=false",
+          joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory,
+              "terraform init -input=false -backend-config=" + tfBackendConfigsFile.getAbsolutePath(),
               "terraform refresh -input=false", "terraform destroy -force"));
           break;
         default:
@@ -210,18 +244,37 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
                                             .withFileName(TERRAFORM_STATE_FILE_NAME)
                                             .build();
 
+      File tfStateFile = getTerraformStateFile(scriptDirectory);
       try (InputStream initialStream = new FileInputStream(tfStateFile)) {
         delegateFileManager.upload(delegateFile, initialStream);
       }
 
       List<NameValuePair> variableList = new ArrayList<>();
-      for (Entry<String, String> variable : parameters.getVariables().entrySet()) {
-        variableList.add(new NameValuePair(variable.getKey(), variable.getValue(), Type.TEXT.name()));
+      if (isNotEmpty(parameters.getVariables())) {
+        for (Entry<String, String> variable : parameters.getVariables().entrySet()) {
+          variableList.add(new NameValuePair(variable.getKey(), variable.getValue(), Type.TEXT.name()));
+        }
       }
 
-      for (Entry<String, EncryptedDataDetail> encVariable : parameters.getEncryptedVariables().entrySet()) {
-        variableList.add(new NameValuePair(
-            encVariable.getKey(), encVariable.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
+      if (isNotEmpty(parameters.getEncryptedVariables())) {
+        for (Entry<String, EncryptedDataDetail> encVariable : parameters.getEncryptedVariables().entrySet()) {
+          variableList.add(new NameValuePair(
+              encVariable.getKey(), encVariable.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
+        }
+      }
+
+      List<NameValuePair> backendConfigs = new ArrayList<>();
+      if (isNotEmpty(parameters.getBackendConfigs())) {
+        for (Entry<String, String> entry : parameters.getBackendConfigs().entrySet()) {
+          backendConfigs.add(new NameValuePair(entry.getKey(), entry.getValue(), Type.TEXT.name()));
+        }
+      }
+
+      if (isNotEmpty(parameters.getEncryptedBackendConfigs())) {
+        for (Entry<String, EncryptedDataDetail> entry : parameters.getEncryptedBackendConfigs().entrySet()) {
+          backendConfigs.add(new NameValuePair(
+              entry.getKey(), entry.getValue().getEncryptedData().getUuid(), Type.ENCRYPTED_TEXT.name()));
+        }
       }
 
       final TerraformExecutionDataBuilder terraformExecutionDataBuilder =
@@ -231,6 +284,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
               .variables(variableList)
+              .backendConfigs(backendConfigs)
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
 
@@ -253,6 +307,58 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     } finally {
       FileUtils.deleteQuietly(tfVariablesFile);
     }
+  }
+
+  private boolean isRemoteStateConfigured(String scriptDirectory) {
+    HCLParser hclParser = new HCLParser();
+
+    File[] allFiles = new File(scriptDirectory).listFiles();
+    if (isNotEmpty(allFiles)) {
+      for (File file : allFiles) {
+        if (file.getName().endsWith(TERRAFORM_SCRIPT_FILE_EXTENSION)) {
+          Map<String, Object> parsedContents;
+          try {
+            byte[] tfContent = Files.readAllBytes(Paths.get(scriptDirectory, file.getName()));
+
+            if (hclParser == null) {
+              throw new WingsException(ErrorCode.UNKNOWN_ERROR, "Unable to instantiate HCL Parser");
+            }
+            parsedContents = hclParser.parse(new String(tfContent, Charset.forName("UTF-8")));
+          } catch (IOException | HCLParserException e) {
+            logger.error("HCL Parser Exception for file [" + file.getAbsolutePath() + "], ", e);
+            throw new WingsException(
+                ErrorCode.GENERAL_ERROR, "Invalid Terraform File [" + file.getAbsolutePath() + "] : " + e.getMessage());
+          }
+
+          LinkedHashMap<String, Object> terraform = (LinkedHashMap) parsedContents.get("terraform");
+          if (isNotEmpty(terraform)) {
+            if (terraform.getOrDefault("backend", null) != null) {
+              return true;
+            }
+          }
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private File getTerraformStateFile(String scriptDirectory) {
+    File tfStateFile = Paths.get(scriptDirectory, TERRAFORM_STATE_FILE_NAME).toFile();
+
+    if (tfStateFile.exists()) {
+      return tfStateFile;
+    }
+
+    File tfRemoteStateDirectory = Paths.get(scriptDirectory, ".terraform").toFile();
+    if (tfRemoteStateDirectory.exists()) {
+      File tfRemoteStateFile = Paths.get(tfRemoteStateDirectory.getAbsolutePath(), TERRAFORM_STATE_FILE_NAME).toFile();
+      if (tfRemoteStateFile.exists()) {
+        return tfRemoteStateFile;
+      }
+    }
+
+    return null;
   }
 
   private String getLatestCommitSHAFromLocalRepo(GitConfig gitConfig) {
