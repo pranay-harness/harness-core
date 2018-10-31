@@ -588,14 +588,11 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     Application app = getApp();
     if (app != null) {
-      Environment env = getEnv();
       context.put("secrets",
           SecretFunctor.builder()
               .managerDecryptionService(managerDecryptionService)
               .secretManager(secretManager)
               .accountId(app.getAccountId())
-              .appId(app.getUuid())
-              .envId(env != null ? env.getUuid() : null)
               .build());
     }
 

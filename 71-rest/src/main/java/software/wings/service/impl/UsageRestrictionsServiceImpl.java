@@ -4,7 +4,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptySet;
-import static java.util.stream.Collectors.toSet;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 
 import com.google.common.collect.Maps;
@@ -345,7 +344,11 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         Set<String> envIdsByFilter =
             getEnvIdsByFilter(envFilter, userPermissionInfo.getAppPermissionMapInternal().get(appId), action);
         // Multimap is deliberately not used since we want to be able to insert the key with null values.
-        Set<String> valueSet = appEnvMap.computeIfAbsent(appId, k -> new HashSet<>());
+        Set<String> valueSet = appEnvMap.get(appId);
+        if (valueSet == null) {
+          valueSet = new HashSet<>();
+          appEnvMap.put(appId, valueSet);
+        }
 
         if (!isEmpty(envIdsByFilter)) {
           valueSet.addAll(envIdsByFilter);
@@ -396,17 +399,24 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
     }
 
     if (filterTypes.contains(FilterType.PROD) && filterTypes.contains(FilterType.NON_PROD)) {
-      return envSetFromPermissions.stream().map(EnvInfo::getEnvId).collect(toSet());
+      return envSetFromPermissions.stream().map(envInfo -> envInfo.getEnvId()).collect(Collectors.toSet());
     }
 
     filterTypes.forEach(filterType -> {
       switch (filterType) {
         case FilterType.PROD:
+          Set<String> envs = envSetFromPermissions.stream()
+                                 .filter(envInfo -> FilterType.PROD.equals(envInfo.getEnvType()))
+                                 .map(envInfo -> envInfo.getEnvId())
+                                 .collect(Collectors.toSet());
+          envSet.addAll(envs);
+          break;
         case FilterType.NON_PROD:
-          envSet.addAll(envSetFromPermissions.stream()
-                            .filter(envInfo -> filterType.equals(envInfo.getEnvType()))
-                            .map(EnvInfo::getEnvId)
-                            .collect(toSet()));
+          envs = envSetFromPermissions.stream()
+                     .filter(envInfo -> FilterType.NON_PROD.equals(envInfo.getEnvType()))
+                     .map(envInfo -> envInfo.getEnvId())
+                     .collect(Collectors.toSet());
+          envSet.addAll(envs);
           break;
         case FilterType.SELECTED:
           envSet.addAll(envFilter.getIds());
@@ -421,7 +431,10 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
 
   private boolean hasUserContext() {
     User user = UserThreadLocal.get();
-    return user != null && user.getUserRequestContext() != null;
+    if (user == null || user.getUserRequestContext() == null) {
+      return false;
+    }
+    return true;
   }
 
   @Override
