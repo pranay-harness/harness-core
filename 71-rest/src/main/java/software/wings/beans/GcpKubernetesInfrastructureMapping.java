@@ -1,10 +1,12 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -31,14 +33,31 @@ public class GcpKubernetesInfrastructureMapping extends ContainerInfrastructureM
   }
 
   @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
+  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      switch (entry.getKey()) {
+        case "clusterName":
+          setClusterName((String) entry.getValue());
+          break;
+        case "namespace":
+          setNamespace((String) entry.getValue());
+          break;
+        default:
+          throw new InvalidRequestException("Incorrect mapping " + entry.getKey() + " added in the provisioner ");
+      }
+    }
+    if (getClusterName() == null) {
+      throw new InvalidRequestException("Cluster Name is mandatory");
+    }
+  }
 
   @SchemaIgnore
   @Override
   public String getDefaultName() {
-    return Util.normalize(format("%s (GCP/Kubernetes::%s) %s", this.getClusterName(),
-        Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        Optional.ofNullable(this.getNamespace()).orElse("default")));
+    return Util.normalize(
+        format("%s (GCP/Kubernetes::%s) %s", isEmpty(this.getProvisionerId()) ? this.getClusterName() : "",
+            Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
+            Optional.ofNullable(this.getNamespace()).orElse("default")));
   }
 
   /**
