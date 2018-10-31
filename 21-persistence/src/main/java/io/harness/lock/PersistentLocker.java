@@ -67,6 +67,11 @@ public class PersistentLocker implements Locker {
   public AcquiredLock waitToAcquireLock(
       Class entityClass, String entityId, Duration lockTimeout, Duration waitTimeout) {
     String name = entityClass.getName() + "-" + entityId;
+    return waitToAcquireLock(name, lockTimeout, waitTimeout);
+  }
+
+  @Override
+  public AcquiredLock waitToAcquireLock(String name, Duration lockTimeout, Duration waitTimeout) {
     try {
       return timeLimiter.callWithTimeout(() -> {
         while (true) {

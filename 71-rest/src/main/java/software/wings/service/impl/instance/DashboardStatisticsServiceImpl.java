@@ -37,6 +37,7 @@ import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.Application;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
@@ -95,6 +96,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 import javax.annotation.Nonnull;
 
 /**
@@ -306,8 +308,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       timestamp = System.currentTimeMillis();
     }
 
-    Set<Instance> instanceSet = new HashSet<>();
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    return getInstancesForAccount(accountId, timestamp, query);
+  }
+
+  private Set<Instance> getInstancesForAccount(String accountId, long timestamp, Query<Instance> query) {
+    Set<Instance> instanceSet = new HashSet<>();
     query.field("accountId").equal(accountId);
     query.field("createdAt").lessThanOrEq(timestamp);
     query.and(
@@ -319,7 +325,6 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         instanceSet.add(instance);
       }
     }
-
     return instanceSet;
   }
 
@@ -598,6 +603,19 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Override
   public Instance getInstanceDetails(String instanceId) {
     return instanceService.get(instanceId);
+  }
+
+  @Override
+  public Set<String> getDeletedAppIds(String accountId, long timestamp) {
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    query.project("appId", true);
+    Set<Instance> instancesForAccount = getInstancesForAccount(accountId, timestamp, query);
+    Set<String> appIdsFromInstances = instancesForAccount.stream().map(Instance::getAppId).collect(Collectors.toSet());
+
+    List<Application> appsByAccountId = appService.getAppsByAccountId(accountId);
+    Set<String> existingApps = appsByAccountId.stream().map(Application::getUuid).collect(Collectors.toSet());
+    appIdsFromInstances.removeAll(existingApps);
+    return appIdsFromInstances;
   }
 
   private List<DeploymentHistory> getDeploymentHistory(String appId, String serviceId) {

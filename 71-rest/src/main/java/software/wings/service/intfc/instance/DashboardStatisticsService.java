@@ -66,4 +66,6 @@ public interface DashboardStatisticsService {
    * @return instance info with the metadata
    */
   Instance getInstanceDetails(String instanceId);
+
+  Set<String> getDeletedAppIds(String accountId, long timestamp);
 }
