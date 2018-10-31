@@ -6,6 +6,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -15,6 +16,8 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.lock.AcquiredLock;
+import io.harness.lock.PersistentLocker;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -33,6 +36,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.utils.Validator;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +53,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
+  @Inject private PersistentLocker persistentLocker;
 
   @Override
   public Instance save(Instance instance) {
@@ -94,21 +99,29 @@ public class InstanceServiceImpl implements InstanceService {
         return null;
       }
     }
-
     return instance;
   }
 
   @Override
   public Instance saveOrUpdate(@Valid Instance instance) {
     Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    query.filter("isDeleted", false);
     InstanceKey instanceKey = addInstanceKeyFilterToQuery(query, instance);
-    synchronized (instanceKey) {
+
+    try (AcquiredLock acquiredLock =
+             persistentLocker.waitToAcquireLock(instanceKey.toString(), Duration.ofMinutes(1), Duration.ofMinutes(2))) {
+      if (acquiredLock == null) {
+        String msg = "Unable to acquire lock while trying save or update instance with key " + instanceKey.toString();
+        logger.warn(msg);
+        throw new WingsException(msg);
+      }
+
       Instance existingInstance = query.get();
       if (existingInstance == null) {
         return save(instance);
       } else {
-        instance.setUuid(existingInstance.getUuid());
-        String uuid = wingsPersistence.merge(instance);
+        delete(Sets.newHashSet(existingInstance.getUuid()));
+        String uuid = wingsPersistence.save(instance);
         return wingsPersistence.get(Instance.class, uuid);
       }
     }
@@ -194,7 +207,7 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public boolean delete(Set<String> instanceIdSet) {
-    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.field("_id").in(instanceIdSet);
 
     long timeMillis = System.currentTimeMillis();

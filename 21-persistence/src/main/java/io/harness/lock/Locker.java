@@ -48,6 +48,8 @@ public interface Locker {
    */
   AcquiredLock waitToAcquireLock(Class entityClass, String entityId, Duration lockTimeout, Duration waitTimeout);
 
+  AcquiredLock waitToAcquireLock(String name, Duration lockTimeout, Duration waitTimeout);
+
   /**
    * Destroy lock.
    *
