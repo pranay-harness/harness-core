@@ -160,7 +160,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("envId", cvConfiguration.getEnvId())
             .set("serviceId", cvConfiguration.getServiceId())
             .set("enabled24x7", cvConfiguration.isEnabled24x7())
-            .set("analysisTolerance", cvConfiguration.getAnalysisTolerance());
+            .set("analysisTolerance", cvConfiguration.getAnalysisTolerance())
+            .set("name", cvConfiguration.getName());
     switch (stateType) {
       case NEW_RELIC:
         updateOperations.set("applicationId", ((NewRelicCVServiceConfiguration) cvConfiguration).getApplicationId())
