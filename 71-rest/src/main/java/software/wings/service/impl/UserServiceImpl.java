@@ -469,20 +469,28 @@ public class UserServiceImpl implements UserService {
   }
 
   private void addUserToUserGroups(String accountId, User user, List<UserGroup> userGroups, boolean sendNotification) {
-    if (isNotEmpty(userGroups)) {
-      final User userFinal = user;
-      userGroups.forEach(userGroup -> {
-        List<User> userGroupMembers = userGroup.getMembers();
-        if (isEmpty(userGroupMembers)) {
-          userGroupMembers = new ArrayList<>();
-          userGroup.setMembers(userGroupMembers);
-        }
-        userGroupMembers.add(userFinal);
-        userGroupService.updateMembers(userGroup, false);
-      });
-      if (sendNotification) {
-        sendAddedRoleEmail(user, accountService.get(accountId));
+    if (isEmpty(userGroups)) {
+      return;
+    }
+
+    // Stores information about newly added user groups
+    Set<String> newUserGroups = Sets.newHashSet();
+    for (UserGroup userGroup : userGroups) {
+      List<User> userGroupMembers = userGroup.getMembers();
+      if (isEmpty(userGroupMembers)) {
+        userGroupMembers = new ArrayList<>();
+        userGroup.setMembers(userGroupMembers);
       }
+      if (!userGroupMembers.contains(user)) {
+        userGroupMembers.add(user);
+        userGroupService.updateMembers(userGroup, false);
+        newUserGroups.add(userGroup.getUuid());
+      }
+    }
+
+    // Sending email only if user was added to some new group
+    if (sendNotification && isNotEmpty(newUserGroups)) {
+      sendAddedRoleEmail(user, accountService.get(accountId));
     }
   }
 
