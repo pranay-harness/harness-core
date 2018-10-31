@@ -13,18 +13,15 @@ import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.security.EncryptionService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.yaml.gitSync.YamlGitConfig;
+import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
 public class YamlGitConfigAppMigration implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(YamlGitConfigAppMigration.class);
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlGitService yamlGitService;
-  @Inject private EncryptionService encryptionService;
-  @Inject private SecretManager secretManager;
 
   @Override
   public void migrate() {
@@ -60,14 +57,17 @@ public class YamlGitConfigAppMigration implements Migration {
       return;
     }
 
-    encryptionService.decrypt(
-        yamlGitConfig, secretManager.getEncryptionDetails(yamlGitConfig, "_GLOBAL_APP_ID_", null));
+    YamlGitConfig newYamlGitConfig = YamlGitConfig.builder()
+                                         .enabled(true)
+                                         .syncMode(SyncMode.BOTH)
+                                         .entityId(app.getUuid())
+                                         .entityType(EntityType.APPLICATION)
+                                         .gitConnectorId(yamlGitConfig.getGitConnectorId())
+                                         .branchName(yamlGitConfig.getBranchName())
+                                         .accountId(yamlGitConfig.getAccountId())
+                                         .build();
+    newYamlGitConfig.setAppId(app.getUuid());
 
-    yamlGitConfig.setUuid(null);
-    yamlGitConfig.setAppId(app.getUuid());
-    yamlGitConfig.setEntityType(EntityType.APPLICATION);
-    yamlGitConfig.setEntityId(app.getUuid());
-
-    wingsPersistence.save(yamlGitConfig);
+    wingsPersistence.save(newYamlGitConfig);
   }
 }

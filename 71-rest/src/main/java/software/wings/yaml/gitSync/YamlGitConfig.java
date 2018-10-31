@@ -40,6 +40,7 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
   public static final String WEBHOOK_TOKEN_KEY = "webhookToken";
   public static final String GIT_CONNECTOR_ID_KEY = "gitConnectorId";
   public static final String BRANCH_NAME_KEY = "branchName";
+  public static final String SYNC_MODE_KEY = "syncMode";
 
   private String url;
   @NotEmpty private String branchName;
