@@ -751,7 +751,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                           .encryptedValue(encryptedData.getUuid())
                                           .secretTextName("My Secret")
                                           .build();
-    when(secretManager.getSecretMappedToAccountByName(ACCOUNT_ID, "My Secret")).thenReturn(encryptedData);
+    when(secretManager.getSecretByName(ACCOUNT_ID, "My Secret", true)).thenReturn(encryptedData);
     when(secretManager.getEncryptionDetails(eq(serviceVariable), eq(null), eq(null))).thenReturn(encryptionDetails);
 
     Delegate delegate =

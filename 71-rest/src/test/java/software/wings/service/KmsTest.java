@@ -25,11 +25,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.common.Constants.SECRET_MASK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.CONFIG_FILE;
-import static software.wings.utils.WingsTestConstants.USER_ID;
-import static software.wings.utils.WingsTestConstants.USER_NAME;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
@@ -87,9 +83,6 @@ import software.wings.security.EncryptionType;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
-import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.UserPermissionInfo;
-import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
@@ -170,7 +163,7 @@ public class KmsTest extends WingsBaseTest {
   private KmsTransitionEventListener transitionEventListener;
 
   @Before
-  public void setup() {
+  public void setup() throws IOException, NoSuchFieldException, IllegalAccessException {
     accountId = generateUuid();
     initMocks(this);
     appId = wingsPersistence.save(
@@ -211,7 +204,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void getKmsConfigGlobal() {
+  public void getKmsConfigGlobal() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(Base.GLOBAL_ACCOUNT_ID);
 
@@ -227,7 +220,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void validateConfig() {
+  public void validateConfig() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
     kmsConfig.setAccessKey("invalidKey");
@@ -241,7 +234,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void getKmsConfigForAccount() {
+  public void getKmsConfigForAccount() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setAccountId(accountId);
 
@@ -255,7 +248,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 3, successes = 1)
-  public void saveAndEditConfig() {
+  public void saveAndEditConfig() throws IOException {
     String name = UUID.randomUUID().toString();
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setName(name);
@@ -297,7 +290,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void localNullEncryption() {
+  public void localNullEncryption() throws Exception {
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, null, null);
     assertNull(encryptedData.getEncryptedValue());
@@ -308,7 +301,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void localEncryption() {
+  public void localEncryption() throws Exception {
     final String keyToEncrypt = UUID.randomUUID().toString();
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt.toCharArray(), null, null);
     assertNotEquals(keyToEncrypt, new String(encryptedData.getEncryptedValue()));
@@ -318,7 +311,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsNullEncryption() {
+  public void kmsNullEncryption() throws Exception {
     final KmsConfig kmsConfig = getKmsConfig();
     final char[] keyToEncrypt = null;
     final EncryptedData encryptedData = kmsService.encrypt(keyToEncrypt, UUID.randomUUID().toString(), kmsConfig);
@@ -330,7 +323,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryption() {
+  public void kmsEncryption() throws Exception {
     final KmsConfig kmsConfig = getKmsConfig();
     final String keyToEncrypt = UUID.randomUUID().toString();
     final EncryptedData encryptedData =
@@ -444,7 +437,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void enableKmsAfterSaving() {
+  public void enableKmsAfterSaving() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -477,7 +470,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionWhileSaving() throws IllegalAccessException {
+  public void kmsEncryptionWhileSaving() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -525,7 +518,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void secretUsageLog() {
+  public void secretUsageLog() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -565,7 +558,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionSaveMultiple() {
+  public void kmsEncryptionSaveMultiple() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -619,7 +612,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void testNumOfEncryptedValue() {
+  public void testNumOfEncryptedValue() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveGlobalKmsConfig(accountId, kmsConfig);
 
@@ -685,7 +678,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void noKmsEncryptionUpdateObject() throws IllegalAccessException {
+  public void noKmsEncryptionUpdateObject() throws IOException, IllegalAccessException {
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
                                                     .controllerUrl(UUID.randomUUID().toString())
@@ -810,7 +803,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  public void noKmsEncryptionUpdateServiceVariable() {
+  public void noKmsEncryptionUpdateServiceVariable() throws IOException, IllegalAccessException {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
     String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
@@ -882,7 +875,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionUpdateObject() throws IllegalAccessException {
+  public void kmsEncryptionUpdateObject() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1009,7 +1002,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionUpdateFieldSettingAttribute() throws IllegalAccessException {
+  public void kmsEncryptionUpdateFieldSettingAttribute() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1129,6 +1122,7 @@ public class KmsTest extends WingsBaseTest {
 
     query = wingsPersistence.createQuery(EncryptedData.class).field("parentIds").hasThisOne(savedAttributeId);
     assertEquals(1, query.count());
+    encryptedData = query.get();
 
     changeLogs = secretManager.getChangeLogs(accountId, savedAttributeId, SettingVariableTypes.APP_DYNAMICS);
     assertEquals(3, changeLogs.size());
@@ -1152,7 +1146,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void updateSettingAttributeAfterKmsEnabled() {
+  public void updateSettingAttributeAfterKmsEnabled() throws IOException, IllegalAccessException {
     final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                                     .accountId(accountId)
                                                     .controllerUrl(UUID.randomUUID().toString())
@@ -1220,7 +1214,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void saveServiceVariableNoKMS() {
+  public void saveServiceVariableNoKMS() throws IOException {
     String value = UUID.randomUUID().toString();
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1274,7 +1268,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void saveServiceVariableNoEncryption() {
+  public void saveServiceVariableNoEncryption() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1336,62 +1330,46 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void getSecretMappedToAccount() {
+  public void getSecret() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
 
-    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
-        ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE));
-
-    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
-    user.setUserRequestContext(
-        UserRequestContext.builder().appIds(ImmutableSet.of(appId)).userPermissionInfo(userPermissionInfo).build());
-    UserThreadLocal.set(user);
-
-    EncryptedData secretByName = secretManager.getSecretMappedToAccountByName(accountId, secretName);
+    EncryptedData secretByName = secretManager.getSecretByName(accountId, secretName, true);
     assertThat(secretByName).isNotNull();
     assertThat(secretByName.getName()).isEqualTo(secretName);
 
-    secretByName = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
-    assertThat(secretByName).isNull();
-  }
+    secretByName = secretManager.getSecretByName(accountId, secretName, false);
+    assertThat(secretByName).isNotNull();
+    assertThat(secretByName.getName()).isEqualTo(secretName);
 
-  @Test
-  public void getSecretMappedToApp() {
-    String secretName = UUID.randomUUID().toString();
-    String secretValue = UUID.randomUUID().toString();
+    String secretName1 = UUID.randomUUID().toString();
+    String secretValue1 = UUID.randomUUID().toString();
 
     AppEnvRestrictionBuilder appEnvRestrictionBuilder =
         AppEnvRestriction.builder()
             .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
             .envFilter(EnvFilter.builder().filterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD)).build());
-    secretManager.saveSecret(accountId, secretName, secretValue,
-        UsageRestrictions.builder().appEnvRestrictions(ImmutableSet.of(appEnvRestrictionBuilder.build())).build());
+    Set<AppEnvRestriction> appEnvRestrictions = new HashSet<>();
+    appEnvRestrictions.add(appEnvRestrictionBuilder.build());
+    secretManager.saveSecret(accountId, secretName1, secretValue1,
+        UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build());
 
-    UserPermissionInfo userPermissionInfo = UsageRestrictionsServiceImplTest.getUserPermissionInfo(
-        ImmutableList.of(appId), ImmutableList.of(envId), ImmutableSet.of(Action.UPDATE));
-
-    User user = User.Builder.anUser().withName(USER_NAME).withUuid(USER_ID).build();
-    user.setUserRequestContext(
-        UserRequestContext.builder().appIds(ImmutableSet.of(appId)).userPermissionInfo(userPermissionInfo).build());
-    UserThreadLocal.set(user);
-
-    EncryptedData secretByName = secretManager.getSecretMappedToAccountByName(accountId, secretName);
+    secretByName = secretManager.getSecretByName(accountId, secretName1, true);
     assertThat(secretByName).isNull();
 
-    secretByName = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
+    secretByName = secretManager.getSecretByName(accountId, secretName1, false);
     assertThat(secretByName).isNotNull();
-    assertThat(secretByName.getName()).isEqualTo(secretName);
+    assertThat(secretByName.getName()).isEqualTo(secretName1);
   }
 
   @Test
   @RealMongo
-  public void kmsEncryptionSaveServiceVariable() throws IllegalAccessException {
+  public void kmsEncryptionSaveServiceVariable() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1480,7 +1458,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionSaveServiceVariableTemplate() {
+  public void kmsEncryptionSaveServiceVariableTemplate() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1521,7 +1499,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void kmsEncryptionUpdateServiceVariable() {
+  public void kmsEncryptionUpdateServiceVariable() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1585,7 +1563,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionDeleteSettingAttribute() {
+  public void kmsEncryptionDeleteSettingAttribute() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1625,7 +1603,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionDeleteSettingAttributeQueryUuid() {
+  public void kmsEncryptionDeleteSettingAttributeQueryUuid() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1679,7 +1657,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionDeleteSettingAttributeQuery() {
+  public void kmsEncryptionDeleteSettingAttributeQuery() throws IOException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1728,7 +1706,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void kmsEncryptionSaveGlobalConfig() {
+  public void kmsEncryptionSaveGlobalConfig() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
 
     kmsResource.saveKmsConfig(Base.GLOBAL_ACCOUNT_ID, kmsConfig);
@@ -1752,7 +1730,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void listEncryptedValues() {
+  public void listEncryptedValues() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
@@ -1806,7 +1784,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void listKmsConfigMultiple() {
+  public void listKmsConfigMultiple() throws IOException {
     KmsConfig kmsConfig1 = getKmsConfig();
     kmsConfig1.setDefault(true);
     kmsConfig1.setName(UUID.randomUUID().toString());
@@ -1889,7 +1867,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @Repeat(times = 5, successes = 1)
-  public void listKmsGlobalDefault() {
+  public void listKmsGlobalDefault() throws IOException {
     KmsConfig globalKmsConfig = getKmsConfig();
     globalKmsConfig.setName("Global config");
 
@@ -1950,7 +1928,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void listKmsConfigOrder() {
+  public void listKmsConfigOrder() throws IOException {
     int numOfKms = 10;
     for (int i = 1; i <= numOfKms; i++) {
       KmsConfig kmsConfig = getKmsConfig();
@@ -1975,7 +1953,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void listKmsConfigHasDefault() {
+  public void listKmsConfigHasDefault() throws IOException {
     KmsConfig globalKmsConfig = getKmsConfig();
     globalKmsConfig.setDefault(false);
     globalKmsConfig.setName("global-kms-config");
@@ -2047,7 +2025,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void listKmsConfig() {
+  public void listKmsConfig() throws IOException {
     KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
     kmsConfig = getKmsConfig();
@@ -2106,7 +2084,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void transitionKms() throws InterruptedException {
+  public void transitionKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     try {
       KmsConfig fromConfig = getKmsConfig();
@@ -2186,13 +2164,14 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void transitionAndDeleteKms() throws InterruptedException {
+  public void transitionAndDeleteKms() throws IOException, InterruptedException {
     Thread listenerThread = startTransitionListener();
     try {
       KmsConfig fromConfig = getKmsConfig();
       kmsResource.saveKmsConfig(accountId, fromConfig);
 
       int numOfSettingAttributes = 5;
+      Map<String, SettingAttribute> encryptedEntities = new HashMap<>();
       for (int i = 0; i < numOfSettingAttributes; i++) {
         String password = UUID.randomUUID().toString();
         final AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
@@ -2214,6 +2193,7 @@ public class KmsTest extends WingsBaseTest {
 
         wingsPersistence.save(settingAttribute);
         appDynamicsConfig.setPassword(password.toCharArray());
+        encryptedEntities.put(settingAttribute.getUuid(), settingAttribute);
       }
 
       Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class);
@@ -2324,7 +2304,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void saveAwsConfig() {
+  public void saveAwsConfig() throws IOException, InterruptedException {
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, fromConfig);
 
@@ -2458,7 +2438,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void saveConfigFileNoEncryption() throws IOException {
+  public void saveConfigFileNoEncryption() throws IOException, InterruptedException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -2505,7 +2485,7 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   @RealMongo
-  public void saveConfigFileWithEncryption() throws IOException, IllegalAccessException {
+  public void saveConfigFileWithEncryption() throws IOException, InterruptedException, IllegalAccessException {
     final long seed = System.currentTimeMillis();
     logger.info("seed: " + seed);
     Random r = new Random(seed);
@@ -2746,7 +2726,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void reuseYamlPasswordNoEncryption() throws IllegalAccessException {
+  public void reuseYamlPasswordNoEncryption() throws IOException, IllegalAccessException {
     int numOfSettingAttributes = 5;
     String password = "password";
     Set<String> attributeIds = new HashSet<>();
@@ -2848,7 +2828,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void reuseYamlPasswordKmsEncryption() throws IllegalAccessException {
+  public void reuseYamlPasswordKmsEncryption() throws IOException, IllegalAccessException {
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, fromConfig);
 
@@ -2953,11 +2933,12 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void reuseYamlPasswordNewEntityKmsEncryption() throws IllegalAccessException {
+  public void reuseYamlPasswordNewEntityKmsEncryption() throws IOException, IllegalAccessException {
     KmsConfig fromConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, fromConfig);
 
     String password = "password";
+    Set<String> attributeIds = new HashSet<>();
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
                                               .controllerUrl(UUID.randomUUID().toString())
@@ -2974,7 +2955,7 @@ public class KmsTest extends WingsBaseTest {
                                             .withEnvId(UUID.randomUUID().toString())
                                             .withName(UUID.randomUUID().toString())
                                             .build();
-    wingsPersistence.save(settingAttribute);
+    attributeIds.add(wingsPersistence.save(settingAttribute));
     List<EncryptedData> encryptedDataList = wingsPersistence.createQuery(EncryptedData.class, excludeAuthority)
                                                 .filter("type", SettingVariableTypes.APP_DYNAMICS)
                                                 .asList();
@@ -3011,7 +2992,7 @@ public class KmsTest extends WingsBaseTest {
   }
 
   @Test
-  public void getUsageLogs() throws IllegalAccessException {
+  public void getUsageLogs() throws IOException, IllegalAccessException {
     final KmsConfig kmsConfig = getKmsConfig();
     kmsResource.saveKmsConfig(accountId, kmsConfig);
 
