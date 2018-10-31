@@ -70,6 +70,13 @@ tar -zcvf disconnected_on_prem_pov_template.tar.gz *
 cd ../..
 cp dist/disconnected_on_prem_pov/disconnected_on_prem_pov_template.tar.gz disconnected_on_prem_pov_template.tar.gz
 
+mkdir -p dist/disconnected_on_prem_k8s
+cd dist/disconnected_on_prem_k8s
+cp -r ../../on-prem/kubernetes_installer .
+tar -zcvf disconnected_on_prem_k8s_installer_builder.tar.gz *
+cd ../..
+cp dist/disconnected_on_prem_k8s/disconnected_on_prem_k8s_installer_builder.tar.gz disconnected_on_prem_k8s_installer_builder.tar.gz
+
 mkdir -p dist/test
 cd dist/test
 cp ../../91-model-gen-tool/target/model-gen-tool-capsule.jar .
