@@ -4,8 +4,10 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.persistence.HIterator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.mongodb.morphia.query.FindOptions;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,7 @@ import software.wings.service.impl.instance.stats.collector.SimplePercentile;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
 import java.time.Instant;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -48,18 +51,27 @@ public class InstanceStatServiceImpl implements InstanceStatService {
   public List<InstanceStatsSnapshot> aggregate(String accountId, Instant from, Instant to) {
     Preconditions.checkArgument(to.isAfter(from), "'to' timestamp should be after 'from'");
 
-    return persistence.createQuery(InstanceStatsSnapshot.class)
-        .filter("accountId", accountId)
-        .field("timestamp")
-        .greaterThanOrEq(from)
-        .field("timestamp")
-        .lessThan(to)
-        .project("accountId", true)
-        .project("timestamp", true)
-        .project("aggregateCounts", true)
-        .project("total", true)
-        .order(Sort.ascending("timestamp"))
-        .asList();
+    Query<InstanceStatsSnapshot> query = persistence.createQuery(InstanceStatsSnapshot.class)
+                                             .filter("accountId", accountId)
+                                             .field("timestamp")
+                                             .greaterThanOrEq(from)
+                                             .field("timestamp")
+                                             .lessThan(to)
+                                             .project("accountId", true)
+                                             .project("timestamp", true)
+                                             .project("aggregateCounts", true)
+                                             .project("total", true)
+                                             .order(Sort.ascending("timestamp"));
+
+    List<InstanceStatsSnapshot> timeline = new LinkedList<>();
+
+    try (HIterator<InstanceStatsSnapshot> iterator = new HIterator<>(query.fetch())) {
+      while (iterator.hasNext()) {
+        timeline.add(iterator.next());
+      }
+    }
+
+    return timeline;
   }
 
   @Override
