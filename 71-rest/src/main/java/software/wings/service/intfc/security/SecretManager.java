@@ -70,7 +70,9 @@ public interface SecretManager {
 
   void checkAndAlertForInvalidManagers();
 
-  EncryptedData getSecretByName(String accountId, String name, boolean isMappedToAccount);
+  EncryptedData getSecretMappedToAccountByName(String accountId, String name);
+
+  EncryptedData getSecretMappedToAppByName(String accountId, String appId, String envId, String name);
 
   EncryptedData getSecretById(String accountId, String id);
 
