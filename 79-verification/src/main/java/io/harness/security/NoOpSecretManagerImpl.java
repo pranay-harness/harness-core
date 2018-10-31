@@ -127,7 +127,12 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptedData getSecretByName(String accountId, String name, boolean isMappedToAccount) {
+  public EncryptedData getSecretMappedToAccountByName(String accountId, String name) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public EncryptedData getSecretMappedToAppByName(String accountId, String appId, String envId, String name) {
     throw new UnsupportedOperationException();
   }
 

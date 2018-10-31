@@ -605,15 +605,26 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public EncryptedData getSecretByName(String accountId, String name, boolean mappedToAccount) {
+  public EncryptedData getSecretMappedToAccountByName(String accountId, String name) {
     Query<EncryptedData> query = wingsPersistence.createQuery(EncryptedData.class)
                                      .filter(EncryptedData.ACCOUNT_ID_KEY, accountId)
-                                     .filter(EncryptedData.NAME_KEY, name);
-    if (mappedToAccount) {
-      query.field("usageRestrictions").doesNotExist();
-    }
-
+                                     .filter(EncryptedData.NAME_KEY, name)
+                                     .field("usageRestrictions")
+                                     .doesNotExist();
     return query.get();
+  }
+
+  @Override
+  public EncryptedData getSecretMappedToAppByName(String accountId, String appId, String envId, String name) {
+    PageRequest<EncryptedData> pageRequest =
+        aPageRequest().addFilter("name", Operator.EQ, name).addFilter("accountId", Operator.EQ, accountId).build();
+    try {
+      PageResponse<EncryptedData> response = listSecrets(accountId, pageRequest, appId, envId, false);
+      List<EncryptedData> secrets = response.getResponse();
+      return isNotEmpty(secrets) ? secrets.get(0) : null;
+    } catch (Exception e) {
+      throw new WingsException(ErrorCode.GENERAL_ERROR, e).addParam("message", "Failed to list secrets");
+    }
   }
 
   @Override
@@ -1081,7 +1092,7 @@ public class SecretManagerImpl implements SecretManager {
     }
 
     pageResponse.setResponse(filteredEncryptedDataList);
-    pageResponse.setTotal(Long.valueOf(filteredEncryptedDataList.size()));
+    pageResponse.setTotal((long) filteredEncryptedDataList.size());
     return pageResponse;
   }
 

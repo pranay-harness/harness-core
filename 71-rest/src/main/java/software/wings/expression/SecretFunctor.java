@@ -1,5 +1,6 @@
 package software.wings.expression;
 
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.ServiceVariable.Type.ENCRYPTED_TEXT;
 
 import io.harness.expression.LateBindingMap;
@@ -17,9 +18,16 @@ public class SecretFunctor extends LateBindingMap {
   private ManagerDecryptionService managerDecryptionService;
   private SecretManager secretManager;
   private String accountId;
+  private String appId;
+  private String envId;
 
   public Object getValue(String secretName) {
-    EncryptedData encryptedData = secretManager.getSecretByName(accountId, secretName, true);
+    EncryptedData encryptedData;
+    if (appId == null || GLOBAL_APP_ID.equals(appId)) {
+      encryptedData = secretManager.getSecretMappedToAccountByName(accountId, secretName);
+    } else {
+      encryptedData = secretManager.getSecretMappedToAppByName(accountId, appId, envId, secretName);
+    }
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .accountId(accountId)
                                           .type(ENCRYPTED_TEXT)
