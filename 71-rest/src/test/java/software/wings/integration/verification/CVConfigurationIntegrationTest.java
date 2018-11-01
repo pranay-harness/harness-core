@@ -302,6 +302,35 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
       assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
       assertEquals("trace.servlet.request.errors, system.mem.used, system.cpu.iowait", obj.getMetrics());
     }
+
+    // Test PUT API for Datadog
+    datadogCVServiceConfiguration.setName("Datadog Config");
+    datadogCVServiceConfiguration.setEnabled24x7(false);
+    datadogCVServiceConfiguration.setMetrics("system.mem.used, system.cpu.iowait");
+    datadogCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+
+    // Call PUT
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId + "&appId=" + appId
+        + "&stateType=" + DATA_DOG + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+    getRequestBuilderWithAuthHeader(target).put(
+        entity(datadogCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+
+    // Call GET
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+    target = client.target(url);
+    getRequestResponse = getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
+    fetchedObject = getRequestResponse.getResource();
+
+    // Assert
+    if (fetchedObject instanceof DatadogCVServiceConfiguration) {
+      DatadogCVServiceConfiguration obj = (DatadogCVServiceConfiguration) fetchedObject;
+      assertEquals("Datadog Confid", obj.getName());
+      assertFalse(obj.isEnabled24x7());
+      assertEquals("system.mem.used, system.cpu.iowait", obj.getMetrics());
+      assertEquals(AnalysisTolerance.MEDIUM, obj.getAnalysisTolerance());
+    }
   }
 
   @Test

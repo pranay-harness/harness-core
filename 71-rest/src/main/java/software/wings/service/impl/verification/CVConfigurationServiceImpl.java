@@ -128,7 +128,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     CVConfiguration savedConfiguration = wingsPersistence.get(CVConfiguration.class, appId, serviceConfigurationId);
     UpdateOperations<CVConfiguration> updateOperations = getUpdateOperations(stateType, updatedConfig);
     wingsPersistence.update(savedConfiguration, updateOperations);
-    updateMetricTemplate(appId, accountId, updatedConfig, stateType);
+    updateMetricTemplate(
+        appId, accountId, wingsPersistence.get(CVConfiguration.class, appId, serviceConfigurationId), stateType);
     return savedConfiguration.getUuid();
   }
 
@@ -293,7 +294,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
     UpdateOperations<TimeSeriesMetricTemplates> updateOperations =
         wingsPersistence.createUpdateOperations(TimeSeriesMetricTemplates.class)
-            .set("stateType", cvConfiguration.getStateType())
+            .set("stateType", stateType)
             .set("cvConfigId", cvConfiguration.getUuid())
             .set("metricTemplates", metricTemplate)
             .set("appId", appId)
@@ -304,7 +305,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .filter("cvConfigId", cvConfiguration.getUuid())
             .filter("appId", appId)
             .filter("accountId", accountId)
-            .filter("stateType", cvConfiguration.getStateType())
+            .filter("stateType", stateType)
             .get();
 
     wingsPersistence.update(savedTimeSeriesMetricTemplates, updateOperations);
