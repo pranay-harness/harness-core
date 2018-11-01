@@ -20,7 +20,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.SetupScheduler;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.scheduler.TestJobListener;
 import software.wings.service.intfc.AlertService;
@@ -37,7 +37,7 @@ public class AppServicePersistenceTest extends WingsBaseTest {
 
   @Inject AppService appService;
 
-  @Inject private JobScheduler jobScheduler;
+  @Inject private BackgroundJobScheduler jobScheduler;
 
   private static String appId = APP_ID;
   private static String dummyAppID = "dummy" + appId;

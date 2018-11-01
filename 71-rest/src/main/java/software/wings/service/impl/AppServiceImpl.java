@@ -101,7 +101,8 @@ public class AppServiceImpl implements AppService {
   @Inject private GenericDbCache dbCache;
   @Inject private YamlGitService yamlGitService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler backgroundJobScheduler;
+  @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
 
   private void validateAppName(Application app) {
     if (app != null) {
@@ -126,7 +127,7 @@ public class AppServiceImpl implements AppService {
     settingsService.createDefaultApplicationSettings(
         application.getUuid(), application.getAccountId(), app.isSyncFromGit());
     sendNotification(application, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
-    InstanceSyncJob.add(jobScheduler, application.getUuid());
+    InstanceSyncJob.add(serviceJobScheduler, application.getUuid());
 
     // Save the Git Configuration for application if not null
     YamlGitConfig yamlGitConfig = app.getYamlGitConfig();
@@ -310,7 +311,7 @@ public class AppServiceImpl implements AppService {
     yamlPushService.pushYamlChangeSet(application.getAccountId(), application, null, Type.DELETE, syncFromGit, false);
 
     // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(jobScheduler, Application.class, appId, appId, ofSeconds(5), ofSeconds(15));
+    PruneEntityJob.addDefaultJob(backgroundJobScheduler, Application.class, appId, appId, ofSeconds(5), ofSeconds(15));
 
     // Do not add too much between these too calls (on top and bottom). We need to persist the job
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting

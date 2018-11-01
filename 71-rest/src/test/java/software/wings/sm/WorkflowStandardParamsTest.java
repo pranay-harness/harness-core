@@ -34,7 +34,7 @@ import software.wings.beans.Application;
 import software.wings.beans.Environment;
 import software.wings.beans.Environment.Builder;
 import software.wings.beans.artifact.Artifact;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
@@ -67,7 +67,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Inject MembersInjector<WorkflowStandardParams> injector;
 
   @Mock SettingsService settingsService;
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private ExecutionContext context;
   @Mock private ArtifactService artifactService;
   @Mock private AccountService accountService;

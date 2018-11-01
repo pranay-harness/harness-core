@@ -17,7 +17,7 @@ import java.util.concurrent.TimeoutException;
 
 @SetupScheduler
 public class ScheduledTriggerJobTest extends WingsBaseTest {
-  @Inject private JobScheduler jobScheduler;
+  @Inject private BackgroundJobScheduler jobScheduler;
 
   private static final String appId = "Dummy App Id";
   private static final String triggerId = "Dummy Trigger Id";

@@ -116,7 +116,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ExecutorService executorService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.ArtifactService#list(software.wings.dl.PageRequest)

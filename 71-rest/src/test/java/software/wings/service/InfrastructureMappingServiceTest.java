@@ -100,7 +100,7 @@ import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.impl.AwsInfrastructureProvider;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
@@ -149,7 +149,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private EnvironmentService envService;
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private WorkflowService workflowService;
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;

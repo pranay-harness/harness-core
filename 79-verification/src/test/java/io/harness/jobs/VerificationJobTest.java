@@ -35,7 +35,7 @@ import java.util.UUID;
  */
 @Ignore
 public class VerificationJobTest extends VerificationBaseTest {
-  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private VerificationJob job;
   JobExecutionContext jobExecutionContext = mock(JobExecutionContext.class);
 

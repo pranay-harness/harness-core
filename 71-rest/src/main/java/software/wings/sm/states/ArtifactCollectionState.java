@@ -61,7 +61,7 @@ public class ArtifactCollectionState extends State {
   @Transient @Inject private ArtifactStreamService artifactStreamService;
   @Transient @Inject private ArtifactService artifactService;
   @Transient @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject @Named("JobScheduler") private transient PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private transient PersistentScheduler jobScheduler;
   @Inject private transient DelayEventHelper delayEventHelper;
   @Inject private transient FeatureFlagService featureFlagService;
 

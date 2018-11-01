@@ -18,7 +18,7 @@ public class LogDataProcessorJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(LogDataProcessorJob.class);
 
   public static final String LOG_DATA_PROCESSOR_CRON_GROUP = "LOG_DATA_PROCESSOR_CRON_GROUP";
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Override
   public void execute(JobExecutionContext jobExecutionContext) throws JobExecutionException {
     logger.info("Executing Log Data Processor Job");

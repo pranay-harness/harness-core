@@ -175,7 +175,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private WorkflowService workflowService;
   @Inject private StencilPostProcessor stencilPostProcessor;
   @Inject private ServiceHelper serviceHelper;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private CommandHelper commandHelper;
   @Inject private TemplateService templateService;
   @Inject private TemplateHelper templateHelper;

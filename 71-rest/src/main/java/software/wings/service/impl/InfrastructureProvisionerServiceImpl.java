@@ -98,7 +98,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Inject private WingsPersistence wingsPersistence;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   @ValidationGroups(Create.class)

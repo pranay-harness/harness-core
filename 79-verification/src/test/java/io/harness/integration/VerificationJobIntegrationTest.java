@@ -40,7 +40,7 @@ import java.util.concurrent.TimeoutException;
 public class VerificationJobIntegrationTest extends VerificationBaseIntegrationTest {
   private static final Logger logger = LoggerFactory.getLogger(VerificationJobIntegrationTest.class);
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private VerificationJob job;
 

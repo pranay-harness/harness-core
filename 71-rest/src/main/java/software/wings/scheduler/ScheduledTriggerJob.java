@@ -34,7 +34,7 @@ public class ScheduledTriggerJob implements Job {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private TriggerService triggerService;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   public static org.quartz.Trigger getQuartzTrigger(Trigger trigger) {
     return TriggerBuilder.newTrigger()

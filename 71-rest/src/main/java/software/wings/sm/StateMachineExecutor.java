@@ -139,7 +139,7 @@ public class StateMachineExecutor {
   @Inject private Injector injector;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private ExecutionInterruptManager executionInterruptManager;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private DelegateService delegateService;
   @Inject private AlertService alertService;
   @Inject private WorkflowService workflowService;

@@ -19,7 +19,7 @@ public class VerificationServiceSchedulerModule extends AbstractModule {
   @Override
   protected void configure() {
     bind(PersistentScheduler.class)
-        .annotatedWith(Names.named("JobScheduler"))
+        .annotatedWith(Names.named("BackgroundJobScheduler"))
         .to(VerificationJobScheduler.class)
         .asEagerSingleton();
   }

@@ -283,7 +283,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private ArtifactStream artifactStream;
   @Mock private TriggerService triggerService;
   @Mock private EnvironmentService environmentService;
-  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Mock private TemplateService templateService;
 
   @InjectMocks @Inject private WorkflowServiceHelper workflowServiceHelper;

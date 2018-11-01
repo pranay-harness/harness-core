@@ -108,7 +108,7 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ArtifactService;
@@ -147,7 +147,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowExecutionServiceImplTest.class);
   @Inject private WorkflowService workflowService;
   @Inject private PipelineService pipelineService;
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private FeatureFlagService featureFlagService;
   @Inject @InjectMocks private AccountService accountService;
   @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;

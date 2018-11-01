@@ -58,7 +58,8 @@ import software.wings.beans.artifact.GcrArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.NexusConfig;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
@@ -71,7 +72,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ArtifactStreamServiceTest extends WingsBaseTest {
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler backgroundJobScheduler;
+  @Mock private ServiceJobScheduler serviceJobScheduler;
   @Mock private YamlPushService yamlPushService;
   @Mock private AppService appService;
   @Mock private BuildSourceService buildSourceService;
@@ -107,7 +109,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedJenkinsArtifactStream.getJobname()).isEqualTo("todolistwar");
     assertThat(savedJenkinsArtifactStream.getArtifactPaths()).contains("target/todolist.war");
 
-    verify(jobScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
+    verify(serviceJobScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
     verify(appService).getAccountIdByAppId(APP_ID);
   }
 
@@ -176,7 +178,7 @@ public class ArtifactStreamServiceTest extends WingsBaseTest {
     assertThat(savedBambooArtifactStream.getJobname()).isEqualTo("TOD-TOD");
     assertThat(savedBambooArtifactStream.getArtifactPaths()).contains("artifacts/todolist.war");
 
-    verify(jobScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
+    verify(serviceJobScheduler).scheduleJob(any(JobDetail.class), any(Trigger.class));
     verify(appService).getAccountIdByAppId(APP_ID);
   }
 

@@ -34,7 +34,7 @@ public class VerificationServiceExecutorService {
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceExecutorService.class);
 
   @Inject @Named("verificationServiceExecutor") protected ScheduledExecutorService taskPollService;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private LearningEngineService learningEngineService;
 

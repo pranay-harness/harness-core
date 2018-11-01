@@ -75,7 +75,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler backgroundJobScheduler;
+  @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private BuildSourceService buildSourceService;
   @Inject private AppService appService;
@@ -118,7 +119,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     setAutoPopulatedName(artifactStream);
 
     String id = wingsPersistence.save(artifactStream);
-    ArtifactCollectionJob.addDefaultJob(jobScheduler, artifactStream.getAppId(), artifactStream.getUuid());
+    ArtifactCollectionJob.addDefaultJob(serviceJobScheduler, artifactStream.getAppId(), artifactStream.getUuid());
 
     String accountId = appService.getAccountIdByAppId(artifactStream.getAppId());
     yamlPushService.pushYamlChangeSet(
@@ -237,7 +238,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   private boolean pruneArtifactStream(String appId, String artifactStreamId) {
     PruneEntityJob.addDefaultJob(
-        jobScheduler, ArtifactStream.class, appId, artifactStreamId, ofSeconds(20), ofSeconds(120));
+        backgroundJobScheduler, ArtifactStream.class, appId, artifactStreamId, ofSeconds(20), ofSeconds(120));
 
     return wingsPersistence.delete(ArtifactStream.class, appId, artifactStreamId);
   }

@@ -65,7 +65,7 @@ public class DirectKubernetesInfraMappingYamlHandlerTest extends BaseYamlHandler
   @Mock protected EnvironmentService environmentService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private ContainerService containerService;
-  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private SecretManager secretManager;
 

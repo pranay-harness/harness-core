@@ -56,7 +56,7 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private EventEmitter eventEmitter;
   private static final Logger logger = LoggerFactory.getLogger(ActivityServiceImpl.class);
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public PageResponse<Activity> list(PageRequest<Activity> pageRequest) {

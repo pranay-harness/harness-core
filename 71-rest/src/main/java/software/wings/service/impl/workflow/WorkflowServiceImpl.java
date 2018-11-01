@@ -233,7 +233,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   @Inject private HostService hostService;
   @Inject private YamlPushService yamlPushService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   private Map<StateTypeScope, List<StateTypeDescriptor>> cachedStencils;
   private Map<String, StateTypeDescriptor> cachedStencilMap;

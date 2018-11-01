@@ -19,7 +19,7 @@ import software.wings.scheduler.InstanceStatsCollectorJob;
 public class AddInstanceStatsCollectionJobToAllAccounts implements Migration {
   private static final Logger logger = LoggerFactory.getLogger(AddInstanceStatsCollectionJobToAllAccounts.class);
   @Inject private WingsPersistence wingsPersistence;
-  @Inject @Named("JobScheduler") private transient PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private transient PersistentScheduler jobScheduler;
 
   @Override
   public void migrate() {

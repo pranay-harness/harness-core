@@ -134,7 +134,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.command.CommandHelper;
@@ -202,7 +202,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;
   @Mock private ExecutorService executorService;
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private TemplateService templateService;
   @Mock private YamlPushService yamlPushService;
 

@@ -30,7 +30,7 @@ import software.wings.beans.RepairActionCode;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
@@ -42,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 
 public class PipelineServiceDBTest extends WingsBaseTest {
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
 
   @Inject @InjectMocks private AccountService accountService;
   @Inject @InjectMocks private AppService appService;

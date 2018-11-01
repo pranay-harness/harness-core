@@ -114,7 +114,7 @@ public class ZombieHunterJob implements Job {
 
   @Inject private AppService appService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @AllArgsConstructor
   @Value

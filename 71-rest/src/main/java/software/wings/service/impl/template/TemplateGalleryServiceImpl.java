@@ -53,7 +53,7 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
   @Inject private TemplateService templateService;
   @Inject private AccountService accountService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public PageResponse<TemplateGallery> list(PageRequest<TemplateGallery> pageRequest) {

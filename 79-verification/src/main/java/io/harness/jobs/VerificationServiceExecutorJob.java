@@ -32,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 public class VerificationServiceExecutorJob implements Job {
   private static final String VERIFICATION_CRON_NAME = "VERIFICATION_SERVICE_EXECUTOR_CRON_NAME";
   private static final String VERIFICATION_CRON_GROUP = "VERIFICATION_SERVICE_EXECUTOR_CRON_GROUP";
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceExecutorJob.class);
 
   @Inject private LearningEngineService learningEngineService;

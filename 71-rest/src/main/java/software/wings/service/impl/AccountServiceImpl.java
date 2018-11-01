@@ -140,7 +140,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject protected AuthService authService;
   @Inject private CVConfigurationService cvConfigurationService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public Account save(@Valid Account account) {

@@ -52,7 +52,7 @@ public class InstanceSyncJob implements Job {
   @Inject private InstanceHelper instanceHelper;
   @Inject private WingsPersistence wingsPersistence;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("ServiceJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private PersistentLocker persistentLocker;
   @Inject private ExecutorService executorService;
 

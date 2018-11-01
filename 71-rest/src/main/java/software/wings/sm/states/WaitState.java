@@ -31,7 +31,7 @@ public class WaitState extends State {
 
   @Transient @Inject private WaitNotifyEngine waitNotifyEngine;
 
-  @Transient @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Transient @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Attributes(title = "Wait Duration") private long duration;
 

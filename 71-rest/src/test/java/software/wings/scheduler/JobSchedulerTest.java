@@ -26,7 +26,7 @@ import software.wings.WingsBaseTest;
 public class JobSchedulerTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(JobSchedulerTest.class);
 
-  @Inject private JobScheduler jobScheduler;
+  @Inject private BackgroundJobScheduler jobScheduler;
 
   @Before
   public void setUp() throws Exception {

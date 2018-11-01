@@ -121,7 +121,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private PersistentLocker persistentLocker;
   @Inject private WorkflowService workflowService;
   @Inject private TriggerService triggerService;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private YamlPushService yamlPushService;
 
   /**

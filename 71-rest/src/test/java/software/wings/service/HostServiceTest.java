@@ -44,7 +44,7 @@ import software.wings.beans.HostConnectionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.HostService;
@@ -73,7 +73,7 @@ public class HostServiceTest extends WingsBaseTest {
   @Mock private FieldEnd hostQueryEnd;
   @Mock private UpdateOperations<Host> updateOperations;
 
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
 
   private SettingAttribute HOST_CONN_ATTR_PWD =
       aSettingAttribute()
