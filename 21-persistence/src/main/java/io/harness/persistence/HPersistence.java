@@ -30,6 +30,17 @@ public interface HPersistence {
   }
 
   /**
+   * Gets the datastore.
+   *
+   * @param cls the entity class
+   * @param readPref the readPref
+   * @return the datastore
+   */
+  default AdvancedDatastore getDatastore(Class cls, ReadPref readPref) {
+    return getDatastore(DEFAULT_STORE, readPref);
+  }
+
+  /**
    * Gets the collection.
    *
    * @param collectionName the collection name
