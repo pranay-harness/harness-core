@@ -435,8 +435,8 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
   public NewRelicMetricData getMetricDataApplication(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, Collection<String> metricNames,
       long fromTime, long toTime, boolean summarize, ThirdPartyApiCallLog apiCallLog) throws IOException {
-    return getMetricData(
-        newRelicConfig, encryptedDataDetails, newRelicApplicationId, -1, metricNames, fromTime, toTime, apiCallLog);
+    return getMetricData(newRelicConfig, encryptedDataDetails, newRelicApplicationId, -1, metricNames, fromTime, toTime,
+        apiCallLog, summarize);
   }
 
   @Override
@@ -444,12 +444,13 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       List<EncryptedDataDetail> encryptedDataDetails, long newRelicApplicationId, long instanceId,
       Collection<String> metricNames, long fromTime, long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException {
     return getMetricData(newRelicConfig, encryptedDataDetails, newRelicApplicationId, instanceId, metricNames, fromTime,
-        toTime, apiCallLog);
+        toTime, apiCallLog, false);
   }
 
   private NewRelicMetricData getMetricData(NewRelicConfig newRelicConfig,
       List<EncryptedDataDetail> encryptedDataDetails, long applicationId, long instanceId,
-      Collection<String> metricNames, long fromTime, long toTime, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      Collection<String> metricNames, long fromTime, long toTime, ThirdPartyApiCallLog apiCallLog, boolean summarize)
+      throws IOException {
     if (apiCallLog == null) {
       apiCallLog = apiCallLogWithDummyStateExecution(newRelicConfig.getAccountId());
     }
@@ -477,7 +478,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
               .getInstanceMetricData(applicationId, instanceId, dateFormatter.format(new Date(fromTime)),
                   dateFormatter.format(new Date(toTime)), updatedMetrics)
         : getNewRelicRestClient(newRelicConfig, encryptedDataDetails)
-              .getApplicationMetricData(applicationId, dateFormatter.format(new Date(fromTime)),
+              .getApplicationMetricData(applicationId, summarize, dateFormatter.format(new Date(fromTime)),
                   dateFormatter.format(new Date(toTime)), updatedMetrics);
     apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
                                      .name(URL_STRING)
@@ -573,7 +574,7 @@ public class NewRelicDelgateServiceImpl implements NewRelicDelegateService {
       Set<String> metricNames = txnsWithData.stream().map(NewRelicMetric::getName).collect(Collectors.toSet());
       NewRelicMetricData newRelicMetricData =
           getMetricData(newRelicConfig, encryptedDataDetails, setupTestNodeData.getNewRelicAppId(), instanceId,
-              metricNames, setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog);
+              metricNames, setupTestNodeData.getFromTime(), setupTestNodeData.getToTime(), apiCallLog, false);
       return VerificationNodeDataSetupResponse.builder()
           .providerReachable(true)
           .dataForNode(newRelicMetricData)

@@ -190,7 +190,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
       if (isPredictiveAnalysis()) {
         metricData = newRelicDelegateService.getMetricDataApplication(dataCollectionInfo.getNewRelicConfig(),
             dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), metricNames,
-            getStartTime(), endTime, true, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+            getStartTime(), endTime, false, createApiCallLog(dataCollectionInfo.getStateExecutionId()));
       } else {
         metricData = newRelicDelegateService.getMetricDataApplicationInstance(dataCollectionInfo.getNewRelicConfig(),
             dataCollectionInfo.getEncryptedDataDetails(), dataCollectionInfo.getNewRelicAppId(), node.getId(),
@@ -239,7 +239,10 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
               }
               metricDataRecord.setDataCollectionMinute(dataCollectionMinForRecord);
 
-              if (metricDataRecord.getDataCollectionMinute() < 0) {
+              if (metricDataRecord.getDataCollectionMinute() < 0
+                  || (is247Task
+                         && metricDataRecord.getDataCollectionMinute()
+                             < TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(windowStartTimeManager)))) {
                 logger.info("New relic sending us data in the past. request start time {}, received time {}",
                     managerAnalysisStartTime, timeStamp);
                 continue;
@@ -410,7 +413,7 @@ public class NewRelicDataCollectionTask extends AbstractDelegateDataCollectionTa
             List<Callable<Boolean>> callables = new ArrayList<>();
             if (isPredictiveAnalysis()) {
               final long endTimeForCollection = is247Task
-                  ? startTime + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime())
+                  ? windowStartTimeManager + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime())
                   : windowEndTimeManager;
 
               logger.info(

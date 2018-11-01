@@ -224,7 +224,8 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .applicationId(config.getAppId())
             .serviceId(config.getServiceId())
             .cvConfigId(config.getUuid())
-            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId() + "-"
+                + config.getUuid())
             .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
             .serviceMethods(DynatraceState.splitServiceMethods(config.getServiceMethods()))
             .startTime(startTime)
@@ -247,7 +248,8 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .applicationId(config.getAppId())
             .serviceId(config.getServiceId())
             .cvConfigId(config.getUuid())
-            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId() + "-"
+                + config.getUuid())
             .startTime(startTime)
             .collectionTime(timeDuration)
             .appId(Long.parseLong(config.getAppDynamicsApplicationId()))
@@ -271,7 +273,8 @@ public class APMVerificationServiceImpl implements APMVerificationService {
         NewRelicDataCollectionInfo.builder()
             .newRelicConfig(newRelicConfig)
             .applicationId(config.getAppId())
-            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId() + "-"
+                + config.getUuid())
             .serviceId(config.getServiceId())
             .startTime(startTime)
             .cvConfigId(config.getUuid())
@@ -295,7 +298,8 @@ public class APMVerificationServiceImpl implements APMVerificationService {
         PrometheusDataCollectionInfo.builder()
             .prometheusConfig(prometheusConfig)
             .applicationId(config.getAppId())
-            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getAppId() + "-" + config.getServiceId() + "-"
+                + config.getUuid())
             .serviceId(config.getServiceId())
             .cvConfigId(config.getUuid())
             .startTime(startTime)
