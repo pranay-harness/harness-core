@@ -360,4 +360,89 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
       assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
     }
   }
+
+  @Test
+  public void testListConfig() {
+    String otherEnvId = generateUuid();
+
+    String newRelicApplicationId = generateUuid();
+    newRelicCVServiceConfiguration = new NewRelicCVServiceConfiguration();
+    newRelicCVServiceConfiguration.setAppId(appId);
+    newRelicCVServiceConfiguration.setEnvId(otherEnvId);
+    newRelicCVServiceConfiguration.setServiceId(serviceId);
+    newRelicCVServiceConfiguration.setEnabled24x7(true);
+    newRelicCVServiceConfiguration.setApplicationId(newRelicApplicationId);
+    newRelicCVServiceConfiguration.setConnectorId(settingAttributeId);
+    newRelicCVServiceConfiguration.setMetrics(Collections.singletonList("apdexScore"));
+    newRelicCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+
+    appDynamicsCVServiceConfiguration = new AppDynamicsCVServiceConfiguration();
+    appDynamicsCVServiceConfiguration.setAppId(appId);
+    appDynamicsCVServiceConfiguration.setEnvId(envId);
+    appDynamicsCVServiceConfiguration.setServiceId(serviceId);
+    appDynamicsCVServiceConfiguration.setEnabled24x7(true);
+    appDynamicsCVServiceConfiguration.setAppDynamicsApplicationId(appDynamicsApplicationId);
+    appDynamicsCVServiceConfiguration.setTierId(generateUuid());
+    appDynamicsCVServiceConfiguration.setConnectorId(generateUuid());
+    appDynamicsCVServiceConfiguration.setStateType(APP_DYNAMICS);
+    appDynamicsCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.HIGH);
+
+    // Save 2 cvConfigs with the same appId but different envIds
+    String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + NEW_RELIC;
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(newRelicCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APP_DYNAMICS;
+    target = client.target(url);
+    restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(appDynamicsCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId;
+    target = client.target(url);
+
+    RestResponse<List<Object>> allConfigResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
+    List<Object> allConfigs = allConfigResponse.getResource();
+
+    assertEquals(2, allConfigs.size());
+
+    NewRelicCVServiceConfiguration obj =
+        JsonUtils.asObject(JsonUtils.asJson(allConfigs.get(0)), NewRelicCVServiceConfiguration.class);
+    assertEquals(appId, obj.getAppId());
+    assertEquals(otherEnvId, obj.getEnvId());
+
+    AppDynamicsCVServiceConfiguration appDObject =
+        JsonUtils.asObject(JsonUtils.asJson(allConfigs.get(1)), AppDynamicsCVServiceConfiguration.class);
+    assertEquals(appId, appDObject.getAppId());
+    assertEquals(envId, appDObject.getEnvId());
+
+    // This call to list configs should fetch only the new relic config
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&envId=" + otherEnvId;
+    target = client.target(url);
+
+    RestResponse<List<Object>> listOfConfigsByEnvResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
+    List<Object> listOfConfigsByEnv = listOfConfigsByEnvResponse.getResource();
+
+    assertEquals(1, listOfConfigsByEnv.size());
+
+    obj = JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), NewRelicCVServiceConfiguration.class);
+    assertEquals(appId, obj.getAppId());
+    assertEquals(otherEnvId, obj.getEnvId());
+
+    // This call to list configs should fetch only the app dynamics config
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&envId=" + envId;
+    target = client.target(url);
+
+    listOfConfigsByEnvResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
+    listOfConfigsByEnv = listOfConfigsByEnvResponse.getResource();
+
+    assertEquals(1, listOfConfigsByEnv.size());
+
+    appDObject =
+        JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), AppDynamicsCVServiceConfiguration.class);
+    assertEquals(appId, appDObject.getAppId());
+    assertEquals(envId, appDObject.getEnvId());
+  }
 }
