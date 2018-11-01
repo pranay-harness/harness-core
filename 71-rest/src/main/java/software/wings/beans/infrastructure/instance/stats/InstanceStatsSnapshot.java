@@ -40,13 +40,9 @@ public class InstanceStatsSnapshot extends Base {
     if (CollectionUtils.isEmpty(aggregateCounts)) {
       this.total = 0;
     } else {
-      // Only calculating the total of applications. The total of instance count by services might be different from
-      // total of Applications. That is because applications are under RBAC and services are not. For an admin, who had
-      // access to everything, those counts should always be equal.
-      this.total = aggregateCounts.stream()
-                       .filter(ac -> ac.entityType == EntityType.APPLICATION)
-                       .mapToInt(AggregateCount::getCount)
-                       .sum();
+      EntityType firstEntity = aggregateCounts.get(0).entityType;
+      this.total =
+          aggregateCounts.stream().filter(ac -> ac.entityType == firstEntity).mapToInt(AggregateCount::getCount).sum();
     }
   }
 
