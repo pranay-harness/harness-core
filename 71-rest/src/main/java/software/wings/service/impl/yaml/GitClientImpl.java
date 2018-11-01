@@ -835,9 +835,11 @@ public class GitClientImpl implements GitClient {
     File keyFile = new File(keyFilePath);
 
     File sshDirectory = keyFile.getParentFile();
-    if (sshDirectory.exists() || !sshDirectory.isDirectory()) {
-      FileIo.deleteFileIfExists(sshDirectory.getAbsolutePath());
+    // Ideally we should not be deleting the entire directory. We should delete only the keyFilePath if it exists
+    if (sshDirectory.exists()) {
+      FileIo.deleteDirectoryAndItsContentIfExists(sshDirectory.getAbsolutePath());
     }
+
     FileUtils.forceMkdir(sshDirectory);
     FileUtils.writeStringToFile(keyFile, sshKey, UTF_8);
     return keyFilePath;
