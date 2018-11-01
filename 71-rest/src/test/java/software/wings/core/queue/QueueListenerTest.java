@@ -12,9 +12,9 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.mongo.MongoQueue;
+import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue.Filter;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
@@ -23,7 +23,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.mockito.invocation.InvocationOnMock;
-import org.mongodb.morphia.AdvancedDatastore;
 import software.wings.WingsBaseTest;
 import software.wings.core.managerConfiguration.ConfigurationController;
 
@@ -32,14 +31,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by peeyushaggarwal on 4/13/16.
- */
 public class QueueListenerTest extends WingsBaseTest {
   private MongoQueue<QueuableObject> queue;
   private QueuableObjectListener listener;
 
-  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
+  @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 
   /**
@@ -50,7 +46,7 @@ public class QueueListenerTest extends WingsBaseTest {
   @Before
   public void setup() throws UnknownHostException {
     queue = spy(new MongoQueue<>(QueuableObject.class));
-    on(queue).set("datastore", datastore);
+    on(queue).set("persistence", persistence);
     on(queue).set("versionInfoManager", versionInfoManager);
     listener = new QueuableObjectListener();
     listener.setQueue(queue);
@@ -67,7 +63,7 @@ public class QueueListenerTest extends WingsBaseTest {
    */
   @Test
   @Ignore
-  public void shouldProcessWhenRecievedMessageFromQueue() {
+  public void shouldProcessWhenReceivedMessageFromQueue() {
     QueuableObject message = new QueuableObject(1);
     queue.send(message);
     assertThat(queue.count(Filter.ALL)).isEqualTo(1);

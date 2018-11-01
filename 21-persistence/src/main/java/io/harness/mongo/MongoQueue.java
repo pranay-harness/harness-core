@@ -4,8 +4,9 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
+import io.harness.persistence.HPersistence;
+import io.harness.persistence.ReadPref;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
 import io.harness.version.VersionInfoManager;
@@ -33,7 +34,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   private int resetDurationInSeconds;
   private final boolean filterWithVersion;
 
-  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
+  @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 
   /**
@@ -91,6 +92,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
    */
   @Override
   public T get(final int waitDuration, long pollDuration) {
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
+
     // reset stuck messages
     datastore.update(createQuery().filter("running", true).field("resetTimestamp").lessThanOrEq(new Date()),
         datastore.createUpdateOperations(klass).set("running", false));
@@ -133,6 +136,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
    */
   @Override
   public void updateResetDuration(T message) {
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
+
     Objects.requireNonNull(message);
 
     Query<T> query = createQuery()
@@ -158,6 +163,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
    */
   @Override
   public long count(final Filter filter) {
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
+
     switch (filter) {
       case ALL:
         return datastore.getCount(klass);
@@ -178,6 +185,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   public void ack(final T message) {
     Objects.requireNonNull(message);
     String id = message.getId();
+
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
     datastore.delete(klass, id);
   }
 
@@ -196,6 +205,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
     payload.setResetTimestamp(new Date(Long.MAX_VALUE));
     payload.setCreated(new Date());
 
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
     datastore.save(payload);
   }
 
@@ -240,6 +250,8 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   public void send(final T payload) {
     Objects.requireNonNull(payload);
     payload.setVersion(versionInfoManager.getVersionInfo().getVersion());
+
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
     datastore.save(payload);
   }
 
@@ -256,6 +268,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
    */
   @Override
   public String name() {
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
     return datastore.getCollection(klass).getName();
   }
 
@@ -270,6 +283,7 @@ public class MongoQueue<T extends Queuable> implements Queue<T> {
   }
 
   private Query<T> createQuery() {
+    final AdvancedDatastore datastore = persistence.getDatastore(klass, ReadPref.CRITICAL);
     return filterWithVersion
         ? datastore.createQuery(klass).filter("version", versionInfoManager.getVersionInfo().getVersion())
         : datastore.createQuery(klass);

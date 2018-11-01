@@ -53,7 +53,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -67,7 +66,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
@@ -120,12 +118,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Created by anubhaw on 5/23/16.
- */
 public class SettingsServiceImplTest extends WingsBaseTest {
-  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
-  @Mock private WingsPersistence wingsPersistence;
+  @Inject private WingsPersistence wingsPersistence;
+  @Mock private WingsPersistence mockWingsPersistence;
   @Mock private AppService appService;
   @Mock private AuthHandler authHandler;
   @Mock private Application application;
@@ -150,10 +145,10 @@ public class SettingsServiceImplTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
-    spyQuery = spy(datastore.createQuery(SettingAttribute.class));
-    when(wingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
-    when(wingsPersistence.query(eq(SettingAttribute.class), any(PageRequest.class))).thenReturn(pageResponse);
-    when(wingsPersistence.saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class)))
+    spyQuery = spy(wingsPersistence.createQuery(SettingAttribute.class));
+    when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
+    when(mockWingsPersistence.query(eq(SettingAttribute.class), any(PageRequest.class))).thenReturn(pageResponse);
+    when(mockWingsPersistence.saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class)))
         .thenAnswer(new Answer<SettingAttribute>() {
           @Override
           public SettingAttribute answer(InvocationOnMock invocationOnMock) throws Throwable {
@@ -173,7 +168,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldListSettings() {
     settingsService.list(aPageRequest().build(), null, null);
-    verify(wingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
+    verify(mockWingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
   }
 
   /**
@@ -186,7 +181,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                              .withAccountId("ACCOUNT_ID")
                              .withValue(StringValue.Builder.aStringValue().build())
                              .build());
-    verify(wingsPersistence).saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class));
+    verify(mockWingsPersistence).saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class));
   }
 
   /**
@@ -195,7 +190,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldGetByAppId() {
     settingsService.get(APP_ID, SETTING_ID);
-    verify(wingsPersistence).createQuery(eq(SettingAttribute.class));
+    verify(mockWingsPersistence).createQuery(eq(SettingAttribute.class));
     verify(spyQuery).filter("appId", APP_ID);
     verify(spyQuery).filter("envId", GLOBAL_ENV_ID);
     verify(spyQuery).filter(ID_KEY, SETTING_ID);
@@ -208,7 +203,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldGetByAppIdAndEnvId() {
     settingsService.get(APP_ID, ENV_ID, SETTING_ID);
-    verify(wingsPersistence).createQuery(eq(SettingAttribute.class));
+    verify(mockWingsPersistence).createQuery(eq(SettingAttribute.class));
     verify(spyQuery).filter("appId", APP_ID);
     verify(spyQuery).filter("envId", ENV_ID);
     verify(spyQuery).filter(ID_KEY, SETTING_ID);
@@ -221,7 +216,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldGetById() {
     settingsService.get(SETTING_ID);
-    verify(wingsPersistence).get(eq(SettingAttribute.class), eq(SETTING_ID));
+    verify(mockWingsPersistence).get(eq(SettingAttribute.class), eq(SETTING_ID));
   }
 
   /**
@@ -241,11 +236,11 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                            .accountId("ACCOUNT_ID")
                                                            .build())
                                             .build();
-    when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
     when(artifactStreamService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
 
     settingsService.delete(APP_ID, SETTING_ID);
-    verify(wingsPersistence).delete(any(SettingAttribute.class));
+    verify(mockWingsPersistence).delete(any(SettingAttribute.class));
   }
 
   /**
@@ -254,7 +249,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldDeleteSettingAttributesByType() {
     settingsService.deleteSettingAttributesByType(ACCOUNT_ID, APP_ID, ENV_ID, "JENKINS");
-    verify(wingsPersistence).delete(any(Query.class));
+    verify(mockWingsPersistence).delete(any(Query.class));
   }
 
   @Test
@@ -271,7 +266,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                                            .accountId("ACCOUNT_ID")
                                                            .build())
                                             .build();
-    when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
     when(artifactStreamService.list(any(PageRequest.class)))
         .thenReturn(
             aPageResponse().withResponse(asList(JenkinsArtifactStream.builder().sourceName(JOB_NAME).build())).build());
@@ -290,7 +285,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                             .withCategory(Category.CLOUD_PROVIDER)
                                             .withValue(AwsConfig.builder().build())
                                             .build();
-    when(wingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
+    when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
     when(infrastructureMappingService.list(any(PageRequest.class)))
         .thenReturn(aPageResponse()
                         .withResponse(asList(anAwsInfrastructureMapping()
@@ -310,7 +305,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldGetByName() {
     settingsService.getByName(ACCOUNT_ID, APP_ID, "NAME");
-    verify(wingsPersistence).createQuery(eq(SettingAttribute.class));
+    verify(mockWingsPersistence).createQuery(eq(SettingAttribute.class));
     verify(spyQuery).filter("accountId", ACCOUNT_ID);
     verify(spyQuery).field("appId");
     verify(spyQuery).field("envId");
@@ -324,7 +319,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   public void shouldListConnectionAttributes() {
     settingsService.getSettingAttributesByType("APP_ID", HOST_CONNECTION_ATTRIBUTES.name());
-    verify(wingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
+    verify(mockWingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
   }
 
   /**
@@ -334,7 +329,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   public void shouldListBastionHostConnectionAttributes() {
     settingsService.getSettingAttributesByType(
         "APP_ID", SettingVariableTypes.BASTION_HOST_CONNECTION_ATTRIBUTES.name());
-    verify(wingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
+    verify(mockWingsPersistence).query(eq(SettingAttribute.class), any(PageRequest.class));
   }
 
   @Test
@@ -373,7 +368,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    doReturn(settingAttribute).when(wingsPersistence).get(SettingAttribute.class, uuid);
+    doReturn(settingAttribute).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
     doReturn(settingAttribute).when(spyQuery).get();
 
     settingsService.update(settingAttribute, false);
@@ -402,7 +397,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
     when(settingValidationService.validate(any(SettingAttribute.class))).thenReturn(true);
 
-    doReturn(settingAttribute).when(wingsPersistence).get(SettingAttribute.class, uuid);
+    doReturn(settingAttribute).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
     doReturn(settingAttribute).when(spyQuery).get();
 
     SettingAttribute updatedSettingAttribute = settingsService.update(settingAttribute);
@@ -461,7 +456,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
             .withCategory(Category.CLOUD_PROVIDER)
             .withValue(AwsConfig.builder().accountId(ACCOUNT_ID).accessKey(ACCESS_KEY).secretKey(SECRET_KEY).build())
             .build();
-    doReturn(settingAttribute).when(wingsPersistence).get(SettingAttribute.class, uuid);
+    doReturn(settingAttribute).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
     doReturn(true).when(settingValidationService).validate(settingAttribute);
     final ValidationResult result = settingsService.validate(uuid);
     assertThat(result).isNotNull();
@@ -471,7 +466,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   public void testValidateIdWhenNotExists() {
     final String uuid = UUID.randomUUID().toString();
-    doReturn(null).when(wingsPersistence).get(SettingAttribute.class, uuid);
+    doReturn(null).when(mockWingsPersistence).get(SettingAttribute.class, uuid);
     final ValidationResult result = settingsService.validate(uuid);
     assertThat(result).isNotNull();
     assertThat(result.isValid()).isFalse();
@@ -533,7 +528,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
       settingAttributeList.add(settingAttribute3);
 
       PageResponse<SettingAttribute> pageResponse = aPageResponse().withResponse(settingAttributeList).build();
-      when(wingsPersistence.query(any(), any(PageRequest.class))).thenReturn(pageResponse);
+      when(mockWingsPersistence.query(any(), any(PageRequest.class))).thenReturn(pageResponse);
 
       // Scenario 1: With no usage restrictions set
       List<SettingAttribute> filteredSettingAttributesByType = settingsService.getFilteredSettingAttributesByType(
@@ -707,7 +702,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldGetApplicationDefaults() {
-    when(wingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
+    when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
     when(spyQuery.filter(ACCOUNT_ID_KEY, ACCOUNT_ID)).thenReturn(spyQuery);
     when(spyQuery.filter(APP_ID_KEY, APP_ID)).thenReturn(spyQuery);
     when(spyQuery.filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())).thenReturn(spyQuery);
@@ -729,7 +724,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     Map<String, String> accountDefaults = settingsService.listAppDefaults(ACCOUNT_ID, APP_ID);
     assertThat(accountDefaults).isNotEmpty().containsKeys("NAME", "NAME2");
     assertThat(accountDefaults).isNotEmpty().containsValues("", "VALUE");
-    verify(wingsPersistence).createQuery(SettingAttribute.class);
+    verify(mockWingsPersistence).createQuery(SettingAttribute.class);
     verify(spyQuery, times(2)).filter(ACCOUNT_ID_KEY, ACCOUNT_ID);
     verify(spyQuery, times(2)).filter(APP_ID_KEY, APP_ID);
     verify(spyQuery, times(2)).filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name());
@@ -737,7 +732,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldGetAccountDefaults() {
-    when(wingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
+    when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
     when(spyQuery.filter(ACCOUNT_ID_KEY, ACCOUNT_ID)).thenReturn(spyQuery);
     when(spyQuery.filter(APP_ID_KEY, APP_ID)).thenReturn(spyQuery);
     when(spyQuery.filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name())).thenReturn(spyQuery);
@@ -757,7 +752,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     Map<String, String> accountDefaults = settingsService.listAccountDefaults(ACCOUNT_ID);
     assertThat(accountDefaults).isNotEmpty().containsKeys("NAME", "NAME2");
     assertThat(accountDefaults).isNotEmpty().containsValues("", "VALUE");
-    verify(wingsPersistence).createQuery(SettingAttribute.class);
+    verify(mockWingsPersistence).createQuery(SettingAttribute.class);
     verify(spyQuery, times(2)).filter(ACCOUNT_ID_KEY, ACCOUNT_ID);
     verify(spyQuery, times(2)).filter(SettingAttribute.VALUE_TYPE_KEY, SettingVariableTypes.STRING.name());
   }

@@ -28,7 +28,6 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -42,7 +41,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
-import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
@@ -85,8 +83,8 @@ import java.util.stream.Collectors;
  * @author rktummala on 06/08/18
  */
 public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
-  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
-  @Mock private WingsPersistence wingsPersistence;
+  @Inject private WingsPersistence wingsPersistence;
+  @Mock private WingsPersistence mockWingsPersistence;
   @Mock private AppService appService;
   @Mock private AuthHandler authHandler;
   @Mock private Application application;
@@ -124,10 +122,10 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
-    spyQuery = spy(datastore.createQuery(SettingAttribute.class));
-    when(wingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
-    when(wingsPersistence.query(eq(SettingAttribute.class), any(PageRequest.class))).thenReturn(pageResponse);
-    when(wingsPersistence.saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class)))
+    spyQuery = spy(wingsPersistence.createQuery(SettingAttribute.class));
+    when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
+    when(mockWingsPersistence.query(eq(SettingAttribute.class), any(PageRequest.class))).thenReturn(pageResponse);
+    when(mockWingsPersistence.saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class)))
         .thenAnswer(
             (Answer<SettingAttribute>) invocationOnMock -> (SettingAttribute) invocationOnMock.getArguments()[1]);
     when(appService.get(anyString())).thenReturn(application);

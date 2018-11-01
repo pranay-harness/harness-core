@@ -9,17 +9,16 @@ import static org.joor.Reflect.on;
 
 import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import io.harness.PersistenceTest;
 import io.harness.mongo.MongoQueue;
+import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue.Filter;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.annotations.PrePersist;
@@ -30,7 +29,7 @@ import java.util.Date;
 import java.util.Objects;
 
 public class MongoQueueTest extends PersistenceTest {
-  @Inject @Named("primaryDatastore") private AdvancedDatastore datastore;
+  @Inject private HPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
 
   private MongoQueue<QueuableObject> queue;
@@ -43,7 +42,7 @@ public class MongoQueueTest extends PersistenceTest {
   @Before
   public void setup() throws UnknownHostException {
     queue = new MongoQueue<>(QueuableObject.class);
-    on(queue).set("datastore", datastore);
+    on(queue).set("persistence", persistence);
     on(queue).set("versionInfoManager", versionInfoManager);
   }
 
@@ -454,7 +453,7 @@ public class MongoQueueTest extends PersistenceTest {
   public void shouldSendAndGetMessageWithEntityReference() {
     Queue<TestQueuableWithEntity> entityQueue;
     entityQueue = new MongoQueue<>(TestQueuableWithEntity.class);
-    on(entityQueue).set("datastore", datastore);
+    on(entityQueue).set("persistence", persistence);
     on(entityQueue).set("versionInfoManager", versionInfoManager);
 
     TestEntity testEntity = new TestEntity(1);
@@ -475,7 +474,7 @@ public class MongoQueueTest extends PersistenceTest {
   public void shouldFilterWithVersion() {
     Queue<QueuableObject> versionQueue;
     versionQueue = new MongoQueue<>(QueuableObject.class, 5, true);
-    on(versionQueue).set("datastore", datastore);
+    on(versionQueue).set("persistence", persistence);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
     QueuableObject message = new QueuableObject(1);
     versionQueue.send(message);
@@ -487,7 +486,7 @@ public class MongoQueueTest extends PersistenceTest {
   public void shouldNotFilterWithVersion() {
     Queue<QueuableObject> versionQueue;
     versionQueue = new MongoQueue<>(QueuableObject.class, 5, false);
-    on(versionQueue).set("datastore", datastore);
+    on(versionQueue).set("persistence", persistence);
     on(versionQueue).set("versionInfoManager", new VersionInfoManager("version   : 1.0.0"));
     QueuableObject message = new QueuableObject(1);
     versionQueue.send(message);
