@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -36,24 +37,27 @@ public class AwsIamHelperServiceManagerImpl implements AwsIamHelperServiceManage
   @Inject private DelegateService delegateService;
 
   @Override
-  public Map<String, String> listIamRoles(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
+  public Map<String, String> listIamRoles(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String appId) {
     AwsResponse response = getResponse(awsConfig.getAccountId(),
-        AwsIamListRolesRequest.builder().awsConfig(awsConfig).encryptionDetails(encryptionDetails).build());
+        AwsIamListRolesRequest.builder().awsConfig(awsConfig).encryptionDetails(encryptionDetails).build(), appId);
     return ((AwsIamListRolesResponse) response).getRoles();
   }
 
   @Override
-  public List<String> listIamInstanceRoles(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
+  public List<String> listIamInstanceRoles(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String appId) {
     AwsResponse response = getResponse(awsConfig.getAccountId(),
-        AwsIamListInstanceRolesRequest.builder().awsConfig(awsConfig).encryptionDetails(encryptionDetails).build());
+        AwsIamListInstanceRolesRequest.builder().awsConfig(awsConfig).encryptionDetails(encryptionDetails).build(),
+        appId);
     return ((AwsIamListInstanceRolesResponse) response).getInstanceRoles();
   }
 
-  private AwsResponse getResponse(String accountId, AwsIamRequest request) {
+  private AwsResponse getResponse(String accountId, AwsIamRequest request, String appId) {
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.AWS_IAM_TASK)
                                     .withAccountId(accountId)
-                                    .withAppId(GLOBAL_APP_ID)
+                                    .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
                                     .withAsync(false)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                     .withParameters(new Object[] {request})

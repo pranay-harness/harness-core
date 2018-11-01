@@ -258,7 +258,7 @@ public class ContainerDeploymentManagerHelper {
           .domainName(domainName);
     } else if (artifactStream.getArtifactStreamType().equals(ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
-      String imageUrl = getImageUrl(ecrArtifactStream, workflowExecutionId);
+      String imageUrl = getImageUrl(ecrArtifactStream, workflowExecutionId, appId);
       // name should be 830767422336.dkr.ecr.us-east-1.amazonaws.com/todolist
       // sourceName should be todolist
       // registryUrl should be https://830767422336.dkr.ecr.us-east-1.amazonaws.com/
@@ -273,7 +273,7 @@ public class ContainerDeploymentManagerHelper {
         AwsConfig awsConfig = (AwsConfig) settingsService.get(settingId).getValue();
         imageDetails.password(
             getAmazonEcrAuthToken(awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, workflowExecutionId),
-                imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion()));
+                imageUrl.substring(0, imageUrl.indexOf('.')), ecrArtifactStream.getRegion(), appId));
       } else {
         // There is a point when old ECR artifact streams would be using the old ECR Artifact Server definition until
         // migration happens. The deployment code handles both the cases.
@@ -352,14 +352,14 @@ public class ContainerDeploymentManagerHelper {
     return imageDetails.build();
   }
 
-  private String getImageUrl(EcrArtifactStream ecrArtifactStream, String workflowExecutionId) {
+  private String getImageUrl(EcrArtifactStream ecrArtifactStream, String workflowExecutionId, String appId) {
     SettingAttribute settingAttribute = settingsService.get(ecrArtifactStream.getSettingId());
     SettingValue value = settingAttribute.getValue();
     if (SettingVariableTypes.AWS.name().equals(value.getType())) {
       AwsConfig awsConfig = (AwsConfig) value;
       return getEcrImageUrl(awsConfig,
           secretManager.getEncryptionDetails(awsConfig, ecrArtifactStream.getAppId(), workflowExecutionId),
-          ecrArtifactStream.getRegion(), ecrArtifactStream);
+          ecrArtifactStream.getRegion(), ecrArtifactStream, appId);
     } else {
       EcrConfig ecrConfig = (EcrConfig) value;
       return ecrClassicService.getEcrImageUrl(ecrConfig, ecrArtifactStream);
@@ -367,14 +367,14 @@ public class ContainerDeploymentManagerHelper {
   }
 
   private String getEcrImageUrl(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
-      EcrArtifactStream ecrArtifactStream) {
+      EcrArtifactStream ecrArtifactStream, String appId) {
     return awsEcrHelperServiceManager.getEcrImageUrl(
-        awsConfig, encryptionDetails, region, ecrArtifactStream.getImageName());
+        awsConfig, encryptionDetails, region, ecrArtifactStream.getImageName(), appId);
   }
 
-  private String getAmazonEcrAuthToken(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region) {
-    return awsEcrHelperServiceManager.getAmazonEcrAuthToken(awsConfig, encryptionDetails, awsAccount, region);
+  private String getAmazonEcrAuthToken(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String awsAccount, String region, String appId) {
+    return awsEcrHelperServiceManager.getAmazonEcrAuthToken(awsConfig, encryptionDetails, awsAccount, region, appId);
   }
 
   private String getDomainName(String registryUrl) {

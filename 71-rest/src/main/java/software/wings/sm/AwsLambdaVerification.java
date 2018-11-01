@@ -14,14 +14,20 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.AwsLambdaContextElement.FunctionMeta;
 import software.wings.api.AwsLambdaExecutionData;
 import software.wings.api.AwsLambdaFunctionElement;
+import software.wings.api.PhaseElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AwsConfig;
+import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.LambdaTestEvent;
+import software.wings.beans.SettingAttribute;
+import software.wings.common.Constants;
 import software.wings.service.impl.aws.model.AwsLambdaExecuteFunctionResponse;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.aws.manager.AwsLambdaHelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.utils.LambdaConvention;
@@ -37,6 +43,8 @@ public class AwsLambdaVerification extends State {
   @Transient @Inject private ActivityService activityService;
   @Transient @Inject private SecretManager secretManager;
   @Transient @Inject private AwsLambdaHelperServiceManager awsLambdaHelperServiceManager;
+  @Inject @Transient private transient InfrastructureMappingService infrastructureMappingService;
+  @Inject @Transient private transient SettingsService settingsService;
   @Transient private static final Logger logger = LoggerFactory.getLogger(AwsLambdaVerification.class);
 
   /**
@@ -57,9 +65,19 @@ public class AwsLambdaVerification extends State {
     AwsLambdaExecutionData awsLambdaExecutionData = new AwsLambdaExecutionData();
     boolean assertionStatus = true;
     try {
+      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+      Application app = workflowStandardParams.getApp();
+
+      AwsLambdaInfraStructureMapping infrastructureMapping =
+          (AwsLambdaInfraStructureMapping) infrastructureMappingService.get(
+              app.getUuid(), phaseElement.getInfraMappingId());
+
+      SettingAttribute cloudProviderSetting = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      AwsConfig awsConfig = (AwsConfig) cloudProviderSetting.getValue();
+
       AwsLambdaFunctionElement awsLambdaFunctionElement =
           context.getContextElement(ContextElementType.AWS_LAMBDA_FUNCTION);
-      AwsConfig awsConfig = awsLambdaFunctionElement.getAwsConfig();
       FunctionMeta functionMeta = awsLambdaFunctionElement.getFunctionArn();
 
       awsLambdaExecutionData.setFunctionArn(functionMeta.getFunctionArn());
@@ -76,9 +94,9 @@ public class AwsLambdaVerification extends State {
           functionNameMap.getOrDefault(functionMeta.getFunctionName(), LambdaTestEvent.builder().build());
 
       AwsLambdaExecuteFunctionResponse functionResponse = awsLambdaHelperServiceManager.executeFunction(awsConfig,
-          secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowId()),
+          secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()),
           awsLambdaFunctionElement.getRegion(), functionMeta.getFunctionArn(), functionMeta.getVersion(),
-          isNotBlank(lambdaTestEvent.getPayload()) ? lambdaTestEvent.getPayload() : null);
+          isNotBlank(lambdaTestEvent.getPayload()) ? lambdaTestEvent.getPayload() : null, context.getAppId());
 
       awsLambdaExecutionData.setStatusCode(functionResponse.getStatusCode());
       awsLambdaExecutionData.setFunctionError(functionResponse.getFunctionError());

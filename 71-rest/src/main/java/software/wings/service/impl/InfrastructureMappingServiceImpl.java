@@ -1090,7 +1090,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (AWS.name().equals(type)) {
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
       return awsEcsHelperServiceManager.listClusters(
-          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region);
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), region, appId);
     } else if (GCP.name().equals(type)) {
       GcpInfrastructureProvider infrastructureProvider =
           (GcpInfrastructureProvider) getInfrastructureProviderByComputeProviderType(GCP.name());
@@ -1139,7 +1139,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsInfrastructureProvider infrastructureProvider =
           (AwsInfrastructureProvider) getInfrastructureProviderByComputeProviderType(AWS.name());
-      return infrastructureProvider.listIAMInstanceRoles(computeProviderSetting);
+      return infrastructureProvider.listIAMInstanceRoles(computeProviderSetting, appId);
     }
     return emptyList();
   }
@@ -1239,7 +1239,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (AWS.name().equals(computeProviderSetting.getValue().getType())) {
       AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
       return awsIamHelperServiceManager.listIamRoles(
-          awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
+          awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), appId);
     }
     return Collections.emptyMap();
   }

@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
@@ -46,9 +47,11 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
   }
 
   @Override
-  public List<AwsCFTemplateParamsData> getParamsData(String type, String data, String awsConfigId, String region) {
+  public List<AwsCFTemplateParamsData> getParamsData(
+      String type, String data, String awsConfigId, String region, String appId) {
     AwsConfig awsConfig = getAwsConfig(awsConfigId);
-    List<EncryptedDataDetail> details = secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null);
+    List<EncryptedDataDetail> details =
+        secretManager.getEncryptionDetails(awsConfig, isNotEmpty(appId) ? appId : GLOBAL_APP_ID, null);
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsCFGetTemplateParamsRequest.builder()
             .awsConfig(awsConfig)
@@ -56,15 +59,16 @@ public class AwsCFHelperServiceManagerImpl implements AwsCFHelperServiceManager 
             .region(region)
             .data(data)
             .type(type)
-            .build());
+            .build(),
+        appId);
     return ((AwsCFGetTemplateParamsResponse) response).getParameters();
   }
 
-  private AwsResponse executeTask(String accountId, AwsCFRequest request) {
+  private AwsResponse executeTask(String accountId, AwsCFRequest request, String appId) {
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.AWS_CF_TASK)
                                     .withAccountId(accountId)
-                                    .withAppId(GLOBAL_APP_ID)
+                                    .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
                                     .withAsync(false)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                     .withParameters(new Object[] {request})
