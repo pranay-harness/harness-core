@@ -143,7 +143,8 @@ public interface HostService extends OwnedByInfrastructureMapping {
    * @param infraMappingId      the infra mapping id
    * @param hostConnectionAttrs the host connection attrs
    */
-  void updateHostConnectionAttrByInfraMappingId(String appId, String infraMappingId, String hostConnectionAttrs);
+  void updateHostConnectionAttrByInfraMappingId(
+      String appId, String infraMappingId, String hostConnectionAttrs, String deploymentType);
 
   /**
    * Delete by service.

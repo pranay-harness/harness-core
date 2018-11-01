@@ -27,6 +27,7 @@ import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrast
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
 import static software.wings.beans.PhysicalDataCenterConfig.Builder.aPhysicalDataCenterConfig;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
+import static software.wings.beans.PhysicalInfrastructureMappingWinRm.Builder.aPhysicalInfrastructureMappingWinRm;
 import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -91,10 +92,12 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
+import software.wings.beans.PhysicalInfrastructureMappingWinRm;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.infrastructure.Host;
@@ -403,6 +406,95 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .updateFields(PhysicalInfrastructureMapping.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
     verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getHostConnectionAttrs());
+  }
+
+  @Test
+  public void shouldUpdateWinRmConnectionAttribute() {
+    final String winrmConnectionAttributeId1 = "winrm-id-1";
+    final String winrmConnectionAttributeId2 = "winrm-id-2";
+    final String infraName = "winrm-physical-infra";
+
+    PhysicalInfrastructureMappingWinRm savedInfra = aPhysicalInfrastructureMappingWinRm()
+                                                        .withName(infraName)
+                                                        .withWinRmConnectionAttributes(winrmConnectionAttributeId1)
+                                                        .withComputeProviderSettingId(SETTING_ID)
+                                                        .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                                                        .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+                                                        .withDeploymentType(DeploymentType.WINRM.name())
+                                                        .withAppId(APP_ID)
+                                                        .withEnvId(ENV_ID)
+                                                        .withServiceId(SERVICE_ID)
+                                                        .withUuid(INFRA_MAPPING_ID)
+                                                        .withServiceTemplateId(TEMPLATE_ID)
+                                                        .withHostNames(singletonList(HOST_NAME))
+                                                        .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                        .build();
+
+    PhysicalInfrastructureMappingWinRm updatedInfra = aPhysicalInfrastructureMappingWinRm()
+                                                          .withName(infraName)
+                                                          .withWinRmConnectionAttributes(winrmConnectionAttributeId2)
+                                                          .withComputeProviderSettingId(SETTING_ID)
+                                                          .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
+                                                          .withComputeProviderType(PHYSICAL_DATA_CENTER.name())
+                                                          .withDeploymentType(DeploymentType.WINRM.name())
+                                                          .withAccountId(ACCOUNT_ID)
+                                                          .withAppId(APP_ID)
+                                                          .withEnvId(ENV_ID)
+                                                          .withServiceId(SERVICE_ID)
+                                                          .withUuid(INFRA_MAPPING_ID)
+                                                          .withServiceTemplateId(TEMPLATE_ID)
+                                                          .withHostNames(singletonList(HOST_NAME))
+                                                          .withInfraMappingType(PHYSICAL_DATA_CENTER.name())
+                                                          .build();
+
+    when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
+
+    doReturn(savedInfra).when(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+
+    doReturn(aSettingAttribute()
+                 .withUuid(COMPUTE_PROVIDER_ID)
+                 .withName(COMPUTE_PROVIDER_ID)
+                 .withValue(aPhysicalDataCenterConfig().build())
+                 .build())
+        .when(settingsService)
+        .get(COMPUTE_PROVIDER_ID);
+
+    doReturn(aSettingAttribute()
+                 .withUuid(winrmConnectionAttributeId1)
+                 .withName(winrmConnectionAttributeId1)
+                 .withValue(WinRmConnectionAttributes.builder().build())
+                 .build())
+        .when(settingsService)
+        .get(winrmConnectionAttributeId1);
+
+    doReturn(aSettingAttribute()
+                 .withUuid(winrmConnectionAttributeId2)
+                 .withName(winrmConnectionAttributeId2)
+                 .withValue(WinRmConnectionAttributes.builder().build())
+                 .build())
+        .when(settingsService)
+        .get(winrmConnectionAttributeId2);
+
+    doReturn(aServiceTemplate().withAppId(APP_ID).withServiceId(SERVICE_ID).withUuid(TEMPLATE_ID).build())
+        .when(serviceTemplateService)
+        .get(APP_ID, TEMPLATE_ID);
+
+    InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
+    assertThat(returnedInfra).isNotNull();
+    Map<String, Object> keyValuePairs = new LinkedHashMap<>();
+    keyValuePairs.put("loadBalancerId", null);
+    keyValuePairs.put("computeProviderSettingId", COMPUTE_PROVIDER_ID);
+    keyValuePairs.put("winRmConnectionAttributes", winrmConnectionAttributeId2);
+    keyValuePairs.put("hostNames", singletonList(HOST_NAME));
+    keyValuePairs.put("computeProviderName", COMPUTE_PROVIDER_ID);
+    keyValuePairs.put("name", infraName);
+
+    Set<String> fieldsToRemove = new HashSet<>();
+    fieldsToRemove.add("provisionerId");
+    verify(wingsPersistence)
+        .updateFields(PhysicalInfrastructureMappingWinRm.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
+    verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getWinRmConnectionAttributes());
   }
 
   @Test

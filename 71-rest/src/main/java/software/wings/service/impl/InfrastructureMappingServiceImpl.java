@@ -439,6 +439,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       keyValuePairs.put("winRmConnectionAttributes", azureInfrastructureMapping.getWinRmConnectionAttributes());
       keyValuePairs.put("tags", azureInfrastructureMapping.getTags());
       keyValuePairs.put("usePublicDns", azureInfrastructureMapping.isUsePublicDns());
+
+      if (!StringUtils.equals(((AzureInfrastructureMapping) savedInfraMapping).getWinRmConnectionAttributes(),
+              azureInfrastructureMapping.getWinRmConnectionAttributes())) {
+        getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType())
+            .updateHostConnAttrs(infrastructureMapping, azureInfrastructureMapping.getWinRmConnectionAttributes());
+      }
+
     } else if (infrastructureMapping instanceof AwsInfrastructureMapping) {
       AwsInfrastructureMapping awsInfrastructureMapping = (AwsInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(awsInfrastructureMapping, fromYaml);
@@ -495,8 +502,16 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       keyValuePairs.put(
           "loadBalancerId", ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getLoadBalancerId());
       keyValuePairs.put("hostNames", ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getHostNames());
-      keyValuePairs.put("winRmConnectionAttributes",
-          ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getWinRmConnectionAttributes());
+
+      if (!StringUtils.equals(((PhysicalInfrastructureMappingWinRm) savedInfraMapping).getWinRmConnectionAttributes(),
+              ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getWinRmConnectionAttributes())) {
+        getInfrastructureProviderByComputeProviderType(infrastructureMapping.getComputeProviderType())
+            .updateHostConnAttrs(infrastructureMapping,
+                ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getWinRmConnectionAttributes());
+
+        keyValuePairs.put("winRmConnectionAttributes",
+            ((PhysicalInfrastructureMappingWinRm) infrastructureMapping).getWinRmConnectionAttributes());
+      }
     } else if (infrastructureMapping instanceof CodeDeployInfrastructureMapping) {
       CodeDeployInfrastructureMapping codeDeployInfrastructureMapping =
           (CodeDeployInfrastructureMapping) infrastructureMapping;
