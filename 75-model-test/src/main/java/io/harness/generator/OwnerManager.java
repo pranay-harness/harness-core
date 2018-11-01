@@ -35,6 +35,9 @@ public class OwnerManager {
     private List<Object> objects = new ArrayList();
 
     public void add(Object owner) {
+      if (objects.contains(owner)) {
+        return;
+      }
       if (owner != null) {
         objects.add(owner);
       }

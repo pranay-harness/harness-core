@@ -964,7 +964,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   private Workflow validateAndGetWorkflow(String appId, String workflowId) {
     Workflow workflow = workflowService.readWorkflow(appId, workflowId);
-    notNullCheck("Workflow", workflow, USER);
+    notNullCheck("Workflow was deleted", workflow, USER);
     return workflow;
   }
 
