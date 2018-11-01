@@ -14,6 +14,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import com.google.inject.Inject;
 
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
@@ -74,6 +75,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
 
   @Ignore
   @Test
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void testGetSampleLogRecordVerifyCall() {
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
         + LogAnalysisResource.ANALYSIS_STATE_GET_SAMPLE_RECORD_URL + "?accountId=" + accountId
@@ -86,6 +88,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
 
   @Ignore
   @Test
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void testGetLogRecords() {
     SumoLogicSetupTestNodedata testNodedata = getSumoLogicSampledata();
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
