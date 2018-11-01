@@ -317,10 +317,7 @@ public class WorkflowGenerator {
   }
 
   public Workflow exists(Workflow workflow) {
-    return wingsPersistence.createQuery(Workflow.class)
-        .filter(Workflow.APP_ID_KEY, workflow.getAppId())
-        .filter(Workflow.NAME_KEY, workflow.getName())
-        .get();
+    return workflowService.readWorkflowByName(workflow.getAppId(), workflow.getName());
   }
 
   public Workflow ensureWorkflow(Randomizer.Seed seed, OwnerManager.Owners owners, Workflow workflow) {
@@ -347,8 +344,12 @@ public class WorkflowGenerator {
     if (workflow.getEnvId() != null) {
       builder.withEnvId(workflow.getEnvId());
     } else {
-      Environment environment = owners.obtainEnvironment();
-      builder.withEnvId(environment.getUuid());
+      OrchestrationWorkflowType orchestrationWorkflowType =
+          workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType();
+      if (!OrchestrationWorkflowType.BUILD.equals(orchestrationWorkflowType)) {
+        Environment environment = owners.obtainEnvironment();
+        builder.withEnvId(environment.getUuid());
+      }
     }
 
     if (workflow.getServiceId() != null) {

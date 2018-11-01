@@ -8,10 +8,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.github.benas.randombeans.api.EnhancedRandom;
-import io.harness.generator.EnvironmentGenerator.Environments;
 import io.harness.generator.OwnerManager.Owners;
 import io.harness.generator.SettingGenerator.Settings;
-import software.wings.beans.Environment;
+import software.wings.beans.Application;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
@@ -48,19 +47,18 @@ public class ArtifactStreamGenerator {
   }
 
   public ArtifactStream ensureHarnessSampleEchoWar(Randomizer.Seed seed, Owners owners, String serviceId) {
-    Environment environment =
-        owners.obtainEnvironment(() -> environmentGenerator.ensurePredefined(seed, owners, Environments.GENERIC_TEST));
     if (serviceId == null) {
       Service service = owners.obtainService();
       serviceId = service.getUuid();
     }
+    Application application = owners.obtainApplication();
 
     final SettingAttribute settingAttribute =
         settingGenerator.ensurePredefined(seed, owners, Settings.HARNESS_JENKINS_CONNECTOR);
 
     return ensureArtifactStream(seed,
         JenkinsArtifactStream.builder()
-            .appId(environment.getAppId())
+            .appId(application.getUuid())
             .serviceId(serviceId)
             .name("harness-samples")
             .sourceName(settingAttribute.getName())
