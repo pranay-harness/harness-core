@@ -38,6 +38,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
+import software.wings.api.DeploymentType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsInfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -183,9 +184,15 @@ public class AwsInfrastructureProviderTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdateHostConnAttrs() {
-    infrastructureProvider.updateHostConnAttrs(
-        anAwsInfrastructureMapping().withAppId(APP_ID).withUuid(INFRA_MAPPING_ID).build(), HOST_CONN_ATTR_ID);
-    verify(hostService).updateHostConnectionAttrByInfraMappingId(APP_ID, INFRA_MAPPING_ID, HOST_CONN_ATTR_ID);
+    infrastructureProvider.updateHostConnAttrs(anAwsInfrastructureMapping()
+                                                   .withAppId(APP_ID)
+                                                   .withUuid(INFRA_MAPPING_ID)
+                                                   .withDeploymentType(DeploymentType.SSH.toString())
+                                                   .build(),
+        HOST_CONN_ATTR_ID);
+    verify(hostService)
+        .updateHostConnectionAttrByInfraMappingId(
+            APP_ID, INFRA_MAPPING_ID, HOST_CONN_ATTR_ID, DeploymentType.SSH.toString());
   }
 
   @Test

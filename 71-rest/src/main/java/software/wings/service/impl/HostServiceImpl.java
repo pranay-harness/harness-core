@@ -13,11 +13,13 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.InvalidRequestException;
 import io.harness.scheduler.PersistentScheduler;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.DeploymentType;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.scheduler.PruneEntityJob;
@@ -99,6 +101,7 @@ public class HostServiceImpl implements HostService {
                                .filter("publicDns", appHost.getPublicDns())
                                .filter("appId", appHost.getAppId())
                                .filter("envId", appHost.getEnvId())
+                               .filter("infraMappingId", appHost.getInfraMappingId())
                                .get();
     return applicationHost != null ? applicationHost : wingsPersistence.saveAndGet(Host.class, appHost);
   }
@@ -192,11 +195,13 @@ public class HostServiceImpl implements HostService {
 
   @Override
   public void updateHostConnectionAttrByInfraMappingId(
-      String appId, String infraMappingId, String hostConnectionAttrs) {
+      String appId, String infraMappingId, String hostConnectionAttrs, String deploymentType) {
     Query<Host> query =
         wingsPersistence.createQuery(Host.class).filter("appId", appId).filter("infraMappingId", infraMappingId);
-    UpdateOperations<Host> operations =
-        wingsPersistence.createUpdateOperations(Host.class).set("hostConnAttr", hostConnectionAttrs);
+
+    UpdateOperations<Host> operations = StringUtils.equals(deploymentType, DeploymentType.SSH.toString())
+        ? wingsPersistence.createUpdateOperations(Host.class).set("hostConnAttr", hostConnectionAttrs)
+        : wingsPersistence.createUpdateOperations(Host.class).set("winrmConnAttr", hostConnectionAttrs);
     wingsPersistence.update(query, operations);
   }
 
