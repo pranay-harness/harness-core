@@ -54,6 +54,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
+import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
@@ -772,8 +773,15 @@ public class AccountServiceImpl implements AccountService {
       if (serviceId != null && !s.getUuid().equals(serviceId)) {
         continue;
       }
-      cvEnabledServices.add(
-          CVEnabledService.builder().service(s).cvConfigurations(serviceCVMap.get(s.getUuid())).build());
+      Application app = wingsPersistence.get(Application.class, s.getAppId());
+      if (app == null) {
+        continue;
+      }
+      cvEnabledServices.add(CVEnabledService.builder()
+                                .service(s)
+                                .appName(app.getName())
+                                .cvConfigurations(serviceCVMap.get(s.getUuid()))
+                                .build());
     }
 
     int totalSize = cvEnabledServices.size();

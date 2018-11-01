@@ -13,4 +13,5 @@ import java.util.List;
 public class CVEnabledService {
   Service service;
   List<String> cvConfigurations;
+  String appName;
 }

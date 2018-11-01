@@ -30,6 +30,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
+import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.LicenseInfo;
@@ -597,7 +598,9 @@ public class AccountServiceTest extends WingsBaseTest {
     config.setUuid(cvConfigId);
     config.setStateType(StateType.NEW_RELIC);
 
-    wingsPersistence.saveAndGet(Service.class, Service.builder().name("serviceTest").uuid(serviceId).build());
+    wingsPersistence.saveAndGet(
+        Service.class, Service.builder().name("serviceTest").appId(appId).uuid(serviceId).build());
+    wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withName("appName").build());
     wingsPersistence.save(config);
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
       { put(appId, buildAppPermissionSummary(serviceId, workflowId, envId)); }
