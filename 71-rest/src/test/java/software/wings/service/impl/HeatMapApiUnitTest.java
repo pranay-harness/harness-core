@@ -40,6 +40,7 @@ import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -283,7 +284,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   private void testOverlappingQuery(long endTime, CVConfiguration cvConfiguration) {
     Map<String, Map<String, TimeSeriesOfMetric>> timeSeries;
     Map<String, TimeSeriesOfMetric> metricMap;
-    List<TimeSeriesDataPoint> dataPoints;
+    Collection<TimeSeriesDataPoint> dataPoints;
     long startEpoch20MinutesAgo = endTime - TimeUnit.MINUTES.toMillis(20);
     long endEpoch10MinutesAgo = endTime - TimeUnit.MINUTES.toMillis(10);
     long historyStartTime = startEpoch20MinutesAgo - TimeUnit.HOURS.toMillis(1);
@@ -299,7 +300,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   private void testTSFor20Mins(long endTime, CVConfiguration cvConfiguration) {
     Map<String, Map<String, TimeSeriesOfMetric>> timeSeries;
     Map<String, TimeSeriesOfMetric> metricMap;
-    List<TimeSeriesDataPoint> dataPoints;
+    Collection<TimeSeriesDataPoint> dataPoints;
     long start20MinutesAgo = endTime - TimeUnit.MINUTES.toMillis(20);
     long historyStartTime = start20MinutesAgo - TimeUnit.HOURS.toMillis(1);
 
@@ -315,7 +316,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   private void testTSFor15Mins(long startTime, long endTime, CVConfiguration cvConfiguration) {
     Map<String, Map<String, TimeSeriesOfMetric>> timeSeries;
     Map<String, TimeSeriesOfMetric> metricMap;
-    List<TimeSeriesDataPoint> dataPoints;
+    Collection<TimeSeriesDataPoint> dataPoints;
     long historyStartTime = startTime - TimeUnit.HOURS.toMillis(1);
     timeSeries =
         continuousVerificationService.fetchObservedTimeSeries(startTime, endTime, cvConfiguration, historyStartTime);
