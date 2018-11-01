@@ -151,8 +151,9 @@ public class ContinuousVerificationDashboardResource {
   @ExceptionMetered
   public RestResponse<List<TransactionTimeSeries>> getTimeSeriesOfHeatMapUnit(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("startTime") long startTime,
-      @QueryParam("endTime") long endTime, @QueryParam("cvConfigId") String cvConfigId) {
-    return new RestResponse<>(
-        continuousVerificationService.getTimeSeriesOfHeatMapUnit(accountId, cvConfigId, startTime, endTime));
+      @QueryParam("endTime") long endTime, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("historyStartTime") long historyStartTime) {
+    return new RestResponse<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(
+        accountId, cvConfigId, startTime, endTime, historyStartTime));
   }
 }

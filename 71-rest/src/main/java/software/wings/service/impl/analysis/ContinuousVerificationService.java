@@ -36,7 +36,7 @@ public interface ContinuousVerificationService {
   List<HeatMap> getHeatMap(
       String accountId, String appId, String serviceId, long startTime, long endTime, boolean detailed);
   List<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
-      String accountId, String cvConfigId, long startTime, long endTime);
+      String accountId, String cvConfigId, long startTime, long endTime, long historyStartTime);
   Map<String, Map<String, TimeSeriesOfMetric>> fetchObservedTimeSeries(
-      long startTime, long endTime, CVConfiguration cvConfiguration);
+      long startTime, long endTime, CVConfiguration cvConfiguration, long historyStartTime);
 }
