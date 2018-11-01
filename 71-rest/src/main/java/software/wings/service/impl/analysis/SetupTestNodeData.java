@@ -1,6 +1,7 @@
 package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import software.wings.api.InstanceElement;
@@ -18,7 +19,7 @@ public class SetupTestNodeData {
   @NotNull private String appId;
   @NotNull private String settingId;
   private String instanceName;
-  private boolean isServiceLevel;
+  @JsonProperty private boolean isServiceLevel;
   private InstanceElement instanceElement;
   private String hostExpression;
   private String workflowId;
