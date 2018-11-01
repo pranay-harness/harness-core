@@ -64,7 +64,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private AuthService authService;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private AlertService alertService;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public UserGroup save(UserGroup userGroup) {

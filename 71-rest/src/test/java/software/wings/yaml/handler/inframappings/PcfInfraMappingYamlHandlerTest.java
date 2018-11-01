@@ -66,7 +66,7 @@ public class PcfInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
   @Mock private EnvironmentService environmentService;
   @Mock private YamlChangeSetService yamlChangeSetService;
   @Mock private YamlDirectoryService yamlDirectoryService;
-  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   private String validYamlContent = "harnessApiVersion: '1.0'\n"
       + "type: PCF_PCF\n"

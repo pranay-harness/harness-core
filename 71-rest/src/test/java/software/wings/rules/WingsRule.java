@@ -284,11 +284,16 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
     configuration.setMongoConnectionFactory(
         MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
-    configuration.getSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+    configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+    configuration.getServiceSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     if (annotations.stream().anyMatch(SetupScheduler.class ::isInstance)) {
-      configuration.getSchedulerConfig().setAutoStart("true");
+      configuration.getBackgroundSchedulerConfig().setAutoStart("true");
+      configuration.getServiceSchedulerConfig().setAutoStart("true");
       if (fakeMongo) {
-        configuration.getSchedulerConfig().setJobStoreClass(org.quartz.simpl.RAMJobStore.class.getCanonicalName());
+        configuration.getBackgroundSchedulerConfig().setJobStoreClass(
+            org.quartz.simpl.RAMJobStore.class.getCanonicalName());
+        configuration.getServiceSchedulerConfig().setJobStoreClass(
+            org.quartz.simpl.RAMJobStore.class.getCanonicalName());
       }
     }
     return configuration;

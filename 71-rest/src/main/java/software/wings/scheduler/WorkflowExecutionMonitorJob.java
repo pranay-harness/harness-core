@@ -53,7 +53,7 @@ public class WorkflowExecutionMonitorJob implements Job {
   @Inject private ExecutorService executorService;
   @Inject private StateMachineExecutor stateMachineExecutor;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   public static void add(PersistentScheduler jobScheduler) {
     jobScheduler.deleteJob(NAME, GROUP);

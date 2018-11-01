@@ -51,7 +51,7 @@ public class YamlChangeSetPruneJob implements Job {
   @Inject private YamlChangeSetService yamlChangeSetService;
   @Inject private AccountService accountService;
   @Inject private PersistentLocker persistentLocker;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private ExecutorService executorService;
 

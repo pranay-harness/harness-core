@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.Map;
 
 public class CronUtil {
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   public String scheduleReminder(long waitMillis) {
     return scheduleReminder(waitMillis, null);

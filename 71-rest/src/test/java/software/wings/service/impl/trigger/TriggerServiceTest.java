@@ -96,7 +96,7 @@ import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
@@ -117,7 +117,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class TriggerServiceTest extends WingsBaseTest {
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private PipelineService pipelineService;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private ArtifactStreamService artifactStreamService;

@@ -75,7 +75,7 @@ public class PruneEntityJob implements Job {
   @Inject private WorkflowService workflowService;
   @Inject private ExecutorService executorService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   static Random randomizer = new Random();
   static RateLimiter pruneRateLimiter = RateLimiter.create(5);

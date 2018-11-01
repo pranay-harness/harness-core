@@ -103,7 +103,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private YamlPushService yamlPushService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   /**
    * {@inheritDoc}

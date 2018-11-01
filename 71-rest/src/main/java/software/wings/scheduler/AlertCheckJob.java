@@ -53,7 +53,7 @@ public class AlertCheckJob implements Job {
   @Inject private DelegateService delegateService;
   @Inject private EmailHelperUtil emailHelperUtil;
   @Inject private MainConfiguration mainConfiguration;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject private ExecutorService executorService;
 

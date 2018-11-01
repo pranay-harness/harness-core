@@ -51,7 +51,7 @@ public class AppContainerServiceImpl implements AppContainerService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private AppService appService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   /**
    * {@inheritDoc}

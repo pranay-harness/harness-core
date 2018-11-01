@@ -48,7 +48,7 @@ public class VerificationJob implements Job {
   // Cron Group name
   public static final String VERIFICATION_CRON_GROUP = "VERIFICATION_CRON_GROUP";
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   private static final Logger logger = LoggerFactory.getLogger(VerificationJob.class);
 
   @Inject private VerificationManagerClient verificationManagerClient;

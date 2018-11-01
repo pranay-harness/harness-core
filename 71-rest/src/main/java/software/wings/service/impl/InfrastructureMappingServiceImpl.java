@@ -185,7 +185,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private AwsIamHelperServiceManager awsIamHelperServiceManager;
   @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private AwsCodeDeployHelperServiceManager awsCodeDeployHelperServiceManager;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private YamlPushService yamlPushService;
   @Inject private AzureHelperService azureHelperService;
 

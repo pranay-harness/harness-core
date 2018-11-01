@@ -122,7 +122,7 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private MongoIdempotentRegistry<String> idempotentRegistry;
   @Inject private TriggerServiceHelper triggerServiceHelper;
   @Inject private EnvironmentService environmentService;

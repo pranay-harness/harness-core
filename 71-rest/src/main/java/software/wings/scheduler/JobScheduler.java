@@ -6,31 +6,29 @@ import static java.util.Arrays.asList;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
-import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.scheduler.AbstractQuartzScheduler;
+import io.harness.scheduler.SchedulerConfig;
 import org.quartz.SchedulerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.MainConfiguration;
 import software.wings.core.managerConfiguration.ConfigChangeEvent;
 import software.wings.core.managerConfiguration.ConfigChangeListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
 
 import java.util.List;
 
-@Singleton
 public class JobScheduler extends AbstractQuartzScheduler implements ConfigChangeListener {
   private static final Logger logger = LoggerFactory.getLogger(JobScheduler.class);
 
   @Inject
-  public JobScheduler(Injector injector, MainConfiguration configuration) {
-    super(injector, configuration.getSchedulerConfig(), configuration.getMongoConnectionFactory().getUri());
+  public JobScheduler(Injector injector, SchedulerConfig schedulerConfig, String defaultMongoUri) {
+    super(injector, schedulerConfig, defaultMongoUri);
     try {
-      if (configuration.getSchedulerConfig().getAutoStart().equals("true")) {
+      if (schedulerConfig.getAutoStart().equals("true")) {
         injector.getInstance(MaintenanceController.class).register(this);
         scheduler = createScheduler(getDefaultProperties());
         injector.getInstance(ConfigurationController.class).register(this, asList(ConfigChangeEvent.PrimaryChanged));

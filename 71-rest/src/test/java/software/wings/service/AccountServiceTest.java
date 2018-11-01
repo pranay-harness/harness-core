@@ -40,7 +40,7 @@ import software.wings.beans.StringValue.Builder;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
 import software.wings.licensing.LicenseManager;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
@@ -75,7 +75,7 @@ public class AccountServiceTest extends WingsBaseTest {
 
   @Mock private AppService appService;
   @Mock private SettingsService settingsService;
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private TemplateGalleryService templateGalleryService;
   @Mock private FeatureFlagService featureFlagService;
   @Mock private UserPermissionInfo mockUserPermissionInfo;

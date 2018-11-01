@@ -27,7 +27,7 @@ import java.time.OffsetDateTime;
 public class ZombieHunterJobTest extends WingsBaseTest {
   public static final Logger logger = LoggerFactory.getLogger(ZombieHunterJobTest.class);
 
-  @Mock @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Mock @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Inject @InjectMocks private AppService appService;
   @Inject private WingsPersistence wingsPersistence;

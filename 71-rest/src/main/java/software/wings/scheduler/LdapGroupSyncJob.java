@@ -68,7 +68,7 @@ public class LdapGroupSyncJob implements Job {
   public static final String GROUP = "LDAP_GROUP_SYNC_CRON_JOB";
   private static final int POLL_INTERVAL = 600; // Seconds
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private PersistentLocker persistentLocker;
   @Inject private ExecutorService executorService;
   @Inject private SSOSettingService ssoSettingService;

@@ -53,7 +53,7 @@ public class SSOSettingServiceImpl implements SSOSettingService {
   @Inject private NotificationService notificationService;
   @Inject private DelegateService delegateService;
   @Inject private AccountService accountService;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   @Override
   public SamlSettings getSamlSettingsByIdpUrl(String idpUrl) {

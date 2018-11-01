@@ -20,7 +20,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.JenkinsArtifactStream;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 
@@ -39,7 +39,7 @@ public class ArtifactStreamResourceServiceTest extends WingsBaseTest {
                                                                   .artifactPaths(asList("dist/svr-*.war"))
                                                                   .build();
 
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
 
   @InjectMocks @Inject private ArtifactStreamService artifactStreamService;

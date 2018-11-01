@@ -40,7 +40,7 @@ public class PruneFileJob implements Job {
 
   @Inject private FileService fileService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   public static Trigger defaultTrigger(String id, Duration delay) {
     final TriggerBuilder<SimpleTrigger> builder = TriggerBuilder.newTrigger().withIdentity(id, GROUP).withSchedule(

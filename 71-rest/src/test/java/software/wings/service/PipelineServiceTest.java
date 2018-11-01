@@ -79,7 +79,7 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.TriggerService;
@@ -108,7 +108,7 @@ public class PipelineServiceTest extends WingsBaseTest {
   @Mock private UpdateOperations<Pipeline> updateOperations;
   @Mock private HQuery<PipelineExecution> query;
   @Mock private HQuery<Pipeline> pipelineQuery;
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private MorphiaIterator<Pipeline, Pipeline> pipelineIterator;
 

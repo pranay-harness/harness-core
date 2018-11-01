@@ -14,7 +14,7 @@ import java.util.concurrent.TimeoutException;
 
 @SetupScheduler
 public class InstanceSyncJobTest extends WingsBaseTest {
-  @Inject private JobScheduler jobScheduler;
+  @Inject private ServiceJobScheduler jobScheduler;
 
   private static final String appId = "Dummy App Id";
 

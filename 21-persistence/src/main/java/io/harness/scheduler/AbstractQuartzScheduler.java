@@ -3,7 +3,6 @@ package io.harness.scheduler;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.lang.String.format;
 
-import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import com.mongodb.BasicDBObject;
@@ -39,7 +38,6 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
   private SchedulerConfig schedulerConfig;
   private String defaultMongoUri;
 
-  @Inject
   public AbstractQuartzScheduler(Injector injector, SchedulerConfig schedulerConfig, String defaultMongoUri) {
     this.injector = injector;
     this.schedulerConfig = schedulerConfig;

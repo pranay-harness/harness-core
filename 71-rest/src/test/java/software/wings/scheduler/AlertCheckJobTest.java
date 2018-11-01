@@ -38,7 +38,7 @@ public class AlertCheckJobTest extends WingsBaseTest {
   public static final String ACCOUNT_ID = "ACCOUNT_ID";
   @Mock private WingsPersistence wingsPersistence;
   @Mock private AlertService alertService;
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private ExecutorService executorService;
   @Mock DelegateService delegateService;
   @Mock EmailHelperUtil emailHelperUtil;

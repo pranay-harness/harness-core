@@ -47,7 +47,7 @@ public class ArtifactCollectionJob implements Job {
   @Inject private TriggerService triggerService;
   @Inject private ArtifactCollectionService artifactCollectionService;
   @Inject @Named("artifactCollectionExecutor") private ExecutorService artifactCollectionExecutor;
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   public static void addDefaultJob(PersistentScheduler jobScheduler, String appId, String artifactStreamId) {
     // If somehow this job was scheduled from before, we would like to reset it to start counting from now.

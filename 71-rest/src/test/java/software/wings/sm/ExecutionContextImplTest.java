@@ -43,7 +43,7 @@ import software.wings.beans.ServiceVariable.Type;
 import software.wings.beans.SweepingOutput;
 import software.wings.beans.SweepingOutput.Scope;
 import software.wings.beans.artifact.Artifact;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.EnvironmentService;
@@ -64,7 +64,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Inject @InjectMocks AppService appService;
   @Inject EnvironmentService environmentService;
 
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private SettingsService settingsService;
   @Mock private ArtifactService artifactService;
   @Mock private ServiceTemplateService serviceTemplateService;

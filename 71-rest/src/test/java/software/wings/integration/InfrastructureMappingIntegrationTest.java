@@ -38,7 +38,7 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -52,7 +52,7 @@ import java.util.List;
  * Created by anubhaw on 1/16/17.
  */
 public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Inject @InjectMocks private AppService appService;
 
   @Inject private WingsPersistence wingsPersistence;

@@ -50,7 +50,7 @@ public class HostServiceImpl implements HostService {
   @Inject private ExecutorService executorService;
   @Inject private ServiceInstanceService serviceInstanceService;
 
-  @Inject @Named("JobScheduler") private PersistentScheduler jobScheduler;
+  @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
   /* (non-Javadoc)
    * @see software.wings.service.intfc.HostService#list(software.wings.dl.PageRequest)

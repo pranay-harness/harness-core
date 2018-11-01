@@ -40,7 +40,7 @@ import software.wings.beans.artifact.Artifact.Status;
 import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.common.VariableProcessor;
 import software.wings.expression.ManagerExpressionEvaluator;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -60,7 +60,7 @@ import java.util.concurrent.TimeUnit;
 public class ArtifactCollectionStateTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
   @Mock private ArtifactStreamService artifactStreamService;
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private ArtifactService artifactService;
   @Mock private WorkflowExecutionService workflowExecutionService;
   @Mock private AppService appService;

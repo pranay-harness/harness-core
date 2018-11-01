@@ -15,7 +15,7 @@ import java.util.concurrent.TimeoutException;
 
 @SetupScheduler
 public class ArtifactCollectionJobTest extends WingsBaseTest {
-  @Inject private JobScheduler jobScheduler;
+  @Inject private BackgroundJobScheduler jobScheduler;
   @Inject @InjectMocks ArtifactCollectionJob job = new ArtifactCollectionJob();
 
   private static final String appId = "Dummy App Id";

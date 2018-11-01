@@ -405,7 +405,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   private void registerCronJobs(Injector injector) {
     logger.info("Register cron jobs...");
     final PersistentScheduler jobScheduler =
-        injector.getInstance(Key.get(PersistentScheduler.class, Names.named("JobScheduler")));
+        injector.getInstance(Key.get(PersistentScheduler.class, Names.named("BackgroundJobScheduler")));
 
     PersistentLocker persistentLocker = injector.getInstance(Key.get(PersistentLocker.class));
 

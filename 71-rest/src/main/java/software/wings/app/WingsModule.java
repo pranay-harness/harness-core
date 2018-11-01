@@ -73,7 +73,8 @@ import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseManager;
 import software.wings.licensing.LicenseManagerImpl;
 import software.wings.licensing.LicenseProvider;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.service.EcrClassicBuildServiceImpl;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.AcrBuildServiceImpl;
@@ -338,6 +339,7 @@ import software.wings.utils.HostValidationService;
 import software.wings.utils.HostValidationServiceImpl;
 
 import java.time.Clock;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -532,9 +534,21 @@ public class WingsModule extends DependencyModule {
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 
     bind(PersistentScheduler.class)
-        .annotatedWith(Names.named("JobScheduler"))
-        .to(JobScheduler.class)
+        .annotatedWith(Names.named("BackgroundJobScheduler"))
+        .to(BackgroundJobScheduler.class)
         .asEagerSingleton();
+
+    if (Objects.equals(configuration.getBackgroundSchedulerConfig(), configuration.getServiceSchedulerConfig())) {
+      bind(PersistentScheduler.class)
+          .annotatedWith(Names.named("ServiceJobScheduler"))
+          .to(BackgroundJobScheduler.class)
+          .asEagerSingleton();
+    } else {
+      bind(PersistentScheduler.class)
+          .annotatedWith(Names.named("ServiceJobScheduler"))
+          .to(ServiceJobScheduler.class)
+          .asEagerSingleton();
+    }
 
     bind(ContainerSync.class).to(ContainerSyncImpl.class);
     bind(AwsLambdaService.class).to(AwsLambdaServiceImpl.class);

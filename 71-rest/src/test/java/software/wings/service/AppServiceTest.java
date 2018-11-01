@@ -54,7 +54,8 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
 import software.wings.dl.WingsPersistence;
-import software.wings.scheduler.JobScheduler;
+import software.wings.scheduler.BackgroundJobScheduler;
+import software.wings.scheduler.ServiceJobScheduler;
 import software.wings.security.UserThreadLocal;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppContainerService;
@@ -117,7 +118,8 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private WorkflowService workflowService;
   @Mock private YamlGitService yamlGitService;
 
-  @Mock private JobScheduler jobScheduler;
+  @Mock private BackgroundJobScheduler backgroundJobScheduler;
+  @Mock private ServiceJobScheduler serviceJobScheduler;
 
   /**
    * Sets up.
@@ -170,7 +172,7 @@ public class AppServiceTest extends WingsBaseTest {
     verify(notificationService).sendNotificationAsync(any(Notification.class));
     ArgumentCaptor<JobDetail> jobDetailArgumentCaptor = ArgumentCaptor.forClass(JobDetail.class);
     ArgumentCaptor<Trigger> triggerArgumentCaptor = ArgumentCaptor.forClass(Trigger.class);
-    verify(jobScheduler, Mockito.times(1))
+    verify(serviceJobScheduler, Mockito.times(1))
         .scheduleJob(jobDetailArgumentCaptor.capture(), triggerArgumentCaptor.capture());
 
     assertThat(jobDetailArgumentCaptor.getValue()).isNotNull();
