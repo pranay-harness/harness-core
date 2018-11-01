@@ -7,6 +7,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -52,7 +53,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -644,10 +644,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return maxRiskLevel;
   }
 
-  private List<TimeSeriesDataPoint> getPreInitializeTimeSeries(long startTime, long endTime) {
-    return TimeSeriesDataPoint.initializeTimeSeriesDataPointsList(startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1);
-  }
-
   @NotNull
   public Map<String, Map<String, TimeSeriesOfMetric>> fetchObservedTimeSeries(
       long startTime, long endTime, CVConfiguration cvConfiguration, long historyStartTime) {
@@ -668,7 +664,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
              new HIterator<>(getTimeSeriesAnalysisRecordIterator(startTime, endTime, cvConfiguration))) {
       while (timeSeriesAnalysisRecords.hasNext()) {
         TimeSeriesMLAnalysisRecord record = timeSeriesAnalysisRecords.next();
-        int analysisMinute = record.getAnalysisMinute();
         record.getTransactions().forEach((transactionKey, transaction) -> {
           String transactionName = transaction.getTxn_name();
 
@@ -684,7 +679,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                   .put(metric.getMetric_name(),
                       TimeSeriesOfMetric.builder()
                           .metricName(metric.getMetric_name())
-                          .timeSeries(getPreInitializeTimeSeries(startTime, endTime))
+                          .timeSeries(
+                              initializeTimeSeriesDataPointsList(startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1))
                           .risk(-1)
                           .build());
             }
@@ -717,16 +713,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               // contains value at each minute
               List<Double> datapoints = metricHostResultsEntry.getValue().getTest_data();
 
-              Iterator<TimeSeriesDataPoint> existingPoints =
-                  observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getTimeSeries().iterator();
+              Map<Long, TimeSeriesDataPoint> existingPoints =
+                  observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getTimeSeriesMap();
 
               long period = TimeUnit.MINUTES.toMillis(1);
-              for (long i = startTime, j = 0; existingPoints.hasNext() && i + period <= endTime; i += period, j++) {
-                TimeSeriesDataPoint timeSeriesDataPoint = existingPoints.next();
-                if (timeSeriesDataPoint.getTimestamp() == i) {
-                  if (j < datapoints.size()) {
-                    timeSeriesDataPoint.setValue(datapoints.get((int) j));
-                  }
+              for (long i = TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES + 1),
+                        j = 0;
+                   i + period <= endTime; i += period, j++) {
+                if (existingPoints.containsKey(i)) {
+                  existingPoints.get(i).setValue(datapoints.get((int) j));
                 }
               }
             }
@@ -774,6 +769,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   public List<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
       String accountId, String cvConfigId, long startTime, long endTime, long historyStartTime) {
+    startTime = Timestamp.minuteBoundary(startTime);
+    endTime = Timestamp.minuteBoundary(endTime);
+    historyStartTime = Timestamp.minuteBoundary(historyStartTime);
     CVConfiguration cvConfiguration =
         wingsPersistence.createQuery(CVConfiguration.class).filter("_id", cvConfigId).get();
     if (cvConfiguration == null) {
