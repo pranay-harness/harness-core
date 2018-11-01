@@ -100,7 +100,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, Distribut
     configuration.getPortal().setVerificationUrl(VERIFICATION_PATH);
     configuration.setMongoConnectionFactory(
         MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
-    configuration.getSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
+    configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     return configuration;
   }
 
