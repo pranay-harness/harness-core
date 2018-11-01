@@ -253,7 +253,7 @@ function setUpVerificationService(){
    echo "################################Setting up Verification Service ################################"
    verificationServiceVersion=$(getProperty "version.properties" "VERIFICATION_SERVICE_VERSION")
    env=$(getProperty "version.properties" "ENV")
-   docker run -d --rm --name verificationService -e MANAGER_URL=$LOAD_BALANCER_URL/api/ -e MONGO_URI="$MONGO_URI" -e ENV=$env -e VERIFICATION_PORT=$verificationport -v $runtime_dir/verification/logs:/opt/harness/logs harness/verification-service:$verificationServiceVersion
+   docker run -d --rm --name verificationService -e MANAGER_URL=$LOAD_BALANCER_URL/api/ -e MONGO_URI="$MONGO_URI" -e ENV=$env -e VERIFICATION_PORT=$verificationport -p $verificationport:$verificationport -v $runtime_dir/verification/logs:/opt/harness/logs harness/verification-service:$verificationServiceVersion
 
     if [[ $(checkDockerImageRunning "verificationService") -eq 1 ]]; then
         echo "Verification service is not running"
