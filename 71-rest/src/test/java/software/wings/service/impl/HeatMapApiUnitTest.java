@@ -261,17 +261,17 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
 
     // Generate data for 12 hours
-    for (int analysisMinute = endMinute; analysisMinute >= startMinuteFor12Hrs;
-         analysisMinute -= VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES) {
-      saveTimeSeriesRecordToDb(analysisMinute, cvConfiguration); // analysis minute = end minute of analyis
+    for (int analysisMinute = endMinute, j = 0; analysisMinute >= startMinuteFor12Hrs;
+         analysisMinute -= VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES, j++) {
+      // for last 15 minutes, set risk as 1. For everything before that, set it to 0.
+      saveTimeSeriesRecordToDb(
+          analysisMinute, cvConfiguration, j >= 15 ? 0 : 1); // analysis minute = end minute of analyis
     }
 
     long start15MinutesAgo = endTime - TimeUnit.MINUTES.toMillis(VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES);
-    int startMinuteFor15Mins = (int) TimeUnit.MILLISECONDS.toMinutes(start15MinutesAgo + 1);
-    int totalMinutes = endMinute - startMinuteFor15Mins;
 
     // First case: Fetch an exact block of 15 minutes
-    testTSFor15Mins(endTime, startMinuteFor15Mins, totalMinutes, cvConfiguration);
+    testTSFor15Mins(start15MinutesAgo, endTime, cvConfiguration);
 
     // Second case: Fetch last 5 data points from one record, all 15 from the next records
     testTSFor20Mins(endTime, cvConfiguration);
@@ -286,16 +286,14 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     List<TimeSeriesDataPoint> dataPoints;
     long startEpoch20MinutesAgo = endTime - TimeUnit.MINUTES.toMillis(20);
     long endEpoch10MinutesAgo = endTime - TimeUnit.MINUTES.toMillis(10);
+    long historyStartTime = startEpoch20MinutesAgo - TimeUnit.HOURS.toMillis(1);
 
-    int startMinuteFor20Mins = (int) TimeUnit.MILLISECONDS.toMinutes(startEpoch20MinutesAgo);
-    int endMinuteFor10MinsAgo = (int) TimeUnit.MILLISECONDS.toMinutes(endEpoch10MinutesAgo);
-
-    timeSeries = continuousVerificationService.fetchObservedTimeSeries(TimeUnit.MINUTES.toMillis(startMinuteFor20Mins),
-        TimeUnit.MINUTES.toMillis(endMinuteFor10MinsAgo), cvConfiguration);
+    timeSeries = continuousVerificationService.fetchObservedTimeSeries(
+        startEpoch20MinutesAgo, endEpoch10MinutesAgo, cvConfiguration, historyStartTime);
     assertTrue(timeSeries.containsKey("/login"));
     metricMap = timeSeries.get("/login");
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
-    assertEquals(10, dataPoints.size());
+    assertEquals(70, dataPoints.size());
   }
 
   private void testTSFor20Mins(long endTime, CVConfiguration cvConfiguration) {
@@ -303,34 +301,43 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     Map<String, TimeSeriesOfMetric> metricMap;
     List<TimeSeriesDataPoint> dataPoints;
     long start20MinutesAgo = endTime - TimeUnit.MINUTES.toMillis(20);
-    int startMinuteFor20Mins = (int) TimeUnit.MILLISECONDS.toMinutes(start20MinutesAgo);
+    long historyStartTime = start20MinutesAgo - TimeUnit.HOURS.toMillis(1);
 
     timeSeries = continuousVerificationService.fetchObservedTimeSeries(
-        TimeUnit.MINUTES.toMillis(startMinuteFor20Mins), endTime, cvConfiguration);
+        start20MinutesAgo, endTime, cvConfiguration, historyStartTime);
     assertTrue(timeSeries.containsKey("/login"));
     metricMap = timeSeries.get("/login");
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
-    assertEquals(20, dataPoints.size());
+    assertEquals(80, dataPoints.size());
   }
 
   @NotNull
-  private void testTSFor15Mins(
-      long endTime, int startMinuteFor15Mins, int totalMinutes, CVConfiguration cvConfiguration) {
+  private void testTSFor15Mins(long startTime, long endTime, CVConfiguration cvConfiguration) {
     Map<String, Map<String, TimeSeriesOfMetric>> timeSeries;
     Map<String, TimeSeriesOfMetric> metricMap;
     List<TimeSeriesDataPoint> dataPoints;
-    timeSeries = continuousVerificationService.fetchObservedTimeSeries(
-        TimeUnit.MINUTES.toMillis(startMinuteFor15Mins), endTime, cvConfiguration);
+    long historyStartTime = startTime - TimeUnit.HOURS.toMillis(1);
+    timeSeries =
+        continuousVerificationService.fetchObservedTimeSeries(startTime, endTime, cvConfiguration, historyStartTime);
     assertTrue(timeSeries.containsKey("/login"));
 
     metricMap = timeSeries.get("/login");
     assertTrue(metricMap.containsKey("95th Percentile Response Time (ms)"));
 
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
-    assertEquals(totalMinutes, dataPoints.size());
+
+    assertEquals(75, dataPoints.size());
+
+    // [-inf, end-15) => risk=0
+    // [end-15, end] => risk=1
+    // history = last 60 mins => risk = 0
+    // current ts = 15 mins => risk = 1
+    // After overlap, risk of metric should be 1, not 0
+    // Risk of current ts *overrides* risk of history ts
+    assertEquals(1, metricMap.get("95th Percentile Response Time (ms)").getRisk());
   }
 
-  private void saveTimeSeriesRecordToDb(int analysisMinute, CVConfiguration cvConfiguration) {
+  private void saveTimeSeriesRecordToDb(int analysisMinute, CVConfiguration cvConfiguration, int risk) {
     final String DEFAULT_GROUP_NAME = "default";
     final String DEFAULT_RESULTS_KEY = "docker-test/tier";
 
@@ -360,7 +367,6 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     Map<String, TimeSeriesMLHostSummary> results = new HashMap<>();
 
     // txn => 0 => metrics => 0 => results => docker-test/tier
-    int risk = ThreadLocalRandom.current().nextInt(1, 3);
     List<Double> test_data = new ArrayList<>();
     for (int i = 0; i < VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES; i++) {
       test_data.add(ThreadLocalRandom.current().nextDouble(0, 30));
@@ -371,6 +377,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     // Set/put everything we have constructed so far
     metricSummary.setResults(results);
+    metricSummary.setMax_risk(risk);
     metricSummaryMap.put("0", metricSummary);
     txnSummary.setMetrics(metricSummaryMap);
     txnSummary.setMetrics(metricSummaryMap);

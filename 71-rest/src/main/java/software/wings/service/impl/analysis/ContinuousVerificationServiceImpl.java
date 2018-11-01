@@ -650,7 +650,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   @NotNull
   public Map<String, Map<String, TimeSeriesOfMetric>> fetchObservedTimeSeries(
-      long startTime, long endTime, CVConfiguration cvConfiguration) {
+      long startTime, long endTime, CVConfiguration cvConfiguration, long historyStartTime) {
+    // 1. Get time series for the entire duration from historyStartTime to endTime
+    // 2. Pass startTime as the riskCutOffTime as that's the starting point where we consider risk
+    if (historyStartTime == 0) {
+      historyStartTime = startTime - TimeUnit.HOURS.toMillis(2);
+    }
+    return getTimeSeriesForTimeRange(historyStartTime, endTime, cvConfiguration, startTime);
+  }
+
+  @NotNull
+  private Map<String, Map<String, TimeSeriesOfMetric>> getTimeSeriesForTimeRange(
+      long startTime, long endTime, CVConfiguration cvConfiguration, long riskCutOffTime) {
     // The object to be returned which contains the map txn => metrics => timeseries per metric
     Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries = new HashMap<>();
     try (HIterator<TimeSeriesMLAnalysisRecord> timeSeriesAnalysisRecords =
@@ -674,8 +685,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
                       TimeSeriesOfMetric.builder()
                           .metricName(metric.getMetric_name())
                           .timeSeries(getPreInitializeTimeSeries(startTime, endTime))
-                          .risk(metric.getMax_risk())
+                          .risk(-1)
                           .build());
+            }
+
+            // Update risk if record's analysisMinute is >= risk cut-off time
+            if (TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()) >= riskCutOffTime) {
+              int candidateRisk = metric.getMax_risk();
+              int currentMaxRisk = observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getRisk();
+              if (candidateRisk > currentMaxRisk) {
+                observedTimeSeries.get(transactionName).get(metric.getMetric_name()).setRisk(candidateRisk);
+              }
             }
 
             // Logic to insert time series data points
@@ -753,14 +773,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   public List<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
-      String accountId, String cvConfigId, long startTime, long endTime) {
+      String accountId, String cvConfigId, long startTime, long endTime, long historyStartTime) {
     CVConfiguration cvConfiguration =
         wingsPersistence.createQuery(CVConfiguration.class).filter("_id", cvConfigId).get();
     if (cvConfiguration == null) {
       logger.info("No cvConfig found for cvConfigId={}", cvConfigId);
       return new ArrayList<>();
     }
-    return convertTimeSeriesResponse(fetchObservedTimeSeries(startTime, endTime, cvConfiguration));
+    return convertTimeSeriesResponse(fetchObservedTimeSeries(startTime, endTime, cvConfiguration, historyStartTime));
   }
 
   private List<TransactionTimeSeries> convertTimeSeriesResponse(
