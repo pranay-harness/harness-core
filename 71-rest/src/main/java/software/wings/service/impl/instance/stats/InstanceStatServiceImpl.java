@@ -64,7 +64,6 @@ public class InstanceStatServiceImpl implements InstanceStatService {
                                              .order(Sort.ascending("timestamp"));
 
     List<InstanceStatsSnapshot> timeline = new LinkedList<>();
-
     try (HIterator<InstanceStatsSnapshot> iterator = new HIterator<>(query.fetch())) {
       while (iterator.hasNext()) {
         timeline.add(iterator.next());
