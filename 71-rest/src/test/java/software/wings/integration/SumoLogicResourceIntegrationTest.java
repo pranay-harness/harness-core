@@ -19,6 +19,7 @@ import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SumoConfig;
@@ -71,6 +72,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
                               .build());
   }
 
+  @Ignore
   @Test
   public void testGetSampleLogRecordVerifyCall() {
     WebTarget target = client.target(API_BASE + "/" + LogAnalysisResource.SUMO_RESOURCE_BASE_URL
@@ -82,6 +84,7 @@ public class SumoLogicResourceIntegrationTest extends BaseIntegrationTest {
     assertEquals("Request failed", restResponse.getStatus(), HttpStatus.SC_OK);
   }
 
+  @Ignore
   @Test
   public void testGetLogRecords() {
     SumoLogicSetupTestNodedata testNodedata = getSumoLogicSampledata();
