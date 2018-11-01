@@ -811,7 +811,7 @@ public class AccountServiceImpl implements AccountService {
     Set<String> appIds = userAppPermissions.keySet();
     List<CVConfiguration> cvConfigList = new ArrayList<>();
     for (String appId : appIds) {
-      cvConfigList.addAll(cvConfigurationService.listConfigurations(accountId, appId));
+      cvConfigList.addAll(cvConfigurationService.listConfigurations(accountId, appId, null));
     }
 
     if (serviceId != null) {

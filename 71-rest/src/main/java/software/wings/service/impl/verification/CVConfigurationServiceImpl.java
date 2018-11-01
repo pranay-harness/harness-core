@@ -1,8 +1,11 @@
 package software.wings.service.impl.verification;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,11 +84,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   @Override
-  public <T extends CVConfiguration> List<T> listConfigurations(String accountId, String appId) {
-    List<T> cvConfigurations = (List<T>) wingsPersistence.createQuery(CVConfiguration.class)
-                                   .filter("accountId", accountId)
-                                   .filter("appId", appId)
-                                   .asList();
+  public <T extends CVConfiguration> List<T> listConfigurations(String accountId, String appId, String envId) {
+    Query<T> configurationQuery = (Query<T>) wingsPersistence.createQuery(CVConfiguration.class)
+                                      .filter("accountId", accountId)
+                                      .filter("appId", appId);
+    if (isNotEmpty(envId)) {
+      configurationQuery = configurationQuery.filter("envId", envId);
+    }
+
+    List<T> cvConfigurations = configurationQuery.asList();
     cvConfigurations.forEach(cvConfiguration -> fillInServiceAndConnectorNames(cvConfiguration));
     return cvConfigurations;
   }
