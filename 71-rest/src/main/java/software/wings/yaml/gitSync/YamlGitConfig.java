@@ -6,7 +6,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -46,7 +45,7 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
   @NotEmpty private String branchName;
   private String username;
 
-  @Encrypted @JsonView(JsonViews.Internal.class) private char[] password;
+  @JsonView(JsonViews.Internal.class) private char[] password;
   private String sshSettingId;
   private boolean keyAuth;
   private String gitConnectorId;
