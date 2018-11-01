@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -32,36 +33,38 @@ public class AwsEcrHelperServiceManagerImpl implements AwsEcrHelperServiceManage
   @Inject private DelegateService delegateService;
 
   @Override
-  public String getAmazonEcrAuthToken(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region) {
+  public String getAmazonEcrAuthToken(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      String awsAccount, String region, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEcrGetAuthTokenRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
             .awsAccount(awsAccount)
-            .build());
+            .build(),
+        appId);
     return ((AwsEcrGetAuthTokenResponse) response).getEcrAuthToken();
   }
 
   @Override
   public String getEcrImageUrl(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String imageName) {
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String imageName, String appId) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEcrGetImageUrlRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
             .imageName(imageName)
-            .build());
+            .build(),
+        appId);
     return ((AwsEcrGetImageUrlResponse) response).getEcrImageUrl();
   }
 
-  private AwsResponse executeTask(String accountId, AwsEcrRequest request) {
+  private AwsResponse executeTask(String accountId, AwsEcrRequest request, String appId) {
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.AWS_ECR_TASK)
                                     .withAccountId(accountId)
-                                    .withAppId(GLOBAL_APP_ID)
+                                    .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
                                     .withAsync(false)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                     .withParameters(new Object[] {request})

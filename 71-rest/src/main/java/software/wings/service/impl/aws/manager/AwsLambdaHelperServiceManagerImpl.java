@@ -1,5 +1,6 @@
 package software.wings.service.impl.aws.manager;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
@@ -32,7 +33,7 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
   @Override
   public AwsLambdaExecuteFunctionResponse executeFunction(AwsConfig awsConfig,
       List<EncryptedDataDetail> encryptedDataDetails, String region, String functionName, String qualifier,
-      String payload) {
+      String payload, String appId) {
     return (AwsLambdaExecuteFunctionResponse) executeTask(awsConfig.getAccountId(),
         AwsLambdaExecuteFunctionRequest.builder()
             .awsConfig(awsConfig)
@@ -41,14 +42,15 @@ public class AwsLambdaHelperServiceManagerImpl implements AwsLambdaHelperService
             .functionName(functionName)
             .qualifier(qualifier)
             .payload(payload)
-            .build());
+            .build(),
+        appId);
   }
 
-  private AwsResponse executeTask(String accountId, AwsLambdaRequest request) {
+  private AwsResponse executeTask(String accountId, AwsLambdaRequest request, String appId) {
     DelegateTask delegateTask = aDelegateTask()
                                     .withTaskType(TaskType.AWS_LAMBDA_TASK)
                                     .withAccountId(accountId)
-                                    .withAppId(GLOBAL_APP_ID)
+                                    .withAppId(isNotEmpty(appId) ? appId : GLOBAL_APP_ID)
                                     .withAsync(false)
                                     .withTimeout(TimeUnit.MINUTES.toMillis(TIME_OUT_IN_MINUTES))
                                     .withParameters(new Object[] {request})

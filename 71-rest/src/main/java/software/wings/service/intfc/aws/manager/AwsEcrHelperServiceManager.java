@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface AwsEcrHelperServiceManager {
   String getAmazonEcrAuthToken(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region);
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String awsAccount, String region, String appId);
   String getEcrImageUrl(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String imageName);
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String imageName, String appId);
 }

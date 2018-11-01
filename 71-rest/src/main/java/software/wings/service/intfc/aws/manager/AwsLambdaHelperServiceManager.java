@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface AwsLambdaHelperServiceManager {
   AwsLambdaExecuteFunctionResponse executeFunction(AwsConfig awsConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String region, String functionName, String qualifier, String payload);
+      String region, String functionName, String qualifier, String payload, String appId);
 }

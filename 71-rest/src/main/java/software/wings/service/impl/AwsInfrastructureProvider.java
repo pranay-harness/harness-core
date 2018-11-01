@@ -216,10 +216,10 @@ public class AwsInfrastructureProvider implements InfrastructureProvider {
     return mainConfiguration.getAwsInstanceTypes();
   }
 
-  public List<String> listIAMInstanceRoles(SettingAttribute computeProviderSetting) {
+  public List<String> listIAMInstanceRoles(SettingAttribute computeProviderSetting, String appId) {
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
     return awsIamHelperServiceManager.listIamInstanceRoles(
-        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null));
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, appId, null), appId);
   }
 
   public List<String> listLoadBalancers(SettingAttribute computeProviderSetting, String region, String appId) {
