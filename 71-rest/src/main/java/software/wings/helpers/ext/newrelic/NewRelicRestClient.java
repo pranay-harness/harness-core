@@ -31,9 +31,10 @@ public interface NewRelicRestClient {
   Call<NewRelicApplicationInstancesResponse> listAppInstances(
       @Path("applicationId") long newRelicAppId, @Query("page") int pageCount);
 
-  @GET("v2/applications/{applicationId}/metrics/data.json?summarize=true")
+  @GET("v2/applications/{applicationId}/metrics/data.json")
   Call<NewRelicMetricDataResponse> getApplicationMetricData(@Path("applicationId") long applicationId,
-      @Query("from") String fromTime, @Query("to") String toTime, @Query(NAMES_PARAM) Collection<String> metricNames);
+      @Query("summarize") boolean summarize, @Query("from") String fromTime, @Query("to") String toTime,
+      @Query(NAMES_PARAM) Collection<String> metricNames);
 
   @GET("v2/applications/{applicationId}/instances/{instanceId}/metrics/data.json")
   Call<NewRelicMetricDataResponse> getInstanceMetricData(@Path("applicationId") long applicationId,
