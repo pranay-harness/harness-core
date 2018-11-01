@@ -17,10 +17,8 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import javax.annotation.ParametersAreNonnullByDefault;
 
 @ParametersAreNonnullByDefault
@@ -76,12 +74,6 @@ public class StatsCollectorImpl implements StatsCollector {
       Set<Instance> instances =
           dashboardStatisticsService.getAppInstancesForAccount(accountId, timesamp.toEpochMilli());
       log.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, timesamp);
-
-      // TODO(jatin): remove below check and log
-      if (accountId.equalsIgnoreCase("zEaak-FLS425IEO7OLzMUg")) { // QA account
-        List<String> appNames = instances.stream().map(Instance::getAppName).collect(Collectors.toList());
-        log.info("Instances fetched for App Names: {}", appNames);
-      }
 
       Mapper<Collection<Instance>, InstanceStatsSnapshot> instanceMapper = new InstanceMapper(timesamp, accountId);
       InstanceStatsSnapshot stats = instanceMapper.map(instances);
