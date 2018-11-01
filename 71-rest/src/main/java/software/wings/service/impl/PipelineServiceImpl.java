@@ -217,6 +217,7 @@ public class PipelineServiceImpl implements PipelineService {
       while (pipelineHIterator.hasNext()) {
         Pipeline pipeline = pipelineHIterator.next();
         if (pipeline.getPipelineStages() != null) {
+        PIPELINE_STAGE_LOOP:
           for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
             if (pipelineStage.getPipelineStageElements() != null) {
               for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
@@ -225,12 +226,13 @@ public class PipelineServiceImpl implements PipelineService {
                     && pipelineStageElement.getProperties().get("envId") != null
                     && pipelineStageElement.getProperties().get("envId").equals(envId)) {
                   referencedPipelines.add(pipeline.getName());
-                  continue;
+                  break PIPELINE_STAGE_LOOP;
                 }
                 // Env Id in workflow variables
                 if (pipelineStageElement.getWorkflowVariables() != null
                     && pipelineStageElement.getWorkflowVariables().values().contains(envId)) {
                   referencedPipelines.add(pipeline.getName());
+                  break PIPELINE_STAGE_LOOP;
                 }
               }
             }

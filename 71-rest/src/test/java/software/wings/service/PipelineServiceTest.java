@@ -201,14 +201,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCreatePipeline() {
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("envId", ENV_ID);
-    properties.put("workflowId", WORKFLOW_ID);
-    PipelineStage pipelineStage =
-        PipelineStage.builder()
-            .pipelineStageElements(asList(
-                PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
-            .build();
+    PipelineStage pipelineStage = prepareStage1();
 
     FailureStrategy failureStrategy =
         FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
@@ -241,14 +234,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdatePipeline() {
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("envId", ENV_ID);
-    properties.put("workflowId", WORKFLOW_ID);
-    PipelineStage pipelineStage =
-        PipelineStage.builder()
-            .pipelineStageElements(asList(
-                PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
-            .build();
+    PipelineStage pipelineStage = prepareStage1();
 
     FailureStrategy failureStrategy =
         FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
@@ -281,6 +267,16 @@ public class PipelineServiceTest extends WingsBaseTest {
     verify(wingsPersistence).createQuery(Pipeline.class);
     verify(pipelineQuery, times(2)).filter(any(), any());
     verify(wingsPersistence).createUpdateOperations(Pipeline.class);
+  }
+
+  private PipelineStage prepareStage1() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", ENV_ID);
+    properties.put("workflowId", WORKFLOW_ID);
+    return PipelineStage.builder()
+        .pipelineStageElements(
+            asList(PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
+        .build();
   }
 
   @Test
@@ -518,7 +514,14 @@ public class PipelineServiceTest extends WingsBaseTest {
     PipelineStage pipelineStage =
         PipelineStage.builder()
             .pipelineStageElements(asList(
-                PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
+                PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build(),
+                PipelineStageElement.builder()
+                    .name("STAGE2")
+                    .type(ENV_STATE.name())
+                    .properties(properties)
+                    .workflowVariables(
+                        ImmutableMap.of("Environment", ENV_ID, "Service", SERVICE_ID, "ServiceInfra", INFRA_MAPPING_ID))
+                    .build()))
             .build();
 
     List<PipelineStage> pipelineStages = new ArrayList<>();
@@ -570,22 +573,12 @@ public class PipelineServiceTest extends WingsBaseTest {
     Map<String, Object> properties2 = new HashMap<>();
     properties2.put("envId", ENV_ID);
     properties2.put("workflowId", WORKFLOW_ID);
-    PipelineStage pipelineStage2 =
-        PipelineStage.builder()
-            .pipelineStageElements(asList(PipelineStageElement.builder()
-                                              .workflowVariables(ImmutableMap.of("Environment", ENV_ID, "Serivice",
-                                                  SERVICE_ID, "ServiceInfra", INFRA_MAPPING_ID))
-                                              .name("STAGE1")
-                                              .type(ENV_STATE.name())
-                                              .properties(properties)
-                                              .build()))
-            .build();
 
     Pipeline pipeline2 = Pipeline.builder()
                              .name("pipeline2")
                              .appId(APP_ID)
                              .uuid(PIPELINE_ID)
-                             .pipelineStages(asList(pipelineStage2))
+                             .pipelineStages(asList(prepareTemplatedStage(properties)))
                              .build();
     when(wingsPersistence.query(Pipeline.class, aPageRequest().build()))
         .thenReturn(aPageResponse().withResponse(asList(pipeline, pipeline2)).build());
@@ -610,35 +603,23 @@ public class PipelineServiceTest extends WingsBaseTest {
                 PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
             .build();
 
-    FailureStrategy failureStrategy =
-        FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
     Pipeline pipeline = Pipeline.builder()
                             .name("pipeline1")
                             .appId(APP_ID)
                             .uuid(PIPELINE_ID)
                             .pipelineStages(asList(pipelineStage))
-                            .failureStrategies(asList(failureStrategy))
+
                             .build();
 
     Map<String, Object> properties2 = new HashMap<>();
     properties2.put("envId", ENV_ID);
     properties2.put("workflowId", WORKFLOW_ID);
-    PipelineStage pipelineStage2 =
-        PipelineStage.builder()
-            .pipelineStageElements(asList(PipelineStageElement.builder()
-                                              .workflowVariables(ImmutableMap.of("Environment", ENV_ID, "Service",
-                                                  SERVICE_ID, "ServiceInfra", INFRA_MAPPING_ID))
-                                              .name("STAGE1")
-                                              .type(ENV_STATE.name())
-                                              .properties(properties)
-                                              .build()))
-            .build();
 
     Pipeline pipeline2 = Pipeline.builder()
                              .name("pipeline2")
                              .appId(APP_ID)
                              .uuid(PIPELINE_ID)
-                             .pipelineStages(asList(pipelineStage2))
+                             .pipelineStages(asList(prepareTemplatedStage(properties)))
                              .build();
     when(wingsPersistence.query(Pipeline.class, aPageRequest().build()))
         .thenReturn(aPageResponse().withResponse(asList(pipeline, pipeline2)).build());
@@ -660,11 +641,22 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipelines.get(0).getAppId()).isEqualTo(APP_ID);
     assertThat(pipelines.get(0).isValid()).isEqualTo(true);
     assertThat(pipelines.get(1).getName()).isEqualTo("pipeline2");
-    assertThat(pipelines.get(1).getAppId()).isEqualTo(APP_ID);
     assertThat(pipelines.get(1).isValid()).isEqualTo(false);
     assertThat(pipelines.get(1).getValidationMessage()).isNotEmpty();
     assertThat(pipelines.get(1).isHasSshInfraMapping()).isEqualTo(false);
     verify(workflowExecutionService, times(2)).listExecutions(workflowExecutionPageRequest, false, false, false, false);
+  }
+
+  private PipelineStage prepareTemplatedStage(Map<String, Object> properties) {
+    return PipelineStage.builder()
+        .pipelineStageElements(asList(PipelineStageElement.builder()
+                                          .workflowVariables(ImmutableMap.of("Environment", ENV_ID, "Service",
+                                              SERVICE_ID, "ServiceInfra", INFRA_MAPPING_ID))
+                                          .name("STAGE1")
+                                          .type(ENV_STATE.name())
+                                          .properties(properties)
+                                          .build()))
+        .build();
   }
 
   @Test
@@ -731,8 +723,6 @@ public class PipelineServiceTest extends WingsBaseTest {
     List<Pipeline> pipelines = pageResponse.getResponse();
     assertThat(pipelines).isNotEmpty().size().isEqualTo(2);
     assertThat(pipelines.get(0).getName()).isEqualTo("pipeline1");
-    assertThat(pipelines.get(0).getAppId()).isEqualTo(APP_ID);
-    assertThat(pipelines.get(0).isValid()).isEqualTo(true);
     assertThat(pipelines.get(0).getPipelineVariables()).isNotEmpty().extracting(Variable::getName).contains("MyVar1");
     assertThat(pipelines.get(0).getPipelineVariables())
         .isNotEmpty()
@@ -743,8 +733,6 @@ public class PipelineServiceTest extends WingsBaseTest {
         .extracting(Variable::getName)
         .doesNotContain(SERVICE_NAME, ENV_NAME, INFRA_NAME);
     assertThat(pipelines.get(1).getName()).isEqualTo("pipeline2");
-    assertThat(pipelines.get(1).getAppId()).isEqualTo(APP_ID);
-    assertThat(pipelines.get(1).isValid()).isEqualTo(true);
     assertThat(pipelines.get(1).getPipelineVariables()).isNotEmpty().extracting(Variable::getName).contains("MyVar1");
     assertThat(pipelines.get(1).getPipelineVariables())
         .isNotEmpty()
@@ -759,23 +747,14 @@ public class PipelineServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldListPipelinesWithDetailsWithSshInfraMapping() {
-    Map<String, Object> properties = new HashMap<>();
-    properties.put("envId", ENV_ID);
-    properties.put("workflowId", WORKFLOW_ID);
-    PipelineStage pipelineStage =
-        PipelineStage.builder()
-            .pipelineStageElements(asList(
-                PipelineStageElement.builder().name("STAGE1").type(ENV_STATE.name()).properties(properties).build()))
-            .build();
+    PipelineStage pipelineStage = prepareStage1();
 
-    FailureStrategy failureStrategy =
-        FailureStrategy.builder().repairActionCode(RepairActionCode.MANUAL_INTERVENTION).build();
     Pipeline pipeline = Pipeline.builder()
                             .name("pipeline1")
                             .appId(APP_ID)
                             .uuid(PIPELINE_ID)
                             .pipelineStages(asList(pipelineStage))
-                            .failureStrategies(asList(failureStrategy))
+
                             .build();
 
     when(wingsPersistence.query(Pipeline.class, aPageRequest().build()))
@@ -801,7 +780,6 @@ public class PipelineServiceTest extends WingsBaseTest {
     List<Pipeline> pipelines = pageResponse.getResponse();
     assertThat(pipelines).isNotEmpty().size().isEqualTo(1);
     assertThat(pipelines.get(0).getName()).isEqualTo("pipeline1");
-    assertThat(pipelines.get(0).getAppId()).isEqualTo(APP_ID);
     assertThat(pipelines.get(0).isValid()).isEqualTo(true);
     assertThat(pipelines.get(0).isHasSshInfraMapping()).isEqualTo(true);
 
