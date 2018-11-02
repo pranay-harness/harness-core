@@ -577,8 +577,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     int dbUnitIndex = 0;
-    for (long unitTime = actualUnitStartTime; unitTime + cronPollIntervalMs <= endTime;
-         unitTime += cronPollIntervalMs) {
+    for (long unitTime = actualUnitStartTime; unitTime <= endTime; unitTime += cronPollIntervalMs) {
       heatMapUnit = dbUnitIndex < unitsFromDB.size() ? unitsFromDB.get(dbUnitIndex) : null;
       if (heatMapUnit != null && unitTime == heatMapUnit.getStartTime()) {
         units.add(heatMapUnit);
@@ -586,7 +585,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         continue;
       }
 
-      units.add(HeatMapUnit.builder().endTime(unitTime).startTime(unitTime - cronPollIntervalMs + 1).na(1).build());
+      units.add(HeatMapUnit.builder().endTime(unitTime - 1).startTime(unitTime - cronPollIntervalMs).na(1).build());
     }
     return units;
   }

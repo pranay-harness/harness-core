@@ -1,6 +1,7 @@
 package io.harness.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeCount;
@@ -55,9 +56,11 @@ import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -80,9 +83,17 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   @Override
   public boolean saveMetricData(final String accountId, final String appId, final String stateExecutionId,
       String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
+    if (isEmpty(metricData)) {
+      logger.info("For state {} received empty collection", stateExecutionId);
+      return false;
+    }
+    metricData.forEach(metric -> {
+      if (isNotEmpty(metric.getCvConfigId())) {
+        metric.setValidUntil(Date.from(OffsetDateTime.now().plusMonths(1).toInstant()));
+      }
+    });
     if (!isStateValid(appId, stateExecutionId)) {
-      logger.warn("State is no longer active " + metricData.get(0).getStateExecutionId()
-          + ". Sending delegate abort request " + delegateTaskId);
+      logger.info("State is no longer active {}. Sending delegate abort request {}", stateExecutionId, delegateTaskId);
       return false;
     }
     if (logger.isDebugEnabled()) {
