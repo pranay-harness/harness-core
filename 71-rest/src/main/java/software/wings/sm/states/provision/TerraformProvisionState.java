@@ -15,7 +15,7 @@ import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STAT
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
-import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -177,34 +177,37 @@ public abstract class TerraformProvisionState extends State {
 
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 
-    Map<String, Object> others = null;
+    Map<String, Object> others = Maps.newHashMap();
     if (!(this instanceof DestroyTerraformProvisionState)) {
       final Collection<NameValuePair> variables =
           validateAndFilterVariables(getVariables(), terraformProvisioner.getVariables());
       Collection<NameValuePair> backendConfigs = terraformExecutionData.getBackendConfigs();
 
-      others = ImmutableMap.<String, Object>builder()
-                   .put(VARIABLES_KEY,
-                       variables.stream()
-                           .filter(item -> item.getValue() != null)
-                           .filter(item -> item.getValueType() == null || "TEXT".equals(item.getValueType()))
-                           .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
-                   .put(ENCRYPTED_VARIABLES_KEY,
-                       variables.stream()
-                           .filter(item -> item.getValue() != null)
-                           .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
-                           .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
-                   .put(BACKEND_CONFIGS_KEY,
-                       backendConfigs.stream()
-                           .filter(item -> item.getValue() != null)
-                           .filter(item -> "TEXT".equals(item.getValueType()))
-                           .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
-                   .put(ENCRYPTED_BACKEND_CONFIGS_KEY,
-                       backendConfigs.stream()
-                           .filter(item -> item.getValue() != null)
-                           .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
-                           .collect(toMap(NameValuePair::getName, NameValuePair::getValue)))
-                   .build();
+      if (isNotEmpty(variables)) {
+        others.put(VARIABLES_KEY,
+            variables.stream()
+                .filter(item -> item.getValue() != null)
+                .filter(item -> item.getValueType() == null || "TEXT".equals(item.getValueType()))
+                .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
+        others.put(ENCRYPTED_VARIABLES_KEY,
+            variables.stream()
+                .filter(item -> item.getValue() != null)
+                .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
+                .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
+      }
+
+      if (isNotEmpty(backendConfigs)) {
+        others.put(BACKEND_CONFIGS_KEY,
+            backendConfigs.stream()
+                .filter(item -> item.getValue() != null)
+                .filter(item -> "TEXT".equals(item.getValueType()))
+                .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
+        others.put(ENCRYPTED_BACKEND_CONFIGS_KEY,
+            backendConfigs.stream()
+                .filter(item -> item.getValue() != null)
+                .filter(item -> "ENCRYPTED_TEXT".equals(item.getValueType()))
+                .collect(toMap(NameValuePair::getName, NameValuePair::getValue)));
+      }
 
       if (terraformExecutionData.getExecutionStatus() == SUCCESS) {
         saveTerraformConfig(context, terraformProvisioner, terraformExecutionData);
