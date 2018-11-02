@@ -11,6 +11,7 @@ import static software.wings.yaml.gitSync.YamlGitConfig.GIT_CONNECTOR_ID_KEY;
 
 import com.google.inject.Inject;
 
+import com.mongodb.DuplicateKeyException;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -152,20 +153,7 @@ public class GitCommandCallback implements NotifyCallback {
 
           List<String> yamlGitConfigIds = obtainYamlGitConfigIds(accountId,
               gitDiffResult.getYamlGitConfig().getBranchName(), gitDiffResult.getYamlGitConfig().getGitConnectorId());
-          yamlGitService.saveCommit(GitCommit.builder()
-                                        .accountId(accountId)
-                                        .yamlChangeSet(YamlChangeSet.builder()
-                                                           .accountId(accountId)
-                                                           .appId(Base.GLOBAL_APP_ID)
-                                                           .gitToHarness(true)
-                                                           .status(Status.COMPLETED)
-                                                           .gitFileChanges(gitDiffResult.getGitFileChanges())
-                                                           .build())
-                                        .yamlGitConfigIds(yamlGitConfigIds)
-                                        .status(GitCommit.Status.COMPLETED)
-                                        .commitId(gitDiffResult.getCommitId())
-                                        .gitCommandResult(gitDiffResult)
-                                        .build());
+          saveGitCommit(gitDiffResult, yamlGitConfigIds);
           // this is for GitCommandType.DIFF, where we set gitToHarness = true explicitly as we are responding to
           // webhook invocation
           yamlGitService.removeGitSyncErrors(accountId, gitFileChangeList, true);
@@ -184,6 +172,33 @@ public class GitCommandCallback implements NotifyCallback {
       logger.warn("Unexpected notify response data: [{}] for changeSetId [{}] for account {}", notifyResponseData,
           changeSetId, accountId);
       yamlChangeSetService.updateStatus(accountId, changeSetId, Status.FAILED);
+    }
+  }
+
+  /**
+   *
+   * @param gitDiffResult
+   * @param yamlGitConfigIds
+   */
+  private void saveGitCommit(GitDiffResult gitDiffResult, List<String> yamlGitConfigIds) {
+    try {
+      yamlGitService.saveCommit(GitCommit.builder()
+                                    .accountId(accountId)
+                                    .yamlChangeSet(YamlChangeSet.builder()
+                                                       .accountId(accountId)
+                                                       .appId(Base.GLOBAL_APP_ID)
+                                                       .gitToHarness(true)
+                                                       .status(Status.COMPLETED)
+                                                       .gitFileChanges(gitDiffResult.getGitFileChanges())
+                                                       .build())
+                                    .yamlGitConfigIds(yamlGitConfigIds)
+                                    .status(GitCommit.Status.COMPLETED)
+                                    .commitId(gitDiffResult.getCommitId())
+                                    .gitCommandResult(gitDiffResult)
+                                    .build());
+    } catch (DuplicateKeyException e) {
+      logger.info(
+          "This was already persisted in DB. May Happens when 2 successive commits are made to git in short duration, and when 2nd commit is done before gitDiff for 1st one is in progress");
     }
   }
 
