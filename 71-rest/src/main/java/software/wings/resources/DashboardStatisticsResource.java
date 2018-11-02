@@ -64,7 +64,8 @@ public class DashboardStatisticsResource {
   public RestResponse<InstanceSummaryStats> getAppInstanceSummaryStats(@QueryParam("accountId") String accountId,
       @QueryParam("appId") List<String> appIds, @QueryParam("groupBy") List<String> groupByEntityTypes,
       @QueryParam("timestamp") long timestamp) {
-    return new RestResponse<>(dashboardStatsService.getAppInstanceSummaryStats(appIds, groupByEntityTypes, timestamp));
+    return new RestResponse<>(
+        dashboardStatsService.getAppInstanceSummaryStats(accountId, appIds, groupByEntityTypes, timestamp));
   }
 
   /**
@@ -80,7 +81,7 @@ public class DashboardStatisticsResource {
       @QueryParam("serviceId") String serviceId, @QueryParam("groupBy") List<String> groupByEntityTypes,
       @QueryParam("timestamp") long timestamp) {
     return new RestResponse<>(
-        dashboardStatsService.getServiceInstanceSummaryStats(serviceId, groupByEntityTypes, timestamp));
+        dashboardStatsService.getServiceInstanceSummaryStats(accountId, serviceId, groupByEntityTypes, timestamp));
   }
 
   /**
@@ -94,7 +95,7 @@ public class DashboardStatisticsResource {
   @ExceptionMetered
   public RestResponse<List<InstanceStatsByService>> getAppInstanceStats(@QueryParam("accountId") String accountId,
       @QueryParam("appId") List<String> appIds, @QueryParam("timestamp") long timestamp) {
-    return new RestResponse<>(dashboardStatsService.getAppInstanceStatsByService(appIds, timestamp));
+    return new RestResponse<>(dashboardStatsService.getAppInstanceStatsByService(accountId, appIds, timestamp));
   }
 
   /**
@@ -122,7 +123,7 @@ public class DashboardStatisticsResource {
   @ExceptionMetered
   public RestResponse<ServiceInstanceDashboard> getServiceInstanceDashboard(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
-    return new RestResponse<>(dashboardStatsService.getServiceInstanceDashboard(appId, serviceId));
+    return new RestResponse<>(dashboardStatsService.getServiceInstanceDashboard(accountId, appId, serviceId));
   }
 
   /**

@@ -20,6 +20,7 @@ import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -80,6 +81,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -112,15 +114,16 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private EnvironmentService environmentService;
   @Inject private InfrastructureMappingService infraMappingService;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
 
   @Override
   public InstanceSummaryStats getAppInstanceSummaryStats(
-      List<String> appIds, List<String> groupByEntityTypes, long timestamp) {
+      String accountId, List<String> appIds, List<String> groupByEntityTypes, long timestamp) {
     if (timestamp == 0) {
       timestamp = System.currentTimeMillis();
     }
 
-    Query<Instance> query = getInstanceQueryAtTime(appIds, timestamp);
+    Query<Instance> query = getInstanceQueryAtTime(accountId, appIds, timestamp);
     if (query == null) {
       logger.error("Error while compiling query for getting app instance summary stats");
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
@@ -243,12 +246,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   @Override
   public InstanceSummaryStats getServiceInstanceSummaryStats(
-      String serviceId, List<String> groupByEntityTypes, long timestamp) {
+      String accountId, String serviceId, List<String> groupByEntityTypes, long timestamp) {
     if (timestamp == 0) {
       timestamp = System.currentTimeMillis();
     }
 
-    Query<Instance> query = getInstanceQueryAtTime(null, timestamp);
+    Query<Instance> query = getInstanceQueryAtTime(accountId, null, timestamp);
     if (query == null) {
       logger.error("Error while compiling query for getting app instance summary stats");
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
@@ -329,12 +332,13 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public List<InstanceStatsByService> getAppInstanceStatsByService(List<String> appIds, long timestamp) {
+  public List<InstanceStatsByService> getAppInstanceStatsByService(
+      String accountId, List<String> appIds, long timestamp) {
     if (timestamp == 0) {
       timestamp = System.currentTimeMillis();
     }
 
-    Query<Instance> query = getInstanceQueryAtTime(appIds, timestamp);
+    Query<Instance> query = getInstanceQueryAtTime(accountId, appIds, timestamp);
     if (query == null) {
       logger.error("Error while compiling query for instance stats by service");
       return Collections.emptyList();
@@ -368,10 +372,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return constructInstanceStatsByService(instanceInfoList);
   }
 
-  private Query<Instance> getInstanceQueryAtTime(List<String> appIds, long timestamp) {
+  private Query<Instance> getInstanceQueryAtTime(String accountId, List<String> appIds, long timestamp) {
     Query<Instance> query;
     try {
-      query = getInstanceQuery(appIds, true);
+      query = getInstanceQuery(accountId, appIds, true, timestamp);
       query.field("createdAt").lessThanOrEq(timestamp);
 
       query.and(
@@ -521,8 +525,8 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public ServiceInstanceDashboard getServiceInstanceDashboard(String appId, String serviceId) {
-    List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(appId, serviceId);
+  public ServiceInstanceDashboard getServiceInstanceDashboard(String accountId, String appId, String serviceId) {
+    List<CurrentActiveInstances> currentActiveInstances = getCurrentActiveInstances(accountId, appId, serviceId);
     List<DeploymentHistory> deploymentHistoryList = getDeploymentHistory(appId, serviceId);
     Service service = serviceResourceService.get(appId, serviceId);
     Validator.notNullCheck("Service not found", service);
@@ -534,10 +538,10 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
         .build();
   }
 
-  private List<CurrentActiveInstances> getCurrentActiveInstances(String appId, String serviceId) {
+  private List<CurrentActiveInstances> getCurrentActiveInstances(String accountId, String appId, String serviceId) {
     Query<Instance> query;
     try {
-      query = getInstanceQuery(null, false).filter("serviceId", serviceId);
+      query = getInstanceQuery(accountId, null, false, 0L).filter("appId", appId).filter("serviceId", serviceId);
     } catch (Exception exception) {
       handleException(exception);
       return Lists.newArrayList();
@@ -790,8 +794,9 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return builder.type(ARTIFACT.name()).id(id).name(name).build();
   }
 
-  private Query<Instance> getInstanceQuery(List<String> appIds, boolean includeDeleted) throws HarnessException {
-    Query query = wingsPersistence.createAuthorizedQuery(Instance.class);
+  private Query<Instance> getInstanceQuery(
+      String accountId, List<String> appIds, boolean includeDeleted, long timestamp) throws HarnessException {
+    Query query = wingsPersistence.createQuery(Instance.class);
     if (!includeDeleted) {
       query.filter("isDeleted", false);
     }
@@ -804,6 +809,15 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
           UserRequestContext userRequestContext = user.getUserRequestContext();
           if (userRequestContext.isAppIdFilterRequired()) {
             Set<String> allowedAppIds = userRequestContext.getAppIds();
+
+            if (includeDeleted && usageRestrictionsService.isAccountAdmin(accountId)) {
+              Set<String> deletedAppIds = getDeletedAppIds(accountId, timestamp);
+              if (isNotEmpty(deletedAppIds)) {
+                allowedAppIds = Sets.newHashSet(allowedAppIds);
+                allowedAppIds.addAll(deletedAppIds);
+              }
+            }
+
             if (isNotEmpty(allowedAppIds)) {
               query.field("appId").in(allowedAppIds);
             } else {

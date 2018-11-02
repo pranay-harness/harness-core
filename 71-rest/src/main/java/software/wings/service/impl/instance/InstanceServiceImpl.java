@@ -121,6 +121,12 @@ public class InstanceServiceImpl implements InstanceService {
         return save(instance);
       } else {
         delete(Sets.newHashSet(existingInstance.getUuid()));
+        // since this is a new version, we have to make sure that the deletedAt of old version and
+        // createdAt of new version are off by at least 1 milliseconds.
+        // Otherwise, if the stats collection happens in that exact millisecond,
+        // they will see twice the instance count for the ones that were in the version update processing.
+
+        instance.setCreatedAt(System.currentTimeMillis() + 1);
         String uuid = wingsPersistence.save(instance);
         return wingsPersistence.get(Instance.class, uuid);
       }

@@ -18,31 +18,38 @@ public interface DashboardStatisticsService {
   /**
    * Gets the total instance summary stats for the given apps.
    * The results are grouped by the given entity types.
+   *
+   * @param accountId
    * @param appIds application ids
    * @param groupByEntityTypes the entity types user wants to group by
    * @param timestamp point in time
    * @return instance summary statistics
    */
-  InstanceSummaryStats getAppInstanceSummaryStats(List<String> appIds, List<String> groupByEntityTypes, long timestamp);
+  InstanceSummaryStats getAppInstanceSummaryStats(
+      @NotEmpty String accountId, List<String> appIds, List<String> groupByEntityTypes, long timestamp);
 
   /**
    * Gets the total instance summary stats for the given service.
    * The results are grouped by the given entity types.
+   *
+   * @param accountId
    * @param serviceId service id
    * @param groupByEntityTypes the entity types user wants to group by
    * @param timestamp point in time
    * @return instance summary statistics
    */
   InstanceSummaryStats getServiceInstanceSummaryStats(
-      @NotEmpty String serviceId, List<String> groupByEntityTypes, long timestamp);
+      @NotEmpty String accountId, @NotEmpty String serviceId, List<String> groupByEntityTypes, long timestamp);
 
   /**
    * Gets the total instance stats for the given apps.
+   * @param accountId
    * @param appIds application ids
    * @param timestamp point in time
    * @return instance summary statistics
    */
-  List<InstanceStatsByService> getAppInstanceStatsByService(List<String> appIds, long timestamp);
+  List<InstanceStatsByService> getAppInstanceStatsByService(
+      @NotEmpty String accountId, List<String> appIds, long timestamp);
 
   /**
    * Gets the instances for the given account. This api is used by the stats cron job.
@@ -50,7 +57,7 @@ public interface DashboardStatisticsService {
    * @param timestamp point in time
    * @return set of instances
    */
-  @Nonnull Set<Instance> getAppInstancesForAccount(String accountId, long timestamp);
+  @Nonnull Set<Instance> getAppInstancesForAccount(@NotEmpty String accountId, long timestamp);
 
   /**
    * Gets the detailed information about the instances provisioned, deployments and pipelines for the given service.
@@ -58,7 +65,8 @@ public interface DashboardStatisticsService {
    * @param serviceId service id
    * @return service dashboard with cloud instance info
    */
-  ServiceInstanceDashboard getServiceInstanceDashboard(@NotEmpty String appId, @NotEmpty String serviceId);
+  ServiceInstanceDashboard getServiceInstanceDashboard(
+      @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String serviceId);
 
   /**
    * Gets the instance detailed information including the metadata
