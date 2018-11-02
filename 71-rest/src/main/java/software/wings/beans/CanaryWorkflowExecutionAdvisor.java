@@ -245,7 +245,8 @@ public class CanaryWorkflowExecutionAdvisor implements ExecutionEventAdvisor {
         PhaseStep phaseStep = null;
         if (state.getParentId().equals(orchestrationWorkflow.getPreDeploymentSteps().getUuid())) {
           phaseStep = orchestrationWorkflow.getPreDeploymentSteps();
-        } else if (state.getParentId().equals(orchestrationWorkflow.getRollbackProvisioners().getUuid())) {
+        } else if (orchestrationWorkflow.getRollbackProvisioners() != null
+            && state.getParentId().equals(orchestrationWorkflow.getRollbackProvisioners().getUuid())) {
           phaseStep = orchestrationWorkflow.getRollbackProvisioners();
         } else if (state.getParentId().equals(orchestrationWorkflow.getPostDeploymentSteps().getUuid())) {
           phaseStep = orchestrationWorkflow.getPostDeploymentSteps();
