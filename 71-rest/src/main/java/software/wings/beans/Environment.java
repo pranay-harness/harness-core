@@ -21,7 +21,6 @@ import software.wings.yaml.BaseEntityYaml;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
@@ -32,6 +31,8 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "environments", noClassnameStored = true)
 @Indexes(@Index(options = @IndexOptions(name = "yaml", unique = true), fields = { @Field("appId")
                                                                                   , @Field("name") }))
+@Data
+@EqualsAndHashCode(callSuper = false)
 public class Environment extends Base {
   public static final String NAME_KEY = "name";
   public static final String ENVIRONMENT_TYPE_KEY = "environmentType";
@@ -206,34 +207,6 @@ public class Environment extends Base {
     keywords.addAll(asList(name, description, environmentType));
     keywords.addAll(super.generateKeywords());
     return keywords;
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(name, description, configMapYaml, configMapYamlByServiceTemplateId, helmValueYaml,
-              helmValueYamlByServiceTemplateId, environmentType, configFiles);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final Environment other = (Environment) obj;
-    return Objects.equals(this.name, other.name) && Objects.equals(this.description, other.description)
-        && Objects.equals(this.configMapYaml, other.configMapYaml)
-        && Objects.equals(this.configMapYamlByServiceTemplateId, other.configMapYamlByServiceTemplateId)
-        && Objects.equals(this.helmValueYaml, other.helmValueYaml)
-        && Objects.equals(this.helmValueYamlByServiceTemplateId, other.helmValueYamlByServiceTemplateId)
-        && Objects.equals(this.environmentType, other.environmentType)
-        && Objects.equals(this.configFiles, other.configFiles);
   }
 
   /**

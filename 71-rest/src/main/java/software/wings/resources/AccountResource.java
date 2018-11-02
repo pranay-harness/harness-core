@@ -17,7 +17,6 @@ import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
-import software.wings.verification.CVConfiguration;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -63,17 +62,6 @@ public class AccountResource {
   }
 
   @GET
-  @Path("cv-services")
-  @Timed
-  @ExceptionMetered
-  @LearningEngineAuth
-  public RestResponse<PageResponse<CVConfiguration>> getAllCVServices(@QueryParam("accountId") String accountId,
-      @QueryParam("serviceId") String serviceId, @BeanParam PageRequest<String> request) {
-    return new RestResponse<>(accountService.getAllCVServicesForAccount(
-        accountId, UserThreadLocal.get().getPublicUser(), request, serviceId));
-  }
-
-  @GET
   @Path("services-cv-24x7")
   @Timed
   @ExceptionMetered
@@ -81,6 +69,6 @@ public class AccountResource {
   public RestResponse<PageResponse<CVEnabledService>> getAllServicesFor24x7(@QueryParam("accountId") String accountId,
       @QueryParam("serviceId") String serviceId, @BeanParam PageRequest<String> request) {
     return new RestResponse<>(
-        accountService.getServicesForAccount(accountId, UserThreadLocal.get().getPublicUser(), request, serviceId));
+        accountService.getServices(accountId, UserThreadLocal.get().getPublicUser(), request, serviceId));
   }
 }

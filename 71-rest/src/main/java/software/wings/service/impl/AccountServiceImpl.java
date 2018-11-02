@@ -56,6 +56,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
+import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
@@ -63,6 +64,7 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
 import software.wings.common.Constants;
@@ -72,6 +74,7 @@ import software.wings.licensing.LicenseManager;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
 import software.wings.security.AppPermissionSummary;
+import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.analysis.CVEnabledService;
@@ -101,7 +104,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -119,7 +121,7 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class AccountServiceImpl implements AccountService {
   private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
-  private static final int SIZE_PER_SERVICES_REQUEST = 10;
+  private static final int SIZE_PER_SERVICES_REQUEST = 25;
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
@@ -735,7 +737,7 @@ public class AccountServiceImpl implements AccountService {
     return featureFlagService.isEnabled(featureName, accountId);
   }
 
-  public PageResponse<CVEnabledService> getServicesForAccount(
+  public PageResponse<CVEnabledService> getServices(
       String accountId, User user, PageRequest<String> request, String serviceId) {
     if (user == null) {
       logger.info("User is null when requesting for Services info. Returning null");
@@ -746,44 +748,79 @@ public class AccountServiceImpl implements AccountService {
         authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
 
     List<String> services = new ArrayList<>();
-
+    Set<EnvInfo> envInfoSet = new HashSet<>();
     for (AppPermissionSummary summary : userAppPermissions.values()) {
       if (isNotEmpty(summary.getServicePermissions())) {
         services.addAll(summary.getServicePermissions().get(Action.READ));
       }
-    }
-
-    List<Service> serviceList = wingsPersistence.createQuery(Service.class).field("_id").in(services).asList();
-
-    List<CVConfiguration> cvConfigurationList =
-        wingsPersistence.createQuery(CVConfiguration.class).field("serviceId").in(services).asList();
-
-    Map<String, List<String>> serviceCVMap = new HashMap<>();
-
-    for (CVConfiguration cvConfiguration : cvConfigurationList) {
-      String cvConfigService = cvConfiguration.getServiceId();
-      if (!serviceCVMap.containsKey(cvConfigService)) {
-        serviceCVMap.put(cvConfigService, new ArrayList<>());
+      if (isNotEmpty(summary.getEnvPermissions())) {
+        envInfoSet.addAll(summary.getEnvPermissions().get(Action.READ));
       }
-      serviceCVMap.get(cvConfigService).add(cvConfiguration.getStateType().getName());
+    }
+    Set<String> allowedEnvs = new HashSet<>();
+    for (EnvInfo envInfo : envInfoSet) {
+      allowedEnvs.add(envInfo.getEnvId());
     }
 
     List<CVEnabledService> cvEnabledServices = new ArrayList<>();
-    for (Service s : serviceList) {
-      if (serviceId != null && !s.getUuid().equals(serviceId)) {
+
+    List<Service> serviceList = wingsPersistence.createQuery(Service.class)
+                                    .field("appId")
+                                    .in(userAppPermissions.keySet())
+                                    .field("_id")
+                                    .in(services)
+                                    .asList();
+
+    // get the serviceTemplates that have this service.
+    List<ServiceTemplate> serviceTemplates = wingsPersistence.createQuery(ServiceTemplate.class)
+                                                 .field("serviceId")
+                                                 .in(services)
+                                                 .field("appId")
+                                                 .in(userAppPermissions.keySet())
+                                                 .asList();
+
+    for (Service service : serviceList) {
+      if (serviceId != null && !serviceId.equals(service.getUuid())) {
         continue;
       }
-      Application app = wingsPersistence.get(Application.class, s.getAppId());
+      // getEnvironments for this service.
+      List<String> envIds = new ArrayList<>();
+      for (ServiceTemplate serviceTemplate : serviceTemplates) {
+        if (serviceTemplate.getServiceId().equals(service.getUuid())) {
+          envIds.add(serviceTemplate.getEnvId());
+        }
+      }
+      envIds.retainAll(allowedEnvs);
+      List<Environment> environments = wingsPersistence.createQuery(Environment.class)
+                                           .filter("appId", service.getAppId())
+                                           .field("_id")
+                                           .in(envIds)
+                                           .asList();
+
+      Application app = wingsPersistence.get(Application.class, service.getAppId());
       if (app == null) {
         continue;
       }
-      cvEnabledServices.add(CVEnabledService.builder()
-                                .service(s)
-                                .appName(app.getName())
-                                .cvConfigurations(serviceCVMap.get(s.getUuid()))
-                                .build());
+
+      for (Environment env : environments) {
+        List<CVConfiguration> cvConfigurationList = null;
+        cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class)
+                                  .filter("serviceId", service.getUuid())
+                                  .filter("envId", env.getUuid())
+                                  .filter("appId", service.getAppId())
+                                  .asList();
+
+        cvEnabledServices.add(CVEnabledService.builder()
+                                  .service(service)
+                                  .appName(app.getName())
+                                  .envName(env.getName())
+                                  .envId(env.getUuid())
+                                  .cvConfig(cvConfigurationList)
+                                  .build());
+      }
     }
 
+    // Wrap into a pageResponse and return
     int totalSize = cvEnabledServices.size();
     if (offset < cvEnabledServices.size()) {
       int endIndex = Math.min(cvEnabledServices.size(), offset + SIZE_PER_SERVICES_REQUEST);
@@ -802,66 +839,6 @@ public class AccountServiceImpl implements AccountService {
     return PageResponseBuilder.aPageResponse()
         .withResponse(new ArrayList<>())
         .withOffset(String.valueOf(offset + cvEnabledServices.size()))
-        .withTotal(totalSize)
-        .build();
-  }
-
-  public PageResponse<CVConfiguration> getAllCVServicesForAccount(
-      String accountId, User user, PageRequest<String> request, String serviceId) {
-    if (user == null) {
-      logger.info("User is null when requesting for Services info. Returning null");
-    }
-
-    int offset = Integer.parseInt(request.getOffset());
-    Map<String, AppPermissionSummary> userAppPermissions =
-        authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
-
-    Set<String> appIds = userAppPermissions.keySet();
-    List<CVConfiguration> cvConfigList = new ArrayList<>();
-    for (String appId : appIds) {
-      cvConfigList.addAll(cvConfigurationService.listConfigurations(accountId, appId, null));
-    }
-
-    if (serviceId != null) {
-      List<CVConfiguration> finalCVConfigList = new ArrayList<>();
-      for (CVConfiguration configuration : cvConfigList) {
-        if (configuration.getServiceId().equals(serviceId)) {
-          finalCVConfigList.add(configuration);
-        }
-      }
-      cvConfigList = finalCVConfigList;
-    }
-
-    // filter the services for which the user has permissions.
-    List<CVConfiguration> finalReturnList = new ArrayList<>();
-    Set<String> serviceIds = new HashSet<>();
-    for (CVConfiguration cvConfiguration : cvConfigList) {
-      serviceIds.addAll(userAppPermissions.get(cvConfiguration.getAppId()).getServicePermissions().get(Action.READ));
-      if (serviceIds.contains(cvConfiguration.getServiceId())) {
-        finalReturnList.add(cvConfiguration);
-      }
-    }
-
-    int totalSize = finalReturnList.size();
-
-    if (offset <= finalReturnList.size() && finalReturnList.size() >= offset + SIZE_PER_SERVICES_REQUEST) {
-      finalReturnList = finalReturnList.subList(offset, offset + SIZE_PER_SERVICES_REQUEST);
-    } else if (offset <= finalReturnList.size()) {
-      finalReturnList = finalReturnList.subList(offset, finalReturnList.size());
-    } else {
-      finalReturnList = new ArrayList<>();
-    }
-
-    if (finalReturnList.size() > 0) {
-      return PageResponseBuilder.aPageResponse()
-          .withResponse(finalReturnList)
-          .withOffset(String.valueOf(offset + finalReturnList.size()))
-          .withTotal(totalSize)
-          .build();
-    }
-    return PageResponseBuilder.aPageResponse()
-        .withResponse(new ArrayList<>())
-        .withOffset(String.valueOf(offset + finalReturnList.size()))
         .withTotal(totalSize)
         .build();
   }
