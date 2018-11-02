@@ -2,12 +2,15 @@ images:
   manager:
     repository: harness/manager
     tag: 12101
+  verification:
+    repository: harness/verification-service
+    tag: 12101
   le:
     repository: harness/learning-engine-onprem
-    tag: portal-6660-onprem-python
+    tag: portal-6630-onprem-python
   ui:
     repository: harness/ui
-    tag: 3432
+    tag: 3396
   mongo:
     repository: mongo
     tag: 3.6

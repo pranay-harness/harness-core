@@ -9,6 +9,7 @@ VERSION_PROPERTY_FILE=version.yaml
 echo "# Reading versions from $VERSION_PROPERTY_FILE"
 leimage=$(yq r version.yaml images.le.repository):$(yq r version.yaml images.le.tag)
 managerimage=$(yq r version.yaml images.manager.repository):$(yq r version.yaml images.manager.tag)
+verificationimage=$(yq r version.yaml images.verification.repository):$(yq r version.yaml images.verification.tag)
 mongoimage=$(yq r version.yaml images.mongo.repository):$(yq r version.yaml images.mongo.tag)
 mongoinstallimage=$(yq r version.yaml images.mongoInstall.repository):$(yq r version.yaml images.mongoInstall.tag)
 nginximage=$(yq r version.yaml images.nginx.repository):$(yq r version.yaml images.nginx.tag)
@@ -45,6 +46,7 @@ function downloadImages(){
    saveImage $ingresscontrollerimage $ARTIFACT_DIR/ingress.tar
    saveImage $defaultbackendimage $ARTIFACT_DIR/defaultbackend.tar
    saveImage $delegateimage $ARTIFACT_DIR/delegate.tar
+   saveImage $verificationimage $ARTIFACT_DIR/verification.tar
    saveImage $busyboximage $ARTIFACT_DIR/busybox.tar
 
 

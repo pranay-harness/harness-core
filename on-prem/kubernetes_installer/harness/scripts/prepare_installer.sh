@@ -22,6 +22,7 @@ if [[ ${DOCKER_REGISTRY_URL} != "" ]] ; then
     echo "Updating the images with private docker prefix"
 
     wv images.manager.repository ${DOCKER_REGISTRY_URL}/$(rv images.manager.repository)
+    wv images.verification.repository ${DOCKER_REGISTRY_URL}/$(rv images.verification.repository)
     wv images.le.repository ${DOCKER_REGISTRY_URL}/$(rv images.le.repository)
     wv images.ui.repository ${DOCKER_REGISTRY_URL}/$(rv images.ui.repository)
     wv images.mongo.repository ${DOCKER_REGISTRY_URL}/$(rv images.mongo.repository)
@@ -38,6 +39,7 @@ helm template -f values.internal.yaml . -x templates/harness-configs.yaml > outp
 helm template -f values.internal.yaml . -x templates/harness-ingress-controller.yaml > output/harness-ingress-controller.yaml
 helm template -f values.internal.yaml . -x templates/harness-le.yaml > output/harness-le.yaml
 helm template -f values.internal.yaml . -x templates/harness-manager.yaml > output/harness-manager.yaml
+helm template -f values.internal.yaml . -x templates/harness-verificationservice.yaml > output/harness-verificationservice.yaml
 helm template -f values.internal.yaml . -x templates/harness-namespace.yaml > output/harness-namespace.yaml
 helm template -f values.internal.yaml . -x templates/harness-regcred.yaml > output/harness-regcred.yaml
 helm template -f values.internal.yaml . -x templates/harness-ui.yaml > output/harness-ui.yaml

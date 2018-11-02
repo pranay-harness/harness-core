@@ -14,6 +14,9 @@ images:
   ui:
     repository:
     tag:
+  verification:
+    repository:
+    tag:
   mongo:
     repository:
     tag:

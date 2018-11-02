@@ -66,7 +66,7 @@ metadata:
   name: harness-manager
   namespace: {{ .Values.kubernetesClusterNamespace }}
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       harness-app: harness
