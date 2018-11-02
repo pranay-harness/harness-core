@@ -323,6 +323,9 @@ public class PipelineServiceImpl implements PipelineService {
     List<EntityType> entityTypes = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+        if (pipelineStageElement.isDisable()) {
+          continue;
+        }
         if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
           Workflow workflow = workflowService.readWorkflow(
               pipeline.getAppId(), (String) pipelineStageElement.getProperties().get("workflowId"));
@@ -439,6 +442,9 @@ public class PipelineServiceImpl implements PipelineService {
       for (PipelineStage pipelineStage : pipelineStages) {
         List<String> invalidStageWorkflows = new ArrayList<>();
         for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
+          if (pse.isDisable()) {
+            continue;
+          }
           if (ENV_STATE.name().equals(pse.getType())) {
             try {
               Workflow workflow =
@@ -522,22 +528,21 @@ public class PipelineServiceImpl implements PipelineService {
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
       for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
         if (ENV_STATE.name().equals(pse.getType())) {
-          try {
-            Workflow workflow =
-                workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
-            Validator.notNullCheck("Workflow does not exist", workflow, USER);
-            Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
-            resolveServicesOfWorkflow(services, serviceIds, pse.getWorkflowVariables(), workflow);
-            setPipelineVariables(
-                workflow.getOrchestrationWorkflow().getUserVariables(), pse.getWorkflowVariables(), pipelineVariables);
-            if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
-              templatized = true;
-            }
-            if (!envParameterized) {
-              envParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
-            }
-          } catch (Exception ex) {
-            logger.warn("Exception occurred while reading workflow associated to the pipeline {}", pipeline);
+          if (pse.isDisable()) {
+            continue;
+          }
+          Workflow workflow =
+              workflowService.readWorkflow(pipeline.getAppId(), (String) pse.getProperties().get("workflowId"));
+          Validator.notNullCheck("Workflow does not exist", workflow, USER);
+          Validator.notNullCheck("Orchestration workflow does not exist", workflow.getOrchestrationWorkflow(), USER);
+          resolveServicesOfWorkflow(services, serviceIds, pse.getWorkflowVariables(), workflow);
+          setPipelineVariables(
+              workflow.getOrchestrationWorkflow().getUserVariables(), pse.getWorkflowVariables(), pipelineVariables);
+          if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
+            templatized = true;
+          }
+          if (!envParameterized) {
+            envParameterized = checkPipelineEntityParameterized(pse.getWorkflowVariables(), workflow);
           }
         }
       }

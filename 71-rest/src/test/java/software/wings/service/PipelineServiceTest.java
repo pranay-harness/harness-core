@@ -330,6 +330,65 @@ public class PipelineServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldNotIncludeDisableStepServices() {
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(
+            Pipeline.builder()
+                .appId(APP_ID)
+                .uuid(PIPELINE_ID)
+                .pipelineStages(asList(
+                    PipelineStage.builder()
+                        .pipelineStageElements(
+                            asList(PipelineStageElement.builder()
+                                       .name("SE")
+                                       .type(ENV_STATE.name())
+                                       .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
+                                       .build(),
+                                PipelineStageElement.builder()
+                                    .name("SE")
+                                    .type(ENV_STATE.name())
+                                    .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", "DISABLE_WORKFLOW_ID"))
+                                    .disable(true)
+                                    .build()))
+                        .build()))
+                .build());
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
+        .thenReturn(
+            aWorkflow()
+                .withOrchestrationWorkflow(
+                    aCanaryOrchestrationWorkflow()
+                        .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                        .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                        .build())
+                .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
+                .build());
+
+    when(workflowService.readWorkflow(APP_ID, "DISABLE_WORKFLOW_ID"))
+        .thenReturn(aWorkflow()
+                        .withOrchestrationWorkflow(
+                            aCanaryOrchestrationWorkflow()
+                                .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                                .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                                .build())
+                        .withServices(asList(Service.builder()
+                                                 .appId(APP_ID)
+                                                 .uuid("DISABLE_STEP_SERVICE_ID")
+                                                 .name("DISABLE_STEP_SERVICE_NAME")
+                                                 .build()))
+                        .build());
+
+    when(workflowService.resolveEnvironmentId(any(), any())).thenReturn(ENV_ID);
+
+    Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
+    assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
+    assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
+    assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").doesNotContain(asList("DISABLE_STEP_SERVICE_ID"));
+    assertThat(pipeline.getEnvIds()).hasSize(0).doesNotContain(ENV_ID);
+    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  @Test
   public void shouldGetPipelineWithTemplatizedServices() {
     when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(
@@ -813,23 +872,6 @@ public class PipelineServiceTest extends WingsBaseTest {
     verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
-  private void mockPipeline() {
-    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
-        .thenReturn(Pipeline.builder()
-                        .appId(APP_ID)
-                        .uuid(PIPELINE_ID)
-                        .pipelineStages(
-                            asList(PipelineStage.builder()
-                                       .pipelineStageElements(asList(
-                                           PipelineStageElement.builder()
-                                               .name("SE")
-                                               .type(ENV_STATE.name())
-                                               .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
-                                               .build()))
-                                       .build()))
-                        .build());
-  }
-
   @Test
   public void shouldGetRequiredEntitiesForBuildPipeline() {
     mockPipeline();
@@ -847,5 +889,63 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
     verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  @Test
+  public void shouldNotIncludeRequiredEntitiesForDisabledStep() {
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(Pipeline.builder()
+                        .appId(APP_ID)
+                        .uuid(PIPELINE_ID)
+                        .pipelineStages(
+                            asList(PipelineStage.builder()
+                                       .pipelineStageElements(asList(
+                                           PipelineStageElement.builder()
+                                               .name("SE")
+                                               .type(ENV_STATE.name())
+                                               .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
+                                               .disable(true)
+                                               .build()))
+                                       .build()))
+                        .build());
+
+    Workflow workflow =
+        aWorkflow()
+            .withOrchestrationWorkflow(
+                aCanaryOrchestrationWorkflow()
+                    .withUserVariables(
+                        asList(aVariable().withEntityType(SERVICE).withName("Service").withValue(SERVICE_ID).build()))
+                    .withPreDeploymentSteps(aPhaseStep(PRE_DEPLOYMENT, Constants.PRE_DEPLOYMENT).build())
+                    .withPostDeploymentSteps(aPhaseStep(POST_DEPLOYMENT, Constants.POST_DEPLOYMENT).build())
+                    .withRequiredEntityTypes(ImmutableSet.of(ARTIFACT, SSH_USER, SSH_PASSWORD))
+                    .build())
+            .withServices(asList(Service.builder().appId(APP_ID).uuid(SERVICE_ID).name(SERVICE_NAME).build()))
+            .build();
+
+    when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
+    when(workflowService.fetchRequiredEntityTypes(APP_ID, workflow.getOrchestrationWorkflow()))
+        .thenReturn(ImmutableSet.of(ARTIFACT, SSH_USER, SSH_PASSWORD));
+    List<EntityType> requiredEntities = pipelineService.getRequiredEntities(APP_ID, PIPELINE_ID);
+    assertThat(requiredEntities).isEmpty();
+
+    verify(workflowService, times(0)).readWorkflow(APP_ID, WORKFLOW_ID);
+    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+  }
+
+  private void mockPipeline() {
+    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+        .thenReturn(Pipeline.builder()
+                        .appId(APP_ID)
+                        .uuid(PIPELINE_ID)
+                        .pipelineStages(
+                            asList(PipelineStage.builder()
+                                       .pipelineStageElements(asList(
+                                           PipelineStageElement.builder()
+                                               .name("SE")
+                                               .type(ENV_STATE.name())
+                                               .properties(ImmutableMap.of("envId", ENV_ID, "workflowId", WORKFLOW_ID))
+                                               .build()))
+                                       .build()))
+                        .build());
   }
 }
