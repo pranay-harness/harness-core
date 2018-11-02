@@ -30,6 +30,7 @@ function loadDockerImages(){
     docker load --input artifacts/ingress.tar
     docker load --input artifacts/le.tar
     docker load --input artifacts/manager.tar
+    docker load --input artifacts/verification.tar
     docker load --input artifacts/mongo.tar
     docker load --input artifacts/mongoinstall.tar
     docker load --input artifacts/nginx.tar
@@ -52,6 +53,7 @@ function prepareandUploadImage(){
 function uploadDockerImages(){
     prepareandUploadImage $leimage
     prepareandUploadImage $managerimage
+    prepareandUploadImage $verificationimage
     prepareandUploadImage $uiimage
     prepareandUploadImage $mongoimage
     prepareandUploadImage $mongoinstallimage
@@ -65,6 +67,7 @@ function uploadDockerImages(){
 echo "# Reading versions from $VERSION_PROPERTY_FILE"
 leimage=$(rv images.le.repository):$(rv images.le.tag)
 managerimage=$(rv images.manager.repository):$(rv images.manager.tag)
+verificationimage=$(rv images.verification.repository):$(rv images.verification.tag)
 mongoimage=$(rv images.mongo.repository):$(rv images.mongo.tag)
 mongoinstallimage=$(rv images.mongoInstall.repository):$(rv images.mongoInstall.tag)
 nginximage=$(rv images.nginx.repository):$(rv images.nginx.tag)
@@ -78,6 +81,7 @@ busyboximage=$(rv images.busybox.repository):$(rv images.busybox.tag)
 echo "#######Version details start #############"
 echo "leimage="$leimage
 echo "managerimage="$managerimage
+echo "verificationimage="$verificationimage
 echo "mongoimage="$mongoimage
 echo "nginximage="$nginximage
 echo "uiimage="$uiimage

@@ -1,0 +1,89 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: harness-verification-service
+  namespace: {{ .Values.kubernetesClusterNamespace }}
+spec:
+  ports:
+  - name: http
+    port: 7070
+    protocol: TCP
+    targetPort: 7070
+  selector:
+    harness-service: verification-service
+  sessionAffinity: None
+  type: ClusterIP
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    harness-app: harness
+    harness-service: verification-service
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.kubernetesClusterNamespace }}
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+  name: harness-verification-service
+  namespace: {{ .Values.kubernetesClusterNamespace }}
+spec:
+  rules:
+  - host: {{ .Values.inframapping.lbhost }}
+    http:
+      paths:
+      - backend:
+          serviceName: harness-verification-service
+          servicePort: 7070
+        path: /verification
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: harness-verification-service
+  namespace: {{ .Values.kubernetesClusterNamespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      harness-app: harness
+      harness-service: verification-service
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        harness.io/application: harness
+        harness.io/service: verification-service
+      labels:
+        harness-app: harness
+        harness-service: verification-service
+    spec:
+      containers:
+      - env:
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              key: MONGO_URI
+              name: harness-verification-service
+        envFrom:
+        - configMapRef:
+            name: harness-verification-service
+        image: {{ .Values.images.verification.repository }}:{{ .Values.images.verification.tag }}
+        imagePullPolicy: IfNotPresent
+        name: verificationservice
+        resources:
+          limits:
+            cpu: "2"
+            memory: 4096Mi
+          requests:
+            cpu: "2"
+            memory: 5447Mi
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+      - name: regcred
+      restartPolicy: Always

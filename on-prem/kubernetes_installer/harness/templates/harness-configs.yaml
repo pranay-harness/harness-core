@@ -105,6 +105,36 @@ metadata:
 
 ---
 
+apiVersion: v1
+stringData:
+  MONGO_URI: mongodb://{{ .Values.services.mongo.adminUser }}:{{ .Values.services.mongo.adminPassword }}@harness-mongodb-replicaset-0.harness-mongodb-replicaset,harness-mongodb-replicaset-1.harness-mongodb-replicaset,harness-mongodb-replicaset-2.harness-mongodb-replicaset:27017/harness?replicaSet=rs0\&authSource=admin
+kind: Secret
+metadata:
+  name: harness-verification-service
+  namespace: {{ .Values.kubernetesClusterNamespace }}
+
+---
+
+apiVersion: v1
+data:
+  CPU: "2"
+  ENV: ONPREM
+  LOGGING_LEVEL: INFO
+  MANAGER_URL: http://harness-manager:9090
+  MEMORY: "4096"
+  POD_MEMORY: "5447"
+  SERVER_PORT: "7070"
+  VERSION: "1.0"
+kind: ConfigMap
+metadata:
+  annotations:
+    haress-app: harness
+    harness-service: verification-service
+  name: harness-verification-service
+  namespace: {{ .Values.kubernetesClusterNamespace }}
+
+---
+
 ### Mongo configs ########
 
 apiVersion: v1
