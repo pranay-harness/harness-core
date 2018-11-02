@@ -183,13 +183,15 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
       switch (parameters.getCommand()) {
         case APPLY:
           joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory,
-              "terraform init -input=false -backend-config=" + tfBackendConfigsFile.getAbsolutePath(),
+              "terraform init -input=false "
+                  + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
               "terraform refresh -input=false", "terraform plan -out=tfplan -input=false",
               "terraform apply -input=false tfplan", "(terraform output --json > " + tfOutputsFile.toString() + ")"));
           break;
         case DESTROY:
           joinedCommands = Joiner.on(" && ").join(asList("cd " + scriptDirectory,
-              "terraform init -input=false -backend-config=" + tfBackendConfigsFile.getAbsolutePath(),
+              "terraform init -input=false "
+                  + (tfBackendConfigsFile.exists() ? "-backend-config=" + tfBackendConfigsFile.getAbsolutePath() : ""),
               "terraform refresh -input=false", "terraform destroy -force"));
           break;
         default:
