@@ -32,9 +32,11 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
+import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
+import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
@@ -443,77 +445,6 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void testGetAllCVServicesForAccount() {
-    String serviceId = UUID.randomUUID().toString();
-    String envId = UUID.randomUUID().toString();
-    String accountId = UUID.randomUUID().toString();
-    String appId = UUID.randomUUID().toString();
-    String workflowId = UUID.randomUUID().toString();
-    String cvConfigId = UUID.randomUUID().toString();
-    User user = new User();
-
-    // setup
-    setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
-    PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("0").build();
-
-    // test behavior
-    PageResponse<CVConfiguration> cvConfigs = accountService.getAllCVServicesForAccount(accountId, user, request, null);
-
-    // verify results
-    assertTrue("Service list should not be empty", cvConfigs.getResponse().size() > 0);
-    assertEquals("Service id should be same", cvConfigId, cvConfigs.getResponse().get(0).getUuid());
-    assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
-    assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getServiceName());
-  }
-
-  @Test
-  public void testGetAllCVServicesForAccountSpecificService() {
-    String serviceId = UUID.randomUUID().toString();
-    String envId = UUID.randomUUID().toString();
-    String accountId = UUID.randomUUID().toString();
-    String appId = UUID.randomUUID().toString();
-    String workflowId = UUID.randomUUID().toString();
-    String cvConfigId = UUID.randomUUID().toString();
-    User user = new User();
-
-    // setup
-    setupCvServicesTests(accountId, serviceId + "-test", envId, appId, cvConfigId + "-test", workflowId, user);
-    setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
-    PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("0").build();
-
-    // test behavior
-    PageResponse<CVConfiguration> cvConfigs =
-        accountService.getAllCVServicesForAccount(accountId, user, request, serviceId);
-
-    // verify results
-    assertTrue("Service list should not be empty", cvConfigs.getResponse().size() == 1);
-    assertEquals("Service id should be same", cvConfigId, cvConfigs.getResponse().get(0).getUuid());
-    assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
-    assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getServiceName());
-  }
-
-  @Test
-  public void testGetAllCVServicesForAccountLastOffset() {
-    String serviceId = UUID.randomUUID().toString();
-    String envId = UUID.randomUUID().toString();
-    String accountId = UUID.randomUUID().toString();
-    String appId = UUID.randomUUID().toString();
-    String workflowId = UUID.randomUUID().toString();
-    String cvConfigId = UUID.randomUUID().toString();
-    User user = new User();
-
-    // setup
-    setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
-    PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("1").build();
-
-    // test behavior
-    PageResponse<CVConfiguration> services = accountService.getAllCVServicesForAccount(accountId, user, request, null);
-
-    // verify results
-    assertTrue("Service list should be empty", services.getResponse().size() == 0);
-  }
-
-  @Test
   public void testGetServicesForAccount() {
     String serviceId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();
@@ -528,7 +459,7 @@ public class AccountServiceTest extends WingsBaseTest {
     PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("0").build();
 
     // test behavior
-    PageResponse<CVEnabledService> cvConfigs = accountService.getServicesForAccount(accountId, user, request, null);
+    PageResponse<CVEnabledService> cvConfigs = accountService.getServices(accountId, user, request, null);
 
     // verify results
     assertTrue("Service list should not be empty", cvConfigs.getResponse().size() > 0);
@@ -536,7 +467,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
     assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getService().getName());
     assertEquals(
-        "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfigurations().get(0));
+        "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfig().get(0).getName());
   }
 
   @Test
@@ -555,8 +486,7 @@ public class AccountServiceTest extends WingsBaseTest {
     PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("0").build();
 
     // test behavior
-    PageResponse<CVEnabledService> cvConfigs =
-        accountService.getServicesForAccount(accountId, user, request, serviceId);
+    PageResponse<CVEnabledService> cvConfigs = accountService.getServices(accountId, user, request, serviceId);
 
     // verify results
     assertTrue("Service list should size 1", cvConfigs.getResponse().size() == 1);
@@ -564,7 +494,7 @@ public class AccountServiceTest extends WingsBaseTest {
     assertEquals("Offset correct in the page response", cvConfigs.getOffset(), "1");
     assertEquals("Service name should be same", "serviceTest", cvConfigs.getResponse().get(0).getService().getName());
     assertEquals(
-        "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfigurations().get(0));
+        "CVConfigType name should be same", "NewRelic", cvConfigs.getResponse().get(0).getCvConfig().get(0).getName());
   }
 
   @Test
@@ -582,7 +512,7 @@ public class AccountServiceTest extends WingsBaseTest {
     PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("1").build();
 
     // test behavior
-    PageResponse<CVEnabledService> services = accountService.getServicesForAccount(accountId, user, request, null);
+    PageResponse<CVEnabledService> services = accountService.getServices(accountId, user, request, null);
 
     // verify results
     assertTrue("Service list should be empty", services.getResponse().size() == 0);
@@ -596,10 +526,15 @@ public class AccountServiceTest extends WingsBaseTest {
     config.setEnvId(envId);
     config.setAppId(appId);
     config.setUuid(cvConfigId);
+    config.setName("NewRelic");
     config.setStateType(StateType.NEW_RELIC);
 
     wingsPersistence.saveAndGet(
         Service.class, Service.builder().name("serviceTest").appId(appId).uuid(serviceId).build());
+    wingsPersistence.saveAndGet(ServiceTemplate.class,
+        ServiceTemplate.Builder.aServiceTemplate().withServiceId(serviceId).withEnvId(envId).withAppId(appId).build());
+    wingsPersistence.saveAndGet(
+        Environment.class, Environment.Builder.anEnvironment().withAppId(appId).withUuid(envId).build());
     wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withName("appName").build());
     wingsPersistence.save(config);
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {

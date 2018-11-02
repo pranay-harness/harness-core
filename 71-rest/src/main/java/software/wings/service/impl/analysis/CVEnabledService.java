@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.Service;
+import software.wings.verification.CVConfiguration;
 
 import java.util.List;
 
@@ -11,7 +12,9 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class CVEnabledService {
-  Service service;
-  List<String> cvConfigurations;
-  String appName;
+  private Service service;
+  String envName;
+  String envId;
+  List<CVConfiguration> cvConfig;
+  private String appName;
 }
