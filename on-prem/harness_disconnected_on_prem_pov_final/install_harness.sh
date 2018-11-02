@@ -8,8 +8,8 @@ VERSION_PROPERTY_FILE=version.properties
 source ./utils.sh
 
 if [[ -z $1 ]]; then
-   runtime_dir=$(getProperty "$CONFIG_PROPERTY_FILE" "runtime_dir")
-   echo "No runtime directory supplied in argument, will default to using the value in config.properties, value=$runtime_dir"
+   runtime_dir=$HOME/harness_runtime
+   echo "No runtime directory supplied in argument, will default to the home directory, value=$runtime_dir"
 else
   runtime_dir=$1
   echo "Using runtime directory $runtime_dir"
@@ -43,7 +43,7 @@ echo "host1="$host1
 echo "#######Infrastructure details end #############"
 printf "\n"
 
-sudo rm -rf config
+rm -rf config
 mkdir -p $runtime_dir
 cp -Rf config_template config
 
@@ -236,8 +236,8 @@ function setupManager(){
 #    echo $LOGGING_LEVEL
 #    echo $DEPLOY_MODE
 
-  sudo mkdir -p $runtime_dir/manager/logs
-  sudo chmod -R 777 $runtime_dir/manager
+  mkdir -p $runtime_dir/manager/logs
+  chmod -R 777 $runtime_dir/manager
 
  docker run -d --net=host --rm -p $SERVER_PORT:$SERVER_PORT --name harnessManager -e LOGGING_LEVEL=$LOGGING_LEVEL -e MEMORY=$MEMORY -e WATCHER_METADATA_URL=$WATCHER_METADATA_URL -e LICENSE_INFO=$licenseInfo -e ALLOWED_ORIGINS=$ALLOWED_ORIGINS -e CAPSULE_JAR=$CAPSULE_JAR -e DELEGATE_METADATA_URL=$DELEGATE_METADATA_URL -e HZ_CLUSTER_NAME=docker-manager-onprem -e SERVER_PORT=$SERVER_PORT -e UI_SERVER_URL=$UI_SERVER_URL -e MONGO_URI="$MONGO_URI" -e DEPLOY_MODE=$DEPLOY_MODE -e TCP_HOSTS_DETAILS=$TCP_HOSTS_DETAILS -e CIDR=127.0.0.1 -e API_URL=$LOAD_BALANCER_URL -e HAZELCAST_PORT=$HAZELCAST_PORT -e jwtPasswordSecret=$jwtPasswordSecret -e jwtExternalServiceSecret=$jwtExternalServiceSecret -e jwtZendeskSecret=$jwtZendeskSecret -e jwtMultiAuthSecret=$jwtMultiAuthSecret -e jwtSsoRedirectSecret=$jwtSsoRedirectSecret -e FEATURES=$FEATURES -e SKIP_LOGS=true -v $runtime_dir/manager/logs:/opt/harness/logs  harness/manager:$managerVersion
 
@@ -307,7 +307,7 @@ function setupDelegateJars(){
     mkdir -p  ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}
     cp images/watcher.jar ${STORAGE_DIR_LOCATION}/wingswatchers/jobs/deploy-prod-watcher/${WATCHER_VERSION}/
     echo "1.0.${WATCHER_VERSION} jobs/deploy-prod-watcher/${WATCHER_VERSION}/watcher.jar" > watcherprod.txt
-    sudo mv watcherprod.txt ${STORAGE_DIR_LOCATION}/wingswatchers
+    mv watcherprod.txt ${STORAGE_DIR_LOCATION}/wingswatchers
 
 }
 
@@ -340,7 +340,7 @@ function startUp(){
 
 function cleanupAfterStart(){
    echo "################################Cleaning up after start ################################"
-    sudo rm -rf config
+   rm -rf config
 }
 
 stopContainers
