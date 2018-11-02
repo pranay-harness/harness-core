@@ -72,7 +72,8 @@ public class BoundedInputStream extends InputStream {
    */
   @Override
   public int read() throws IOException {
-    return updateTotalBytesRead(inputStream.read());
+    int numBytes = inputStream.read();
+    return updateTotalBytesRead(numBytes == -1 ? -1 : 1);
   }
 
   /* (non-Javadoc)

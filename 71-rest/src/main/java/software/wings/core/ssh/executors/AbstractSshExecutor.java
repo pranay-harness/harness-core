@@ -74,7 +74,8 @@ import javax.validation.executable.ValidateOnExecution;
  */
 @ValidateOnExecution
 public abstract class AbstractSshExecutor implements SshExecutor {
-  public static final int CHUNK_SIZE = 10 * 1024; // 10MB
+  public static final int CHUNK_SIZE = 10 * 1024; // 10KB
+  public static final int ALLOWED_BYTES = 1024 * 1024; // 1MB
   /**
    * The constant DEFAULT_SUDO_PROMPT_PATTERN.
    */
@@ -721,10 +722,15 @@ public abstract class AbstractSshExecutor implements SshExecutor {
       }
 
       int c;
+      int totalBytesRead = 0;
       do {
         c = in.read();
+        if (c == -1) {
+          break;
+        }
+        totalBytesRead++;
         sb.append((char) c);
-      } while (c != '\n');
+      } while (c != '\n' || totalBytesRead <= ALLOWED_BYTES);
 
       if (b <= 2) {
         saveExecutionLogError(sb.toString());

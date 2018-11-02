@@ -64,51 +64,58 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
   @SuppressWarnings("PMD")
   public void run() {
     try (TaskLogContext ignore = new TaskLogContext(this.taskId)) {
-      if (preExecute.get()) {
-        DelegateTaskResponseBuilder taskResponse =
-            DelegateTaskResponse.builder().accountId(accountId).responseCode(ResponseCode.OK);
-        try {
-          logger.info("Started executing task {}", taskId);
-          ResponseData result = run(parameters);
-          if (result != null) {
-            taskResponse.response(result);
-            if (result instanceof RemoteMethodReturnValueData) {
-              RemoteMethodReturnValueData returnValueData = (RemoteMethodReturnValueData) result;
-              if (returnValueData.getException() instanceof DelegateRetryableException) {
-                taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
-              }
-            }
-          } else {
-            String errorMessage = "No response from delegate task " + taskId;
-            logger.error(errorMessage);
-            taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
-            taskResponse.responseCode(ResponseCode.FAILED);
-          }
-          logger.info("Completed executing task {}", taskId);
-        } catch (DelegateRetryableException exception) {
-          exception.addContext(DelegateTask.class, taskId);
-          WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
-          taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
-          taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
-        } catch (WingsException exception) {
-          exception.addContext(DelegateTask.class, taskId);
-          WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
-          taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
-          taskResponse.responseCode(ResponseCode.FAILED);
-        } catch (Throwable exception) {
-          logger.error(format("Unexpected error executing delegate task %s", taskId), exception);
-          taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
-          taskResponse.responseCode(ResponseCode.FAILED);
-        } finally {
-          if (consumer != null) {
-            consumer.accept(taskResponse.build());
+      runDelegateTask();
+    } catch (Throwable e) {
+      logger.error(format("Unexpected error executing delegate task %s", taskId), e);
+    }
+  }
+
+  @SuppressWarnings("PMD")
+  private void runDelegateTask() {
+    if (!preExecute.get()) {
+      logger.info("Pre-execute returned false for task {}", taskId);
+      return;
+    }
+
+    DelegateTaskResponseBuilder taskResponse =
+        DelegateTaskResponse.builder().accountId(accountId).responseCode(ResponseCode.OK);
+
+    try {
+      logger.info("Started executing task {}", taskId);
+      ResponseData result = run(parameters);
+      if (result != null) {
+        taskResponse.response(result);
+        if (result instanceof RemoteMethodReturnValueData) {
+          RemoteMethodReturnValueData returnValueData = (RemoteMethodReturnValueData) result;
+          if (returnValueData.getException() instanceof DelegateRetryableException) {
+            taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
           }
         }
       } else {
-        logger.info("Pre-execute returned false for task {}", taskId);
+        String errorMessage = "No response from delegate task " + taskId;
+        logger.error(errorMessage);
+        taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(errorMessage).build());
+        taskResponse.responseCode(ResponseCode.FAILED);
       }
-    } catch (Throwable e) {
-      logger.error(format("Unexpected error executing delegate task %s", taskId), e);
+      logger.info("Completed executing task {}", taskId);
+    } catch (DelegateRetryableException exception) {
+      exception.addContext(DelegateTask.class, taskId);
+      WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
+      taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
+      taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
+    } catch (WingsException exception) {
+      exception.addContext(DelegateTask.class, taskId);
+      WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
+      taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
+      taskResponse.responseCode(ResponseCode.FAILED);
+    } catch (Throwable exception) {
+      logger.error(format("Unexpected error executing delegate task %s", taskId), exception);
+      taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
+      taskResponse.responseCode(ResponseCode.FAILED);
+    } finally {
+      if (consumer != null) {
+        consumer.accept(taskResponse.build());
+      }
     }
   }
 
