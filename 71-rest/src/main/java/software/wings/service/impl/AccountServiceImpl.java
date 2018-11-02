@@ -744,6 +744,12 @@ public class AccountServiceImpl implements AccountService {
     }
 
     int offset = Integer.parseInt(request.getOffset());
+    if (isNotEmpty(request.getLimit()) && request.getLimit().equals("UNLIMITED")) {
+      request.setLimit(String.valueOf(Integer.MAX_VALUE));
+    }
+    int limit = Integer.parseInt(request.getLimit() != null ? request.getLimit() : "0");
+    limit = limit == 0 ? SIZE_PER_SERVICES_REQUEST : limit;
+
     Map<String, AppPermissionSummary> userAppPermissions =
         authService.getUserPermissionInfo(accountId, user).getAppPermissionMapInternal();
 
@@ -823,7 +829,7 @@ public class AccountServiceImpl implements AccountService {
     // Wrap into a pageResponse and return
     int totalSize = cvEnabledServices.size();
     if (offset < cvEnabledServices.size()) {
-      int endIndex = Math.min(cvEnabledServices.size(), offset + SIZE_PER_SERVICES_REQUEST);
+      int endIndex = Math.min(cvEnabledServices.size(), offset + limit);
       cvEnabledServices = cvEnabledServices.subList(offset, endIndex);
     } else {
       cvEnabledServices = new ArrayList<>();
