@@ -9,6 +9,8 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +26,7 @@ import software.wings.beans.Service;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.CVConfigurationResource;
+import software.wings.resources.ContinuousVerificationDashboardResource;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
@@ -36,8 +39,14 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.TimeSeriesDataPoint;
 import software.wings.verification.TimeSeriesOfMetric;
+import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,6 +67,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
   @Inject ContinuousVerificationService continuousVerificationService;
   @Inject private CVConfigurationResource cvConfigurationResource;
+  @Inject private ContinuousVerificationDashboardResource cvDashboardResource;
 
   private String accountId;
   private String appId;
@@ -182,11 +192,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         heatMapSummary.getRiskLevelSummary().size());
     AtomicInteger index = new AtomicInteger();
     heatMapSummary.getRiskLevelSummary().forEach(riskLevel -> {
-      if (index.get() == 0 || index.get() == 25) {
+      if (index.get() == 0 || index.get() >= 25) {
         assertEquals(0, riskLevel.getHighRisk());
         assertEquals(2, riskLevel.getNa());
-      } else if (index.get() == 26) { // 53rd small unit
-        assertEquals(1, riskLevel.getNa());
       } else {
         assertEquals(2, riskLevel.getHighRisk());
         assertEquals(0, riskLevel.getNa());
@@ -217,12 +225,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         heatMapSummary.getRiskLevelSummary().size());
     index.set(0);
     heatMapSummary.getRiskLevelSummary().forEach(riskLevel -> {
-      if (index.get() == 0 || index.get() == 25) {
+      if (index.get() == 0 || index.get() >= 25) {
         assertEquals(0, riskLevel.getHighRisk());
         assertEquals(2, riskLevel.getNa());
-      } else if (index.get() == 26) { // 53rd small unit
-        assertEquals(0, riskLevel.getHighRisk());
-        assertEquals(1, riskLevel.getNa());
       } else if (index.get() == 7 || index.get() == 21 || index.get() == 22) {
         assertEquals(1, riskLevel.getHighRisk());
         assertEquals(1, riskLevel.getNa());
@@ -387,5 +392,38 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
     // Save to DB
     wingsPersistence.save(record);
+  }
+
+  @Test
+  public void testWithActualData() throws IOException {
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    File file = new File(getClass().getClassLoader().getResource("./verification/24_7_ts_analysis.json").getFile());
+    final Gson gson = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
+      List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = gson.fromJson(br, type);
+      timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setAppId(appId);
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+      });
+      wingsPersistence.save(timeSeriesMLAnalysisRecords);
+    }
+
+    List<HeatMap> heatMaps =
+        cvDashboardResource.getHeatMapSummary(accountId, appId, serviceId, 1541083500000L, 1541126700000L)
+            .getResource();
+    assertEquals(1, heatMaps.size());
+    assertEquals(48, heatMaps.get(0).getRiskLevelSummary().size());
   }
 }
