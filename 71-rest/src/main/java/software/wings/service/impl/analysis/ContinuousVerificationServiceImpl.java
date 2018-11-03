@@ -58,6 +58,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -766,7 +768,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return riskLevel;
   }
 
-  public List<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
+  public SortedSet<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
       String accountId, String cvConfigId, long startTime, long endTime, long historyStartTime) {
     startTime = Timestamp.minuteBoundary(startTime);
     endTime = Timestamp.minuteBoundary(endTime);
@@ -775,18 +777,18 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         wingsPersistence.createQuery(CVConfiguration.class).filter("_id", cvConfigId).get();
     if (cvConfiguration == null) {
       logger.info("No cvConfig found for cvConfigId={}", cvConfigId);
-      return new ArrayList<>();
+      return new TreeSet<>();
     }
     return convertTimeSeriesResponse(fetchObservedTimeSeries(startTime, endTime, cvConfiguration, historyStartTime));
   }
 
-  private List<TransactionTimeSeries> convertTimeSeriesResponse(
+  private SortedSet<TransactionTimeSeries> convertTimeSeriesResponse(
       Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries) {
-    List<TransactionTimeSeries> resp = new ArrayList<>();
+    SortedSet<TransactionTimeSeries> resp = new TreeSet<>();
     for (Map.Entry<String, Map<String, TimeSeriesOfMetric>> txnEntry : observedTimeSeries.entrySet()) {
       TransactionTimeSeries txnTimeSeries = new TransactionTimeSeries();
       txnTimeSeries.setTransactionName(txnEntry.getKey());
-      txnTimeSeries.setMetricTimeSeries(new ArrayList<>());
+      txnTimeSeries.setMetricTimeSeries(new TreeSet<>());
       for (Map.Entry<String, TimeSeriesOfMetric> metricEntry : txnEntry.getValue().entrySet()) {
         txnTimeSeries.getMetricTimeSeries().add(metricEntry.getValue());
       }

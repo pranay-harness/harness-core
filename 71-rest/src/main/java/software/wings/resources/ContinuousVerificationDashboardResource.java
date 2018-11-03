@@ -25,6 +25,7 @@ import software.wings.verification.TransactionTimeSeries;
 import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.SortedSet;
 import javax.validation.Valid;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
@@ -149,7 +150,7 @@ public class ContinuousVerificationDashboardResource {
   @Path(VerificationConstants.TIMESERIES)
   @Timed
   @ExceptionMetered
-  public RestResponse<List<TransactionTimeSeries>> getTimeSeriesOfHeatMapUnit(
+  public RestResponse<SortedSet<TransactionTimeSeries>> getTimeSeriesOfHeatMapUnit(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("startTime") long startTime,
       @QueryParam("endTime") long endTime, @QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("historyStartTime") long historyStartTime) {
