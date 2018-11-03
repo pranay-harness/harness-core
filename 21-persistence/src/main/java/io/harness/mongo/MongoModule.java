@@ -27,6 +27,7 @@ import com.mongodb.MongoCommandException;
 import com.mongodb.ReadPreference;
 import io.harness.exception.UnexpectedException;
 import io.harness.logging.MorphiaLoggerFactory;
+import io.harness.persistence.ReadPref;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -70,10 +71,20 @@ public class MongoModule extends AbstractModule {
           .maxConnectionIdleTime(600000)
           .connectionsPerHost(300);
 
-  /**
-   * Creates a guice module for portal app.
-   *
-   */
+  public static AdvancedDatastore createDatastore(String uri, ReadPref readPref) {
+    Morphia morphia = new Morphia();
+    morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+    morphia.getMapper().getOptions().setMapSubPackages(true);
+
+    MongoClientURI clientUri = new MongoClientURI(uri, mongoClientOptions);
+    MongoClient mongoClient = new MongoClient(uri);
+
+    AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, clientUri.getDatabase());
+    datastore.setQueryFactory(new QueryFactory());
+
+    return datastore;
+  }
+
   public MongoModule(MongoConfig mongoConfig) {
     registerLogger(MorphiaLoggerFactory.class);
 

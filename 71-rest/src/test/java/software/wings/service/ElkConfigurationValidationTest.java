@@ -9,6 +9,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Assert;
@@ -52,6 +53,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void testElkConfigNoPassword() throws Exception {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
@@ -69,6 +71,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void testElkConfigNoUserName() throws Exception {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
@@ -86,6 +89,7 @@ public class ElkConfigurationValidationTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void testInvalidUrl() throws Exception {
     final ElkConfig elkConfig = new ElkConfig();
     elkConfig.setAccountId(accountId);
