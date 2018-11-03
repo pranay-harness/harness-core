@@ -38,6 +38,7 @@ import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
+import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoModule;
 import io.harness.scheduler.PersistentScheduler;
@@ -392,6 +393,9 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   public static void registerObservers(Injector injector) {
+    final MaintenanceController maintenanceController = injector.getInstance(MaintenanceController.class);
+    maintenanceController.register(new HazelcastListener());
+
     SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
     StateMachineExecutor stateMachineExecutor = injector.getInstance(Key.get(StateMachineExecutor.class));
     WorkflowServiceImpl workflowService = (WorkflowServiceImpl) injector.getInstance(Key.get(WorkflowService.class));

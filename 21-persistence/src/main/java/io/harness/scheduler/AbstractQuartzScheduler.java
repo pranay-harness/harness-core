@@ -194,6 +194,9 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
   }
 
   @Override
+  public void onShutdown() {}
+
+  @Override
   public void onEnterMaintenance() {
     if (scheduler != null) {
       try {

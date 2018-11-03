@@ -14,6 +14,11 @@ public class Subject<T> {
   }
 
   @FunctionalInterface
+  public interface Informant0<T> {
+    void inform(T t);
+  }
+
+  @FunctionalInterface
   public interface Informant1<T, U> {
     void inform(T t, U u);
   }
@@ -48,6 +53,10 @@ public class Subject<T> {
         .map(observer -> func.apply(observer, arg))
         .filter(rejection -> rejection != null)
         .collect(toList());
+  }
+
+  public void fireInform(Informant0<T> func) {
+    observers.forEach(observer -> func.inform(observer));
   }
 
   public <U> void fireInform(Informant1<T, U> func, U arg) {
