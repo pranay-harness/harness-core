@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +23,7 @@ import java.util.SortedMap;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TimeSeriesOfMetric {
+public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   private static final Logger logger = LoggerFactory.getLogger(TimeSeriesOfMetric.class);
 
   @Builder.Default int risk = -1;
@@ -38,5 +39,14 @@ public class TimeSeriesOfMetric {
   @JsonIgnore
   public Map<Long, TimeSeriesDataPoint> getTimeSeriesMap() {
     return timeSeries;
+  }
+
+  @Override
+  public int compareTo(@NotNull TimeSeriesOfMetric o) {
+    if (o.risk != this.risk) {
+      return o.risk - this.risk;
+    }
+
+    return this.metricName.compareTo(o.metricName);
   }
 }

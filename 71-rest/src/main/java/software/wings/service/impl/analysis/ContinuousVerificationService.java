@@ -14,6 +14,7 @@ import java.text.ParseException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 
 public interface ContinuousVerificationService {
   void saveCVExecutionMetaData(ContinuousVerificationExecutionMetaData continuousVerificationExecutionMetaData);
@@ -35,7 +36,7 @@ public interface ContinuousVerificationService {
 
   List<HeatMap> getHeatMap(
       String accountId, String appId, String serviceId, long startTime, long endTime, boolean detailed);
-  List<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
+  SortedSet<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
       String accountId, String cvConfigId, long startTime, long endTime, long historyStartTime);
   Map<String, Map<String, TimeSeriesOfMetric>> fetchObservedTimeSeries(
       long startTime, long endTime, CVConfiguration cvConfiguration, long historyStartTime);
