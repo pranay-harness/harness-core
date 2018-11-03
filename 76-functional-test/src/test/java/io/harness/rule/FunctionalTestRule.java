@@ -3,8 +3,6 @@ package io.harness.rule;
 import static org.mockito.Mockito.mock;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 
 import com.codahale.metrics.MetricRegistry;
@@ -43,11 +41,9 @@ import java.util.concurrent.ExecutorService;
 import javax.validation.Validation;
 import javax.validation.ValidatorFactory;
 
-public class FunctionalTestRule implements MethodRule, MongoRuleMixin, DistributedLockRuleMixin {
+public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorRuleMixin, DistributedLockRuleMixin {
   private static final Logger logger = LoggerFactory.getLogger(FunctionalTestRule.class);
 
-  private Injector injector;
-  private ClosingFactory closingFactory = new ClosingFactory();
   private int port;
   protected AdvancedDatastore datastore;
   private ExecutorService executorService = new CurrentThreadExecutor();
@@ -56,7 +52,8 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, Distribut
 
   String VERIFICATION_PATH = "VERIFICATION_PATH";
 
-  protected void before() {
+  @Override
+  public List<Module> modules(ClosingFactory closingFactory) {
     List<Module> modules = new ArrayList<>();
     MongoClient mongoClient;
     String dbName = System.getProperty("dbName", "harness");
@@ -89,7 +86,8 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, Distribut
 
     modules = getRequiredModules(configuration, distributedLockSvc);
     modules.add(new QueueModule(false));
-    injector = Guice.createInjector(modules);
+
+    return modules;
   }
 
   protected Configuration getConfiguration(String dbName) {
@@ -102,10 +100,6 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, Distribut
         MongoConfig.builder().uri(System.getProperty("mongoUri", "mongodb://localhost:27017/" + dbName)).build());
     configuration.getBackgroundSchedulerConfig().setAutoStart(System.getProperty("setupScheduler", "false"));
     return configuration;
-  }
-
-  protected void after() {
-    closingFactory.stopServers();
   }
 
   protected List<Module> getRequiredModules(Configuration configuration, DistributedLockSvc distributedLockSvc) {
@@ -136,17 +130,6 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, Distribut
 
   @Override
   public Statement apply(Statement statement, FrameworkMethod frameworkMethod, Object target) {
-    return new Statement() {
-      @Override
-      public void evaluate() throws Throwable {
-        before();
-        injector.injectMembers(target);
-        try {
-          statement.evaluate();
-        } finally {
-          after();
-        }
-      }
-    };
+    return applyInjector(statement, target);
   }
 }
