@@ -8,12 +8,14 @@ import static software.wings.beans.command.EcsSetupParams.EcsSetupParamsBuilder.
 import com.google.inject.Singleton;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.sm.ExecutionContext;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
@@ -74,10 +76,21 @@ public class EcsStateHelper {
         .withServiceSteadyStateTimeout(serviceSteadyStateTimeout)
         .withRollback(ecsSetupStateConfig.isRollback())
         .withPreviousEcsServiceSnapshotJson(ecsSetupStateConfig.getPreviousEcsServiceSnapshotJson())
-        .withEcsServiceSpecification(ecsSetupStateConfig.getEcsServiceSpecification())
+        .withEcsServiceSpecification(
+            getServiceSpecWithRenderedExpression(ecsSetupStateConfig.getEcsServiceSpecification(), context))
         .withEcsServiceArn(ecsSetupStateConfig.getEcsServiceArn())
         .withIsDaemonSchedulingStrategy(ecsSetupStateConfig.isDaemonSchedulingStrategy())
         .build();
+  }
+
+  private EcsServiceSpecification getServiceSpecWithRenderedExpression(
+      EcsServiceSpecification ecsServiceSpecification, ExecutionContext context) {
+    if (ecsServiceSpecification == null || StringUtils.isBlank(ecsServiceSpecification.getServiceSpecJson())) {
+      return ecsServiceSpecification;
+    }
+
+    ecsServiceSpecification.setServiceSpecJson(context.renderExpression(ecsServiceSpecification.getServiceSpecJson()));
+    return ecsServiceSpecification;
   }
 
   private String[] getArrayFromList(List<String> input) {
