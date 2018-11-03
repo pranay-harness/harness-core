@@ -32,6 +32,7 @@ import com.amazonaws.services.ecs.model.PortMapping;
 import com.amazonaws.services.ecs.model.RegisterTaskDefinitionRequest;
 import com.amazonaws.services.ecs.model.SchedulingStrategy;
 import com.amazonaws.services.ecs.model.Service;
+import com.amazonaws.services.ecs.model.ServiceRegistry;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.elasticloadbalancingv2.model.TargetGroup;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -158,13 +159,75 @@ public class EcsCommandUnitHelper {
     EcsServiceSpecification serviceSpecification = setupParams.getEcsServiceSpecification();
     if (serviceSpecification != null && StringUtils.isNotBlank(serviceSpecification.getServiceSpecJson())) {
       Service advancedServiceConfig = getAwsServiceFromJson(serviceSpecification.getServiceSpecJson(), logger);
+      validateServiceRegistries(advancedServiceConfig.getServiceRegistries(), taskDefinition, executionLogCallback);
+
       createServiceRequest.setPlacementStrategy(advancedServiceConfig.getPlacementStrategy());
       createServiceRequest.setPlacementConstraints(advancedServiceConfig.getPlacementConstraints());
       createServiceRequest.setHealthCheckGracePeriodSeconds(advancedServiceConfig.getHealthCheckGracePeriodSeconds());
+      createServiceRequest.setServiceRegistries(advancedServiceConfig.getServiceRegistries());
       setDeploymentConfiguration(createServiceRequest, advancedServiceConfig);
     }
 
     return createServiceRequest;
+  }
+
+  /**
+   * Validate if ContainerName and ContianerPort if mentioned in ServiceRegistry in serviceSpec,
+   * matches ones defined in TaskDefinitions
+   * @param serviceRegistries
+   * @param taskDefinition
+   * @param executionLogCallback
+   * @return
+   */
+  public void validateServiceRegistries(List<ServiceRegistry> serviceRegistries, TaskDefinition taskDefinition,
+      ExecutionLogCallback executionLogCallback) {
+    // Validate containerNames in Service Registries match the ones defined in TaskDefinition
+    Map<String, ContainerDefinition> nameToContainerDefinitionMap = new HashMap<>();
+    taskDefinition.getContainerDefinitions().forEach(
+        containerDefinition -> nameToContainerDefinitionMap.put(containerDefinition.getName(), containerDefinition));
+
+    serviceRegistries.forEach(serviceRegistry -> {
+      if (StringUtils.isNotBlank(serviceRegistry.getContainerName())) {
+        ContainerDefinition containerDefinition = nameToContainerDefinitionMap.get(serviceRegistry.getContainerName());
+
+        // if Container Name is not null, Validate ContainerName is mentioned in ServiceRegistry
+        if (containerDefinition == null) {
+          String errorMsg = new StringBuilder("Invalid Container name :")
+                                .append(serviceRegistry.getContainerName())
+                                .append(", mentioned in Service Registry")
+                                .toString();
+          executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR);
+          throw new WingsException(errorMsg, USER).addParam("message", errorMsg);
+        }
+
+        // If containerName is mentioned, ContainerPort mapped to that name in TaskjDefinition must be used
+        if (serviceRegistry.getContainerPort() == null
+            || isInvalidContainerPortUsed(serviceRegistry, containerDefinition, executionLogCallback)) {
+          String errorMsg = new StringBuilder("Invalid Container Port: ")
+                                .append(serviceRegistry.getContainerPort())
+                                .append(", mentioned in Service Registry for Container Name: ")
+                                .append(serviceRegistry.getContainerName())
+                                .toString();
+          executionLogCallback.saveExecutionLog(errorMsg, LogLevel.ERROR);
+          throw new WingsException(errorMsg, USER).addParam("message", errorMsg);
+        }
+      }
+    });
+  }
+
+  private boolean isInvalidContainerPortUsed(ServiceRegistry serviceRegistry, ContainerDefinition containerDefinition,
+      ExecutionLogCallback executionLogCallback) {
+    List<PortMapping> portMappings = containerDefinition.getPortMappings();
+    Optional<PortMapping> optionalPortMapping =
+        portMappings.stream()
+            .filter(portMapping -> serviceRegistry.getContainerPort().compareTo(portMapping.getContainerPort()) == 0)
+            .findFirst();
+
+    if (!optionalPortMapping.isPresent()) {
+      return true;
+    }
+
+    return false;
   }
 
   private void setDeploymentConfiguration(CreateServiceRequest createServiceRequest, Service advancedServiceConfig) {
