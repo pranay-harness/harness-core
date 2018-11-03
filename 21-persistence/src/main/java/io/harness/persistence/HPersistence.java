@@ -1,10 +1,22 @@
 package io.harness.persistence;
 
 import com.mongodb.DBCollection;
+import io.harness.annotation.StoreIn;
 import org.mongodb.morphia.AdvancedDatastore;
+
+import java.util.Arrays;
+import java.util.Map;
 
 public interface HPersistence {
   Store DEFAULT_STORE = Store.builder().name("default").build();
+
+  /**
+   * Register Uri for the datastore.
+   *
+   * @param store the store
+   * @param uri the datastore uri
+   */
+  void register(Store store, String uri);
 
   /**
    * Gets the datastore.
@@ -23,11 +35,10 @@ public interface HPersistence {
    * @return the datastore
    */
   default AdvancedDatastore getDatastore(Entity entity, ReadPref readPref) {
-    if (entity instanceof StoreSelector) {
-      return getDatastore(((StoreSelector) entity).getStore(), readPref);
-    }
-    return getDatastore(DEFAULT_STORE, readPref);
+    return getDatastore(entity.getClass(), readPref);
   }
+
+  Map<Class, Store> getClassStores();
 
   /**
    * Gets the datastore.
@@ -36,8 +47,16 @@ public interface HPersistence {
    * @param readPref the readPref
    * @return the datastore
    */
+
   default AdvancedDatastore getDatastore(Class cls, ReadPref readPref) {
-    return getDatastore(DEFAULT_STORE, readPref);
+    return getDatastore(getClassStores().computeIfAbsent(cls, klass -> {
+      return Arrays.stream(cls.getDeclaredAnnotations())
+          .filter(annotation -> annotation.annotationType().equals(StoreIn.class))
+          .map(annotation -> ((StoreIn) annotation).name())
+          .map(name -> Store.builder().name(name).build())
+          .findFirst()
+          .orElseGet(() -> DEFAULT_STORE);
+    }), readPref);
   }
 
   /**

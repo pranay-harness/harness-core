@@ -537,6 +537,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = "sriram@harness.io", intermittent = true)
   public void fetch() throws Exception {
     APMVerificationConfig config = new APMVerificationConfig();
     config.setAccountId(accountId);
