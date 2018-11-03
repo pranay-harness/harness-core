@@ -25,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -248,6 +249,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "srinivas@harness.io", intermittent = true)
   public void shouldTriggerGitHubPRWithDifferentEvent() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
                                  .workflowId(PIPELINE_ID)
@@ -278,6 +280,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "srinivas@harness.io", intermittent = true)
   public void shouldTriggerGitHubPRWithDifferentAction() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
                                  .workflowId(PIPELINE_ID)
@@ -308,6 +311,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "srinivas@harness.io", intermittent = true)
   public void shouldTriggerGitHubPushRequest() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
                                  .workflowId(PIPELINE_ID)

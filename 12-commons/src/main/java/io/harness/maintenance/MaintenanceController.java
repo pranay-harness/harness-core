@@ -1,20 +1,17 @@
 package io.harness.maintenance;
 
 import static io.harness.threading.Morpheus.sleep;
-import static java.util.Collections.synchronizedSet;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import com.hazelcast.core.HazelcastInstance;
 import io.dropwizard.lifecycle.Managed;
+import io.harness.observer.Subject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Duration;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -50,13 +47,12 @@ public class MaintenanceController implements Managed {
   }
 
   @Inject private ExecutorService executorService;
-  @Inject private HazelcastInstance hazelcastInstance;
 
   private final AtomicBoolean running = new AtomicBoolean(true);
-  private final Set<MaintenanceListener> maintenanceListeners = synchronizedSet(new HashSet<>());
+  private final Subject<MaintenanceListener> maintenanceListenerSubject = new Subject();
 
   public void register(MaintenanceListener listener) {
-    maintenanceListeners.add(listener);
+    maintenanceListenerSubject.register(listener);
   }
 
   @Override
@@ -65,17 +61,14 @@ public class MaintenanceController implements Managed {
       while (running.get()) {
         boolean isShutdown = new File(SHUTDOWN).exists();
         if (shutdown.getAndSet(isShutdown) != isShutdown) {
-          logger.info("Shutdown started. Leaving hazelcast cluster.");
-          hazelcastInstance.shutdown();
+          maintenanceListenerSubject.fireInform(MaintenanceListener::onShutdown);
         }
         boolean isMaintenance =
             forceMaintenance != null ? forceMaintenance : new File(MAINTENANCE).exists() || isShutdown;
         if (maintenance.getAndSet(isMaintenance) != isMaintenance) {
           logger.info("{} maintenance mode", isMaintenance ? "Entering" : "Leaving");
-          synchronized (maintenanceListeners) {
-            maintenanceListeners.forEach(listener
-                -> executorService.submit(isMaintenance ? listener::onEnterMaintenance : listener::onLeaveMaintenance));
-          }
+          maintenanceListenerSubject.fireInform(
+              isMaintenance ? MaintenanceListener::onEnterMaintenance : MaintenanceListener::onLeaveMaintenance);
         }
         sleep(Duration.ofSeconds(1));
       }
