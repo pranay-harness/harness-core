@@ -121,6 +121,7 @@ public class InstanceServiceImpl implements InstanceService {
         return save(instance);
       } else {
         delete(Sets.newHashSet(existingInstance.getUuid()));
+
         // since this is a new version, we have to make sure that the deletedAt of old version and
         // createdAt of new version are off by at least 1 milliseconds.
         // Otherwise, if the stats collection happens in that exact millisecond,
