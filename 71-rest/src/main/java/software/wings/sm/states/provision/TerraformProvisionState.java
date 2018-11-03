@@ -347,43 +347,51 @@ public abstract class TerraformProvisionState extends State {
       final GridFSFile gridFsFile = fileService.getGridFsFile(fileId, FileBucket.TERRAFORM_STATE);
 
       final Map<String, Object> rawVariables = (Map<String, Object>) gridFsFile.getExtraElements().get(VARIABLES_KEY);
-      variables = extractTextVariables(rawVariables.entrySet().stream().map(entry
-                                           -> NameValuePair.builder()
-                                                  .valueType("TEXT")
-                                                  .name(entry.getKey())
-                                                  .value((String) entry.getValue())
-                                                  .build()),
-          context);
+      if (isNotEmpty(rawVariables)) {
+        variables = extractTextVariables(rawVariables.entrySet().stream().map(entry
+                                             -> NameValuePair.builder()
+                                                    .valueType("TEXT")
+                                                    .name(entry.getKey())
+                                                    .value((String) entry.getValue())
+                                                    .build()),
+            context);
+      }
 
       final Map<String, Object> rawBackendConfigs =
           (Map<String, Object>) gridFsFile.getExtraElements().get(BACKEND_CONFIGS_KEY);
-      backendConfigs = extractTextVariables(rawBackendConfigs.entrySet().stream().map(entry
-                                                -> NameValuePair.builder()
-                                                       .valueType("TEXT")
-                                                       .name(entry.getKey())
-                                                       .value((String) entry.getValue())
-                                                       .build()),
-          context);
+      if (isNotEmpty(rawBackendConfigs)) {
+        backendConfigs = extractTextVariables(rawBackendConfigs.entrySet().stream().map(entry
+                                                  -> NameValuePair.builder()
+                                                         .valueType("TEXT")
+                                                         .name(entry.getKey())
+                                                         .value((String) entry.getValue())
+                                                         .build()),
+            context);
+      }
 
       final Map<String, Object> rawEncryptedVariables =
           (Map<String, Object>) gridFsFile.getExtraElements().get(ENCRYPTED_VARIABLES_KEY);
-      encryptedVariables = extractEncryptedTextVariables(rawEncryptedVariables.entrySet().stream().map(entry
-                                                             -> NameValuePair.builder()
-                                                                    .valueType("ENCRYPTED_TEXT")
-                                                                    .name(entry.getKey())
-                                                                    .value((String) entry.getValue())
-                                                                    .build()),
-          context);
+      if (isNotEmpty(rawEncryptedVariables)) {
+        encryptedVariables = extractEncryptedTextVariables(rawEncryptedVariables.entrySet().stream().map(entry
+                                                               -> NameValuePair.builder()
+                                                                      .valueType("ENCRYPTED_TEXT")
+                                                                      .name(entry.getKey())
+                                                                      .value((String) entry.getValue())
+                                                                      .build()),
+            context);
+      }
 
       final Map<String, Object> rawEncryptedBackendConfigs =
           (Map<String, Object>) gridFsFile.getExtraElements().get(ENCRYPTED_BACKEND_CONFIGS_KEY);
-      encryptedBackendConfigs = extractEncryptedTextVariables(rawEncryptedBackendConfigs.entrySet().stream().map(entry
-                                                                  -> NameValuePair.builder()
-                                                                         .valueType("ENCRYPTED_TEXT")
-                                                                         .name(entry.getKey())
-                                                                         .value((String) entry.getValue())
-                                                                         .build()),
-          context);
+      if (isNotEmpty(rawEncryptedBackendConfigs)) {
+        encryptedBackendConfigs = extractEncryptedTextVariables(rawEncryptedBackendConfigs.entrySet().stream().map(entry
+                                                                    -> NameValuePair.builder()
+                                                                           .valueType("ENCRYPTED_TEXT")
+                                                                           .name(entry.getKey())
+                                                                           .value((String) entry.getValue())
+                                                                           .build()),
+            context);
+      }
     } else {
       final Collection<NameValuePair> validVariables =
           validateAndFilterVariables(getAllVariables(), terraformProvisioner.getVariables());
