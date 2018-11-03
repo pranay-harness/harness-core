@@ -1,13 +1,19 @@
 package software.wings.resources;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.swagger.annotations.Api;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.RestResponse;
+import software.wings.beans.User;
 import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
 import software.wings.beans.instance.dashboard.InstanceStatsByService;
@@ -15,12 +21,16 @@ import software.wings.beans.instance.dashboard.InstanceSummaryStats;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.resources.stats.model.InstanceTimeline;
 import software.wings.resources.stats.model.TimeRange;
+import software.wings.resources.stats.rbac.TimelineRbacFilters;
 import software.wings.resources.stats.service.TimeRangeProvider;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
+import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.instance.InstanceHelper;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.stats.InstanceStatService;
 
@@ -46,11 +56,15 @@ import javax.ws.rs.QueryParam;
 @Produces("application/json")
 @Scope(ResourceType.APPLICATION)
 public class DashboardStatisticsResource {
-  private static final double DEFAULT_PERCENTILE = 95.0D;
+  private static final Logger log = LoggerFactory.getLogger(DashboardStatisticsResource.class);
+
+  public static final double DEFAULT_PERCENTILE = 95.0D;
 
   @Inject private DashboardStatisticsService dashboardStatsService;
   @Inject private InstanceHelper instanceHelper;
   @Inject private InstanceStatService instanceStatService;
+  @Inject private AppService appService;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
 
   /**
    * Get instance summary stats by given applications and group the results by the given entity types
@@ -167,10 +181,30 @@ public class DashboardStatisticsResource {
       @QueryParam("fromTsMillis") long fromTsMillis, @QueryParam("toTsMillis") long toTsMillis) {
     Instant from = Instant.ofEpochMilli(fromTsMillis);
     Instant to = Instant.ofEpochMilli(toTsMillis);
+    List<InstanceStatsSnapshot> stats = instanceStatService.aggregate(accountId, from, to);
+    List<InstanceStatsSnapshot> filteredStats;
 
-    List<InstanceStatsSnapshot> timeline = instanceStatService.aggregate(accountId, from, to);
+    User user = UserThreadLocal.get();
+    TimelineRbacFilters rbacFilters;
+    if (null != user) {
+      rbacFilters = new TimelineRbacFilters(user, accountId, appService, usageRestrictionsService);
+      filteredStats = rbacFilters.filter(stats);
+    } else {
+      throw new WingsException(ErrorCode.USER_DOES_NOT_EXIST);
+    }
 
-    return new RestResponse<>(InstanceTimeline.from(timeline));
+    Set<Instant> timestamps = filteredStats.stream().map(InstanceStatsSnapshot::getTimestamp).collect(toSet());
+    Set<String> deletedAppIds = getDeletedAppIds(accountId, timestamps);
+    InstanceTimeline timeline = rbacFilters.removeDeletedApps(new InstanceTimeline(filteredStats, deletedAppIds));
+
+    return new RestResponse<>(timeline);
+  }
+
+  private Set<String> getDeletedAppIds(String accountId, Set<Instant> times) {
+    return times.stream()
+        .map(it -> dashboardStatsService.getDeletedAppIds(accountId, it.toEpochMilli()))
+        .flatMap(Set::stream)
+        .collect(toSet());
   }
 
   /**
