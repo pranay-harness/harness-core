@@ -909,19 +909,19 @@ public class YamlGitServiceImpl implements YamlGitService {
         ArrayList arrayList = (ArrayList) ((LinkedHashMap) map.get("push")).get("changes");
         return (String) ((LinkedHashMap) (((LinkedHashMap) (arrayList.get(0))).get("new"))).get("name");
       } else {
-        logger.error(GIT_YAML_LOG_PREFIX + "Unsupported webhook token header");
+        logger.error(format(GIT_YAML_LOG_PREFIX + "Unsupported webhook token header %s", headers));
       }
 
       return "";
     } catch (Exception e) {
-      logger.info(GIT_YAML_LOG_PREFIX + "Failed to obtain branch from payload" + e);
+      logger.info(format(GIT_YAML_LOG_PREFIX + "Failed to obtain branch from payload %s ", yamlWebHookPayload) + e);
       return null;
     }
   }
 
   @Override
   public void fullSyncForEntireAccount(String accountId) {
-    logger.info(format("Performing fullsync from migration service for account %s", accountId));
+    logger.info(format(GIT_YAML_LOG_PREFIX + "Performing fullsync from migration service for account %s", accountId));
 
     // Perform fullsync for account level entities
     fullSync(accountId, accountId, EntityType.ACCOUNT, false);
@@ -933,7 +933,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         fullSync(accountId, application.getUuid(), EntityType.APPLICATION, false);
       }
     }
-    logger.info(format("Performed fullsync from migration service for account %s", accountId));
+    logger.info(format(GIT_YAML_LOG_PREFIX + "Performed fullsync from migration service for account %s", accountId));
   }
 
   private GitCommit fetchLastProcessedGitCommitId(String accountId, String yamlGitConfigId) {
