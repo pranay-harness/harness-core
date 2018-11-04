@@ -332,6 +332,9 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
 
     GitConfig gitConfig = getGitConfig(terraformProvisioner.getSourceRepoSettingId());
+    if (isNotEmpty(terraformProvisioner.getSourceRepoBranch())) {
+      gitConfig.setBranch(terraformProvisioner.getSourceRepoBranch());
+    }
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
 

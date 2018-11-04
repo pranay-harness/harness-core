@@ -44,6 +44,7 @@ public class TerraformInfrastructureProvisionerYamlHandler
     yaml.setType(InfrastructureProvisionerType.TERRAFORM.name());
     yaml.setPath(bean.getPath());
     yaml.setSourceRepoSettingName(getSourceRepoSettingName(appId, bean.getSourceRepoSettingId()));
+    yaml.setSourceRepoBranch(bean.getSourceRepoBranch());
     return yaml;
   }
 
