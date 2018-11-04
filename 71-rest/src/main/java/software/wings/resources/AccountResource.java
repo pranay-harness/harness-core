@@ -12,12 +12,14 @@ import io.swagger.annotations.Api;
 import software.wings.beans.Account;
 import software.wings.beans.FeatureName;
 import software.wings.beans.RestResponse;
+import software.wings.beans.Service;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.annotations.LearningEngineAuth;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 
+import java.util.List;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -70,5 +72,14 @@ public class AccountResource {
       @QueryParam("serviceId") String serviceId, @BeanParam PageRequest<String> request) {
     return new RestResponse<>(
         accountService.getServices(accountId, UserThreadLocal.get().getPublicUser(), request, serviceId));
+  }
+
+  @GET
+  @Path("services-cv-24x7-breadcrumb")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
+  public RestResponse<List<Service>> getAllServicesFor24x7(@QueryParam("accountId") String accountId) {
+    return new RestResponse<>(accountService.getServicesBreadCrumb(accountId, UserThreadLocal.get().getPublicUser()));
   }
 }

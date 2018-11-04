@@ -12,6 +12,7 @@ import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.service.impl.analysis.CVEnabledService;
 
@@ -94,4 +95,6 @@ public interface AccountService {
 
   PageResponse<CVEnabledService> getServices(
       String accountId, User user, PageRequest<String> request, String serviceId);
+
+  List<Service> getServicesBreadCrumb(String accountId, User user);
 }

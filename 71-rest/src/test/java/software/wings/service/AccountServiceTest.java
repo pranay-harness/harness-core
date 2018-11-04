@@ -32,11 +32,9 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
-import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
@@ -445,6 +443,30 @@ public class AccountServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void testGetServicesForAccountBreadcrumb() {
+    String serviceId = UUID.randomUUID().toString();
+    String envId = UUID.randomUUID().toString();
+    String accountId = UUID.randomUUID().toString();
+    String appId = UUID.randomUUID().toString();
+    String workflowId = UUID.randomUUID().toString();
+    String cvConfigId = UUID.randomUUID().toString();
+    User user = new User();
+
+    // setup
+    setupCvServicesTests(accountId, serviceId + "-test", envId, appId, cvConfigId + "-test", workflowId, user);
+    setupCvServicesTests(accountId, serviceId, envId, appId, cvConfigId, workflowId, user);
+    PageRequest<String> request = PageRequestBuilder.aPageRequest().withOffset("0").build();
+
+    // test behavior
+    List<Service> cvConfigs = accountService.getServicesBreadCrumb(accountId, user);
+
+    // verify results
+    assertTrue("Service list should size 1", cvConfigs.size() == 2);
+    assertEquals("Service id should be same", serviceId, cvConfigs.get(1).getUuid());
+    assertEquals("Service name should be same", "serviceTest", cvConfigs.get(0).getName());
+  }
+
+  @Test
   public void testGetServicesForAccount() {
     String serviceId = UUID.randomUUID().toString();
     String envId = UUID.randomUUID().toString();
@@ -531,10 +553,6 @@ public class AccountServiceTest extends WingsBaseTest {
 
     wingsPersistence.saveAndGet(
         Service.class, Service.builder().name("serviceTest").appId(appId).uuid(serviceId).build());
-    wingsPersistence.saveAndGet(ServiceTemplate.class,
-        ServiceTemplate.Builder.aServiceTemplate().withServiceId(serviceId).withEnvId(envId).withAppId(appId).build());
-    wingsPersistence.saveAndGet(
-        Environment.class, Environment.Builder.anEnvironment().withAppId(appId).withUuid(envId).build());
     wingsPersistence.save(Application.Builder.anApplication().withUuid(appId).withName("appName").build());
     wingsPersistence.save(config);
     when(mockUserPermissionInfo.getAppPermissionMapInternal()).thenReturn(new HashMap<String, AppPermissionSummary>() {
