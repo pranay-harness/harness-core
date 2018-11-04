@@ -56,7 +56,6 @@ import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
-import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
@@ -64,7 +63,6 @@ import software.wings.beans.NotificationGroup;
 import software.wings.beans.Role;
 import software.wings.beans.RoleType;
 import software.wings.beans.Service;
-import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
 import software.wings.common.Constants;
@@ -122,6 +120,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class AccountServiceImpl implements AccountService {
   private static final Logger logger = LoggerFactory.getLogger(AccountServiceImpl.class);
   private static final int SIZE_PER_SERVICES_REQUEST = 25;
+  private static final String UNLIMITED_PAGE_SIZE = "UNLIMITED";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
@@ -737,6 +736,22 @@ public class AccountServiceImpl implements AccountService {
     return featureFlagService.isEnabled(featureName, accountId);
   }
 
+  public List<Service> getServicesBreadCrumb(String accountId, User user) {
+    PageRequest<String> request = aPageRequest().withOffset("0").withLimit(UNLIMITED_PAGE_SIZE).build();
+    PageResponse<CVEnabledService> response = getServices(accountId, user, request, null);
+    if (response != null && isNotEmpty(response.getResponse())) {
+      List<Service> serviceList = new ArrayList<>();
+      for (CVEnabledService cvEnabledService : response.getResponse()) {
+        serviceList.add(Service.builder()
+                            .name(cvEnabledService.getService().getName())
+                            .uuid(cvEnabledService.getService().getUuid())
+                            .build());
+      }
+      return serviceList;
+    }
+    return new ArrayList<>();
+  }
+
   public PageResponse<CVEnabledService> getServices(
       String accountId, User user, PageRequest<String> request, String serviceId) {
     if (user == null) {
@@ -744,7 +759,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     int offset = Integer.parseInt(request.getOffset());
-    if (isNotEmpty(request.getLimit()) && request.getLimit().equals("UNLIMITED")) {
+    if (isNotEmpty(request.getLimit()) && request.getLimit().equals(UNLIMITED_PAGE_SIZE)) {
       request.setLimit(String.valueOf(Integer.MAX_VALUE));
     }
     int limit = Integer.parseInt(request.getLimit() != null ? request.getLimit() : "0");
@@ -777,52 +792,26 @@ public class AccountServiceImpl implements AccountService {
                                     .in(services)
                                     .asList();
 
-    // get the serviceTemplates that have this service.
-    List<ServiceTemplate> serviceTemplates = wingsPersistence.createQuery(ServiceTemplate.class)
-                                                 .field("serviceId")
-                                                 .in(services)
-                                                 .field("appId")
-                                                 .in(userAppPermissions.keySet())
-                                                 .asList();
-
     for (Service service : serviceList) {
       if (serviceId != null && !serviceId.equals(service.getUuid())) {
         continue;
       }
-      // getEnvironments for this service.
-      List<String> envIds = new ArrayList<>();
-      for (ServiceTemplate serviceTemplate : serviceTemplates) {
-        if (serviceTemplate.getServiceId().equals(service.getUuid())) {
-          envIds.add(serviceTemplate.getEnvId());
-        }
-      }
-      envIds.retainAll(allowedEnvs);
-      List<Environment> environments = wingsPersistence.createQuery(Environment.class)
-                                           .filter("appId", service.getAppId())
-                                           .field("_id")
-                                           .in(envIds)
-                                           .asList();
-
       Application app = wingsPersistence.get(Application.class, service.getAppId());
       if (app == null) {
         continue;
       }
 
-      for (Environment env : environments) {
-        List<CVConfiguration> cvConfigurationList = null;
-        cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class)
-                                  .filter("serviceId", service.getUuid())
-                                  .filter("envId", env.getUuid())
-                                  .filter("appId", service.getAppId())
-                                  .asList();
+      List<CVConfiguration> cvConfigurationList = null;
+      cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class)
+                                .filter("serviceId", service.getUuid())
+                                .field("envId")
+                                .in(allowedEnvs)
+                                .filter("appId", service.getAppId())
+                                .asList();
 
-        cvEnabledServices.add(CVEnabledService.builder()
-                                  .service(service)
-                                  .appName(app.getName())
-                                  .envName(env.getName())
-                                  .envId(env.getUuid())
-                                  .cvConfig(cvConfigurationList)
-                                  .build());
+      if (isNotEmpty(cvConfigurationList)) {
+        cvEnabledServices.add(
+            CVEnabledService.builder().service(service).appName(app.getName()).cvConfig(cvConfigurationList).build());
       }
     }
 
