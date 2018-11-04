@@ -64,7 +64,8 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
       + "    value: ${terraform.archive_tags}\n"
       + "  serviceName: Archive\n"
       + "name: Harness Terraform Test\n"
-      + "sourceRepoSettingName: TERRAFORM_TEST_GIT_REPO";
+      + "sourceRepoSettingName: TERRAFORM_TEST_GIT_REPO\n"
+      + "sourceRepoBranch: master";
 
   @Test
   public void testCRUDAndGet() throws HarnessException, IOException {
@@ -99,6 +100,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
             .name("Name1")
             .description("Desc1")
             .sourceRepoSettingId(SETTING_ID)
+            .sourceRepoBranch("master")
             .mappingBlueprints(Collections.singletonList(
                 InfrastructureMappingBlueprint.builder()
                     .cloudProviderType(CloudProviderType.AWS)
@@ -113,6 +115,7 @@ public class TerraformInfrastructureProvisionerYamlHandlerTest extends BaseYamlH
     assertEquals(yaml1.getHarnessApiVersion(), "1.0");
     assertEquals(yaml1.getName(), "Name1");
     assertEquals(yaml1.getDescription(), "Desc1");
+    assertEquals(yaml1.getSourceRepoBranch(), "master");
     assertEquals(yaml1.getMappingBlueprints().size(), 1);
     assertEquals(yaml1.getMappingBlueprints().get(0).getServiceName(), "ServiceName");
     assertEquals(yaml1.getMappingBlueprints().get(0).getDeploymentType(), SSH);
