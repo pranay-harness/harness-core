@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -35,8 +36,15 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKey;
 
   private boolean keyless;
-
   private String keyPath;
+  @Attributes(title = "Pass Phrase") @Encrypted private char[] passphrase;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassphrase;
+
+  @Attributes(title = "Auth Scheme") private AuthenticationScheme authenticationScheme = SSH_KEY;
+  public enum AuthenticationScheme { SSH_KEY, KERBEROS }
+  @Attributes private KerberosConfig kerberosConfig;
+  @Attributes(title = "Kerberos Password") @Encrypted private char[] kerberosPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedKerberosPassword;
 
   /**
    * Instantiates a new host connection attributes.
@@ -81,7 +89,11 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     /**
      * Key sudo app user access type.
      */
-    KEY_SUDO_APP_USER
+    KEY_SUDO_APP_USER,
+    /**
+     * Kerberos Access Type.
+     */
+    KERBEROS
   }
 
   /**
@@ -103,6 +115,10 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     private String encryptedKey;
     private boolean keyless;
     private String keyPath;
+    private AuthenticationScheme authenticationScheme;
+    private KerberosConfig kerberosConfig;
+    private char[] passphrase;
+    private String encryptedPassphrase;
 
     private Builder() {}
 
@@ -151,6 +167,27 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       return this;
     }
 
+    public Builder withAuthenticationScheme(AuthenticationScheme authenticationScheme) {
+      this.authenticationScheme = authenticationScheme;
+      return this;
+    }
+
+    public Builder withKerberosConfig(KerberosConfig kerberosConfig) {
+      this.kerberosConfig = kerberosConfig;
+      return this;
+    }
+
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public Builder withPassphrase(char[] passphrase) {
+      this.passphrase = passphrase;
+      return this;
+    }
+
+    public Builder withEncryptedPassphrase(String encryptedPassphrase) {
+      this.encryptedPassphrase = encryptedPassphrase;
+      return this;
+    }
+
     public Builder but() {
       return aHostConnectionAttributes()
           .withConnectionType(connectionType)
@@ -160,7 +197,11 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
           .withAccountId(accountId)
           .withEncryptedKey(encryptedKey)
           .withKeyless(keyless)
-          .withKeyPath(keyPath);
+          .withKeyPath(keyPath)
+          .withAuthenticationScheme(authenticationScheme)
+          .withKerberosConfig(kerberosConfig)
+          .withPassphrase(passphrase)
+          .withEncryptedPassphrase(encryptedPassphrase);
     }
 
     public HostConnectionAttributes build() {
@@ -173,6 +214,10 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       hostConnectionAttributes.setEncryptedKey(encryptedKey);
       hostConnectionAttributes.setKeyless(keyless);
       hostConnectionAttributes.setKeyPath(keyPath);
+      hostConnectionAttributes.setAuthenticationScheme(authenticationScheme);
+      hostConnectionAttributes.setKerberosConfig(kerberosConfig);
+      hostConnectionAttributes.setPassphrase(passphrase);
+      hostConnectionAttributes.setEncryptedPassphrase(encryptedPassphrase);
       return hostConnectionAttributes;
     }
   }

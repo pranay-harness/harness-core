@@ -25,6 +25,7 @@ import io.netty.channel.ConnectTimeoutException;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
+import software.wings.beans.KerberosConfig;
 import software.wings.beans.SSHExecutionCredential;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
@@ -122,8 +123,7 @@ public class SshHelperUtil {
                           .withUserName(sshExecutionCredential.getSshUser())
                           .withPassword(sshExecutionCredential.getSshPassword())
                           .withSudoAppName(sshExecutionCredential.getAppAccount())
-                          .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword())
-                          .withKeyPassphrase(sshExecutionCredential.getKeyPassphrase());
+                          .withSudoAppPassword(sshExecutionCredential.getAppAccountPassword());
 
     if (executorType.equals(KEY_AUTH)) {
       SettingAttribute settingAttribute = context.getHostConnectionAttributes();
@@ -133,7 +133,8 @@ public class SshHelperUtil {
           .withKeyName(settingAttribute.getUuid())
           .withPassword(null)
           .withKeyLess(hostConnectionAttributes.isKeyless())
-          .withKeyPath(hostConnectionAttributes.getKeyPath());
+          .withKeyPath(hostConnectionAttributes.getKeyPath())
+          .withKeyPassphrase(hostConnectionAttributes.getPassphrase());
     }
 
     if (context.getBastionConnectionAttributes() != null) {
@@ -143,11 +144,25 @@ public class SshHelperUtil {
                                      .withHost(bastionAttrs.getHostName())
                                      .withKey(bastionAttrs.getKey())
                                      .withKeyName(settingAttribute.getUuid())
-                                     .withUserName(bastionAttrs.getUserName());
+                                     .withUserName(bastionAttrs.getUserName())
+                                     .withKeyPassphrase(bastionAttrs.getPassphrase());
       if (connectTimeoutSeconds != null) {
         sshSessionConfig.withSshConnectionTimeout((int) TimeUnit.SECONDS.toMillis(connectTimeoutSeconds));
       }
       builder.withBastionHostConfig(sshSessionConfig.build());
+    }
+
+    if (context.getHostConnectionAttributes() != null) {
+      SettingAttribute settingAttribute = context.getHostConnectionAttributes();
+      HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
+      if (hostConnectionAttributes.getAuthenticationScheme() != null
+          && hostConnectionAttributes.getAuthenticationScheme().equals(
+                 HostConnectionAttributes.AuthenticationScheme.KERBEROS)) {
+        KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
+        builder.withPassword(hostConnectionAttributes.getKerberosPassword())
+            .withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.KERBEROS)
+            .withKerberosConfig(kerberosConfig);
+      }
     }
     return builder.build();
   }

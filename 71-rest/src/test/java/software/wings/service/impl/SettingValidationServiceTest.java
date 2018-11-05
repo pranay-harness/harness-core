@@ -5,6 +5,7 @@ import static org.mockito.Matchers.anyListOf;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
+import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 
 import com.google.inject.Inject;
@@ -72,7 +73,8 @@ public class SettingValidationServiceTest extends WingsBaseTest {
             .withAccountId(UUIDGenerator.generateUuid())
             .withConnectionType(ConnectionType.SSH)
             .withKeyless(false)
-            .withUserName("TestUser");
+            .withUserName("TestUser")
+            .withAuthenticationScheme(SSH_KEY);
 
     SettingAttribute attribute = new SettingAttribute();
     attribute.setValue(hostConnectionAttributes.build());
