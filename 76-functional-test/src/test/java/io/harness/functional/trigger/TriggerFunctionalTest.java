@@ -7,6 +7,7 @@ import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.category.element.FunctionalTests;
 import io.harness.functional.AbstractFunctionalTest;
 import io.harness.generator.ApplicationGenerator;
 import io.harness.generator.ApplicationGenerator.Applications;
@@ -20,8 +21,8 @@ import io.harness.generator.WorkflowGenerator.Workflows;
 import io.restassured.http.ContentType;
 import io.restassured.mapper.ObjectMapperType;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
 import software.wings.beans.WebHookToken;
@@ -31,7 +32,6 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 
 import javax.ws.rs.core.GenericType;
 
-@Ignore
 public class TriggerFunctionalTest extends AbstractFunctionalTest {
   @Inject private OwnerManager ownerManager;
   @Inject private ApplicationGenerator applicationGenerator;
@@ -51,6 +51,7 @@ public class TriggerFunctionalTest extends AbstractFunctionalTest {
   }
 
   @Test
+  @Category(FunctionalTests.class)
   public void shouldCreateWebHookTriggerForWorkflow() {
     owners.obtainService(() -> serviceGenerator.ensurePredefined(seed, owners, Services.GENERIC_TEST));
 
