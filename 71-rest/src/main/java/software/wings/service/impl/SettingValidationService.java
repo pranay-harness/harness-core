@@ -239,13 +239,17 @@ public class SettingValidationService {
   }
 
   private void validateHostConnectionAttributes(HostConnectionAttributes hostConnectionAttributes) {
-    if (hostConnectionAttributes.isKeyless()) {
-      if (EmptyPredicate.isEmpty(hostConnectionAttributes.getKeyPath())) {
-        throw new InvalidRequestException("Private key file path is not specified", USER);
-      }
-    } else {
-      if (EmptyPredicate.isEmpty(hostConnectionAttributes.getKey())) {
-        throw new InvalidRequestException("Private key is not specified", USER);
+    if (hostConnectionAttributes.getAuthenticationScheme() != null
+        && hostConnectionAttributes.getAuthenticationScheme().equals(
+               HostConnectionAttributes.AuthenticationScheme.SSH_KEY)) {
+      if (hostConnectionAttributes.isKeyless()) {
+        if (EmptyPredicate.isEmpty(hostConnectionAttributes.getKeyPath())) {
+          throw new InvalidRequestException("Private key file path is not specified", USER);
+        }
+      } else {
+        if (EmptyPredicate.isEmpty(hostConnectionAttributes.getKey())) {
+          throw new InvalidRequestException("Private key is not specified", USER);
+        }
       }
     }
   }
