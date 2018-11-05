@@ -201,7 +201,7 @@ public class ContainerInstanceHandler extends InstanceHandler {
           instancesToBeAdded.forEach(containerId -> {
             ContainerInfo containerInfo = latestContainerInfoMap.get(containerId);
             Instance instance = buildInstanceFromContainerInfo(containerInfraMapping, containerInfo, deploymentSummary);
-            instanceService.saveOrUpdate(instance);
+            instanceService.save(instance);
           });
         }
       });

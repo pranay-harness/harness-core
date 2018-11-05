@@ -179,15 +179,15 @@ public class AwsInstanceHandler extends InstanceHandler {
 
         if (asgNameDeploymentSummaryMap != null && !isAmi) {
           instancesToBeUpdated.forEach(ec2InstanceId -> {
-            Instance instance = instancesInDBMap.get(ec2InstanceId);
-            String uuid = null;
-            if (instance != null) {
-              uuid = instance.getUuid();
-            }
+            Instance oldInstance = instancesInDBMap.get(ec2InstanceId);
             com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
-            instance = buildInstanceUsingEc2InstanceAndASG(uuid, ec2Instance, infrastructureMapping,
+            Instance instance = buildInstanceUsingEc2InstanceAndASG(null, ec2Instance, infrastructureMapping,
                 autoScalingGroupName, asgNameDeploymentSummaryMap.get(autoScalingGroupName));
-            instanceService.saveOrUpdate(instance);
+            if (oldInstance != null) {
+              instanceService.update(instance, oldInstance.getUuid());
+            } else {
+              logger.error("Instance doesn't exist for given ec2 instance id {}", ec2InstanceId);
+            }
           });
         }
 

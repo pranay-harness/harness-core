@@ -107,7 +107,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
     // catpure arg
     doReturn(true).when(instanceService).delete(anySet());
     // capture arg
-    doReturn(Instance.builder().build()).when(instanceService).saveOrUpdate(any(Instance.class));
+    doReturn(Instance.builder().build()).when(instanceService).save(any(Instance.class));
 
     doReturn(Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build())
         .when(appService)
@@ -261,7 +261,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
         false);
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-    verify(instanceService, times(3)).saveOrUpdate(captorInstance.capture());
+    verify(instanceService, times(3)).save(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
     Set<String> expectedKeys = new HashSet<>();
@@ -348,7 +348,7 @@ public class PcfInstanceHandlerTest extends WingsBaseTest {
         true);
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-    verify(instanceService, times(3)).saveOrUpdate(captorInstance.capture());
+    verify(instanceService, times(3)).save(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
     Set<String> expectedKeys = new HashSet<>();

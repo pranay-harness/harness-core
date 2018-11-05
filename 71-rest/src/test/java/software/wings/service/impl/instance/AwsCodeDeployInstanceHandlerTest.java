@@ -322,7 +322,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     assertTrue(idTobeDeleted.contains(instance2.getInstanceId()));
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-    verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
+    verify(instanceService, times(1)).save(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
     assertEquals(1, capturedInstances.size());
@@ -418,7 +418,7 @@ public class AwsCodeDeployInstanceHandlerTest extends WingsBaseTest {
     assertTrue(idTobeDeleted.contains(instance2.getInstanceId()));
 
     ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-    verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
+    verify(instanceService, times(1)).save(captorInstance.capture());
 
     List<Instance> capturedInstances = captorInstance.getAllValues();
     assertEquals(1, capturedInstances.size());

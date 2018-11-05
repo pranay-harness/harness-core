@@ -182,7 +182,7 @@ public class PcfInstanceHandler extends InstanceHandler {
               // For rollback fetch existing data from deployment summary table
               Instance instance =
                   buildInstanceFromPCFInfo(pcfInfrastructureMapping, pcfInstanceInfo, deploymentSummary);
-              instanceService.saveOrUpdate(instance);
+              instanceService.save(instance);
             });
           }
         }

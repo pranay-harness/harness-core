@@ -100,7 +100,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
     // catpure arg
     doReturn(true).when(instanceService).delete(anySet());
     // capture arg
-    doReturn(Instance.builder().build()).when(instanceService).saveOrUpdate(any(Instance.class));
+    doReturn(Instance.builder().build()).when(instanceService).save(any(Instance.class));
 
     doReturn(Application.Builder.anApplication().withName(APP_NAME).withUuid(APP_ID).withAccountId(ACCOUNT_ID).build())
         .when(appService)
@@ -235,7 +235,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     if (checkSaveOrUpdate) {
       ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-      verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
+      verify(instanceService, times(1)).save(captorInstance.capture());
 
       List<Instance> capturedInstances = captorInstance.getAllValues();
       assertEquals(containerId, capturedInstances.get(0).getContainerInstanceKey().getContainerId());
@@ -253,7 +253,7 @@ public class ContainerInstanceHandlerTest extends WingsBaseTest {
 
     if (checkSaveOrUpdate) {
       ArgumentCaptor<Instance> captorInstance = ArgumentCaptor.forClass(Instance.class);
-      verify(instanceService, times(1)).saveOrUpdate(captorInstance.capture());
+      verify(instanceService, times(1)).save(captorInstance.capture());
 
       List<Instance> capturedInstances = captorInstance.getAllValues();
       assertEquals(containerId, capturedInstances.get(0).getContainerInstanceKey().getContainerId());

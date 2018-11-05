@@ -4,6 +4,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
 import software.wings.beans.infrastructure.instance.Instance;
@@ -56,6 +57,8 @@ public interface InstanceService
    * @return the instance
    */
   @ValidationGroups(Update.class) Instance saveOrUpdate(@Valid Instance instance);
+
+  @ValidationGroups(Update.class) Instance update(@Valid Instance instance, @NotEmpty String oldInstanceId);
 
   /**
    * Deletes the instances with the given ids

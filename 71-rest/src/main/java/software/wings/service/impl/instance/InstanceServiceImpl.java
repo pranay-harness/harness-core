@@ -14,6 +14,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
@@ -104,7 +105,9 @@ public class InstanceServiceImpl implements InstanceService {
 
   @Override
   public Instance saveOrUpdate(@Valid Instance instance) {
-    Query<Instance> query = wingsPersistence.createAuthorizedQuery(Instance.class);
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    query.filter("accountId", instance.getAccountId());
+    query.filter("appId", instance.getAppId());
     query.filter("isDeleted", false);
     InstanceKey instanceKey = addInstanceKeyFilterToQuery(query, instance);
 
@@ -120,18 +123,23 @@ public class InstanceServiceImpl implements InstanceService {
       if (existingInstance == null) {
         return save(instance);
       } else {
-        delete(Sets.newHashSet(existingInstance.getUuid()));
-
-        // since this is a new version, we have to make sure that the deletedAt of old version and
-        // createdAt of new version are off by at least 1 milliseconds.
-        // Otherwise, if the stats collection happens in that exact millisecond,
-        // they will see twice the instance count for the ones that were in the version update processing.
-
-        instance.setCreatedAt(System.currentTimeMillis() + 1);
-        String uuid = wingsPersistence.save(instance);
-        return wingsPersistence.get(Instance.class, uuid);
+        instance.setUuid(UUIDGenerator.generateUuid());
+        return update(instance, existingInstance.getUuid());
       }
     }
+  }
+
+  @Override
+  public Instance update(Instance instance, String oldInstanceId) {
+    delete(Sets.newHashSet(oldInstanceId));
+
+    // since this is a new version, we have to make sure that the deletedAt of old version and
+    // createdAt of new version are off by at least 1 milliseconds.
+    // Otherwise, if the stats collection happens in that exact millisecond,
+    // they will see twice the instance count for the ones that were in the version update processing.
+    instance.setCreatedAt(System.currentTimeMillis() + 1);
+    String uuid = wingsPersistence.save(instance);
+    return wingsPersistence.get(Instance.class, uuid);
   }
 
   private InstanceKey addInstanceKeyFilterToQuery(Query<Instance> query, Instance instance) {
