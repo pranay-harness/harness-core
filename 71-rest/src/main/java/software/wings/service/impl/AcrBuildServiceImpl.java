@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -84,5 +85,10 @@ public class AcrBuildServiceImpl implements AcrBuildService {
   public Map<String, String> getBuckets(
       AzureConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by ACR Artifact Stream");
+  }
+
+  @Override
+  public List<String> getSmbPaths(AzureConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Azure Build Service", WingsException.USER);
   }
 }

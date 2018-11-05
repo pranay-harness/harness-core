@@ -21,5 +21,6 @@ public enum FeatureName {
   CV_SUCCEED_FOR_ANOMALY,
   TRIAL_SUPPORT,
   COPY_ARTIFACT,
-  CV_24X7
+  CV_24X7,
+  SMB_ARTIFACT
 }

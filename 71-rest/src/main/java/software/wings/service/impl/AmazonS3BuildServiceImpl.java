@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
@@ -81,6 +82,11 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   @Override
   public Map<String, String> getBuckets(
       AwsConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
-    throw new InvalidRequestException("Operation not supported by Amazon S3 Build Service");
+    throw new InvalidRequestException("Operation not supported by Amazon S3 Build Service", WingsException.USER);
+  }
+
+  @Override
+  public List<String> getSmbPaths(AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Amazon S3 Build Service", WingsException.USER);
   }
 }

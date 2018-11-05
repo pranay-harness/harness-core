@@ -85,4 +85,9 @@ public class AmiBuildServiceImpl implements AmiBuildService {
       AwsConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Ami Artifact Stream");
   }
+
+  @Override
+  public List<String> getSmbPaths(AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by AWS Artifact Stream");
+  }
 }

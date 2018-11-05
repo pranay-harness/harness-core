@@ -94,4 +94,9 @@ public class DockerBuildServiceImpl implements DockerBuildService {
       DockerConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Docker Artifact Stream", USER);
   }
+
+  @Override
+  public List<String> getSmbPaths(DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Docker Build Service", WingsException.USER);
+  }
 }

@@ -57,6 +57,15 @@ public interface BuildSourceService {
   Map<String, String> getBuckets(String appId, String projectId, String settingId);
 
   /**
+   * Get SMB paths.
+   *
+   * @param appId     the app id
+   * @param settingId the setting id
+   * @return the paths (now SMB only)
+   */
+  List<String> getSmbPaths(String appId, String settingId);
+
+  /**
    * Gets plans.
    *
    * @param appId     the app id

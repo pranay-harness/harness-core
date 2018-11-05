@@ -104,6 +104,14 @@ public class BuildSourceServiceImpl implements BuildSourceService {
   }
 
   @Override
+  public List<String> getSmbPaths(String appId, String settingId) {
+    SettingAttribute settingAttribute = settingsService.get(settingId);
+    SettingValue settingValue = getSettingValue(settingAttribute);
+    return getBuildService(settingAttribute, appId, ArtifactStreamType.SMB.name())
+        .getSmbPaths(getSettingValue(settingAttribute), getEncryptedDataDetails((EncryptableSetting) settingValue));
+  }
+
+  @Override
   public Map<String, String> getPlans(String appId, String settingId, String artifactStreamType) {
     SettingAttribute settingAttribute = settingsService.get(settingId);
     SettingValue settingValue = getSettingValue(settingAttribute);

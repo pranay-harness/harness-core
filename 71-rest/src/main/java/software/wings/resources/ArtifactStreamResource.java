@@ -44,7 +44,6 @@ import javax.ws.rs.QueryParam;
 @AuthRule(permissionType = SERVICE, skipAuth = true)
 public class ArtifactStreamResource {
   private ArtifactStreamService artifactStreamService;
-
   private AppService appService;
 
   /**

@@ -32,6 +32,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
@@ -42,6 +43,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SlackConfig;
+import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -323,6 +325,17 @@ public class PluginServiceImpl implements PluginService {
                        .withPluginCategories(asList(SourceRepo))
                        .withUiSchema(readUiSchema("GIT"))
                        .build());
+    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
+      pluginList.add(anAccountPlugin()
+                         .withSettingClass(SmbConfig.class)
+                         .withAccountId(accountId)
+                         .withIsEnabled(true)
+                         .withDisplayName("Smb")
+                         .withType("SMB")
+                         .withPluginCategories(asList(Artifact))
+                         .withUiSchema(readUiSchema("SMB"))
+                         .build());
+    }
 
     return pluginList;
   }

@@ -94,6 +94,14 @@ public interface BuildService<T> {
   Map<String, String> getBuckets(T config, String projectId, List<EncryptedDataDetail> encryptionDetails);
 
   /**
+   * Get SMB paths
+   *
+   * @param config the  config
+   * @return the smb paths
+   */
+  List<String> getSmbPaths(T config, List<EncryptedDataDetail> encryptionDetails);
+
+  /**
    * Gets plans.
    *
    * @param config the  config

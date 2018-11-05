@@ -391,10 +391,10 @@ public class YamlHandlerFactory {
         "CodeDeployInfrastructureMapping", "AzureKubernetesInfrastructureMapping", "AwsLambdaInfraStructureMapping",
         "AwsInfrastructureMapping", "AwsAmiInfrastructureMapping", "ArtifactStream", "InfrastructureProvisioner",
         "TerraformInfrastructureProvisioner", "CloudFormationInfrastructureProvisioner", "JenkinsArtifactStream",
-        "NexusArtifactStream", "GcsArtifactStream", "GcrArtifactStream", "EcrArtifactStream", "DockerArtifactStream",
-        "BambooArtifactStream", "ArtifactoryArtifactStream", "AmiArtifactStream", "AmazonS3ArtifactStream",
-        "AcrArtifactStream", "HelmChartSpecification", "EcsServiceSpecification", "PcfServiceSpecification",
-        "LambdaSpecification", "UserDataSpecification", "EcsContainerTask", "KubernetesContainerTask", "ConfigFile",
-        "SettingAttribute", "ServiceCommand");
+        "NexusArtifactStream", "GcsArtifactStream", "SmbArtifactStream", "GcrArtifactStream", "EcrArtifactStream",
+        "DockerArtifactStream", "BambooArtifactStream", "ArtifactoryArtifactStream", "AmiArtifactStream",
+        "AmazonS3ArtifactStream", "AcrArtifactStream", "HelmChartSpecification", "EcsServiceSpecification",
+        "PcfServiceSpecification", "LambdaSpecification", "UserDataSpecification", "EcsContainerTask",
+        "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand");
   }
 }
