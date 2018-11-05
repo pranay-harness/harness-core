@@ -200,7 +200,7 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
     return updateOperations;
   }
 
-  private void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration) {
+  public void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration) {
     Service service = wingsPersistence.get(Service.class, cvConfiguration.getServiceId());
     if (service != null) {
       cvConfiguration.setServiceName(service.getName());

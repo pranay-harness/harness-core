@@ -13,8 +13,7 @@ import java.util.List;
 @Builder
 public class CVEnabledService {
   private Service service;
-  String envName;
-  String envId;
   List<CVConfiguration> cvConfig;
   private String appName;
+  private String appId;
 }
