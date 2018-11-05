@@ -306,7 +306,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   }
 
   @Override
-  public @Nonnull Set<Instance> getAppInstancesForAccount(String accountId, long timestamp) {
+  public @Nonnull List<Instance> getAppInstancesForAccount(String accountId, long timestamp) {
     if (timestamp == 0) {
       timestamp = System.currentTimeMillis();
     }
@@ -315,20 +315,28 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return getInstancesForAccount(accountId, timestamp, query);
   }
 
-  private Set<Instance> getInstancesForAccount(String accountId, long timestamp, Query<Instance> query) {
-    Set<Instance> instanceSet = new HashSet<>();
+  private List<Instance> getInstancesForAccount(String accountId, long timestamp, Query<Instance> query) {
+    List<Instance> instanceList = new ArrayList<>();
     query.field("accountId").equal(accountId);
     query.field("createdAt").lessThanOrEq(timestamp);
     query.and(
         query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
-
+    int counter = 0;
     try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
       while (iterator.hasNext()) {
         Instance instance = iterator.next();
-        instanceSet.add(instance);
+        counter++;
+        instanceList.add(instance);
       }
     }
-    return instanceSet;
+
+    if (isNotEmpty(instanceList)) {
+      HashSet<Instance> instanceSet = new HashSet<>(instanceList);
+      logger.info("Instances reported {}, set count {}", counter, instanceSet.size());
+    } else {
+      logger.info("Instances reported {}", counter);
+    }
+    return instanceList;
   }
 
   @Override
@@ -613,7 +621,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   public Set<String> getDeletedAppIds(String accountId, long timestamp) {
     Query<Instance> query = wingsPersistence.createQuery(Instance.class);
     query.project("appId", true);
-    Set<Instance> instancesForAccount = getInstancesForAccount(accountId, timestamp, query);
+    List<Instance> instancesForAccount = getInstancesForAccount(accountId, timestamp, query);
     Set<String> appIdsFromInstances = instancesForAccount.stream().map(Instance::getAppId).collect(Collectors.toSet());
 
     List<Application> appsByAccountId = appService.getAppsByAccountId(accountId);

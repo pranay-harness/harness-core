@@ -325,11 +325,11 @@ public class DashboardStatisticsServiceImplTest extends WingsBaseTest {
       List<InstanceStatsByService> appInstanceStatsByServiceAtTime =
           dashboardService.getAppInstanceStatsByService(ACCOUNT_1_ID, appIdList, System.currentTimeMillis());
       assertEquals(7, appInstanceStatsByServiceAtTime.size());
-      Set<Instance> currentInstances =
+      List<Instance> currentInstances =
           dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, System.currentTimeMillis());
       assertEquals(6, currentInstances.size());
 
-      Set<Instance> instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 60000);
+      List<Instance> instancesAtTime = dashboardService.getAppInstancesForAccount(ACCOUNT_1_ID, currentTime - 60000);
       assertEquals(2, instancesAtTime.size());
 
       appInstanceStatsByServiceAtTime =
