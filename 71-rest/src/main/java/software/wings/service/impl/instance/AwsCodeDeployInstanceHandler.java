@@ -154,15 +154,15 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
 
         instancesToBeUpdated.forEach(ec2InstanceId -> {
           // change to codeDeployInstance builder
-          Instance instance = instancesInDBMap.get(ec2InstanceId);
-          String uuid = null;
-          if (instance != null) {
-            uuid = instance.getUuid();
-          }
+          Instance oldInstance = instancesInDBMap.get(ec2InstanceId);
           com.amazonaws.services.ec2.model.Instance ec2Instance = latestEc2InstanceMap.get(ec2InstanceId);
-          instance = buildInstanceUsingEc2Instance(uuid, ec2Instance, infrastructureMapping,
+          Instance instance = buildInstanceUsingEc2Instance(null, ec2Instance, infrastructureMapping,
               getDeploymentSummaryForInstanceCreation(newDeploymentSummary, rollback));
-          instanceService.saveOrUpdate(instance);
+          if (oldInstance != null) {
+            instanceService.update(instance, oldInstance.getUuid());
+          } else {
+            logger.error("Instance doesn't exist for given ec2 instance id {}", ec2InstanceId);
+          }
         });
 
         // Find the instances that were yet to be added to db
@@ -177,7 +177,7 @@ public class AwsCodeDeployInstanceHandler extends AwsInstanceHandler {
             // change to codeDeployInstance builder
             Instance instance =
                 buildInstanceUsingEc2Instance(null, ec2Instance, infrastructureMapping, deploymentSummary);
-            instanceService.saveOrUpdate(instance);
+            instanceService.save(instance);
           });
         }
       });
