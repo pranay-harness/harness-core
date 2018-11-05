@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.ParametersAreNonnullByDefault;
 
@@ -71,7 +71,7 @@ public class StatsCollectorImpl implements StatsCollector {
 
   boolean createStats(String accountId, Instant timesamp) {
     try {
-      Set<Instance> instances =
+      List<Instance> instances =
           dashboardStatisticsService.getAppInstancesForAccount(accountId, timesamp.toEpochMilli());
       log.info("Fetched instances. Count: {}, Account: {}, Time: {}", instances.size(), accountId, timesamp);
 

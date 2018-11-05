@@ -57,7 +57,7 @@ public interface DashboardStatisticsService {
    * @param timestamp point in time
    * @return set of instances
    */
-  @Nonnull Set<Instance> getAppInstancesForAccount(@NotEmpty String accountId, long timestamp);
+  @Nonnull List<Instance> getAppInstancesForAccount(@NotEmpty String accountId, long timestamp);
 
   /**
    * Gets the detailed information about the instances provisioned, deployments and pipelines for the given service.
