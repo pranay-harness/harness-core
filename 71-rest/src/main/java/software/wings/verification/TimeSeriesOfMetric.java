@@ -13,6 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author Vaibhav Tulsyan
@@ -45,6 +46,25 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   public int compareTo(@NotNull TimeSeriesOfMetric o) {
     if (o.risk != this.risk) {
       return o.risk - this.risk;
+    }
+
+    if (this.timeSeries != null && o.timeSeries != null) {
+      AtomicInteger numEmptyThis = new AtomicInteger(0);
+      AtomicInteger numEmptyOther = new AtomicInteger(0);
+      this.timeSeries.forEach((k, v) -> {
+        if (v.getValue() == -1) {
+          numEmptyThis.getAndIncrement();
+        }
+      });
+
+      o.timeSeries.forEach((k, v) -> {
+        if (v.getValue() == -1) {
+          numEmptyOther.getAndIncrement();
+        }
+      });
+      if (numEmptyThis.get() != numEmptyOther.get()) {
+        return numEmptyThis.get() - numEmptyOther.get();
+      }
     }
 
     return this.metricName.compareTo(o.metricName);
