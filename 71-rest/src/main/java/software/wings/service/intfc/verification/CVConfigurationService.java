@@ -17,4 +17,5 @@ public interface CVConfigurationService {
       String accountId, String appId, StateType stateType, Object params, String serviceConfigurationId);
   boolean deleteConfiguration(String accountId, String appId, String serviceConfigurationId);
   <T extends CVConfiguration> List<T> listConfigurations(String accountId);
+  void fillInServiceAndConnectorNames(CVConfiguration cvConfiguration);
 }

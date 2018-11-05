@@ -810,8 +810,15 @@ public class AccountServiceImpl implements AccountService {
                                 .asList();
 
       if (isNotEmpty(cvConfigurationList)) {
-        cvEnabledServices.add(
-            CVEnabledService.builder().service(service).appName(app.getName()).cvConfig(cvConfigurationList).build());
+        for (CVConfiguration cvConfiguration : cvConfigurationList) {
+          cvConfigurationService.fillInServiceAndConnectorNames(cvConfiguration);
+        }
+        cvEnabledServices.add(CVEnabledService.builder()
+                                  .service(service)
+                                  .appName(app.getName())
+                                  .appId(app.getUuid())
+                                  .cvConfig(cvConfigurationList)
+                                  .build());
       }
     }
 
