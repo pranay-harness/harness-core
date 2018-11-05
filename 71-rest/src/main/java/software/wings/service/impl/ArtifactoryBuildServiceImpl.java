@@ -131,4 +131,9 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
       ArtifactoryConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Artifactory");
   }
+
+  @Override
+  public List<String> getSmbPaths(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Artifactory Build Service", WingsException.USER);
+  }
 }

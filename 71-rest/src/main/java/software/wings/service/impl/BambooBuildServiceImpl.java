@@ -98,4 +98,9 @@ public class BambooBuildServiceImpl implements BambooBuildService {
       BambooConfig bambooConfig, String projectId, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Bamboo Artifact Stream");
   }
+
+  @Override
+  public List<String> getSmbPaths(BambooConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Bamboo Build Service", WingsException.USER);
+  }
 }

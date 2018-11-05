@@ -95,4 +95,9 @@ public class EcrClassicBuildServiceImpl implements EcrClassicBuildService {
       EcrConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by ECR");
   }
+
+  @Override
+  public List<String> getSmbPaths(EcrConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by ECR Build Service", WingsException.USER);
+  }
 }

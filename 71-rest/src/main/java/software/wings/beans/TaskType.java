@@ -51,6 +51,7 @@ import software.wings.delegatetasks.k8s.K8sCommandTask;
 import software.wings.delegatetasks.pcf.PcfCommandTask;
 import software.wings.delegatetasks.validation.APMValidation;
 import software.wings.delegatetasks.validation.AcrValidation;
+import software.wings.delegatetasks.validation.AlwaysTrueValidation;
 import software.wings.delegatetasks.validation.AppdynamicsValidation;
 import software.wings.delegatetasks.validation.ArtifactoryValidation;
 import software.wings.delegatetasks.validation.AwsConnectionValidation;
@@ -140,6 +141,9 @@ public enum TaskType {
   GCS_GET_BUILDS(TaskGroup.GCS, ServiceImplDelegateTask.class, GcsValidation.class),
   GCS_GET_BUCKETS(TaskGroup.GCS, ServiceImplDelegateTask.class, GcsValidation.class),
   GCS_GET_PLANS(TaskGroup.GCS, ServiceImplDelegateTask.class, GcsValidation.class),
+  SMB_GET_BUILDS(TaskGroup.SMB, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  SMB_GET_SMB_PATHS(TaskGroup.SMB, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
+  SMB_VALIDATE_ARTIFACT_SERVER(TaskGroup.SMB, ServiceImplDelegateTask.class, AlwaysTrueValidation.class),
   AMAZON_S3_COLLECTION(TaskGroup.S3, AmazonS3CollectionTask.class, AwsConnectionValidation.class),
   AMAZON_S3_GET_ARTIFACT_PATHS(TaskGroup.S3, ServiceImplDelegateTask.class, AwsConnectionValidation.class),
   AMAZON_S3_LAST_SUCCESSFUL_BUILD(TaskGroup.S3, ServiceImplDelegateTask.class, AwsConnectionValidation.class),

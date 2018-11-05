@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.ecr.EcrService;
@@ -91,5 +92,10 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   public Map<String, String> getBuckets(
       AwsConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by ECR Artifact Stream", USER);
+  }
+
+  @Override
+  public List<String> getSmbPaths(AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by ECR Build Service", WingsException.USER);
   }
 }

@@ -27,6 +27,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SmbConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.cloudprovider.aws.AwsClusterService;
@@ -69,6 +70,8 @@ import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerUnsupported;
+import software.wings.helpers.ext.smb.SmbService;
+import software.wings.helpers.ext.smb.SmbServiceImpl;
 import software.wings.licensing.DatabaseLicenseProviderImpl;
 import software.wings.licensing.LicenseManager;
 import software.wings.licensing.LicenseManagerImpl;
@@ -141,6 +144,7 @@ import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.impl.ServiceVariableServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.SlackNotificationServiceImpl;
+import software.wings.service.impl.SmbBuildServiceImpl;
 import software.wings.service.impl.StateExecutionServiceImpl;
 import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.impl.StatisticsServiceImpl;
@@ -275,6 +279,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SlackNotificationService;
+import software.wings.service.intfc.SmbBuildService;
 import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.SweepingOutputService;
@@ -506,6 +511,8 @@ public class WingsModule extends DependencyModule {
     bind(SumoLogicAnalysisService.class).to(SumoLogicAnalysisServiceImpl.class);
     bind(InstanceStatService.class).to(InstanceStatServiceImpl.class);
     bind(StatsCollector.class).to(StatsCollectorImpl.class);
+    bind(SmbService.class).to(SmbServiceImpl.class);
+    bind(SmbBuildService.class).to(SmbBuildServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -530,6 +537,7 @@ public class WingsModule extends DependencyModule {
     buildServiceMapBinder.addBinding(AzureConfig.class).toInstance(AcrBuildService.class);
     buildServiceMapBinder.addBinding(NexusConfig.class).toInstance(NexusBuildService.class);
     buildServiceMapBinder.addBinding(ArtifactoryConfig.class).toInstance(ArtifactoryBuildService.class);
+    buildServiceMapBinder.addBinding(SmbConfig.class).toInstance(SmbBuildService.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 

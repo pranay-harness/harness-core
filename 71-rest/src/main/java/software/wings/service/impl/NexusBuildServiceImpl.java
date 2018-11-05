@@ -107,4 +107,9 @@ public class NexusBuildServiceImpl implements NexusBuildService {
       NexusConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Nexus Artifact Stream");
   }
+
+  @Override
+  public List<String> getSmbPaths(NexusConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Nexus Build Service", WingsException.USER);
+  }
 }

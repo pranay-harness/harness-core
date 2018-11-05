@@ -266,6 +266,10 @@ public abstract class SettingValue implements ExtensionPoint {
      * Artifactory setting variable types
      */
     ARTIFACTORY("Artifactory"),
+    /**
+     * SMB setting variable types
+     */
+    SMB("Smb"),
 
     /**
      * Amazon S3 setting variable types

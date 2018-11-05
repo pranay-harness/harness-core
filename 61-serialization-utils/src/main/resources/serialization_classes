@@ -589,3 +589,4 @@ software.wings.yaml.gitSync.YamlGitConfig, 5547
 software.wings.yaml.gitSync.YamlGitConfig$SyncMode, 5548
 software.wings.beans.KerberosConfig, 5549
 software.wings.beans.HostConnectionAttributes$AuthenticationScheme, 5550
+software.wings.beans.SmbConfig, 5551

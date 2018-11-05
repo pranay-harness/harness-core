@@ -14,6 +14,7 @@ import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.GcsBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
+import software.wings.service.intfc.SmbBuildService;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -51,6 +52,8 @@ public class ServiceClassLocator {
         return NexusBuildService.class;
       case AMI:
         return AmiBuildService.class;
+      case SMB:
+        return SmbBuildService.class;
       default:
         throw new WingsException("Unsupported artifact stream type: " + artifactStreamType);
     }

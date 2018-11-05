@@ -253,4 +253,9 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
       JenkinsConfig jenkinsConfig, String projectId, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Jenkins Artifact Stream");
   }
+
+  @Override
+  public List<String> getSmbPaths(JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by Jenkins Build Service", WingsException.USER);
+  }
 }

@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.helpers.ext.gcs.GcsService;
@@ -79,5 +80,10 @@ public class GcsBuildServiceImpl implements GcsBuildService {
   public Map<String, String> getPlans(
       GcpConfig config, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType, String repositoryType) {
     throw new InvalidRequestException("Operation not supported by GCS Artifact Stream");
+  }
+
+  @Override
+  public List<String> getSmbPaths(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
+    throw new InvalidRequestException("Operation not supported by GCS Build Service", WingsException.USER);
   }
 }

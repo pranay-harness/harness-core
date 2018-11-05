@@ -19,6 +19,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -34,10 +35,12 @@ import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Event.Type;
+import software.wings.beans.FeatureName;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -49,6 +52,7 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.TriggerService;
@@ -84,6 +88,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @Inject private SettingsService settingsService;
   @Inject private ArtifactService artifactService; // Do not delete it is being used by Prune
   @Inject private YamlPushService yamlPushService;
+  @Inject @Transient private transient FeatureFlagService featureFlagService;
 
   @Override
   public PageResponse<ArtifactStream> list(PageRequest<ArtifactStream> req) {
@@ -300,6 +305,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public Map<String, String> getSupportedBuildSourceTypes(String appId, String serviceId) {
+    String accountId = appService.getAccountIdByAppId(appId);
     Service service = serviceResourceService.get(appId, serviceId, false);
     // Observed NPE in logs due to invalid service id provided by the ui due to a stale screen.
     if (service == null) {
@@ -319,30 +325,60 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } else if (service.getArtifactType().equals(ArtifactType.AMI)) {
       return ImmutableMap.of(AMI.name(), AMI.name());
     } else if (service.getArtifactType().equals(ArtifactType.OTHER)) {
+      if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
+        return new ImmutableMap.Builder<String, String>()
+            .put(DOCKER.name(), DOCKER.name())
+            .put(ECR.name(), ECR.name())
+            .put(ACR.name(), ACR.name())
+            .put(GCR.name(), GCR.name())
+            .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+            .put(NEXUS.name(), NEXUS.name())
+            .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
+            .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
+            .put(GCS.name(), GCS.name())
+            .put(AMAZON_S3.name(), AMAZON_S3.name())
+            .put(AMI.name(), AMI.name())
+            .put(SMB.name(), SMB.name())
+            .build();
+      } else {
+        return new ImmutableMap.Builder<String, String>()
+            .put(DOCKER.name(), DOCKER.name())
+            .put(ECR.name(), ECR.name())
+            .put(ACR.name(), ACR.name())
+            .put(GCR.name(), GCR.name())
+            .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+            .put(NEXUS.name(), NEXUS.name())
+            .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
+            .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
+            .put(GCS.name(), GCS.name())
+            .put(AMAZON_S3.name(), AMAZON_S3.name())
+            .put(AMI.name(), AMI.name())
+            .build();
+      }
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
       return new ImmutableMap.Builder<String, String>()
-          .put(DOCKER.name(), DOCKER.name())
-          .put(ECR.name(), ECR.name())
-          .put(ACR.name(), ACR.name())
-          .put(GCR.name(), GCR.name())
-          .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-          .put(NEXUS.name(), NEXUS.name())
           .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
           .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
           .put(GCS.name(), GCS.name())
+          .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
+          .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
+          .put(AMAZON_S3.name(), AMAZON_S3.name())
+          .put(AMI.name(), AMI.name())
+          .put(SMB.name(), SMB.name())
+          .build();
+    } else {
+      return new ImmutableMap.Builder<String, String>()
+          .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
+          .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
+          .put(GCS.name(), GCS.name())
+          .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
+          .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
           .put(AMAZON_S3.name(), AMAZON_S3.name())
           .put(AMI.name(), AMI.name())
           .build();
     }
-
-    return new ImmutableMap.Builder<String, String>()
-        .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
-        .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
-        .put(GCS.name(), GCS.name())
-        .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
-        .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
-        .put(AMAZON_S3.name(), AMAZON_S3.name())
-        .put(AMI.name(), AMI.name())
-        .build();
   }
 
   @Override

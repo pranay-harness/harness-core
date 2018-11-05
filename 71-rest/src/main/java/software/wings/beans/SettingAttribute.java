@@ -30,6 +30,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.PCF;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PROMETHEUS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SLACK;
+import static software.wings.settings.SettingValue.SettingVariableTypes.SMB;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SMTP;
 import static software.wings.settings.SettingValue.SettingVariableTypes.SPLUNK;
 import static software.wings.settings.SettingValue.SettingVariableTypes.STRING;
@@ -93,7 +94,7 @@ public class SettingAttribute extends Base {
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
         BUG_SNAG, DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3,
-        GCS, GIT)),
+        GCS, GIT, SMB)),
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING));
 

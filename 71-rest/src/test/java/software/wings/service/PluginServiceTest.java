@@ -112,6 +112,14 @@ public class PluginServiceTest {
                 .withType("ARTIFACTORY")
                 .withPluginCategories(asList(Artifact))
                 .build(),
+            //            anAccountPlugin()
+            //                .withSettingClass(SmbConfig.class)
+            //                .withAccountId(accountId)
+            //                .withIsEnabled(true)
+            //                .withDisplayName("Smb")
+            //                .withType("SMB")
+            //                .withPluginCategories(asList(Artifact))
+            //                .build(),
             anAccountPlugin()
                 .withSettingClass(AppDynamicsConfig.class)
                 .withAccountId(accountId)

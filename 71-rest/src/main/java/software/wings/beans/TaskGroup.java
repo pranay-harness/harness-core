@@ -42,5 +42,6 @@ public enum TaskGroup {
   TERRAFORM,
   AWS,
   LDAP,
-  K8S
+  K8S,
+  SMB
 }

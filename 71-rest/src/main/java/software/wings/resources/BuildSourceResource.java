@@ -125,6 +125,21 @@ public class BuildSourceResource {
   }
 
   /**
+   * Get SMB artifact paths.
+   *
+   * @param settingId the setting id
+   * @return the artifact paths
+   */
+  @GET
+  @Path("smb-paths")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getArtifactPaths(
+      @QueryParam("appId") String appId, @QueryParam("settingId") String settingId) {
+    return new RestResponse<>(buildSourceService.getSmbPaths(appId, settingId));
+  }
+
+  /**
    * Gets artifact paths.
    *
    * @param jobName   the job name
