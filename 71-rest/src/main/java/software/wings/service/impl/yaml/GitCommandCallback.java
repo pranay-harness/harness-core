@@ -228,6 +228,8 @@ public class GitCommandCallback implements NotifyCallback {
     }
 
     for (GitFileChange gitFileChange : gitFileChanges) {
+      YamlGitConfig currentEntityYamlGitConfig;
+
       if (yamlGitService.checkApplicationChange(gitFileChange)) {
         // Handles application
 
@@ -249,22 +251,18 @@ public class GitCommandCallback implements NotifyCallback {
           }
         }
 
-        YamlGitConfig appYamlGitConfig = appMap.get(appName);
-        if (appYamlGitConfig != null) {
-          if (yamlGitConfig.getGitConnectorId().equals(appYamlGitConfig.getGitConnectorId())
-              && yamlGitConfig.getBranchName().equals(appYamlGitConfig.getBranchName())) {
-            gitFileChangeList.add(gitFileChange);
-          }
-        }
+        currentEntityYamlGitConfig = appMap.get(appName);
       } else {
         // Handle account level entities
         // This check is there to make sure that the yamlGitConfig is not disabled. If its disabled then we don't need
         // to process this change.
+        currentEntityYamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId, GLOBAL_APP_ID);
+      }
 
-        YamlGitConfig accountLevelYamlGitConfig = yamlDirectoryService.weNeedToPushChanges(accountId, GLOBAL_APP_ID);
-        if (accountLevelYamlGitConfig != null) {
-          gitFileChangeList.add(gitFileChange);
-        }
+      if (currentEntityYamlGitConfig != null
+          && yamlGitConfig.getGitConnectorId().equals(currentEntityYamlGitConfig.getGitConnectorId())
+          && yamlGitConfig.getBranchName().equals(currentEntityYamlGitConfig.getBranchName())) {
+        gitFileChangeList.add(gitFileChange);
       }
     }
 
