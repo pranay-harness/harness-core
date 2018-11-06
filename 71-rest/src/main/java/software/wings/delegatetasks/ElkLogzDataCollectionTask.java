@@ -6,6 +6,7 @@ import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.json.JSONArray;
@@ -288,8 +289,9 @@ public class ElkLogzDataCollectionTask extends AbstractDelegateDataCollectionTas
       try {
         timeStampValue = Instant.from(timeFormatter.parse(timeStamp)).toEpochMilli();
       } catch (Exception pe) {
-        throw new WingsException(
-            "Failed to parse time stamp : " + timeStamp + ", with format: " + timestampFieldFormat, pe);
+        throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR,
+            "Failed to parse time stamp : " + timeStamp + ", with format: " + timestampFieldFormat, WingsException.USER,
+            pe);
       }
 
       final LogElement elkLogElement = new LogElement();
