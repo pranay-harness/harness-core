@@ -60,6 +60,7 @@ public class TimelineRbacFilters {
     }
 
     Set<String> allowedAppIds = getAssignedApps(currentUser);
+    log.info("Allowed App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), allowedAppIds);
     return stats.stream()
         .map(it
             -> new InstanceStatsSnapshot(

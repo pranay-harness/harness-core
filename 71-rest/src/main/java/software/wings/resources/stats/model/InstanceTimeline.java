@@ -13,6 +13,7 @@ import software.wings.service.impl.instance.stats.collector.SimplePercentile;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,19 +34,32 @@ public class InstanceTimeline {
   private List<DataPoint> points;
 
   public InstanceTimeline(List<InstanceStatsSnapshot> snapshots, Set<String> deletedAppIds) {
-    this.points = snapshots.stream().map(it -> mapToDataPoint(it, deletedAppIds)).collect(Collectors.toList());
+    this.points = snapshots.stream().map(it -> markDeleted(it, deletedAppIds)).collect(Collectors.toList());
   }
 
-  private static DataPoint mapToDataPoint(InstanceStatsSnapshot snapshot, Set<String> deletedAppIds) {
-    List<Aggregate> filteredAndSortedCounts = snapshot.getAggregateCounts()
-                                                  .stream()
-                                                  .filter(ac -> ac.getEntityType() == EntityType.APPLICATION)
-                                                  .sorted(Comparator.comparingInt(AggregateCount::getCount).reversed())
-                                                  .limit(5)
-                                                  .map(it -> new Aggregate(it, deletedAppIds.contains(it.getId())))
-                                                  .collect(toList());
-    return new DataPoint(
-        snapshot.getTimestamp().toEpochMilli(), snapshot.getAccountId(), filteredAndSortedCounts, snapshot.getTotal());
+  private static DataPoint markDeleted(InstanceStatsSnapshot snapshot, Set<String> deletedAppIds) {
+    List<Aggregate> marked = snapshot.getAggregateCounts()
+                                 .stream()
+                                 .filter(ac -> ac.getEntityType() == EntityType.APPLICATION)
+                                 .map(it -> new Aggregate(it, deletedAppIds.contains(it.getId()))) // mark deleted
+                                 .collect(toList());
+    return new DataPoint(snapshot.getTimestamp().toEpochMilli(), snapshot.getAccountId(), marked, snapshot.getTotal());
+  }
+
+  // limits the aggregate counts to top N. This information is used in hover.
+  public static InstanceTimeline top(InstanceTimeline timeline, int limit) {
+    List<DataPoint> filteredPoints = new LinkedList<>();
+    for (DataPoint point : timeline.points) {
+      List<Aggregate> topAggregates = point.aggregateCounts.stream()
+                                          .sorted(Comparator.comparingInt(Aggregate::getCount).reversed())
+                                          .limit(limit)
+                                          .collect(toList());
+
+      DataPoint p = new DataPoint(point.getTimestamp(), point.getAccountId(), topAggregates, point.getTotal());
+      filteredPoints.add(p);
+    }
+
+    return new InstanceTimeline(filteredPoints);
   }
 
   public Map<String, Object> getLocalPercentile() {

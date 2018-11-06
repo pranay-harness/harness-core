@@ -146,6 +146,7 @@ public class MigrationList {
         .add(Pair.of(198, YamlGitConfigMigration.class))
         .add(Pair.of(199, YamlGitConfigAppMigration.class))
         .add(Pair.of(200, UpdateGitSyncErrorMigration.class))
+        .add(Pair.of(201, RemoveDupInstanceStats.class))
         .build();
   }
 }
