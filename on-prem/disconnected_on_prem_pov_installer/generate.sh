@@ -34,7 +34,7 @@ rm -f "${INSTALLER_COMPRESSED_FILE}"
 
 rm -rf "${INSTALLER_DIR}"
 mkdir -p "${INSTALLER_DIR}"
-
+mkdir -p "${IMAGES_DIR}"
 cp README.txt "${INSTALLER_DIR}"
 
 echo "Manager version is ${MANAGER_VERSION}"
@@ -62,6 +62,7 @@ docker pull "${VERIFICATION_SERVICE_IMAGE}"
 docker pull "${LEARNING_ENGINE_IMAGE}"
 docker pull "${UI_IMAGE}"
 docker pull "${PROXY_IMAGE}"
+docker pull "${MONGO_IMAGE}"
 
 docker save "${MANAGER_IMAGE}" > "${MANAGER_IMAGE_TAR}"
 docker save "${VERIFICATION_SERVICE_IMAGE}" > "${VERIFICATION_SERVICE_IMAGE_TAR}"
