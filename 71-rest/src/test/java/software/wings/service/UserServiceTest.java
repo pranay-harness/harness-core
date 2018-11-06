@@ -105,6 +105,7 @@ import software.wings.utils.CacheHelper;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -771,5 +772,32 @@ public class UserServiceTest extends WingsBaseTest {
 
     verify(emailDataNotificationService).send(emailDataArgumentCaptor.capture());
     assertThat(emailDataArgumentCaptor.getValue().getTemplateName()).isEqualTo(INVITE_EMAIL_TEMPLATE_NAME);
+  }
+
+  @Test
+  public void testUserVerified() {
+    Account account = anAccount()
+                          .withCompanyName(COMPANY_NAME)
+                          .withUuid(ACCOUNT_ID)
+                          .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                          .build();
+    User user = userBuilder.withUuid(USER_ID)
+                    .withEmailVerified(false)
+                    .withCompanyName(COMPANY_NAME)
+                    .withAccountName(ACCOUNT_NAME)
+                    .withPasswordHash(hashpw(new String(PASSWORD), BCrypt.gensalt()))
+                    .withAccounts(Arrays.asList(account))
+                    .build();
+
+    assertThat(userService.isUserVerified(user)).isFalse();
+    user.setEmailVerified(true);
+    assertThat(userService.isUserVerified(user)).isTrue();
+
+    account.setAuthenticationMechanism(AuthenticationMechanism.LDAP);
+    user.setEmailVerified(false);
+    assertThat(userService.isUserVerified(user)).isTrue();
+
+    account.setAuthenticationMechanism(AuthenticationMechanism.SAML);
+    assertThat(userService.isUserVerified(user)).isTrue();
   }
 }
