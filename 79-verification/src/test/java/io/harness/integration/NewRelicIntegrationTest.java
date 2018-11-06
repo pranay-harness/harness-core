@@ -196,8 +196,8 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
-  @Owner(emails = "raghu@harness.io", intermittent = true)
-  public void getNewRelicDataForNode() throws Exception {
+  @Repeat(successes = 1, times = 5)
+  public void getNewRelicDataForNode() {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
     String workflowExecutionId = wingsPersistence.save(

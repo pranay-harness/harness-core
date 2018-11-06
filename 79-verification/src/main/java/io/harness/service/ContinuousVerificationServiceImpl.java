@@ -81,6 +81,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // Get last CV Analysis minute on given configuration
     // Add new learning task for next ANALYSIS_PERIOD_MINUTES period
     cvConfigurations.stream().filter(cvConfiguration -> cvConfiguration.isEnabled24x7()).forEach(cvConfiguration -> {
+      if (!getMetricAnalysisStates().contains(cvConfiguration.getStateType())) {
+        return;
+      }
+
       long lastCVDataCollectionMinute =
           timeSeriesAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
       if (lastCVDataCollectionMinute <= 0) {
@@ -100,30 +104,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             cvConfiguration.getStateType());
       }
 
-      if (getMetricAnalysisStates().contains(cvConfiguration.getStateType())) {
-        while (lastCVDataCollectionMinute - lastCVAnalysisMinute >= TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)) {
-          long analysisStartMinute = lastCVAnalysisMinute <= 0
-              ? lastCVDataCollectionMinute - TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)
-              : lastCVAnalysisMinute;
-          long endMinute = analysisStartMinute + TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL);
+      if (lastCVDataCollectionMinute - lastCVAnalysisMinute >= TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)) {
+        long analysisStartMinute = lastCVAnalysisMinute <= 0
+            ? lastCVDataCollectionMinute - TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL)
+            : lastCVAnalysisMinute;
+        long endMinute = analysisStartMinute + TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL);
 
-          // since analysis startMin is inclusive in LE, we  need to add 1.
-          analysisStartMinute += 1;
+        // since analysis startMin is inclusive in LE, we  need to add 1.
+        analysisStartMinute += 1;
 
-          LearningEngineAnalysisTask learningEngineAnalysisTask =
-              createLearningEngineAnalysisTask(accountId, cvConfiguration, analysisStartMinute, endMinute);
+        LearningEngineAnalysisTask learningEngineAnalysisTask =
+            createLearningEngineAnalysisTask(accountId, cvConfiguration, analysisStartMinute, endMinute);
 
-          learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
+        learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
 
-          logger.info("Queuing analysis task for state {} config {} with startTime {}", cvConfiguration.getStateType(),
-              cvConfiguration.getUuid(), analysisStartMinute);
-
-          if (lastCVAnalysisMinute <= 0) {
-            lastCVAnalysisMinute = endMinute;
-          } else {
-            lastCVAnalysisMinute += TimeUnit.SECONDS.toMinutes(CRON_POLL_INTERVAL);
-          }
-        }
+        logger.info("Queuing analysis task for state {} config {} with startTime {}", cvConfiguration.getStateType(),
+            cvConfiguration.getUuid(), analysisStartMinute);
       }
     });
   }
@@ -143,6 +139,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         LearningEngineAnalysisTask.builder()
             .service_id(cvConfiguration.getServiceId())
             .state_execution_id(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid() + "-" + endMin)
+            .cvConfigId(cvConfiguration.getUuid())
             .analysis_start_min((int) startMin - PREDECTIVE_HISTORY_MINUTES)
             .analysis_minute((int) endMin)
             .prediction_start_time((int) startMin - 1)
