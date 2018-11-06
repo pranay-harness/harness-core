@@ -2,6 +2,7 @@ package software.wings.resources;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static software.wings.resources.stats.model.InstanceTimeline.top;
 
 import com.google.inject.Inject;
 
@@ -195,9 +196,10 @@ public class DashboardStatisticsResource {
 
     Set<Instant> timestamps = filteredStats.stream().map(InstanceStatsSnapshot::getTimestamp).collect(toSet());
     Set<String> deletedAppIds = getDeletedAppIds(accountId, timestamps);
+    log.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, user.getEmail(), deletedAppIds);
     InstanceTimeline timeline = rbacFilters.removeDeletedApps(new InstanceTimeline(filteredStats, deletedAppIds));
 
-    return new RestResponse<>(timeline);
+    return new RestResponse<>(top(timeline, 5));
   }
 
   private Set<String> getDeletedAppIds(String accountId, Set<Instant> times) {
