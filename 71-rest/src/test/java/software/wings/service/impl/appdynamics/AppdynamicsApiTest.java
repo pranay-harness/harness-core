@@ -108,7 +108,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       fail("Validated invalid config");
     } catch (WingsException e) {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
-      assertEquals(
+      assertEquals("got exception: " + e.getMessage() + " params: " + e.getParams(),
           "Could not reach AppDynamics server. " + Misc.getMessage(runtimeException), e.getParams().get("reason"));
     }
   }
@@ -127,7 +127,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       fail("Validated invalid config");
     } catch (WingsException e) {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
-      assertEquals("Could not login to AppDynamics server with the given credentials", e.getParams().get("reason"));
+      assertEquals("got exception: " + e.getMessage() + " params: " + e.getParams(),
+          "Could not login to AppDynamics server with the given credentials", e.getParams().get("reason"));
     }
   }
 

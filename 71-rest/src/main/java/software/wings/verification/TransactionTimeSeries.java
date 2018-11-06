@@ -45,6 +45,9 @@ public class TransactionTimeSeries implements Comparable<TransactionTimeSeries> 
     AtomicInteger otherRisk = new AtomicInteger();
     o.metricTimeSeries.forEach(metric -> otherRisk.addAndGet(metric.getRisk()));
 
+    if (otherRisk.get() == thisRisk.get()) {
+      return this.transactionName.compareTo(o.transactionName);
+    }
     return otherRisk.get() - thisRisk.get();
   }
 }
