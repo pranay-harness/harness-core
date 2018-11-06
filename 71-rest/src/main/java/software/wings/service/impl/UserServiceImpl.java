@@ -1331,4 +1331,13 @@ public class UserServiceImpl implements UserService {
         .map(user -> user.getEmail())
         .collect(toList());
   }
+
+  @Override
+  public boolean isUserVerified(User user) {
+    if (user.getAccounts().size() > 0) {
+      return getPrimaryAccount(user).getAuthenticationMechanism().getType().equals("SSO") || user.isEmailVerified();
+    }
+    logger.warn("User [] has no accounts associated,", user.getEmail());
+    return false;
+  }
 }

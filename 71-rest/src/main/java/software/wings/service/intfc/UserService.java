@@ -347,4 +347,6 @@ public interface UserService {
   boolean isUserAssignedToAccount(User user, String accountId);
 
   List<String> fetchUserEmailAddressesFromUserIds(List<String> userIds);
+
+  boolean isUserVerified(User user);
 }
