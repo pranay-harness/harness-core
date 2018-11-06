@@ -54,6 +54,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedSet;
@@ -460,11 +461,19 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long historyStart = TimeUnit.MINUTES.toMillis(25685326);
     SortedSet<TransactionTimeSeries> timeseries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
         accountId, cvConfigId, startTime + 1, endTime, historyStart + 1);
-    assertEquals(1, timeseries.size());
+    assertEquals(5, timeseries.size());
     assertNotNull("Metric timeseries shouldn't be null", timeseries.first().getMetricTimeSeries());
     assertEquals(9, timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries().size());
     TimeSeriesRisk timeSeriesRisk =
         timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries().iterator().next();
+    Iterator<TransactionTimeSeries> iterator = timeseries.iterator();
+    while (iterator.hasNext()) {
+      TransactionTimeSeries transactionTimeSeries = iterator.next();
+      if (transactionTimeSeries.getTransactionName().equals("/todolist/inside")) {
+        timeSeriesRisk = transactionTimeSeries.getMetricTimeSeries().first().getRisksForTimeSeries().iterator().next();
+        break;
+      }
+    }
     assertEquals(2, timeSeriesRisk.getRisk());
     assertEquals("End time should be correct", TimeUnit.MINUTES.toMillis(25685341), timeSeriesRisk.getEndTime());
     assertEquals("Start time should be correct",
