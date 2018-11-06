@@ -778,6 +778,7 @@ public class AccountServiceImpl implements AccountService {
         envInfoSet.addAll(summary.getEnvPermissions().get(Action.READ));
       }
     }
+
     Set<String> allowedEnvs = new HashSet<>();
     for (EnvInfo envInfo : envInfoSet) {
       allowedEnvs.add(envInfo.getEnvId());
