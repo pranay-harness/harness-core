@@ -311,30 +311,51 @@ public class LearningEngineAnalysisTest extends VerificationBaseTest {
                                                          .filter("appId", this.appId)
                                                          .order("-analysis_minute")
                                                          .asList();
-    assertEquals(numOfUnitsToBeAnalyized, analysisTasks.size());
-    for (int i = 0; i < numOfUnitsToBeAnalyized; i++) {
-      LearningEngineAnalysisTask analysisTask = analysisTasks.get(i);
-      assertEquals(currentMinute - i * CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
-      assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
-          analysisTask.getAnalysis_start_min());
-      assertEquals(
-          analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
-    }
+    assertEquals(1, analysisTasks.size());
+    LearningEngineAnalysisTask analysisTask = analysisTasks.get(0);
+    assertEquals(currentMinute - CRON_POLL_INTERVAL_IN_MINUTES * (numOfUnitsToBeAnalyized - 1),
+        analysisTask.getAnalysis_minute());
+    assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
+        analysisTask.getAnalysis_start_min());
+    assertEquals(
+        analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
 
     continuousVerificationService.triggerDataAnalysis(accountId);
     analysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                         .filter("appId", this.appId)
                         .order("-analysis_minute")
                         .asList();
-    assertEquals(numOfUnitsToBeAnalyized, analysisTasks.size());
+    assertEquals(1, analysisTasks.size());
 
-    for (int i = 0; i < numOfUnitsToBeAnalyized; i++) {
-      LearningEngineAnalysisTask analysisTask = analysisTasks.get(i);
-      assertEquals(currentMinute - i * CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getAnalysis_minute());
-      assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
-          analysisTask.getAnalysis_start_min());
-      assertEquals(
-          analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
-    }
+    analysisTask = analysisTasks.get(0);
+    assertEquals(currentMinute - CRON_POLL_INTERVAL_IN_MINUTES * (numOfUnitsToBeAnalyized - 1),
+        analysisTask.getAnalysis_minute());
+    assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
+        analysisTask.getAnalysis_start_min());
+    assertEquals(
+        analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
+
+    timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
+    timeSeriesMLAnalysisRecord.setAppId(appId);
+    timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+    timeSeriesMLAnalysisRecord.setAnalysisMinute(
+        (int) (currentMinute - CRON_POLL_INTERVAL_IN_MINUTES * (numOfUnitsToBeAnalyized - 1)));
+    wingsPersistence.save(timeSeriesMLAnalysisRecord);
+
+    continuousVerificationService.triggerDataAnalysis(accountId);
+
+    analysisTasks = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                        .filter("appId", this.appId)
+                        .order("-analysis_minute")
+                        .asList();
+    assertEquals(2, analysisTasks.size());
+
+    analysisTask = analysisTasks.get(0);
+    assertEquals(timeSeriesMLAnalysisRecord.getAnalysisMinute() + CRON_POLL_INTERVAL_IN_MINUTES,
+        analysisTask.getAnalysis_minute());
+    assertEquals(analysisTask.getAnalysis_minute() - PREDECTIVE_HISTORY_MINUTES - CRON_POLL_INTERVAL_IN_MINUTES + 1,
+        analysisTask.getAnalysis_start_min());
+    assertEquals(
+        analysisTask.getAnalysis_minute() - CRON_POLL_INTERVAL_IN_MINUTES, analysisTask.getPrediction_start_time());
   }
 }

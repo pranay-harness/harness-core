@@ -76,6 +76,7 @@ public class LearningEngineAnalysisTask extends Base {
   private String feedback_url;
   private String feature_name;
   private @Indexed ExecutionStatus executionStatus;
+  private String cvConfigId;
 
   @Builder.Default
   private ServiceApiVersion version = ServiceApiVersion.values()[ServiceApiVersion.values().length - 1];
