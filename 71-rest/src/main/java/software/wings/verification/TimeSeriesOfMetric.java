@@ -1,5 +1,7 @@
 package software.wings.verification;
 
+import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,9 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -31,7 +34,7 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   private String metricName;
 
   @JsonIgnore private SortedMap<Long, TimeSeriesDataPoint> timeSeries;
-  private List<TimeSeriesHighlight> highlights;
+  @JsonIgnore private SortedMap<Long, TimeSeriesRisk> risksForTimeSeries;
 
   public Collection<TimeSeriesDataPoint> getTimeSeries() {
     return timeSeries.values();
@@ -40,6 +43,27 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   @JsonIgnore
   public Map<Long, TimeSeriesDataPoint> getTimeSeriesMap() {
     return timeSeries;
+  }
+
+  public Collection<TimeSeriesRisk> getRisksForTimeSeries() {
+    return risksForTimeSeries.values();
+  }
+
+  @JsonIgnore
+  public Map<Long, TimeSeriesRisk> getTimeSeriesRiskMap() {
+    return risksForTimeSeries;
+  }
+
+  public void addToRiskMap(long analysisTime, int risk) {
+    if (risksForTimeSeries == null) {
+      risksForTimeSeries = new TreeMap<>();
+    }
+    risksForTimeSeries.put(analysisTime,
+        TimeSeriesRisk.builder()
+            .startTime(analysisTime - TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES) + 1)
+            .endTime(analysisTime)
+            .risk(risk)
+            .build());
   }
 
   @Override

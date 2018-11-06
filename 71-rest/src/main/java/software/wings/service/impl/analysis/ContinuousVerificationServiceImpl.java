@@ -726,6 +726,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               Map<Long, TimeSeriesDataPoint> existingPoints =
                   observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getTimeSeriesMap();
 
+              observedTimeSeries.get(transactionName)
+                  .get(metric.getMetric_name())
+                  .addToRiskMap(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()), metric.getMax_risk());
+
               if (datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES) {
                 logger.error(
                     "datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES. Cron poll interval = {}, datapoints.size() = {}",
@@ -769,7 +773,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .filter("appId", cvConfiguration.getAppId())
         .filter("cvConfigId", cvConfiguration.getUuid())
         .field("analysisMinute")
-        .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
+        .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime))
         .field("analysisMinute")
         .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(recordEndTime))
         .order("analysisMinute")

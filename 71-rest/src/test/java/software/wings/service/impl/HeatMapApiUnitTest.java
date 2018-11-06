@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
@@ -39,6 +40,8 @@ import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.TimeSeriesDataPoint;
 import software.wings.verification.TimeSeriesOfMetric;
+import software.wings.verification.TimeSeriesRisk;
+import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
@@ -53,6 +56,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -425,5 +429,45 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
             .getResource();
     assertEquals(1, heatMaps.size());
     assertEquals(48, heatMaps.get(0).getRiskLevelSummary().size());
+  }
+
+  @Test
+  public void testGetRiskArray() throws Exception {
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+    File file = new File(getClass().getClassLoader().getResource("./verification/24_7_ts_analysis.json").getFile());
+    final Gson gson = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
+      List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = gson.fromJson(br, type);
+      timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setAppId(appId);
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+      });
+      wingsPersistence.save(timeSeriesMLAnalysisRecords);
+    }
+    long startTime = TimeUnit.MINUTES.toMillis(25685446);
+    long endTime = TimeUnit.MINUTES.toMillis(25685461);
+    long historyStart = TimeUnit.MINUTES.toMillis(25685326);
+    SortedSet<TransactionTimeSeries> timeseries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
+        accountId, cvConfigId, startTime + 1, endTime, historyStart + 1);
+    assertEquals(1, timeseries.size());
+    assertNotNull("Metric timeseries shouldn't be null", timeseries.first().getMetricTimeSeries());
+    assertEquals(9, timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries().size());
+    TimeSeriesRisk timeSeriesRisk =
+        timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries().iterator().next();
+    assertEquals(2, timeSeriesRisk.getRisk());
+    assertEquals("End time should be correct", TimeUnit.MINUTES.toMillis(25685341), timeSeriesRisk.getEndTime());
+    assertEquals("Start time should be correct",
+        TimeUnit.MINUTES.toMillis(25685341 - CRON_POLL_INTERVAL_IN_MINUTES) + 1, timeSeriesRisk.getStartTime());
   }
 }
