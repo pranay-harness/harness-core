@@ -538,15 +538,23 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       keyValuePairs.put("autoScalingGroupName", awsAmiInfrastructureMapping.getAutoScalingGroupName());
       if (awsAmiInfrastructureMapping.getClassicLoadBalancers() != null) {
         keyValuePairs.put("classicLoadBalancers", awsAmiInfrastructureMapping.getClassicLoadBalancers());
+      } else {
+        fieldsToRemove.add("classicLoadBalancers");
       }
       if (awsAmiInfrastructureMapping.getTargetGroupArns() != null) {
         keyValuePairs.put("targetGroupArns", awsAmiInfrastructureMapping.getTargetGroupArns());
+      } else {
+        fieldsToRemove.add("targetGroupArns");
       }
       if (awsAmiInfrastructureMapping.getStageClassicLoadBalancers() != null) {
         keyValuePairs.put("stageClassicLoadBalancers", awsAmiInfrastructureMapping.getStageClassicLoadBalancers());
+      } else {
+        fieldsToRemove.add("stageClassicLoadBalancers");
       }
       if (awsAmiInfrastructureMapping.getStageTargetGroupArns() != null) {
         keyValuePairs.put("stageTargetGroupArns", awsAmiInfrastructureMapping.getStageTargetGroupArns());
+      } else {
+        fieldsToRemove.add("stageTargetGroupArns");
       }
       if (awsAmiInfrastructureMapping.getHostNameConvention() != null) {
         keyValuePairs.put("hostNameConvention", awsAmiInfrastructureMapping.getHostNameConvention());
