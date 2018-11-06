@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -581,6 +582,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     int dbUnitIndex = 0;
     for (long unitTime = actualUnitStartTime; unitTime <= endTime; unitTime += cronPollIntervalMs) {
       heatMapUnit = dbUnitIndex < unitsFromDB.size() ? unitsFromDB.get(dbUnitIndex) : null;
+      if (heatMapUnit != null) {
+        logger.info("heatmap unit time = {}", heatMapUnit.getStartTime());
+        long timeDifference = TimeUnit.MILLISECONDS.toSeconds(abs(heatMapUnit.getStartTime() - unitTime));
+        if (timeDifference != 0 && timeDifference < 60) {
+          logger.error("Unexpected state: timeDifference = {}, should have been 0 or > 60", timeDifference);
+        }
+      }
+
       if (heatMapUnit != null && unitTime == heatMapUnit.getStartTime()) {
         units.add(heatMapUnit);
         dbUnitIndex++;
@@ -717,12 +726,24 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               Map<Long, TimeSeriesDataPoint> existingPoints =
                   observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getTimeSeriesMap();
 
+              if (datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES) {
+                logger.error(
+                    "datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES. Cron poll interval = {}, datapoints.size() = {}",
+                    CRON_POLL_INTERVAL_IN_MINUTES, datapoints.size());
+              }
+
+              long timestamp =
+                  TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES + 1);
               long period = TimeUnit.MINUTES.toMillis(1);
-              for (long i = TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES + 1),
-                        j = 0;
-                   i + period <= endTime; i += period, j++) {
-                if (existingPoints.containsKey(i)) {
-                  existingPoints.get(i).setValue(datapoints.get((int) j));
+              for (int j = 0; j < datapoints.size(); j++, timestamp += period) {
+                if (timestamp > endTime) {
+                  break;
+                }
+                if (existingPoints.containsKey(timestamp)) {
+                  existingPoints.get(timestamp).setValue(datapoints.get(j));
+                } else {
+                  logger.error("Timestamp {} does not exist in timeseries map. txnName={}, metricName={}", timestamp,
+                      transactionName, metric.getMetric_name());
                 }
               }
             }
@@ -735,14 +756,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   private MorphiaIterator<TimeSeriesMLAnalysisRecord, TimeSeriesMLAnalysisRecord> getTimeSeriesAnalysisRecordIterator(
       long startTime, long endTime, CVConfiguration cvConfiguration) {
-    // TODO (VT): Refactor
+    TimeSeriesMLAnalysisRecord record = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                            .filter("appId", cvConfiguration.getAppId())
+                                            .filter("cvConfigId", cvConfiguration.getUuid())
+                                            .filter("analysisMinute", TimeUnit.MILLISECONDS.toMinutes(endTime))
+                                            .get();
+    long recordEndTime = endTime;
+    if (record == null) {
+      recordEndTime = endTime + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
+    }
     return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
         .filter("appId", cvConfiguration.getAppId())
         .filter("cvConfigId", cvConfiguration.getUuid())
         .field("analysisMinute")
         .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
         .field("analysisMinute")
-        .lessThan(TimeUnit.MILLISECONDS.toMinutes(endTime) + VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES)
+        .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(recordEndTime))
         .order("analysisMinute")
         .fetch();
   }
