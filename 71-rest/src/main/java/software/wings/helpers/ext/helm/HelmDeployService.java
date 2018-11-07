@@ -1,6 +1,5 @@
 package software.wings.helpers.ext.helm;
 
-import software.wings.beans.command.LogCallback;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
@@ -20,19 +19,17 @@ public interface HelmDeployService {
    * Deploy helm command response.
    *
    * @param commandRequest       the command request
-   * @param executionLogCallback the execution log callback
    * @return the helm command response
    */
-  HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback);
+  HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest);
 
   /**
    * Rollback helm command response.
    *
    * @param commandRequest       the command request
-   * @param executionLogCallback the execution log callback
    * @return the helm command response
    */
-  HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest, LogCallback executionLogCallback);
+  HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest);
 
   /**
    * Ensure helm cli and tiller installed helm command response.
@@ -58,6 +55,6 @@ public interface HelmDeployService {
    */
   HelmReleaseHistoryCommandResponse releaseHistory(HelmReleaseHistoryCommandRequest helmCommandRequest);
 
-  HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest, LogCallback executionLogCallback)
+  HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest)
       throws InterruptedException, IOException, TimeoutException;
 }

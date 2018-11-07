@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.GitConfig;
+import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
@@ -28,6 +29,7 @@ public class HelmCommandRequest {
   private String repoName;
   private GitConfig gitConfig;
   private List<EncryptedDataDetail> encryptedDataDetails;
+  private LogCallback executionLogCallback;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;

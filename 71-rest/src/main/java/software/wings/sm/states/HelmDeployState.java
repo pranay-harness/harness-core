@@ -10,6 +10,7 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
+import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
 import static software.wings.helpers.ext.helm.HelmConstants.HELM_NAMESPACE_PLACEHOLDER_REGEX;
 import static software.wings.sm.StateType.HELM_DEPLOY;
 
@@ -235,6 +236,7 @@ public class HelmDeployState extends State {
   protected void setNewAndPrevReleaseVersion(ExecutionContext context, Application app, String releaseName,
       ContainerServiceParams containerServiceParams, HelmDeployStateExecutionData stateExecutionData,
       GitConfig gitConfig, List<EncryptedDataDetail> encryptedDataDetails) throws InterruptedException {
+    logger.info("Setting new and previous helm release version");
     int prevVersion = getPreviousReleaseVersion(
         app.getUuid(), app.getAccountId(), releaseName, containerServiceParams, gitConfig, encryptedDataDetails);
 
@@ -329,19 +331,27 @@ public class HelmDeployState extends State {
             .encryptedDataDetails(encryptedDataDetails)
             .build();
 
-    ResponseData notifyResponseData =
-        delegateService.executeTask(aDelegateTask()
-                                        .withTaskType(TaskType.HELM_COMMAND_TASK)
-                                        .withParameters(new Object[] {helmReleaseHistoryCommandRequest})
-                                        .withAccountId(accountId)
-                                        .withAppId(appId)
-                                        .withAsync(false)
-                                        .build());
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withTaskType(TaskType.HELM_COMMAND_TASK)
+                                    .withParameters(new Object[] {helmReleaseHistoryCommandRequest})
+                                    .withAccountId(accountId)
+                                    .withAppId(appId)
+                                    .withAsync(false)
+                                    .withTimeout(Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS) * 2 * 1000)
+                                    .build();
 
-    HelmCommandExecutionResponse helmCommandExecutionResponse = fetchHelmCommandExecutionResponse(notifyResponseData);
+    HelmCommandExecutionResponse helmCommandExecutionResponse;
+    ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+    if (notifyResponseData instanceof HelmCommandExecutionResponse) {
+      helmCommandExecutionResponse = (HelmCommandExecutionResponse) notifyResponseData;
+    } else {
+      String msg =
+          " Failed to find the previous helm release version. Make sure that the helm client and tiller is installed.";
+      logger.error(msg);
+      throw new InvalidRequestException(msg, WingsException.USER);
+    }
 
-    if (helmCommandExecutionResponse != null
-        && helmCommandExecutionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
+    if (helmCommandExecutionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS)) {
       List<ReleaseInfo> releaseInfoList =
           ((HelmReleaseHistoryCommandResponse) helmCommandExecutionResponse.getHelmCommandResponse())
               .getReleaseInfoList();
@@ -349,8 +359,7 @@ public class HelmDeployState extends State {
           ? 0
           : Integer.parseInt(releaseInfoList.get(releaseInfoList.size() - 1).getRevision());
     } else {
-      String errorMsg =
-          helmCommandExecutionResponse != null ? helmCommandExecutionResponse.getErrorMessage() : "Null response";
+      String errorMsg = helmCommandExecutionResponse.getErrorMessage();
       throw new InvalidRequestException(errorMsg);
     }
     return prevVersion;

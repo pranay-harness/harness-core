@@ -52,14 +52,7 @@ public interface HelmClient {
   HelmInstallCommandResponse rollback(HelmRollbackCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException;
 
-  /**
-   * Release history helm cli response.
-   *
-   * @param kubeConfigLocation the kube config location
-   * @param releaseName        the release name
-   * @return the helm cli response
-   */
-  HelmCliResponse releaseHistory(String kubeConfigLocation, String releaseName)
+  HelmCliResponse releaseHistory(HelmCommandRequest helmCommandRequest)
       throws InterruptedException, TimeoutException, IOException;
 
   /**
