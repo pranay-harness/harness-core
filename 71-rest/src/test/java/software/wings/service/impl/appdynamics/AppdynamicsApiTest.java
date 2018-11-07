@@ -25,12 +25,15 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.rule.OwnerRule.Owner;
 import okhttp3.internal.http.RealResponseBody;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mock;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 import retrofit2.Response;
 import software.wings.WingsBaseTest;
@@ -67,6 +70,7 @@ import java.util.stream.Collectors;
  * Created by rsingh on 4/24/18.
  */
 public class AppdynamicsApiTest extends WingsBaseTest {
+  private static final Logger logger = LoggerFactory.getLogger(AppdynamicsApiTest.class);
   @Inject private AppdynamicsResource appdynamicsResource;
   @Inject private AppdynamicsService appdynamicsService;
   @Inject private WingsPersistence wingsPersistence;
@@ -94,6 +98,7 @@ public class AppdynamicsApiTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void testUnreachableAppdynamicsServer() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
     RuntimeException runtimeException = new RuntimeException(UUID.randomUUID().toString());
@@ -108,12 +113,14 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       fail("Validated invalid config");
     } catch (WingsException e) {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
-      assertEquals("got exception: " + e.getMessage() + " params: " + e.getParams(),
+      logger.info("got execption", e);
+      assertEquals("got exception: " + e + " params: " + e.getParams(),
           "Could not reach AppDynamics server. " + Misc.getMessage(runtimeException), e.getParams().get("reason"));
     }
   }
 
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void testInvalidCredential() throws IOException {
     Call<List<NewRelicApplication>> restCall = mock(Call.class);
     when(restCall.execute()).thenReturn(Response.error(HttpStatus.SC_UNAUTHORIZED, new RealResponseBody(null, null)));
@@ -127,7 +134,8 @@ public class AppdynamicsApiTest extends WingsBaseTest {
       fail("Validated invalid config");
     } catch (WingsException e) {
       assertEquals(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR, e.getCode());
-      assertEquals("got exception: " + e.getMessage() + " params: " + e.getParams(),
+      logger.info("got execption", e);
+      assertEquals("got exception: " + e + " params: " + e.getParams(),
           "Could not login to AppDynamics server with the given credentials", e.getParams().get("reason"));
     }
   }
