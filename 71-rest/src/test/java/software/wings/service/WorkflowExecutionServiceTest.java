@@ -26,8 +26,10 @@ import static software.wings.beans.command.ServiceCommand.Builder.aServiceComman
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
+import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.DEFAULT_VERSION;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
@@ -64,6 +66,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
+import software.wings.beans.Account;
+import software.wings.beans.Account.Builder;
 import software.wings.beans.ApprovalDetails;
 import software.wings.beans.ApprovalDetails.Action;
 import software.wings.beans.EntityType;
@@ -81,6 +85,7 @@ import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.authentication.AuthenticationMechanism;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.WorkflowExecutionService;
@@ -582,7 +587,19 @@ public class WorkflowExecutionServiceTest extends WingsBaseTest {
   }
 
   private User createUser(String userId) {
-    return anUser().withUuid(userId).withAppId(APP_ID).withEmailVerified(true).withEmail(USER_EMAIL).build();
+    Account account = Builder.anAccount()
+                          .withUuid(ACCOUNT_ID)
+                          .withCompanyName(COMPANY_NAME)
+                          .withAccountName(ACCOUNT_NAME)
+                          .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                          .build();
+    return anUser()
+        .withUuid(userId)
+        .withAppId(APP_ID)
+        .withEmailVerified(true)
+        .withEmail(USER_EMAIL)
+        .withAccounts(asList(account))
+        .build();
   }
 
   private UserGroup createUserGroup(List<String> memberIds) {

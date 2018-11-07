@@ -322,7 +322,8 @@ public class UserGroupServiceImpl implements UserGroupService {
     User user = UserThreadLocal.get();
     List<String> userGroupMembers = fetchUserGroupsMemberIds(accountId, userGroupIds);
 
-    return user.isEmailVerified() && isNotEmpty(userGroupMembers) && userGroupMembers.contains(user.getUuid());
+    return userService.isUserVerified(user) && isNotEmpty(userGroupMembers)
+        && userGroupMembers.contains(user.getUuid());
   }
 
   @Override
