@@ -332,12 +332,12 @@ public class WebHookServiceTest extends WingsBaseTest {
         new File(classLoader.getResource("software/wings/service/impl/webhook/github_push_request.json").getFile());
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
-    doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
+    doReturn("push").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
     doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
 
     WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
     assertThat(response).isNotNull();
-    assertThat(response.getError()).isNotEmpty();
+    assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
 
   @Test

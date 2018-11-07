@@ -204,6 +204,8 @@ public interface WingsTestConstants {
 
   String TRIGGER_NAME = "TRIGGER_NAME";
 
+  String TRIGGER_DESCRIPTION = "TRIGGER_DESCRIPTION";
+
   String ARTIFACT_FILTER = "ARTIFACT_FILTER";
 
   String USER_GROUP_ID = "USER_GROUP_ID";

@@ -2205,4 +2205,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     StateExecutionInstance stateExecutionData = workflowExecutionService.getStateExecutionData(appId, stateExecutionId);
     return workflowExecutionService.getWorkflowExecution(appId, stateExecutionData.getExecutionUuid());
   }
+
+  @Override
+  public String fetchWorkflowName(String appId, String workflowId) {
+    Workflow workflow = wingsPersistence.createQuery(Workflow.class)
+                            .project(Workflow.NAME_KEY, true)
+                            .filter(APP_ID_KEY, appId)
+                            .filter(Pipeline.ID_KEY, workflowId)
+                            .get();
+    Validator.notNullCheck("Workflow does not exist", USER);
+    return workflow.getName();
+  }
 }

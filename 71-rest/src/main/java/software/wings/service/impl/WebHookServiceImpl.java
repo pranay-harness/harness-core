@@ -2,6 +2,7 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.trigger.WebhookEventType.PULL_REQUEST;
@@ -105,7 +106,7 @@ public class WebHookServiceImpl implements WebHookService {
       WingsExceptionMapper.logProcessedMessages(ex, MANAGER, logger);
       return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
     } catch (Exception ex) {
-      logger.warn(format("Webhook Request call failed [%s]", token), ex);
+      logger.warn(format("Webhook Request call failed"), ex);
       return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
     }
   }
@@ -127,8 +128,11 @@ public class WebHookServiceImpl implements WebHookService {
           .status(workflowExecution.getStatus().name())
           .build();
 
+    } catch (WingsException ex) {
+      WingsExceptionMapper.logProcessedMessages(ex, MANAGER, logger);
+      return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
     } catch (Exception ex) {
-      logger.warn(format("Webhook Request call failed [%s]", token), ex);
+      logger.warn(format("Webhook Request call failed "), ex);
       return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
     }
   }
@@ -207,14 +211,14 @@ public class WebHookServiceImpl implements WebHookService {
       String gitHubEvent = headers == null ? null : headers.getHeaderString(X_GIT_HUB_EVENT);
       logger.info("X-GitHub-Event is {} ", gitHubEvent);
       if (gitHubEvent == null) {
-        throw new WingsException("Header [X-GitHub-Event] is missing");
+        throw new WingsException("Header [X-GitHub-Event] is missing", USER);
       }
       WebhookEventType webhookEventType = WebhookEventType.find(gitHubEvent);
       if (triggerCondition.getEventTypes() != null && !triggerCondition.getEventTypes().contains(webhookEventType)) {
         String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub event ["
             + gitHubEvent + "]";
         logger.warn(msg);
-        throw new WingsException(msg);
+        throw new WingsException(msg, USER);
       }
       if (PULL_REQUEST.equals(webhookEventType)) {
         Object prAction = content.get("action");
@@ -223,7 +227,7 @@ public class WebHookServiceImpl implements WebHookService {
           String msg = "Trigger [" + trigger.getName() + "] is not associated with the received GitHub action ["
               + prAction + "]";
           logger.warn(msg);
-          throw new WingsException(msg);
+          throw new WingsException(msg, USER);
         }
       }
     }

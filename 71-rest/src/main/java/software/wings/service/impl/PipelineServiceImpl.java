@@ -292,6 +292,17 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
+  public String fetchPipelineName(String appId, String pipelineId) {
+    Pipeline pipeline = wingsPersistence.createQuery(Pipeline.class)
+                            .project(Pipeline.NAME_KEY, true)
+                            .filter(APP_ID_KEY, appId)
+                            .filter(Pipeline.ID_KEY, pipelineId)
+                            .get();
+    Validator.notNullCheck("Pipeline does not exist", USER);
+    return pipeline.getName();
+  }
+
+  @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String pipelineId) {
     List<OwnedByPipeline> services =
         ServiceClassLocator.descendingServices(this, PipelineServiceImpl.class, OwnedByPipeline.class);

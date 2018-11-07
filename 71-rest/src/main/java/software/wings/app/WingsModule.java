@@ -30,6 +30,7 @@ import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
+import software.wings.beans.trigger.Condition;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.AwsClusterServiceImpl;
 import software.wings.cloudprovider.aws.AwsCodeDeployService;
@@ -198,6 +199,9 @@ import software.wings.service.impl.security.SecretManagerImpl;
 import software.wings.service.impl.security.VaultServiceImpl;
 import software.wings.service.impl.splunk.SplunkAnalysisServiceImpl;
 import software.wings.service.impl.sumo.SumoLogicAnalysisServiceImpl;
+import software.wings.service.impl.trigger.ArtifactTriggerProcessor;
+import software.wings.service.impl.trigger.DeploymentTriggerServiceImpl;
+import software.wings.service.impl.trigger.TriggerProcessor;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
@@ -326,6 +330,7 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.splunk.SplunkAnalysisService;
 import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
+import software.wings.service.intfc.trigger.DeploymentTriggerService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -575,6 +580,15 @@ public class WingsModule extends DependencyModule {
     bind(LimitConfigurationService.class).to(LimitConfigurationServiceMongo.class);
 
     bind(DefaultLimitsService.class).to(DefaultLimitsServiceImpl.class);
+
+    // Start of deployment trigger dependencies
+    bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
+    MapBinder<String, TriggerProcessor> triggerProcessorMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, TriggerProcessor.class);
+
+    triggerProcessorMapBinder.addBinding(Condition.Type.NEW_ARTIFACT.name()).to(ArtifactTriggerProcessor.class);
+
+    // End of deployment trigger dependencies
   }
 
   @Override
