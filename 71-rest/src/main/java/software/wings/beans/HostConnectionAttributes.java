@@ -30,6 +30,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
 
   @Attributes(title = "User Name") private String userName;
+  @Attributes(title = "SSH Port") private Integer sshPort = 22;
   @Attributes(title = "Key") @Encrypted private char[] key;
   @SchemaIgnore @NotNull private String accountId;
 
@@ -112,10 +113,11 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     private char[] key;
     private String accountId;
     private String userName;
+    private Integer sshPort = 22;
     private String encryptedKey;
     private boolean keyless;
     private String keyPath;
-    private AuthenticationScheme authenticationScheme;
+    private AuthenticationScheme authenticationScheme = SSH_KEY;
     private KerberosConfig kerberosConfig;
     private char[] passphrase;
     private String encryptedPassphrase;
@@ -138,6 +140,11 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
 
     public Builder withUserName(String userName) {
       this.userName = userName;
+      return this;
+    }
+
+    public Builder withSshPort(Integer sshPort) {
+      this.sshPort = sshPort;
       return this;
     }
 
@@ -193,6 +200,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
           .withConnectionType(connectionType)
           .withAccessType(accessType)
           .withUserName(userName)
+          .withSshPort(sshPort)
           .withKey(key)
           .withAccountId(accountId)
           .withEncryptedKey(encryptedKey)
@@ -209,6 +217,7 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       hostConnectionAttributes.setConnectionType(connectionType);
       hostConnectionAttributes.setAccessType(accessType);
       hostConnectionAttributes.setUserName(userName);
+      hostConnectionAttributes.setSshPort(sshPort);
       hostConnectionAttributes.setKey(key);
       hostConnectionAttributes.setAccountId(accountId);
       hostConnectionAttributes.setEncryptedKey(encryptedKey);
