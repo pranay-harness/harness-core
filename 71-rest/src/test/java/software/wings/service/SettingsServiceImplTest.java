@@ -406,6 +406,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
     HostConnectionAttributes updatedHostConnectionAttributes =
         (HostConnectionAttributes) updatedSettingAttribute.getValue();
     assertThat(updatedHostConnectionAttributes.getKey()).isEqualTo(SecretManager.ENCRYPTED_FIELD_MASK);
+    assertThat(updatedHostConnectionAttributes.getSshPort()).isEqualTo(22);
   }
 
   @Test

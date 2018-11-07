@@ -130,6 +130,7 @@ public class SshHelperUtil {
       HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
       builder.withKey(hostConnectionAttributes.getKey())
           .withUserName(hostConnectionAttributes.getUserName())
+          .withPort(hostConnectionAttributes.getSshPort())
           .withKeyName(settingAttribute.getUuid())
           .withPassword(null)
           .withKeyLess(hostConnectionAttributes.isKeyless())
@@ -145,6 +146,7 @@ public class SshHelperUtil {
                                      .withKey(bastionAttrs.getKey())
                                      .withKeyName(settingAttribute.getUuid())
                                      .withUserName(bastionAttrs.getUserName())
+                                     .withPort(bastionAttrs.getSshPort())
                                      .withKeyPassphrase(bastionAttrs.getPassphrase());
       if (connectTimeoutSeconds != null) {
         sshSessionConfig.withSshConnectionTimeout((int) TimeUnit.SECONDS.toMillis(connectTimeoutSeconds));
@@ -161,7 +163,8 @@ public class SshHelperUtil {
         KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
         builder.withPassword(hostConnectionAttributes.getKerberosPassword())
             .withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.KERBEROS)
-            .withKerberosConfig(kerberosConfig);
+            .withKerberosConfig(kerberosConfig)
+            .withPort(hostConnectionAttributes.getSshPort());
       }
     }
     return builder.build();
