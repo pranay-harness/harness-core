@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.GitConfig;
+import software.wings.beans.command.LogCallback;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ContainerServiceParams;
 
@@ -22,8 +23,8 @@ public class HelmReleaseHistoryCommandRequest extends HelmCommandRequest {
   @Builder
   public HelmReleaseHistoryCommandRequest(String accountId, String appId, String kubeConfigLocation, String commandName,
       String activityId, ContainerServiceParams containerServiceParams, String releaseName, GitConfig gitConfig,
-      List<EncryptedDataDetail> encryptedDataDetails) {
+      List<EncryptedDataDetail> encryptedDataDetails, LogCallback executionLogCallback) {
     super(HelmCommandType.RELEASE_HISTORY, accountId, appId, kubeConfigLocation, commandName, activityId,
-        containerServiceParams, releaseName, null, null, gitConfig, encryptedDataDetails);
+        containerServiceParams, releaseName, null, null, gitConfig, encryptedDataDetails, executionLogCallback);
   }
 }

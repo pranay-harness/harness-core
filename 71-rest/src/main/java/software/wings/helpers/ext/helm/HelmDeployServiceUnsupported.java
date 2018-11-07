@@ -1,6 +1,5 @@
 package software.wings.helpers.ext.helm;
 
-import software.wings.beans.command.LogCallback;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmReleaseHistoryCommandRequest;
@@ -14,12 +13,12 @@ import java.util.concurrent.TimeoutException;
 
 public class HelmDeployServiceUnsupported implements HelmDeployService {
   @Override
-  public HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback) {
+  public HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest) {
     throw new UnsupportedOperationException("Helm deploy service not supported on manager");
   }
 
   @Override
-  public HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest, LogCallback executionLogCallback) {
+  public HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest) {
     throw new UnsupportedOperationException("Helm deploy service not supported on manager");
   }
 
@@ -39,7 +38,7 @@ public class HelmDeployServiceUnsupported implements HelmDeployService {
   }
 
   @Override
-  public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest, LogCallback executionLogCallback)
+  public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest)
       throws InterruptedException, IOException, TimeoutException {
     throw new UnsupportedOperationException("Helm deploy service not supported on manager");
   }

@@ -54,11 +54,15 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
     HelmCommandResponse commandResponse;
 
     LogCallback executionLogCallback = getExecutionLogCallback(helmCommandRequest);
+    helmCommandRequest.setExecutionLogCallback(executionLogCallback);
 
     try {
+      executionLogCallback.saveExecutionLog("Creating KubeConfig", LogLevel.INFO, CommandExecutionStatus.RUNNING);
       String configLocation = containerDeploymentDelegateHelper.createAndGetKubeConfigLocation(
           helmCommandRequest.getContainerServiceParams());
       helmCommandRequest.setKubeConfigLocation(configLocation);
+      executionLogCallback.saveExecutionLog(
+          "Setting KubeConfig\nKUBECONFIG_PATH=" + configLocation, LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
       ensureHelmCliAndTillerInstalled(helmCommandRequest);
       addPublicRepo(helmCommandRequest);
@@ -68,12 +72,10 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
 
       switch (helmCommandRequest.getHelmCommandType()) {
         case INSTALL:
-          commandResponse =
-              helmDeployService.deploy((HelmInstallCommandRequest) helmCommandRequest, executionLogCallback);
+          commandResponse = helmDeployService.deploy((HelmInstallCommandRequest) helmCommandRequest);
           break;
         case ROLLBACK:
-          commandResponse =
-              helmDeployService.rollback((HelmRollbackCommandRequest) helmCommandRequest, executionLogCallback);
+          commandResponse = helmDeployService.rollback((HelmRollbackCommandRequest) helmCommandRequest);
           break;
         case RELEASE_HISTORY:
           commandResponse = helmDeployService.releaseHistory((HelmReleaseHistoryCommandRequest) helmCommandRequest);
@@ -118,7 +120,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
   }
 
   private void ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) throws Exception {
-    LogCallback executionLogCallback = getExecutionLogCallback(helmCommandRequest);
+    LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
 
     executionLogCallback.saveExecutionLog(
         "Finding helm client and server version", LogLevel.INFO, CommandExecutionStatus.RUNNING);
@@ -128,7 +130,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
 
   private void addPublicRepo(HelmCommandRequest helmCommandRequest)
       throws InterruptedException, IOException, TimeoutException {
-    LogCallback executionLogCallback = getExecutionLogCallback(helmCommandRequest);
+    LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
 
     if (helmCommandRequest.getHelmCommandType() != HelmCommandType.INSTALL) {
       return;
@@ -140,8 +142,7 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
       executionLogCallback.saveExecutionLog(
           "Adding helm repository " + helmCommandRequest.getChartSpecification().getChartUrl(), LogLevel.INFO,
           CommandExecutionStatus.RUNNING);
-      HelmCommandResponse helmCommandResponse =
-          helmDeployService.addPublicRepo(helmCommandRequest, executionLogCallback);
+      HelmCommandResponse helmCommandResponse = helmDeployService.addPublicRepo(helmCommandRequest);
       executionLogCallback.saveExecutionLog(helmCommandResponse.getOutput());
     }
   }

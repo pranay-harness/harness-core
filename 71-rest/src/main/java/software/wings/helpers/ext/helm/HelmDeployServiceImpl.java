@@ -4,7 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT;
+import static software.wings.helpers.ext.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS;
 
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
@@ -72,13 +72,15 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   private static final Logger logger = LoggerFactory.getLogger(HelmDeployService.class);
 
   @Override
-  public HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest, LogCallback executionLogCallback) {
+  public HelmCommandResponse deploy(HelmInstallCommandRequest commandRequest) {
+    LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
+
     try {
       HelmInstallCommandResponse commandResponse;
       executionLogCallback.saveExecutionLog(
           "List all existing deployed releases for release name: " + commandRequest.getReleaseName());
-      HelmCliResponse helmCliResponse =
-          helmClient.releaseHistory(commandRequest.getKubeConfigLocation(), commandRequest.getReleaseName());
+
+      HelmCliResponse helmCliResponse = helmClient.releaseHistory(commandRequest);
       executionLogCallback.saveExecutionLog(
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
@@ -151,7 +153,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @Override
-  public HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest, LogCallback executionLogCallback) {
+  public HelmCommandResponse rollback(HelmRollbackCommandRequest commandRequest) {
+    LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
+
     try {
       HelmInstallCommandResponse commandResponse = helmClient.rollback(commandRequest);
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
@@ -185,7 +189,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           throw new InvalidRequestException(cliResponse.getOutput());
         }
         return new HelmCommandResponse(cliResponse.getCommandExecutionStatus(), cliResponse.getOutput());
-      }, Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT), TimeUnit.SECONDS, true);
+      }, Long.parseLong(DEFAULT_TILLER_CONNECTION_TIMEOUT_SECONDS), TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
       String msg = "Timed out while finding helm client and server version";
       logger.error(msg, e);
@@ -194,8 +198,10 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @Override
-  public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest, LogCallback executionLogCallback)
+  public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException {
+    LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
+
     executionLogCallback.saveExecutionLog(
         "Checking if the repository has already been added", LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
@@ -254,8 +260,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   public HelmReleaseHistoryCommandResponse releaseHistory(HelmReleaseHistoryCommandRequest helmCommandRequest) {
     List<ReleaseInfo> releaseInfoList = new ArrayList<>();
     try {
-      HelmCliResponse helmCliResponse =
-          helmClient.releaseHistory(helmCommandRequest.getKubeConfigLocation(), helmCommandRequest.getReleaseName());
+      HelmCliResponse helmCliResponse = helmClient.releaseHistory(helmCommandRequest);
       releaseInfoList =
           parseHelmReleaseCommandOutput(helmCliResponse.getOutput(), helmCommandRequest.getHelmCommandType());
     } catch (Exception e) {
@@ -328,6 +333,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     try {
       String message = "Cleaning up. Deleting the release with --purge option";
       executionLogCallback.saveExecutionLog(message);
+
       HelmCliResponse deleteCommandResponse = helmClient.deleteHelmRelease(commandRequest);
       executionLogCallback.saveExecutionLog(deleteCommandResponse.getOutput());
     } catch (Exception e) {

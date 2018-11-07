@@ -27,7 +27,9 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
+import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.helpers.ext.helm.request.HelmCommandRequest;
 import software.wings.helpers.ext.helm.request.HelmInstallCommandRequest;
@@ -56,11 +58,14 @@ public class HelmClientImpl implements HelmClient {
     String chartReference = getChartReference(commandRequest.getChartSpecification());
 
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
-    String installCommand = HELM_INSTALL_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
-                                .replace("${OVERRIDE_VALUES}", keyValueOverrides)
+    String installCommand = HELM_INSTALL_COMMAND_TEMPLATE.replace("${OVERRIDE_VALUES}", keyValueOverrides)
                                 .replace("${RELEASE_NAME}", getReleaseFlag(commandRequest))
                                 .replace("${NAMESPACE}", getNamespaceFlag(commandRequest))
                                 .replace("${CHART_REFERENCE}", chartReference);
+
+    logHelmCommandInExecutionLogs(commandRequest, installCommand);
+    installCommand = applyKubeConfigToCommand(installCommand, kubeConfigLocation);
+
     HelmCliResponse cliResponse = executeHelmCLICommand(installCommand);
     return HelmInstallCommandResponse.builder()
         .commandExecutionStatus(cliResponse.getCommandExecutionStatus())
@@ -75,10 +80,12 @@ public class HelmClientImpl implements HelmClient {
     String chartReference = getChartReference(commandRequest.getChartSpecification());
 
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
-    String upgradeCommand = HELM_UPGRADE_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
-                                .replace("${RELEASE_NAME}", commandRequest.getReleaseName())
+    String upgradeCommand = HELM_UPGRADE_COMMAND_TEMPLATE.replace("${RELEASE_NAME}", commandRequest.getReleaseName())
                                 .replace("${CHART_REFERENCE}", chartReference)
                                 .replace("${OVERRIDE_VALUES}", keyValueOverrides);
+
+    logHelmCommandInExecutionLogs(commandRequest, upgradeCommand);
+    upgradeCommand = applyKubeConfigToCommand(upgradeCommand, kubeConfigLocation);
 
     HelmCliResponse cliResponse = executeHelmCLICommand(upgradeCommand);
     return HelmInstallCommandResponse.builder()
@@ -91,9 +98,12 @@ public class HelmClientImpl implements HelmClient {
   public HelmInstallCommandResponse rollback(HelmRollbackCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
-    String command = HELM_ROLLBACK_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
-                         .replace("${RELEASE}", commandRequest.getReleaseName())
+    String command = HELM_ROLLBACK_COMMAND_TEMPLATE.replace("${RELEASE}", commandRequest.getReleaseName())
                          .replace("${REVISION}", commandRequest.getPrevReleaseVersion().toString());
+
+    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyKubeConfigToCommand(command, kubeConfigLocation);
+
     HelmCliResponse cliResponse = executeHelmCLICommand(command);
     return HelmInstallCommandResponse.builder()
         .commandExecutionStatus(cliResponse.getCommandExecutionStatus())
@@ -102,15 +112,21 @@ public class HelmClientImpl implements HelmClient {
   }
 
   @Override
-  public HelmCliResponse releaseHistory(String kubeConfigLocation, String releaseName)
+  public HelmCliResponse releaseHistory(HelmCommandRequest helmCommandRequest)
       throws InterruptedException, TimeoutException, IOException {
+    String kubeConfigLocation = helmCommandRequest.getKubeConfigLocation();
+    String releaseName = helmCommandRequest.getReleaseName();
+
     if (kubeConfigLocation == null) {
       kubeConfigLocation = "";
     }
 
-    String releaseHistory = HELM_RELEASE_HIST_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
-                                .replace("${FLAGS}", "--max 5")
-                                .replace("${RELEASE_NAME}", releaseName);
+    String releaseHistory =
+        HELM_RELEASE_HIST_COMMAND_TEMPLATE.replace("${FLAGS}", "--max 5").replace("${RELEASE_NAME}", releaseName);
+
+    logHelmCommandInExecutionLogs(helmCommandRequest, releaseHistory);
+    releaseHistory = applyKubeConfigToCommand(releaseHistory, kubeConfigLocation);
+
     return executeHelmCLICommand(releaseHistory);
   }
 
@@ -118,8 +134,11 @@ public class HelmClientImpl implements HelmClient {
   public HelmCliResponse listReleases(HelmInstallCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
-    String listRelease = HELM_LIST_RELEASE_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
-                             .replace("${RELEASE_NAME}", commandRequest.getReleaseName());
+    String listRelease = HELM_LIST_RELEASE_COMMAND_TEMPLATE.replace("${RELEASE_NAME}", commandRequest.getReleaseName());
+
+    logHelmCommandInExecutionLogs(commandRequest, listRelease);
+    listRelease = applyKubeConfigToCommand(listRelease, kubeConfigLocation);
+
     return executeHelmCLICommand(listRelease);
   }
 
@@ -127,7 +146,11 @@ public class HelmClientImpl implements HelmClient {
   public HelmCliResponse getClientAndServerVersion(HelmCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
-    String command = HELM_VERSION_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation);
+    String command = HELM_VERSION_COMMAND_TEMPLATE;
+
+    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyKubeConfigToCommand(command, kubeConfigLocation);
+
     return executeHelmCLICommand(command);
   }
 
@@ -135,9 +158,12 @@ public class HelmClientImpl implements HelmClient {
   public HelmCliResponse addPublicRepo(HelmCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
-    String command = HELM_ADD_REPO_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
-                         .replace("${REPO_URL}", commandRequest.getChartSpecification().getChartUrl())
-                         .replace("${REPO_NAME}", commandRequest.getRepoName());
+    String command =
+        HELM_ADD_REPO_COMMAND_TEMPLATE.replace("${REPO_URL}", commandRequest.getChartSpecification().getChartUrl())
+            .replace("${REPO_NAME}", commandRequest.getRepoName());
+
+    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
     return executeHelmCLICommand(command);
   }
@@ -146,7 +172,10 @@ public class HelmClientImpl implements HelmClient {
   public HelmCliResponse getHelmRepoList(HelmCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
-    String command = HELM_REPO_LIST_COMMAND_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation);
+    String command = HELM_REPO_LIST_COMMAND_TEMPLATE;
+
+    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
     return executeHelmCLICommand(command);
   }
@@ -155,9 +184,11 @@ public class HelmClientImpl implements HelmClient {
   public HelmCliResponse deleteHelmRelease(HelmCommandRequest commandRequest)
       throws InterruptedException, TimeoutException, IOException {
     String kubeConfigLocation = Optional.ofNullable(commandRequest.getKubeConfigLocation()).orElse("");
-    String command = HELM_DELETE_RELEASE_TEMPLATE.replace("${KUBECONFIG_PATH}", kubeConfigLocation)
-                         .replace("${RELEASE_NAME}", commandRequest.getReleaseName())
+    String command = HELM_DELETE_RELEASE_TEMPLATE.replace("${RELEASE_NAME}", commandRequest.getReleaseName())
                          .replace("${FLAGS}", "--purge");
+
+    logHelmCommandInExecutionLogs(commandRequest, command);
+    command = applyKubeConfigToCommand(command, kubeConfigLocation);
 
     return executeHelmCLICommand(command);
   }
@@ -226,6 +257,19 @@ public class HelmClientImpl implements HelmClient {
 
   private String dryRunCommand(String command) {
     return command + "--dry-run";
+  }
+
+  private void logHelmCommandInExecutionLogs(HelmCommandRequest helmCommandRequest, String helmCommand) {
+    LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
+
+    if (executionLogCallback != null) {
+      String msg = "Executing command - " + helmCommand + "\n";
+      executionLogCallback.saveExecutionLog(msg, LogLevel.INFO);
+    }
+  }
+
+  private String applyKubeConfigToCommand(String command, String kubeConfigLocation) {
+    return command.replace("${KUBECONFIG_PATH}", kubeConfigLocation);
   }
 
   /**

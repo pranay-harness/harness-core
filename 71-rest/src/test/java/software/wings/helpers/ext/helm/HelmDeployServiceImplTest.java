@@ -23,6 +23,7 @@ import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.command.LogCallback;
 import software.wings.beans.container.HelmChartSpecification;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
@@ -56,6 +57,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Mock private GitService gitService;
   @Mock private EncryptionService encryptionService;
   @Mock private HelmCommandHelper helmCommandHelper;
+  @Mock private LogCallback logCallback;
   @InjectMocks private HelmDeployServiceImpl helmDeployService;
 
   private HelmInstallCommandRequest helmInstallCommandRequest;
@@ -90,12 +92,11 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
     helmCliListReleasesResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
 
-    when(helmClient.releaseHistory(HELM_KUBE_CONFIG_LOCATION_KEY, HELM_RELEASE_NAME_KEY))
-        .thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
 
-    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest, executionLogCallback);
+    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(helmClient).install(helmInstallCommandRequest);
   }
@@ -106,12 +107,11 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmCliListReleasesResponse.setOutput(LIST_RELEASE_RESPONSE_KEY);
     helmCliListReleasesResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
 
-    when(helmClient.releaseHistory(HELM_KUBE_CONFIG_LOCATION_KEY, HELM_RELEASE_NAME_KEY))
-        .thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.upgrade(any())).thenReturn(helmInstallCommandResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
 
-    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest, executionLogCallback);
+    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(helmClient).upgrade(helmInstallCommandRequest);
   }
@@ -124,13 +124,12 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
     helmCliListReleasesResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
 
-    when(helmClient.releaseHistory(HELM_KUBE_CONFIG_LOCATION_KEY, HELM_RELEASE_NAME_KEY))
-        .thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
 
     ArgumentCaptor<HelmInstallCommandRequest> argumentCaptor = ArgumentCaptor.forClass(HelmInstallCommandRequest.class);
-    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest, executionLogCallback);
+    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(helmClient).install(argumentCaptor.capture());
     HelmInstallCommandRequest commandRequest = argumentCaptor.getAllValues().get(0);
@@ -147,13 +146,12 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
     helmCliListReleasesResponse.setCommandExecutionStatus(CommandExecutionStatus.SUCCESS);
 
-    when(helmClient.releaseHistory(HELM_KUBE_CONFIG_LOCATION_KEY, HELM_RELEASE_NAME_KEY))
-        .thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
 
     ArgumentCaptor<HelmInstallCommandRequest> argumentCaptor = ArgumentCaptor.forClass(HelmInstallCommandRequest.class);
-    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest, executionLogCallback);
+    HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(helmClient).install(argumentCaptor.capture());
     HelmInstallCommandRequest commandRequest = argumentCaptor.getAllValues().get(0);
@@ -174,14 +172,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmInstallCommandRequest.setVariableOverridesYamlFiles(asList(GIT_FILE_CONTENT_3_KEY));
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
 
-    when(helmClient.releaseHistory(HELM_KUBE_CONFIG_LOCATION_KEY, HELM_RELEASE_NAME_KEY))
-        .thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmInstallCommandResponse);
     when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
         .thenThrow(new WingsException("WingsException"));
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
 
-    helmDeployService.deploy(helmInstallCommandRequest, executionLogCallback);
+    helmDeployService.deploy(helmInstallCommandRequest);
   }
 
   private HelmInstallCommandRequest createHelmInstallCommandRequest() {
@@ -189,6 +186,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         .releaseName(HELM_RELEASE_NAME_KEY)
         .kubeConfigLocation(HELM_KUBE_CONFIG_LOCATION_KEY)
         .chartSpecification(HelmChartSpecification.builder().chartName(CHART_NAME_KEY).build())
+        .executionLogCallback(logCallback)
         .build();
   }
 
