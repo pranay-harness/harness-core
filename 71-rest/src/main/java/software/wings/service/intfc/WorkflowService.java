@@ -164,4 +164,6 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   boolean isStateValid(String appId, String stateExecutionId);
 
   WorkflowExecution getWorkflowExecutionForStateExecutionId(String appId, String stateExecutionId);
+
+  String fetchWorkflowName(@NotEmpty String appId, @NotEmpty String workflowId);
 }
