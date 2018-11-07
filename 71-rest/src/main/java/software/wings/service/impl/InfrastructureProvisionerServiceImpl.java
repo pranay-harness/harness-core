@@ -385,8 +385,8 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public List<AwsCFTemplateParamsData> getCFTemplateParamKeys(
-      String type, String region, String awsConfigId, String data) {
-    return awsCFHelperServiceManager.getParamsData(type, data, awsConfigId, region, "");
+      String type, String region, String awsConfigId, String data, String appId) {
+    return awsCFHelperServiceManager.getParamsData(type, data, awsConfigId, region, appId);
   }
 
   @Override

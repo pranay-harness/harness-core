@@ -48,7 +48,8 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
   void regenerateInfrastructureMappings(String provisionerId, ExecutionContext context, Map<String, Object> outputs,
       Optional<ManagerExecutionLogCallback> executionLogCallback, Optional<String> region);
 
-  List<AwsCFTemplateParamsData> getCFTemplateParamKeys(String type, String region, String awsConfigId, String data);
+  List<AwsCFTemplateParamsData> getCFTemplateParamKeys(
+      String type, String region, String awsConfigId, String data, String appId);
 
   void delete(String appId, String infrastructureProvisionerId, boolean syncFromGit);
 

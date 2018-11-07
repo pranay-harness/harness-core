@@ -134,10 +134,11 @@ public class InfrastructureProvisionerResource {
   @Path("get-params")
   @Timed
   @ExceptionMetered
-  @AuthRule(permissionType = PROVISIONER, action = READ)
   public RestResponse<List<AwsCFTemplateParamsData>> getParamsKeys(@QueryParam("type") String type,
-      @QueryParam("region") String region, @QueryParam("awsConfigId") String awsConfigId, String data) {
-    return new RestResponse<>(infrastructureProvisionerService.getCFTemplateParamKeys(type, region, awsConfigId, data));
+      @QueryParam("region") String region, @QueryParam("awsConfigId") String awsConfigId,
+      @QueryParam("appId") String appId, String data) {
+    return new RestResponse<>(
+        infrastructureProvisionerService.getCFTemplateParamKeys(type, region, awsConfigId, data, appId));
   }
 
   @DELETE
