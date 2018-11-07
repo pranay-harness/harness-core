@@ -28,10 +28,11 @@ public class HelmConstants {
       + "users:\n"
       + "- name: HARNESS_USER\n"
       + "  user:\n"
-      + "    ${CLIENT_CERT_DATA}\n"
-      + "    ${CLIENT_KEY_DATA}\n"
-      + "    ${PASSWORD}\n"
-      + "    ${USER_NAME}";
+      + "    ${CLIENT_CERT_DATA}"
+      + "    ${CLIENT_KEY_DATA}"
+      + "    ${PASSWORD}"
+      + "    ${USER_NAME}"
+      + "    ${SERVICE_ACCOUNT_TOKEN_DATA}";
 
   public static final String HELM_ROLLBACK_COMMAND_TEMPLATE =
       "KUBECONFIG=${KUBECONFIG_PATH} helm rollback ${RELEASE} ${REVISION}";
