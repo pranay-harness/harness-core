@@ -110,18 +110,23 @@ public class ContainerDeploymentDelegateHelper {
       return "";
     }
 
-    String clientCertData =
-        isNotEmpty(config.getClientCert()) ? "client-certificate-data: " + new String(config.getClientCert()) : "";
+    String clientCertData = isNotEmpty(config.getClientCert())
+        ? "client-certificate-data: " + new String(config.getClientCert()) + "\n"
+        : "";
     String clientKeyData =
-        isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) : "";
-    String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) : "";
-    String username = isNotEmpty(config.getUsername()) ? "username: " + config.getUsername() : "";
+        isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) + "\n" : "";
+    String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) + "\n" : "";
+    String username = isNotEmpty(config.getUsername()) ? "username: " + config.getUsername() + "\n" : "";
+    String serviceAccountTokenData = isNotEmpty(config.getServiceAccountToken())
+        ? "token: " + new String(config.getServiceAccountToken()) + "\n"
+        : "";
 
     return KUBE_CONFIG_TEMPLATE.replace("${MASTER_URL}", config.getMasterUrl())
         .replace("${USER_NAME}", username)
         .replace("${CLIENT_CERT_DATA}", clientCertData)
         .replace("${CLIENT_KEY_DATA}", clientKeyData)
-        .replace("${PASSWORD}", password);
+        .replace("${PASSWORD}", password)
+        .replace("${SERVICE_ACCOUNT_TOKEN_DATA}", serviceAccountTokenData);
   }
 
   public String getKubeConfigFileContent(ContainerServiceParams containerServiceParam) {
