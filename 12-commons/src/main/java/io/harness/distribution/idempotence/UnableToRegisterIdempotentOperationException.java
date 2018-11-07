@@ -5,10 +5,10 @@ import io.harness.exception.WingsException;
 
 public class UnableToRegisterIdempotentOperationException extends WingsException {
   public UnableToRegisterIdempotentOperationException(String message) {
-    super(ErrorCode.UNEXPECTED, message);
+    super(ErrorCode.UNKNOWN_ERROR, message);
   }
 
   public UnableToRegisterIdempotentOperationException(Exception cause) {
-    super(ErrorCode.UNEXPECTED, cause);
+    super(ErrorCode.UNKNOWN_ERROR, cause);
   }
 }
