@@ -696,7 +696,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             }
 
             // Update risk if record's analysisMinute is >= risk cut-off time
-            if (TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()) >= riskCutOffTime) {
+            if (TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()) > riskCutOffTime) {
               int candidateRisk = metric.getMax_risk();
               int currentMaxRisk = observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getRisk();
               if (candidateRisk > currentMaxRisk) {
@@ -737,7 +737,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               }
 
               long timestamp =
-                  TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES + 1);
+                  TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1;
+              timestamp = Timestamp.minuteBoundary(timestamp);
               long period = TimeUnit.MINUTES.toMillis(1);
               for (int j = 0; j < datapoints.size(); j++, timestamp += period) {
                 if (timestamp > endTime) {
