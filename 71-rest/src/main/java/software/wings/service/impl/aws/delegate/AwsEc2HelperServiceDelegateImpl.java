@@ -26,7 +26,6 @@ import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Region;
-import com.amazonaws.services.ec2.model.ResourceType;
 import com.amazonaws.services.ec2.model.SecurityGroup;
 import com.amazonaws.services.ec2.model.Subnet;
 import com.amazonaws.services.ec2.model.TagDescription;
@@ -146,7 +145,8 @@ public class AwsEc2HelperServiceDelegateImpl
   }
 
   @Override
-  public Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+  public Set<String> listTags(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String resourceType) {
     String nextToken = null;
     Set<String> tags = new HashSet<>();
     try {
@@ -154,11 +154,11 @@ public class AwsEc2HelperServiceDelegateImpl
       do {
         AmazonEC2Client amazonEC2Client =
             getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
-        DescribeTagsResult describeTagsResult = amazonEC2Client.describeTags(
-            new DescribeTagsRequest()
-                .withNextToken(nextToken)
-                .withFilters(new Filter("resource-type").withValues(ResourceType.Instance.toString()))
-                .withMaxResults(1000));
+        DescribeTagsResult describeTagsResult =
+            amazonEC2Client.describeTags(new DescribeTagsRequest()
+                                             .withNextToken(nextToken)
+                                             .withFilters(new Filter("resource-type").withValues(resourceType))
+                                             .withMaxResults(1000));
         tags.addAll(describeTagsResult.getTags().stream().map(TagDescription::getKey).collect(Collectors.toSet()));
         nextToken = describeTagsResult.getNextToken();
       } while (nextToken != null);

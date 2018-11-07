@@ -2,6 +2,7 @@ package software.wings.service.intfc.aws.manager;
 
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.ResourceType;
 import software.wings.beans.AwsConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 
@@ -17,6 +18,8 @@ public interface AwsEc2HelperServiceManager {
   List<String> listSGs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<String> vpcIds, String appId);
   Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId);
+  Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId,
+      ResourceType resourceType);
   List<Instance> listEc2Instances(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<Filter> filters, String appId);
 }

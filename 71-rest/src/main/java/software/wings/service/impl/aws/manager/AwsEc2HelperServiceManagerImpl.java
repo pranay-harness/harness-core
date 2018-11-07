@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 
 import com.amazonaws.services.ec2.model.Filter;
 import com.amazonaws.services.ec2.model.Instance;
+import com.amazonaws.services.ec2.model.ResourceType;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -108,16 +109,23 @@ public class AwsEc2HelperServiceManagerImpl implements AwsEc2HelperServiceManage
   }
 
   @Override
-  public Set<String> listTags(
-      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
+  public Set<String> listTags(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
+      String appId, ResourceType resourceType) {
     AwsResponse response = executeTask(awsConfig.getAccountId(),
         AwsEc2ListTagsRequest.builder()
             .awsConfig(awsConfig)
             .encryptionDetails(encryptionDetails)
             .region(region)
+            .resourceType(resourceType.toString())
             .build(),
         appId);
     return ((AwsEc2ListTagsResponse) response).getTags();
+  }
+
+  @Override
+  public Set<String> listTags(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String appId) {
+    return listTags(awsConfig, encryptionDetails, region, appId, ResourceType.Instance);
   }
 
   @Override
