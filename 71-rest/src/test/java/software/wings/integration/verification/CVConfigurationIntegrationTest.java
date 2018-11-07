@@ -473,5 +473,21 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
         JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), AppDynamicsCVServiceConfiguration.class);
     assertEquals(appId, appDObject.getAppId());
     assertEquals(envId, appDObject.getEnvId());
+
+    // This call to list configs should fetch only the app dynamics config
+    url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APP_DYNAMICS;
+    target = client.target(url);
+
+    listOfConfigsByEnvResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<List<Object>>>() {});
+    listOfConfigsByEnv = listOfConfigsByEnvResponse.getResource();
+
+    assertEquals(1, listOfConfigsByEnv.size());
+
+    appDObject =
+        JsonUtils.asObject(JsonUtils.asJson(listOfConfigsByEnv.get(0)), AppDynamicsCVServiceConfiguration.class);
+    assertEquals(appId, appDObject.getAppId());
+    assertEquals(envId, appDObject.getEnvId());
+    assertEquals(APP_DYNAMICS, appDObject.getStateType());
   }
 }

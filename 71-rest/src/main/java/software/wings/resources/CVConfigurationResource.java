@@ -60,8 +60,8 @@ public class CVConfigurationResource {
   @ExceptionMetered
   public <T extends CVConfiguration> RestResponse<List<T>> listConfigurations(
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("appId") @Valid final String appId,
-      @QueryParam("envId") @Valid final String envId) {
-    return new RestResponse<>(cvConfigurationService.listConfigurations(accountId, appId, envId));
+      @QueryParam("envId") final String envId, @QueryParam("stateType") final StateType stateType) {
+    return new RestResponse<>(cvConfigurationService.listConfigurations(accountId, appId, envId, stateType));
   }
 
   @PUT
