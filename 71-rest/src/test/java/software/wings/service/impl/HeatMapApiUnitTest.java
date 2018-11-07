@@ -479,4 +479,82 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertEquals("Start time should be correct",
         TimeUnit.MINUTES.toMillis(25685341 - CRON_POLL_INTERVAL_IN_MINUTES) + 1, timeSeriesRisk.getStartTime());
   }
+
+  @Test
+  public void testTrafficLight() throws Exception {
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    TimeSeriesMLAnalysisRecord tsAnalysisRecord = null;
+    List<Double> expectedTimeSeries = new ArrayList<>();
+
+    File file = new File(getClass()
+                             .getClassLoader()
+                             .getResource("./verification/24_7_ts_transactionMetricRisk_regression.json")
+                             .getFile());
+    final Gson gson = new Gson();
+
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
+      List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = gson.fromJson(br, type);
+
+      int idx = 0;
+      for (int i = 0; i < timeSeriesMLAnalysisRecords.size(); i++) {
+        tsAnalysisRecord = timeSeriesMLAnalysisRecords.get(i);
+        tsAnalysisRecord.setAppId(appId);
+        tsAnalysisRecord.setCvConfigId(cvConfigId);
+        // 2nd record in json list contains the expected timeseries
+        // metrics.0.test.data contains 135 elements: 2hrs of history + 15mins of current heatmap unit
+        if (idx == 1
+            && tsAnalysisRecord.getTransactions().get("45").getMetrics().get("0").getMetric_name().equals(
+                   "95th Percentile Response Time (ms)")) {
+          expectedTimeSeries =
+              tsAnalysisRecord.getTransactions().get("45").getMetrics().get("0").getTest().getData().get(0);
+        }
+        idx++;
+      }
+      wingsPersistence.save(timeSeriesMLAnalysisRecords);
+    }
+
+    long startTime = 1541522760001L;
+    long endTime = 1541523660000L;
+    long historyStart = 1541515560001L;
+    SortedSet<TransactionTimeSeries> timeseries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
+        accountId, cvConfigId, startTime, endTime, historyStart);
+    TransactionTimeSeries apiArtifactsTransaction = null;
+    for (Iterator<TransactionTimeSeries> it = timeseries.iterator(); it.hasNext();) {
+      TransactionTimeSeries txnTimeSeries = it.next();
+      if (txnTimeSeries.getTransactionName().equals("/api/artifacts")) {
+        apiArtifactsTransaction = txnTimeSeries;
+        break;
+      }
+    }
+
+    TimeSeriesOfMetric apiArtifactsRespTimeTS = null;
+    for (Iterator<TimeSeriesOfMetric> it = apiArtifactsTransaction.getMetricTimeSeries().iterator(); it.hasNext();) {
+      TimeSeriesOfMetric metricTS = it.next();
+      if (metricTS.getMetricName().equals("95th Percentile Response Time (ms)")) {
+        apiArtifactsRespTimeTS = metricTS;
+        break;
+      }
+    }
+
+    assertEquals(-1, apiArtifactsRespTimeTS.getRisk());
+
+    List<Double> actualTimeSeries = new ArrayList<>();
+    for (TimeSeriesDataPoint datapoint : apiArtifactsRespTimeTS.getTimeSeries()) {
+      actualTimeSeries.add(datapoint.getValue());
+    }
+    assertEquals(135, actualTimeSeries.size());
+    assertEquals(expectedTimeSeries, actualTimeSeries);
+  }
 }
