@@ -1335,7 +1335,9 @@ public class UserServiceImpl implements UserService {
   @Override
   public boolean isUserVerified(User user) {
     if (user.getAccounts().size() > 0) {
-      return getPrimaryAccount(user).getAuthenticationMechanism().getType().equals("SSO") || user.isEmailVerified();
+      AuthenticationMechanism authenticationMechanism = getPrimaryAccount(user).getAuthenticationMechanism();
+      return (authenticationMechanism != null && authenticationMechanism.getType().equals("SSO"))
+          || user.isEmailVerified();
     }
     logger.warn("User [] has no accounts associated,", user.getEmail());
     return false;
