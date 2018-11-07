@@ -82,15 +82,7 @@ public class InstanceSyncJob implements Job {
         return;
       }
       final String appIdFinal = appId;
-      // The app level lock was a work around for the threading issue we observed in quartz scheduler. The execute() was
-      // getting called on all the managers. Its supposed to call it only on one manager. This is a way to stop that
-      // from happening.
-      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Application.class, appId, Duration.ofSeconds(60))) {
-        if (lock == null) {
-          return;
-        }
-        executorService.submit(() -> executeInternal(appIdFinal));
-      }
+      executorService.submit(() -> executeInternal(appIdFinal));
     } catch (WingsException exception) {
       // do nothing. Only one manager should acquire the lock.
     } catch (Exception ex) {
@@ -100,15 +92,26 @@ public class InstanceSyncJob implements Job {
 
   private void executeInternal(String appId) {
     try {
-      logger.info("Executing instance sync job for appId:" + appId);
-      PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
-      pageRequest.addFilter("appId", Operator.EQ, appId);
-      pageRequest.addOrder("envId", OrderType.ASC);
-      PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
-      // Response only contains id
-      List<InfrastructureMapping> infraMappingList = response.getResponse();
-      infraMappingList.forEach(infrastructureMapping -> { instanceHelper.syncNow(appId, infrastructureMapping); });
-      logger.info("Instance sync done for appId:" + appId);
+      // The app level lock was a work around for the threading issue we observed in quartz scheduler. The execute() was
+      // getting called on all the managers. Its supposed to call it only on one manager. This is a way to stop that
+      // from happening.
+      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Application.class, appId, Duration.ofSeconds(60))) {
+        if (lock == null) {
+          return;
+        }
+
+        logger.info("Executing instance sync job for appId:" + appId);
+
+        PageRequest<InfrastructureMapping> pageRequest = new PageRequest<>();
+        pageRequest.addFilter("appId", Operator.EQ, appId);
+        pageRequest.addOrder("envId", OrderType.ASC);
+        PageResponse<InfrastructureMapping> response = infraMappingService.list(pageRequest);
+        // Response only contains id
+        List<InfrastructureMapping> infraMappingList = response.getResponse();
+        infraMappingList.forEach(infrastructureMapping -> { instanceHelper.syncNow(appId, infrastructureMapping); });
+
+        logger.info("Instance sync done for appId:" + appId);
+      }
     } catch (WingsException exception) {
       WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception ex) {

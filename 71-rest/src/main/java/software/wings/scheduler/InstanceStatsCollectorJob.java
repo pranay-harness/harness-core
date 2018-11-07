@@ -61,15 +61,15 @@ public class InstanceStatsCollectorJob implements Job {
 
   @Override
   public void execute(JobExecutionContext jobExecutionContext) {
-    String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID);
-    Objects.requireNonNull(accountId, "Account Id must be passed in job context");
+    executorService.submit(() -> {
+      String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID);
+      Objects.requireNonNull(accountId, "Account Id must be passed in job context");
 
-    try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Account.class, accountId, Duration.ofSeconds(10))) {
-      if (lock == null) {
-        return;
-      }
+      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Account.class, accountId, Duration.ofSeconds(10))) {
+        if (lock == null) {
+          return;
+        }
 
-      executorService.submit(() -> {
         Stopwatch sw = Stopwatch.createStarted();
         boolean ranAtLeastOnce = statsCollector.createStats(accountId);
         if (ranAtLeastOnce) {
@@ -79,7 +79,7 @@ public class InstanceStatsCollectorJob implements Job {
           logger.info("No instance history stats were saved. Account Id: {}. Time taken: {} millis", accountId,
               sw.elapsed(TimeUnit.MILLISECONDS));
         }
-      });
-    }
+      }
+    });
   }
 }
