@@ -23,6 +23,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
 import software.wings.beans.LicenseInfo;
+import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
@@ -401,6 +402,24 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
 
   @Test
   public void testWithActualData() throws IOException {
+    readAndSaveAnalysisRecords();
+
+    List<HeatMap> heatMaps =
+        cvDashboardResource.getHeatMapSummary(accountId, appId, serviceId, 1541083500000L, 1541126700000L)
+            .getResource();
+    assertEquals(1, heatMaps.size());
+    assertEquals(48, heatMaps.get(0).getRiskLevelSummary().size());
+  }
+
+  @Test
+  public void testSortingFromDB() throws IOException {
+    String cvConfigId = readAndSaveAnalysisRecords();
+    RestResponse<SortedSet<TransactionTimeSeries>> timeSeries =
+        cvDashboardResource.getTimeSeriesOfHeatMapUnit(accountId, 1541164560000L, 1541177160000L, cvConfigId, 0);
+    assertEquals(7, timeSeries.getResource().size());
+  }
+
+  private String readAndSaveAnalysisRecords() throws IOException {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
                                                                    .tierId(generateUuid())
@@ -424,12 +443,90 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       });
       wingsPersistence.save(timeSeriesMLAnalysisRecords);
     }
+    return cvConfigId;
+  }
 
-    List<HeatMap> heatMaps =
-        cvDashboardResource.getHeatMapSummary(accountId, appId, serviceId, 1541083500000L, 1541126700000L)
+  @Test
+  public void testSorting() throws IOException {
+    long currentTime = System.currentTimeMillis();
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    final Gson gson = new Gson();
+    File file =
+        new File(getClass().getClassLoader().getResource("./verification/cv_24_7_analysis_record.json").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
+      timeSeriesMLAnalysisRecord = gson.fromJson(br, type);
+      timeSeriesMLAnalysisRecord.setAppId(appId);
+      timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+      timeSeriesMLAnalysisRecord.setAnalysisMinute((int) TimeUnit.MILLISECONDS.toMinutes(currentTime));
+      wingsPersistence.save(timeSeriesMLAnalysisRecord);
+    }
+
+    SortedSet<TransactionTimeSeries> timeSeries =
+        cvDashboardResource
+            .getTimeSeriesOfHeatMapUnit(accountId,
+                currentTime - TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES), currentTime, cvConfigId, 0)
             .getResource();
-    assertEquals(1, heatMaps.size());
-    assertEquals(48, heatMaps.get(0).getRiskLevelSummary().size());
+
+    assertEquals(9, timeSeries.size());
+    ArrayList<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
+    for (int i = 0; i < 8; i++) {
+      assertTrue(
+          timeSeriesList.get(i).getTransactionName().compareTo(timeSeriesList.get(i + 1).getTransactionName()) < 0);
+    }
+
+    timeSeriesMLAnalysisRecord.getTransactions().get("6").getMetrics().get("1").setMax_risk(2);
+    timeSeriesMLAnalysisRecord.getTransactions().get("6").getMetrics().get("0").setMax_risk(1);
+    timeSeriesMLAnalysisRecord.getTransactions().get("4").getMetrics().get("0").setMax_risk(2);
+    timeSeriesMLAnalysisRecord.getTransactions().get("2").getMetrics().get("0").setMax_risk(1);
+    timeSeriesMLAnalysisRecord.getTransactions().get("9").getMetrics().get("0").setMax_risk(1);
+    wingsPersistence.save(timeSeriesMLAnalysisRecord);
+
+    timeSeries = cvDashboardResource
+                     .getTimeSeriesOfHeatMapUnit(
+                         accountId, currentTime - TimeUnit.MINUTES.toMillis(15), currentTime, cvConfigId, 0)
+                     .getResource();
+
+    assertEquals(9, timeSeries.size());
+    timeSeriesList = new ArrayList<>(timeSeries);
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("6").getTxn_name(),
+        timeSeriesList.get(0).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("4").getTxn_name(),
+        timeSeriesList.get(1).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("2").getTxn_name(),
+        timeSeriesList.get(2).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("9").getTxn_name(),
+        timeSeriesList.get(3).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("3").getTxn_name(),
+        timeSeriesList.get(4).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("0").getTxn_name(),
+        timeSeriesList.get(5).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("7").getTxn_name(),
+        timeSeriesList.get(6).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("8").getTxn_name(),
+        timeSeriesList.get(7).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("1").getTxn_name(),
+        timeSeriesList.get(8).getTransactionName());
+
+    List<TimeSeriesOfMetric> metrics = new ArrayList<>(timeSeriesList.get(0).getMetricTimeSeries());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("6").getMetrics().get("1").getMetric_name(),
+        metrics.get(0).getMetricName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("6").getMetrics().get("0").getMetric_name(),
+        metrics.get(1).getMetricName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("6").getMetrics().get("2").getMetric_name(),
+        metrics.get(2).getMetricName());
   }
 
   @Test

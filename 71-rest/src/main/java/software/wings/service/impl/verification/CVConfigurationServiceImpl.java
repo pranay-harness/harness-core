@@ -84,12 +84,17 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   @Override
-  public <T extends CVConfiguration> List<T> listConfigurations(String accountId, String appId, String envId) {
+  public <T extends CVConfiguration> List<T> listConfigurations(
+      String accountId, String appId, String envId, StateType stateType) {
     Query<T> configurationQuery = (Query<T>) wingsPersistence.createQuery(CVConfiguration.class)
                                       .filter("accountId", accountId)
                                       .filter("appId", appId);
     if (isNotEmpty(envId)) {
       configurationQuery = configurationQuery.filter("envId", envId);
+    }
+
+    if (stateType != null) {
+      configurationQuery = configurationQuery.filter("stateType", stateType);
     }
 
     List<T> cvConfigurations = configurationQuery.asList();
