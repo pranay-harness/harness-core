@@ -14,10 +14,13 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class AwsEc2ListTagsRequest extends AwsEc2Request {
   private String region;
+  private String resourceType;
 
   @Builder
-  public AwsEc2ListTagsRequest(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
+  public AwsEc2ListTagsRequest(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String resourceType) {
     super(awsConfig, encryptionDetails, LIST_TAGS);
     this.region = region;
+    this.resourceType = resourceType;
   }
 }

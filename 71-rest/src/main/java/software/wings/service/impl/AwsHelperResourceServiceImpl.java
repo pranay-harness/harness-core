@@ -19,6 +19,7 @@ import software.wings.beans.NameValuePair.NameValuePairBuilder;
 import software.wings.beans.SettingAttribute;
 import software.wings.service.intfc.AwsHelperResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
@@ -38,7 +39,7 @@ import javax.validation.executable.ValidateOnExecution;
 public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
   @Inject private MainConfiguration mainConfiguration;
 
-  @Inject private AwsHelperService awsHelperService;
+  @Inject private AwsEc2HelperServiceManager awsEc2HelperServiceManager;
   @Inject private SettingsService settingService;
   @Inject private SecretManager secretManager;
 
@@ -79,8 +80,8 @@ public class AwsHelperResourceServiceImpl implements AwsHelperResourceService {
     ResourceType resourceType = resourceTypeStr == null ? ResourceType.Image : ResourceType.valueOf(resourceTypeStr);
     SettingAttribute computeProviderSetting = settingService.get(computeProviderId);
     AwsConfig awsConfig = validateAndGetAwsConfig(computeProviderSetting);
-    return awsHelperService.listTags(
-        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, resourceType);
+    return awsEc2HelperServiceManager.listTags(
+        awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null), region, appId, resourceType);
   }
 
   private AwsConfig validateAndGetAwsConfig(SettingAttribute computeProviderSetting) {

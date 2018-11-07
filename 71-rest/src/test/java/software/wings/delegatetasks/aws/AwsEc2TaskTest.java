@@ -54,7 +54,7 @@ public class AwsEc2TaskTest extends WingsBaseTest {
     verify(mockEc2ServiceDelegate).listSGs(any(), anyList(), anyString(), anyList());
     request = AwsEc2ListTagsRequest.builder().build();
     task.run(new Object[] {request});
-    verify(mockEc2ServiceDelegate).listTags(any(), anyList(), anyString());
+    verify(mockEc2ServiceDelegate).listTags(any(), anyList(), anyString(), anyString());
     request = AwsEc2ListInstancesRequest.builder().build();
     task.run(new Object[] {request});
     verify(mockEc2ServiceDelegate).listEc2Instances(any(), anyList(), anyString(), anyList());

@@ -120,7 +120,8 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
     doReturn(new DescribeTagsResult().withTags(new TagDescription().withKey("k1"), new TagDescription().withKey("k2")))
         .when(mockClient)
         .describeTags(any());
-    Set<String> tags = awsEc2HelperServiceDelegate.listTags(AwsConfig.builder().build(), emptyList(), "us-east-1");
+    Set<String> tags =
+        awsEc2HelperServiceDelegate.listTags(AwsConfig.builder().build(), emptyList(), "us-east-1", "instance");
     assertThat(tags).isNotNull();
     assertThat(tags.size()).isEqualTo(2);
     assertThat(tags.contains("k1")).isTrue();

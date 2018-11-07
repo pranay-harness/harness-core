@@ -75,8 +75,8 @@ public class AwsEc2Task extends AbstractDelegateRunnableTask {
           return AwsEc2ListSGsResponse.builder().securityGroups(securityGroups).executionStatus(SUCCESS).build();
         }
         case LIST_TAGS: {
-          Set<String> tags = ec2ServiceDelegate.listTags(
-              request.getAwsConfig(), request.getEncryptionDetails(), ((AwsEc2ListTagsRequest) request).getRegion());
+          Set<String> tags = ec2ServiceDelegate.listTags(request.getAwsConfig(), request.getEncryptionDetails(),
+              ((AwsEc2ListTagsRequest) request).getRegion(), ((AwsEc2ListTagsRequest) request).getResourceType());
           return AwsEc2ListTagsResponse.builder().tags(tags).executionStatus(SUCCESS).build();
         }
         case LIST_INSTANCES: {
