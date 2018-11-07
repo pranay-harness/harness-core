@@ -43,6 +43,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.Account.Builder;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.security.AppPermission;
@@ -401,7 +402,19 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   private User createUser(String userId) {
-    return anUser().withUuid(userId).withAppId(APP_ID).withEmailVerified(true).withEmail(USER_EMAIL).build();
+    Account account = Builder.anAccount()
+                          .withUuid(ACCOUNT_ID)
+                          .withCompanyName(COMPANY_NAME)
+                          .withAccountName(ACCOUNT_NAME)
+                          .withAuthenticationMechanism(AuthenticationMechanism.USER_PASSWORD)
+                          .build();
+    return anUser()
+        .withUuid(userId)
+        .withAppId(APP_ID)
+        .withEmailVerified(true)
+        .withEmail(USER_EMAIL)
+        .withAccounts(asList(account))
+        .build();
   }
 
   private UserGroup createUserGroup(List<String> memberIds) {
