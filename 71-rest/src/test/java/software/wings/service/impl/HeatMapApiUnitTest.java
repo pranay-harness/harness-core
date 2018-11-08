@@ -703,4 +703,42 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       }
     }
   }
+
+  @Test
+  public void testRiskSortLevel() throws Exception {
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    File file = new File(getClass().getClassLoader().getResource("./verification/multi-risk-sorting.json").getFile());
+    final Gson gson = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
+      List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = gson.fromJson(br, type);
+      timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setAppId(appId);
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+      });
+      wingsPersistence.save(timeSeriesMLAnalysisRecords);
+    }
+    SortedSet<TransactionTimeSeries> timeSeries =
+        cvDashboardResource
+            .getTimeSeriesOfHeatMapUnit(accountId, 1541688360001l, 1541689260000l, cvConfigId, 1541681160001l)
+            .getResource();
+
+    ArrayList<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
+    for (int i = 0; i < timeSeriesList.size() - 1; i++) {
+      assertTrue(timeSeriesList.get(i).getMetricTimeSeries().first().getRisk()
+          >= timeSeriesList.get(i + 1).getMetricTimeSeries().first().getRisk());
+    }
+    assertEquals("/api/setup-as-code", timeSeriesList.get(0).getTransactionName());
+  }
 }
