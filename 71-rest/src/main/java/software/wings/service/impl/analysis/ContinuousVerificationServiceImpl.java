@@ -659,8 +659,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       long startTime, long endTime, CVConfiguration cvConfiguration, long historyStartTime) {
     // 1. Get time series for the entire duration from historyStartTime to endTime
     // 2. Pass startTime as the riskCutOffTime as that's the starting point where we consider risk
-    if (historyStartTime == 0) {
-      historyStartTime = startTime - TimeUnit.HOURS.toMillis(2);
+    if (TimeUnit.MILLISECONDS.toDays(endTime - historyStartTime) > 30L) {
+      historyStartTime = startTime - TimeUnit.HOURS.toMillis(2) + 1;
     }
     return getTimeSeriesForTimeRange(historyStartTime, endTime, cvConfiguration, startTime);
   }
@@ -738,7 +738,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
               long timestamp =
                   TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1;
-              timestamp = Timestamp.minuteBoundary(timestamp);
+              timestamp = Timestamp.nextMinuteBoundary(timestamp);
               long period = TimeUnit.MINUTES.toMillis(1);
               for (int j = 0; j < datapoints.size(); j++, timestamp += period) {
                 if (timestamp > endTime) {
@@ -804,9 +804,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
   public SortedSet<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
       String accountId, String cvConfigId, long startTime, long endTime, long historyStartTime) {
-    startTime = Timestamp.minuteBoundary(startTime);
+    startTime = Timestamp.nextMinuteBoundary(startTime);
     endTime = Timestamp.minuteBoundary(endTime);
-    historyStartTime = Timestamp.minuteBoundary(historyStartTime);
+    historyStartTime = Timestamp.nextMinuteBoundary(historyStartTime);
     CVConfiguration cvConfiguration =
         wingsPersistence.createQuery(CVConfiguration.class).filter("_id", cvConfigId).get();
     if (cvConfiguration == null) {
