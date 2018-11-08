@@ -8,7 +8,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
+import software.wings.metrics.RiskLevel;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -39,14 +42,38 @@ public class TransactionTimeSeries implements Comparable<TransactionTimeSeries> 
       return 1;
     }
 
-    AtomicInteger thisRisk = new AtomicInteger();
-    metricTimeSeries.forEach(metric -> thisRisk.addAndGet(metric.getRisk()));
+    Map<RiskLevel, Integer> thisRiskMap = new HashMap<RiskLevel, Integer>() {
+      {
+        for (RiskLevel level : RiskLevel.values()) {
+          put(level, 0);
+        }
+      }
+    };
+    metricTimeSeries.forEach(metric -> {
+      if (metric.getRisk() != -1) {
+        RiskLevel thisLevel = RiskLevel.getRiskLevel(metric.getRisk());
+        thisRiskMap.put(thisLevel, thisRiskMap.get(thisLevel) + 1);
+      }
+    });
 
-    AtomicInteger otherRisk = new AtomicInteger();
-    o.metricTimeSeries.forEach(metric -> otherRisk.addAndGet(metric.getRisk()));
+    Map<RiskLevel, Integer> otherRiskMap = new HashMap<RiskLevel, Integer>() {
+      {
+        for (RiskLevel level : RiskLevel.values()) {
+          put(level, 0);
+        }
+      }
+    };
+    o.metricTimeSeries.forEach(metric -> {
+      if (metric.getRisk() != -1) {
+        RiskLevel thisLevel = RiskLevel.getRiskLevel(metric.getRisk());
+        otherRiskMap.put(thisLevel, otherRiskMap.get(thisLevel) + 1);
+      }
+    });
 
-    if (otherRisk.get() != thisRisk.get()) {
-      return otherRisk.get() - thisRisk.get();
+    for (RiskLevel level : RiskLevel.values()) {
+      if (!otherRiskMap.get(level).equals(thisRiskMap.get(level))) {
+        return otherRiskMap.get(level) - thisRiskMap.get(level);
+      }
     }
 
     // compare the first metric list of both and order

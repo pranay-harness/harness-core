@@ -568,7 +568,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               .startTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
               .endTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()))
               .build();
-      heatMapUnit.increment(getRiskLevel(getMaxRiskLevel(record)));
+      heatMapUnit.increment(RiskLevel.getRiskLevel(getMaxRiskLevel(record)));
       unitsFromDB.add(heatMapUnit);
     });
 
@@ -779,27 +779,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(recordEndTime))
         .order("analysisMinute")
         .fetch();
-  }
-
-  private RiskLevel getRiskLevel(int risk) {
-    RiskLevel riskLevel;
-    switch (risk) {
-      case -1:
-        riskLevel = RiskLevel.NA;
-        break;
-      case 0:
-        riskLevel = RiskLevel.LOW;
-        break;
-      case 1:
-        riskLevel = RiskLevel.MEDIUM;
-        break;
-      case 2:
-        riskLevel = RiskLevel.HIGH;
-        break;
-      default:
-        throw new IllegalArgumentException("Unknown risk level " + risk);
-    }
-    return riskLevel;
   }
 
   public SortedSet<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
