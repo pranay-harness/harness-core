@@ -147,7 +147,8 @@ public class MigrationList {
         .add(Pair.of(199, YamlGitConfigAppMigration.class))
         .add(Pair.of(200, UpdateGitSyncErrorMigration.class))
         .add(Pair.of(201, RemoveDupInstanceStats.class))
-        .add(Pair.of(202, UpdateGitSyncErrorMigration.class)) // This is intentional.
+        .add(Pair.of(202, RemoveDupInstanceStats.class))
+        .add(Pair.of(203, UpdateGitSyncErrorMigration.class)) // This is intentional.
         .build();
   }
 }
