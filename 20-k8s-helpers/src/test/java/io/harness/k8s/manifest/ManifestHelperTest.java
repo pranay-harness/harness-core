@@ -62,6 +62,24 @@ public class ManifestHelperTest {
   }
 
   @Test
+  public void invalidYamlTest() {
+    try {
+      processYaml(":");
+    } catch (KubernetesYamlException e) {
+      assertThat(e.getMessage()).isEqualTo("Error parsing YAML.");
+    }
+  }
+
+  @Test
+  public void invalidYamlObjectTest() {
+    try {
+      processYaml("object");
+    } catch (KubernetesYamlException e) {
+      assertThat(e.getMessage()).isEqualTo("Invalid Yaml. Object is not a map.");
+    }
+  }
+
+  @Test
   public void processYamlMissingKindTest() throws Exception {
     URL url = this.getClass().getResource("/missing-kind.yaml");
     String fileContents = Resources.toString(url, Charsets.UTF_8);

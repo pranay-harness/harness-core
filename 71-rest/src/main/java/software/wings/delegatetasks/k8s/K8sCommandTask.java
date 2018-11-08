@@ -54,6 +54,8 @@ public class K8sCommandTask extends AbstractDelegateRunnableTask {
       K8sCommandTaskParams k8sCommandTaskParams =
           K8sCommandTaskParams.builder().kubeconfigPath(KUBECONFIG_FILENAME).workingDirectory(workingDirectory).build();
 
+      logger.info("Starting task execution for Command {}", k8sCommandRequest.getCommandType().name());
+
       return k8sCommandTaskTypeToTaskHandlerMap.get(k8sCommandRequest.getCommandType().name())
           .executeTask(k8sCommandRequest, k8sCommandTaskParams);
     } catch (Exception ex) {

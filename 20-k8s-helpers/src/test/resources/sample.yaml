@@ -1,13 +1,16 @@
 persons:
 - name: joe
+  age: 20
   favorites:
     fruits: [mango]
     drinks: [tea, coffee]
 - name: nick
+  age: 21
   favorites:
     fruits: [kiwi, apple]
     drinks: [tea]
 - name: john
+  age: 22
   favorites:
     fruits: [mango]
     drinks: [coffee]

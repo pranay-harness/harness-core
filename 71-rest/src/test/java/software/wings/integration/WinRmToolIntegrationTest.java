@@ -6,7 +6,6 @@ import io.cloudsoft.winrm4j.client.ShellCommand;
 import io.cloudsoft.winrm4j.client.WinRmClient;
 import io.cloudsoft.winrm4j.client.WinRmClientContext;
 import io.cloudsoft.winrm4j.winrm.WinRmTool;
-import org.apache.http.client.config.AuthSchemes;
 import org.junit.Ignore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +71,7 @@ public class WinRmToolIntegrationTest {
     WinRmClientContext context = WinRmClientContext.newInstance();
 
     WinRmTool.Builder builder = WinRmTool.Builder.builder("104.209.40.95", "harnessadmin1", "H@rnessH@rness");
-    builder.authenticationScheme(AuthSchemes.NTLM);
+    //    builder.authenticationScheme(AuthSchemes.NTLM);
     builder.port(5986);
     builder.useHttps(true);
     builder.disableCertificateChecks(true);

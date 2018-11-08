@@ -47,7 +47,8 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   RESIZE_KUBERNETES(KubernetesResizeCommandUnit.class, "Resize Kubernetes Service", StencilCategory.CONTAINERS,
       DEFAULT_DISPLAY_ORDER),
   DOWNLOAD_ARTIFACT(
-      DownloadArtifactCommandUnit.class, "Download Artifact", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER);
+      DownloadArtifactCommandUnit.class, "Download Artifact", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
+  K8S_DUMMY(K8sDummyCommandUnit.class, "K8s Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER);
 
   private static final String stencilsPath = "/templates/commandstencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";

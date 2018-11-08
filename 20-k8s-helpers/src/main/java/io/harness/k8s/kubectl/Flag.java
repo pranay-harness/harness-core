@@ -7,5 +7,12 @@ public enum Flag {
       return "dry-run";
     }
   },
-  record
+  record,
+  watch,
+  watchOnly {
+    @Override
+    public String toString() {
+      return "watch-only";
+    }
+  }
 }

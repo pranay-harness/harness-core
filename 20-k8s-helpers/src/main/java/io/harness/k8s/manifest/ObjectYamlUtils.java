@@ -1,5 +1,6 @@
 package io.harness.k8s.manifest;
 
+import static io.harness.govern.Switch.noop;
 import static java.util.Arrays.asList;
 
 import com.esotericsoftware.yamlbeans.YamlConfig;
@@ -30,6 +31,8 @@ public class ObjectYamlUtils {
 
   private static final String dotMatchRegex = "\\.";
   private static final String encodedDot = "[dot]";
+  public static final String YAML_DOCUMENT_DELIMITER = "---";
+  private static final String newLineRegex = "\\r?\\n";
 
   private static boolean isCollection(String str) {
     return str.endsWith("]");
@@ -80,6 +83,15 @@ public class ObjectYamlUtils {
     return result;
   }
 
+  public static Object tryReadYaml(String yamlString) {
+    try {
+      return readYaml(yamlString).get(0);
+    } catch (YamlException e) {
+      noop();
+    }
+    return null;
+  }
+
   public static String toYaml(Object resource) throws YamlException {
     YamlConfig yamlConfig = new YamlConfig();
     yamlConfig.writeConfig.setIndentSize(2);
@@ -92,6 +104,31 @@ public class ObjectYamlUtils {
     yamlWriter.close();
 
     return out.toString();
+  }
+
+  public static List<String> splitYamlFile(String yamlString) {
+    List<String> results = new ArrayList<>();
+    String[] lines = yamlString.split(newLineRegex);
+    StringBuilder builder = new StringBuilder();
+
+    for (String line : lines) {
+      if ((line.length() >= YAML_DOCUMENT_DELIMITER.length()
+              && !line.substring(0, YAML_DOCUMENT_DELIMITER.length()).equals(YAML_DOCUMENT_DELIMITER))
+          || (line.length() < YAML_DOCUMENT_DELIMITER.length())) {
+        builder.append(line).append(System.lineSeparator());
+      } else {
+        if (!builder.toString().isEmpty()) {
+          results.add(builder.toString());
+        }
+        builder.setLength(0);
+      }
+    }
+
+    if (!builder.toString().isEmpty()) {
+      results.add(builder.toString());
+    }
+
+    return results;
   }
 
   public static Object getField(Object object, String key) {

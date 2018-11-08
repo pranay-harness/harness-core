@@ -27,6 +27,10 @@ public class Kubectl {
     return new GetCommand(this);
   }
 
+  public RolloutCommand rollout() {
+    return new RolloutCommand(this);
+  }
+
   public String command() {
     StringBuilder command = new StringBuilder(128);
     if (StringUtils.isNotBlank(kubectlPath)) {
@@ -48,5 +52,9 @@ public class Kubectl {
 
   public static String flag(Flag type) {
     return "--" + type.toString() + " ";
+  }
+
+  public static String flag(Flag type, boolean value) {
+    return "--" + type.toString() + "=" + value + " ";
   }
 }

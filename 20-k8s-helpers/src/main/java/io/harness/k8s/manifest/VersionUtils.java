@@ -1,9 +1,6 @@
 package io.harness.k8s.manifest;
 
-import static io.harness.govern.Switch.unhandled;
 import static io.harness.k8s.manifest.ObjectYamlUtils.encodeDot;
-import static io.harness.k8s.manifest.ObjectYamlUtils.getField;
-import static io.harness.k8s.manifest.ObjectYamlUtils.transformField;
 import static io.harness.k8s.model.Kind.ConfigMap;
 import static io.harness.k8s.model.Kind.DaemonSet;
 import static io.harness.k8s.model.Kind.Deployment;
@@ -12,11 +9,9 @@ import static io.harness.k8s.model.Kind.Pod;
 import static io.harness.k8s.model.Kind.Secret;
 import static io.harness.k8s.model.Kind.StatefulSet;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
 import io.harness.k8s.model.HarnessAnnotations;
-import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import org.apache.commons.lang3.StringUtils;
@@ -31,12 +26,6 @@ public class VersionUtils {
   private static Set<String> versionedKinds = ImmutableSet.of(ConfigMap.name(), Secret.name());
   private static Set<String> workloadKinds =
       ImmutableSet.of(Deployment.name(), DaemonSet.name(), StatefulSet.name(), Pod.name(), Job.name());
-
-  private static List<String> configMapPodRefFields =
-      ImmutableList.of("containers[].env[].valueFrom.configMapKeyRef.name", "containers[].envFrom[].configMapRef.name",
-          "volumes[].configMap.name");
-
-  private static List<String> secretPodRefFields = ImmutableList.of("volumes[].secret.secretName");
 
   private static boolean shouldVersion(KubernetesResource resource) {
     if (versionedKinds.contains(resource.getResourceId().getKind())) {
@@ -57,30 +46,14 @@ public class VersionUtils {
     return false;
   }
 
-  private static Object getPodSpec(KubernetesResource resource) {
-    Kind kind = Kind.valueOf(resource.getResourceId().getKind());
-    switch (kind) {
-      case Deployment:
-      case StatefulSet:
-      case DaemonSet:
-      case Job:
-        return getField(resource.getValue(), "spec.template.spec");
-      case Pod:
-        return getField(resource.getValue(), "spec");
-      default:
-        unhandled(kind);
-    }
-    return null;
-  }
-
   public static void addRevisionNumber(List<KubernetesResource> resources, int revision) {
     Set<KubernetesResourceId> versionedResources = new HashSet<>();
     UnaryOperator<Object> appendRevision = t -> t + revisionSeparator + revision;
 
     for (KubernetesResource resource : resources) {
       if (shouldVersion(resource)) {
-        versionedResources.add(resource.getResourceId());
-        resource.transformField("metadata.name", appendRevision);
+        versionedResources.add(resource.getResourceId().cloneInternal());
+        resource.transformName(appendRevision);
       }
     }
 
@@ -110,14 +83,7 @@ public class VersionUtils {
           return t;
         };
 
-        Object podSpec = getPodSpec(resource);
-        for (String configMapRef : configMapPodRefFields) {
-          transformField(podSpec, configMapRef, updateConfigMapReference);
-        }
-
-        for (String secretRef : secretPodRefFields) {
-          transformField(podSpec, secretRef, updateSecretReference);
-        }
+        resource.transformConfigMapAndSecretRef(updateConfigMapReference, updateSecretReference);
       }
     }
   }

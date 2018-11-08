@@ -8,7 +8,7 @@ public class ApplyCommand extends AbstractExecutable {
   private String namespace;
   private boolean dryrun;
   private boolean record;
-  private OutputFormat output;
+  private String output;
 
   public ApplyCommand(Kubectl client) {
     this.client = client;
@@ -34,7 +34,7 @@ public class ApplyCommand extends AbstractExecutable {
     return this;
   }
 
-  public ApplyCommand output(OutputFormat output) {
+  public ApplyCommand output(String output) {
     this.output = output;
     return this;
   }
@@ -60,7 +60,7 @@ public class ApplyCommand extends AbstractExecutable {
     }
 
     if (this.output != null) {
-      command.append(Kubectl.option(Option.output, output.toString()));
+      command.append(Kubectl.option(Option.output, output));
     }
 
     return command.toString().trim();

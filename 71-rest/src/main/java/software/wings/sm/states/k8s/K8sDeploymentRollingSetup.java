@@ -5,6 +5,7 @@ import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -25,6 +26,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
+import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
@@ -100,8 +102,11 @@ public class K8sDeploymentRollingSetup extends State {
         throw new InvalidRequestException("Manifests not found for service.");
       }
 
-      Activity activity = k8sStateHelper.createK8sActivity(
-          context, K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME, getStateType(), activityService);
+      Activity activity = k8sStateHelper.createK8sActivity(context, K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME,
+          getStateType(), activityService,
+          ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
+              new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply),
+              new K8sDummyCommandUnit(K8sDummyCommandUnit.StatusCheck)));
 
       K8sCommandRequest commandRequest =
           K8sDeploymentRollingSetupRequest.builder()

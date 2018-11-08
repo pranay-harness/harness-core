@@ -12,6 +12,7 @@ import org.junit.Test;
 import java.net.URL;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 
 public class KubernetesResourceTest {
   @Test
@@ -95,5 +96,19 @@ public class KubernetesResourceTest {
     assertThat(labels.get("app")).isEqualTo("nginx");
     assertThat(labels.get("key1")).isEqualTo("value1");
     assertThat(labels.get("key2")).isEqualTo("value2");
+  }
+
+  @Test
+  public void nameUpdateTests() throws Exception {
+    URL url = this.getClass().getResource("/deploy.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+    KubernetesResource resource = ManifestHelper.processYaml(fileContents).get(0);
+    UnaryOperator<Object> appendRevision = t -> t + "-1";
+
+    String oldName = (String) resource.getField("metadata.name");
+
+    resource.transformName(appendRevision);
+
+    assertThat(resource.getField("metadata.name")).isEqualTo(oldName + "-1");
   }
 }
