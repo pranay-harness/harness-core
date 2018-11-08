@@ -25,12 +25,29 @@ import javax.validation.constraints.NotNull;
  */
 public interface UserService {
   /**
-   * Register.
+   * Register a new user with basic account information. Create the account if that
+   * account did not exist.
    *
    * @param user the user
    * @return the user
    */
   @ValidationGroups(Create.class) User register(@Valid User user);
+
+  /**
+   * Start the trial registration with an email.
+   *
+   * @param email the email of the user who is registering for a trial account.
+   */
+  boolean trialSignup(String email);
+
+  /**
+   * Register a new user within an existing account.
+   *
+   * @param user the user
+   * @param account the account the user should be registered to
+   * @return the user
+   */
+  User registerNewUser(User user, Account account);
 
   /**
    * Match password.
@@ -167,8 +184,12 @@ public interface UserService {
    */
   Account addAccount(Account account, User user);
 
-  User registerNewUser(User user, Account account);
-
+  /**
+   * Retrieve an user by its email.
+   *
+   * @param email
+   * @return
+   */
   User getUserByEmail(String email);
 
   /**
@@ -265,6 +286,16 @@ public interface UserService {
    * @return the user invite
    */
   UserInvite completeInvite(UserInvite userInvite);
+
+  /**
+   * Complete the trial user signup. Both the trial account and the account admin user will be created
+   * as part of this operation.
+   *
+   * @param user The user to be signed up for a free trial
+   * @param userInvite the user invite.
+   * @return the completed user invite
+   */
+  UserInvite completeTrialSignup(User user, UserInvite userInvite);
 
   /**
    * Delete invite user invite.

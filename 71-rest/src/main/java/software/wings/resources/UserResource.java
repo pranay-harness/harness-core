@@ -160,7 +160,7 @@ public class UserResource {
   }
 
   /**
-   * Register.
+   * Register a user with account/company name. The user and account will be created as part of this operation
    *
    * @param user the user
    * @return the rest response
@@ -172,6 +172,22 @@ public class UserResource {
   public RestResponse<User> register(User user) {
     user.setAppId(GLOBAL_APP_ID);
     return new RestResponse<>(userService.register(user));
+  }
+
+  /**
+   *  Start the trial registration with an email. A verification/signup email will be sent to the
+   *  specified email address for the next steps in completing the signup process.
+   *
+   * @param email the email of the user who is registering for a trial account.
+   */
+  @PublicApi
+  @POST
+  @Path("trial")
+  @Consumes(MediaType.TEXT_PLAIN)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> trialSignup(String email) {
+    return new RestResponse<>(userService.trialSignup(email));
   }
 
   @POST
@@ -755,7 +771,7 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> refreshToken(@HeaderParam(HttpHeaders.AUTHORIZATION) String oldToken) {
-    return new RestResponse<String>(authenticationManager.refreshToken(oldToken));
+    return new RestResponse<>(authenticationManager.refreshToken(oldToken));
   }
 
   /**
@@ -776,6 +792,25 @@ public class UserResource {
     userInvite.setAccountId(accountId);
     userInvite.setUuid(inviteId);
     return new RestResponse<>(userService.completeInvite(userInvite));
+  }
+
+  @PublicApi
+  @PUT
+  @Path("invites/trial/{inviteId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<UserInvite> completeTrialSignup(@QueryParam("account") @NotEmpty String accountName,
+      @QueryParam("company") @NotEmpty String companyName, @PathParam("inviteId") @NotEmpty String inviteId,
+      @NotNull UserInvite userInvite) {
+    userInvite.setUuid(inviteId);
+    User user = User.Builder.anUser()
+                    .withEmail(userInvite.getEmail())
+                    .withName(userInvite.getName())
+                    .withPassword(userInvite.getPassword())
+                    .withAccountName(accountName)
+                    .withCompanyName(companyName)
+                    .build();
+    return new RestResponse<>(userService.completeTrialSignup(user, userInvite));
   }
 
   /**

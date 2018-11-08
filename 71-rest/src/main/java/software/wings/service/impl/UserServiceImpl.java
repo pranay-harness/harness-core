@@ -7,11 +7,9 @@ import static io.harness.beans.SearchFilter.Operator.IN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCOUNT_DOES_NOT_EXIT;
-import static io.harness.eraro.ErrorCode.DOMAIN_NOT_ALLOWED_TO_REGISTER;
 import static io.harness.eraro.ErrorCode.EMAIL_VERIFICATION_TOKEN_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.EXPIRED_TOKEN;
 import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.INVALID_EMAIL;
 import static io.harness.eraro.ErrorCode.ROLE_DOES_NOT_EXIST;
@@ -81,16 +79,22 @@ import org.slf4j.LoggerFactory;
 import software.wings.app.MainConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.AccountRole;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.ApplicationRole;
 import software.wings.beans.EmailVerificationToken;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.Role;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInvite.UserInviteBuilder;
+import software.wings.beans.UserInviteSource;
+import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.ZendeskSsoLoginResponse;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOSettings;
+import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.security.PermissionAttribute.Action;
@@ -142,8 +146,8 @@ public class UserServiceImpl implements UserService {
   public static final String ADD_ROLE_EMAIL_TEMPLATE_NAME = "add_role";
   public static final String SIGNUP_EMAIL_TEMPLATE_NAME = "signup";
   public static final String INVITE_EMAIL_TEMPLATE_NAME = "invite";
+  public static final String INVITE_TRIAL_EMAIL_TEMPLATE_NAME = "invite_trial";
   private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
-  public static final int JWT_TOKEN_VALIDITY_DURATION = 3 * 60 * 1000; // 3 min
 
   /**
    * The Executor service.
@@ -161,7 +165,7 @@ public class UserServiceImpl implements UserService {
   @Inject private CacheHelper cacheHelper;
   @Inject private AuthHandler authHandler;
   @Inject private SecretManager secretManager;
-  @Inject TwoFactorAuthenticationManager twoFactorAuthenticationManager;
+  @Inject private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   @Inject private SSOSettingService ssoSettingService;
   @Inject private SamlClientService samlClientService;
 
@@ -186,15 +190,51 @@ public class UserServiceImpl implements UserService {
       user.setCompanyName(user.getCompanyName().trim());
     }
 
-    if (!domainAllowedToRegister(user.getEmail())) {
-      logger.warn("DOMAIN_NOT_ALLOWED_TO_REGISTER for user - {}", user.toString());
-      throw new WingsException(DOMAIN_NOT_ALLOWED_TO_REGISTER);
-    }
     verifyRegisteredOrAllowed(user.getEmail());
+
     Account account = setupAccount(user.getAccountName(), user.getCompanyName());
     User savedUser = registerNewUser(user, account);
     executorService.execute(() -> sendVerificationEmail(savedUser));
     return savedUser;
+  }
+
+  /**
+   * Trial/Freemium user invitation won't create account. The freemium account will be created only at time of
+   * invitation completion.
+   */
+  @Override
+  public boolean trialSignup(String email) {
+    if (!configuration.isTrialRegistrationAllowed()) {
+      throw new WingsException(GENERAL_ERROR).addParam("message", "Trial user/account registration is disabled.");
+    }
+
+    final String emailAddress = email.trim().toLowerCase();
+    verifyEmailRegisteredOrAllowed(emailAddress, false);
+
+    UserInvite userInvite = getUserInviteByEmail(emailAddress);
+    if (userInvite == null) {
+      // Create a new user invite to track the invitation status
+      userInvite = new UserInvite();
+      userInvite.setSource(UserInviteSource.builder().type(SourceType.TRIAL).build());
+      userInvite.setEmail(emailAddress);
+      userInvite.setCompleted(false);
+
+      String inviteId = wingsPersistence.save(userInvite);
+      userInvite.setUuid(inviteId);
+
+      // Send an email invitation for the trial user to finish up the sign-up with additional information
+      // such as password, account/company name information.
+      sendNewInvitationMail(userInvite, null);
+    } else if (userInvite.isCompleted()) {
+      throw new WingsException(GENERAL_ERROR).addParam("message", "User invite for " + email + " has been completed.");
+    } else {
+      throw new WingsException(GENERAL_ERROR)
+          .addParam("message",
+              "User invite for " + email + " exists and is pending, "
+                  + "please finish the signup process through your verification email.");
+    }
+
+    return true;
   }
 
   @Override
@@ -273,6 +313,14 @@ public class UserServiceImpl implements UserService {
     return user;
   }
 
+  private UserInvite getUserInviteByEmail(String email) {
+    UserInvite userInvite = null;
+    if (isNotEmpty(email)) {
+      userInvite = wingsPersistence.createQuery(UserInvite.class).filter("email", email).get();
+    }
+    return userInvite;
+  }
+
   private void loadUserGroups(String accountId, User user, boolean loadUsers) {
     List<UserGroup> userGroupList = getUserGroupsOfUser(accountId, user.getUuid(), loadUsers);
     user.setUserGroups(userGroupList);
@@ -326,6 +374,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public void verifyRegisteredOrAllowed(String email) {
+    verifyEmailRegisteredOrAllowed(email, true);
+  }
+
+  private void verifyEmailRegisteredOrAllowed(String email, boolean verifyAllowedDomain) {
     if (isBlank(email)) {
       throw new WingsException(INVALID_EMAIL, USER);
     }
@@ -335,14 +387,13 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(INVALID_EMAIL, USER);
     }
 
-    User existingUser = getUserByEmail(emailAddress);
-
-    if (existingUser != null && existingUser.isEmailVerified()) {
-      throw new WingsException(USER_ALREADY_REGISTERED, USER);
+    if (verifyAllowedDomain && !domainAllowedToRegister(emailAddress)) {
+      throw new WingsException(USER_DOMAIN_NOT_ALLOWED, USER);
     }
 
-    if (!domainAllowedToRegister(emailAddress)) {
-      throw new WingsException(USER_DOMAIN_NOT_ALLOWED, USER);
+    User existingUser = getUserByEmail(emailAddress);
+    if (existingUser != null && existingUser.isEmailVerified()) {
+      throw new WingsException(USER_ALREADY_REGISTERED, USER);
     }
   }
 
@@ -540,12 +591,17 @@ public class UserServiceImpl implements UserService {
   private Map<String, String> getNewInvitationTemplateModel(UserInvite userInvite, Account account)
       throws URISyntaxException {
     Map<String, String> model = new HashMap<>();
-    String inviteUrl =
-        buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
-            account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
-    model.put("url", inviteUrl);
-    model.put("company", account.getCompanyName());
+    final String inviteUrl;
+    if (account == null) {
+      inviteUrl = buildAbsoluteUrl(format("/invite?email=%s&inviteId=%s", userInvite.getEmail(), userInvite.getUuid()));
+    } else {
+      inviteUrl =
+          buildAbsoluteUrl(format("/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s", account.getUuid(),
+              account.getAccountName(), account.getCompanyName(), userInvite.getEmail(), userInvite.getUuid()));
+      model.put("company", account.getCompanyName());
+    }
     model.put("name", userInvite.getEmail());
+    model.put("url", inviteUrl);
     return model;
   }
 
@@ -555,12 +611,22 @@ public class UserServiceImpl implements UserService {
       Map<String, String> templateModel = getNewInvitationTemplateModel(userInvite, account);
       List<String> toList = new ArrayList<>();
       toList.add(userInvite.getEmail());
-      EmailData emailData = EmailData.builder()
-                                .to(toList)
-                                .templateName(INVITE_EMAIL_TEMPLATE_NAME)
-                                .templateModel(templateModel)
-                                .accountId(account.getUuid())
-                                .build();
+      final EmailData emailData;
+      if (account == null) {
+        emailData = EmailData.builder()
+                        .to(toList)
+                        .templateName(INVITE_TRIAL_EMAIL_TEMPLATE_NAME)
+                        .templateModel(templateModel)
+                        .build();
+      } else {
+        emailData = EmailData.builder()
+                        .to(toList)
+                        .templateName(INVITE_EMAIL_TEMPLATE_NAME)
+                        .templateModel(templateModel)
+                        .accountId(account.getUuid())
+                        .build();
+      }
+
       emailData.setCc(Collections.emptyList());
       emailData.setRetries(2);
 
@@ -652,7 +718,7 @@ public class UserServiceImpl implements UserService {
       return existingInvite;
     }
     if (userInvite.getName() == null || userInvite.getPassword() == null) {
-      throw new InvalidRequestException("User name/password", USER);
+      throw new InvalidRequestException("User name/password is not provided", USER);
     }
 
     User existingUser = getUserByEmail(existingInvite.getEmail());
@@ -667,8 +733,68 @@ public class UserServiceImpl implements UserService {
     }
 
     wingsPersistence.updateField(UserInvite.class, existingInvite.getUuid(), "completed", true);
+    wingsPersistence.updateField(UserInvite.class, existingInvite.getUuid(), "agreement", userInvite.isAgreement());
     existingInvite.setCompleted(true);
     return existingInvite;
+  }
+
+  @Override
+  public UserInvite completeTrialSignup(User user, UserInvite userInvite) {
+    if (user.getAccountName() == null || user.getCompanyName() == null) {
+      throw new InvalidRequestException("Account/company name is not provided", USER);
+    }
+    if (isEmpty(user.getName()) || isEmpty(user.getPassword())) {
+      throw new InvalidRequestException("User's name/password is not provided", USER);
+    }
+
+    UserInvite existingInvite = wingsPersistence.get(UserInvite.class, userInvite.getUuid());
+    if (existingInvite == null) {
+      throw new WingsException(USER_INVITATION_DOES_NOT_EXIST, USER);
+    } else if (existingInvite.isCompleted()) {
+      return existingInvite;
+    }
+
+    String email = existingInvite.getEmail();
+    User existingUser = getUserByEmail(email);
+    if (existingUser != null) {
+      throw new WingsException(USER_ALREADY_REGISTERED, USER);
+    }
+
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(user.getAccountName())
+                          .withCompanyName(user.getCompanyName())
+                          .withAppId(GLOBAL_APP_ID)
+                          .withLicenseInfo(licenseInfo)
+                          .build();
+    // Create an trial account which license expires in 15 days.
+    account = setupAccount(account);
+    String accountId = account.getUuid();
+
+    // For trial user just signed up, it will be assigned to the account admin role.
+    List<UserGroup> accountAdminGroups = getAccountAdminGroup(accountId);
+
+    userInvite.setAccountId(accountId);
+    userInvite.setCompleted(true);
+    userInvite.setAgreement(true);
+
+    // Update existing invite with the associated account ID and set the status to be completed.
+    wingsPersistence.save(userInvite);
+
+    user.setAppId(GLOBAL_APP_ID);
+    user.setEmail(email);
+    user.setPasswordHash(hashpw(new String(user.getPassword()), BCrypt.gensalt()));
+    user.setEmailVerified(true);
+    user.getAccounts().add(account);
+    user.setUserGroups(accountAdminGroups);
+
+    save(user);
+
+    addUserToUserGroups(accountId, user, accountAdminGroups, false);
+
+    return userInvite;
   }
 
   @Override
@@ -839,6 +965,11 @@ public class UserServiceImpl implements UserService {
   @Override
   public User update(User user) {
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
+
+    updateOperations.set("emailVerified", user.isEmailVerified());
+    if (isNotEmpty(user.getAccounts())) {
+      updateOperations.set("accounts", user.getAccounts());
+    }
 
     if (user.getPassword() != null && user.getPassword().length > 0) {
       updateOperations.set("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
@@ -1227,24 +1358,32 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private User addAccountAdminRole(User existingUser, Account account) {
-    return addAccountRoles(
-        existingUser, account, Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
+  private void addAccountAdminRole(User existingUser, Account account) {
+    addAccountRoles(existingUser, account, Lists.newArrayList(roleService.getAccountAdminRole(account.getUuid())));
   }
 
-  private User addAccountRoles(User existingUser, Account account, List<Role> roles) {
+  private void addAccountRoles(User existingUser, Account account, List<Role> roles) {
+    UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(User.class);
+    if (isNotEmpty(roles)) {
+      updateOperations.addToSet("roles", roles);
+    }
+    if (account != null) {
+      updateOperations.addToSet("accounts", account);
+    }
     wingsPersistence.update(wingsPersistence.createQuery(User.class)
                                 .filter("email", existingUser.getEmail())
                                 .filter("appId", existingUser.getAppId()),
-        wingsPersistence.createUpdateOperations(User.class).addToSet("accounts", account).addToSet("roles", roles));
-    return existingUser;
+        updateOperations);
   }
 
-  private User addRoles(User user, List<Role> roles) {
-    wingsPersistence.update(
-        wingsPersistence.createQuery(User.class).filter("email", user.getEmail()).filter("appId", user.getAppId()),
-        wingsPersistence.createUpdateOperations(User.class).addToSet("roles", roles));
-    return user;
+  private void addRoles(User user, List<Role> roles) {
+    if (isNotEmpty(roles)) {
+      UpdateOperations updateOperations = wingsPersistence.createUpdateOperations(User.class);
+      updateOperations.addToSet("roles", roles);
+      wingsPersistence.update(
+          wingsPersistence.createQuery(User.class).filter("email", user.getEmail()).filter("appId", user.getAppId()),
+          updateOperations);
+    }
   }
 
   private Account setupAccount(String accountName, String companyName) {
@@ -1254,19 +1393,29 @@ public class UserServiceImpl implements UserService {
 
   private Account setupAccount(Account account) {
     if (isBlank(account.getCompanyName())) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Company Name Can't be empty");
+      throw new WingsException(GENERAL_ERROR).addParam("message", "Company Name can't be empty");
     }
 
     if (isBlank(account.getAccountName())) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Account Name Can't be empty");
+      throw new WingsException(GENERAL_ERROR).addParam("message", "Account Name can't be empty");
     }
 
     if (accountService.exists(account.getAccountName())) {
-      throw new WingsException(INVALID_ARGUMENT).addParam("args", "Account Name should be unique");
+      throw new WingsException(GENERAL_ERROR)
+          .addParam("message", "Account Name is already taken, please try a different one.");
     }
 
     account.setAppId(GLOBAL_APP_ID);
     return accountService.save(account);
+  }
+
+  private List<UserGroup> getAccountAdminGroup(String accountId) {
+    PageRequest<UserGroup> pageRequest = aPageRequest()
+                                             .addFilter("accountId", EQ, accountId)
+                                             .addFilter("name", EQ, Constants.DEFAULT_ACCOUNT_ADMIN_USER_GROUP_NAME)
+                                             .build();
+    PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
+    return pageResponse.getResponse();
   }
 
   @Override

@@ -23,13 +23,16 @@ import java.util.List;
 //@Indexes(@Index(fields = {@Field("accountId"), @Field("email")}, options = @IndexOptions(unique = true))) //TODO:
 // handle update with insert and then uncomment
 public class UserInvite extends Base {
-  @NotEmpty private String accountId;
+  private String accountId;
   @NotEmpty(groups = {Update.class}) private String email;
   @Reference(idOnly = true, ignoreMissing = true) private List<Role> roles = new ArrayList<>();
   @Transient private List<UserGroup> userGroups = new ArrayList<>();
   private boolean completed;
   @Transient @JsonProperty(access = WRITE_ONLY) private List<String> emails = new ArrayList<>();
   private UserInviteSource source = UserInviteSource.builder().build();
+
+  // This flag denote if the user has agreed to the terms and conditions.
+  private boolean agreement;
 
   @Transient private String name;
 
@@ -152,6 +155,14 @@ public class UserInvite extends Base {
     this.source = source;
   }
 
+  public boolean isAgreement() {
+    return agreement;
+  }
+
+  public void setAgreement(boolean agreement) {
+    this.agreement = agreement;
+  }
+
   public static final class UserInviteBuilder {
     private String accountId;
     private String email;
@@ -159,6 +170,7 @@ public class UserInvite extends Base {
     private List<Role> roles = new ArrayList<>();
     private List<UserGroup> userGroups = new ArrayList<>();
     private boolean completed;
+    private boolean agreement;
     private List<String> emails = new ArrayList<>();
     private String uuid;
     private String appId;
@@ -196,6 +208,11 @@ public class UserInvite extends Base {
 
     public UserInviteBuilder withCompleted(boolean completed) {
       this.completed = completed;
+      return this;
+    }
+
+    public UserInviteBuilder withAgreement(boolean agreement) {
+      this.agreement = agreement;
       return this;
     }
 
@@ -260,6 +277,7 @@ public class UserInvite extends Base {
       userInvite.setLastUpdatedBy(lastUpdatedBy);
       userInvite.setLastUpdatedAt(lastUpdatedAt);
       userInvite.setSource(source);
+      userInvite.setAgreement(agreement);
       return userInvite;
     }
   }
