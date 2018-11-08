@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.validation;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import com.google.inject.Inject;
@@ -23,8 +24,22 @@ public class SmbValidation extends AbstractDelegateValidateTask {
   public List<String> getCriteria() {
     return singletonList(Arrays.stream(getParameters())
                              .filter(o -> o instanceof SmbConfig)
-                             .map(config -> smbHelperService.getSMBConnectionHost(((SmbConfig) config).getSmbUrl()))
+                             .map(config -> ((SmbConfig) config).getSmbUrl())
                              .findFirst()
                              .orElse(null));
+  }
+
+  @Override
+  public List<DelegateConnectionResult> validate() {
+    try {
+      String criteria = getCriteria().get(0);
+      String connectionHost = smbHelperService.getSMBConnectionHost(criteria);
+      return singletonList(DelegateConnectionResult.builder()
+                               .criteria(criteria)
+                               .validated(smbHelperService.isConnetableSMBServer(connectionHost))
+                               .build());
+    } catch (Exception e) {
+      return emptyList();
+    }
   }
 }
