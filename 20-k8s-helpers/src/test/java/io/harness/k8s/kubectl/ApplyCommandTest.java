@@ -11,8 +11,7 @@ public class ApplyCommandTest {
   public void smokeTest() throws Exception {
     Kubectl client = Kubectl.client(null, null);
 
-    ApplyCommand applyCommand =
-        client.apply().filename("manifests.yaml").dryrun(true).record(true).output(OutputFormat.yaml);
+    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").dryrun(true).record(true).output("yaml");
 
     assertEquals("kubectl apply --filename=manifests.yaml --dry-run --record --output=yaml", applyCommand.command());
   }
@@ -21,7 +20,7 @@ public class ApplyCommandTest {
   public void testDryRun() throws Exception {
     Kubectl client = Kubectl.client(null, null);
 
-    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").dryrun(true).output(OutputFormat.yaml);
+    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").dryrun(true).output("yaml");
 
     assertTrue(applyCommand.command().contains("--dry-run"));
 
@@ -33,7 +32,7 @@ public class ApplyCommandTest {
   public void testRecord() throws Exception {
     Kubectl client = Kubectl.client(null, null);
 
-    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").record(true).output(OutputFormat.yaml);
+    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").record(true).output("yaml");
 
     assertTrue(applyCommand.command().contains("--record"));
 

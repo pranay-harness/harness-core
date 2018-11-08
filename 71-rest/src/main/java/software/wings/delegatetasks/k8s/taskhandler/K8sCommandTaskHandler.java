@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
-import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.k8s.K8sCommandTaskParams;
 import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
@@ -18,13 +17,8 @@ public abstract class K8sCommandTaskHandler {
   @Inject protected DelegateLogService delegateLogService;
   private static final Logger logger = LoggerFactory.getLogger(K8sCommandTaskHandler.class);
 
-  protected ExecutionLogCallback executionLogCallback;
-
   public K8sCommandExecutionResponse executeTask(
       K8sCommandRequest k8sCommandRequest, K8sCommandTaskParams k8sCommandTaskParams) {
-    executionLogCallback = new ExecutionLogCallback(delegateLogService, k8sCommandRequest.getAccountId(),
-        k8sCommandRequest.getAppId(), k8sCommandRequest.getActivityId(), k8sCommandRequest.getCommandName());
-
     try {
       return executeTaskInternal(k8sCommandRequest, k8sCommandTaskParams);
     } catch (Exception ex) {

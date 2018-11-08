@@ -6,7 +6,9 @@ import static io.harness.k8s.manifest.ObjectYamlUtils.getField;
 import static io.harness.k8s.manifest.ObjectYamlUtils.getFields;
 import static io.harness.k8s.manifest.ObjectYamlUtils.readYaml;
 import static io.harness.k8s.manifest.ObjectYamlUtils.setField;
+import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
 import static io.harness.k8s.manifest.ObjectYamlUtils.transformField;
+import static io.harness.k8s.manifest.ObjectYamlUtils.tryReadYaml;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
@@ -26,6 +28,17 @@ public class ObjectYamlUtilsTest {
   public void encodeDotTest() {
     assertThat(encodeDot("harness.io")).isEqualTo("harness[dot]io");
     assertThat(encodeDot("harness-io")).isEqualTo("harness-io");
+  }
+
+  @Test
+  public void tryReadYamlTest() {
+    Object object = tryReadYaml("Hello: World");
+
+    assertThat(object).isNotNull();
+
+    object = tryReadYaml(":");
+
+    assertThat(object).isNull();
   }
 
   @Test
@@ -241,5 +254,26 @@ public class ObjectYamlUtilsTest {
     fields = getFields(object, "persons");
     assertThat(fields.size()).isEqualTo(1);
     assertThat(fields.get(0)).isEqualTo("personA");
+  }
+
+  @Test
+  public void splitYamlFileSanityTest() throws Exception {
+    URL url = this.getClass().getResource("/mongo.yaml");
+    String fileContents = Resources.toString(url, Charsets.UTF_8);
+
+    List<String> yamlDocs = splitYamlFile(fileContents);
+    assertThat(yamlDocs).hasSize(4);
+
+    yamlDocs = splitYamlFile("---");
+    assertThat(yamlDocs).isEmpty();
+
+    yamlDocs = splitYamlFile("hello: world");
+    assertThat(yamlDocs).hasSize(1);
+    assertThat(yamlDocs.get(0)).contains("hello: world");
+
+    yamlDocs = splitYamlFile("---\nhello: world\n---\nfoo: bar\n---");
+    assertThat(yamlDocs).hasSize(2);
+    assertThat(yamlDocs.get(0)).contains("hello: world");
+    assertThat(yamlDocs.get(1)).contains("foo: bar");
   }
 }

@@ -7,7 +7,9 @@ public class GetCommand extends AbstractExecutable {
   private String filename;
   private String resources;
   private String namespace;
-  private OutputFormat output;
+  private String output;
+  private boolean watch;
+  private boolean watchOnly;
 
   public GetCommand(Kubectl client) {
     this.client = client;
@@ -28,8 +30,18 @@ public class GetCommand extends AbstractExecutable {
     return this;
   }
 
-  public GetCommand output(OutputFormat output) {
+  public GetCommand output(String output) {
     this.output = output;
+    return this;
+  }
+
+  public GetCommand watch(boolean watch) {
+    this.watch = watch;
+    return this;
+  }
+
+  public GetCommand watchOnly(boolean watchOnly) {
+    this.watchOnly = watchOnly;
     return this;
   }
 
@@ -50,7 +62,15 @@ public class GetCommand extends AbstractExecutable {
     }
 
     if (this.output != null) {
-      command.append(Kubectl.option(Option.output, output.name()));
+      command.append(Kubectl.option(Option.output, output));
+    }
+
+    if (this.watch) {
+      command.append(Kubectl.flag(Flag.watch));
+    }
+
+    if (this.watchOnly) {
+      command.append(Kubectl.flag(Flag.watchOnly));
     }
 
     return command.toString().trim();

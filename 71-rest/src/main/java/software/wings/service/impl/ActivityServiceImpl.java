@@ -112,6 +112,7 @@ public class ActivityServiceImpl implements ActivityService {
     List<CommandUnitDetails> rv = new ArrayList<>();
     if (activity.getCommandUnitType() != null) {
       switch (activity.getCommandUnitType()) {
+        case KUBERNETES:
         case COMMAND:
           List<CommandUnit> commandUnits = activity.getCommandUnits();
           for (CommandUnit commandUnit : commandUnits) {
@@ -141,13 +142,6 @@ public class ActivityServiceImpl implements ActivityService {
           rv.add(CommandUnitDetails.builder()
                      .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
                      .name(activity.getCommandUnitType().getName())
-                     .commandUnitType(activity.getCommandUnitType())
-                     .build());
-          break;
-        case KUBERNETES:
-          rv.add(CommandUnitDetails.builder()
-                     .commandExecutionStatus(CommandExecutionStatus.translateExecutionStatus(activity.getStatus()))
-                     .name(activity.getCommandName())
                      .commandUnitType(activity.getCommandUnitType())
                      .build());
           break;
