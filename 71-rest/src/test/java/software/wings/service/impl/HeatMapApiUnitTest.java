@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -301,7 +302,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long historyStartTime = startEpoch20MinutesAgo - TimeUnit.HOURS.toMillis(1);
 
     timeSeries = continuousVerificationService.fetchObservedTimeSeries(
-        startEpoch20MinutesAgo, endEpoch10MinutesAgo, cvConfiguration, historyStartTime);
+        startEpoch20MinutesAgo + 1, endEpoch10MinutesAgo, cvConfiguration, historyStartTime + 1);
     assertTrue(timeSeries.containsKey("/login"));
     metricMap = timeSeries.get("/login");
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
@@ -316,7 +317,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long historyStartTime = start20MinutesAgo - TimeUnit.HOURS.toMillis(1);
 
     timeSeries = continuousVerificationService.fetchObservedTimeSeries(
-        start20MinutesAgo, endTime, cvConfiguration, historyStartTime);
+        start20MinutesAgo + 1, endTime, cvConfiguration, historyStartTime + 1);
     assertTrue(timeSeries.containsKey("/login"));
     metricMap = timeSeries.get("/login");
     dataPoints = metricMap.get("95th Percentile Response Time (ms)").getTimeSeries();
@@ -329,8 +330,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     Map<String, TimeSeriesOfMetric> metricMap;
     Collection<TimeSeriesDataPoint> dataPoints;
     long historyStartTime = startTime - TimeUnit.HOURS.toMillis(1);
-    timeSeries =
-        continuousVerificationService.fetchObservedTimeSeries(startTime, endTime, cvConfiguration, historyStartTime);
+    timeSeries = continuousVerificationService.fetchObservedTimeSeries(
+        startTime + 1, endTime, cvConfiguration, historyStartTime + 1);
     assertTrue(timeSeries.containsKey("/login"));
 
     metricMap = timeSeries.get("/login");
@@ -415,7 +416,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   public void testSortingFromDB() throws IOException {
     String cvConfigId = readAndSaveAnalysisRecords();
     RestResponse<SortedSet<TransactionTimeSeries>> timeSeries =
-        cvDashboardResource.getTimeSeriesOfHeatMapUnit(accountId, 1541164560000L, 1541177160000L, cvConfigId, 0);
+        cvDashboardResource.getTimeSeriesOfHeatMapUnit(accountId, 1541164560001L, 1541177160000L, cvConfigId, 0);
     assertEquals(7, timeSeries.getResource().size());
   }
 
@@ -477,7 +478,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     SortedSet<TransactionTimeSeries> timeSeries =
         cvDashboardResource
             .getTimeSeriesOfHeatMapUnit(accountId,
-                currentTime - TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES), currentTime, cvConfigId, 0)
+                currentTime - TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES) + 1, currentTime, cvConfigId, 0)
             .getResource();
 
     assertEquals(9, timeSeries.size());
@@ -654,5 +655,50 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     }
     assertEquals(135, actualTimeSeries.size());
     assertEquals(expectedTimeSeries, actualTimeSeries);
+  }
+
+  @Test
+  public void testRiskArrayEndpointContainment() throws Exception {
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+    File file = new File(getClass().getClassLoader().getResource("./verification/24_7_ts_analysis.json").getFile());
+    final Gson gson = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<List<TimeSeriesMLAnalysisRecord>>() {}.getType();
+      List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords = gson.fromJson(br, type);
+      timeSeriesMLAnalysisRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setAppId(appId);
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+      });
+      wingsPersistence.save(timeSeriesMLAnalysisRecords);
+    }
+    long startTime = TimeUnit.MINUTES.toMillis(25685326);
+    long endTime = TimeUnit.MINUTES.toMillis(25685461);
+    long historyStart = TimeUnit.MINUTES.toMillis(25685326);
+    SortedSet<TransactionTimeSeries> timeseries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
+        accountId, cvConfigId, startTime + 1, endTime, historyStart + 1);
+    for (Iterator<TransactionTimeSeries> txnIterator = timeseries.iterator(); txnIterator.hasNext();) {
+      TransactionTimeSeries txnTimeSeries = txnIterator.next();
+      for (Iterator<TimeSeriesOfMetric> metricTSIterator = txnTimeSeries.getMetricTimeSeries().iterator();
+           metricTSIterator.hasNext();) {
+        TimeSeriesOfMetric metricTimeSeries = metricTSIterator.next();
+        SortedMap<Long, TimeSeriesDataPoint> datapoints = (SortedMap) metricTimeSeries.getTimeSeriesMap();
+        for (TimeSeriesRisk tsRisk : metricTimeSeries.getRisksForTimeSeries()) {
+          long startTimeOfRisk = tsRisk.getStartTime();
+          long endTimeOfRisk = tsRisk.getEndTime();
+          assertTrue(datapoints.containsKey(startTimeOfRisk + TimeUnit.MINUTES.toMillis(1) - 1));
+          assertTrue(datapoints.containsKey(endTimeOfRisk));
+        }
+      }
+    }
   }
 }

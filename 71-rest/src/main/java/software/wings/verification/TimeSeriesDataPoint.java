@@ -24,7 +24,7 @@ public class TimeSeriesDataPoint {
   public static SortedMap<Long, TimeSeriesDataPoint> initializeTimeSeriesDataPointsList(
       long startTime, long endTime, long period, int initialValue) {
     SortedMap<Long, TimeSeriesDataPoint> timeSeriesDataPoints = new TreeMap<>();
-    for (long i = startTime; i + period <= endTime; i += period) {
+    for (long i = startTime; i <= endTime; i += period) {
       timeSeriesDataPoints.put(i, TimeSeriesDataPoint.builder().timestamp(i).value(initialValue).build());
     }
     return timeSeriesDataPoints;
