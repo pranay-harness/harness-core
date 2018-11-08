@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -447,6 +448,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     return cvConfigId;
   }
 
+  @Ignore
   @Test
   public void testSorting() throws IOException {
     long currentTime = System.currentTimeMillis();
