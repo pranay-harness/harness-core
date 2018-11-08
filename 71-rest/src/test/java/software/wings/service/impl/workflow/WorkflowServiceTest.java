@@ -3171,4 +3171,23 @@ public class WorkflowServiceTest extends WingsBaseTest {
     GraphNode graphNode = workflowService.readGraphNode(workflow.getAppId(), workflow.getUuid(), nodeId);
     assertThat(graphNode).isNotNull();
   }
+
+  @Test
+  public void shouldCheckEnvironmentServiceOrInfraReferenced() {
+    Workflow workflow = workflowService.createWorkflow(constructCanaryWorkflowWithPhase());
+    assertThat(workflow).isNotNull();
+
+    assertThat(workflowService.obtainWorkflowNamesReferencedByEnvironment(workflow.getAppId(), workflow.getEnvId()))
+        .isNotEmpty()
+        .contains(workflow.getName());
+
+    assertThat(workflowService.obtainWorkflowNamesReferencedByService(workflow.getAppId(), SERVICE_ID))
+        .isNotEmpty()
+        .contains(workflow.getName());
+
+    assertThat(
+        workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(workflow.getAppId(), INFRA_MAPPING_ID))
+        .isNotEmpty()
+        .contains(workflow.getName());
+  }
 }

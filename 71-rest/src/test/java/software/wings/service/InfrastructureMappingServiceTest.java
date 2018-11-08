@@ -21,7 +21,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
-import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.DirectKubernetesInfrastructureMapping.Builder.aDirectKubernetesInfrastructureMapping;
 import static software.wings.beans.EcsInfrastructureMapping.Builder.anEcsInfrastructureMapping;
 import static software.wings.beans.GcpKubernetesInfrastructureMapping.Builder.aGcpKubernetesInfrastructureMapping;
@@ -32,7 +31,6 @@ import static software.wings.beans.ServiceInstance.Builder.aServiceInstance;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
-import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.DIRECT;
@@ -54,9 +52,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_INSTANCE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
-import static software.wings.utils.WingsTestConstants.WORKFLOW_NAME;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
@@ -98,8 +94,6 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.WinRmConnectionAttributes;
-import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.infrastructure.Host;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
@@ -114,17 +108,18 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.WingsTestConstants;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -156,6 +151,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Mock private YamlDirectoryService yamlDirectoryService;
   @Mock private YamlChangeSetHelper yamlChangeSetHelper;
+  @Mock private PipelineService pipelineService;
+  @Mock private TriggerService triggerService;
 
   @Inject @InjectMocks private InfrastructureMappingService infrastructureMappingService;
 
@@ -530,7 +527,17 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldThrowExceptionOnReferencedInfraMappingDelete() {
+  public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
+    mockPhysicalInfra();
+    when(workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(asList("Referenced Workflow"));
+
+    assertThatThrownBy(() -> infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_REQUEST.name());
+  }
+
+  private void mockPhysicalInfra() {
     PhysicalInfrastructureMapping physicalInfrastructureMapping =
         aPhysicalInfrastructureMapping()
             .withUuid(INFRA_MAPPING_ID)
@@ -546,18 +553,29 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(physicalInfrastructureMapping);
-    Workflow workflow =
-        aWorkflow()
-            .withName(WORKFLOW_NAME)
-            .withOrchestrationWorkflow(
-                aBasicOrchestrationWorkflow()
-                    .withWorkflowPhaseIdMap(ImmutableMap.of(
-                        "PHASE_ID", WorkflowPhaseBuilder.aWorkflowPhase().withInfraMappingId(INFRA_MAPPING_ID).build()))
-                    .build())
-            .build();
-    when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(aPageResponse().withResponse(asList(workflow)).build());
+  }
 
+  @Test
+  public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
+    mockPhysicalInfra();
+    when(workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(asList());
+    when(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(asList("Referenced Pipeline"));
+    assertThatThrownBy(() -> infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_REQUEST.name());
+  }
+
+  @Test
+  public void shouldThrowExceptionOnDeleteReferencedByTrigger() {
+    mockPhysicalInfra();
+    when(workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(asList());
+    when(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, INFRA_MAPPING_ID)).thenReturn(asList());
+
+    when(triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(APP_ID, INFRA_MAPPING_ID))
+        .thenReturn(asList("Referenced Trigger"));
     assertThatThrownBy(() -> infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage(INVALID_REQUEST.name());
@@ -918,8 +936,8 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             PcfInfrastructureMapping.builder()
                 .organization(ORGANIZATION)
                 .space(SPACE)
-                .routeMaps(Arrays.asList(ROUTE))
-                .tempRouteMap(Arrays.asList(ROUTE))
+                .routeMaps(asList(ROUTE))
+                .tempRouteMap(asList(ROUTE))
                 .build()});
 
     assertEquals(4, keyValuePairs.size());

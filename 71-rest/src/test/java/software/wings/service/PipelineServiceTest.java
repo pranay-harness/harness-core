@@ -604,8 +604,49 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(pipelineIterator.next()).thenReturn(pipeline);
 
-    List<String> refPipelines = pipelineService.isEnvironmentReferenced(APP_ID, ENV_ID);
+    when(wingsPersistence.get(Workflow.class, APP_ID, WORKFLOW_ID)).thenReturn(aWorkflow().withEnvId(ENV_ID).build());
+
+    List<String> refPipelines = pipelineService.obtainPipelineNamesReferencedByEnvironment(APP_ID, ENV_ID);
     assertThat(!refPipelines.isEmpty() && refPipelines.size() > 0).isTrue();
+  }
+
+  @Test
+  public void shouldCheckTemplatedEntityReferenced() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("envId", ENV_ID);
+    properties.put("workflowId", WORKFLOW_ID);
+    PipelineStage pipelineStage = prepareTemplatedStage(properties);
+
+    List<PipelineStage> pipelineStages = new ArrayList<>();
+    pipelineStages.add(pipelineStage);
+
+    Pipeline pipeline =
+        Pipeline.builder().name("pipeline1").appId(APP_ID).pipelineStages(pipelineStages).uuid(PIPELINE_ID).build();
+
+    when(wingsPersistence.createQuery(eq(Pipeline.class))).thenReturn(pquery);
+
+    when(pquery.field(any())).thenReturn(end);
+    when(end.in(any())).thenReturn(pquery);
+    when(pquery.filter(any(), any())).thenReturn(pquery);
+    when(wingsPersistence.createQuery(Pipeline.class).filter(any(), any()).get()).thenReturn(pipeline);
+
+    when(wingsPersistence.saveAndGet(eq(Pipeline.class), eq(pipeline))).thenReturn(pipeline);
+
+    when(pquery.fetch()).thenReturn(pipelineIterator);
+
+    when(pipelineIterator.hasNext()).thenReturn(true).thenReturn(false);
+
+    when(pipelineIterator.next()).thenReturn(pipeline);
+
+    assertThat(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, ENV_ID)).isNotEmpty();
+    when(pipelineIterator.hasNext()).thenReturn(true).thenReturn(false);
+
+    when(pipelineIterator.next()).thenReturn(pipeline);
+    assertThat(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, SERVICE_ID)).isNotEmpty();
+    when(pipelineIterator.hasNext()).thenReturn(true).thenReturn(false);
+
+    when(pipelineIterator.next()).thenReturn(pipeline);
+    assertThat(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, INFRA_MAPPING_ID)).isNotEmpty();
   }
 
   @Test

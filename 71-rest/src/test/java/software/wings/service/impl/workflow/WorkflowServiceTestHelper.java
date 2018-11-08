@@ -132,6 +132,7 @@ public class WorkflowServiceTestHelper {
     return aWorkflow()
         .withName(WORKFLOW_NAME)
         .withAppId(APP_ID)
+        .withEnvId(ENV_ID)
         .withWorkflowType(WorkflowType.ORCHESTRATION)
         .withOrchestrationWorkflow(
             aCanaryOrchestrationWorkflow()

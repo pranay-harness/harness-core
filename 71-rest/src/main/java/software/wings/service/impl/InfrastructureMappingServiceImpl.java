@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
@@ -77,7 +76,6 @@ import software.wings.beans.AwsLambdaInfraStructureMapping;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.AzureInfrastructureMapping;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
-import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CodeDeployInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
@@ -101,8 +99,6 @@ import software.wings.beans.ServiceInstance;
 import software.wings.beans.ServiceInstanceSelectionParams;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.SettingAttribute;
-import software.wings.beans.Workflow;
-import software.wings.beans.WorkflowPhase;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.infrastructure.Host;
@@ -119,10 +115,12 @@ import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvider;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
 import software.wings.service.intfc.aws.manager.AwsEc2HelperServiceManager;
@@ -188,6 +186,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private YamlPushService yamlPushService;
   @Inject private AzureHelperService azureHelperService;
+  @Inject private TriggerService triggerService;
+  @Inject private PipelineService pipelineService;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -931,31 +931,30 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public void ensureSafeToDelete(@NotEmpty String appId, @NotEmpty String infraMappingId) {
-    List<Workflow> workflows =
-        workflowService
-            .listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", Operator.EQ, appId).build())
-            .getResponse();
-
     List<String> referencingWorkflowNames =
-        workflows.stream()
-            .filter(wfl -> {
-              if (wfl.getOrchestrationWorkflow() != null
-                  && wfl.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
-                Map<String, WorkflowPhase> workflowPhaseIdMap =
-                    ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
-                return workflowPhaseIdMap.values().stream().anyMatch(workflowPhase
-                    -> !workflowPhase.checkInfraTemplatized()
-                        && infraMappingId.equals(workflowPhase.getInfraMappingId()));
-              }
-              return false;
-            })
-            .map(Workflow::getName)
-            .collect(toList());
+        workflowService.obtainWorkflowNamesReferencedByServiceInfrastructure(appId, infraMappingId);
 
     if (!referencingWorkflowNames.isEmpty()) {
       throw new InvalidRequestException(
-          format("Service Infrastructure %s is in use by %s %s [%s].", infraMappingId, referencingWorkflowNames.size(),
-              plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)),
+          format("Service Infrastructure %s is referenced by %s %s [%s].", infraMappingId,
+              referencingWorkflowNames.size(), plural("workflow", referencingWorkflowNames.size()),
+              Joiner.on(", ").join(referencingWorkflowNames)),
+          USER);
+    }
+
+    List<String> refPipelines = pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(appId, infraMappingId);
+    if (isNotEmpty(refPipelines)) {
+      throw new InvalidRequestException(
+          format("Service Infrastructure is referenced by %d %s [%s] as a workflow variable.", refPipelines.size(),
+              plural("pipeline", refPipelines.size()), Joiner.on(", ").join(refPipelines)),
+          USER);
+    }
+
+    List<String> refTriggers = triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(appId, infraMappingId);
+    if (isNotEmpty(refTriggers)) {
+      throw new InvalidRequestException(
+          format("Service Infrastructure is referenced by %d %s [%s] as a workflow variable.", refTriggers.size(),
+              plural("trigger", refTriggers.size()), Joiner.on(", ").join(refTriggers)),
           USER);
     }
   }

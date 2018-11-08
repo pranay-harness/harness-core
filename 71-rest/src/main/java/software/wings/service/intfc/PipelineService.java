@@ -28,15 +28,6 @@ public interface PipelineService extends OwnedByApplication {
   PageResponse<Pipeline> listPipelines(PageRequest<Pipeline> pageRequest);
 
   /**
-   * Check if environment is referenced
-   *
-   * @param appId app Id
-   * @param envId env Id
-   * @return List of referenced pipelines
-   */
-  List<String> isEnvironmentReferenced(String appId, @NotEmpty String envId);
-
-  /**
    * List pipelines page response.
    *
    * @param pageRequest the page request
@@ -124,4 +115,22 @@ public interface PipelineService extends OwnedByApplication {
   void deleteByYamlGit(String appId, String pipelineId, boolean syncFromGit);
 
   String fetchPipelineName(@NotEmpty String appId, @NotEmpty String pipelineId);
+
+  /***
+   * It verifies if the Templated entityIds like Service Infrastructure and Service referenced in the pipeline template
+   * @param appId
+   * @param templatedEntityId
+   * @return Returns the list of names
+   */
+  List<String> obtainPipelineNamesReferencedByTemplatedEntity(
+      @NotEmpty String appId, @NotEmpty String templatedEntityId);
+
+  /**
+   * Check if environment is referenced
+   *
+   * @param appId app Id
+   * @param envId env Id
+   * @return List of referenced pipelines
+   */
+  List<String> obtainPipelineNamesReferencedByEnvironment(String appId, @NotEmpty String envId);
 }
