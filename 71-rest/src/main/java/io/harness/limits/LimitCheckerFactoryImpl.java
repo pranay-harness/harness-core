@@ -3,6 +3,7 @@ package io.harness.limits;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.limits.checker.MongoStaticLimitChecker;
 import io.harness.limits.checker.rate.MongoSlidingWindowRateLimitChecker;
@@ -28,7 +29,7 @@ public class LimitCheckerFactoryImpl implements LimitCheckerFactory {
     ConfiguredLimit configuredLimit =
         configuredLimitService.getOrDefault(action.getAccountId(), action.getActionType());
     if (null == configuredLimit) {
-      throw new WingsException("No limit configured. Action: " + action);
+      throw new WingsException(ErrorCode.LIMIT_NOT_CONFIGURED, "No limit configured. Action: " + action);
     }
 
     Limit limit = configuredLimit.getLimit();

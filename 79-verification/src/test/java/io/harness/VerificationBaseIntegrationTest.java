@@ -64,6 +64,8 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 /**
  * Created by rsingh on 9/25/18.
@@ -202,12 +204,15 @@ public abstract class VerificationBaseIntegrationTest
 
   protected Application createApp(String appName) {
     WebTarget target = client.target(API_BASE + "/apps?accountId=" + accountId);
-    RestResponse<Application> response = getRequestBuilderWithAuthHeader(target).post(
-        entity(anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build(),
-            APPLICATION_JSON),
-        new GenericType<RestResponse<Application>>() {});
-    assertThat(response.getResource()).isInstanceOf(Application.class);
-    assertThat(response.getResource().getName()).isEqualTo(appName);
-    return response.getResource();
+    Application app = anApplication().withName(appName).withDescription(appName).withAccountId(accountId).build();
+    Response response = getRequestBuilderWithAuthHeader(target).post(entity(app, APPLICATION_JSON));
+    if (response.getStatus() != Status.OK.getStatusCode()) {
+      log().error("Non-ok-status. Headers: {}", response.getHeaders());
+    }
+    assertThat(response.getStatus()).isEqualTo(Status.OK.getStatusCode());
+    RestResponse<Application> restResponse = response.readEntity(new GenericType<RestResponse<Application>>() {});
+
+    assertThat(restResponse.getResource().getName()).isEqualTo(appName);
+    return restResponse.getResource();
   }
 }

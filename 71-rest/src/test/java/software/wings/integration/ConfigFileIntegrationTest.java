@@ -16,9 +16,11 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
+import io.harness.limits.LimitCheckerFactory;
 import org.apache.commons.io.IOUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -27,6 +29,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.beans.Application;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.ConfigFile.ConfigOverrideType;
@@ -63,6 +66,8 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   private static final String INPUT_TEXT = "Input Text";
   @Inject private ConfigService configService;
   @Inject @InjectMocks private AppService appService;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
+
   @Mock private DelegateProxyFactory delegateProxyFactory;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private FileService fileService;
@@ -83,6 +88,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     loginAdminUser();
     when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
         .thenReturn(new SecretManagementDelegateServiceImpl());
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     app = appService.save(
         anApplication().withAccountId(ACCOUNT_ID).withName(APP_NAME + System.currentTimeMillis()).build());

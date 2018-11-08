@@ -146,7 +146,6 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
                  .hostnameVerifier((s1, s2) -> true)
                  .register(MultiPartFeature.class)
                  .register(jacksonProvider)
-                 .register(loggingFeature)
                  .build();
   }
 

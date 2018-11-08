@@ -40,6 +40,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   @Inject private DefaultLimitsService defaultLimits;
 
   @Override
+
   public @Nullable ConfiguredLimit getOrDefault(String accountId, ActionType actionType) {
     ConfiguredLimit limit = get(accountId, actionType);
 
@@ -53,7 +54,10 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
   @VisibleForTesting
   @Nullable
   ConfiguredLimit get(String accountId, ActionType actionType) {
-    return dao.createQuery(ConfiguredLimit.class).filter("accountId", accountId).filter("key", actionType).get();
+    return dao.createQuery(ConfiguredLimit.class)
+        .filter("accountId", accountId)
+        .filter("key", actionType.toString())
+        .get();
   }
 
   private @Nullable ConfiguredLimit getDefaultLimit(ActionType actionType, String accountId) {

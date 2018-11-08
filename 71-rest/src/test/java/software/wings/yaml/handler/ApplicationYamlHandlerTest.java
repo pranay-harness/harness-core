@@ -4,15 +4,20 @@ import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.beans.Application;
 import software.wings.beans.Application.Yaml;
 import software.wings.beans.yaml.ChangeContext;
@@ -34,6 +39,7 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
   @InjectMocks @Inject YamlHelper yamlHelper;
   @InjectMocks @Inject AppService appService;
   @InjectMocks @Inject private ApplicationYamlHandler yamlHandler;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   private final String APP_NAME = "app1";
   private Application application;
@@ -54,6 +60,8 @@ public class ApplicationYamlHandlerTest extends BaseYamlHandlerTest {
 
   @Test
   public void testCRUDAndGet() throws HarnessException, IOException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     GitFileChange gitFileChange = new GitFileChange();
     gitFileChange.setFileContent(validYamlContent);
     gitFileChange.setFilePath(validYamlFilePath);

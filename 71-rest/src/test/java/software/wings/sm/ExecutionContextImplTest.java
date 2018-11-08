@@ -14,6 +14,7 @@ import static software.wings.service.intfc.ServiceTemplateService.EncryptedField
 import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -21,11 +22,13 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.limits.LimitCheckerFactory;
 import org.assertj.core.util.Maps;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.Key;
 import software.wings.WingsBaseTest;
 import software.wings.api.CommandStateExecutionData;
@@ -68,6 +71,7 @@ public class ExecutionContextImplTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @Mock private ArtifactService artifactService;
   @Mock private ServiceTemplateService serviceTemplateService;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Before
   public void setup() {
@@ -143,6 +147,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
   @Test
   public void shouldRenderExpression() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setDisplayName("abc");
     ExecutionContextImpl context = prepareContext(stateExecutionInstance);
@@ -180,6 +186,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
   @Test
   public void shouldRenderExpressionList() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     ExecutionContextImpl context = prepareContextRenderExpressionList("listExpr", "x, y, z");
     List<String> exprList = ImmutableList.of("a", "b", "${serviceVariable.listExpr}", "c");
     List<String> rendered = context.renderExpressionList(exprList);
@@ -189,6 +197,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
   @Test
   public void shouldRenderExpressionListNoSeparator() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     ExecutionContextImpl context = prepareContextRenderExpressionList("listExpr", "xyz");
     List<String> exprList = ImmutableList.of("abc", "${serviceVariable.listExpr}", "def");
     List<String> rendered = context.renderExpressionList(exprList);
@@ -198,12 +208,16 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
   @Test
   public void shouldRenderExpressionListNull() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     ExecutionContextImpl context = prepareContextRenderExpressionList("a", "b");
     assertThat(context.renderExpressionList(null)).isNull();
   }
 
   @Test
   public void shouldRenderExpressionListWithCustomSeparator() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     ExecutionContextImpl context = prepareContextRenderExpressionList("listExpr", "x:y:z");
     List<String> exprList = ImmutableList.of("a", "b", "${serviceVariable.listExpr}", "c");
     List<String> rendered = context.renderExpressionList(exprList, ":");
@@ -247,6 +261,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
 
   @Test
   public void shouldEvaluateIndirectExpression() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setExecutionUuid(generateUuid());
     stateExecutionInstance.setDisplayName("http");
@@ -279,6 +295,8 @@ public class ExecutionContextImplTest extends WingsBaseTest {
    */
   @Test
   public void shouldRenderTemplateVariableExpression() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     StateExecutionInstance stateExecutionInstance = new StateExecutionInstance();
     stateExecutionInstance.setExecutionUuid(generateUuid());
     stateExecutionInstance.setDisplayName("http");

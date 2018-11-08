@@ -10,9 +10,9 @@ import io.harness.eraro.mongo.MongoError;
 import io.harness.limits.Action;
 import io.harness.limits.Counter;
 import io.harness.limits.lib.StaticLimit;
-import io.harness.limits.lib.StaticLimitChecker;
 import io.harness.persistence.ReadPref;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.Value;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -28,35 +28,34 @@ import javax.annotation.ParametersAreNonnullByDefault;
  * MongoDB backed implementation of static limit checker
  */
 @ParametersAreNonnullByDefault
-public class MongoStaticLimitChecker implements StaticLimitChecker {
+public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement {
   private static final Logger log = LoggerFactory.getLogger(MongoStaticLimitChecker.class);
 
-  private final StaticLimit limit;
+  @Getter private final StaticLimit limit;
   private final WingsPersistence persistence;
-  private final String key;
+  @Getter private Action action;
+  @Getter private final String key;
 
   public MongoStaticLimitChecker(StaticLimit limit, WingsPersistence persistence, Action action) {
     Preconditions.checkArgument(limit.getCount() >= 0, "limits can only be non-negative");
     this.persistence = persistence;
     this.limit = limit;
     this.key = action.key();
+    this.action = action;
   }
 
   /**
-   * @deprecated use {@link #MongoStaticLimitChecker(StaticLimit, WingsPersistence, Action)} instead.
+   * DEPRECATED.
+   *
+   * use {@link #MongoStaticLimitChecker(StaticLimit, WingsPersistence, Action)} instead.
+   * Tried to mark it as Deprecated but then warning checks kept failing.
    */
-  @Deprecated
   @VisibleForTesting
   MongoStaticLimitChecker(StaticLimit limit, WingsPersistence persistence, String key) {
     Preconditions.checkArgument(limit.getCount() >= 0, "limits can only be non-negative");
     this.persistence = persistence;
     this.limit = limit;
     this.key = key;
-  }
-
-  @Override
-  public StaticLimit getLimit() {
-    return limit;
   }
 
   @Override
@@ -77,6 +76,7 @@ public class MongoStaticLimitChecker implements StaticLimitChecker {
    * @return - whether a decrement was done or not. So, if there are no used permits, then there is nothing to decrement
    * and this'll return false.
    */
+  @Override
   public boolean decrement() {
     // don't touch the database if the limit is zero
     if (limit.getCount() == 0) {
@@ -122,6 +122,7 @@ public class MongoStaticLimitChecker implements StaticLimitChecker {
       if (e.getErrorCode() == MongoError.DUPLICATE_KEY.getErrorCode()) {
         log.info(
             "Duplicate key exception while trying to increment counter. Can happen when counter is already at max, and it tries to upsert");
+
         return new Counter(key, limit.getCount() + 1);
       } else {
         throw e;
@@ -161,9 +162,5 @@ public class MongoStaticLimitChecker implements StaticLimitChecker {
   static class UpdateResponse {
     Counter counter;
     boolean changed;
-  }
-
-  public String getKey() {
-    return key;
   }
 }

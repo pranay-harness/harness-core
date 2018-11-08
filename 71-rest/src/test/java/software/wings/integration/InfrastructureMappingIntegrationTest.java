@@ -5,16 +5,19 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.AwsInfrastructureMapping.Builder.anAwsInfrastructureMapping;
 import static software.wings.beans.PhysicalInfrastructureMapping.Builder.aPhysicalInfrastructureMapping;
 import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServiceInstanceSelectionParams;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.limits.LimitCheckerFactory;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.junit.Before;
@@ -22,6 +25,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mongodb.morphia.Key;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -53,6 +57,7 @@ import java.util.List;
  */
 public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
   @Mock private BackgroundJobScheduler jobScheduler;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
   @Inject @InjectMocks private AppService appService;
 
   @Inject private WingsPersistence wingsPersistence;
@@ -69,6 +74,8 @@ public class InfrastructureMappingIntegrationTest extends BaseIntegrationTest {
 
   @Before
   public void setUp() throws Exception {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     super.setUp();
     app =
         appService.save(anApplication().withName("AppA" + System.currentTimeMillis()).withAccountId(accountId).build());

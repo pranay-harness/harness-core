@@ -4,14 +4,20 @@ import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.time.Duration.ofSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
 import io.harness.beans.PageResponse;
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.quartz.SchedulerException;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
@@ -35,9 +41,11 @@ public class AppServicePersistenceTest extends WingsBaseTest {
 
   @Inject private AlertService alertService;
 
-  @Inject AppService appService;
+  @Inject @InjectMocks AppService appService;
 
   @Inject private BackgroundJobScheduler jobScheduler;
+
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   private static String appId = APP_ID;
   private static String dummyAppID = "dummy" + appId;
@@ -45,6 +53,8 @@ public class AppServicePersistenceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteApplication()
       throws SchedulerException, InterruptedException, ExecutionException, TimeoutException {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     assertThat(wingsPersistence.get(Application.class, appId)).isNull();
 
     // Create some other application. We make this to make sure that deleting items that belong to one
