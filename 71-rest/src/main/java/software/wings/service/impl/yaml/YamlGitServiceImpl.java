@@ -10,6 +10,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.GitCommit.STATUS_KEY;
@@ -77,6 +78,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.YamlProcessingException;
 import software.wings.exception.YamlProcessingException.ChangeWithErrorMsg;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.yaml.service.YamlHelper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.AppService;
@@ -141,6 +143,7 @@ public class YamlGitServiceImpl implements YamlGitService {
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private AppService appService;
   @Inject private YamlGitService yamlGitSyncService;
+  @Inject YamlHelper yamlHelper;
 
   /**
    * Gets the yaml git sync info by entityId
@@ -734,6 +737,8 @@ public class YamlGitServiceImpl implements YamlGitService {
                                           .filter("yamlFilePath", failedChange.getFilePath());
     GitFileChange failedGitFileChange = (GitFileChange) failedChange;
     String failedCommitId = failedGitFileChange.getCommitId() != null ? failedGitFileChange.getCommitId() : "";
+    String appId = obtainAppIdFromGitFileChange(failedChange.getAccountId(), failedChange.getFilePath());
+
     UpdateOperations<GitSyncError> failedUpdateOperations =
         wingsPersistence.createUpdateOperations(GitSyncError.class)
             .set("accountId", failedChange.getAccountId())
@@ -743,9 +748,26 @@ public class YamlGitServiceImpl implements YamlGitService {
             .set("changeType", failedChange.getChangeType().name())
             .set("failureReason",
                 errorMessage != null ? errorMessage : "Reason could not be captured. Logs might have some info")
-            .set("fullSyncPath", fullSyncPath);
+            .set("fullSyncPath", fullSyncPath)
+            .set(APP_ID_KEY, appId);
 
     wingsPersistence.upsert(failedQuery, failedUpdateOperations);
+  }
+
+  private String obtainAppIdFromGitFileChange(String accountId, String yamlFilePath) {
+    String appId = GLOBAL_APP_ID;
+
+    // Fetch appName from yamlPath, e.g. Setup/Applications/App1/Services/S1/index.yaml -> App1,
+    // Setup/Artifact Servers/server.yaml -> null
+    String appName = yamlHelper.getAppName(yamlFilePath);
+    if (StringUtils.isNotBlank(appName)) {
+      Application app = appService.getAppByName(accountId, appName);
+      if (app != null) {
+        appId = app.getUuid();
+      }
+    }
+
+    return appId;
   }
 
   @Override
