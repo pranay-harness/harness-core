@@ -63,6 +63,8 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty("featuresEnabled") private String featureNames;
+  @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
+
   private int applicationPort;
   private boolean sslEnabled;
 

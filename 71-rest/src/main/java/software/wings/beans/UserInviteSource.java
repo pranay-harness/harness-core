@@ -16,7 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserInviteSource {
-  public enum SourceType { MANUAL, SSO }
+  public enum SourceType { MANUAL, SSO, TRIAL }
 
   @Default SourceType type = SourceType.MANUAL;
   @Default String uuid = StringUtils.EMPTY;

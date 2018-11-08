@@ -84,6 +84,7 @@ public class EmailHandler implements CollaborationHandler {
           transport.close();
           result = true;
 
+          logger.info("Validated email delegate communication to {}.", transport.toString());
         } catch (AuthenticationFailedException e) {
           logger.warn("SMTP: Authentication Failed", e);
 
@@ -94,7 +95,7 @@ public class EmailHandler implements CollaborationHandler {
         }
 
         return result;
-      }, 5000, TimeUnit.MILLISECONDS, true);
+      }, 10000, TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
       logger.warn("Failed to validate email delegate communication", e);
     }
