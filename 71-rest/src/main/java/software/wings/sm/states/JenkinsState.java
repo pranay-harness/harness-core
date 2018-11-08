@@ -69,9 +69,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-/**
- * Created by peeyushaggarwal on 10/21/16.
- */
+
 public class JenkinsState extends State {
   private static final Logger logger = LoggerFactory.getLogger(JenkinsState.class);
 
@@ -83,13 +81,13 @@ public class JenkinsState extends State {
 
   private String jenkinsConfigId;
 
-  @Attributes(title = "Job Name") private String jobName;
+  private String jobName;
+  @Getter @Setter private boolean jobNameAsExpression;
 
-  @Attributes(title = "Job Parameters") private List<ParameterEntry> jobParameters = Lists.newArrayList();
+  private List<ParameterEntry> jobParameters = Lists.newArrayList();
 
-  @Attributes(title = "Treat unstable Jenkins status as success") private boolean unstableSuccess;
+  private boolean unstableSuccess;
 
-  @Attributes(title = "Artifacts/Files Paths")
   private List<FilePathAssertionEntry> filePathsForAssertion = Lists.newArrayList();
 
   @Getter @Setter private String sweepingOutputName;
