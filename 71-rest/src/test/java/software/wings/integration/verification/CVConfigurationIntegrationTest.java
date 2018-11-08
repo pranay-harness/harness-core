@@ -5,18 +5,24 @@ import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateType.APP_DYNAMICS;
 import static software.wings.sm.StateType.DATA_DOG;
 import static software.wings.sm.StateType.DYNA_TRACE;
 import static software.wings.sm.StateType.NEW_RELIC;
 import static software.wings.sm.StateType.PROMETHEUS;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
@@ -48,7 +54,9 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private String appId, envId, serviceId, appDynamicsApplicationId;
 
   @Inject private WingsPersistence wingsPersistence;
-  @Inject private AppService appService;
+  @Inject @InjectMocks private AppService appService;
+
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   private NewRelicCVServiceConfiguration newRelicCVServiceConfiguration;
   private AppDynamicsCVServiceConfiguration appDynamicsCVServiceConfiguration;
@@ -62,7 +70,10 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Before
   public void setUp() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     loginAdminUser();
+
     appId = appService.save(anApplication().withName(generateUuid()).withAccountId(accountId).build()).getUuid();
     envId = generateUuid();
     appDynamicsApplicationId = generateUuid();
@@ -165,6 +176,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testSaveConfiguration() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     String id = wingsPersistence.save(newRelicCVServiceConfiguration);
     NewRelicCVServiceConfiguration obj = wingsPersistence.get(NewRelicCVServiceConfiguration.class, id);
     assertEquals(id, obj.getUuid());
@@ -172,6 +185,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public <T extends CVConfiguration> void testNewRelicConfiguration() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + NEW_RELIC;
     logger.info("POST " + url);
     WebTarget target = client.target(url);
@@ -250,6 +265,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public <T extends CVConfiguration> void testAppDynamicsConfiguration() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     String url =
         API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + APP_DYNAMICS;
     logger.info("POST " + url);
@@ -280,6 +297,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public <T extends CVConfiguration> void testDatadogConfiguration() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + DATA_DOG;
     WebTarget target = client.target(url);
     RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
@@ -363,6 +382,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public <T extends CVConfiguration> void testDynaTraceConfiguration() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     String url = API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + DYNA_TRACE;
     logger.info("POST " + url);
     WebTarget target = client.target(url);
@@ -392,6 +413,8 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testListConfig() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     String otherEnvId = generateUuid();
 
     String newRelicApplicationId = generateUuid();

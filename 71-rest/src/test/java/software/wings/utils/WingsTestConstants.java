@@ -1,5 +1,10 @@
 package software.wings.utils;
 
+import io.harness.limits.Action;
+import io.harness.limits.ActionType;
+import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
+import io.harness.limits.lib.StaticLimit;
+
 /**
  * Created by anubhaw on 5/26/16.
  */
@@ -239,4 +244,28 @@ public interface WingsTestConstants {
   String ARTIFACT_STREAM_ID_ARTIFACTORY = "ARTIFACT_STREAM_ID_ARTIFACTORY";
 
   String INTEGRATION_TEST_ACCOUNT_ID = "kmpySmUISimoRrJL6NL73w";
+
+  static StaticLimitCheckerWithDecrement mockChecker() {
+    return new StaticLimitCheckerWithDecrement() {
+      @Override
+      public boolean checkAndConsume() {
+        return true;
+      }
+
+      @Override
+      public StaticLimit getLimit() {
+        return new io.harness.limits.impl.model.StaticLimit(1000);
+      }
+
+      @Override
+      public boolean decrement() {
+        return true;
+      }
+
+      @Override
+      public Action getAction() {
+        return new Action("invalid-account", ActionType.CREATE_APPLICATION);
+      }
+    };
+  }
 }

@@ -2,17 +2,21 @@ package software.wings.scheduler;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import io.harness.limits.LimitCheckerFactory;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
@@ -33,6 +37,7 @@ public class ZombieHunterJobTest extends WingsBaseTest {
   @Inject private WingsPersistence wingsPersistence;
 
   @Inject @InjectMocks ZombieHunterJob job;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Test
   public void huntingExpeditionSchedule() {
@@ -71,6 +76,8 @@ public class ZombieHunterJobTest extends WingsBaseTest {
 
   @Test
   public void huntingExpedition() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     Account account = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
     wingsPersistence.save(account);
 
@@ -92,6 +99,8 @@ public class ZombieHunterJobTest extends WingsBaseTest {
 
   @Test
   public void huntingForOwnersFromMultipleCollections() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     Account account = anAccount().withAppId(GLOBAL_APP_ID).withUuid("exists").build();
     wingsPersistence.save(account);
 

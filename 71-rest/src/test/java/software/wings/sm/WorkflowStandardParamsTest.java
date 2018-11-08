@@ -17,16 +17,19 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_ID;
 import static software.wings.utils.WingsTestConstants.COMPANY_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.MembersInjector;
 
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.ServiceElement;
 import software.wings.beans.Account;
@@ -72,6 +75,7 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private AccountService accountService;
   @Mock private ArtifactStreamService artifactStreamService;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Before
   public void setup() {
@@ -85,6 +89,8 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
    */
   @Test
   public void shouldGetApp() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);
 
@@ -135,6 +141,8 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
   @Test
   public void shouldGetArtifactWithSourceProperties() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);
     Environment env = Builder.anEnvironment().withAppId(app.getUuid()).withName("DEV").build();
@@ -175,6 +183,8 @@ public class WorkflowStandardParamsTest extends WingsBaseTest {
 
   @Test
   public void shouldGetAccountDefaults() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     Application app = Application.Builder.anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);
 

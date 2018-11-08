@@ -30,6 +30,10 @@ import io.harness.beans.PageResponse;
 import io.harness.data.validator.EntityNameValidator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.limits.ActionType;
+import io.harness.limits.LimitCheckerFactory;
+import io.harness.limits.LimitEnforcementUtils;
+import io.harness.limits.checker.StaticLimitCheckerWithDecrement;
 import io.harness.scheduler.PersistentScheduler;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.Query;
@@ -99,6 +103,7 @@ public class AppServiceImpl implements AppService {
   @Inject private WorkflowService workflowService;
   @Inject private YamlPushService yamlPushService;
   @Inject private GenericDbCache dbCache;
+  @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private YamlGitService yamlGitService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler backgroundJobScheduler;
@@ -118,31 +123,36 @@ public class AppServiceImpl implements AppService {
   @Override
   public Application save(Application app) {
     notNullCheck("accountId", app.getAccountId());
-    validateAppName(app);
-    app.setKeywords(trimList(app.generateKeywords()));
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new io.harness.limits.Action(app.getAccountId(), ActionType.CREATE_APPLICATION));
 
-    Application application =
-        duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
-    createDefaultRoles(app);
-    settingsService.createDefaultApplicationSettings(
-        application.getUuid(), application.getAccountId(), app.isSyncFromGit());
-    sendNotification(application, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
-    InstanceSyncJob.add(serviceJobScheduler, application.getUuid());
+    return LimitEnforcementUtils.withLimitCheck(checker, () -> {
+      validateAppName(app);
+      app.setKeywords(trimList(app.generateKeywords()));
 
-    // Save the Git Configuration for application if not null
-    YamlGitConfig yamlGitConfig = app.getYamlGitConfig();
-    if (yamlGitConfig != null) {
-      setAppYamlGitConfigDefaults(application.getAccountId(), application.getUuid(), yamlGitConfig);
+      Application application =
+          duplicateCheck(() -> wingsPersistence.saveAndGet(Application.class, app), "name", app.getName());
+      createDefaultRoles(app);
+      settingsService.createDefaultApplicationSettings(
+          application.getUuid(), application.getAccountId(), app.isSyncFromGit());
+      sendNotification(application, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
+      InstanceSyncJob.add(serviceJobScheduler, application.getUuid());
 
-      // We are disabling git fullsync when the app is created on git side. The reason we have to to do this is that the
-      // fullsync for an app deletes the original app folder and creates new one. If the app is created on git side,
-      // then we dont need fullsync again.
-      yamlGitService.save(yamlGitConfig, !app.isSyncFromGit());
-    }
+      // Save the Git Configuration for application if not null
+      YamlGitConfig yamlGitConfig = app.getYamlGitConfig();
+      if (yamlGitConfig != null) {
+        setAppYamlGitConfigDefaults(application.getAccountId(), application.getUuid(), yamlGitConfig);
 
-    yamlPushService.pushYamlChangeSet(app.getAccountId(), null, application, Type.CREATE, app.isSyncFromGit(), false);
+        // We are disabling git fullsync when the app is created on git side. The reason we have to to do this is that
+        // the fullsync for an app deletes the original app folder and creates new one. If the app is created on git
+        // side, then we dont need fullsync again.
+        yamlGitService.save(yamlGitConfig, !app.isSyncFromGit());
+      }
 
-    return get(application.getUuid());
+      yamlPushService.pushYamlChangeSet(app.getAccountId(), null, application, Type.CREATE, app.isSyncFromGit(), false);
+
+      return get(application.getUuid());
+    });
   }
 
   private void sendNotification(Application application, NotificationMessageType entityCreateNotification) {
@@ -306,27 +316,35 @@ public class AppServiceImpl implements AppService {
       return;
     }
 
-    dbCache.invalidate(Application.class, appId);
+    String accountId = this.getAccountIdByAppId(appId);
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new io.harness.limits.Action(accountId, ActionType.CREATE_APPLICATION));
 
-    yamlPushService.pushYamlChangeSet(application.getAccountId(), application, null, Type.DELETE, syncFromGit, false);
+    LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+      dbCache.invalidate(Application.class, appId);
 
-    // First lets make sure that we have persisted a job that will prone the descendant objects
-    PruneEntityJob.addDefaultJob(backgroundJobScheduler, Application.class, appId, appId, ofSeconds(5), ofSeconds(15));
+      yamlPushService.pushYamlChangeSet(application.getAccountId(), application, null, Type.DELETE, syncFromGit, false);
 
-    // Do not add too much between these too calls (on top and bottom). We need to persist the job
-    // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
-    // too much though will result in start the job before the object is deleted, this possibility is
-    // handled, but this is still not good.
+      // First lets make sure that we have persisted a job that will prone the descendant objects
+      PruneEntityJob.addDefaultJob(
+          backgroundJobScheduler, Application.class, appId, appId, ofSeconds(5), ofSeconds(15));
 
-    // Now we are ready to delete the object.
-    if (wingsPersistence.delete(Application.class, appId)) {
-      sendNotification(application, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
-    }
+      // Do not add too much between these too calls (on top and bottom). We need to persist the job
+      // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
+      // too much though will result in start the job before the object is deleted, this possibility is
+      // handled, but this is still not good.
 
-    // Note that if we failed to delete the object we left without the yaml. Likely the users
-    // will not reconsider and start using the object as they never intended to delete it, but
-    // probably they will retry. This is why there is no reason for us to regenerate it at this
-    // point. We should have the necessary APIs elsewhere, if we find the users want it.
+      // Now we are ready to delete the object.
+      if (wingsPersistence.delete(Application.class, appId)) {
+        sendNotification(application, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
+      }
+
+      // Note that if we failed to delete the object we left without the yaml. Likely the users
+      // will not reconsider and start using the object as they never intended to delete it, but
+      // probably they will retry. This is why there is no reason for us to regenerate it at this
+      // point. We should have the necessary APIs elsewhere, if we find the users want it.
+      return true;
+    });
   }
 
   @Override

@@ -122,6 +122,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   @Inject private YamlResourceService yamlResourceService;
   @Inject private WorkflowService workflowService;
   @Inject private AppService appService;
+  @Inject private FailedCommitStore failedCommitStore;
 
   private final List<YamlType> yamlProcessingOrder = getEntityProcessingOrder();
 
@@ -476,6 +477,20 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     notNullCheck("FileChange is null", change, USER);
     notNullCheck("ChangeType is null for change:" + change.getFilePath(), change.getChangeType(), USER);
 
+    if (!(change instanceof GitFileChange)) {
+      throw new IllegalArgumentException(
+          "Expected change to be instance of GitFileChange. Found: " + change.getClass().getCanonicalName());
+    }
+
+    String commitId = ((GitFileChange) changeContext.getChange()).getCommitId();
+    String accountId = change.getAccountId();
+
+    // do not process commits which exceed limits
+    // if you process them, the processing throws validation errors which populates the Alerts page with GitSyncErrors
+    if (failedCommitStore.didExceedLimit(new FailedCommitStore.Commit(commitId, accountId))) {
+      return;
+    }
+
     // If its not a yaml file, we don't have a handler for that file
     if (!change.getFilePath().endsWith(YAML_EXTENSION)) {
       return;
@@ -486,7 +501,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     switch (change.getChangeType()) {
       case ADD:
       case MODIFY:
-        yamlSyncHandler.upsertFromYaml(changeContext, changeContextList);
+        upsertFromYaml(changeContext, changeContextList);
         break;
       case DELETE:
         yamlSyncHandler.delete(changeContext);
@@ -496,6 +511,24 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       default:
         // TODO
         break;
+    }
+  }
+
+  private void upsertFromYaml(ChangeContext changeContext, List<ChangeContext> changeContextList)
+      throws HarnessException {
+    GitFileChange change = (GitFileChange) changeContext.getChange();
+    String commitId = change.getCommitId();
+    String accountId = change.getAccountId();
+    BaseYamlHandler yamlSyncHandler = changeContext.getYamlSyncHandler();
+
+    try {
+      yamlSyncHandler.upsertFromYaml(changeContext, changeContextList);
+    } catch (WingsException e) {
+      if (e.getCode() == ErrorCode.USAGE_LIMITS_EXCEEDED) {
+        logger.info("Usage Limit Exceeded. Account: {}. Message: {}", change.getAccountId(), e.getMessage());
+        failedCommitStore.exceededLimit(new FailedCommitStore.Commit(commitId, accountId));
+      }
+      throw e;
     }
   }
 

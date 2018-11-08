@@ -32,7 +32,8 @@ public class MessageManager {
   public String prepareMessage(ErrorCodeName errorCodeName, String exceptionMessage, Map<String, Object> params) {
     String message = messages.getProperty(errorCodeName.getValue());
     if (message == null) {
-      logger.error("Response message for error code {} is not provided!", errorCodeName.getValue());
+      logger.error("Response message for error code {} is not provided! Add one in response_messages.properties file.",
+          errorCodeName.getValue());
       message = errorCodeName.getValue();
     }
     return prepareMessage(message, exceptionMessage, params);

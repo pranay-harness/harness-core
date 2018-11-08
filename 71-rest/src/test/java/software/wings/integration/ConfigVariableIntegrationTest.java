@@ -2,6 +2,7 @@ package software.wings.integration;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
@@ -9,12 +10,17 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.inject.Inject;
 
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.beans.Application;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
@@ -34,10 +40,11 @@ import java.util.UUID;
 
 @SetupScheduler
 public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
-  @Inject private AppService appService;
+  @Inject @InjectMocks private AppService appService;
   @Inject private ServiceResourceService serviceResourceService;
   @Inject private ServiceTemplateService serviceTemplateService;
   @Inject private ServiceVariableService serviceVariableService;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   private Application app;
   private Service service;
@@ -48,6 +55,8 @@ public class ConfigVariableIntegrationTest extends BaseIntegrationTest {
   @Before
   public void setUp() throws Exception {
     super.setUp();
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     app = appService.save(
         anApplication().withAccountId(ACCOUNT_ID).withName(APP_NAME + System.currentTimeMillis()).build());
     service = serviceResourceService.save(

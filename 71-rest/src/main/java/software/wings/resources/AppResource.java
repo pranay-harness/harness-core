@@ -8,6 +8,7 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.limits.LimitCheckerFactory;
 import io.swagger.annotations.Api;
 import software.wings.beans.Application;
 import software.wings.beans.RestResponse;
@@ -40,15 +41,12 @@ import javax.ws.rs.QueryParam;
 @Scope(APPLICATION)
 public class AppResource {
   private AppService appService;
+  private LimitCheckerFactory limitCheckerFactory;
 
-  /**
-   * Instantiates a new app resource.
-   *
-   * @param appService the app service
-   */
   @Inject
-  public AppResource(AppService appService) {
+  public AppResource(AppService appService, LimitCheckerFactory limitCheckerFactory) {
     this.appService = appService;
+    this.limitCheckerFactory = limitCheckerFactory;
   }
 
   /**

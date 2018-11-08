@@ -21,6 +21,7 @@ import static software.wings.service.intfc.ServiceVariableService.EncryptedField
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -29,11 +30,13 @@ import com.google.inject.Injector;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import software.wings.WingsBaseTest;
 import software.wings.api.InstanceElement;
 import software.wings.api.PartitionElement;
@@ -111,6 +114,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
    */
   @Mock HostService hostService;
   @Inject private WingsPersistence wingsPersistence;
+
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   /**
    * Sets .
@@ -351,6 +356,8 @@ public class InstanceExpressionProcessorTest extends WingsBaseTest {
     stateExecutionInstance.setDisplayName("abc");
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance);
     injector.injectMembers(context);
+
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     Application app = anApplication().withName("AppA").withAccountId(ACCOUNT_ID).build();
     app = appService.save(app);

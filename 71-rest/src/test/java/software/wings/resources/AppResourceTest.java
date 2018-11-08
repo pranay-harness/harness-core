@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -25,13 +26,14 @@ import javax.ws.rs.core.GenericType;
 public class AppResourceTest {
   private static final Logger logger = LoggerFactory.getLogger(AppResourceTest.class);
   private static final AppService appService = mock(AppService.class);
+  private static final LimitCheckerFactory limitCheckerFactory = mock(LimitCheckerFactory.class);
 
   /**
    * The constant resources.
    */
   @ClassRule
   public static final ResourceTestRule resources =
-      ResourceTestRule.builder().addResource(new AppResource(appService)).build();
+      ResourceTestRule.builder().addResource(new AppResource(appService, limitCheckerFactory)).build();
   private final long TIME_IN_MS = System.currentTimeMillis();
   private final String TEST_UUID = "TEST-UUID-" + TIME_IN_MS;
   private final String TEST_UUID2 = "TEST-UUID2-" + TIME_IN_MS + 10;

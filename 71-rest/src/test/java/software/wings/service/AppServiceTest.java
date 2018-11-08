@@ -25,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.APP_NAME;
 import static software.wings.utils.WingsTestConstants.NOTIFICATION_ID;
+import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -32,6 +33,7 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
+import io.harness.limits.LimitCheckerFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -103,6 +105,7 @@ public class AppServiceTest extends WingsBaseTest {
   @Mock private YamlPushService yamlPushService;
 
   @Inject @InjectMocks AppService appService;
+  @Mock private LimitCheckerFactory limitCheckerFactory;
 
   @Mock private AlertService alertService;
   @Mock private AppContainerService appContainerService;
@@ -155,6 +158,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(notificationService.list(any(PageRequest.class))).thenReturn(new PageResponse<Notification>());
     when(settingsService.getGlobalSettingAttributesByType(ACCOUNT_ID, SettingVariableTypes.APP_DYNAMICS.name()))
         .thenReturn(Lists.newArrayList(aSettingAttribute().withUuid("id").build()));
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     appService.save(app);
     ArgumentCaptor<Application> calledApp = ArgumentCaptor.forClass(Application.class);
@@ -264,6 +268,7 @@ public class AppServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotThrowExceptionForNonExistentApplicationDelete() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
     appService.delete("NON_EXISTENT_APP_ID");
   }
 
@@ -297,6 +302,8 @@ public class AppServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteApplication() {
     when(wingsPersistence.delete(any(), any())).thenReturn(true);
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
     Application application = anApplication().withUuid(APP_ID).withName("APP_NAME").build();
     when(wingsPersistence.get(Application.class, APP_ID)).thenReturn(application);
     appService.delete(APP_ID);
