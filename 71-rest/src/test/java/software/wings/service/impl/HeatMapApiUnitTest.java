@@ -483,8 +483,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertEquals(9, timeSeries.size());
     ArrayList<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
     for (int i = 0; i < 8; i++) {
-      assertTrue(
-          timeSeriesList.get(i).getTransactionName().compareTo(timeSeriesList.get(i + 1).getTransactionName()) < 0);
+      assertTrue(timeSeriesList.get(i).getMetricTimeSeries().first().compareTo(
+                     timeSeriesList.get(i + 1).getMetricTimeSeries().first())
+          <= 0);
     }
 
     timeSeriesMLAnalysisRecord.getTransactions().get("6").getMetrics().get("1").setMax_risk(2);
@@ -509,11 +510,11 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         timeSeriesList.get(2).getTransactionName());
     assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("9").getTxn_name(),
         timeSeriesList.get(3).getTransactionName());
-    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("3").getTxn_name(),
-        timeSeriesList.get(4).getTransactionName());
-    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("0").getTxn_name(),
-        timeSeriesList.get(5).getTransactionName());
     assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("7").getTxn_name(),
+        timeSeriesList.get(4).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("3").getTxn_name(),
+        timeSeriesList.get(5).getTransactionName());
+    assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("0").getTxn_name(),
         timeSeriesList.get(6).getTransactionName());
     assertEquals(timeSeriesMLAnalysisRecord.getTransactions().get("8").getTxn_name(),
         timeSeriesList.get(7).getTransactionName());

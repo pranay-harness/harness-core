@@ -136,7 +136,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                   .filter("version", serviceApiVersion)
                                                   .field("retry")
-                                                  .lessThan(LearningEngineAnalysisTask.RETRIES);
+                                                  .lessThanOrEq(LearningEngineAnalysisTask.RETRIES);
     query.or(query.criteria("executionStatus").equal(ExecutionStatus.QUEUED),
         query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
             query.criteria("lastUpdatedAt").lessThan(System.currentTimeMillis() - TIME_SERIES_ANALYSIS_TASK_TIME_OUT)));
@@ -145,7 +145,15 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
             .set("executionStatus", ExecutionStatus.RUNNING)
             .inc("retry")
             .set("lastUpdatedAt", System.currentTimeMillis());
-    return wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
+    LearningEngineAnalysisTask task =
+        wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
+    if (task != null && task.getRetry() >= LearningEngineAnalysisTask.RETRIES) {
+      // If some task has failed for more than 3 times, mark status as failed.
+      wingsPersistence.updateField(
+          LearningEngineAnalysisTask.class, task.getUuid(), "executionStatus", ExecutionStatus.FAILED);
+      return null;
+    }
+    return task;
   }
 
   @Override
