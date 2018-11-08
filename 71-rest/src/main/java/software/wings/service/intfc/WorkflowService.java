@@ -41,7 +41,6 @@ import javax.validation.constraints.NotNull;
  */
 public interface WorkflowService extends OwnedByApplication, SettingsServiceManipulationObserver {
   PageResponse<Workflow> listWorkflows(PageRequest<Workflow> pageRequest);
-  List<String> isEnvironmentReferenced(String appId, @NotEmpty String envId);
 
   PageResponse<Workflow> listWorkflowsWithoutOrchestration(PageRequest<Workflow> pageRequest);
 
@@ -166,4 +165,9 @@ public interface WorkflowService extends OwnedByApplication, SettingsServiceMani
   WorkflowExecution getWorkflowExecutionForStateExecutionId(String appId, String stateExecutionId);
 
   String fetchWorkflowName(@NotEmpty String appId, @NotEmpty String workflowId);
+  List<String> obtainWorkflowNamesReferencedByEnvironment(String appId, @NotEmpty String envId);
+
+  List<String> obtainWorkflowNamesReferencedByService(String appId, @NotEmpty String serviceId);
+
+  List<String> obtainWorkflowNamesReferencedByServiceInfrastructure(String appId, @NotEmpty String infraMappingId);
 }

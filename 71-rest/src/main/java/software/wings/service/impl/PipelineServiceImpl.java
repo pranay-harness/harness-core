@@ -210,30 +210,28 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   @Override
-  public List<String> isEnvironmentReferenced(String appId, String envId) {
+  public List<String> obtainPipelineNamesReferencedByEnvironment(String appId, String envId) {
     List<String> referencedPipelines = new ArrayList<>();
     try (HIterator<Pipeline> pipelineHIterator =
              new HIterator<>(wingsPersistence.createQuery(Pipeline.class).filter(APP_ID_KEY, appId).fetch())) {
       while (pipelineHIterator.hasNext()) {
         Pipeline pipeline = pipelineHIterator.next();
-        if (pipeline.getPipelineStages() != null) {
-        PIPELINE_STAGE_LOOP:
-          for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
-            if (pipelineStage.getPipelineStageElements() != null) {
-              for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
-                // Env Id in pipeline
-                if (pipelineStageElement.getProperties() != null
-                    && pipelineStageElement.getProperties().get("envId") != null
-                    && pipelineStageElement.getProperties().get("envId").equals(envId)) {
+      PIPELINE_STAGE_LOOP:
+        for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
+          for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
+            // Env Id in pipeline
+            if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
+              Workflow workflow = wingsPersistence.get(
+                  Workflow.class, appId, (String) pipelineStageElement.getProperties().get("workflowId"));
+              if (!workflow.checkEnvironmentTemplatized()) {
+                if (envId.equals(workflow.getEnvId())) {
                   referencedPipelines.add(pipeline.getName());
                   break PIPELINE_STAGE_LOOP;
                 }
-                // Env Id in workflow variables
-                if (pipelineStageElement.getWorkflowVariables() != null
-                    && pipelineStageElement.getWorkflowVariables().values().contains(envId)) {
-                  referencedPipelines.add(pipeline.getName());
-                  break PIPELINE_STAGE_LOOP;
-                }
+              } else if (pipelineStageElement.getWorkflowVariables() != null
+                  && pipelineStageElement.getWorkflowVariables().values().contains(envId)) {
+                referencedPipelines.add(pipeline.getName());
+                break PIPELINE_STAGE_LOOP;
               }
             }
           }
@@ -682,6 +680,27 @@ public class PipelineServiceImpl implements PipelineService {
     yamlPushService.pushYamlChangeSet(accountId, null, finalPipeline, Type.CREATE, pipeline.isSyncFromGit(), false);
 
     return finalPipeline;
+  }
+
+  @Override
+  public List<String> obtainPipelineNamesReferencedByTemplatedEntity(String appId, String templatedEntityId) {
+    List<String> referencedPipelines = new ArrayList<>();
+    try (HIterator<Pipeline> pipelineHIterator =
+             new HIterator<>(wingsPersistence.createQuery(Pipeline.class).filter(APP_ID_KEY, appId).fetch())) {
+      while (pipelineHIterator.hasNext()) {
+        Pipeline pipeline = pipelineHIterator.next();
+        // Templated Id in workflow variables
+        if (pipeline.getPipelineStages()
+                .stream()
+                .flatMap(pipelineStage -> pipelineStage.getPipelineStageElements().stream())
+                .anyMatch(pse
+                    -> pse.getWorkflowVariables() != null
+                        && pse.getWorkflowVariables().values().contains(templatedEntityId))) {
+          referencedPipelines.add(pipeline.getName());
+        }
+      }
+    }
+    return referencedPipelines;
   }
 
   private void validatePipeline(Pipeline pipeline, List<Object> keywords) {

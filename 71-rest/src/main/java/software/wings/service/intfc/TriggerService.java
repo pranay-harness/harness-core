@@ -36,8 +36,6 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    */
   PageResponse<Trigger> list(PageRequest<Trigger> pageRequest);
 
-  List<String> isEnvironmentReferenced(String appId, @NotEmpty String envId);
-
   /**
    * Get artifact stream.
    *
@@ -185,4 +183,6 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    * @param infraMappingId
    */
   boolean triggerExecutionByServiceInfra(String appId, String infraMappingId);
+
+  List<String> obtainTriggerNamesReferencedByTemplatedEntityId(String appId, @NotEmpty String entityId);
 }

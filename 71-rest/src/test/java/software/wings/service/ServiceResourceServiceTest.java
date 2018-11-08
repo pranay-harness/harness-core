@@ -24,7 +24,6 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.AppContainer.Builder.anAppContainer;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
-import static software.wings.beans.BasicOrchestrationWorkflow.BasicOrchestrationWorkflowBuilder.aBasicOrchestrationWorkflow;
 import static software.wings.beans.CanaryOrchestrationWorkflow.CanaryOrchestrationWorkflowBuilder.aCanaryOrchestrationWorkflow;
 import static software.wings.beans.CommandCategory.Type.COMMANDS;
 import static software.wings.beans.CommandCategory.Type.COPY;
@@ -38,7 +37,6 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.Service.ServiceBuilder;
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.Variable.VariableBuilder.aVariable;
-import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.beans.command.Command.Builder.aCommand;
 import static software.wings.beans.command.CommandType.START;
@@ -113,8 +111,8 @@ import software.wings.beans.Notification;
 import software.wings.beans.PhaseStepType;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
+import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.Workflow.WorkflowBuilder;
-import software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder;
 import software.wings.beans.command.AmiCommandUnit;
 import software.wings.beans.command.AwsLambdaCommandUnit;
 import software.wings.beans.command.CleanupSshCommandUnit;
@@ -143,10 +141,13 @@ import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.EntityVersionService;
+import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
+import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlPushService;
@@ -200,6 +201,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private TemplateService templateService;
   @Mock private YamlPushService yamlPushService;
+  @Mock private PipelineService pipelineService;
+  @Mock private TriggerService triggerService;
+  @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -354,17 +358,85 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Test
   public void shouldDeleteService() {
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
-    when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(aPageResponse().withResponse(asList()).build());
+    when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
     ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
     srs.delete(APP_ID, SERVICE_ID);
     InOrder inOrder = inOrder(mockWingsPersistence, workflowService, notificationService, serviceTemplateService,
         configService, serviceVariableService, artifactStreamService);
     inOrder.verify(mockWingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
-    inOrder.verify(workflowService).listWorkflows(any(PageResponse.class));
+    inOrder.verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
     inOrder.verify(mockWingsPersistence).delete(Service.class, SERVICE_ID);
     inOrder.verify(notificationService).sendNotificationAsync(any(Notification.class));
+  }
+
+  @Test
+  public void shouldThrowExceptionOnDeleteReferencedByWorkflow() {
+    when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
+    when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID))
+        .thenReturn(asList("Referenced Workflow"));
+
+    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_REQUEST.name());
+
+    verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldThrowExceptionOnDeleteReferencedByInfraProvisioner() {
+    when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
+    when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
+    when(infrastructureProvisionerService.listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null))
+        .thenReturn(aPageResponse()
+                        .withResponse(
+                            asList(TerraformInfrastructureProvisioner.builder().name("Referenced Provisioner").build()))
+                        .build());
+
+    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_REQUEST.name());
+
+    verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
+    verify(infrastructureProvisionerService).listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null);
+  }
+
+  @Test
+  public void shouldThrowExceptionOnDeleteReferencedByPipeline() {
+    when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
+    when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
+    when(infrastructureProvisionerService.listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null))
+        .thenReturn(aPageResponse().build());
+    when(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, SERVICE_ID))
+        .thenReturn(asList("Referenced Pipeline"));
+
+    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_REQUEST.name());
+
+    verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
+    verify(infrastructureProvisionerService).listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null);
+    verify(pipelineService).obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, SERVICE_ID);
+  }
+
+  @Test
+  public void shouldThrowExceptionOnDeleteReferencedByTrigger() {
+    when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
+    when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
+    when(infrastructureProvisionerService.listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null))
+        .thenReturn(aPageResponse().build());
+    when(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, SERVICE_ID)).thenReturn(asList());
+    when(triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(APP_ID, SERVICE_ID))
+        .thenReturn(asList("Referenced Trigger"));
+
+    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
+        .isInstanceOf(WingsException.class)
+        .hasMessage(INVALID_REQUEST.name());
+
+    verify(workflowService).obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID);
+    verify(infrastructureProvisionerService).listByBlueprintDetails(APP_ID, null, SERVICE_ID, null, null);
+    verify(pipelineService).obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, SERVICE_ID);
+    verify(triggerService).obtainTriggerNamesReferencedByTemplatedEntityId(APP_ID, SERVICE_ID);
   }
 
   @Test
@@ -490,31 +562,6 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                       .addProperty("commandString", "bin/startup.sh")
                       .build())
         .build();
-  }
-
-  @Test
-  public void shouldThrowExceptionOnDeleteServiceStillReferencedInWorkflow() {
-    when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
-    when(workflowService.listWorkflows(any(PageRequest.class)))
-        .thenReturn(aPageResponse()
-                        .withResponse(asList(
-                            aWorkflow()
-                                .withName(WORKFLOW_NAME)
-                                .withOrchestrationWorkflow(
-                                    aBasicOrchestrationWorkflow()
-                                        .withWorkflowPhaseIdMap(ImmutableMap.of("PHASE_ID",
-                                            WorkflowPhaseBuilder.aWorkflowPhase().withServiceId(SERVICE_ID).build()))
-                                        .build())
-                                .build()))
-                        .build());
-
-    assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
-        .isInstanceOf(WingsException.class)
-        .hasMessage(INVALID_REQUEST.name());
-
-    verify(mockWingsPersistence).get(Service.class, APP_ID, SERVICE_ID);
-    verify(workflowService).listWorkflows(any(PageResponse.class));
-    verify(mockWingsPersistence, never()).delete(Service.class, SERVICE_ID);
   }
 
   @Test

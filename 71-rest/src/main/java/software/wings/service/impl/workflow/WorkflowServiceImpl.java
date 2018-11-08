@@ -1,6 +1,7 @@
 package software.wings.service.impl.workflow;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
+import static io.harness.beans.PageRequest.UNLIMITED;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -476,24 +477,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   @Override
-  public List<String> isEnvironmentReferenced(String appId, String envId) {
-    List<String> referencedWorkflows = new ArrayList<>();
-    try (HIterator<Workflow> workflowHIterator =
-             new HIterator<>(wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch())) {
-      if (workflowHIterator != null) {
-        while (workflowHIterator.hasNext()) {
-          Workflow workflow = workflowHIterator.next();
-          if (workflow.getEnvId() != null && !workflow.checkEnvironmentTemplatized()
-              && workflow.getEnvId().equals(envId)) {
-            referencedWorkflows.add(workflow.getName());
-          }
-        }
-      }
-    }
-    return referencedWorkflows;
-  }
-
-  @Override
   public Workflow readWorkflow(String appId, String workflowId, Integer version) {
     Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
     if (workflow == null) {
@@ -934,7 +917,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             .addFilter("pipelineStages.pipelineStageElements.properties.workflowId", EQ, workflow.getUuid())
             .build());
 
-    if (!pipelines.isEmpty()) {
+    if (isNotEmpty(pipelines)) {
       List<String> pipelineNames = pipelines.stream().map(Pipeline::getName).collect(toList());
       String message = format("Workflow is referenced by %d %s [%s].", pipelines.size(),
           plural("pipeline", pipelines.size()), Joiner.on(", ").join(pipelineNames));
@@ -2215,5 +2198,66 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                             .get();
     Validator.notNullCheck("Workflow does not exist", USER);
     return workflow.getName();
+  }
+
+  public List<String> obtainWorkflowNamesReferencedByEnvironment(String appId, String envId) {
+    List<String> referencedWorkflows = new ArrayList<>();
+    try (HIterator<Workflow> workflowHIterator =
+             new HIterator<>(wingsPersistence.createQuery(Workflow.class).filter(APP_ID_KEY, appId).fetch())) {
+      if (workflowHIterator != null) {
+        while (workflowHIterator.hasNext()) {
+          Workflow workflow = workflowHIterator.next();
+          if (workflow.getEnvId() != null && !workflow.checkEnvironmentTemplatized()
+              && workflow.getEnvId().equals(envId)) {
+            referencedWorkflows.add(workflow.getName());
+          }
+        }
+      }
+    }
+    return referencedWorkflows;
+  }
+
+  @Override
+  public List<String> obtainWorkflowNamesReferencedByServiceInfrastructure(String appId, String infraMappingId) {
+    List<Workflow> workflows =
+        listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", Operator.EQ, appId).build()).getResponse();
+
+    return workflows.stream()
+        .filter(wfl -> {
+          if (wfl.getOrchestrationWorkflow() != null
+              && wfl.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+            return ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow())
+                .getWorkflowPhaseIdMap()
+                .values()
+                .stream()
+                .anyMatch(workflowPhase
+                    -> !workflowPhase.checkInfraTemplatized()
+                        && infraMappingId.equals(workflowPhase.getInfraMappingId()));
+          }
+          return false;
+        })
+        .map(Workflow::getName)
+        .collect(toList());
+  }
+
+  @Override
+  public List<String> obtainWorkflowNamesReferencedByService(String appId, String serviceId) {
+    List<Workflow> workflows =
+        listWorkflows(aPageRequest().withLimit(UNLIMITED).addFilter("appId", Operator.EQ, appId).build()).getResponse();
+    return workflows.stream()
+        .filter(wfl -> {
+          if (wfl.getOrchestrationWorkflow() != null
+              && wfl.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
+            return ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow())
+                .getWorkflowPhaseIdMap()
+                .values()
+                .stream()
+                .anyMatch(workflowPhase
+                    -> !workflowPhase.checkServiceTemplatized() && serviceId.equals(workflowPhase.getServiceId()));
+          }
+          return false;
+        })
+        .map(Workflow::getName)
+        .collect(toList());
   }
 }

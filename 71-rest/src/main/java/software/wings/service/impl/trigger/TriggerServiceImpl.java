@@ -204,8 +204,8 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public List<String> isEnvironmentReferenced(String appId, String envId) {
-    return triggerServiceHelper.isEnvironmentReferenced(appId, envId);
+  public List<String> obtainTriggerNamesReferencedByTemplatedEntityId(String appId, String entityId) {
+    return triggerServiceHelper.checkTemplatedEntityReferenced(appId, entityId);
   }
 
   @Override

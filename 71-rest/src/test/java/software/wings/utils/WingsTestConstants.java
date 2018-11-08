@@ -205,6 +205,8 @@ public interface WingsTestConstants {
 
   String PHASE_STEP = "PHASE_STEP";
 
+  String PHASE_ID = "PHASE_ID";
+
   String TRIGGER_ID = "TRIGGER_ID";
 
   String TRIGGER_NAME = "TRIGGER_NAME";

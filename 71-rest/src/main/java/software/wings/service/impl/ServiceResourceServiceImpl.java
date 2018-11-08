@@ -116,6 +116,7 @@ import software.wings.service.intfc.EntityVersionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.NotificationService;
+import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
@@ -184,6 +185,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private HelmHelper helmHelper;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private YamlPushService yamlPushService;
+  @Inject private PipelineService pipelineService;
 
   /**
    * {@inheritDoc}
@@ -589,27 +591,12 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void ensureServiceSafeToDelete(Service service) {
-    List<Workflow> workflows = getWorkflows(service);
-
     List<String> referencingWorkflowNames =
-        workflows.stream()
-            .filter(wfl -> {
-              if (wfl.getOrchestrationWorkflow() != null
-                  && wfl.getOrchestrationWorkflow() instanceof CanaryOrchestrationWorkflow) {
-                Map<String, WorkflowPhase> workflowPhaseIdMap =
-                    ((CanaryOrchestrationWorkflow) wfl.getOrchestrationWorkflow()).getWorkflowPhaseIdMap();
-                return workflowPhaseIdMap.values().stream().anyMatch(workflowPhase
-                    -> !workflowPhase.checkServiceTemplatized()
-                        && service.getUuid().equals(workflowPhase.getServiceId()));
-              }
-              return false;
-            })
-            .map(Workflow::getName)
-            .collect(toList());
+        workflowService.obtainWorkflowNamesReferencedByService(service.getAppId(), service.getUuid());
 
     if (isNotEmpty(referencingWorkflowNames)) {
       throw new InvalidRequestException(
-          format("Service %s is in use by %s %s [%s].", service.getUuid(), referencingWorkflowNames.size(),
+          format("Service %s is referenced by %s %s [%s].", service.getUuid(), referencingWorkflowNames.size(),
               plural("workflow", referencingWorkflowNames.size()), Joiner.on(", ").join(referencingWorkflowNames)),
           USER);
     }
@@ -625,6 +612,24 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
                   + plural("infrastructure provisioner", provisioners.size()) + " [" + infrastructureProvisionerNames
                   + "] ",
               service.getName()),
+          USER);
+    }
+
+    List<String> refPipelines =
+        pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(service.getAppId(), service.getUuid());
+    if (isNotEmpty(refPipelines)) {
+      throw new InvalidRequestException(
+          format("Service is referenced by %d %s [%s] as a workflow variable.", refPipelines.size(),
+              plural("pipeline", refPipelines.size()), Joiner.on(", ").join(refPipelines)),
+          USER);
+    }
+
+    List<String> refTriggers =
+        triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(service.getAppId(), service.getUuid());
+    if (isNotEmpty(refTriggers)) {
+      throw new InvalidRequestException(
+          format("Service is referenced by %d %s [%s] as a workflow variable.", refTriggers.size(),
+              plural("trigger", refTriggers.size()), Joiner.on(", ").join(refTriggers)),
           USER);
     }
   }

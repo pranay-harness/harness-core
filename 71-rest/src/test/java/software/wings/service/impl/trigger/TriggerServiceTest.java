@@ -1552,7 +1552,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   public void shouldEnvironmentReferencedByTrigger() {
     artifactConditionTrigger.setWorkflowVariables(ImmutableMap.of("Environment", ENV_ID));
     triggerService.save(artifactConditionTrigger);
-    List<String> triggerNames = triggerService.isEnvironmentReferenced(APP_ID, ENV_ID);
+    List<String> triggerNames = triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(APP_ID, ENV_ID);
     assertThat(triggerNames).isNotEmpty();
   }
 
@@ -1585,6 +1585,22 @@ public class TriggerServiceTest extends WingsBaseTest {
   public void shouldTriggerTemplatedWorkflowExecutionByBitBucketWebhook() {
     ExecutionArgs executionArgs = new ExecutionArgs();
 
+    Trigger trigger = saveTemplatedWebhookTrigger();
+
+    Map<String, String> parameters = new HashMap<>();
+    parameters.put("MyVar", "MyValue");
+    executionArgs.setWorkflowVariables(parameters);
+
+    triggerService.triggerExecutionByWebHook(trigger, parameters);
+
+    verify(workflowExecutionService)
+        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
+    verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
+    verify(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
+    verify(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+  }
+
+  private Trigger saveTemplatedWebhookTrigger() {
     workflow.setTemplateExpressions(asList(TemplateExpression.builder()
                                                .fieldName("envId")
                                                .expression("${Environment}")
@@ -1607,7 +1623,6 @@ public class TriggerServiceTest extends WingsBaseTest {
         aVariable().withEntityType(SERVICE).withName("Service").build());
     workflow.getOrchestrationWorkflow().getUserVariables().add(
         aVariable().withEntityType(INFRASTRUCTURE_MAPPING).withName("ServiceInfra_Ssh").build());
-
     when(workflowService.readWorkflowWithoutOrchestration(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID)).thenReturn(workflow);
     when(environmentService.getEnvironmentByName(APP_ID, ENV_NAME, false))
@@ -1633,19 +1648,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     webHookTriggerCondition.setWebhookSource(WebhookSource.BITBUCKET);
     webHookTriggerCondition.setEventTypes(Arrays.asList(WebhookEventType.PULL_REQUEST));
 
-    triggerService.save(workflowWebhookConditionTrigger);
-
-    Map<String, String> parameters = new HashMap<>();
-    parameters.put("MyVar", "MyValue");
-    executionArgs.setWorkflowVariables(parameters);
-
-    triggerService.triggerExecutionByWebHook(workflowWebhookConditionTrigger, parameters);
-
-    verify(workflowExecutionService)
-        .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
-    verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
-    verify(infrastructureMappingService).get(APP_ID, INFRA_MAPPING_ID);
-    verify(serviceResourceService).get(APP_ID, SERVICE_ID, false);
+    return triggerService.save(workflowWebhookConditionTrigger);
   }
 
   @Test
@@ -1697,5 +1700,15 @@ public class TriggerServiceTest extends WingsBaseTest {
     verify(environmentService).getEnvironmentByName(APP_ID, ENV_NAME, false);
     verify(infrastructureMappingService).getInfraMappingByName(APP_ID, ENV_ID, INFRA_NAME);
     verify(serviceResourceService).getServiceByName(APP_ID, SERVICE_NAME, false);
+  }
+
+  @Test
+  public void shouldCheckTemplatedEntityReferenced() {
+    Trigger trigger = saveTemplatedWebhookTrigger();
+
+    assertThat(triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(trigger.getAppId(), SERVICE_ID))
+        .isNotEmpty();
+    assertThat(triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(trigger.getAppId(), INFRA_MAPPING_ID))
+        .isNotEmpty();
   }
 }

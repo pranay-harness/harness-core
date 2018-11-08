@@ -147,7 +147,7 @@ public class TriggerServiceHelper {
         .asList();
   }
 
-  public List<String> isEnvironmentReferenced(String appId, String envId) {
+  public List<String> checkTemplatedEntityReferenced(String appId, String envId) {
     List<String> referencedTriggers = new ArrayList<>();
     try (HIterator<Trigger> triggerHIterator =
              new HIterator<>(wingsPersistence.createQuery(Trigger.class).filter(APP_ID_KEY, appId).fetch())) {
