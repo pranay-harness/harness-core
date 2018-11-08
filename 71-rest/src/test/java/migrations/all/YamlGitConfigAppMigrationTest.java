@@ -26,6 +26,7 @@ import software.wings.yaml.gitSync.YamlGitConfig.SyncMode;
 
 public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
   private static final String BRANCH = "branch";
+  private static final String GIT_CONNECTOR_ID_KEY = "gitConnectorId";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private YamlGitService yamlGitService;
@@ -50,6 +51,7 @@ public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
                                       .syncMode(SyncMode.NONE)
                                       .entityId(ACCOUNT_ID)
                                       .entityType(EntityType.ACCOUNT)
+                                      .gitConnectorId(GIT_CONNECTOR_ID_KEY + "1")
                                       .build();
     yamlGitConfig.setAppId(Base.GLOBAL_APP_ID);
     yamlGitService.save(yamlGitConfig);
@@ -66,6 +68,7 @@ public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
     assertThat(savedYamlGitConfig.getAppId()).isEqualTo(application.getUuid());
     assertThat(savedYamlGitConfig.getEntityId()).isEqualTo(application.getUuid());
     assertThat(savedYamlGitConfig.getEntityType()).isEqualTo(EntityType.APPLICATION);
+    assertThat(savedYamlGitConfig.getGitConnectorId()).isEqualTo(GIT_CONNECTOR_ID_KEY + "1");
   }
 
   @Test
@@ -79,6 +82,7 @@ public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
                                       .syncMode(SyncMode.NONE)
                                       .entityId(application.getUuid())
                                       .entityType(EntityType.APPLICATION)
+                                      .gitConnectorId(GIT_CONNECTOR_ID_KEY + "2")
                                       .build();
     yamlGitConfig.setAppId(Base.GLOBAL_APP_ID);
     yamlGitService.save(yamlGitConfig);
@@ -86,6 +90,7 @@ public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
     yamlGitConfigAppMigration.migrate();
     YamlGitConfig savedYamlGitConfig = yamlGitService.get(ACCOUNT_ID, application.getUuid(), EntityType.APPLICATION);
     assertNotNull(savedYamlGitConfig);
+    assertThat(savedYamlGitConfig.getGitConnectorId()).isEqualTo(yamlGitConfig.getGitConnectorId());
   }
 
   private Application createApplication() {

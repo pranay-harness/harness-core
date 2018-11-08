@@ -48,7 +48,7 @@ public class YamlGitConfig extends Base implements EncryptableSetting {
   @JsonView(JsonViews.Internal.class) private char[] password;
   private String sshSettingId;
   private boolean keyAuth;
-  private String gitConnectorId;
+  @NotEmpty private String gitConnectorId;
 
   @SchemaIgnore @JsonIgnore private String encryptedPassword;
 
