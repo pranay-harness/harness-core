@@ -263,7 +263,7 @@ public class YamlGitServiceImpl implements YamlGitService {
         }
         YamlChangeSet yamlChangeSet = obtainYamlChangeSet(accountId, appId, gitFileChanges, forcePush);
 
-        discardGitSyncErrorForFullSync(accountId);
+        discardGitSyncErrorForFullSync(accountId, appId);
 
         yamlChangeSetService.save(yamlChangeSet);
         logger.info(format(GIT_YAML_LOG_PREFIX + "Performed git full-sync for account %s and entity %s successfully",
@@ -827,10 +827,11 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   @Override
-  public RestResponse discardGitSyncErrorForFullSync(String accountId) {
+  public RestResponse discardGitSyncErrorForFullSync(String accountId, String appId) {
     Query query = wingsPersistence.createAuthorizedQuery(GitSyncError.class);
     query.filter("accountId", accountId);
     query.filter("fullSyncPath", true);
+    query.filter(APP_ID_KEY, appId);
     wingsPersistence.delete(query);
     closeAlertIfApplicable(accountId, false);
     return RestResponse.Builder.aRestResponse().build();
