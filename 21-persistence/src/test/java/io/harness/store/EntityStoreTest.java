@@ -6,15 +6,15 @@ import com.google.inject.Inject;
 
 import io.harness.PersistenceTest;
 import io.harness.annotation.StoreIn;
-import io.harness.persistence.Entity;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
 import org.junit.Test;
 import org.mongodb.morphia.AdvancedDatastore;
 
 @StoreIn(name = "foo")
-class Dummy extends Entity {}
+class Dummy extends PersistentEntity {}
 
 public class EntityStoreTest extends PersistenceTest {
   @Inject private HPersistence persistence;

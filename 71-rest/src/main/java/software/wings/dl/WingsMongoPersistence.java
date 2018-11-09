@@ -38,6 +38,7 @@ import io.harness.mongo.PageController;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HQuery;
 import io.harness.persistence.HQuery.QueryChecks;
+import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -432,24 +433,20 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T> Query<T> createQuery(Class<T> cls) {
+  public <T extends PersistentEntity> Query<T> createQuery(Class<T> cls) {
     return createQuery(cls, NORMAL);
   }
 
   @Override
-  public <T> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks) {
+  public <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks) {
     Query<T> query = createQuery(cls, NORMAL);
     ((HQuery) query).setQueryChecks(queryChecks);
     return query;
   }
 
   @Override
-  public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref) {
-    return getDatastore(DEFAULT_STORE, readPref).createQuery(cls);
-  }
-
-  @Override
-  public <T> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks) {
+  public <T extends PersistentEntity> Query<T> createQuery(
+      Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks) {
     Query<T> query = createQuery(cls, readPref);
     ((HQuery) query).setQueryChecks(queryChecks);
     return query;
@@ -602,7 +599,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T> Query<T> createAuthorizedQuery(Class<T> collectionClass) {
+  public <T extends PersistentEntity> Query<T> createAuthorizedQuery(Class<T> collectionClass) {
     Query query = createQuery(collectionClass);
     if (authFilters(query, collectionClass)) {
       return query;

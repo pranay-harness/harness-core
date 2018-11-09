@@ -2,6 +2,7 @@ package software.wings.scheduler;
 
 import com.google.inject.Singleton;
 
+import io.harness.persistence.PersistentEntity;
 import org.mongodb.morphia.query.Query;
 import org.reflections.Reflections;
 import software.wings.beans.Base;
@@ -40,7 +41,7 @@ public class ArchivalManager {
         if (annotation.retentionMills() <= 0) {
           continue;
         }
-        Query deletionQuery = wingsPersistence.createQuery(clazz)
+        Query deletionQuery = wingsPersistence.createQuery((Class<? extends PersistentEntity>) clazz)
                                   .field("createdAt")
                                   .lessThan(System.currentTimeMillis() - annotation.retentionMills());
         this.wingsPersistence.delete(deletionQuery);

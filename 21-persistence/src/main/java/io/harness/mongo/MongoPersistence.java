@@ -9,9 +9,11 @@ import com.google.inject.name.Named;
 
 import com.mongodb.DBCollection;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.Query;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,5 +55,10 @@ public class MongoPersistence implements HPersistence {
   @Override
   public DBCollection getCollection(Store store, ReadPref readPref, String collectionName) {
     return getDatastore(store, readPref).getDB().getCollection(collectionName);
+  }
+
+  @Override
+  public <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref) {
+    return getDatastore(DEFAULT_STORE, readPref).createQuery(cls);
   }
 }

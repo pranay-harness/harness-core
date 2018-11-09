@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 
 import io.harness.data.structure.ListUtils;
 import io.harness.exception.WingsException;
+import io.harness.persistence.PersistentEntity;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.query.CountOptions;
 import org.mongodb.morphia.query.Query;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 public class TemplateHelper {
   @Inject private WingsPersistence wingsPersistence;
 
-  public Class<?> lookupEntityClass(TemplateType templateType) {
+  public Class<? extends PersistentEntity> lookupEntityClass(TemplateType templateType) {
     switch (templateType) {
       case SSH:
         return ServiceCommand.class;
