@@ -64,7 +64,7 @@ software.wings.beans.config.NexusConfig, 5016
 software.wings.beans.ElkConfig, 5017
 software.wings.beans.config.ArtifactoryConfig, 5018
 software.wings.beans.ElasticLoadBalancerConfig, 5020
-software.wings.beans.EmbeddedUser, 5021
+io.harness.beans.EmbeddedUser, 5021
 software.wings.beans.SSHExecutionCredential, 5022
 software.wings.beans.ExecutionCredential$ExecutionType, 5023
 software.wings.beans.CanaryWorkflowExecutionAdvisor, 5024

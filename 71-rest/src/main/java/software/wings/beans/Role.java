@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import static java.util.Arrays.asList;
 
+import io.harness.beans.EmbeddedUser;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;

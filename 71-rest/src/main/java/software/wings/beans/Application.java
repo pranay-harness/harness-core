@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

@@ -8,12 +8,12 @@ import static software.wings.beans.artifact.ArtifactStreamType.AMAZON_S3;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.EmbeddedUser;
 
 import java.util.Date;
 import java.util.List;

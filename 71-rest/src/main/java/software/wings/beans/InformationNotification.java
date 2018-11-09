@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.harness.beans.EmbeddedUser;
 import lombok.EqualsAndHashCode;
 
 import java.util.HashMap;

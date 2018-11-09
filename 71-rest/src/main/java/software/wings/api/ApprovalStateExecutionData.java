@@ -5,12 +5,12 @@ import static java.util.Arrays.asList;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Transient;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.security.UserGroup;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;

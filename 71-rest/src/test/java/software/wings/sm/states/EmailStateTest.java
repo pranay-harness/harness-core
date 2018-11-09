@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 
+import io.harness.beans.EmbeddedUser;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -26,7 +27,6 @@ import software.wings.api.EmailStateExecutionData;
 import software.wings.api.HostElement;
 import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
-import software.wings.beans.EmbeddedUser;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;

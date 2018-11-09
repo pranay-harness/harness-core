@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.utils.ContainerFamily;
 import software.wings.utils.FileType;

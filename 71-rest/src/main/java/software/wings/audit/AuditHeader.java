@@ -1,10 +1,10 @@
 package software.wings.audit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
 import software.wings.beans.HttpMethod;
 import software.wings.beans.Service;

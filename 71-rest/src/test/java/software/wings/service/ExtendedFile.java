@@ -1,9 +1,9 @@
 package software.wings.service;
 
+import io.harness.beans.EmbeddedUser;
 import org.junit.Ignore;
 import software.wings.beans.BaseFile;
 import software.wings.beans.ChecksumType;
-import software.wings.beans.EmbeddedUser;
 
 /**
  * Created by peeyushaggarwal on 5/17/16.

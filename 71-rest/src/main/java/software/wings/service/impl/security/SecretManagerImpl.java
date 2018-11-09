@@ -28,6 +28,7 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -49,7 +50,6 @@ import software.wings.beans.Account;
 import software.wings.beans.Base;
 import software.wings.beans.BaseFile;
 import software.wings.beans.ConfigFile;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.KmsConfig;
 import software.wings.beans.ServiceTemplate;

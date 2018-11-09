@@ -4,11 +4,11 @@ import com.google.common.base.MoreObjects;
 
 import com.amazonaws.services.ec2.model.Instance;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.beans.EmbeddedUser;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 
 import java.util.Objects;
 

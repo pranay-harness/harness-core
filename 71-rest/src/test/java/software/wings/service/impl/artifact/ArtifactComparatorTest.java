@@ -10,8 +10,8 @@ import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.EmbeddedUser;
 import org.junit.Test;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.artifact.Artifact;
 import software.wings.common.Constants;
 

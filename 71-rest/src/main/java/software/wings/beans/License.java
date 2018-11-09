@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 
 import java.util.List;

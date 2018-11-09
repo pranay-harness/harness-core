@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
