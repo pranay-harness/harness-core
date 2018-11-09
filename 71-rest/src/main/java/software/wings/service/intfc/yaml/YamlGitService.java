@@ -169,7 +169,7 @@ public interface YamlGitService {
 
   <T extends Change> void upsertGitSyncErrors(T failedChange, String errorMessage, boolean fullSyncPath);
 
-  RestResponse discardGitSyncErrorForFullSync(String accountId);
+  RestResponse discardGitSyncErrorForFullSync(String accountId, String appId);
 
   RestResponse discardGitSyncErrorsForGivenIds(String accountId, List<String> errorIds);
 
