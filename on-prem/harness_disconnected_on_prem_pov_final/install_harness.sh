@@ -134,6 +134,7 @@ UI1=$host1:$uiport
 WWW_DIR_LOCATION=$runtime_dir/data/proxy/www
 STORAGE_DIR_LOCATION=$WWW_DIR_LOCATION/data/storage
 PROXY_VERSION=$(getProperty "version.properties" "PROXY_VERSION")
+MONGO_VERSION=$(getProperty "version.properties" "MONGO_VERSION")
 LOAD_BALANCER_URL=http://$host1:$proxyPort
 MONGO_URI=mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/harness?authSource=admin
 mkdir -p $STORAGE_DIR_LOCATION
@@ -163,7 +164,7 @@ function setUpMongoDB(){
     chown -R 999 $runtime_dir/mongo/*
     chmod 777 $runtime_dir/mongo/$mongodb_data_dir
 
-    docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v "$runtime_dir/mongo/mongod.conf":/etc/mongod.conf -v $runtime_dir/mongo/data/db:/data/db -v $runtime_dir/mongo/scripts:/scripts --rm mongo:3.4 -f /etc/mongod.conf
+    docker run -p $mongodb_port:$mongodb_port --name mongoContainer -d -v "$runtime_dir/mongo/mongod.conf":/etc/mongod.conf -v $runtime_dir/mongo/data/db:/data/db -v $runtime_dir/mongo/scripts:/scripts --rm mongo:$MONGO_VERSION -f /etc/mongod.conf
 
     mongoContainerId=$(docker ps -q -f name=mongoContainer)
 
@@ -184,9 +185,10 @@ function seedMongoDB(){
 
     docker exec mongoContainer mongo --port $mongodb_port admin --eval "db.createUser({user: '$mongodbUserName', pwd: '$mongodbPassword', roles:[{role:'$admin_user_role',db:'admin'}]});"
 
-    docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port < /scripts/add_first_user.js"
 
-    docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port < /scripts/add_learning_engine_secret.js"
+    docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/?authSource=admin < /scripts/add_first_user.js"
+
+    docker exec mongoContainer bash -c "mongo  mongodb://$mongodbUserName:$mongodbPassword@$host1:$mongodb_port/?authSource=admin < /scripts/add_learning_engine_secret.js"
 
 }
 
@@ -277,7 +279,7 @@ function setUpLearningEngine(){
    echo "################################Setting up Learning Engine ################################"
    learningEngineVersion=$(getProperty "version.properties" "LEARNING_ENGINE_VERSION")
    https_port=$(getProperty "config_template/learning_engine/learning_engine.properties" "https_port")
-   docker run -d --rm --name learningEngine -e learning_env=on_prem -e https_port=$https_port -e server_url=$LOAD_BALANCER_URL -e service_secret=$learningengine_secret harness/learning-engine:$learningEngineVersion
+   docker run -d --rm --name learningEngine -e learning_env=on_prem -e https_port=$https_port -e server_url=$LOAD_BALANCER_URL -e service_secret=$learningengine_secret harness/learning-engine-onprem:$learningEngineVersion
 
     if [[ $(checkDockerImageRunning "learningEngine") -eq 1 ]]; then
         echo "LearningEngine is not running"
