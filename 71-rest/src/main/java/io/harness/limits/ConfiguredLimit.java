@@ -2,6 +2,7 @@ package io.harness.limits;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.limits.lib.Limit;
+import io.harness.persistence.PersistentEntity;
 import io.harness.validation.Update;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -21,13 +22,13 @@ import javax.validation.constraints.NotNull;
  * To override limits for an account, there should be an entry present with that account Id.
  */
 @Getter
-@EqualsAndHashCode(exclude = "id")
+@EqualsAndHashCode(exclude = "id", callSuper = false)
 @ToString
 @Entity(value = "allowedLimits", noClassnameStored = true)
 @Indexes(
     @Index(fields = { @Field("key")
                       , @Field("accountId") }, options = @IndexOptions(name = "key_idx", unique = true)))
-public class ConfiguredLimit<T extends Limit> {
+public class ConfiguredLimit<T extends Limit> extends PersistentEntity {
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private ObjectId id;
 
   private String accountId;

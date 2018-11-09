@@ -5,7 +5,7 @@ import static java.lang.System.currentTimeMillis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.persistence.Entity;
+import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.AllArgsConstructor;
@@ -33,10 +33,10 @@ import javax.validation.constraints.NotNull;
  * @author Rishi
  */
 @Data
-@EqualsAndHashCode(of = {"uuid", "appId"})
+@EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
-public class Base extends Entity implements UuidAware {
+public class Base extends PersistentEntity implements UuidAware {
   public static final String ID_KEY = "_id";
   public static final String APP_ID_KEY = "appId";
   public static final String ACCOUNT_ID_KEY = "accountId";

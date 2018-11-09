@@ -5,6 +5,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery.QueryChecks;
+import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -291,7 +292,7 @@ public interface WingsPersistence extends HPersistence {
    * @param cls the cls
    * @return the query
    */
-  <T> Query<T> createQuery(Class<T> cls);
+  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls);
 
   /**
    * Creates the query.
@@ -301,17 +302,7 @@ public interface WingsPersistence extends HPersistence {
    * @param queryChecks  the query checks
    * @return             the query
    */
-  <T> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks);
-
-  /**
-   * Creates the query.
-   *
-   * @param <T>      the generic type
-   * @param cls      the cls
-   * @param readPref the read pref
-   * @return         the query
-   */
-  <T> Query<T> createQuery(Class<T> cls, ReadPref readPref);
+  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks);
 
   /**
    * Creates the query.
@@ -322,7 +313,7 @@ public interface WingsPersistence extends HPersistence {
    * @param queryChecks  the query checks
    * @return             the query
    */
-  <T> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks);
+  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks);
 
   /**
    * Gets the or create grid fs bucket.
@@ -344,7 +335,7 @@ public interface WingsPersistence extends HPersistence {
    * @param collectionClass the collection class
    * @return query
    */
-  <T> Query<T> createAuthorizedQuery(Class<T> collectionClass);
+  <T extends PersistentEntity> Query<T> createAuthorizedQuery(Class<T> collectionClass);
 
   /**
    * Creates a query and runs the authFilter to it.

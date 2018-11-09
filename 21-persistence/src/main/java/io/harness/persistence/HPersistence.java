@@ -3,6 +3,7 @@ package io.harness.persistence;
 import com.mongodb.DBCollection;
 import io.harness.annotation.StoreIn;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.query.Query;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -34,7 +35,7 @@ public interface HPersistence {
    * @param readPref the readPref
    * @return the datastore
    */
-  default AdvancedDatastore getDatastore(Entity entity, ReadPref readPref) {
+  default AdvancedDatastore getDatastore(PersistentEntity entity, ReadPref readPref) {
     return getDatastore(entity.getClass(), readPref);
   }
 
@@ -67,4 +68,14 @@ public interface HPersistence {
    * @return the collection
    */
   DBCollection getCollection(Store store, ReadPref readPref, String collectionName);
+
+  /**
+   * Creates the query.
+   *
+   * @param <T>      the generic type
+   * @param cls      the cls
+   * @param readPref the read pref
+   * @return         the query
+   */
+  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref);
 }

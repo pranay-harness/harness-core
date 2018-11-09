@@ -1,3 +1,3 @@
 package io.harness.persistence;
 
-public class Entity {}
+public class PersistentEntity {}
