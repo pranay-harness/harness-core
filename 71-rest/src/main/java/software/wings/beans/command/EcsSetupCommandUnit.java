@@ -20,6 +20,7 @@ import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
 import software.wings.beans.container.EcsContainerTask;
+import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -52,6 +54,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject @Transient private transient EcsContainerService ecsContainerService;
   @Inject @Transient private transient AwsHelperService awsHelperService;
   @Inject @Transient private transient EcsCommandUnitHelper ecsCommandUnitHelper;
+  static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
 
   public EcsSetupCommandUnit() {
     super(CommandUnitType.ECS_SETUP);
@@ -90,6 +93,13 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
         TaskDefinition taskDefinition = ecsCommandUnitHelper.createTaskDefinition(ecsContainerTask, containerName,
             dockerImageName, setupParams, cloudProviderSetting, serviceVariables, safeDisplayServiceVariables,
             encryptedDataDetails, executionLogCallback, domainName, awsClusterService);
+
+        if (setupParams.getEcsServiceSpecification() != null
+            && StringUtils.isNotBlank(setupParams.getEcsServiceSpecification().getServiceSpecJson())) {
+          EcsServiceSpecification specification = setupParams.getEcsServiceSpecification();
+          specification.setServiceSpecJson(
+              specification.getServiceSpecJson().replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName));
+        }
 
         // For REPLICA STRATEGY
         if (!setupParams.isDaemonSchedulingStrategy()) {

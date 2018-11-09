@@ -22,8 +22,8 @@ public class EcsServiceSpecification extends DeploymentSpecification {
   public static final String preamble = "# Enter your Service JSON spec below.\n"
       + "# ---\n\n";
 
-  public static final String manifestTemplate = "{\n\"placementConstraints\":[],\n"
-      + "\"placementStrategy\":[],\n"
+  public static final String manifestTemplate = "{\n\"placementConstraints\":[ ],\n"
+      + "\"placementStrategy\":[ ],\n"
       + "\"healthCheckGracePeriodSeconds\":null,\n"
       + "\"schedulingStrategy\":\"REPLICA\"\n}";
 
