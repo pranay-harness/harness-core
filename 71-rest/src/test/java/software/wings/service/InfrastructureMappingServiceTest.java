@@ -896,9 +896,10 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     InfrastructureMappingServiceImpl serviceImpl = (InfrastructureMappingServiceImpl) infrastructureMappingService;
 
     Map<String, Object> keyValuePairs = new HashMap<>();
+    Set<String> fieldsToRemove = new HashSet<>();
 
     MethodUtils.invokeMethod(serviceImpl, true, "handleEcsInfraMapping",
-        new Object[] {keyValuePairs,
+        new Object[] {keyValuePairs, fieldsToRemove,
             anEcsInfrastructureMapping()
                 .withClusterName(CLUSTER_NAME)
                 .withRegion("us-east-1")

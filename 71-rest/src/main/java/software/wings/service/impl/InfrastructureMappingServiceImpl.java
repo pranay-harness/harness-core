@@ -349,7 +349,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infrastructureMapping instanceof EcsInfrastructureMapping) {
       EcsInfrastructureMapping ecsInfrastructureMapping = (EcsInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(ecsInfrastructureMapping, fromYaml);
-      handleEcsInfraMapping(keyValuePairs, ecsInfrastructureMapping);
+      handleEcsInfraMapping(keyValuePairs, fieldsToRemove, ecsInfrastructureMapping);
 
     } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
@@ -809,9 +809,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
                                                         : pcfInfrastructureMapping.getRouteMaps());
   }
 
-  private void handleEcsInfraMapping(
-      Map<String, Object> keyValuePairs, EcsInfrastructureMapping ecsInfrastructureMapping) {
-    keyValuePairs.put("clusterName", ecsInfrastructureMapping.getClusterName());
+  private void handleEcsInfraMapping(Map<String, Object> keyValuePairs, Set<String> fieldsToRemove,
+      EcsInfrastructureMapping ecsInfrastructureMapping) {
+    if (isNotEmpty(ecsInfrastructureMapping.getClusterName())) {
+      keyValuePairs.put("clusterName", ecsInfrastructureMapping.getClusterName());
+    } else {
+      fieldsToRemove.add("clusterName");
+    }
+
     keyValuePairs.put("region", ecsInfrastructureMapping.getRegion());
     keyValuePairs.put("assignPublicIp", ecsInfrastructureMapping.isAssignPublicIp());
     keyValuePairs.put("launchType", ecsInfrastructureMapping.getLaunchType());
