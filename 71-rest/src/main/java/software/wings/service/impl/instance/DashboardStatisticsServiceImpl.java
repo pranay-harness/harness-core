@@ -123,8 +123,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       timestamp = System.currentTimeMillis();
     }
 
-    Query<Instance> query = getInstanceQueryAtTime(accountId, appIds, timestamp);
-    if (query == null) {
+    Query<Instance> query;
+    try {
+      query = getInstanceQueryAtTime(accountId, appIds, timestamp);
+    } catch (HarnessException e) {
+      return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
+    } catch (Exception e) {
       logger.error("Error while compiling query for getting app instance summary stats");
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     }
@@ -251,11 +255,16 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       timestamp = System.currentTimeMillis();
     }
 
-    Query<Instance> query = getInstanceQueryAtTime(accountId, null, timestamp);
-    if (query == null) {
+    Query<Instance> query;
+    try {
+      query = getInstanceQueryAtTime(accountId, null, timestamp);
+    } catch (HarnessException e) {
+      return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
+    } catch (Exception e) {
       logger.error("Error while compiling query for getting app instance summary stats");
       return InstanceSummaryStats.Builder.anInstanceSummaryStats().countMap(null).totalCount(0).build();
     }
+
     query.filter("serviceId", serviceId);
 
     long instanceCount = getInstanceCount(query);
@@ -346,8 +355,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       timestamp = System.currentTimeMillis();
     }
 
-    Query<Instance> query = getInstanceQueryAtTime(accountId, appIds, timestamp);
-    if (query == null) {
+    Query<Instance> query;
+    try {
+      query = getInstanceQueryAtTime(accountId, appIds, timestamp);
+    } catch (HarnessException e) {
+      return Collections.emptyList();
+    } catch (Exception e) {
       logger.error("Error while compiling query for instance stats by service");
       return Collections.emptyList();
     }
@@ -380,19 +393,12 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return constructInstanceStatsByService(instanceInfoList);
   }
 
-  private Query<Instance> getInstanceQueryAtTime(String accountId, List<String> appIds, long timestamp) {
-    Query<Instance> query;
-    try {
-      query = getInstanceQuery(accountId, appIds, true, timestamp);
-      query.field("createdAt").lessThanOrEq(timestamp);
-
-      query.and(
-          query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
-
-    } catch (Exception exception) {
-      handleException(exception);
-      return null;
-    }
+  private Query<Instance> getInstanceQueryAtTime(String accountId, List<String> appIds, long timestamp)
+      throws HarnessException {
+    Query<Instance> query = getInstanceQuery(accountId, appIds, true, timestamp);
+    query.field("createdAt").lessThanOrEq(timestamp);
+    query.and(
+        query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
     return query;
   }
 
