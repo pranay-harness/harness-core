@@ -28,6 +28,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
+import software.wings.beans.TaskType;
 import software.wings.helpers.ext.apm.APMRestClient;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.ThirdPartyApiCallLog;
@@ -139,7 +140,8 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
 
   @Override
   protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
-    return new APMMetricCollector(dataCollectionInfo, taskResult);
+    return new APMMetricCollector(dataCollectionInfo, taskResult,
+        this.getTaskType().equalsIgnoreCase(TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK.name()));
   }
 
   private class APMMetricCollector implements Runnable {
@@ -152,8 +154,10 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
     private long currentEndTime;
     private int currentElapsedTime;
     Map<String, Long> hostStartMinuteMap;
+    boolean is24x7Task;
 
-    private APMMetricCollector(APMDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult) {
+    private APMMetricCollector(
+        APMDataCollectionInfo dataCollectionInfo, DataCollectionTaskResult taskResult, boolean is24x7Task) {
       this.dataCollectionInfo = dataCollectionInfo;
       this.taskResult = taskResult;
       this.collectionStartMinute = Timestamp.currentMinuteBoundary();
@@ -161,6 +165,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       this.dataCollectionMinute = dataCollectionInfo.getDataCollectionMinute();
       this.lastEndTime = dataCollectionInfo.getStartTime();
       this.currentElapsedTime = 0;
+      this.is24x7Task = is24x7Task;
       hostStartMinuteMap = new HashMap<>();
     }
 
@@ -211,6 +216,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       long startTime = lastEndTime;
       long endTime = Timestamp.currentMinuteBoundary();
       currentEndTime = endTime;
+
       if (TEST_HOST_NAME.equals(host) && strategy == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
         for (int i = 0; i <= CANARY_DAYS_TO_COLLECT; i++) {
           String hostName = getHostNameForTestControl(i);
@@ -222,6 +228,11 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
           result.add(resolvedUrl(url, hostName, thisStartTime, thisEndTime));
         }
       } else {
+        if (isPredictiveAnalysis() && dataCollectionMinute == 0 && !is24x7Task) {
+          startTime = startTime - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES);
+        } else if (is24x7Task) {
+          endTime = startTime + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getDataCollectionTotalTime());
+        }
         result.add(resolvedUrl(url, host, startTime, endTime));
       }
       logger.info("Start and end times for minute {} were {} and {}", dataCollectionMinute, startTime, endTime);
@@ -415,6 +426,10 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       return batchResolvedUrls;
     }
 
+    private boolean isPredictiveAnalysis() {
+      return dataCollectionInfo.getStrategy().equals(AnalysisComparisonStrategy.PREDICTIVE);
+    }
+
     /**
      * if it is time to collect data, return true. Else false.
      * @return
@@ -458,21 +473,24 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
               newRelicMetricDataRecord.setStateExecutionId(dataCollectionInfo.getStateExecutionId());
               newRelicMetricDataRecord.setWorkflowExecutionId(dataCollectionInfo.getWorkflowExecutionId());
               newRelicMetricDataRecord.setWorkflowId(dataCollectionInfo.getWorkflowId());
+              newRelicMetricDataRecord.setCvConfigId(dataCollectionInfo.getCvConfigId());
               long startTimeMinForHost = collectionStartMinute;
               if (hostStartMinuteMap.containsKey(newRelicMetricDataRecord.getHost())) {
                 startTimeMinForHost = hostStartMinuteMap.get(newRelicMetricDataRecord.getHost());
               }
-              newRelicMetricDataRecord.setDataCollectionMinute(
-                  (int) ((Timestamp.minuteBoundary(newRelicMetricDataRecord.getTimeStamp()) - startTimeMinForHost)
-                      / TimeUnit.MINUTES.toMillis(1)));
+
+              int collectionMin = resolveDataCollectionMinute(
+                  newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord.getHost(), false);
+              newRelicMetricDataRecord.setDataCollectionMinute(collectionMin);
+
+              if (isPredictiveAnalysis()) {
+                newRelicMetricDataRecord.setHost(newRelicMetricDataRecord.getGroupName());
+              }
 
               newRelicMetricDataRecord.setStateType(dataCollectionInfo.getStateType());
               groupNameSet.add(newRelicMetricDataRecord.getGroupName());
 
               newRelicMetricDataRecord.setAppId(dataCollectionInfo.getApplicationId());
-              newRelicMetricDataRecord.setDataCollectionMinute(
-                  (int) ((Timestamp.minuteBoundary(newRelicMetricDataRecord.getTimeStamp()) - startTimeMinForHost)
-                      / TimeUnit.MINUTES.toMillis(1)));
               if (newRelicMetricDataRecord.getTimeStamp() >= startTimeMinForHost) {
                 records.put(newRelicMetricDataRecord.getName() + newRelicMetricDataRecord.getHost(),
                     newRelicMetricDataRecord.getTimeStamp(), newRelicMetricDataRecord);
@@ -495,7 +513,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
             }
             lastEndTime = currentEndTime;
             collectionStartTime += TimeUnit.MINUTES.toMillis(collectionWindow);
-            if (dataCollectionMinute >= dataCollectionInfo.getDataCollectionTotalTime()) {
+            if (dataCollectionMinute >= dataCollectionInfo.getDataCollectionTotalTime() || is24x7Task) {
               // We are done with all data collection, so setting task status to success and quitting.
               logger.info(
                   "Completed APM collection task. So setting task status to success and quitting. StateExecutionId {}",
@@ -536,6 +554,30 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
       }
     }
 
+    private int resolveDataCollectionMinute(long timestamp, String host, boolean isHeartbeat) {
+      int collectionMinute = -1;
+      if (isHeartbeat) {
+        collectionMinute = dataCollectionMinute;
+        if (is24x7Task) {
+          collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(dataCollectionInfo.getStartTime())
+              + dataCollectionInfo.getDataCollectionTotalTime();
+        }
+      } else if (is24x7Task) {
+        collectionMinute = (int) TimeUnit.MILLISECONDS.toMinutes(timestamp);
+      } else {
+        long startTimeMinForHost = isPredictiveAnalysis()
+            ? collectionStartMinute - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES)
+            : collectionStartMinute;
+        if (hostStartMinuteMap.containsKey(host)) {
+          startTimeMinForHost = hostStartMinuteMap.get(host);
+        }
+        collectionMinute =
+            (int) ((Timestamp.minuteBoundary(timestamp) - startTimeMinForHost) / TimeUnit.MINUTES.toMillis(1));
+      }
+
+      return collectionMinute;
+    }
+
     private void addHeartbeatRecords(
         Set<String> groupNameSet, TreeBasedTable<String, Long, NewRelicMetricDataRecord> records) {
       if (isEmpty(groupNameSet)) {
@@ -559,7 +601,7 @@ public class APMDataCollectionTask extends AbstractDelegateDataCollectionTask {
                 .serviceId(dataCollectionInfo.getServiceId())
                 .stateExecutionId(dataCollectionInfo.getStateExecutionId())
                 .appId(dataCollectionInfo.getApplicationId())
-                .dataCollectionMinute(dataCollectionMinute)
+                .dataCollectionMinute(resolveDataCollectionMinute(Timestamp.currentMinuteBoundary(), null, true))
                 .timeStamp(collectionStartTime)
                 .level(ClusterLevel.H0)
                 .groupName(group)

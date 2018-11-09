@@ -36,6 +36,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse.VerificationLoadResponse;
+import software.wings.service.impl.apm.APMDataCollectionInfo;
 import software.wings.service.impl.apm.APMMetricInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.datadog.DataDogFetchConfig;
@@ -49,10 +50,12 @@ import software.wings.service.intfc.analysis.APMVerificationService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.StateType;
+import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.DynatraceState;
 import software.wings.utils.Misc;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
@@ -203,6 +206,13 @@ public class APMVerificationServiceImpl implements APMVerificationService {
                 .get();
         task = createPrometheusDelegateTask(prometheusCVServiceConfiguration, waitId, startTime, endTime);
         break;
+      case DATA_DOG:
+        DatadogCVServiceConfiguration ddConfig =
+            (DatadogCVServiceConfiguration) wingsPersistence.createQuery(CVConfiguration.class)
+                .filter("_id", cvConfigId)
+                .get();
+        task = createDatadogDelegateTask(ddConfig, waitId, startTime, endTime);
+        break;
       default:
         logger.error("Calling collect 24x7 data for an unsupported state");
         return false;
@@ -307,6 +317,34 @@ public class APMVerificationServiceImpl implements APMVerificationService {
             .build();
     return createDelegateTask(
         config, waitId, new Object[] {dataCollectionInfo}, timeDuration, TaskType.PROMETHEUS_COLLECT_24_7_METRIC_DATA);
+  }
+
+  private DelegateTask createDatadogDelegateTask(
+      DatadogCVServiceConfiguration config, String waitId, long startTime, long endTime) {
+    DatadogConfig datadogConfig = (DatadogConfig) settingsService.get(config.getConnectorId()).getValue();
+    int timeDuration = (int) TimeUnit.MILLISECONDS.toMinutes(endTime - startTime);
+    final APMDataCollectionInfo dataCollectionInfo =
+        APMDataCollectionInfo.builder()
+            .baseUrl(datadogConfig.getUrl())
+            .validationUrl(DatadogConfig.validationUrl)
+            .encryptedDataDetails(secretManager.getEncryptionDetails(datadogConfig, config.getAppId(), null))
+            .hosts(new HashMap<>())
+            .stateType(StateType.DATA_DOG)
+            .applicationId(config.getAppId())
+            .stateExecutionId(CV_24x7_STATE_EXECUTION + "-" + config.getUuid())
+            .serviceId(config.getServiceId())
+            .startTime(startTime)
+            .cvConfigId(config.getUuid())
+            .dataCollectionMinute(0)
+            .metricEndpoints(DatadogState.metricEndpointsInfo(
+                config.getDatadogServiceName(), Arrays.asList(config.getMetrics().split(","))))
+            .accountId(config.getAccountId())
+            .strategy(AnalysisComparisonStrategy.PREDICTIVE)
+            .dataCollectionFrequency(1)
+            .dataCollectionTotalTime(timeDuration)
+            .build();
+    return createDelegateTask(
+        config, waitId, new Object[] {dataCollectionInfo}, timeDuration, TaskType.APM_24_7_METRIC_DATA_COLLECTION_TASK);
   }
 
   private DelegateTask createDelegateTask(
