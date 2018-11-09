@@ -31,4 +31,5 @@ public class APMDataCollectionInfo {
   private AnalysisComparisonStrategy strategy;
   private int dataCollectionFrequency;
   private int dataCollectionTotalTime;
+  private String cvConfigId;
 }
