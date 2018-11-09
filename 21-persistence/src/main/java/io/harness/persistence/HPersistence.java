@@ -2,11 +2,13 @@ package io.harness.persistence;
 
 import com.mongodb.DBCollection;
 import io.harness.annotation.StoreIn;
+import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
 public interface HPersistence {
   Store DEFAULT_STORE = Store.builder().name("default").build();
@@ -72,10 +74,40 @@ public interface HPersistence {
   /**
    * Creates the query.
    *
+   * @param <T> the generic type
+   * @param cls the cls
+   * @return the query
+   */
+  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls);
+
+  /**
+   * Creates the query.
+   *
    * @param <T>      the generic type
    * @param cls      the cls
    * @param readPref the read pref
    * @return         the query
    */
   <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref);
+
+  /**
+   * Creates the query.
+   *
+   * @param <T>          the generic type
+   * @param cls          the cls
+   * @param queryChecks  the query checks
+   * @return             the query
+   */
+  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks);
+
+  /**
+   * Creates the query.
+   *
+   * @param <T>          the generic type
+   * @param cls          the cls
+   * @param readPref     the read pref
+   * @param queryChecks  the query checks
+   * @return             the query
+   */
+  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks);
 }

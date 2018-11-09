@@ -9,6 +9,8 @@ import com.google.inject.name.Named;
 
 import com.mongodb.DBCollection;
 import io.harness.persistence.HPersistence;
+import io.harness.persistence.HQuery;
+import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
@@ -17,6 +19,7 @@ import org.mongodb.morphia.query.Query;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Singleton
 public class MongoPersistence implements HPersistence {
@@ -58,7 +61,27 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Override
+  public <T extends PersistentEntity> Query<T> createQuery(Class<T> cls) {
+    return createQuery(cls, NORMAL);
+  }
+
+  @Override
   public <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref) {
     return getDatastore(DEFAULT_STORE, readPref).createQuery(cls);
+  }
+
+  @Override
+  public <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks) {
+    Query<T> query = createQuery(cls, NORMAL);
+    ((HQuery) query).setQueryChecks(queryChecks);
+    return query;
+  }
+
+  @Override
+  public <T extends PersistentEntity> Query<T> createQuery(
+      Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks) {
+    Query<T> query = createQuery(cls, readPref);
+    ((HQuery) query).setQueryChecks(queryChecks);
+    return query;
   }
 }
