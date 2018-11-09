@@ -3,6 +3,8 @@ package io.harness.service;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
+import static software.wings.common.VerificationConstants.DATA_ANALYSIS_TASKS_PER_MINUTE;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.TIME_DELAY_QUERY_MINS;
 import static software.wings.common.VerificationConstants.VERIFICATION_SERVICE_BASE_URL;
 import static software.wings.common.VerificationConstants.getMetricAnalysisStates;
@@ -16,8 +18,11 @@ import static software.wings.sm.states.AbstractMetricAnalysisState.SMOOTH_WINDOW
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import com.codahale.metrics.annotation.Counted;
+import com.codahale.metrics.annotation.Timed;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
+import io.harness.registry.HarnessMetricRegistry;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
@@ -32,6 +37,7 @@ import software.wings.verification.CVConfiguration;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Created by rsingh on 10/9/18.
@@ -39,20 +45,21 @@ import java.util.concurrent.TimeUnit;
 public class ContinuousVerificationServiceImpl implements ContinuousVerificationService {
   private static final Logger logger = LoggerFactory.getLogger(ContinuousVerificationServiceImpl.class);
 
-  // todo: need to change this. Group name is set to default.
-  private final String DEFAULT_GROUP_NAME = "default";
-
   @Inject private CVConfigurationService cvConfigurationService;
   @Inject private TimeSeriesAnalysisService timeSeriesAnalysisService;
   @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
   @Inject private VerificationManagerClient verificationManagerClient;
   @Inject private LearningEngineService learningEngineService;
   @Inject private TimeSeriesAnalysisService analysisService;
+  @Inject private HarnessMetricRegistry metricRegistry;
 
   @Override
+  @Counted
+  @Timed
   public boolean triggerDataCollection(String accountId) {
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
     long endMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis()) - TIME_DELAY_QUERY_MINS;
+    AtomicLong totalDataCollectionTasks = new AtomicLong(0);
     cvConfigurations.stream().filter(cvConfiguration -> cvConfiguration.isEnabled24x7()).forEach(cvConfiguration -> {
       long maxCVCollectionMinute =
           timeSeriesAnalysisService.getMaxCVCollectionMinute(cvConfiguration.getAppId(), cvConfiguration.getUuid());
@@ -66,16 +73,22 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endMinute, endMinute);
         verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerAPMDataCollection(
             cvConfiguration.getUuid(), cvConfiguration.getStateType(), startTime, endTime));
+        totalDataCollectionTasks.getAndIncrement();
       }
     });
+    metricRegistry.updateMetricValue(DATA_COLLECTION_TASKS_PER_MINUTE, totalDataCollectionTasks.get());
     return true;
   }
 
   @Override
+  @Counted
+  @Timed
   public void triggerDataAnalysis(String accountId) {
     logger.info("Triggering Data Analysis for account {} ", accountId);
     // List all the CV configurations for a given account
     List<CVConfiguration> cvConfigurations = cvConfigurationService.listConfigurations(accountId);
+
+    AtomicLong totalDataAnalysisTasks = new AtomicLong(0);
 
     // for each 24x7 enabled configurations do following
     // Get last CV Analysis minute on given configuration
@@ -118,10 +131,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
         learningEngineService.addLearningEngineAnalysisTask(learningEngineAnalysisTask);
 
+        totalDataAnalysisTasks.getAndIncrement();
         logger.info("Queuing analysis task for state {} config {} with startTime {}", cvConfiguration.getStateType(),
             cvConfiguration.getUuid(), analysisStartMinute);
       }
     });
+    metricRegistry.updateMetricValue(DATA_ANALYSIS_TASKS_PER_MINUTE, totalDataAnalysisTasks.get());
   }
 
   private LearningEngineAnalysisTask createLearningEngineAnalysisTask(
