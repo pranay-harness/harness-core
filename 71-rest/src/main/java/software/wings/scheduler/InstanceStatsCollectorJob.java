@@ -65,7 +65,7 @@ public class InstanceStatsCollectorJob implements Job {
       String accountId = (String) jobExecutionContext.getJobDetail().getJobDataMap().get(ACCOUNT_ID);
       Objects.requireNonNull(accountId, "Account Id must be passed in job context");
 
-      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Account.class, accountId, Duration.ofSeconds(10))) {
+      try (AcquiredLock lock = persistentLocker.tryToAcquireLock(Account.class, accountId, Duration.ofSeconds(120))) {
         if (lock == null) {
           return;
         }
