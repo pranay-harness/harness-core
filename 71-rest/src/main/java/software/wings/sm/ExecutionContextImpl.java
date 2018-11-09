@@ -513,31 +513,33 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       String key = encryptedFieldMode == OBTAIN_VALUE ? SERVICE_VARIABLE : SAFE_DISPLAY_SERVICE_VARIABLE;
       executionContext.contextMap.remove(key);
 
-      final List<ServiceVariable> serviceVariables = executionContext.prepareServiceVariables(
-          encryptedFieldMode == MASKED ? EncryptedFieldComputeMode.MASKED : EncryptedFieldComputeMode.OBTAIN_META);
-
       Map<String, Object> variables = isEmpty(phaseOverrides)
           ? new HashMap<>()
           : phaseOverrides.stream().collect(Collectors.toMap(NameValuePair::getName, NameValuePair::getValue));
 
-      serviceVariables.forEach(serviceVariable -> {
-        final String variableName = executionContext.renderExpression(serviceVariable.getName());
+      final List<ServiceVariable> serviceVariables = executionContext.prepareServiceVariables(
+          encryptedFieldMode == MASKED ? EncryptedFieldComputeMode.MASKED : EncryptedFieldComputeMode.OBTAIN_META);
 
-        if (!variables.containsKey(variableName)) {
-          if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
-            variables.put(variableName, executionContext.renderExpression(new String(serviceVariable.getValue())));
-          } else {
-            if (isEmpty(serviceVariable.getAccountId())) {
-              serviceVariable.setAccountId(executionContext.getApp().getAccountId());
+      if (isNotEmpty(serviceVariables)) {
+        serviceVariables.forEach(serviceVariable -> {
+          final String variableName = executionContext.renderExpression(serviceVariable.getName());
+
+          if (!variables.containsKey(variableName)) {
+            if (serviceVariable.getType() == TEXT || encryptedFieldMode == MASKED) {
+              variables.put(variableName, executionContext.renderExpression(new String(serviceVariable.getValue())));
+            } else {
+              if (isEmpty(serviceVariable.getAccountId())) {
+                serviceVariable.setAccountId(executionContext.getApp().getAccountId());
+              }
+              variables.put(variableName,
+                  ServiceEncryptedVariable.builder()
+                      .serviceVariable(serviceVariable)
+                      .executionContext(executionContext)
+                      .build());
             }
-            variables.put(variableName,
-                ServiceEncryptedVariable.builder()
-                    .serviceVariable(serviceVariable)
-                    .executionContext(executionContext)
-                    .build());
           }
-        }
-      });
+        });
+      }
       executionContext.contextMap.put(key, variables);
       return variables;
     }
