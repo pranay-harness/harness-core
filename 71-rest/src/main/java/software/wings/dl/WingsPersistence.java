@@ -286,36 +286,6 @@ public interface WingsPersistence extends HPersistence {
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks);
 
   /**
-   * Creates the query.
-   *
-   * @param <T> the generic type
-   * @param cls the cls
-   * @return the query
-   */
-  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls);
-
-  /**
-   * Creates the query.
-   *
-   * @param <T>          the generic type
-   * @param cls          the cls
-   * @param queryChecks  the query checks
-   * @return             the query
-   */
-  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks);
-
-  /**
-   * Creates the query.
-   *
-   * @param <T>          the generic type
-   * @param cls          the cls
-   * @param readPref     the read pref
-   * @param queryChecks  the query checks
-   * @return             the query
-   */
-  <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks);
-
-  /**
    * Gets the or create grid fs bucket.
    *
    * @param bucketName the bucket name

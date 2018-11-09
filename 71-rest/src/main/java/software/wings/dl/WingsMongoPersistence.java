@@ -433,26 +433,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends PersistentEntity> Query<T> createQuery(Class<T> cls) {
-    return createQuery(cls, NORMAL);
-  }
-
-  @Override
-  public <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, Set<QueryChecks> queryChecks) {
-    Query<T> query = createQuery(cls, NORMAL);
-    ((HQuery) query).setQueryChecks(queryChecks);
-    return query;
-  }
-
-  @Override
-  public <T extends PersistentEntity> Query<T> createQuery(
-      Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks) {
-    Query<T> query = createQuery(cls, readPref);
-    ((HQuery) query).setQueryChecks(queryChecks);
-    return query;
-  }
-
-  @Override
   public GridFSBucket getOrCreateGridFSBucket(String bucketName) {
     final AdvancedDatastore datastore = getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
     return GridFSBuckets.create(datastore.getMongo().getDatabase(datastore.getDB().getName()), bucketName);
