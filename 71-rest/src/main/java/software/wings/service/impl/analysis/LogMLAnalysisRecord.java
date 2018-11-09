@@ -4,6 +4,7 @@ import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,7 +17,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.sm.StateType;

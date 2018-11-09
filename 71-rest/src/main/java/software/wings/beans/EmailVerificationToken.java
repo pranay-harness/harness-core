@@ -3,6 +3,7 @@ package software.wings.beans;
 import static software.wings.utils.CryptoUtil.secureRandAlphaNumString;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 

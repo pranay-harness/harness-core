@@ -6,6 +6,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
 import io.harness.exception.WingsException;
 import lombok.Builder;
@@ -22,7 +23,6 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.sm.StateType;

@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import com.google.common.base.MoreObjects;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;

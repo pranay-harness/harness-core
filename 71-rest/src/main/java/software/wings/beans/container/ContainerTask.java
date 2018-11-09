@@ -5,6 +5,7 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,6 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.DeploymentSpecification;
-import software.wings.beans.EmbeddedUser;
 
 import java.util.List;
 import java.util.regex.Pattern;

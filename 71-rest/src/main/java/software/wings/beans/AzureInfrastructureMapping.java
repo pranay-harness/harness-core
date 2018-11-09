@@ -5,10 +5,10 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.beans.AzureKubernetesInfrastructureMapping.Builder;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.utils.Util;
 

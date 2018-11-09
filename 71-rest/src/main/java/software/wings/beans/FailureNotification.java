@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import software.wings.beans.NotificationAction.NotificationActionType;
 
 import java.util.HashMap;

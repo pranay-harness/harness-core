@@ -3,6 +3,7 @@ package software.wings.sm;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
@@ -13,7 +14,6 @@ import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import org.simpleframework.xml.Transient;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.OrchestrationWorkflowType;
 import software.wings.beans.WorkflowType;
 

@@ -35,6 +35,7 @@ import com.google.common.io.Files;
 import com.google.inject.Inject;
 
 import de.danielbechler.util.Collections;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
@@ -48,7 +49,6 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;

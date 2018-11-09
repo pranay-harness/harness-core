@@ -34,6 +34,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.HQuery;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +49,6 @@ import software.wings.app.MainConfiguration;
 import software.wings.app.PortalConfig;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.CanaryOrchestrationWorkflow;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.ExecutionScope;
 import software.wings.beans.FailureNotification;
 import software.wings.beans.InformationNotification;

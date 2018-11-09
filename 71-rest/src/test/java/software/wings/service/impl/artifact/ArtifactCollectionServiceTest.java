@@ -16,13 +16,13 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import software.wings.WingsBaseTest;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Service;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;

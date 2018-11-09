@@ -11,6 +11,7 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;

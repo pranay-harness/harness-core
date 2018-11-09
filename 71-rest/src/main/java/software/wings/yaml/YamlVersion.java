@@ -6,13 +6,13 @@ import com.google.common.base.MoreObjects;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 
 import java.util.Objects;
 

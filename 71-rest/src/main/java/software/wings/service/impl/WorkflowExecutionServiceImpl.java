@@ -77,6 +77,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -126,7 +127,6 @@ import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.CanaryWorkflowExecutionAdvisor;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.EntityType;
 import software.wings.beans.EntityVersion;
 import software.wings.beans.EntityVersion.ChangeType;

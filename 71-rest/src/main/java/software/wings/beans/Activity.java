@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

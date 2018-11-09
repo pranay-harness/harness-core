@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

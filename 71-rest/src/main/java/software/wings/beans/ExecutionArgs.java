@@ -5,6 +5,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.artifact.Artifact;
 

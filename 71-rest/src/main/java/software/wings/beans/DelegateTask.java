@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.hibernate.validator.constraints.NotEmpty;

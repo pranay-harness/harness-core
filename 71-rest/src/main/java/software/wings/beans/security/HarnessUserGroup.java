@@ -3,6 +3,7 @@ package software.wings.beans.security;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,7 +11,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.security.PermissionAttribute.Action;
 
 import java.util.List;

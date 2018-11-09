@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.beans.EmbeddedUser;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;

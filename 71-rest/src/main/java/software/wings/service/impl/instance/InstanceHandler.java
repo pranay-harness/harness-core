@@ -4,6 +4,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -14,7 +15,6 @@ import software.wings.api.DeploymentSummary;
 import software.wings.api.PhaseExecutionData;
 import software.wings.api.PhaseStepExecutionData;
 import software.wings.beans.Application;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Service;

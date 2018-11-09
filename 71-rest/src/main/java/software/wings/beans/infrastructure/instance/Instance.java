@@ -1,5 +1,6 @@
 package software.wings.beans.infrastructure.instance;
 
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -7,7 +8,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.ContainerInstanceKey;

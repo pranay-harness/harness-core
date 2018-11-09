@@ -1,6 +1,7 @@
 package software.wings.beans.artifact;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,7 +14,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.config.ArtifactSourceable;
 import software.wings.utils.Util;
 import software.wings.yaml.BaseEntityYaml;

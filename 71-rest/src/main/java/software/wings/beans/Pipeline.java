@@ -8,6 +8,7 @@ import static java.util.Arrays.asList;
 import static software.wings.beans.WorkflowType.PIPELINE;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

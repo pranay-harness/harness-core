@@ -75,6 +75,7 @@ public class MongoModule extends AbstractModule {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
+    JAVA_PACKAGES_TO_SCAN.forEach(morphia::mapPackage);
 
     MongoClientURI clientUri = new MongoClientURI(uri, mongoClientOptions);
     MongoClient mongoClient = new MongoClient(uri);

@@ -5,6 +5,7 @@ import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.Environment.EnvironmentType.NON_PROD;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

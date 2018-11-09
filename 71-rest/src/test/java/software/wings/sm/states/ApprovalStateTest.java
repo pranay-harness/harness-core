@@ -32,6 +32,7 @@ import static software.wings.utils.WingsTestConstants.PIPELINE_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.PIPELINE_WORKFLOW_EXECUTION_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
+import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageResponse;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,7 +43,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.api.WorkflowElement;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Notification;
 import software.wings.beans.NotificationRule;
 import software.wings.beans.User;

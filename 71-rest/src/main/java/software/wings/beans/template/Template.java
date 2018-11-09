@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
 import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -19,7 +20,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.Variable;
 
 import java.util.ArrayList;

@@ -1,5 +1,6 @@
 package software.wings.security.encryption;
 
+import io.harness.beans.EmbeddedUser;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,7 +10,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 
 import javax.validation.constraints.NotNull;
 

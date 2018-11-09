@@ -4,6 +4,7 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,7 +14,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.beans.User;
 import software.wings.beans.sso.SSOType;
 

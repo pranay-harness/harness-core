@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,7 +14,6 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 import software.wings.sm.StateType;
 
 import java.time.OffsetDateTime;

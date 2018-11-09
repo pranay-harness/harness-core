@@ -5,10 +5,10 @@
 package software.wings.sm;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 
 import java.util.Map;
 import javax.validation.constraints.NotNull;

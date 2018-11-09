@@ -1,8 +1,8 @@
 package software.wings.beans.artifact;
 
+import io.harness.beans.EmbeddedUser;
 import software.wings.beans.BaseFile;
 import software.wings.beans.ChecksumType;
-import software.wings.beans.EmbeddedUser;
 
 /**
  * The Class ArtifactFile.

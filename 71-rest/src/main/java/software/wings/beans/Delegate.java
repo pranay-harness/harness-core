@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.beans.EmbeddedUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;

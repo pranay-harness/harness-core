@@ -6,12 +6,12 @@ import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
-import software.wings.beans.EmbeddedUser;
 import software.wings.utils.Util;
 
 import java.util.Date;

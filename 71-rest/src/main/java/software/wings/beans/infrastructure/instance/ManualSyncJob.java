@@ -1,11 +1,11 @@
 package software.wings.beans.infrastructure.instance;
 
+import io.harness.beans.EmbeddedUser;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.beans.Base;
-import software.wings.beans.EmbeddedUser;
 
 import java.util.List;
 

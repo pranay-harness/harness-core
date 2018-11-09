@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.EmbeddedUser;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.NotificationAction.NotificationActionType;
