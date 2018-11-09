@@ -40,6 +40,9 @@ public class VerificationConstants {
   public static final int MIN_TIMESERIES_QUERY_INTERVAL_IN_HOURS = 1;
   public static final int MAX_TIMESERIES_QUERY_INTERVAL_IN_HOURS = 12;
 
+  public static final String DATA_COLLECTION_TASKS_PER_MINUTE = "data_collection_tasks_per_min";
+  public static final String DATA_ANALYSIS_TASKS_PER_MINUTE = "data_analysis_tasks_per_min";
+
   private VerificationConstants() {}
 
   public static List<StateType> getMetricAnalysisStates() {

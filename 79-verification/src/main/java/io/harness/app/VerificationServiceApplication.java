@@ -5,6 +5,8 @@ import static io.harness.security.VerificationTokenGenerator.VERIFICATION_SERVIC
 import static java.time.Duration.ofSeconds;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
+import static software.wings.common.VerificationConstants.DATA_ANALYSIS_TASKS_PER_MINUTE;
+import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -13,6 +15,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Names;
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
@@ -35,6 +38,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.mongo.MongoModule;
+import io.harness.registry.HarnessMetricRegistry;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.VerificationServiceExecutorService;
@@ -71,6 +75,7 @@ import javax.ws.rs.Path;
 public class VerificationServiceApplication extends Application<VerificationServiceConfiguration> {
   // pool interval at which the job will schedule. But here in verificationJob it will schedule at POLL_INTERVAL / 2
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceApplication.class);
+  public HarnessMetricRegistry harnessMetricRegistry;
   private static String APPLICATION_NAME = "Verification Service Application";
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private WingsPersistence wingsPersistence;
@@ -141,9 +146,13 @@ public class VerificationServiceApplication extends Application<VerificationServ
                                                  .build(),
         new ValidationModule(validatorFactory), databaseModule, new VerificationServiceModule(configuration),
         new VerificationServiceSchedulerModule(configuration),
-        new VerificationManagerClientModule(configuration.getManagerUrl()));
+        new VerificationManagerClientModule(configuration.getManagerUrl()), new MetricRegistryModule(metricRegistry));
 
     wingsPersistence = injector.getInstance(WingsPersistence.class);
+
+    harnessMetricRegistry = injector.getInstance(HarnessMetricRegistry.class);
+
+    initMetrics();
 
     registerResources(environment, injector);
 
@@ -167,6 +176,11 @@ public class VerificationServiceApplication extends Application<VerificationServ
     initializeServiceTaskPoll(injector);
 
     logger.info("Starting app done");
+  }
+
+  private void initMetrics() {
+    harnessMetricRegistry.registerMeterMetric(DATA_ANALYSIS_TASKS_PER_MINUTE, new Meter());
+    harnessMetricRegistry.registerMeterMetric(DATA_COLLECTION_TASKS_PER_MINUTE, new Meter());
   }
 
   private void registerResources(Environment environment, Injector injector) {

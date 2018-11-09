@@ -18,6 +18,11 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_servlet</artifactId>
+            <version>0.1.0</version>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>71-rest</artifactId>
             <version>${project.parent.version}</version>
