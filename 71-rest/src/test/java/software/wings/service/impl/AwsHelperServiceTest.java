@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
@@ -58,8 +59,8 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     UpdateStackRequest request = new UpdateStackRequest().withStackName(stackName);
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
-    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
-    service.updateStack(region, accessKey, secretKey, request);
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any(), anyBoolean());
+    service.updateStack(region, accessKey, secretKey, request, false);
     verify(mockClient).updateStack(request);
   }
 
@@ -72,8 +73,8 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     DeleteStackRequest request = new DeleteStackRequest().withStackName(stackName);
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
-    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
-    service.deleteStack(region, accessKey, secretKey, request);
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any(), anyBoolean());
+    service.deleteStack(region, accessKey, secretKey, request, false);
     verify(mockClient).deleteStack(request);
   }
 
@@ -86,10 +87,10 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     DescribeStacksRequest request = new DescribeStacksRequest().withStackName(stackName);
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
-    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any(), anyBoolean());
     DescribeStacksResult result = new DescribeStacksResult().withStacks(new Stack().withStackName(stackName));
     doReturn(result).when(mockClient).describeStacks(request);
-    DescribeStacksResult actual = service.describeStacks(region, accessKey, secretKey, request);
+    DescribeStacksResult actual = service.describeStacks(region, accessKey, secretKey, request, false);
     assertThat(actual).isNotNull();
     assertThat(actual.getStacks().size()).isEqualTo(1);
     assertThat(actual.getStacks().get(0).getStackName()).isEqualTo(stackName);
@@ -104,11 +105,11 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     DescribeStackEventsRequest request = new DescribeStackEventsRequest().withStackName(stackName);
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
-    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any(), anyBoolean());
     DescribeStackEventsResult result =
         new DescribeStackEventsResult().withStackEvents(new StackEvent().withStackName(stackName).withEventId("id"));
     doReturn(result).when(mockClient).describeStackEvents(request);
-    List<StackEvent> events = service.getAllStackEvents(region, accessKey, secretKey, request);
+    List<StackEvent> events = service.getAllStackEvents(region, accessKey, secretKey, request, false);
     assertThat(events).isNotNull();
     assertThat(events.size()).isEqualTo(1);
     assertThat(events.get(0).getStackName()).isEqualTo(stackName);
@@ -124,8 +125,8 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     CreateStackRequest request = new CreateStackRequest().withStackName(stackName);
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
-    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
-    service.createStack(region, accessKey, secretKey, request);
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any(), anyBoolean());
+    service.createStack(region, accessKey, secretKey, request, false);
     verify(mockClient).createStack(request);
   }
 
@@ -138,10 +139,10 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     DescribeStacksRequest request = new DescribeStacksRequest().withStackName(stackName);
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     AwsHelperService service = spy(new AwsHelperService());
-    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any());
+    doReturn(mockClient).when(service).getAmazonCloudFormationClient(any(), anyString(), any(), anyBoolean());
     DescribeStacksResult result = new DescribeStacksResult().withStacks(new Stack().withStackName(stackName));
     doReturn(result).when(mockClient).describeStacks(request);
-    List<Stack> stacks = service.getAllStacks(region, accessKey, secretKey, request);
+    List<Stack> stacks = service.getAllStacks(region, accessKey, secretKey, request, false);
     assertThat(stacks).isNotNull();
     assertThat(stacks.size()).isEqualTo(1);
     assertThat(stacks.get(0).getStackName()).isEqualTo(stackName);

@@ -8,9 +8,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
@@ -44,24 +43,26 @@ import java.util.stream.Collectors;
 public class AwsEc2HelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEc2HelperServiceDelegate {
   @VisibleForTesting
-  AmazonEC2Client getAmazonEc2Client(String region, String accessKey, char[] secretKey) {
-    return (AmazonEC2Client) AmazonEC2ClientBuilder.standard()
-        .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
-        .build();
+  AmazonEC2Client getAmazonEc2Client(String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+    AmazonEC2ClientBuilder builder = AmazonEC2ClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    return (AmazonEC2Client) builder.build();
   }
 
   @Override
   public boolean validateAwsAccountCredential(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig.getAccessKey(), awsConfig.getSecretKey())
+      getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig.getAccessKey(), awsConfig.getSecretKey(),
+          awsConfig.isUseEc2IamCredentials())
           .describeRegions();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       if (amazonEC2Exception.getStatusCode() == 401) {
         return false;
       }
       handleAmazonServiceException(amazonEC2Exception);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return true;
   }
@@ -70,11 +71,13 @@ public class AwsEc2HelperServiceDelegateImpl
   public List<String> listRegions(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonEC2Client amazonEC2Client =
-          getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(Regions.US_EAST_1.getName(), awsConfig.getAccessKey(),
+          awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       return amazonEC2Client.describeRegions().getRegions().stream().map(Region::getRegionName).collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -83,7 +86,8 @@ public class AwsEc2HelperServiceDelegateImpl
   public List<String> listVPCs(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
+          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       return amazonEC2Client
           .describeVpcs(new DescribeVpcsRequest().withFilters(new Filter("state").withValues("available")))
           .getVpcs()
@@ -92,6 +96,8 @@ public class AwsEc2HelperServiceDelegateImpl
           .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -101,7 +107,8 @@ public class AwsEc2HelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<String> vpcIds) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
+          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       List<Filter> filters = new ArrayList<>();
       if (isNotEmpty(vpcIds)) {
         filters.add(new Filter("vpc-id", vpcIds));
@@ -114,6 +121,8 @@ public class AwsEc2HelperServiceDelegateImpl
           .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -126,8 +135,8 @@ public class AwsEc2HelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       String nextToken = null;
       do {
-        AmazonEC2Client amazonEC2Client =
-            getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
+            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
         List<Filter> filters = new ArrayList<>();
         if (isNotEmpty(vpcIds)) {
           filters.add(new Filter("vpc-id", vpcIds));
@@ -140,6 +149,8 @@ public class AwsEc2HelperServiceDelegateImpl
       } while (nextToken != null);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return result;
   }
@@ -152,8 +163,8 @@ public class AwsEc2HelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       do {
-        AmazonEC2Client amazonEC2Client =
-            getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
+            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
         DescribeTagsResult describeTagsResult =
             amazonEC2Client.describeTags(new DescribeTagsRequest()
                                              .withNextToken(nextToken)
@@ -164,6 +175,8 @@ public class AwsEc2HelperServiceDelegateImpl
       } while (nextToken != null);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return tags;
   }
@@ -178,15 +191,17 @@ public class AwsEc2HelperServiceDelegateImpl
       do {
         DescribeInstancesRequest describeInstancesRequest =
             new DescribeInstancesRequest().withNextToken(nextToken).withFilters(filters);
-        DescribeInstancesResult describeInstancesResult =
-            getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
-                .describeInstances(describeInstancesRequest);
+        DescribeInstancesResult describeInstancesResult = getAmazonEc2Client(
+            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+                                                              .describeInstances(describeInstancesRequest);
         result.addAll(getInstanceList(describeInstancesResult));
         nextToken = describeInstancesResult.getNextToken();
       } while (nextToken != null);
       return result;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -204,15 +219,17 @@ public class AwsEc2HelperServiceDelegateImpl
       do {
         DescribeInstancesRequest describeInstancesRequest =
             new DescribeInstancesRequest().withNextToken(nextToken).withInstanceIds(instanceIds);
-        DescribeInstancesResult describeInstancesResult =
-            getAmazonEc2Client(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
-                .describeInstances(describeInstancesRequest);
+        DescribeInstancesResult describeInstancesResult = getAmazonEc2Client(
+            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+                                                              .describeInstances(describeInstancesRequest);
         result.addAll(getInstanceList(describeInstancesResult));
         nextToken = describeInstancesResult.getNextToken();
       } while (nextToken != null);
       return result;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }

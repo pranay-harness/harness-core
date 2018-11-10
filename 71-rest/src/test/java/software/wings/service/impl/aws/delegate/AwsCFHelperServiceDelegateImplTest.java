@@ -3,6 +3,7 @@ package software.wings.service.impl.aws.delegate;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -31,7 +32,9 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   public void testGetParamsData() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
-    doReturn(mockClient).when(awsCFHelperServiceDelegate).getAmazonCloudFormationClient(any(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsCFHelperServiceDelegate)
+        .getAmazonCloudFormationClient(any(), anyString(), any(), anyBoolean());
     doReturn(new GetTemplateSummaryResult().withParameters(
                  new ParameterDeclaration().withParameterKey("k1").withParameterType("t1").withDefaultValue("d1"),
                  new ParameterDeclaration().withParameterKey("k2").withParameterType("t2").withDefaultValue("d2")))
@@ -55,7 +58,9 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testGetStackBody() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
-    doReturn(mockClient).when(awsCFHelperServiceDelegate).getAmazonCloudFormationClient(any(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsCFHelperServiceDelegate)
+        .getAmazonCloudFormationClient(any(), anyString(), any(), anyBoolean());
     doReturn(new GetTemplateResult().withTemplateBody("body")).when(mockClient).getTemplate(any());
     String body = awsCFHelperServiceDelegate.getStackBody(AwsConfig.builder().build(), "us-east-1", "stackId");
     assertThat(body).isEqualTo("body");
@@ -64,7 +69,9 @@ public class AwsCFHelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testGetCapabilities() {
     AmazonCloudFormationClient mockClient = mock(AmazonCloudFormationClient.class);
-    doReturn(mockClient).when(awsCFHelperServiceDelegate).getAmazonCloudFormationClient(any(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsCFHelperServiceDelegate)
+        .getAmazonCloudFormationClient(any(), anyString(), any(), anyBoolean());
     doReturn(new GetTemplateSummaryResult().withCapabilities("c1", "c2")).when(mockClient).getTemplateSummary(any());
     List<String> capabilities =
         awsCFHelperServiceDelegate.getCapabilities(AwsConfig.builder().build(), "us-east-1", "foo", "body");

@@ -27,13 +27,13 @@ import software.wings.yaml.setting.CloudProviderYaml;
 @Builder
 @ToString(exclude = "secretKey")
 public class AwsConfig extends SettingValue implements EncryptableSetting {
-  @Attributes(title = "Access Key", required = true) @NotEmpty private String accessKey;
-
-  @Attributes(title = "Secret Key", required = true) @Encrypted private char[] secretKey;
-
+  @Attributes(title = "Access Key") private String accessKey;
+  @Attributes(title = "Secret Key") @Encrypted private char[] secretKey;
   @SchemaIgnore @NotEmpty private String accountId; // internal
-
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSecretKey;
+
+  @Attributes(title = "Use Ec2 Iam role") private boolean useEc2IamCredentials;
+
   /**
    * Instantiates a new Aws config.
    */
@@ -42,12 +42,14 @@ public class AwsConfig extends SettingValue implements EncryptableSetting {
   }
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public AwsConfig(String accessKey, char[] secretKey, String accountId, String encryptedSecretKey) {
+  public AwsConfig(
+      String accessKey, char[] secretKey, String accountId, String encryptedSecretKey, boolean useEc2IamCredentials) {
     this();
     this.accessKey = accessKey;
     this.secretKey = secretKey;
     this.accountId = accountId;
     this.encryptedSecretKey = encryptedSecretKey;
+    this.useEc2IamCredentials = useEc2IamCredentials;
   }
 
   @Data
@@ -56,13 +58,15 @@ public class AwsConfig extends SettingValue implements EncryptableSetting {
   public static final class Yaml extends CloudProviderYaml {
     private String accessKey;
     private String secretKey;
+    private boolean useEc2IamCredentials;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String accessKey, String secretKey,
-        UsageRestrictions usageRestrictions) {
+        UsageRestrictions usageRestrictions, boolean useEc2IamCredentials) {
       super(type, harnessApiVersion, usageRestrictions);
       this.accessKey = accessKey;
       this.secretKey = secretKey;
+      this.useEc2IamCredentials = useEc2IamCredentials;
     }
   }
 }

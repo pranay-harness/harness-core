@@ -221,7 +221,9 @@ public class SettingValidationService {
   private void validateAwsConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     try {
       AwsConfig value = (AwsConfig) settingAttribute.getValue();
-      awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
+      if (!value.isUseEc2IamCredentials()) {
+        awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
+      }
     } catch (Exception e) {
       logger.warn(Misc.getMessage(e), e);
       throw new InvalidRequestException(Misc.getMessage(e), USER);

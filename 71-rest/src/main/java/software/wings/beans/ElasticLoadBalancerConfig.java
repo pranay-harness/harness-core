@@ -46,6 +46,8 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSecretKey;
 
+  @Attributes(title = "Use Ec2 Iam role") private boolean useEc2IamCredentials;
+
   /**
    * Instantiates a new Elastic load balancer config.
    */
@@ -55,7 +57,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")
   public ElasticLoadBalancerConfig(Regions region, String loadBalancerName, String accessKey, char[] secretKey,
-      String accountId, String encryptedSecretKey) {
+      String accountId, String encryptedSecretKey, boolean useEc2IamCredentials) {
     this();
     this.region = region;
     this.loadBalancerName = loadBalancerName;
@@ -63,6 +65,7 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
     this.secretKey = secretKey;
     this.accountId = accountId;
     this.encryptedSecretKey = encryptedSecretKey;
+    this.useEc2IamCredentials = useEc2IamCredentials;
   }
 
   @Data
@@ -73,15 +76,17 @@ public class ElasticLoadBalancerConfig extends LoadBalancerConfig implements Enc
     private String loadBalancerName;
     private String accessKey;
     private String secretKey;
+    private boolean useEc2IamCredentials;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String region, String loadBalancerName, String accessKey,
-        String secretKey, UsageRestrictions usageRestrictions) {
+        String secretKey, UsageRestrictions usageRestrictions, boolean useEc2IamCredentials) {
       super(type, harnessApiVersion, usageRestrictions);
       this.region = region;
       this.loadBalancerName = loadBalancerName;
       this.accessKey = accessKey;
       this.secretKey = secretKey;
+      this.useEc2IamCredentials = useEc2IamCredentials;
     }
   }
 }

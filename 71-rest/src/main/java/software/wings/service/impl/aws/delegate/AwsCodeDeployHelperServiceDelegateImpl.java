@@ -9,9 +9,8 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClient;
 import com.amazonaws.services.codedeploy.AmazonCodeDeployClientBuilder;
@@ -49,11 +48,11 @@ public class AwsCodeDeployHelperServiceDelegateImpl
   @Inject private AwsEc2HelperServiceDelegate awsEc2HelperServiceDelegate;
 
   @VisibleForTesting
-  AmazonCodeDeployClient getAmazonCodeDeployClient(Regions region, String accessKey, char[] secretKey) {
-    return (AmazonCodeDeployClient) AmazonCodeDeployClientBuilder.standard()
-        .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
-        .build();
+  AmazonCodeDeployClient getAmazonCodeDeployClient(
+      Regions region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+    AmazonCodeDeployClientBuilder builder = AmazonCodeDeployClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    return (AmazonCodeDeployClient) builder.build();
   }
 
   @Override
@@ -67,15 +66,17 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       ListApplicationsRequest listApplicationsRequest;
       do {
         listApplicationsRequest = new ListApplicationsRequest().withNextToken(nextToken);
-        listApplicationsResult =
-            getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
-                .listApplications(listApplicationsRequest);
+        listApplicationsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(),
+            awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+                                     .listApplications(listApplicationsRequest);
         applications.addAll(listApplicationsResult.getApplications());
         nextToken = listApplicationsResult.getNextToken();
       } while (nextToken != null);
       return applications;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -91,15 +92,17 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       ListDeploymentConfigsRequest listDeploymentConfigsRequest;
       do {
         listDeploymentConfigsRequest = new ListDeploymentConfigsRequest().withNextToken(nextToken);
-        listDeploymentConfigsResult =
-            getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
-                .listDeploymentConfigs(listDeploymentConfigsRequest);
+        listDeploymentConfigsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(),
+            awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+                                          .listDeploymentConfigs(listDeploymentConfigsRequest);
         deploymentConfigurations.addAll(listDeploymentConfigsResult.getDeploymentConfigsList());
         nextToken = listDeploymentConfigsResult.getNextToken();
       } while (nextToken != null);
       return deploymentConfigurations;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -116,15 +119,17 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       do {
         listDeploymentGroupsRequest =
             new ListDeploymentGroupsRequest().withNextToken(nextToken).withApplicationName(appName);
-        listDeploymentGroupsResult =
-            getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
-                .listDeploymentGroups(listDeploymentGroupsRequest);
+        listDeploymentGroupsResult = getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(),
+            awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+                                         .listDeploymentGroups(listDeploymentGroupsRequest);
         deploymentGroups.addAll(listDeploymentGroupsResult.getDeploymentGroups());
         nextToken = listDeploymentGroupsResult.getNextToken();
       } while (nextToken != null);
       return deploymentGroups;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -138,8 +143,8 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       List<String> instanceIds = new ArrayList<>();
       ListDeploymentInstancesRequest listDeploymentInstancesRequest;
       ListDeploymentInstancesResult listDeploymentInstancesResult;
-      AmazonCodeDeployClient amazonCodeDeployClient =
-          getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonCodeDeployClient amazonCodeDeployClient = getAmazonCodeDeployClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       do {
         listDeploymentInstancesRequest = new ListDeploymentInstancesRequest()
                                              .withNextToken(nextToken)
@@ -163,6 +168,8 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       }
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -174,9 +181,9 @@ public class AwsCodeDeployHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptedDataDetails);
       GetDeploymentGroupRequest getDeploymentGroupRequest =
           new GetDeploymentGroupRequest().withApplicationName(appName).withDeploymentGroupName(deploymentGroupName);
-      GetDeploymentGroupResult getDeploymentGroupResult =
-          getAmazonCodeDeployClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey())
-              .getDeploymentGroup(getDeploymentGroupRequest);
+      GetDeploymentGroupResult getDeploymentGroupResult = getAmazonCodeDeployClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+                                                              .getDeploymentGroup(getDeploymentGroupRequest);
       DeploymentGroupInfo deploymentGroupInfo = getDeploymentGroupResult.getDeploymentGroupInfo();
       RevisionLocation revisionLocation = deploymentGroupInfo.getTargetRevision();
       if (revisionLocation == null || revisionLocation.getS3Location() == null) {
@@ -190,6 +197,8 @@ public class AwsCodeDeployHelperServiceDelegateImpl
           .build();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return null;
   }

@@ -7,11 +7,11 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClient;
+import com.amazonaws.services.identitymanagement.AmazonIdentityManagementClientBuilder;
 import com.amazonaws.services.identitymanagement.model.InstanceProfile;
 import com.amazonaws.services.identitymanagement.model.ListInstanceProfilesRequest;
 import com.amazonaws.services.identitymanagement.model.ListInstanceProfilesResult;
@@ -30,11 +30,12 @@ import java.util.Map;
 public class AwsIamHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsIamHelperServiceDelegate {
   @VisibleForTesting
-  AmazonIdentityManagementClient getAmazonIdentityManagementClient(String accessKey, char[] secretKey) {
-    return (AmazonIdentityManagementClient) AmazonIdentityManagementClient.builder()
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
-        .withRegion(Regions.US_EAST_1)
-        .build();
+  AmazonIdentityManagementClient getAmazonIdentityManagementClient(
+      String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+    AmazonIdentityManagementClientBuilder builder =
+        AmazonIdentityManagementClient.builder().withRegion(Regions.US_EAST_1);
+    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    return (AmazonIdentityManagementClient) builder.build();
   }
 
   @Override
@@ -44,8 +45,8 @@ public class AwsIamHelperServiceDelegateImpl
       String nextMarker = null;
       encryptionService.decrypt(awsConfig, encryptionDetails);
       do {
-        AmazonIdentityManagementClient amazonIdentityManagementClient =
-            getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        AmazonIdentityManagementClient amazonIdentityManagementClient = getAmazonIdentityManagementClient(
+            awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
         ListRolesRequest listRolesRequest = new ListRolesRequest().withMaxItems(400).withMarker(nextMarker);
         ListRolesResult listRolesResult = amazonIdentityManagementClient.listRoles(listRolesRequest);
         listRolesResult.getRoles().forEach(role -> result.put(role.getArn(), role.getRoleName()));
@@ -54,6 +55,8 @@ public class AwsIamHelperServiceDelegateImpl
       return result;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyMap();
   }
@@ -68,9 +71,9 @@ public class AwsIamHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       do {
         listInstanceProfilesRequest = new ListInstanceProfilesRequest().withMarker(nextMarker);
-        listInstanceProfilesResult =
-            getAmazonIdentityManagementClient(awsConfig.getAccessKey(), awsConfig.getSecretKey())
-                .listInstanceProfiles(listInstanceProfilesRequest);
+        listInstanceProfilesResult = getAmazonIdentityManagementClient(
+            awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+                                         .listInstanceProfiles(listInstanceProfilesRequest);
         result.addAll(listInstanceProfilesResult.getInstanceProfiles()
                           .stream()
                           .map(InstanceProfile::getInstanceProfileName)
@@ -80,6 +83,8 @@ public class AwsIamHelperServiceDelegateImpl
       return result;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }

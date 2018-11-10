@@ -23,6 +23,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
         .accessKey(awsConfig.getAccessKey())
         .secretKey(getEncryptedValue(awsConfig, "secretKey", false))
         .type(awsConfig.getType())
+        .useEc2IamCredentials(awsConfig.isUseEc2IamCredentials())
         .build();
   }
 
@@ -36,6 +37,7 @@ public class AwsConfigYamlHandler extends CloudProviderYamlHandler<Yaml, AwsConf
                            .accountId(accountId)
                            .accessKey(yaml.getAccessKey())
                            .encryptedSecretKey(yaml.getSecretKey())
+                           .useEc2IamCredentials(yaml.isUseEc2IamCredentials())
                            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }

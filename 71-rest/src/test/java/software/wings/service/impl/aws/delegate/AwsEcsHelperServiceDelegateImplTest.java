@@ -3,6 +3,7 @@ package software.wings.service.impl.aws.delegate;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -27,7 +28,9 @@ public class AwsEcsHelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testListClusters() {
     AmazonECSClient mockClient = mock(AmazonECSClient.class);
-    doReturn(mockClient).when(awsEcsHelperServiceDelegate).getAmazonEcsClient(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsEcsHelperServiceDelegate)
+        .getAmazonEcsClient(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new ListClustersResult().withClusterArns("foo/bar")).when(mockClient).listClusters(any());
     List<String> result =

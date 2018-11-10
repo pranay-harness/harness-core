@@ -78,8 +78,8 @@ public class ElasticLoadBalancerState extends State {
       AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
       managerDecryptionService.decrypt(awsConfig,
           secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()));
-      return execute(
-          context, loadBalancerName, Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      return execute(context, loadBalancerName, Regions.fromName(region), awsConfig.getAccessKey(),
+          awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
     } else if (infrastructureMapping instanceof PhysicalInfrastructureMappingBase) {
       SettingAttribute elbSetting =
           settingsService.get(((PhysicalInfrastructureMappingBase) infrastructureMapping).getLoadBalancerId());
@@ -89,28 +89,30 @@ public class ElasticLoadBalancerState extends State {
       loadBalancerName = loadBalancerConfig.getLoadBalancerName();
       region = loadBalancerConfig.getRegion().name();
       return execute(context, loadBalancerName, Regions.valueOf(region), loadBalancerConfig.getAccessKey(),
-          loadBalancerConfig.getSecretKey());
+          loadBalancerConfig.getSecretKey(), loadBalancerConfig.isUseEc2IamCredentials());
     } else {
       throw new InvalidRequestException("ELB operations not supported");
     }
   }
 
-  public ExecutionResponse execute(
-      ExecutionContext context, String loadBalancerName, Regions region, String accessKey, char[] secretKey) {
+  public ExecutionResponse execute(ExecutionContext context, String loadBalancerName, Regions region, String accessKey,
+      char[] secretKey, boolean useEc2IamCredentials) {
     ExecutionStatus status;
 
     InstanceElement instance = context.getContextElement(ContextElementType.INSTANCE);
     final String instanceId = instance.getHost().getInstanceId() != null
         ? instance.getHost().getInstanceId()
-        : awsHelperService.getInstanceId(region, accessKey, secretKey, instance.getHost().getHostName());
+        : awsHelperService.getInstanceId(
+              region, accessKey, secretKey, instance.getHost().getHostName(), useEc2IamCredentials);
 
     String errorMessage = "";
 
     try {
-      boolean result = operation == Operation.Enable ? awsHelperService.registerInstancesWithLoadBalancer(
-                                                           region, accessKey, secretKey, loadBalancerName, instanceId)
-                                                     : awsHelperService.deregisterInstancesFromLoadBalancer(
-                                                           region, accessKey, secretKey, loadBalancerName, instanceId);
+      boolean result = operation == Operation.Enable
+          ? awsHelperService.registerInstancesWithLoadBalancer(
+                region, accessKey, secretKey, loadBalancerName, instanceId, useEc2IamCredentials)
+          : awsHelperService.deregisterInstancesFromLoadBalancer(
+                region, accessKey, secretKey, loadBalancerName, instanceId, useEc2IamCredentials);
       status = result ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED;
     } catch (Exception e) {
       status = ExecutionStatus.ERROR;

@@ -49,8 +49,8 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
       long stackEventsTs = System.currentTimeMillis();
       executionLogCallback.saveExecutionLog(String.format("# Starting to delete stack: %s", stackName));
       DeleteStackRequest deleteStackRequest = new DeleteStackRequest().withStackName(stackId);
-      awsHelperService.deleteStack(
-          request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), deleteStackRequest);
+      awsHelperService.deleteStack(request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(),
+          deleteStackRequest, awsConfig.isUseEc2IamCredentials());
       executionLogCallback.saveExecutionLog(
           String.format("# Request to delete stack: %s submitted. Now beginning to poll.", stackName));
       int timeOutMs = cloudFormationDeleteStackRequest.getTimeoutInMs() > 0
@@ -60,8 +60,8 @@ public class CloudFormationDeleteStackHandler extends CloudFormationCommandTaskH
       boolean done = false;
       while (System.currentTimeMillis() < endTime && !done) {
         DescribeStacksRequest describeStacksRequest = new DescribeStacksRequest().withStackName(stackId);
-        List<Stack> stacks = awsHelperService.getAllStacks(
-            request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), describeStacksRequest);
+        List<Stack> stacks = awsHelperService.getAllStacks(request.getRegion(), awsConfig.getAccessKey(),
+            awsConfig.getSecretKey(), describeStacksRequest, awsConfig.isUseEc2IamCredentials());
         if (stacks.size() < 1) {
           String message = String.format(
               "# Did not get any stacks with id: %s while querying stacks list. Deletion may have completed",

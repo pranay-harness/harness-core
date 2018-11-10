@@ -21,9 +21,8 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
@@ -75,11 +74,11 @@ public class AwsAsgHelperServiceDelegateImpl
   @Inject private TimeLimiter timeLimiter;
 
   @VisibleForTesting
-  AmazonAutoScalingClient getAmazonAutoScalingClient(Regions region, String accessKey, char[] secretKey) {
-    return (AmazonAutoScalingClient) AmazonAutoScalingClientBuilder.standard()
-        .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
-        .build();
+  AmazonAutoScalingClient getAmazonAutoScalingClient(
+      Regions region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+    AmazonAutoScalingClientBuilder builder = AmazonAutoScalingClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    return (AmazonAutoScalingClient) builder.build();
   }
 
   @Override
@@ -90,6 +89,8 @@ public class AwsAsgHelperServiceDelegateImpl
       return result.stream().map(AutoScalingGroup::getAutoScalingGroupName).collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -101,8 +102,8 @@ public class AwsAsgHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
           amazonAutoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest);
       if (describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty()) {
@@ -115,6 +116,8 @@ public class AwsAsgHelperServiceDelegateImpl
           .collect(toList());
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -134,8 +137,8 @@ public class AwsAsgHelperServiceDelegateImpl
       encryptionService.decrypt(awsConfig, encryptionDetails);
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult =
           amazonAutoScalingClient.describeAutoScalingGroups(describeAutoScalingGroupsRequest);
       if (!describeAutoScalingGroupsResult.getAutoScalingGroups().isEmpty()) {
@@ -143,6 +146,8 @@ public class AwsAsgHelperServiceDelegateImpl
       }
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return null;
   }
@@ -152,8 +157,8 @@ public class AwsAsgHelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String launchConfigName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       return amazonAutoScalingClient
           .describeLaunchConfigurations(
               new DescribeLaunchConfigurationsRequest().withLaunchConfigurationNames(launchConfigName))
@@ -163,6 +168,8 @@ public class AwsAsgHelperServiceDelegateImpl
           .orElse(null);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return null;
   }
@@ -172,8 +179,8 @@ public class AwsAsgHelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
 
       DescribeAutoScalingGroupsRequest describeAutoScalingGroupsRequest;
       DescribeAutoScalingGroupsResult describeAutoScalingGroupsResult;
@@ -190,6 +197,8 @@ public class AwsAsgHelperServiceDelegateImpl
       return result;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -199,12 +208,14 @@ public class AwsAsgHelperServiceDelegateImpl
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       amazonAutoScalingClient.deleteLaunchConfiguration(
           new DeleteLaunchConfigurationRequest().withLaunchConfigurationName(autoScalingGroupName));
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -214,11 +225,13 @@ public class AwsAsgHelperServiceDelegateImpl
       CreateLaunchConfigurationRequest createLaunchConfigurationRequest) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       return amazonAutoScalingClient.createLaunchConfiguration(createLaunchConfigurationRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return new CreateLaunchConfigurationResult();
   }
@@ -230,8 +243,8 @@ public class AwsAsgHelperServiceDelegateImpl
     AmazonAutoScalingClient amazonAutoScalingClient = null;
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(),
+          awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       return amazonAutoScalingClient.createAutoScalingGroup(createAutoScalingGroupRequest);
     } catch (AmazonServiceException amazonServiceException) {
       if (amazonAutoScalingClient != null && logCallback != null) {
@@ -239,6 +252,8 @@ public class AwsAsgHelperServiceDelegateImpl
             createAutoScalingGroupRequest.getAutoScalingGroupName(), new HashSet<>(), logCallback, true);
       }
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return new CreateAutoScalingGroupResult();
   }
@@ -246,8 +261,8 @@ public class AwsAsgHelperServiceDelegateImpl
   @Override
   public void deleteAutoScalingGroups(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region,
       List<AutoScalingGroup> autoScalingGroups, LogCallback callback) {
-    AmazonAutoScalingClient amazonAutoScalingClient =
-        getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       autoScalingGroups.forEach(autoScalingGroup -> {
@@ -272,6 +287,8 @@ public class AwsAsgHelperServiceDelegateImpl
       });
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -281,8 +298,8 @@ public class AwsAsgHelperServiceDelegateImpl
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
       Map<String, Integer> capacities = Maps.newHashMap();
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       String nextToken = null;
       DescribeAutoScalingGroupsRequest request = null;
       DescribeAutoScalingGroupsResult result = null;
@@ -296,6 +313,8 @@ public class AwsAsgHelperServiceDelegateImpl
       return capacities;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyMap();
   }
@@ -305,8 +324,8 @@ public class AwsAsgHelperServiceDelegateImpl
       List<EncryptedDataDetail> encryptionDetails, String region, String autoScalingGroupName, Integer desiredCapacity,
       ExecutionLogCallback logCallback, Integer autoScalingSteadyStateTimeout) {
     encryptionService.decrypt(awsConfig, encryptionDetails);
-    AmazonAutoScalingClient amazonAutoScalingClient =
-        getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+        awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
     try {
       logCallback.saveExecutionLog(
           format("Set AutoScaling Group: [%s] desired capacity to [%s]", autoScalingGroupName, desiredCapacity));
@@ -320,6 +339,8 @@ public class AwsAsgHelperServiceDelegateImpl
       describeAutoScalingGroupActivities(
           amazonAutoScalingClient, autoScalingGroupName, new HashSet<>(), logCallback, true);
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -331,8 +352,8 @@ public class AwsAsgHelperServiceDelegateImpl
         return;
       }
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       DescribeAutoScalingGroupsRequest request =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
@@ -349,6 +370,8 @@ public class AwsAsgHelperServiceDelegateImpl
       logCallback.saveExecutionLog(
           format("Exception: [%s] while setting Asg limits", getMessage(amazonServiceException)));
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -357,8 +380,8 @@ public class AwsAsgHelperServiceDelegateImpl
       String autoScalingGroupName, Integer desiredCapacity, ExecutionLogCallback logCallback) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       DescribeAutoScalingGroupsRequest request =
           new DescribeAutoScalingGroupsRequest().withAutoScalingGroupNames(autoScalingGroupName);
       DescribeAutoScalingGroupsResult result = amazonAutoScalingClient.describeAutoScalingGroups(request);
@@ -390,6 +413,8 @@ public class AwsAsgHelperServiceDelegateImpl
       logCallback.saveExecutionLog(
           format("Exception: [%s] while setting Asg limits", getMessage(amazonServiceException)));
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -463,8 +488,8 @@ public class AwsAsgHelperServiceDelegateImpl
       Integer autoScalingSteadyStateTimeout) {
     try {
       timeLimiter.callWithTimeout(() -> {
-        AmazonAutoScalingClient amazonAutoScalingClient =
-            getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+        AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+            awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
         Set<String> completedActivities = new HashSet<>();
         while (true) {
           List<String> instanceIds =
@@ -513,14 +538,16 @@ public class AwsAsgHelperServiceDelegateImpl
         logCallback.saveExecutionLog(format("No Target Groups to attach to: [%s]", asgName));
         return;
       }
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       AttachLoadBalancerTargetGroupsRequest request =
           new AttachLoadBalancerTargetGroupsRequest().withAutoScalingGroupName(asgName).withTargetGroupARNs(
               targetGroupARNs);
       amazonAutoScalingClient.attachLoadBalancerTargetGroups(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -532,13 +559,15 @@ public class AwsAsgHelperServiceDelegateImpl
         logCallback.saveExecutionLog(format("No classic load balancers to attach to: [%s]", asgName));
         return;
       }
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       AttachLoadBalancersRequest request =
           new AttachLoadBalancersRequest().withAutoScalingGroupName(asgName).withLoadBalancerNames(classicLBs);
       amazonAutoScalingClient.attachLoadBalancers(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -550,14 +579,16 @@ public class AwsAsgHelperServiceDelegateImpl
         logCallback.saveExecutionLog(format("No Target Groups to attach to: [%s]", asgName));
         return;
       }
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       DetachLoadBalancerTargetGroupsRequest request =
           new DetachLoadBalancerTargetGroupsRequest().withAutoScalingGroupName(asgName).withTargetGroupARNs(
               targetGroupARNs);
       amazonAutoScalingClient.detachLoadBalancerTargetGroups(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 
@@ -569,13 +600,15 @@ public class AwsAsgHelperServiceDelegateImpl
         logCallback.saveExecutionLog(format("No classic load balancers to detach to: [%s]", asgName));
         return;
       }
-      AmazonAutoScalingClient amazonAutoScalingClient =
-          getAmazonAutoScalingClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonAutoScalingClient amazonAutoScalingClient = getAmazonAutoScalingClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       DetachLoadBalancersRequest request =
           new DetachLoadBalancersRequest().withAutoScalingGroupName(asgName).withLoadBalancerNames(classicLBs);
       amazonAutoScalingClient.detachLoadBalancers(request);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
   }
 }

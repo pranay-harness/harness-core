@@ -422,14 +422,15 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                     .withParameterKey("VpcAvailabilityZones")
                     .withParameterValue("us-east-1e,us-east-1c,us-east-1d,us-east-1a"),
                 new Parameter().withParameterKey("VpcCidr").withParameterValue("10.0.0.0/16"),
-                new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")));
+                new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")),
+        false);
 
     Stack stack;
     while (!"CREATE_COMPLETE".equals(
         (stack = awsHelperService
                      .describeStacks("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
                          "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
-                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"))
+                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"), false)
                      .getStacks()
                      .get(0))
             .getStackStatus())) {
@@ -765,14 +766,15 @@ public class EcsContainerServiceImpl implements EcsContainerService {
                     .withParameterKey("VpcAvailabilityZones")
                     .withParameterValue("us-east-1e,us-east-1c,us-east-1d,us-east-1a"),
                 new Parameter().withParameterKey("VpcCidr").withParameterValue("10.0.0.0/16"),
-                new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")));
+                new Parameter().withParameterKey("VpcId").withParameterValue("vpc-84a9bfe0")),
+        false);
 
     Stack stack;
     while (!"CREATE_COMPLETE".equals(
         (stack = awsHelperService
                      .describeStacks("us-east-1", "AKIAJLEKM45P4PO5QUFQ",
                          "nU8xaNacU65ZBdlNxfXvKM2Yjoda7pQnNP3fClVE".toCharArray(),
-                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"))
+                         new DescribeStacksRequest().withStackName("EC2ContainerService-test2"), false)
                      .getStacks()
                      .get(0))
             .getStackStatus())) {
