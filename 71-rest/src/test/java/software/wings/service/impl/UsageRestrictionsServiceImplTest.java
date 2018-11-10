@@ -1,4 +1,4 @@
-package software.wings.service;
+package software.wings.service.impl;
 
 import static com.google.common.collect.Sets.newHashSet;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
@@ -61,18 +61,17 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
-import software.wings.service.impl.UsageRestrictionsServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +107,7 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
 
   @Spy
   @InjectMocks
-  private UsageRestrictionsService usageRestrictionsService = new UsageRestrictionsServiceImpl(
+  private UsageRestrictionsServiceImpl usageRestrictionsService = new UsageRestrictionsServiceImpl(
       authHandler, userGroupService, appService, envService, settingsService, secretManager);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -187,6 +186,61 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
     } finally {
       UserThreadLocal.unset();
     }
+  }
+
+  @Test
+  public void testHasAllEnvAccessOfType() {
+    UsageRestrictions usageRestrictions = null;
+    GenericEntityFilter appFilter = null;
+    EnvFilter envFilter = null;
+
+    assertFalse(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.NON_PROD));
+
+    usageRestrictions = new UsageRestrictions();
+    assertFalse(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.NON_PROD));
+
+    AppEnvRestriction appEnvRestriction = AppEnvRestriction.builder().appFilter(null).envFilter(null).build();
+    usageRestrictions.setAppEnvRestrictions(Collections.singleton(appEnvRestriction));
+    assertFalse(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.NON_PROD));
+
+    appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    envFilter = EnvFilter.builder()
+                    .filterTypes(Collections.singleton(EnvFilter.FilterType.NON_PROD))
+                    .ids(Collections.singleton(ENV_ID_1))
+                    .build();
+    appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+    usageRestrictions.setAppEnvRestrictions(Collections.singleton(appEnvRestriction));
+    assertFalse(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.PROD));
+    assertTrue(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.NON_PROD));
+
+    appFilter =
+        GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Collections.singleton(APP_ID)).build();
+    envFilter = EnvFilter.builder()
+                    .filterTypes(Collections.singleton(EnvFilter.FilterType.SELECTED))
+                    .ids(Collections.singleton(ENV_ID_1))
+                    .build();
+    appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+    usageRestrictions.setAppEnvRestrictions(Collections.singleton(appEnvRestriction));
+    assertFalse(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID_1, EnvFilter.FilterType.SELECTED));
+    assertFalse(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.PROD));
+    assertTrue(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.SELECTED));
+
+    // No NPE is expected if envFilter filter types are null;
+    appFilter =
+        GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Collections.singleton(APP_ID)).build();
+    envFilter = EnvFilter.builder().build();
+    appEnvRestriction = AppEnvRestriction.builder().appFilter(appFilter).envFilter(envFilter).build();
+    usageRestrictions.setAppEnvRestrictions(Collections.singleton(appEnvRestriction));
+    assertFalse(
+        UsageRestrictionsServiceImpl.hasAllEnvAccessOfType(usageRestrictions, APP_ID, EnvFilter.FilterType.SELECTED));
   }
 
   @Test
