@@ -13,6 +13,8 @@ import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
+import static software.wings.common.Constants.HARNESS_IO_KEY_;
+import static software.wings.common.Constants.HARNESS_SUPPORT_EMAIL_KEY;
 
 import com.google.inject.Inject;
 
@@ -366,9 +368,14 @@ public class GitClientImpl implements GitClient {
         status.getRemoved().forEach(
             filePath -> commitMessage.append(format("%s: %s\n", DiffEntry.ChangeType.DELETE, filePath)));
       }
+
+      String authorName = isNotBlank(gitConfig.getAuthorName()) ? gitConfig.getAuthorName() : HARNESS_IO_KEY_;
+      String authorEmailId =
+          isNotBlank(gitConfig.getAuthorEmailId()) ? gitConfig.getAuthorEmailId() : HARNESS_SUPPORT_EMAIL_KEY;
+
       RevCommit revCommit = git.commit()
-                                .setCommitter("Harness.io", "support@harness.io")
-                                .setAuthor("Harness.io", "support@harness.io")
+                                .setCommitter(authorName, authorEmailId)
+                                .setAuthor(authorName, authorEmailId)
                                 .setAll(true)
                                 .setMessage(commitMessage.toString())
                                 .call();

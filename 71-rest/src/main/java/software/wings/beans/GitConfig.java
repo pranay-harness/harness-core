@@ -6,11 +6,13 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.Encrypted;
+import io.harness.data.validator.Trimmed;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
@@ -42,6 +44,9 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   private String webhookToken;
   @SchemaIgnore @Transient private GitRepositoryType gitRepoType;
   @Transient private boolean generateWebhookUrl;
+
+  @Trimmed private String authorName;
+  @Trimmed @Email private String authorEmailId;
 
   public enum GitRepositoryType { YAML, TERRAFORM }
 
