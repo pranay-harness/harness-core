@@ -1,6 +1,5 @@
 package software.wings.beans;
 
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.System.currentTimeMillis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -39,11 +38,9 @@ import javax.validation.constraints.NotNull;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Base extends PersistentEntity implements UuidAware, CreatedAtAware {
-  public static final String ID_KEY = "_id";
   public static final String APP_ID_KEY = "appId";
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String LAST_UPDATED_AT_KEY = "lastUpdatedAt";
-  public static final String CREATED_AT_KEY = "createdAt";
   public static final String CREATED_BY_KEY = "createdBy";
 
   public static final String GLOBAL_APP_ID = "__GLOBAL_APP_ID__";
@@ -113,12 +110,10 @@ public class Base extends PersistentEntity implements UuidAware, CreatedAtAware 
   public void onSave() {
     super.onSave();
 
-    if (uuid == null) {
-      uuid = generateUuid();
-      if (this instanceof Application) {
-        this.appId = uuid;
-      }
+    if (this instanceof Application) {
+      this.appId = uuid;
     }
+
     EmbeddedUser embeddedUser = prepareEmbeddedUser();
     if (createdBy == null && !(this instanceof Account)) {
       createdBy = embeddedUser;
