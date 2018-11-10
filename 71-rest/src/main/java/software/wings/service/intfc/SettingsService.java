@@ -9,6 +9,7 @@ import software.wings.beans.SettingAttribute;
 import software.wings.beans.ValidationResult;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.settings.SettingValue;
+import software.wings.settings.UsageRestrictions;
 
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,12 @@ public interface SettingsService extends OwnedByAccount {
   @ValidationGroups(Update.class) SettingAttribute update(@Valid SettingAttribute settingAttribute);
 
   @ValidationGroups(Update.class) SettingAttribute update(@Valid SettingAttribute settingAttribute, boolean pushToGit);
+
+  /**
+   * INTERNAL API only no usage restriction is checked. Only update the usage restrictions of the specified setting
+   * attribute. This API is primary called during migration of removing dangling app/env references,
+   */
+  void updateUsageRestrictionsInternal(String uuid, UsageRestrictions usageRestrictions);
 
   void delete(String appId, String varId);
 

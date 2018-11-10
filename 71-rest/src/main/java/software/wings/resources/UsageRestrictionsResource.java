@@ -14,6 +14,7 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.settings.UsageRestrictions;
+import software.wings.settings.UsageRestrictionsReferenceSummary;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -96,5 +97,25 @@ public class UsageRestrictionsResource {
       @PathParam("entityId") @NotEmpty String entityId, @QueryParam("entityType") @NotEmpty String entityType) {
     boolean isEditable = usageRestrictionsService.isEditable(accountId, entityId, entityType);
     return new RestResponse<>(isEditable);
+  }
+
+  @GET
+  @Path("appReferences/{appId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<UsageRestrictionsReferenceSummary> getReferenceSummaryForApp(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("appId") String appId) {
+    return new RestResponse<>(usageRestrictionsService.getReferenceSummaryForApp(accountId, appId));
+  }
+
+  @GET
+  @Path("envReferences/{envId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.LOGGED_IN)
+  public RestResponse<UsageRestrictionsReferenceSummary> getReferenceSummaryForEnv(
+      @QueryParam("accountId") @NotEmpty String accountId, @PathParam("envId") String envId) {
+    return new RestResponse<>(usageRestrictionsService.getReferenceSummaryForEnv(accountId, envId));
   }
 }

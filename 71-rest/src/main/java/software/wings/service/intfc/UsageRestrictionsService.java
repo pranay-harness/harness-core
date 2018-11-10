@@ -7,6 +7,7 @@ import software.wings.security.UserPermissionInfo;
 import software.wings.settings.RestrictionsAndAppEnvMap;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
+import software.wings.settings.UsageRestrictionsReferenceSummary;
 
 import java.util.Map;
 import java.util.Set;
@@ -127,4 +128,25 @@ public interface UsageRestrictionsService {
   RestrictionsAndAppEnvMap getRestrictionsAndAppEnvMapFromCache(String accountId, Action action);
 
   boolean isEditable(String accountId, String entityId, String entityType);
+
+  /**
+   * Get the summary of all usage restriction references to the specified application.
+   */
+  UsageRestrictionsReferenceSummary getReferenceSummaryForApp(String accountId, String appId);
+
+  /**
+   * Get the summary of all usage restriction references to the specified environment.
+   */
+  UsageRestrictionsReferenceSummary getReferenceSummaryForEnv(String accountId, String envId);
+
+  /**
+   * Purge all the usage restriction references to application/environments that no longer exists.
+   */
+  int purgeDanglingAppEnvReferences(String accountId);
+
+  /**
+   * Remove all references to an application or an environment in the usage restrictions. This operation is usually
+   * performed before an application is deleted to prevent dangling references to deleted applications.
+   */
+  int removeAppEnvReferences(String accountId, String appId, String envId);
 }

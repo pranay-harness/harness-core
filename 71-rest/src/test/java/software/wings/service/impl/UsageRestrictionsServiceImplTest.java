@@ -5,12 +5,18 @@ import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
@@ -21,13 +27,11 @@ import static software.wings.security.PermissionAttribute.PermissionType.ENV;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
-import static software.wings.utils.WingsTestConstants.SETTING_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.USER_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
 
 import com.google.common.collect.Maps;
-import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -37,12 +41,15 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
+import org.mongodb.morphia.query.FieldEnd;
+import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
-import software.wings.WingsBaseTest;
 import software.wings.beans.Application;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
@@ -61,6 +68,7 @@ import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserPermissionInfo;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserThreadLocal;
+import software.wings.security.encryption.EncryptedData;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
@@ -69,6 +77,7 @@ import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
+import software.wings.settings.UsageRestrictionsReferenceSummary;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -81,8 +90,8 @@ import java.util.stream.Collectors;
 /**
  * @author rktummala on 06/08/18
  */
-public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
-  @Inject private WingsPersistence wingsPersistence;
+@RunWith(MockitoJUnitRunner.class)
+public class UsageRestrictionsServiceImplTest {
   @Mock private WingsPersistence mockWingsPersistence;
   @Mock private AppService appService;
   @Mock private AuthHandler authHandler;
@@ -91,11 +100,14 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
   @Mock private EnvironmentService envService;
   @Mock private SettingsService settingsService;
   @Mock private SecretManager secretManager;
+  @Mock private Query<SettingAttribute> query;
 
   private static Set<Action> readAction = newHashSet(Action.READ);
   private static Set<Action> updateAndReadAction = newHashSet(Action.UPDATE, Action.READ);
   private static Set<Action> allActions =
       newHashSet(Action.CREATE, Action.UPDATE, Action.READ, Action.DELETE, Action.EXECUTE);
+
+  private String SETTING_ATTRIBUTE_ID = "SETTING_ATTRIBUTE_ID";
 
   private String ENV_ID_1 = "ENV_ID_1";
   private String ENV_ID_2 = "ENV_ID_2";
@@ -108,21 +120,19 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
   @Spy
   @InjectMocks
   private UsageRestrictionsServiceImpl usageRestrictionsService = new UsageRestrictionsServiceImpl(
-      authHandler, userGroupService, appService, envService, settingsService, secretManager);
+      authHandler, userGroupService, appService, envService, settingsService, secretManager, mockWingsPersistence);
   @Rule public ExpectedException thrown = ExpectedException.none();
 
-  private Query<SettingAttribute> spyQuery;
-
   private PageResponse<SettingAttribute> pageResponse =
-      aPageResponse().withResponse(asList(aSettingAttribute().withAppId(SETTING_ID).build())).build();
+      aPageResponse().withResponse(asList(aSettingAttribute().withAppId(APP_ID).build())).build();
 
   /**
    * Sets mocks.
    */
   @Before
   public void setupMocks() {
-    spyQuery = spy(wingsPersistence.createQuery(SettingAttribute.class));
-    when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(spyQuery);
+    when(mockWingsPersistence.createQuery(SettingAttribute.class)).thenReturn(query);
+
     when(mockWingsPersistence.query(eq(SettingAttribute.class), any(PageRequest.class))).thenReturn(pageResponse);
     when(mockWingsPersistence.saveAndGet(eq(SettingAttribute.class), any(SettingAttribute.class)))
         .thenAnswer(
@@ -533,6 +543,104 @@ public class UsageRestrictionsServiceImplTest extends WingsBaseTest {
     } finally {
       UserThreadLocal.unset();
     }
+  }
+
+  @Test
+  public void shouldRemoveEnvReferences() {
+    UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
+
+    int count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID, ENV_ID);
+    assertEquals(0, count);
+    assertEquals(1, usageRestrictions.getAppEnvRestrictions().size());
+    verifyZeroInteractions(settingsService);
+    verifyZeroInteractions(secretManager);
+
+    count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID_1, ENV_ID_1);
+    assertEquals(1, count);
+    assertEquals(0, usageRestrictions.getAppEnvRestrictions().size());
+    verify(settingsService, times(1))
+        .updateUsageRestrictionsInternal(eq(SETTING_ATTRIBUTE_ID), any(UsageRestrictions.class));
+    verifyZeroInteractions(secretManager);
+  }
+
+  @Test
+  public void shouldRemoveAppReferences() {
+    UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
+
+    int count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID, null);
+    assertEquals(0, count);
+    assertEquals(1, usageRestrictions.getAppEnvRestrictions().size());
+    verifyZeroInteractions(settingsService);
+    verifyZeroInteractions(secretManager);
+
+    count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID_1, null);
+    assertEquals(1, count);
+    assertEquals(0, usageRestrictions.getAppEnvRestrictions().size());
+    verify(settingsService, times(1))
+        .updateUsageRestrictionsInternal(eq(SETTING_ATTRIBUTE_ID), any(UsageRestrictions.class));
+    verifyZeroInteractions(secretManager);
+  }
+
+  @Test
+  public void shouldPurgeDanglingReferences() {
+    UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
+
+    when(appService.exist(APP_ID_1)).thenReturn(false);
+
+    int count = usageRestrictionsService.purgeDanglingAppEnvReferences(ACCOUNT_ID);
+    assertEquals(1, count);
+    assertEquals(0, usageRestrictions.getAppEnvRestrictions().size());
+    verify(settingsService, times(1)).updateUsageRestrictionsInternal(anyString(), any(UsageRestrictions.class));
+  }
+
+  @Test
+  public void shouldReturnReferenceSummaries() {
+    setupUsageRestrictionsForAppEnvReferenceTesting();
+
+    UsageRestrictionsReferenceSummary summary =
+        usageRestrictionsService.getReferenceSummaryForApp(ACCOUNT_ID, APP_ID_1);
+    assertNotNull(summary);
+    assertEquals(1, summary.getTotal());
+    assertEquals(1, summary.getNumOfSettings());
+    assertEquals(1, summary.getSettings().size());
+
+    summary = usageRestrictionsService.getReferenceSummaryForEnv(ACCOUNT_ID, ENV_ID_1);
+    assertNotNull(summary);
+    assertEquals(1, summary.getTotal());
+    assertEquals(1, summary.getNumOfSettings());
+    assertEquals(1, summary.getSettings().size());
+  }
+
+  private UsageRestrictions setupUsageRestrictionsForAppEnvReferenceTesting() {
+    UsageRestrictions usageRestrictions = getUsageRestrictionsForAppIdAndEnvId(APP_ID_1, ENV_ID_1);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setUuid(SETTING_ATTRIBUTE_ID);
+    settingAttribute.setUsageRestrictions(usageRestrictions);
+
+    Query<SettingAttribute> query1 = mock(Query.class);
+    FieldEnd fieldEnd1 = mock(FieldEnd.class);
+    MorphiaIterator iterator1 = mock(MorphiaIterator.class);
+
+    when(mockWingsPersistence.createQuery(eq(SettingAttribute.class))).thenReturn(query1);
+    when(query1.filter(anyString(), anyObject())).thenReturn(query1);
+    when(query1.field(any())).thenReturn(fieldEnd1);
+    when(fieldEnd1.exists()).thenReturn(query1);
+    when(query1.fetch()).thenReturn(iterator1);
+    when(iterator1.hasNext()).thenReturn(true).thenReturn(false).thenReturn(true).thenReturn(false);
+    when(iterator1.next()).thenReturn(settingAttribute);
+
+    Query<EncryptedData> query2 = mock(Query.class);
+    FieldEnd fieldEnd2 = mock(FieldEnd.class);
+    MorphiaIterator iterator2 = mock(MorphiaIterator.class);
+
+    when(mockWingsPersistence.createQuery(eq(EncryptedData.class))).thenReturn(query2);
+    when(query2.filter(anyString(), anyObject())).thenReturn(query2);
+    when(query2.field(any())).thenReturn(fieldEnd2);
+    when(fieldEnd2.exists()).thenReturn(query2);
+    when(query2.fetch()).thenReturn(iterator2);
+    doReturn(false).when(iterator2).hasNext();
+
+    return usageRestrictions;
   }
 
   private void checkIfHasAccess(boolean isAccountAdmin, UsageRestrictions usageRestrictions,

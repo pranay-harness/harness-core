@@ -14,6 +14,7 @@ import migrations.all.AppKeywordsMigration;
 import migrations.all.AuthTokenTtlMigration;
 import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
+import migrations.all.DanglingAppEnvReferenceRemovalMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import migrations.all.DeleteStaleSecretUsageLogs;
@@ -150,6 +151,7 @@ public class MigrationList {
         .add(Pair.of(202, RemoveDupInstanceStats.class))
         .add(Pair.of(203, UpdateGitSyncErrorMigration.class)) // This is intentional.
         .add(Pair.of(204, InitializeAppCounters.class))
+        .add(Pair.of(205, DanglingAppEnvReferenceRemovalMigration.class))
         .build();
   }
 }

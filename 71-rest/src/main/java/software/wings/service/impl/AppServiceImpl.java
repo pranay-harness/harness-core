@@ -65,6 +65,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -105,6 +106,7 @@ public class AppServiceImpl implements AppService {
   @Inject private GenericDbCache dbCache;
   @Inject private LimitCheckerFactory limitCheckerFactory;
   @Inject private YamlGitService yamlGitService;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler backgroundJobScheduler;
   @Inject @Named("ServiceJobScheduler") private PersistentScheduler serviceJobScheduler;
@@ -333,6 +335,9 @@ public class AppServiceImpl implements AppService {
       // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
       // too much though will result in start the job before the object is deleted, this possibility is
       // handled, but this is still not good.
+
+      // HAR-6245: Need to first remove all the references to this app ID in existing usage restrictions.
+      usageRestrictionsService.removeAppEnvReferences(application.getAccountId(), appId, null);
 
       // Now we are ready to delete the object.
       if (wingsPersistence.delete(Application.class, appId)) {

@@ -383,6 +383,13 @@ public class SettingsServiceImpl implements SettingsService {
     return updatedSettingAttribute;
   }
 
+  @Override
+  public void updateUsageRestrictionsInternal(String uuid, UsageRestrictions usageRestrictions) {
+    ImmutableMap.Builder<String, Object> fields =
+        ImmutableMap.<String, Object>builder().put("usageRestrictions", usageRestrictions);
+    wingsPersistence.updateFields(SettingAttribute.class, uuid, fields.build());
+  }
+
   /* (non-Javadoc)
    * @see software.wings.service.intfc.SettingsService#update(software.wings.beans.SettingAttribute)
    */
