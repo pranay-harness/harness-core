@@ -338,14 +338,11 @@ public class TriggerServiceImpl implements TriggerService {
           logger.info("Artifacts {} not matched with the given artifact filter", artifacts);
         }
       }
-      if (isEmpty(artifactSelections)) {
-        logger.info("No artifact selections found so executing pipeline/ workflow with the collected artifacts");
-        if (isEmpty(artifacts)) {
-          logger.warn(
-              "Skipping execution - artifact does not match with the given filter {}", artifactTriggerCondition);
-          continue;
-        }
-      } else {
+      if (isEmpty(artifacts)) {
+        logger.warn("Skipping execution - artifact does not match with the given filter {}", artifactTriggerCondition);
+        continue;
+      }
+      if (isNotEmpty(artifactSelections)) {
         logger.info("Artifact selections found collecting artifacts as per artifactStream selections");
         if (addArtifactsFromSelections(trigger.getAppId(), trigger, artifacts)) {
           if (isEmpty(artifacts)) {
