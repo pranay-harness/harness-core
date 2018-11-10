@@ -17,6 +17,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.persistence.HIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -29,6 +30,7 @@ import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.restrictions.AppRestrictionsSummary;
 import software.wings.beans.security.restrictions.RestrictionsSummary;
+import software.wings.dl.WingsPersistence;
 import software.wings.security.AccountPermissionSummary;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
@@ -56,9 +58,12 @@ import software.wings.settings.RestrictionsAndAppEnvMap.RestrictionsAndAppEnvMap
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.settings.UsageRestrictions.AppEnvRestriction;
+import software.wings.settings.UsageRestrictionsReferenceSummary;
+import software.wings.settings.UsageRestrictionsReferenceSummary.IdNameReference;
 import software.wings.utils.JsonUtils;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -80,16 +85,19 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   @Inject private EnvironmentService environmentService;
   @Inject private SettingsService settingsService;
   @Inject private SecretManager secretManager;
+  @Inject private WingsPersistence wingsPersistence;
 
   @Inject
   public UsageRestrictionsServiceImpl(AuthHandler authHandler, UserGroupService userGroupService, AppService appService,
-      EnvironmentService environmentService, SettingsService settingsService, SecretManager secretManager) {
+      EnvironmentService environmentService, SettingsService settingsService, SecretManager secretManager,
+      WingsPersistence wingsPersistence) {
     this.authHandler = authHandler;
     this.userGroupService = userGroupService;
     this.appService = appService;
     this.environmentService = environmentService;
     this.settingsService = settingsService;
     this.secretManager = secretManager;
+    this.wingsPersistence = wingsPersistence;
   }
 
   @Override
@@ -988,6 +996,277 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       }
       return userHasPermissionsToChangeEntity(accountId, settingAttribute.getUsageRestrictions());
     }
+  }
+
+  @Override
+  public UsageRestrictionsReferenceSummary getReferenceSummaryForApp(String accountId, String appId) {
+    Set<IdNameReference> settings = new LinkedHashSet<>();
+    Set<IdNameReference> secrets = new LinkedHashSet<>();
+
+    try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
+      while (iterator.hasNext()) {
+        SettingAttribute settingAttribute = iterator.next();
+        UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
+        for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
+          GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
+          if (FilterType.SELECTED.equals(appFilter.getFilterType()) && appFilter.getIds().contains(appId)) {
+            settings.add(
+                IdNameReference.builder().id(settingAttribute.getUuid()).name(settingAttribute.getName()).build());
+          }
+        }
+      }
+    }
+
+    try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
+      while (iterator.hasNext()) {
+        EncryptedData encryptedData = iterator.next();
+        UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
+        for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
+          GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
+          if (FilterType.SELECTED.equals(appFilter.getFilterType()) && appFilter.getIds().contains(appId)) {
+            secrets.add(IdNameReference.builder().id(encryptedData.getUuid()).name(encryptedData.getName()).build());
+          }
+        }
+      }
+    }
+
+    int numOfSettings = settings.size();
+    int numOfSecrets = secrets.size();
+    return UsageRestrictionsReferenceSummary.builder()
+        .total(numOfSettings + numOfSecrets)
+        .numOfSettings(numOfSettings)
+        .numOfSecrets(numOfSecrets)
+        .settings(settings)
+        .secrets(secrets)
+        .build();
+  }
+
+  @Override
+  public UsageRestrictionsReferenceSummary getReferenceSummaryForEnv(String accountId, String envId) {
+    Set<IdNameReference> settings = new LinkedHashSet<>();
+    Set<IdNameReference> secrets = new LinkedHashSet<>();
+
+    try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
+      while (iterator.hasNext()) {
+        SettingAttribute settingAttribute = iterator.next();
+        UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
+        for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
+          EnvFilter envFilter = appEnvRestriction.getEnvFilter();
+          if (envFilter.getFilterTypes().contains(FilterType.SELECTED) && envFilter.getIds().contains(envId)) {
+            settings.add(
+                IdNameReference.builder().id(settingAttribute.getUuid()).name(settingAttribute.getName()).build());
+          }
+        }
+      }
+    }
+
+    try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
+      while (iterator.hasNext()) {
+        EncryptedData encryptedData = iterator.next();
+        UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
+        for (AppEnvRestriction appEnvRestriction : usageRestrictions.getAppEnvRestrictions()) {
+          EnvFilter envFilter = appEnvRestriction.getEnvFilter();
+          if (envFilter.getFilterTypes().contains(FilterType.SELECTED) && envFilter.getIds().contains(envId)) {
+            secrets.add(IdNameReference.builder().id(encryptedData.getUuid()).name(encryptedData.getName()).build());
+          }
+        }
+      }
+    }
+
+    int numOfSettings = settings.size();
+    int numOfSecrets = secrets.size();
+    return UsageRestrictionsReferenceSummary.builder()
+        .total(numOfSettings + numOfSecrets)
+        .numOfSettings(numOfSettings)
+        .numOfSecrets(numOfSecrets)
+        .settings(settings)
+        .secrets(secrets)
+        .build();
+  }
+
+  @Override
+  public int purgeDanglingAppEnvReferences(String accountId) {
+    int count = 0;
+
+    Set<String> existingAppIds = new HashSet<>(appService.getAppIdsByAccountId(accountId));
+    Set<String> existingEnvIds = new HashSet<>();
+    for (String appId : existingAppIds) {
+      existingEnvIds.addAll(environmentService.getEnvIdsByApp(appId));
+    }
+
+    try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
+      while (iterator.hasNext()) {
+        SettingAttribute settingAttribute = iterator.next();
+        UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
+        count += purgeDanglingAppEnvReferenceInternal(usageRestrictions, existingAppIds, existingEnvIds);
+
+        // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
+        // restrictions.
+        if (count > 0) {
+          settingsService.updateUsageRestrictionsInternal(settingAttribute.getUuid(), usageRestrictions);
+        }
+      }
+    }
+
+    try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
+      while (iterator.hasNext()) {
+        EncryptedData encryptedData = iterator.next();
+        UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
+        count += purgeDanglingAppEnvReferenceInternal(usageRestrictions, existingAppIds, existingEnvIds);
+
+        // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
+        // restrictions.
+        if (count > 0) {
+          secretManager.updateUsageRestrictionsForSecretOrFile(accountId, encryptedData.getUuid(), usageRestrictions);
+        }
+      }
+    }
+
+    return count;
+  }
+
+  @Override
+  public int removeAppEnvReferences(String accountId, String appId, String envId) {
+    int count = 0;
+
+    try (HIterator<SettingAttribute> iterator = getSettingAttributesWithUsageRestrictionsIterator(accountId)) {
+      while (iterator.hasNext()) {
+        SettingAttribute settingAttribute = iterator.next();
+        UsageRestrictions usageRestrictions = settingAttribute.getUsageRestrictions();
+        count += removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
+
+        // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
+        // restrictions.
+        if (count > 0) {
+          settingsService.updateUsageRestrictionsInternal(settingAttribute.getUuid(), usageRestrictions);
+          logger.info("Reference to application {} has been removed in setting attribute {} with id {} in account {}",
+              appId, settingAttribute.getName(), settingAttribute.getUuid(), accountId);
+        }
+      }
+    }
+
+    try (HIterator<EncryptedData> iterator = getEncryptedDataWithUsageRestrictionsIterator(accountId)) {
+      while (iterator.hasNext()) {
+        EncryptedData encryptedData = iterator.next();
+        UsageRestrictions usageRestrictions = encryptedData.getUsageRestrictions();
+        count += removeAppEnvReferencesInternal(usageRestrictions, appId, envId);
+
+        // Dangling reference to App/Env has been cleared in the usage restrictions. Then update with the updated usage
+        // restrictions.
+        if (count > 0) {
+          secretManager.updateUsageRestrictionsForSecretOrFile(accountId, encryptedData.getUuid(), usageRestrictions);
+          logger.info("Reference to application {} has been removed in encrypted text/file {} with id {} in account {}",
+              appId, encryptedData.getName(), encryptedData.getUuid(), accountId);
+        }
+      }
+    }
+
+    return count;
+  }
+
+  private HIterator<SettingAttribute> getSettingAttributesWithUsageRestrictionsIterator(String accountId) {
+    return new HIterator<>(wingsPersistence.createQuery(SettingAttribute.class)
+                               .filter("accountId", accountId)
+                               .field("usageRestrictions")
+                               .exists()
+                               .fetch());
+  }
+
+  private HIterator<EncryptedData> getEncryptedDataWithUsageRestrictionsIterator(String accountId) {
+    return new HIterator<>(wingsPersistence.createQuery(EncryptedData.class)
+                               .filter("accountId", accountId)
+                               .field("usageRestrictions")
+                               .exists()
+                               .fetch());
+  }
+
+  private int removeAppEnvReferencesInternal(UsageRestrictions usageRestrictions, String appId, String envId) {
+    int count = 0;
+
+    Set<AppEnvRestriction> filteredAppEnvRestrictions = new LinkedHashSet<>();
+    Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
+    for (AppEnvRestriction appEnvRestriction : appEnvRestrictions) {
+      // When envId is present, don't rely on appId match to remove appEnvRestriction within the usage restrictions.
+      if (envId == null) {
+        GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
+        Set<String> appIds = appFilter.getIds();
+
+        if (GenericEntityFilter.FilterType.SELECTED.equals(appFilter.getFilterType()) && isNotEmpty(appIds)
+            && appIds.contains(appId)) {
+          appIds.remove(appId);
+          count++;
+
+          if (isEmpty(appFilter.getIds())) {
+            continue;
+          }
+        }
+      } else {
+        EnvFilter envFilter = appEnvRestriction.getEnvFilter();
+        Set<String> envIds = envFilter.getIds();
+        Set<String> filterTypes = envFilter.getFilterTypes();
+
+        if (filterTypes.contains(EnvFilter.FilterType.SELECTED) && isNotEmpty(envIds) && envIds.contains(envId)) {
+          envIds.remove(envId);
+          count++;
+
+          if (isEmpty(envFilter.getIds())) {
+            continue;
+          }
+        }
+      }
+
+      filteredAppEnvRestrictions.add(appEnvRestriction);
+    }
+
+    if (count > 0) {
+      usageRestrictions.setAppEnvRestrictions(filteredAppEnvRestrictions);
+    }
+
+    return count;
+  }
+
+  private int purgeDanglingAppEnvReferenceInternal(
+      UsageRestrictions usageRestrictions, Set<String> existingAppIds, Set<String> existingEnvIds) {
+    int count = 0;
+
+    Set<AppEnvRestriction> filteredAppEnvRestrictions = new LinkedHashSet<>();
+    Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
+    for (AppEnvRestriction appEnvRestriction : appEnvRestrictions) {
+      GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
+      EnvFilter envFilter = appEnvRestriction.getEnvFilter();
+
+      String appId = null;
+      if (GenericEntityFilter.FilterType.SELECTED.equals(appFilter.getFilterType()) && isNotEmpty(appFilter.getIds())) {
+        appId = appFilter.getIds().iterator().next();
+        if (!existingAppIds.contains(appId)) {
+          appFilter.getIds().remove(appId);
+          count++;
+        }
+
+        if (isEmpty(appFilter.getIds())) {
+          continue;
+        }
+      }
+
+      if (envFilter.getFilterTypes().contains(FilterType.SELECTED) && isNotEmpty(envFilter.getIds())) {
+        String envId = envFilter.getIds().iterator().next();
+        if (appId != null && !existingEnvIds.contains(envId)) {
+          envFilter.getIds().remove(envId);
+          count++;
+        }
+
+        if (isEmpty(envFilter.getIds())) {
+          continue;
+        }
+      }
+
+      filteredAppEnvRestrictions.add(appEnvRestriction);
+    }
+
+    if (count > 0) {
+      usageRestrictions.setAppEnvRestrictions(filteredAppEnvRestrictions);
+    }
+    return count;
   }
 
   private void checkIfValidUsageRestrictions(UsageRestrictions usageRestrictions) {

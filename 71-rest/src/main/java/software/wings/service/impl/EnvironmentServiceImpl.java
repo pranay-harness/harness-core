@@ -79,6 +79,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
+import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByEnvironment;
@@ -123,6 +124,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private TriggerService triggerService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private YamlPushService yamlPushService;
+  @Inject private UsageRestrictionsService usageRestrictionsService;
 
   /**
    * {@inheritDoc}
@@ -426,6 +428,9 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     // before we delete the object to avoid leaving the objects unpruned in case of crash. Waiting
     // too much though will result in start the job before the object is deleted, this possibility is
     // handled, but this is still not good.
+
+    // HAR-6245: Need to first remove all the references to this environment from existing usage restrictions
+    usageRestrictionsService.removeAppEnvReferences(accountId, environment.getAppId(), environment.getUuid());
 
     // Now we are ready to delete the object.
     if (wingsPersistence.delete(environment)) {
