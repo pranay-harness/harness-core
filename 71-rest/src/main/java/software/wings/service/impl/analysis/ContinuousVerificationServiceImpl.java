@@ -674,86 +674,88 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
              new HIterator<>(getTimeSeriesAnalysisRecordIterator(startTime, endTime, cvConfiguration))) {
       while (timeSeriesAnalysisRecords.hasNext()) {
         TimeSeriesMLAnalysisRecord record = timeSeriesAnalysisRecords.next();
-        record.getTransactions().forEach((transactionKey, transaction) -> {
-          String transactionName = transaction.getTxn_name();
+        if (record != null && record.getTransactions() != null) {
+          record.getTransactions().forEach((transactionKey, transaction) -> {
+            String transactionName = transaction.getTxn_name();
 
-          // Add empty hashmap corresponding to txn name if not already present in observedTimeSeries hashmap
-          if (!observedTimeSeries.containsKey(transactionName)) {
-            observedTimeSeries.put(transactionName, new HashMap<>());
-          }
-
-          transaction.getMetrics().forEach((metricKey, metric) -> {
-            // Add empty arraylist corresponding to current metric name, for above transaction name
-            if (!observedTimeSeries.get(transactionName).containsKey(metric.getMetric_name())) {
-              observedTimeSeries.get(transactionName)
-                  .put(metric.getMetric_name(),
-                      TimeSeriesOfMetric.builder()
-                          .metricName(metric.getMetric_name())
-                          .timeSeries(
-                              initializeTimeSeriesDataPointsList(startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1))
-                          .risk(-1)
-                          .build());
+            // Add empty hashmap corresponding to txn name if not already present in observedTimeSeries hashmap
+            if (!observedTimeSeries.containsKey(transactionName)) {
+              observedTimeSeries.put(transactionName, new HashMap<>());
             }
 
-            // Update risk if record's analysisMinute is >= risk cut-off time
-            if (TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()) > riskCutOffTime) {
-              int candidateRisk = metric.getMax_risk();
-              int currentMaxRisk = observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getRisk();
-              if (candidateRisk > currentMaxRisk) {
-                observedTimeSeries.get(transactionName).get(metric.getMetric_name()).setRisk(candidateRisk);
-              }
-            }
-
-            // Logic to insert time series data points
-
-            Map<String, TimeSeriesMLHostSummary> results = metric.getResults();
-            Map.Entry<String, TimeSeriesMLHostSummary> metricHostResultsEntry;
-            if (isEmpty(results)) {
-              logger.info("results is empty for time series analysis record with uuid {}", record.getUuid());
-            } else {
-              // For CV 24x7, there has to exist exactly one host
-              if (results.size() > 1) {
-                logger.info("More than 1 host found for time series analysis record {}", record.getUuid());
+            transaction.getMetrics().forEach((metricKey, metric) -> {
+              // Add empty arraylist corresponding to current metric name, for above transaction name
+              if (!observedTimeSeries.get(transactionName).containsKey(metric.getMetric_name())) {
+                observedTimeSeries.get(transactionName)
+                    .put(metric.getMetric_name(),
+                        TimeSeriesOfMetric.builder()
+                            .metricName(metric.getMetric_name())
+                            .timeSeries(initializeTimeSeriesDataPointsList(
+                                startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1))
+                            .risk(-1)
+                            .build());
               }
 
-              // Here we get the iterator to the first entry and dereference it and ignore other entries
-              metricHostResultsEntry = results.entrySet().iterator().next();
-
-              // size of list = CRON INTERVAL IN MINUTES
-              // contains value at each minute
-              List<Double> datapoints = metricHostResultsEntry.getValue().getTest_data();
-
-              Map<Long, TimeSeriesDataPoint> existingPoints =
-                  observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getTimeSeriesMap();
-
-              observedTimeSeries.get(transactionName)
-                  .get(metric.getMetric_name())
-                  .addToRiskMap(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()), metric.getMax_risk());
-
-              if (datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES) {
-                logger.error(
-                    "datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES. Cron poll interval = {}, datapoints.size() = {}",
-                    CRON_POLL_INTERVAL_IN_MINUTES, datapoints.size());
-              }
-
-              long timestamp =
-                  TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1;
-              timestamp = Timestamp.nextMinuteBoundary(timestamp);
-              long period = TimeUnit.MINUTES.toMillis(1);
-              for (int j = 0; j < datapoints.size(); j++, timestamp += period) {
-                if (timestamp > endTime) {
-                  break;
-                }
-                if (existingPoints.containsKey(timestamp)) {
-                  existingPoints.get(timestamp).setValue(datapoints.get(j));
-                } else {
-                  logger.error("Timestamp {} does not exist in timeseries map. txnName={}, metricName={}", timestamp,
-                      transactionName, metric.getMetric_name());
+              // Update risk if record's analysisMinute is >= risk cut-off time
+              if (TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()) > riskCutOffTime) {
+                int candidateRisk = metric.getMax_risk();
+                int currentMaxRisk = observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getRisk();
+                if (candidateRisk > currentMaxRisk) {
+                  observedTimeSeries.get(transactionName).get(metric.getMetric_name()).setRisk(candidateRisk);
                 }
               }
-            }
+
+              // Logic to insert time series data points
+
+              Map<String, TimeSeriesMLHostSummary> results = metric.getResults();
+              Map.Entry<String, TimeSeriesMLHostSummary> metricHostResultsEntry;
+              if (isEmpty(results)) {
+                logger.info("results is empty for time series analysis record with uuid {}", record.getUuid());
+              } else {
+                // For CV 24x7, there has to exist exactly one host
+                if (results.size() > 1) {
+                  logger.info("More than 1 host found for time series analysis record {}", record.getUuid());
+                }
+
+                // Here we get the iterator to the first entry and dereference it and ignore other entries
+                metricHostResultsEntry = results.entrySet().iterator().next();
+
+                // size of list = CRON INTERVAL IN MINUTES
+                // contains value at each minute
+                List<Double> datapoints = metricHostResultsEntry.getValue().getTest_data();
+
+                Map<Long, TimeSeriesDataPoint> existingPoints =
+                    observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getTimeSeriesMap();
+
+                observedTimeSeries.get(transactionName)
+                    .get(metric.getMetric_name())
+                    .addToRiskMap(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()), metric.getMax_risk());
+
+                if (datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES) {
+                  logger.error(
+                      "datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES. Cron poll interval = {}, datapoints.size() = {}",
+                      CRON_POLL_INTERVAL_IN_MINUTES, datapoints.size());
+                }
+
+                long timestamp =
+                    TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1;
+                timestamp = Timestamp.nextMinuteBoundary(timestamp);
+                long period = TimeUnit.MINUTES.toMillis(1);
+                for (int j = 0; j < datapoints.size(); j++, timestamp += period) {
+                  if (timestamp > endTime) {
+                    break;
+                  }
+                  if (existingPoints.containsKey(timestamp)) {
+                    existingPoints.get(timestamp).setValue(datapoints.get(j));
+                  } else {
+                    logger.error("Timestamp {} does not exist in timeseries map. txnName={}, metricName={}", timestamp,
+                        transactionName, metric.getMetric_name());
+                  }
+                }
+              }
+            });
           });
-        });
+        }
       }
     }
     return observedTimeSeries;
