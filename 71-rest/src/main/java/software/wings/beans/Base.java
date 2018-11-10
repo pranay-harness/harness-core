@@ -6,6 +6,7 @@ import static java.lang.System.currentTimeMillis;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
@@ -37,7 +38,7 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
-public class Base extends PersistentEntity implements UuidAware {
+public class Base extends PersistentEntity implements UuidAware, CreatedAtAware {
   public static final String ID_KEY = "_id";
   public static final String APP_ID_KEY = "appId";
   public static final String ACCOUNT_ID_KEY = "accountId";
@@ -110,14 +111,13 @@ public class Base extends PersistentEntity implements UuidAware {
    */
   @PrePersist
   public void onSave() {
+    super.onSave();
+
     if (uuid == null) {
       uuid = generateUuid();
       if (this instanceof Application) {
         this.appId = uuid;
       }
-    }
-    if (createdAt == 0) {
-      createdAt = currentTimeMillis();
     }
     EmbeddedUser embeddedUser = prepareEmbeddedUser();
     if (createdBy == null && !(this instanceof Account)) {
