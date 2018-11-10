@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -41,7 +42,9 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testValidateAwsAccountCredential() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsEc2HelperServiceDelegate)
+        .getAmazonEc2Client(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeRegionsResult()).when(mockClient).describeRegions();
     boolean valid = awsEc2HelperServiceDelegate.validateAwsAccountCredential(AwsConfig.builder().build(), emptyList());
@@ -51,7 +54,9 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testListRegions() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsEc2HelperServiceDelegate)
+        .getAmazonEc2Client(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeRegionsResult().withRegions(
                  new Region().withRegionName("us-east-1"), new Region().withRegionName("us-east-2")))
@@ -67,7 +72,9 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testListVPCs() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsEc2HelperServiceDelegate)
+        .getAmazonEc2Client(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeVpcsResult().withVpcs(new Vpc().withVpcId("vp1"), new Vpc().withVpcId("vp2")))
         .when(mockClient)
@@ -82,7 +89,9 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testListSubnets() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsEc2HelperServiceDelegate)
+        .getAmazonEc2Client(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeSubnetsResult().withSubnets(new Subnet().withSubnetId("s1"), new Subnet().withSubnetId("s2")))
         .when(mockClient)
@@ -98,7 +107,9 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testListSGs() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsEc2HelperServiceDelegate)
+        .getAmazonEc2Client(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeSecurityGroupsResult().withSecurityGroups(
                  new SecurityGroup().withGroupId("g1"), new SecurityGroup().withGroupId("g2")))
@@ -115,7 +126,9 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testListTags() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsEc2HelperServiceDelegate)
+        .getAmazonEc2Client(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeTagsResult().withTags(new TagDescription().withKey("k1"), new TagDescription().withKey("k2")))
         .when(mockClient)
@@ -131,7 +144,9 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testListEc2Instances_1() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsEc2HelperServiceDelegate)
+        .getAmazonEc2Client(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeInstancesResult().withReservations(new Reservation().withInstances(
                  new Instance().withInstanceId("id1"), new Instance().withInstanceId("id2"))))
@@ -148,7 +163,9 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testListEc2Instances_2() {
     AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
-    doReturn(mockClient).when(awsEc2HelperServiceDelegate).getAmazonEc2Client(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsEc2HelperServiceDelegate)
+        .getAmazonEc2Client(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new DescribeInstancesResult().withReservations(new Reservation().withInstances(
                  new Instance().withInstanceId("id1"), new Instance().withInstanceId("id2"))))

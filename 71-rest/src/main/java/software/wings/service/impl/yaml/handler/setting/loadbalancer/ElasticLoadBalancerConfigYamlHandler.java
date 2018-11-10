@@ -27,6 +27,7 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
         .loadBalancerName(config.getLoadBalancerName())
         .accessKey(config.getAccessKey())
         .secretKey(getEncryptedValue(config, "secretKey", false))
+        .useEc2IamCredentials(config.isUseEc2IamCredentials())
         .build();
   }
 
@@ -44,6 +45,7 @@ public class ElasticLoadBalancerConfigYamlHandler extends LoadBalancerYamlHandle
                                            .loadBalancerName(yaml.getLoadBalancerName())
                                            .region(region)
                                            .encryptedSecretKey(yaml.getSecretKey())
+                                           .useEc2IamCredentials(yaml.isUseEc2IamCredentials())
                                            .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }

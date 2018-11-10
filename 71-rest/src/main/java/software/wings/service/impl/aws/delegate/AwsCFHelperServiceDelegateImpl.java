@@ -7,9 +7,8 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClient;
 import com.amazonaws.services.cloudformation.AmazonCloudFormationClientBuilder;
@@ -29,11 +28,11 @@ import java.util.List;
 @Singleton
 public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase implements AwsCFHelperServiceDelegate {
   @VisibleForTesting
-  AmazonCloudFormationClient getAmazonCloudFormationClient(Regions region, String accessKey, char[] secretKey) {
-    return (AmazonCloudFormationClient) AmazonCloudFormationClientBuilder.standard()
-        .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
-        .build();
+  AmazonCloudFormationClient getAmazonCloudFormationClient(
+      Regions region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+    AmazonCloudFormationClientBuilder builder = AmazonCloudFormationClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    return (AmazonCloudFormationClient) builder.build();
   }
 
   @Override
@@ -41,8 +40,8 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String data, String type) {
     try {
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AmazonCloudFormationClient client =
-          getAmazonCloudFormationClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       GetTemplateSummaryRequest request = new GetTemplateSummaryRequest();
       if ("s3".equalsIgnoreCase(type)) {
         request.withTemplateURL(data);
@@ -63,6 +62,8 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       }
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
@@ -70,13 +71,15 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
   @Override
   public String getStackBody(AwsConfig awsConfig, String region, String stackId) {
     try {
-      AmazonCloudFormationClient client =
-          getAmazonCloudFormationClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       GetTemplateRequest getTemplateRequest = new GetTemplateRequest().withStackName(stackId);
       GetTemplateResult getTemplateResult = client.getTemplate(getTemplateRequest);
       return getTemplateResult.getTemplateBody();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       handleAmazonServiceException(amazonEC2Exception);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return "";
   }
@@ -84,8 +87,8 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
   @Override
   public List<String> getCapabilities(AwsConfig awsConfig, String region, String data, String type) {
     try {
-      AmazonCloudFormationClient client =
-          getAmazonCloudFormationClient(Regions.fromName(region), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AmazonCloudFormationClient client = getAmazonCloudFormationClient(Regions.fromName(region),
+          awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       GetTemplateSummaryRequest request = new GetTemplateSummaryRequest();
       if ("s3".equalsIgnoreCase(type)) {
         request.withTemplateURL(data);
@@ -96,6 +99,8 @@ public class AwsCFHelperServiceDelegateImpl extends AwsHelperServiceDelegateBase
       return result.getCapabilities();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }

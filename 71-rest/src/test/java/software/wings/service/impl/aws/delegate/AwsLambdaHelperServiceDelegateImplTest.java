@@ -3,6 +3,7 @@ package software.wings.service.impl.aws.delegate;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
@@ -45,7 +46,9 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testExecuteFunction() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
-    doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsLambdaHelperServiceDelegate)
+        .getAmazonLambdaClient(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     doReturn(new InvokeResult().withStatusCode(1).withFunctionError("err").withLogResult("log").withPayload(
                  StandardCharsets.UTF_8.encode("payload")))
@@ -65,7 +68,9 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testExecuteWf_FxDoesNotExist() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
-    doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsLambdaHelperServiceDelegate)
+        .getAmazonLambdaClient(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());
@@ -98,7 +103,9 @@ public class AwsLambdaHelperServiceDelegateImplTest extends WingsBaseTest {
   @Test
   public void testExecuteWf_FxExists() {
     AWSLambdaClient mockClient = mock(AWSLambdaClient.class);
-    doReturn(mockClient).when(awsLambdaHelperServiceDelegate).getAmazonLambdaClient(anyString(), anyString(), any());
+    doReturn(mockClient)
+        .when(awsLambdaHelperServiceDelegate)
+        .getAmazonLambdaClient(anyString(), anyString(), any(), anyBoolean());
     doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
     ExecutionLogCallback mockCallBack = mock(ExecutionLogCallback.class);
     doNothing().when(mockCallBack).saveExecutionLog(anyString(), any());

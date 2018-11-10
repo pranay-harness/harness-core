@@ -1,10 +1,17 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.autoscaling.model.AmazonAutoScalingException;
 import com.amazonaws.services.cloudformation.model.AmazonCloudFormationException;
 import com.amazonaws.services.codedeploy.model.AmazonCodeDeployException;
@@ -24,6 +31,29 @@ import software.wings.service.intfc.security.EncryptionService;
 class AwsHelperServiceDelegateBase {
   private static final Logger logger = LoggerFactory.getLogger(AwsHelperServiceDelegateBase.class);
   @Inject protected EncryptionService encryptionService;
+
+  protected void attachCredentials(
+      AwsClientBuilder builder, boolean useEc2IamCredentials, String accessKey, char[] secretKey) {
+    if (useEc2IamCredentials) {
+      builder.withCredentials(InstanceProfileCredentialsProvider.getInstance());
+    } else {
+      builder.withCredentials(
+          new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))));
+    }
+  }
+
+  protected void handleAmazonClientException(AmazonClientException amazonClientException) {
+    logger.error("AWS API Client call exception", amazonClientException);
+    String errorMessage = amazonClientException.getMessage();
+    if (isNotEmpty(errorMessage) && errorMessage.contains("/meta-data/iam/security-credentials/")) {
+      throw new InvalidRequestException("The IAM role on the Ec2 delegate does not exist OR does not"
+              + " have required permissions.",
+          amazonClientException, USER);
+    } else {
+      logger.error("Unhandled aws exception");
+      throw new WingsException(ErrorCode.AWS_ACCESS_DENIED).addParam("message", amazonClientException.getMessage());
+    }
+  }
 
   protected void handleAmazonServiceException(AmazonServiceException amazonServiceException) {
     logger.error("AWS API call exception", amazonServiceException);

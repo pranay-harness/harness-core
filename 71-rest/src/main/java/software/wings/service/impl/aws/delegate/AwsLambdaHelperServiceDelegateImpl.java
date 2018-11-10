@@ -12,9 +12,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import com.google.inject.Singleton;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.amazonaws.services.lambda.AWSLambdaClient;
 import com.amazonaws.services.lambda.AWSLambdaClientBuilder;
@@ -74,11 +73,11 @@ public class AwsLambdaHelperServiceDelegateImpl
   private static final Logger logger = LoggerFactory.getLogger(AwsLambdaHelperServiceDelegateImpl.class);
 
   @VisibleForTesting
-  AWSLambdaClient getAmazonLambdaClient(String region, String accessKey, char[] secretKey) {
-    return (AWSLambdaClient) AWSLambdaClientBuilder.standard()
-        .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
-        .build();
+  AWSLambdaClient getAmazonLambdaClient(
+      String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+    AWSLambdaClientBuilder builder = AWSLambdaClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    return (AWSLambdaClient) builder.build();
   }
 
   @Override
@@ -87,8 +86,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       AwsConfig awsConfig = request.getAwsConfig();
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AWSLambdaClient lambdaClient =
-          getAmazonLambdaClient(request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AWSLambdaClient lambdaClient = getAmazonLambdaClient(
+          request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       InvokeRequest invokeRequest = new InvokeRequest()
                                         .withFunctionName(request.getFunctionName())
                                         .withQualifier(request.getQualifier())
@@ -114,6 +113,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       return responseBuilder.build();
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return null;
   }
@@ -127,8 +128,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       responseBuilder.region(request.getRegion());
       List<EncryptedDataDetail> encryptionDetails = request.getEncryptionDetails();
       encryptionService.decrypt(awsConfig, encryptionDetails);
-      AWSLambdaClient lambdaClient =
-          getAmazonLambdaClient(request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+      AWSLambdaClient lambdaClient = getAmazonLambdaClient(
+          request.getRegion(), awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
       String roleArn = request.getRoleArn();
       List<String> evaluatedAliases = request.getEvaluatedAliases();
       Map<String, String> serviceVariables = request.getServiceVariables();
@@ -153,6 +154,8 @@ public class AwsLambdaHelperServiceDelegateImpl
       responseBuilder.functionResults(functionResultList);
     } catch (AmazonEC2Exception amazonEC2Exception) {
       handleAmazonServiceException(amazonEC2Exception);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return responseBuilder.build();
   }

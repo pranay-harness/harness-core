@@ -7,9 +7,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
 import com.google.inject.Singleton;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ecr.AmazonECRClient;
 import com.amazonaws.services.ecr.AmazonECRClientBuilder;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
@@ -27,11 +26,9 @@ public class AwsEcrHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEcrHelperServiceDelegate {
   @VisibleForTesting
   AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {
-    return (AmazonECRClient) AmazonECRClientBuilder.standard()
-        .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(
-            new BasicAWSCredentials(awsConfig.getAccessKey(), new String(awsConfig.getSecretKey()))))
-        .build();
+    AmazonECRClientBuilder builder = AmazonECRClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, awsConfig.isUseEc2IamCredentials(), awsConfig.getAccessKey(), awsConfig.getSecretKey());
+    return (AmazonECRClient) builder.build();
   }
 
   private DescribeRepositoriesResult listRepositories(AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
@@ -41,6 +38,8 @@ public class AwsEcrHelperServiceDelegateImpl
       return getAmazonEcrClient(awsConfig, region).describeRepositories(describeRepositoriesRequest);
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return new DescribeRepositoriesResult();
   }

@@ -6,9 +6,8 @@ import static java.util.stream.Collectors.toList;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.ecs.AmazonECSClient;
 import com.amazonaws.services.ecs.AmazonECSClientBuilder;
 import com.amazonaws.services.ecs.model.ListClustersRequest;
@@ -24,11 +23,10 @@ import java.util.List;
 public class AwsEcsHelperServiceDelegateImpl
     extends AwsHelperServiceDelegateBase implements AwsEcsHelperServiceDelegate {
   @VisibleForTesting
-  AmazonECSClient getAmazonEcsClient(String region, String accessKey, char[] secretKey) {
-    return (AmazonECSClient) AmazonECSClientBuilder.standard()
-        .withRegion(region)
-        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
-        .build();
+  AmazonECSClient getAmazonEcsClient(String region, String accessKey, char[] secretKey, boolean useEc2IamCredentials) {
+    AmazonECSClientBuilder builder = AmazonECSClientBuilder.standard().withRegion(region);
+    attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
+    return (AmazonECSClient) builder.build();
   }
 
   private String getIdFromArn(String arn) {
@@ -43,15 +41,17 @@ public class AwsEcsHelperServiceDelegateImpl
       String nextToken = null;
       do {
         ListClustersRequest listClustersRequest = new ListClustersRequest().withNextToken(nextToken);
-        ListClustersResult listClustersResult =
-            getAmazonEcsClient(region, awsConfig.getAccessKey(), awsConfig.getSecretKey())
-                .listClusters(listClustersRequest);
+        ListClustersResult listClustersResult = getAmazonEcsClient(
+            region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials())
+                                                    .listClusters(listClustersRequest);
         result.addAll(listClustersResult.getClusterArns().stream().map(this ::getIdFromArn).collect(toList()));
         nextToken = listClustersResult.getNextToken();
       } while (nextToken != null);
       return result;
     } catch (AmazonServiceException amazonServiceException) {
       handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
     }
     return emptyList();
   }
