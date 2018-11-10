@@ -654,7 +654,7 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
         .build();
   }
 
-  private boolean hasAllEnvAccessOfType(UsageRestrictions usageRestrictions, String appId, String envType) {
+  static boolean hasAllEnvAccessOfType(UsageRestrictions usageRestrictions, String appId, String envType) {
     if (usageRestrictions == null) {
       return false;
     }
@@ -664,11 +664,18 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
       return false;
     }
 
-    return appEnvRestrictions.stream().anyMatch(appEnvRestriction
-        -> (appEnvRestriction.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.ALL)
-               || (appEnvRestriction.getAppFilter().getIds() != null
-                      && appEnvRestriction.getAppFilter().getIds().contains(appId)))
-            && appEnvRestriction.getEnvFilter().getFilterTypes().contains(envType));
+    return appEnvRestrictions.stream().anyMatch(appEnvRestriction -> {
+      GenericEntityFilter appFilter = appEnvRestriction.getAppFilter();
+      EnvFilter envFilter = appEnvRestriction.getEnvFilter();
+      if (appFilter == null || appFilter.getFilterType() == null || envFilter == null
+          || isEmpty(envFilter.getFilterTypes())) {
+        return false;
+      } else {
+        return (appFilter.getFilterType().equals(GenericEntityFilter.FilterType.ALL)
+                   || (appFilter.getIds() != null && appFilter.getIds().contains(appId)))
+            && envFilter.getFilterTypes().contains(envType);
+      }
+    });
   }
 
   private boolean hasAllEnvAccessOfType(UsageRestrictions usageRestrictions, String envType) {

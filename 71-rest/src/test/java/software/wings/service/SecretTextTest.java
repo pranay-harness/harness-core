@@ -70,6 +70,7 @@ import software.wings.security.EncryptionType;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
+import software.wings.service.impl.UsageRestrictionsServiceImplTest;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
