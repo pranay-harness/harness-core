@@ -339,7 +339,9 @@ public class TriggerServiceImpl implements TriggerService {
         }
       }
       if (isEmpty(artifacts)) {
-        logger.warn("Skipping execution - artifact does not match with the given filter {}", artifactTriggerCondition);
+        logger.warn(
+            "Skipping execution - artifact does not match with the given filter. So, skipping the complete deployment {}",
+            artifactTriggerCondition);
         continue;
       }
       if (isNotEmpty(artifactSelections)) {
