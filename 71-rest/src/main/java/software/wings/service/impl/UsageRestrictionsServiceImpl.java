@@ -1183,8 +1183,12 @@ public class UsageRestrictionsServiceImpl implements UsageRestrictionsService {
   private int removeAppEnvReferencesInternal(UsageRestrictions usageRestrictions, String appId, String envId) {
     int count = 0;
 
-    Set<AppEnvRestriction> filteredAppEnvRestrictions = new LinkedHashSet<>();
     Set<AppEnvRestriction> appEnvRestrictions = usageRestrictions.getAppEnvRestrictions();
+    if (isEmpty(appEnvRestrictions)) {
+      return count;
+    }
+
+    Set<AppEnvRestriction> filteredAppEnvRestrictions = new LinkedHashSet<>();
     for (AppEnvRestriction appEnvRestriction : appEnvRestrictions) {
       // When envId is present, don't rely on appId match to remove appEnvRestriction within the usage restrictions.
       if (envId == null) {

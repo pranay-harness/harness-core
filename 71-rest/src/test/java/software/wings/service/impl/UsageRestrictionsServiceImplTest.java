@@ -582,6 +582,17 @@ public class UsageRestrictionsServiceImplTest {
   }
 
   @Test
+  public void shouldRemoveAppReferencesWithNullAppEnvRestrictions() {
+    UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
+    usageRestrictions.setAppEnvRestrictions(null);
+
+    int count = usageRestrictionsService.removeAppEnvReferences(ACCOUNT_ID, APP_ID, null);
+    assertEquals(0, count);
+    verifyZeroInteractions(settingsService);
+    verifyZeroInteractions(secretManager);
+  }
+
+  @Test
   public void shouldPurgeDanglingReferences() {
     UsageRestrictions usageRestrictions = setupUsageRestrictionsForAppEnvReferenceTesting();
 
