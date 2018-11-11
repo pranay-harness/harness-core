@@ -7,6 +7,7 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aNotificationGroup;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
+import static software.wings.service.impl.SlackNotificationServiceImpl.SLACK_WEBHOOK_URL_PREFIX;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -50,7 +51,7 @@ public class SlackNotificationServiceTest extends WingsBaseTest {
   public void shouldSendMessage() {
     doReturn(slackWebhookClient).when(slackNotificationService).getWebhookClient(anyString());
     SlackConfig slackConfig = new SlackConfig();
-    slackConfig.setOutgoingWebhookUrl(WingsTestConstants.PORTAL_URL);
+    slackConfig.setOutgoingWebhookUrl(SLACK_WEBHOOK_URL_PREFIX + WingsTestConstants.PORTAL_URL);
     slackNotificationService.sendMessage(slackConfig, CHANNEL, SENDER, MESSAGE);
     ArgumentCaptor<Payload> argumentCaptor = ArgumentCaptor.forClass(Payload.class);
     verify(slackWebhookClient).post(argumentCaptor.capture());
