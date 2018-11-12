@@ -15,6 +15,7 @@ import static org.mongodb.morphia.aggregation.Group.grouping;
 import static org.mongodb.morphia.aggregation.Projection.projection;
 import static org.mongodb.morphia.query.Sort.ascending;
 import static org.mongodb.morphia.query.Sort.descending;
+import static software.wings.beans.Base.CREATED_AT_KEY;
 import static software.wings.beans.EntityType.APPLICATION;
 import static software.wings.beans.EntityType.ARTIFACT;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
@@ -37,6 +38,7 @@ import lombok.NoArgsConstructor;
 import org.mongodb.morphia.aggregation.Group;
 import org.mongodb.morphia.annotations.Id;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
@@ -348,6 +350,26 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     return instanceList;
   }
 
+  private long getCreatedTimeOfInstanceAtTimestamp(
+      String accountId, long timestamp, Query<Instance> query, boolean oldest) {
+    query.field("accountId").equal(accountId);
+    query.field("createdAt").lessThanOrEq(timestamp);
+    query.and(
+        query.or(query.criteria("isDeleted").equal(false), query.criteria("deletedAt").greaterThanOrEq(timestamp)));
+    if (oldest) {
+      query.order(Sort.ascending(CREATED_AT_KEY));
+    } else {
+      query.order(Sort.descending(CREATED_AT_KEY));
+    }
+
+    Instance instance = query.get();
+    if (instance == null) {
+      return timestamp;
+    }
+
+    return instance.getCreatedAt();
+  }
+
   @Override
   public List<InstanceStatsByService> getAppInstanceStatsByService(
       String accountId, List<String> appIds, long timestamp) {
@@ -629,6 +651,39 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     query.project("appId", true);
     List<Instance> instancesForAccount = getInstancesForAccount(accountId, timestamp, query);
     Set<String> appIdsFromInstances = instancesForAccount.stream().map(Instance::getAppId).collect(Collectors.toSet());
+
+    List<Application> appsByAccountId = appService.getAppsByAccountId(accountId);
+    Set<String> existingApps = appsByAccountId.stream().map(Application::getUuid).collect(Collectors.toSet());
+    appIdsFromInstances.removeAll(existingApps);
+    return appIdsFromInstances;
+  }
+
+  @Override
+  public Set<String> getDeletedAppIds(String accountId, long fromTimestamp, long toTimestamp) {
+    Query<Instance> query = wingsPersistence.createQuery(Instance.class);
+    query.project("appId", true);
+    query.project("createdAt", true);
+
+    // Find the timestamp of oldest instance alive at fromTimestamp
+    long lhsCreatedAt = getCreatedTimeOfInstanceAtTimestamp(accountId, fromTimestamp, query, true);
+    // Find the timestamp of latest instance alive at toTimestamp
+    long rhsCreatedAt = getCreatedTimeOfInstanceAtTimestamp(accountId, toTimestamp, query, false);
+
+    query = wingsPersistence.createQuery(Instance.class);
+    query.field("accountId").equal(accountId);
+    query.field("createdAt").greaterThanOrEq(lhsCreatedAt);
+    query.field("createdAt").lessThanOrEq(rhsCreatedAt);
+    query.project("appId", true);
+
+    List<Instance> instanceList = new ArrayList<>();
+    try (HIterator<Instance> iterator = new HIterator<>(query.fetch())) {
+      while (iterator.hasNext()) {
+        Instance instance = iterator.next();
+        instanceList.add(instance);
+      }
+    }
+
+    Set<String> appIdsFromInstances = instanceList.stream().map(Instance::getAppId).collect(Collectors.toSet());
 
     List<Application> appsByAccountId = appService.getAppsByAccountId(accountId);
     Set<String> existingApps = appsByAccountId.stream().map(Application::getUuid).collect(Collectors.toSet());

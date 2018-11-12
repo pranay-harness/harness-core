@@ -3,6 +3,8 @@ package software.wings.resources.stats.rbac;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 
+import com.google.common.collect.Sets;
+
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,12 +46,13 @@ public class TimelineRbacFilters {
   }
 
   /**
-   * remove apps from aggregateCounts for which user does not have permissions
+   * This method filters the stats for the allowed applications and also include
    */
-  public List<InstanceStatsSnapshot> filter(List<InstanceStatsSnapshot> stats) {
-    // No filtering for admins
+  public List<InstanceStatsSnapshot> filter(List<InstanceStatsSnapshot> stats, Set<String> deletedAppIds) {
+    boolean includeDeletedAppIds = false;
+
     if (usageRestrictionsService.isAccountAdmin(accountId)) {
-      return stats;
+      includeDeletedAppIds = true;
     }
 
     UserRequestContext userRequestContext = currentUser.getUserRequestContext();
@@ -59,12 +62,18 @@ public class TimelineRbacFilters {
       return stats;
     }
 
-    Set<String> allowedAppIds = getAssignedApps(currentUser);
+    final Set<String> allowedAppIds = getAssignedApps(currentUser);
     log.info("Allowed App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), allowedAppIds);
+    final Set<String> allowedAppIdsFinal = Sets.newHashSet(allowedAppIds);
+    if (includeDeletedAppIds) {
+      allowedAppIdsFinal.addAll(deletedAppIds);
+      log.info("Deleted App Ids. Account: {} User: {} Ids: {}", accountId, currentUser.getEmail(), deletedAppIds);
+    }
+
     return stats.stream()
         .map(it
             -> new InstanceStatsSnapshot(
-                it.getTimestamp(), it.getAccountId(), filterAggregates(it.getAggregateCounts(), allowedAppIds)))
+                it.getTimestamp(), it.getAccountId(), filterAggregates(it.getAggregateCounts(), allowedAppIdsFinal)))
         .collect(Collectors.toList());
   }
 
@@ -91,10 +100,6 @@ public class TimelineRbacFilters {
    * @return updated timeline
    */
   public InstanceTimeline removeDeletedApps(InstanceTimeline timeline) {
-    if (usageRestrictionsService.isAccountAdmin(accountId)) {
-      return timeline;
-    }
-
     List<DataPoint> updatedPoints =
         timeline.getPoints().stream().map(TimelineRbacFilters::removeDeletedEntities).collect(Collectors.toList());
 

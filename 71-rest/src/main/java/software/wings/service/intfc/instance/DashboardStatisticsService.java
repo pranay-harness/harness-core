@@ -76,4 +76,6 @@ public interface DashboardStatisticsService {
   Instance getInstanceDetails(String instanceId);
 
   Set<String> getDeletedAppIds(String accountId, long timestamp);
+
+  Set<String> getDeletedAppIds(String accountId, long fromTimestamp, long toTimestamp);
 }
