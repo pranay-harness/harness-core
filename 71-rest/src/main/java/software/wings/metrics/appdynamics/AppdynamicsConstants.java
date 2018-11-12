@@ -8,4 +8,5 @@ public interface AppdynamicsConstants {
   String ERRORS_PER_MINUTE = "Errors per Minute";
   String STALL_COUNT = "Stall Count";
   String NUMBER_OF_SLOW_CALLS = "Number of Slow Calls";
+  String CALLS_PER_MINUTE = "Calls per Minute";
 }

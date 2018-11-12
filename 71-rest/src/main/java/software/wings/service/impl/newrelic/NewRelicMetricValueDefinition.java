@@ -90,6 +90,11 @@ public class NewRelicMetricValueDefinition {
     metricName = AppdynamicsTimeSeries.STALL_COUNT.getMetricName();
     APP_DYNAMICS_VALUES_TO_ANALYZE.put(
         metricName, TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.ERROR).build());
+
+    // calls per min
+    metricName = AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName();
+    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
+        TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.THROUGHPUT).build());
   }
 
   private String metricName;
