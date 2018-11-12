@@ -1,8 +1,7 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import com.google.inject.Inject;
 
@@ -44,11 +43,13 @@ public class GitValidation extends AbstractDelegateValidateTask {
       return singletonList(DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
     }
 
+    boolean validated = true;
+    if (isNotEmpty(gitClient.validate(gitConfig, false))) {
+      validated = false;
+    }
+
     return singletonList(
-        DelegateConnectionResult.builder()
-            .criteria(getCriteria().get(0))
-            .validated(!startsWith(gitClient.validate(gitConfig, false), UNREACHABLE_HOST.getDescription()))
-            .build());
+        DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(validated).build());
   }
 
   @Override
