@@ -1,6 +1,7 @@
 package software.wings.service.intfc.instance.stats;
 
 import software.wings.beans.infrastructure.instance.stats.InstanceStatsSnapshot;
+import software.wings.resources.stats.model.InstanceTimeline;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,10 +20,11 @@ public interface InstanceStatService {
 
   /**
    * Get a "timeline" of instance history usage.
-   *
-   * @param from - inclusive
+   *  @param from - inclusive
    * @param to - exclusive
    */
+  InstanceTimeline aggregate(String accountId, long from, long to);
+
   List<InstanceStatsSnapshot> aggregate(String accountId, Instant from, Instant to);
 
   /**
