@@ -1,8 +1,6 @@
 package software.wings.delegatetasks.validation;
 
-import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
 import static java.util.Collections.singletonList;
-import static org.apache.commons.lang3.StringUtils.startsWith;
 
 import com.google.inject.Inject;
 
@@ -54,10 +52,8 @@ public class HelmCommandValidation extends AbstractDelegateValidateTask {
       String errorMsg = validateGitConnectivity(commandRequest);
       if (EmptyPredicate.isNotEmpty(errorMsg)) {
         logger.warn("This delegate doesn't have Git connectivity, cannot perform helm deployment");
-        return singletonList(DelegateConnectionResult.builder()
-                                 .criteria(getCriteria().get(0))
-                                 .validated(!startsWith(errorMsg, UNREACHABLE_HOST.getDescription()))
-                                 .build());
+        return singletonList(
+            DelegateConnectionResult.builder().criteria(getCriteria().get(0)).validated(false).build());
       }
 
       String configLocation =
