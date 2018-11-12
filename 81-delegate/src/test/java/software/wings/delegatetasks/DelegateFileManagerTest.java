@@ -9,6 +9,7 @@ import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anA
 import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
+import io.harness.CategoryTest;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -40,7 +41,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class DelegateFileManagerTest {
+public class DelegateFileManagerTest extends CategoryTest {
   @Rule public MockitoRule mockitoRule = MockitoJUnit.rule();
 
   @Mock ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
