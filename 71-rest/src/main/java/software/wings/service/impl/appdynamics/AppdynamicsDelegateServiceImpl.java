@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -260,8 +261,8 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   @Override
   public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      String tierName, String btName, String hostName, int durationInMins, List<EncryptedDataDetail> encryptionDetails,
-      ThirdPartyApiCallLog apiCallLog) throws IOException {
+      String tierName, String btName, String hostName, Long startTime, Long endTime,
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
     for (int i = 1; i <= RETRIES; i++) {
       apiCallLog = apiCallLog.copy();
@@ -271,21 +272,27 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
       metricPath += isEmpty(hostName) ? "*" : "Individual Nodes|" + hostName + "|*";
       logger.info("fetching metrics for path {} ", metricPath);
-      apiCallLog.addFieldToRequest(
-          ThirdPartyApiCallField.builder()
-              .name("url")
-              .value(appDynamicsConfig.getControllerUrl() + "/rest/applications/" + appdynamicsAppId
-                  + "/metric-data?output=JSON&time-range-type=BEFORE_NOW&rollup=false&duration-in-mins="
-                  + durationInMins + "&metric-path=" + metricPath)
-              .type(FieldType.URL)
-              .build());
+
       apiCallLog.setTitle("Fetching metric data for " + metricPath);
       apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
       try {
-        Call<List<AppdynamicsMetricData>> tierBTMetricRequest =
-            getAppdynamicsRestClient(appDynamicsConfig)
-                .getMetricData(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId,
-                    metricPath, durationInMins);
+        Call<List<AppdynamicsMetricData>> tierBTMetricRequest;
+
+        if (startTime != null && endTime != null) {
+          tierBTMetricRequest =
+              getAppdynamicsRestClient(appDynamicsConfig)
+                  .getMetricDataTimeRange(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails),
+                      appdynamicsAppId, metricPath, startTime, endTime);
+          apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                           .name("url")
+                                           .value(tierBTMetricRequest.request().url().toString())
+                                           .type(FieldType.URL)
+                                           .build());
+        } else {
+          throw new WingsException(
+              "Start time or end Time was null while getting data from AppDynamics. StateExecutionId: "
+              + apiCallLog.getStateExecutionId());
+        }
 
         Response<List<AppdynamicsMetricData>> tierBTMResponse = tierBTMetricRequest.execute();
         apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
@@ -497,11 +504,12 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
           .build();
     }
     List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
+    long endTime = System.currentTimeMillis();
+    long startTime = endTime - TimeUnit.MINUTES.toSeconds(DURATION_TO_ASK_MINUTES);
     for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
-      callables.add(
-          ()
-              -> getTierBTMetricData(appDynamicsConfig, setupTestNodeData.getApplicationId(), tier.getName(),
-                  appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES, encryptionDetails, apiCallLog));
+      callables.add(()
+                        -> getTierBTMetricData(appDynamicsConfig, setupTestNodeData.getApplicationId(), tier.getName(),
+                            appdynamicsMetric.getName(), hostName, startTime, endTime, encryptionDetails, apiCallLog));
     }
     List<Optional<List<AppdynamicsMetricData>>> results = dataCollectionService.executeParrallel(callables);
     results.forEach(result -> {

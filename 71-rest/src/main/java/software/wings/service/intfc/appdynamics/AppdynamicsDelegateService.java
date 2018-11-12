@@ -45,7 +45,7 @@ public interface AppdynamicsDelegateService {
       throws IOException, CloneNotSupportedException;
 
   List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      String tierName, String btName, String hostName, int durantionInMinutes,
+      String tierName, String btName, String hostName, Long startTime, Long endTime,
       List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   AppdynamicsTier getAppdynamicsTier(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
