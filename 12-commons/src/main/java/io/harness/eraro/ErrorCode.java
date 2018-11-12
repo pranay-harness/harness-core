@@ -288,8 +288,6 @@ public enum ErrorCode {
 
   KUBERNETES_YAML_ERROR,
 
-  LIMIT_NOT_CONFIGURED(Status.INTERNAL_SERVER_ERROR),
-
   USAGE_LIMITS_EXCEEDED(Status.FORBIDDEN, "Usage Limit Exceeded");
 
   private Status status = BAD_REQUEST;
