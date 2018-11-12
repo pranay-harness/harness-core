@@ -150,10 +150,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     String metricTemplateUrl = getMetricTemplateUrl(accountId, cvConfiguration.getAppId(),
         cvConfiguration.getStateType(), cvConfiguration.getServiceId(), cvConfiguration.getUuid());
 
+    final String stateExecutionIdForLETask = CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid() + "-" + endMin;
+
+    // clear up any old failed task with the same ID and time.
+    learningEngineService.checkAndUpdateFailedLETask(stateExecutionIdForLETask, (int) endMin);
+
     LearningEngineAnalysisTask learningEngineAnalysisTask =
         LearningEngineAnalysisTask.builder()
             .service_id(cvConfiguration.getServiceId())
-            .state_execution_id(CV_24x7_STATE_EXECUTION + "-" + cvConfiguration.getUuid() + "-" + endMin)
+            .state_execution_id(stateExecutionIdForLETask)
             .cvConfigId(cvConfiguration.getUuid())
             .analysis_start_min((int) startMin - PREDECTIVE_HISTORY_MINUTES)
             .analysis_minute((int) endMin)

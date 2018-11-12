@@ -41,4 +41,5 @@ public interface LearningEngineService {
   AnalysisContext getNextVerificationAnalysisTask(ServiceApiVersion serviceApiVersion);
 
   void markJobScheduled(AnalysisContext verificationAnalysisTask);
+  void checkAndUpdateFailedLETask(String stateExecutionId, int analysisMinute);
 }

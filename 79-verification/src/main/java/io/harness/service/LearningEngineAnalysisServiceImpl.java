@@ -12,6 +12,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.service.intfc.LearningEngineService;
+import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -37,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by rsingh on 1/9/18.
@@ -301,5 +303,18 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public void markJobScheduled(AnalysisContext verificationAnalysisTask) {
     wingsPersistence.updateField(
         AnalysisContext.class, verificationAnalysisTask.getUuid(), "executionStatus", ExecutionStatus.SUCCESS);
+  }
+
+  @Override
+  public void checkAndUpdateFailedLETask(String stateExecutionId, int analysisMinute) {
+    Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
+                                                  .filter("state_execution_id", stateExecutionId)
+                                                  .filter("analysis_minute", analysisMinute)
+                                                  .filter("executionStatus", ExecutionStatus.FAILED);
+    UpdateOperations<LearningEngineAnalysisTask> updateOperations =
+        wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
+            .set("state_execution_id",
+                stateExecutionId + "-retry-" + TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
+    wingsPersistence.update(query, updateOperations);
   }
 }
