@@ -5,7 +5,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
@@ -26,6 +25,7 @@ import com.google.inject.Inject;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.rule.OwnerRule.Owner;
+import okhttp3.Request;
 import okhttp3.internal.http.RealResponseBody;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
@@ -339,8 +339,10 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                         .value(new Random().nextDouble())
                         .build()))
                 .build());
+    when(btDataCall.request()).thenReturn(new Request.Builder().url("http://harness-test.appd.com").build());
     when(btDataCall.execute()).thenReturn(Response.success(btData));
-    when(appdynamicsRestClient.getMetricData(anyString(), anyLong(), anyString(), anyInt())).thenReturn(btDataCall);
+    when(appdynamicsRestClient.getMetricDataTimeRange(anyString(), anyLong(), anyString(), anyLong(), anyLong()))
+        .thenReturn(btDataCall);
 
     AppDynamicsConfig appDynamicsConfig = AppDynamicsConfig.builder()
                                               .accountId(accountId)
@@ -349,9 +351,10 @@ public class AppdynamicsApiTest extends WingsBaseTest {
                                               .password(UUID.randomUUID().toString().toCharArray())
                                               .accountname(UUID.randomUUID().toString())
                                               .build();
-    List<AppdynamicsMetricData> tierBTMetricData = delegateService.getTierBTMetricData(appDynamicsConfig,
-        new Random().nextLong(), generateUuid(), generateUuid(), generateUuid(), new Random().nextInt(),
-        Collections.emptyList(), apiCallLogWithDummyStateExecution(accountId));
+    List<AppdynamicsMetricData> tierBTMetricData =
+        delegateService.getTierBTMetricData(appDynamicsConfig, new Random().nextLong(), generateUuid(), generateUuid(),
+            generateUuid(), System.currentTimeMillis() - new Random().nextInt(), System.currentTimeMillis(),
+            Collections.emptyList(), apiCallLogWithDummyStateExecution(accountId));
     assertEquals(2, tierBTMetricData.size());
     assertEquals(btData, tierBTMetricData);
   }

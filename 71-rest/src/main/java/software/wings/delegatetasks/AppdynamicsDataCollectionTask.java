@@ -131,23 +131,39 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
       final List<AppdynamicsMetricData> metricsData = new ArrayList<>();
       List<Callable<List<AppdynamicsMetricData>>> callables = new ArrayList<>();
+      long endTimeForCollection = System.currentTimeMillis();
+
       for (AppdynamicsMetric appdynamicsMetric : tierMetrics) {
         switch (dataCollectionInfo.getTimeSeriesMlAnalysisType()) {
           case COMPARATIVE:
             for (String hostName : dataCollectionInfo.getHosts().keySet()) {
               callables.add(()
                                 -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId,
-                                    tier.getName(), appdynamicsMetric.getName(), hostName, DURATION_TO_ASK_MINUTES,
-                                    encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+                                    tier.getName(), appdynamicsMetric.getName(), hostName,
+                                    endTimeForCollection - TimeUnit.MINUTES.toMillis(DURATION_TO_ASK_MINUTES),
+                                    endTimeForCollection, encryptionDetails,
+                                    createApiCallLog(dataCollectionInfo.getStateExecutionId())));
             }
             break;
           case PREDICTIVE:
-            final int periodToCollect = is247Task ? dataCollectionInfo.getCollectionTime()
-                                                  : PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES;
-            callables.add(()
-                              -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId,
-                                  tier.getName(), appdynamicsMetric.getName(), null, periodToCollect, encryptionDetails,
-                                  createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+            if (is247Task) {
+              long startTime = dataCollectionInfo.getStartTime();
+              long endTime =
+                  dataCollectionInfo.getStartTime() + TimeUnit.MINUTES.toMillis(dataCollectionInfo.getCollectionTime());
+              callables.add(()
+                                -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId,
+                                    tier.getName(), appdynamicsMetric.getName(), null, startTime, endTime,
+                                    encryptionDetails, createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+            } else {
+              callables.add(
+                  ()
+                      -> appdynamicsDelegateService.getTierBTMetricData(appDynamicsConfig, appId, tier.getName(),
+                          appdynamicsMetric.getName(), null,
+                          endTimeForCollection
+                              - TimeUnit.MINUTES.toMillis(PREDECTIVE_HISTORY_MINUTES + DURATION_TO_ASK_MINUTES),
+                          endTimeForCollection, encryptionDetails,
+                          createApiCallLog(dataCollectionInfo.getStateExecutionId())));
+            }
             break;
 
           default:
