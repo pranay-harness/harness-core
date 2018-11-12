@@ -50,8 +50,8 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   @After
   public void cleanUp() {
     Datastore ds = dao.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
-    ds.delete(ds.createQuery(ConfiguredLimit.class).filter("accountId", ACCOUNT_ID));
-    ds.delete(ds.createQuery(Counter.class).field("key").startsWith(ACCOUNT_ID));
+    ds.delete(ds.createQuery(ConfiguredLimit.class).filter("accountId", ACTION.getAccountId()));
+    ds.delete(ds.createQuery(Counter.class).filter("key", ACTION.key()));
   }
 
   @Test

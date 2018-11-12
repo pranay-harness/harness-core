@@ -16,7 +16,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
@@ -87,6 +86,7 @@ import io.harness.cache.Ordinal;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.limits.LimitCheckerFactory;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
@@ -268,6 +268,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private UserGroupService userGroupService;
   @Inject private AuthHandler authHandler;
   @Inject private SweepingOutputService sweepingOutputService;
+  @Inject private LimitCheckerFactory limitCheckerFactory;
+  @Inject private PreDeploymentChecker preDeploymentChecker;
 
   /**
    * {@inheritDoc}
@@ -288,7 +290,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   void trigger(String appId, String stateMachineId, String executionUuid, String executionName,
       StateMachineExecutionCallback callback) {
-    checkIfAccountExpired(appId);
+    preDeploymentChecker.check(appId);
     stateMachineExecutor.execute(appId, stateMachineId, executionUuid, executionName, null, callback);
   }
 
@@ -909,7 +911,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
-    checkIfAccountExpired(appId);
+    preDeploymentChecker.check(appId);
     Pipeline pipeline =
         pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
     if (pipeline == null) {
@@ -985,17 +987,6 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         workflowExecution, stateMachine, workflowExecutionUpdate, stdParams, trigger, pipeline, null);
   }
 
-  private void checkIfAccountExpired(String appId) throws WingsException {
-    Application application = appService.get(appId, false);
-    Validator.notNullCheck("Invalid app with id: " + appId, application);
-
-    boolean isAccountExpired = accountService.isAccountExpired(application.getAccountId());
-    if (isAccountExpired) {
-      throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Trial license expired!!! Please contact Harness Support.");
-    }
-  }
-
   /**
    * {@inheritDoc}
    */
@@ -1019,7 +1010,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger) {
-    checkIfAccountExpired(appId);
+    preDeploymentChecker.check(appId);
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
@@ -1489,7 +1480,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   private WorkflowExecution triggerSimpleExecution(
       String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    checkIfAccountExpired(appId);
+    preDeploymentChecker.check(appId);
     Workflow workflow = workflowService.readLatestSimpleWorkflow(appId, envId);
     String workflowId = workflow.getUuid();
 
