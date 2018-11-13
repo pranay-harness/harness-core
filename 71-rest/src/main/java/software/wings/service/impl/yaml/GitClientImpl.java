@@ -910,6 +910,10 @@ public class GitClientImpl implements GitClient {
   }
 
   protected String getGitLogMessagePrefix(GitRepositoryType repositoryType) {
+    if (repositoryType == null) {
+      return GIT_UNHANDLED_LOG_PREFIX;
+    }
+
     switch (repositoryType) {
       case TERRAFORM:
         return GIT_TERRAFORM_LOG_PREFIX;
