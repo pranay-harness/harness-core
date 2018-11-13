@@ -48,6 +48,9 @@ public class StatsCollectorImpl implements StatsCollector {
     boolean ranAtLeastOnce = false;
     while (snapshotTimeProvider.hasNext()) {
       Instant nextTs = snapshotTimeProvider.next();
+      if (nextTs == null) {
+        throw new IllegalStateException("nextTs is null even though hasNext() returned true. Shouldn't be possible");
+      }
       boolean success = createStats(accountId, nextTs);
       ranAtLeastOnce = ranAtLeastOnce || success;
     }
