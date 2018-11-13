@@ -15,6 +15,8 @@ public class TimeSeriesMLHostSummary {
   private List<Double> control_data;
   private List<Double> test_data;
   private List<Double> history;
+  private List<Double> history_bins;
+  private List<Double> all_risks;
   private List<Character> control_cuts;
   private List<Character> test_cuts;
   private String optimal_cuts;
