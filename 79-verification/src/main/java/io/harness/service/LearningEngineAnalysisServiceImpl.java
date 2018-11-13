@@ -151,6 +151,7 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
         wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
     if (task != null && task.getRetry() >= LearningEngineAnalysisTask.RETRIES) {
       // If some task has failed for more than 3 times, mark status as failed.
+      logger.info("LearningEngine task {} has failed 3 or more times. Setting the status to FAILED", task.getUuid());
       wingsPersistence.updateField(
           LearningEngineAnalysisTask.class, task.getUuid(), "executionStatus", ExecutionStatus.FAILED);
       return null;
