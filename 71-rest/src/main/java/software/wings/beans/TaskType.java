@@ -29,6 +29,7 @@ import software.wings.delegatetasks.SplunkDataCollectionTask;
 import software.wings.delegatetasks.SumoDataCollectionTask;
 import software.wings.delegatetasks.TerraformInputVariablesObtainTask;
 import software.wings.delegatetasks.TerraformProvisionTask;
+import software.wings.delegatetasks.TriggerTask;
 import software.wings.delegatetasks.aws.AwsAmiAsyncTask;
 import software.wings.delegatetasks.aws.AwsAsgTask;
 import software.wings.delegatetasks.aws.AwsCFTask;
@@ -87,6 +88,7 @@ import software.wings.delegatetasks.validation.SmbValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
 import software.wings.delegatetasks.validation.SumoValidation;
 import software.wings.delegatetasks.validation.TerraformValidation;
+import software.wings.delegatetasks.validation.TriggerValidation;
 import software.wings.delegatetasks.validation.VaultValidation;
 
 import java.util.List;
@@ -272,7 +274,8 @@ public enum TaskType {
   AWS_LAMBDA_ASYNC_TASK(TaskGroup.AWS, AwsLambdaAsyncTask.class, AwsConnectionValidation.class),
   AWS_AMI_ASYNC_TASK(TaskGroup.AWS, AwsAmiAsyncTask.class, AwsConnectionValidation.class),
   AWS_CF_TASK(TaskGroup.AWS, AwsCFTask.class, AwsConnectionValidation.class),
-  K8S_COMMAND_TASK(TaskGroup.K8S, K8sCommandTask.class, K8sCommandValidation.class);
+  K8S_COMMAND_TASK(TaskGroup.K8S, K8sCommandTask.class, K8sCommandValidation.class),
+  TRIGGER_TASK(TaskGroup.TRIGGER, TriggerTask.class, TriggerValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

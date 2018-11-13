@@ -413,6 +413,8 @@ TASK_TYPES:
       value: LDAP
     - name: Amazon Web Services (AWS)
       value: AWS
+    - name: Trigger
+      value: TRIGGER
 
 EXECUTION_STATUS:
     - name: Aborted

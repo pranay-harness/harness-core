@@ -15,6 +15,7 @@ public interface GitCommand {
     PULL,
     COMMIT_AND_PUSH,
     FETCH_FILES,
-    VALIDATE;
+    VALIDATE,
+    FILES_BETWEEN_COMMITS
   }
 }

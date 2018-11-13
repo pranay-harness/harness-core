@@ -12,6 +12,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
+import static software.wings.beans.yaml.YamlConstants.GIT_TRIGGER_LOG_PREFIX;
+import static software.wings.beans.yaml.YamlConstants.GIT_UNHANDLED_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.common.Constants.HARNESS_IO_KEY_;
 import static software.wings.common.Constants.HARNESS_SUPPORT_EMAIL_KEY;
@@ -86,6 +88,7 @@ import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.beans.yaml.GitFileChange;
+import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.beans.yaml.GitPushResult.RefUpdate;
 import software.wings.service.intfc.yaml.GitClient;
@@ -208,6 +211,30 @@ public class GitClientImpl implements GitClient {
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
     }
     return diffResult;
+  }
+
+  private List<GitFile> getGitFilesFromDiff(
+      List<DiffEntry> diffs, Repository repository, GitRepositoryType gitRepositoryType) throws IOException {
+    logger.info(getGitLogMessagePrefix(gitRepositoryType)
+        + "Get git files from diff. Total diff entries found : " + diffs.size());
+
+    List<GitFile> gitFiles = new ArrayList<>();
+    for (DiffEntry entry : diffs) {
+      ObjectId objectId;
+      String filePath;
+      if (entry.getChangeType().equals(DiffEntry.ChangeType.DELETE)) {
+        filePath = entry.getOldPath();
+        objectId = entry.getOldId().toObjectId();
+      } else {
+        filePath = entry.getNewPath();
+        objectId = entry.getNewId().toObjectId();
+      }
+      ObjectLoader loader = repository.open(objectId);
+      String content = new String(loader.getBytes(), Charset.forName("utf-8"));
+      gitFiles.add(GitFile.builder().filePath(filePath).fileContent(content).build());
+    }
+
+    return gitFiles;
   }
 
   private void addToGitDiffResult(List<DiffEntry> diffs, GitDiffResult diffResult, ObjectId headCommitId,
@@ -447,6 +474,98 @@ public class GitClientImpl implements GitClient {
   }
 
   @Override
+  public GitFetchFilesResult fetchFilesBetweenCommits(GitConfig gitConfig, GitFilesBetweenCommitsRequest gitRequest) {
+    String gitConnectorId = gitRequest.getGitConnectorId();
+
+    validateRequiredArgsForFilesBetweenCommit(gitRequest.getOldCommitId(), gitRequest.getNewCommitId());
+
+    synchronized (gitClientHelper.getLockObject(gitConnectorId)) {
+      try {
+        logger.info(new StringBuilder(128)
+                        .append(" Processing Git command: FILES_BETWEEN_COMMITS ")
+                        .append("Account: ")
+                        .append(gitConfig.getAccountId())
+                        .append(", repo: ")
+                        .append(gitConfig.getRepoUrl())
+                        .append(", newCommitId: ")
+                        .append(gitRequest.getNewCommitId())
+                        .append(", oldCommitId: ")
+                        .append(gitRequest.getOldCommitId())
+                        .append(", gitConnectorId: ")
+                        .append(gitRequest.getGitConnectorId())
+                        .toString());
+
+        gitClientHelper.createDirStructureForFileDownload(gitConfig, gitConnectorId);
+        cloneRepoForFilePathCheckout(gitConfig, StringUtils.EMPTY, gitConnectorId);
+        checkoutGivenCommitForAllPaths(gitRequest.getNewCommitId(), gitConfig, gitConnectorId);
+        List<GitFile> gitFilesFromDiff;
+
+        try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
+          Repository repository = git.getRepository();
+
+          ObjectId newCommitHead = repository.resolve(gitRequest.getNewCommitId() + "^{tree}");
+          ObjectId oldCommitHead = repository.resolve(gitRequest.getOldCommitId() + "^{tree}");
+
+          List<DiffEntry> diffs = getDiffEntries(repository, git, newCommitHead, oldCommitHead);
+          gitFilesFromDiff = getGitFilesFromDiff(diffs, repository, gitConfig.getGitRepoType());
+
+        } catch (IOException | GitAPIException ex) {
+          logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+          throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in getting commit diff");
+        }
+
+        resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
+
+        return GitFetchFilesResult.builder()
+            .files(gitFilesFromDiff)
+            .gitCommitResult(GitCommitResult.builder().commitId(gitRequest.getNewCommitId()).build())
+            .build();
+
+      } catch (WingsException e) {
+        throw e;
+      } catch (Exception e) {
+        throw new WingsException(GENERAL_ERROR,
+            new StringBuilder()
+                .append("Failed while fetching files between commits ")
+                .append("Account: ")
+                .append(gitConfig.getAccountId())
+                .append(", newCommitId: ")
+                .append(gitRequest.getNewCommitId())
+                .append(", oldCommitId: ")
+                .append(gitRequest.getOldCommitId())
+                .append(", gitConnectorId: ")
+                .append(gitRequest.getGitConnectorId())
+                .toString(),
+            e);
+      }
+    }
+  }
+
+  private List<DiffEntry> getDiffEntries(Repository repository, Git git, ObjectId newCommitHead, ObjectId oldCommitHead)
+      throws IOException, GitAPIException {
+    try (ObjectReader reader = repository.newObjectReader()) {
+      CanonicalTreeParser oldTreeIter = new CanonicalTreeParser();
+      oldTreeIter.reset(reader, oldCommitHead);
+      CanonicalTreeParser newTreeIter = new CanonicalTreeParser();
+      newTreeIter.reset(reader, newCommitHead);
+
+      return git.diff().setNewTree(newTreeIter).setOldTree(oldTreeIter).call();
+    }
+  }
+
+  private void validateRequiredArgsForFilesBetweenCommit(String oldCommitId, String newCommitId) {
+    if (isEmpty(oldCommitId)) {
+      throw new WingsException(GENERAL_ERROR, "Old commit id can not be empty", USER)
+          .addParam("message", "Old commit id can not be empty");
+    }
+
+    if (isEmpty(newCommitId)) {
+      throw new WingsException(GENERAL_ERROR, "New commit id can not be empty", USER)
+          .addParam("message", "New commit id can not be empty");
+    }
+  }
+
+  @Override
   public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
     // Default it to yaml
     if (gitConfig.getGitRepoType() == null) {
@@ -508,7 +627,7 @@ public class GitClientImpl implements GitClient {
           }
         });
 
-        resetWorkingDir(gitRequest.getFilePaths(), gitConfig, gitRequest.getGitConnectorId());
+        resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
 
         if (isNotEmpty(gitFiles)) {
           gitFiles.forEach(gitFile -> logger.info("File fetched : " + gitFile.getFilePath()));
@@ -551,6 +670,21 @@ public class GitClientImpl implements GitClient {
     if (!gitRequest.isUseBranch() && isEmpty(gitRequest.getCommitId())) {
       throw new WingsException("useBranch was false but CommitId was not provided", USER)
           .addParam("message", "useBranch was false but CommitId was not provided");
+    }
+  }
+
+  private void checkoutGivenCommitForAllPaths(String commitId, GitConfig gitConfig, String gitConnectorId) {
+    try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
+      logger.info("Checking out commitId: " + commitId);
+      CheckoutCommand checkoutCommand = git.checkout().setStartPoint(commitId).setCreateBranch(false).setAllPaths(true);
+
+      checkoutCommand.call();
+      logger.info("Successfully Checked out commitId: " + commitId);
+    } catch (Exception ex) {
+      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      gitClientHelper.checkIfTransportException(ex);
+      throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR)
+          .addParam("message", "Error in checking out commit id " + commitId);
     }
   }
 
@@ -600,14 +734,14 @@ public class GitClientImpl implements GitClient {
     return filePaths.size() == 1 && filePaths.get(0).equals("");
   }
 
-  private void resetWorkingDir(List<String> filePaths, GitConfig gitConfig, String gitConnectorId) {
+  private void resetWorkingDir(GitConfig gitConfig, String gitConnectorId) {
     try (Git git = Git.open(new File(gitClientHelper.getFileDownloadRepoDirectory(gitConfig, gitConnectorId)))) {
       logger.info("Resetting repo");
       ResetCommand resetCommand = new ResetCommand(git.getRepository()).setMode(ResetType.HARD);
       resetCommand.call();
       logger.info("Resetting repo completed successfully");
     } catch (Exception ex) {
-      logger.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      logger.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
       gitClientHelper.checkIfTransportException(ex);
       throw new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", "Error in resetting repo");
     }
@@ -776,7 +910,20 @@ public class GitClientImpl implements GitClient {
   }
 
   protected String getGitLogMessagePrefix(GitRepositoryType repositoryType) {
-    return repositoryType.equals(GitRepositoryType.TERRAFORM) ? GIT_TERRAFORM_LOG_PREFIX : GIT_YAML_LOG_PREFIX;
+    switch (repositoryType) {
+      case TERRAFORM:
+        return GIT_TERRAFORM_LOG_PREFIX;
+
+      case YAML:
+        return GIT_YAML_LOG_PREFIX;
+
+      case TRIGGER:
+        return GIT_TRIGGER_LOG_PREFIX;
+
+      default:
+        unhandled(repositoryType);
+        return GIT_UNHANDLED_LOG_PREFIX;
+    }
   }
 
   private TransportCommand getAuthConfiguredCommand(TransportCommand gitCommand, GitConfig gitConfig) {

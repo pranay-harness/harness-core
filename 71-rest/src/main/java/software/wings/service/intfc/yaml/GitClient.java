@@ -10,6 +10,7 @@ import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.beans.yaml.GitPushResult;
 
 /**
@@ -97,4 +98,6 @@ public interface GitClient {
   String validate(GitConfig gitConfig, boolean logError);
 
   GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest);
+
+  GitFetchFilesResult fetchFilesBetweenCommits(GitConfig gitConfig, GitFilesBetweenCommitsRequest gitRequest);
 }

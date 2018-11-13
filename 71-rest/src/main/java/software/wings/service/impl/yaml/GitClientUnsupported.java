@@ -10,6 +10,7 @@ import software.wings.beans.yaml.GitCommitResult;
 import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.beans.yaml.GitPushResult;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -61,6 +62,11 @@ public class GitClientUnsupported implements GitClient {
 
   @Override
   public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, GitFetchFilesRequest gitRequest) {
+    throw new UnsupportedOperationException("Git operations not supported.");
+  }
+
+  @Override
+  public GitFetchFilesResult fetchFilesBetweenCommits(GitConfig gitConfig, GitFilesBetweenCommitsRequest gitRequest) {
     throw new UnsupportedOperationException("Git operations not supported.");
   }
 }
