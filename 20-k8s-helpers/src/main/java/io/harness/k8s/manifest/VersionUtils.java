@@ -46,6 +46,14 @@ public class VersionUtils {
     return false;
   }
 
+  public static void markVersionedResources(List<KubernetesResource> resources) {
+    for (KubernetesResource resource : resources) {
+      if (shouldVersion(resource)) {
+        resource.getResourceId().setVersioned(true);
+      }
+    }
+  }
+
   public static void addRevisionNumber(List<KubernetesResource> resources, int revision) {
     Set<KubernetesResourceId> versionedResources = new HashSet<>();
     UnaryOperator<Object> appendRevision = t -> t + revisionSeparator + revision;
@@ -54,6 +62,7 @@ public class VersionUtils {
       if (shouldVersion(resource)) {
         versionedResources.add(resource.getResourceId().cloneInternal());
         resource.transformName(appendRevision);
+        resource.getResourceId().setVersioned(true);
       }
     }
 

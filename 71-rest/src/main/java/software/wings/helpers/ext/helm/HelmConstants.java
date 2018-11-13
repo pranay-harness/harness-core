@@ -21,6 +21,7 @@ public class HelmConstants {
       + "- context:\n"
       + "    cluster: CLUSTER_NAME\n"
       + "    user: HARNESS_USER\n"
+      + "    ${NAMESPACE}\n"
       + "  name: CURRENT_CONTEXT\n"
       + "current-context: CURRENT_CONTEXT\n"
       + "kind: Config\n"

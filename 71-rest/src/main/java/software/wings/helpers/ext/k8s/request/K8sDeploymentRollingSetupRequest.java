@@ -16,9 +16,10 @@ public class K8sDeploymentRollingSetupRequest extends K8sCommandRequest {
   @Builder
   public K8sDeploymentRollingSetupRequest(String accountId, String appId, String commandName, String activityId,
       K8sCommandType k8sCommandType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId,
-      Integer timeoutIntervalInMin, StoreType manifestStoreTypes, List<ManifestFile> manifestFiles) {
-    super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, timeoutIntervalInMin,
-        k8sCommandType);
+      String infraMappingId, Integer timeoutIntervalInMin, StoreType manifestStoreTypes,
+      List<ManifestFile> manifestFiles) {
+    super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, infraMappingId,
+        timeoutIntervalInMin, k8sCommandType);
     this.manifestStoreTypes = manifestStoreTypes;
     this.manifestFiles = manifestFiles;
   }

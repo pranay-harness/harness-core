@@ -117,11 +117,13 @@ public class ContainerDeploymentDelegateHelper {
         isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) + "\n" : "";
     String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) + "\n" : "";
     String username = isNotEmpty(config.getUsername()) ? "username: " + config.getUsername() + "\n" : "";
+    String namespace = isNotEmpty(config.getNamespace()) ? "namespace: " + config.getNamespace() + "\n" : "";
     String serviceAccountTokenData = isNotEmpty(config.getServiceAccountToken())
         ? "token: " + new String(config.getServiceAccountToken()) + "\n"
         : "";
 
     return KUBE_CONFIG_TEMPLATE.replace("${MASTER_URL}", config.getMasterUrl())
+        .replace("${NAMESPACE}", namespace)
         .replace("${USER_NAME}", username)
         .replace("${CLIENT_CERT_DATA}", clientCertData)
         .replace("${CLIENT_KEY_DATA}", clientKeyData)

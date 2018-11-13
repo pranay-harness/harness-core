@@ -7,7 +7,9 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 
 public class K8sDummyCommandUnit extends AbstractCommandUnit {
   public static final String Init = "Initialize";
+  public static final String Prepare = "Prepare";
   public static final String Apply = "Apply";
+  public static final String Rollback = "Rollback";
   public static final String StatusCheck = "Status Check";
 
   public K8sDummyCommandUnit(String name) {

@@ -1,21 +1,25 @@
 package software.wings.delegatetasks.k8s;
 
-import static io.harness.k8s.manifest.VersionUtils.addRevisionNumber;
+import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
+import static java.lang.String.format;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Singleton;
 
-import io.harness.exception.KubernetesYamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.ApplyCommand;
+import io.harness.k8s.kubectl.DeleteCommand;
 import io.harness.k8s.kubectl.GetCommand;
 import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.kubectl.RolloutHistoryCommand;
 import io.harness.k8s.kubectl.RolloutStatusCommand;
 import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceComparer;
 import io.harness.k8s.model.KubernetesResourceId;
+import io.harness.k8s.model.Release;
+import io.harness.k8s.model.ReleaseHistory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessResult;
@@ -24,7 +28,6 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
-import software.wings.utils.Misc;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,20 +65,25 @@ public class Utils {
         });
 
     if (result.getExitValue() != 0) {
-      executionLogCallback.saveExecutionLog("Failed", INFO, CommandExecutionStatus.FAILURE);
+      executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
       return false;
     }
 
-    executionLogCallback.saveExecutionLog("Success", INFO, CommandExecutionStatus.SUCCESS);
+    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
     return true;
   }
 
   public static boolean doStatusCheck(Kubectl client, KubernetesResourceId resourceId,
       K8sCommandTaskParams k8sCommandTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
+    final String eventFormat = "%-7s: %s";
+    final String statusFormat = "%n%-7s: %s";
+
     GetCommand getEventsCommand =
         client.get().resources("events").namespace(resourceId.getNamespace()).output(eventOutputFormat).watchOnly(true);
 
     executionLogCallback.saveExecutionLog(getEventsCommand.command() + "\n");
+
+    boolean success = false;
 
     StartedProcess eventWatchProcess = null;
     try {
@@ -84,14 +92,14 @@ public class Utils {
             @Override
             protected void processLine(String line) {
               if (line.contains(resourceId.getName())) {
-                executionLogCallback.saveExecutionLog("Event: " + line, INFO);
+                executionLogCallback.saveExecutionLog(format(eventFormat, "Event", line), INFO);
               }
             }
           },
           new LogOutputStream() {
             @Override
             protected void processLine(String line) {
-              executionLogCallback.saveExecutionLog(line, ERROR);
+              executionLogCallback.saveExecutionLog(format(eventFormat, "Event", line), ERROR);
             }
           });
 
@@ -104,72 +112,136 @@ public class Utils {
           new LogOutputStream() {
             @Override
             protected void processLine(String line) {
-              executionLogCallback.saveExecutionLog("Rollout Status: " + line, INFO);
+              executionLogCallback.saveExecutionLog(format(statusFormat, "Status", line), INFO);
             }
           },
           new LogOutputStream() {
             @Override
             protected void processLine(String line) {
-              executionLogCallback.saveExecutionLog("Rollout Status: " + line, ERROR);
+              executionLogCallback.saveExecutionLog(format(statusFormat, "Status", line), ERROR);
             }
           });
 
-      if (result.getExitValue() == 0) {
-        executionLogCallback.saveExecutionLog("Success", INFO, CommandExecutionStatus.SUCCESS);
-        return true;
-      } else {
-        executionLogCallback.saveExecutionLog("Failed", INFO, CommandExecutionStatus.FAILURE);
+      success = result.getExitValue() == 0;
+
+      if (!success) {
         logger.warn(result.outputString());
-        return false;
       }
+      return success;
     } finally {
       if (eventWatchProcess != null) {
-        eventWatchProcess.getProcess().destroy();
+        eventWatchProcess.getProcess().destroyForcibly().waitFor();
+      }
+      if (success) {
+        executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+
+      } else {
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
       }
     }
   }
 
-  public static List<KubernetesResource> readManifests(
-      List<ManifestFile> manifestFiles, int revision, ExecutionLogCallback executionLogCallback) {
+  public static void cleanupForRolling(Kubectl client, K8sCommandTaskParams k8sCommandTaskParams,
+      ReleaseHistory releaseHistory, ExecutionLogCallback executionLogCallback) throws Exception {
+    try {
+      Release lastSuccessfulRelease = releaseHistory.getLastSuccessfulRelease();
+
+      if (lastSuccessfulRelease == null) {
+        executionLogCallback.saveExecutionLog("No successful release found. Nothing to cleanup");
+        return;
+      }
+
+      executionLogCallback.saveExecutionLog("Last Successful Release is " + lastSuccessfulRelease.getNumber());
+
+      executionLogCallback.saveExecutionLog("\nCleaning up older releases");
+
+      for (int releaseIndex = releaseHistory.getReleases().size() - 1; releaseIndex > 0; releaseIndex--) {
+        Release release = releaseHistory.getReleases().get(releaseIndex);
+        if (release.getNumber() < lastSuccessfulRelease.getNumber()) {
+          for (int resourceIndex = release.getResources().size() - 1; resourceIndex > 0; resourceIndex--) {
+            KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
+            if (resourceId.isVersioned()) {
+              DeleteCommand deleteCommand =
+                  client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+
+              executionLogCallback.saveExecutionLog("\n" + deleteCommand.command());
+
+              ProcessResult result = deleteCommand.execute(k8sCommandTaskParams.getWorkingDirectory(),
+                  new LogOutputStream() {
+                    @Override
+                    protected void processLine(String line) {
+                      executionLogCallback.saveExecutionLog(line, INFO);
+                    }
+                  },
+                  new LogOutputStream() {
+                    @Override
+                    protected void processLine(String line) {
+                      executionLogCallback.saveExecutionLog(line, ERROR);
+                    }
+                  });
+
+              if (result.getExitValue() != 0) {
+                logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+              }
+            }
+          }
+        } else {
+          break;
+        }
+      }
+
+      releaseHistory.getReleases().removeIf(release -> release.getNumber() < lastSuccessfulRelease.getNumber());
+
+    } finally {
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+    }
+  }
+
+  public static String getLatestRevision(
+      Kubectl client, KubernetesResourceId resourceId, K8sCommandTaskParams k8sCommandTaskParams) throws Exception {
+    RolloutHistoryCommand rolloutHistoryCommand =
+        client.rollout().history().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+
+    ProcessResult result = rolloutHistoryCommand.execute(k8sCommandTaskParams.getWorkingDirectory(),
+        new LogOutputStream() {
+          @Override
+          protected void processLine(String line) {}
+        },
+        new LogOutputStream() {
+          @Override
+          protected void processLine(String line) {}
+        });
+
+    if (result.getExitValue() == 0) {
+      return parseLatestRevisionNumberFromRolloutHistory(result.outputString());
+    }
+    return "";
+  }
+
+  public static List<KubernetesResource> readManifests(List<ManifestFile> manifestFiles) {
     List<KubernetesResource> result = new ArrayList<>();
 
-    executionLogCallback.saveExecutionLog("Initializing..\n");
-
-    try {
-      for (ManifestFile manifestFile : manifestFiles) {
-        result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
-      }
-
-      result = result.stream().sorted(new KubernetesResourceComparer()).collect(Collectors.toList());
-
-      executionLogCallback.saveExecutionLog(
-          "Manifests processed. Found following resources: \n" + getResourceKindRefs(result));
-
-      addRevisionNumber(result, revision);
-    } catch (Exception e) {
-      if (e instanceof KubernetesYamlException) {
-        executionLogCallback.saveExecutionLog(e.getMessage(), ERROR);
-      }
-
-      executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      throw e;
+    for (ManifestFile manifestFile : manifestFiles) {
+      result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
     }
 
-    executionLogCallback.saveExecutionLog("Success.", INFO, CommandExecutionStatus.SUCCESS);
-
-    return result;
+    return result.stream().sorted(new KubernetesResourceComparer()).collect(Collectors.toList());
   }
 
-  public static int getRevisionNumber() {
-    // ToDo: Implement version history
-    return 1;
-  }
-
-  private static String getResourceKindRefs(List<KubernetesResource> resources) {
+  public static String getResourcesInTableFormat(List<KubernetesResource> resources) {
     StringBuilder sb = new StringBuilder(1024);
+    final String tableFormat = "%-20s%-40s%-6s";
+    sb.append(System.lineSeparator())
+        .append(format(tableFormat, "Kind", "Name", "Versioned"))
+        .append(System.lineSeparator())
+        .append(format(tableFormat, "----", "----", "---------"))
+        .append(System.lineSeparator());
+
     for (KubernetesResource resource : resources) {
-      sb.append(resource.getResourceId().kindNameRef()).append(System.lineSeparator());
+      KubernetesResourceId id = resource.getResourceId();
+      sb.append(format(tableFormat, id.getKind(), id.getName(), id.isVersioned())).append(System.lineSeparator());
     }
+
     return sb.toString();
   }
 }

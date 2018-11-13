@@ -137,4 +137,10 @@ public interface KubernetesContainerService {
   void waitForPodsToStop(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
       Map<String, String> labels, int serviceSteadyStateTimeout, List<Pod> originalPods, long startTime,
       ExecutionLogCallback executionLogCallback);
+
+  String fetchReleaseHistory(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String infraMappingId);
+
+  void saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String infraMappingId, String releaseHistory);
 }

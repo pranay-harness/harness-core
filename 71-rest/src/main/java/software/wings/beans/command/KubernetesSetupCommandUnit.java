@@ -34,6 +34,7 @@ import static software.wings.service.impl.KubernetesHelperService.printVirtualSe
 import static software.wings.service.impl.KubernetesHelperService.toDisplayYaml;
 import static software.wings.service.impl.KubernetesHelperService.toYaml;
 import static software.wings.utils.KubernetesConvention.getBlueGreenIngressName;
+import static software.wings.utils.KubernetesConvention.getInternalHarnessConfigName;
 import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySecretName;
 import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getLabelValue;
@@ -173,7 +174,6 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   @Transient private static final String CONFIG_MAP_YAML = "CONFIG_MAP_YAML";
   @Transient private static final String SECRET_MAP_YAML = "SECRET_MAP_YAML";
   @Transient private static final String AUTOSCALER_YAML = "AUTOSCALER_YAML";
-  @Transient private static final String HARNESS_INTERNAL = "harness-internal-";
 
   @Inject private transient GkeClusterService gkeClusterService;
   @Inject private transient KubernetesContainerService kubernetesContainerService;
@@ -240,8 +240,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       kubernetesContainerService.createNamespaceIfNotExist(kubernetesConfig, encryptedDataDetails);
 
-      String internalConfigName =
-          HARNESS_INTERNAL + getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId());
+      String internalConfigName = getInternalHarnessConfigName(setupParams.getInfraMappingId());
 
       if (!setupParams.isRollback()) {
         kubernetesContainerService.deleteSecret(kubernetesConfig, encryptedDataDetails, internalConfigName);

@@ -95,6 +95,6 @@ public class ManifestHelper {
             .filter(resource -> !resource.isDirectApply())
             .collect(Collectors.toList());
 
-    return result.get(0).getResourceId();
+    return result.get(0).getResourceId().cloneInternal();
   }
 }

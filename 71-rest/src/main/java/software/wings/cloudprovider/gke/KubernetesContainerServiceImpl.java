@@ -16,11 +16,14 @@ import static software.wings.beans.command.ContainerApiVersions.KUBERNETES_V1;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.utils.KubernetesConvention.DASH;
+import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
+import static software.wings.utils.KubernetesConvention.getInternalHarnessConfigName;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
@@ -29,6 +32,7 @@ import com.google.inject.Singleton;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.KubernetesHelper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ContainerStateRunning;
 import io.fabric8.kubernetes.api.model.ContainerStateTerminated;
@@ -1295,5 +1299,40 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
     } else {
       logger.info("Service {} does not exist", serviceName);
     }
+  }
+
+  @Override
+  public String fetchReleaseHistory(
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String infraMappingId) {
+    String releaseHistory = "";
+    ConfigMap configMap =
+        getConfigMap(kubernetesConfig, encryptedDataDetails, getInternalHarnessConfigName(infraMappingId));
+    if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
+      releaseHistory = configMap.getData().get(ReleaseHistoryKeyName);
+    }
+
+    return releaseHistory;
+  }
+
+  @Override
+  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
+      String infraMappingId, String releaseHistory) {
+    String internalConfigName = getInternalHarnessConfigName(infraMappingId);
+    ConfigMap configMap = getConfigMap(kubernetesConfig, encryptedDataDetails, internalConfigName);
+    if (configMap == null) {
+      configMap = new ConfigMapBuilder()
+                      .withNewMetadata()
+                      .withName(internalConfigName)
+                      .withNamespace(kubernetesConfig.getNamespace())
+                      .endMetadata()
+                      .withData(ImmutableMap.of(ReleaseHistoryKeyName, releaseHistory))
+                      .build();
+    } else {
+      Map data = configMap.getData();
+      data.put(ReleaseHistoryKeyName, releaseHistory);
+      configMap.setData(data);
+    }
+
+    createOrReplaceConfigMap(kubernetesConfig, encryptedDataDetails, configMap);
   }
 }

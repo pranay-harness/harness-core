@@ -23,6 +23,10 @@ public class Kubectl {
     return new ApplyCommand(this);
   }
 
+  public DeleteCommand delete() {
+    return new DeleteCommand(this);
+  }
+
   public GetCommand get() {
     return new GetCommand(this);
   }
