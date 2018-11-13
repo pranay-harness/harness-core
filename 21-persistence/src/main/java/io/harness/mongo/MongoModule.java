@@ -61,7 +61,7 @@ public class MongoModule extends AbstractModule {
   private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;
 
-  public static final MongoClientOptions.Builder mongoClientOptions =
+  public static final MongoClientOptions mongoClientOptions =
       MongoClientOptions.builder()
           .retryWrites(false)
           // TODO: Using secondaryPreferred creates issues that need to be investigated
@@ -69,7 +69,8 @@ public class MongoModule extends AbstractModule {
           .connectTimeout(30000)
           .serverSelectionTimeout(90000)
           .maxConnectionIdleTime(600000)
-          .connectionsPerHost(300);
+          .connectionsPerHost(300)
+          .build();
 
   public static AdvancedDatastore createDatastore(String uri, ReadPref readPref) {
     Morphia morphia = new Morphia();
@@ -77,7 +78,7 @@ public class MongoModule extends AbstractModule {
     morphia.getMapper().getOptions().setMapSubPackages(true);
     JAVA_PACKAGES_TO_SCAN.forEach(morphia::mapPackage);
 
-    MongoClientURI clientUri = new MongoClientURI(uri, mongoClientOptions);
+    MongoClientURI clientUri = new MongoClientURI(uri, MongoClientOptions.builder(mongoClientOptions));
     MongoClient mongoClient = new MongoClient(uri);
 
     AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, clientUri.getDatabase());
@@ -93,7 +94,7 @@ public class MongoModule extends AbstractModule {
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
 
-    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), mongoClientOptions);
+    MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(mongoClientOptions));
     MongoClient mongoClient = new MongoClient(uri);
 
     primaryDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, uri.getDatabase());
@@ -102,7 +103,7 @@ public class MongoModule extends AbstractModule {
     MongoClientURI locksUri = uri;
     MongoClient mongoLocksClient = mongoClient;
     if (isNotEmpty(mongoConfig.getLocksUri())) {
-      locksUri = new MongoClientURI(mongoConfig.getLocksUri(), mongoClientOptions);
+      locksUri = new MongoClientURI(mongoConfig.getLocksUri(), MongoClientOptions.builder(mongoClientOptions));
       mongoLocksClient = new MongoClient(locksUri);
     }
 

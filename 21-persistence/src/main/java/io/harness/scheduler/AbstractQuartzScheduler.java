@@ -59,7 +59,8 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
     // it is a bit hack but we are going to add them from here
 
     if (schedulerConfig.getJobStoreClass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
-      MongoClientURI uri = new MongoClientURI(getMongoUri(), MongoModule.mongoClientOptions);
+      MongoClientURI uri =
+          new MongoClientURI(getMongoUri(), MongoClientOptions.builder(MongoModule.mongoClientOptions));
       try (MongoClient mongoClient = new MongoClient(uri)) {
         final MongoDatabase database = mongoClient.getDatabase(uri.getDatabase());
 
