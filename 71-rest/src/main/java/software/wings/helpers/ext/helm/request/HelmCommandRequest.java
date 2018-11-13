@@ -1,5 +1,6 @@
 package software.wings.helpers.ext.helm.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -29,7 +30,7 @@ public class HelmCommandRequest {
   private String repoName;
   private GitConfig gitConfig;
   private List<EncryptedDataDetail> encryptedDataDetails;
-  private LogCallback executionLogCallback;
+  @JsonIgnore private transient LogCallback executionLogCallback;
 
   public HelmCommandRequest(HelmCommandType helmCommandType) {
     this.helmCommandType = helmCommandType;
