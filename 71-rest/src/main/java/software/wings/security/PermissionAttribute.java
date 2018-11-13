@@ -162,6 +162,12 @@ public class PermissionAttribute {
      * Setting resource.
      */
     SETTING(ACCOUNT),
+
+    /**
+     * Configured Limit resource.
+     */
+    LIMIT(ACCOUNT),
+
     /**
      * App stack resource type.
      */
