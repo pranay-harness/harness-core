@@ -374,6 +374,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
       case COLLECT_ARTIFACT:
       case AMI_AUTOSCALING_GROUP_SETUP:
       case AMI_DEPLOY_AUTOSCALING_GROUP:
+      case AMI_SWITCH_AUTOSCALING_GROUP_ROUTES:
       case HELM_DEPLOY:
       case PCF_SETUP:
       case PCF_RESIZE:
