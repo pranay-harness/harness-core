@@ -1,6 +1,7 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -156,6 +157,9 @@ public class AwsAmiServiceSetup extends State {
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     Artifact artifact = ((DeploymentExecutionContext) context).getArtifactForService(serviceId);
+    if (artifact == null) {
+      throw new WingsException(format("Unable to find artifact for service id: %s", serviceId));
+    }
 
     Application app = workflowStandardParams.getApp();
     Environment env = workflowStandardParams.getEnv();
