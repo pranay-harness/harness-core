@@ -310,12 +310,16 @@ public class LearningEngineAnalysisServiceImpl implements LearningEngineService 
   public void checkAndUpdateFailedLETask(String stateExecutionId, int analysisMinute) {
     Query<LearningEngineAnalysisTask> query = wingsPersistence.createQuery(LearningEngineAnalysisTask.class)
                                                   .filter("state_execution_id", stateExecutionId)
-                                                  .filter("analysis_minute", analysisMinute)
-                                                  .filter("executionStatus", ExecutionStatus.FAILED);
+                                                  .filter("analysis_minute", analysisMinute);
+    query.or(query.criteria("executionStatus").equal(ExecutionStatus.FAILED),
+        query.and(query.criteria("executionStatus").equal(ExecutionStatus.RUNNING),
+            query.criteria("retry").greaterThan(LearningEngineAnalysisTask.RETRIES)));
+
     UpdateOperations<LearningEngineAnalysisTask> updateOperations =
         wingsPersistence.createUpdateOperations(LearningEngineAnalysisTask.class)
             .set("state_execution_id",
-                stateExecutionId + "-retry-" + TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()));
+                stateExecutionId + "-retry-" + TimeUnit.MILLISECONDS.toMinutes(Timestamp.currentMinuteBoundary()))
+            .set("executionStatus", ExecutionStatus.FAILED);
     wingsPersistence.update(query, updateOperations);
   }
 }
