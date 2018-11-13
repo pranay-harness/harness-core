@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFilesBetweenCommitsRequest;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.yaml.GitClient;
 
@@ -31,6 +32,17 @@ public class GitServiceImpl implements GitService {
             .filePaths(filePaths)
             .gitConnectorId(connectorId)
             .useBranch(useBranch)
+            .build());
+  }
+
+  @Override
+  public GitFetchFilesResult fetchFilesBetweenCommits(
+      GitConfig gitConfig, String newCommitId, String oldCommitId, String connectorId) {
+    return gitClient.fetchFilesBetweenCommits(gitConfig,
+        GitFilesBetweenCommitsRequest.builder()
+            .newCommitId(newCommitId)
+            .oldCommitId(oldCommitId)
+            .gitConnectorId(connectorId)
             .build());
   }
 }

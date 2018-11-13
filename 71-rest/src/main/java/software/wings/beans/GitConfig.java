@@ -48,7 +48,7 @@ public class GitConfig extends SettingValue implements EncryptableSetting {
   @Trimmed private String authorName;
   @Trimmed @Email private String authorEmailId;
 
-  public enum GitRepositoryType { YAML, TERRAFORM }
+  public enum GitRepositoryType { YAML, TERRAFORM, TRIGGER }
 
   /**
    * Instantiates a new setting value.

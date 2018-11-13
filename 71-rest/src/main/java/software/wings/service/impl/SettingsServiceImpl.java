@@ -10,6 +10,7 @@ import static io.harness.persistence.HQuery.excludeValidate;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
@@ -107,6 +108,7 @@ public class SettingsServiceImpl implements SettingsService {
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private UsageRestrictionsService usageRestrictionsService;
   @Inject private YamlPushService yamlPushService;
+  @Inject private GitConfigHelperService gitConfigHelperService;
 
   @Getter private Subject<SettingsServiceManipulationObserver> manipulationSubject = new Subject<>();
   @Inject private CacheHelper cacheHelper;
@@ -740,5 +742,21 @@ public class SettingsServiceImpl implements SettingsService {
                                 .filter("appId", appId)
                                 .filter("envId", envId)
                                 .filter("value.type", type));
+  }
+
+  @Override
+  public GitConfig fetchGitConfigFromConnectorId(String gitConnectorId) {
+    if (isBlank(gitConnectorId)) {
+      return null;
+    }
+
+    SettingAttribute gitSettingAttribute = get(gitConnectorId);
+    if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
+      throw new InvalidRequestException("Git connector not found");
+    }
+
+    GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
+    gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
+    return gitConfig;
   }
 }

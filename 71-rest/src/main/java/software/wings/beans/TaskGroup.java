@@ -43,5 +43,6 @@ public enum TaskGroup {
   AWS,
   LDAP,
   K8S,
-  SMB
+  SMB,
+  TRIGGER
 }

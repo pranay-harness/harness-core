@@ -43,7 +43,6 @@ import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -200,7 +199,7 @@ public class HelmDeployState extends State {
     GitConfig gitConfig = null;
     if (gitFileConfig != null) {
       evaluateGitFileConfig(context);
-      gitConfig = fetchGitConfig(gitFileConfig.getConnectorId());
+      gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
       encryptedDataDetails = fetchEncryptedDataDetail(context, gitConfig);
     }
 
@@ -549,21 +548,6 @@ public class HelmDeployState extends State {
     if (isNotBlank(gitFileConfig.getFilePath())) {
       gitFileConfig.setFilePath(context.renderExpression(gitFileConfig.getFilePath()));
     }
-  }
-
-  private GitConfig fetchGitConfig(String gitConnectorId) {
-    if (isBlank(gitConnectorId)) {
-      return null;
-    }
-
-    SettingAttribute gitSettingAttribute = settingsService.get(gitConnectorId);
-    if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
-      throw new InvalidRequestException("Git connector not found");
-    }
-
-    GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
-    gitConfigHelperService.setSshKeySettingAttributeIfNeeded(gitConfig);
-    return gitConfig;
   }
 
   private List<EncryptedDataDetail> fetchEncryptedDataDetail(ExecutionContext context, GitConfig gitConfig) {

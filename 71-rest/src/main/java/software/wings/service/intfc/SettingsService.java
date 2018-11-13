@@ -5,6 +5,7 @@ import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.beans.GitConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.ValidationResult;
 import software.wings.service.intfc.ownership.OwnedByAccount;
@@ -92,4 +93,6 @@ public interface SettingsService extends OwnedByAccount {
   Map<String, String> listAccountDefaults(String accountId);
 
   Map<String, String> listAppDefaults(String accountId, String appId);
+
+  GitConfig fetchGitConfigFromConnectorId(String gitConnectorId);
 }

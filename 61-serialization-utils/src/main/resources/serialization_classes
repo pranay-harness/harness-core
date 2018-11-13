@@ -591,3 +591,9 @@ software.wings.beans.KerberosConfig, 5549
 software.wings.beans.HostConnectionAttributes$AuthenticationScheme, 5550
 software.wings.beans.SmbConfig, 5551
 software.wings.helpers.ext.k8s.request.K8sDeploymentRollingRollbackSetupRequest, 5552
+software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest, 5553
+software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse, 5554
+software.wings.beans.trigger.TriggerCommand$TriggerCommandType, 5555
+software.wings.helpers.ext.trigger.response.TriggerResponse, 5556
+software.wings.helpers.ext.trigger.request.TriggerRequest, 5557
+software.wings.beans.yaml.GitFilesBetweenCommitsRequest, 5558
