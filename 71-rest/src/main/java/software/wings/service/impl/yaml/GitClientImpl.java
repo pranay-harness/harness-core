@@ -11,9 +11,9 @@ import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.OK;
 import static org.eclipse.jgit.transport.RemoteRefUpdate.Status.UP_TO_DATE;
+import static software.wings.beans.yaml.YamlConstants.GIT_DEFAULT_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TERRAFORM_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_TRIGGER_LOG_PREFIX;
-import static software.wings.beans.yaml.YamlConstants.GIT_UNHANDLED_LOG_PREFIX;
 import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import static software.wings.common.Constants.HARNESS_IO_KEY_;
 import static software.wings.common.Constants.HARNESS_SUPPORT_EMAIL_KEY;
@@ -911,7 +911,7 @@ public class GitClientImpl implements GitClient {
 
   protected String getGitLogMessagePrefix(GitRepositoryType repositoryType) {
     if (repositoryType == null) {
-      return GIT_UNHANDLED_LOG_PREFIX;
+      return GIT_DEFAULT_LOG_PREFIX;
     }
 
     switch (repositoryType) {
@@ -926,7 +926,7 @@ public class GitClientImpl implements GitClient {
 
       default:
         unhandled(repositoryType);
-        return GIT_UNHANDLED_LOG_PREFIX;
+        return GIT_DEFAULT_LOG_PREFIX;
     }
   }
 
