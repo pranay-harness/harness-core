@@ -17,10 +17,6 @@ import org.mongodb.morphia.annotations.Indexes;
 
 import javax.validation.constraints.NotNull;
 
-/**
- * Documents with accountId = GLOBAL_ACCOUNT_ID are treated as default limits for all accounts.
- * To override limits for an account, there should be an entry present with that account Id.
- */
 @Getter
 @EqualsAndHashCode(exclude = "id", callSuper = false)
 @ToString

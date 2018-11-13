@@ -114,6 +114,12 @@ public class IntegrationTestUtil {
     return false;
   }
 
+  /**
+   * @param path example: /api/dash-stats
+   * @param params
+   * @return fully formed URL string
+   * @throws URISyntaxException
+   */
   public static String buildAbsoluteUrl(String path, Map<String, String> params) throws URISyntaxException {
     URIBuilder uriBuilder = new URIBuilder();
     String scheme = StringUtils.isBlank(System.getenv().get("BASE_HTTP")) ? "https" : "http";
