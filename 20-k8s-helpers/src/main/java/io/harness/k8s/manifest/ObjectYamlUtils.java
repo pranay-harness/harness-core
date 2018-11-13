@@ -94,6 +94,7 @@ public class ObjectYamlUtils {
 
   public static String toYaml(Object resource) throws YamlException {
     YamlConfig yamlConfig = new YamlConfig();
+    yamlConfig.writeConfig.setAutoAnchor(false);
     yamlConfig.writeConfig.setIndentSize(2);
     yamlConfig.writeConfig.setWriteClassname(WriteClassName.NEVER);
 

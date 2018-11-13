@@ -22,6 +22,8 @@ public class KubernetesConvention {
   public static final String DOT = ".";
   public static final String DASH = "-";
 
+  public static final String ReleaseHistoryKeyName = "releaseHistory";
+
   private static final String VOLUME_PREFIX = "vol-";
   private static final String VOLUME_SUFFIX = "-vol";
   private static final String SECRET_PREFIX = "hs-";
@@ -31,6 +33,11 @@ public class KubernetesConvention {
   private static final int HELM_RELEASE_VERSION_LENGTH = 15;
   private static final int MAX_REVISIONS = 100000;
   private static Pattern wildCharPattern = Pattern.compile("[_+*/\\\\ &@$|\"':]");
+  private static final String HARNESS_INTERNAL = "harness-internal-";
+
+  public static String getInternalHarnessConfigName(String infraMappingId) {
+    return HARNESS_INTERNAL + getNormalizedInfraMappingIdLabelValue(infraMappingId);
+  }
 
   public static String getControllerName(String prefix, int revision) {
     return normalize(prefix) + DASH + revision;

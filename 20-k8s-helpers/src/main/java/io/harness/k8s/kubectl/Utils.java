@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.OutputStream;
 
 public class Utils {
+  private static final String newLineRegex = "\\r?\\n";
+
   public static ProcessResult executeScript(
       String directoryPath, String command, OutputStream output, OutputStream error) throws Exception {
     String[] commandList = new String[] {"Powershell", "-c", command};
@@ -34,5 +36,11 @@ public class Utils {
                                           .redirectError(error);
 
     return processExecutor.start();
+  }
+
+  public static String parseLatestRevisionNumberFromRolloutHistory(String rolloutHistory) {
+    // assumes valid input from `kubectl rollout history`
+    String[] lines = rolloutHistory.split(newLineRegex);
+    return lines[lines.length - 1].split(" ")[0];
   }
 }

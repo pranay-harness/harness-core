@@ -16,7 +16,6 @@ import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
-import software.wings.api.ServiceElement;
 import software.wings.api.k8s.K8sDeploymentRollingSetupStateExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
@@ -24,14 +23,13 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
-import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
 import software.wings.helpers.ext.k8s.request.K8sCommandRequest.K8sCommandType;
-import software.wings.helpers.ext.k8s.request.K8sDeploymentRollingSetupRequest;
+import software.wings.helpers.ext.k8s.request.K8sDeploymentRollingRollbackSetupRequest;
 import software.wings.helpers.ext.k8s.response.K8sCommandExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -55,8 +53,8 @@ import java.util.Arrays;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sDeploymentRollingSetup extends State {
-  private static final transient Logger logger = LoggerFactory.getLogger(K8sDeploymentRollingSetup.class);
+public class K8sDeploymentRollingRollbackSetup extends State {
+  private static final transient Logger logger = LoggerFactory.getLogger(K8sDeploymentRollingRollbackSetup.class);
 
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
@@ -70,9 +68,9 @@ public class K8sDeploymentRollingSetup extends State {
   @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
 
-  public static final String K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME = "Rolling Deployment";
+  public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
 
-  public K8sDeploymentRollingSetup(String name) {
+  public K8sDeploymentRollingRollbackSetup(String name) {
     super(name, K8S_DEPLOYMENT_ROLLING.name());
   }
 
@@ -90,36 +88,27 @@ public class K8sDeploymentRollingSetup extends State {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Application app = appService.get(context.getAppId());
       Environment env = workflowStandardParams.getEnv();
-      ServiceElement serviceElement = phaseElement.getServiceElement();
 
       ContainerInfrastructureMapping infraMapping = (ContainerInfrastructureMapping) infrastructureMappingService.get(
           app.getUuid(), phaseElement.getInfraMappingId());
 
-      ApplicationManifest applicationManifest = applicationManifestService.get(app.getUuid(), serviceElement.getUuid());
-
-      if (applicationManifest == null) {
-        throw new InvalidRequestException("Manifests not found for service.");
-      }
-
-      Activity activity = k8sStateHelper.createK8sActivity(context, K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME,
+      Activity activity = k8sStateHelper.createK8sActivity(context, K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME,
           getStateType(), activityService,
           ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare), new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply),
+              new K8sDummyCommandUnit(K8sDummyCommandUnit.Rollback),
               new K8sDummyCommandUnit(K8sDummyCommandUnit.StatusCheck)));
 
       K8sCommandRequest commandRequest =
-          K8sDeploymentRollingSetupRequest.builder()
+          K8sDeploymentRollingRollbackSetupRequest.builder()
               .activityId(activity.getUuid())
               .appId(app.getUuid())
               .accountId(app.getAccountId())
               .infraMappingId(infraMapping.getUuid())
-              .commandName(K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME)
-              .k8sCommandType(K8sCommandType.DEPLOYMENT_ROLLING)
+              .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
+              .k8sCommandType(K8sCommandType.DEPLOYMENT_ROLLING_ROLLBACK)
               .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .timeoutIntervalInMin(10)
-              .manifestStoreTypes(applicationManifest.getStoreType())
-              .manifestFiles(applicationManifest.getManifestFiles())
               .build();
 
       DelegateTask delegateTask =
@@ -141,7 +130,7 @@ public class K8sDeploymentRollingSetup extends State {
           .withCorrelationIds(Arrays.asList(activity.getUuid()))
           .withStateExecutionData(K8sDeploymentRollingSetupStateExecutionData.builder()
                                       .activityId(activity.getUuid())
-                                      .commandName(K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME)
+                                      .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
                                       .build())
           .withDelegateTaskId(delegateTaskId)
           .build();

@@ -11,6 +11,14 @@ public class RolloutCommand extends AbstractExecutable {
     return new RolloutStatusCommand(this);
   }
 
+  public RolloutHistoryCommand history() {
+    return new RolloutHistoryCommand(this);
+  }
+
+  public RolloutUndoCommand undo() {
+    return new RolloutUndoCommand(this);
+  }
+
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(client.command()).append("rollout ");

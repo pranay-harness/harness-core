@@ -24,6 +24,8 @@ public class VersionUtilsTest {
     List<KubernetesResource> resourcesWithRevision = processYaml(fileContents);
     addRevisionNumber(resourcesWithRevision, 1);
 
+    assertThat(resourcesWithRevision.get(0).getResourceId().isVersioned()).isEqualTo(true);
+
     assertThat(resourcesWithRevision.get(0).getField("metadata.name"))
         .isEqualTo(resources.get(0).getField("metadata.name") + "-1");
 
@@ -193,6 +195,8 @@ public class VersionUtilsTest {
 
     List<KubernetesResource> resourcesWithRevision = processYaml(fileContents);
     addRevisionNumber(resourcesWithRevision, revision);
+
+    assertThat(resourcesWithRevision.get(0).getResourceId().isVersioned()).isEqualTo(false);
 
     assertThat(resourcesWithRevision.get(0).getField("metadata.name"))
         .isEqualTo(resources.get(0).getField("metadata.name"));

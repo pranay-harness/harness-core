@@ -298,6 +298,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         // We don't need to pass something unnecessarily.
         return emptyList();
       }
+      case K8S_PHASE_STEP: {
+        return emptyList();
+      }
       default:
         unhandled(phaseStepType);
     }
