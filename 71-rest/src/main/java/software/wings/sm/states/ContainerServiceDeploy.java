@@ -204,12 +204,18 @@ public abstract class ContainerServiceDeploy extends State {
       String envId = workflowStandardParams.getEnv().getUuid();
       executionData.setNewInstanceStatusSummaries(
           buildInstanceStatusSummaries(appId, serviceId, envId, serviceElement, response));
+
+      updateContainerElementAfterSuccessfulResize(context);
       return buildEndStateExecution(executionData, commandExecutionResult, ExecutionStatus.SUCCESS);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(Misc.getMessage(e), e);
     }
+  }
+
+  protected void updateContainerElementAfterSuccessfulResize(ExecutionContext context) {
+    // Do Nothing here, let subclasses override it if required
   }
 
   @Override

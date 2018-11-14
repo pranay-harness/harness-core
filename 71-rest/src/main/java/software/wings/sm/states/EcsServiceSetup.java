@@ -27,6 +27,7 @@ import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.EcsSetupParams;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
@@ -34,6 +35,7 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -53,6 +55,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
   private String targetContainerName;
   private String targetPort;
   private String commandName = "Setup Service Cluster";
+  private List<AwsAutoScalarConfig> awsAutoScalarConfigs;
   @Inject EcsStateHelper ecsStateHelper;
 
   /**
@@ -94,6 +97,7 @@ public class EcsServiceSetup extends ContainerServiceSetup {
             .useLoadBalancer(useLoadBalancer)
             .ecsServiceSpecification(serviceSpecification)
             .isDaemonSchedulingStrategy(false)
+            .awsAutoScalarConfigs(awsAutoScalarConfigs)
             .build());
   }
 
@@ -149,6 +153,8 @@ public class EcsServiceSetup extends ContainerServiceSetup {
         }
       }
     }
+
+    containerServiceElementBuilder.newServiceAutoScalarConfig(setupParams.getNewAwsAutoScalarConfigList());
     return containerServiceElementBuilder.build();
   }
 
@@ -269,5 +275,13 @@ public class EcsServiceSetup extends ContainerServiceSetup {
 
   public void setTargetPort(String targetPort) {
     this.targetPort = targetPort;
+  }
+
+  public List<AwsAutoScalarConfig> getAwsAutoScalarConfigs() {
+    return awsAutoScalarConfigs;
+  }
+
+  public void setAwsAutoScalarConfigs(List<AwsAutoScalarConfig> awsAutoScalarConfigs) {
+    this.awsAutoScalarConfigs = awsAutoScalarConfigs;
   }
 }

@@ -1,13 +1,17 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
+
+import java.util.List;
 
 /**
  * Created by brett on 3/24/17
@@ -74,7 +78,16 @@ public class EcsServiceRollback extends ContainerServiceDeploy {
         .withOldInstanceData(contextData.rollbackElement.getOldInstanceData())
         .withOriginalServiceCounts(contextData.containerElement.getActiveServiceCounts())
         .withRollback(true)
-        .withRollbackAllPhases(rollbackAllPhases)
+        .withRollbackAllPhases(getRollbackAtOnce(contextData.containerElement.getPreviousAwsAutoScalarConfigs()))
+        .withPreviousAwsAutoScalarConfigs(contextData.containerElement.getPreviousAwsAutoScalarConfigs())
+        .withContainerServiceName(contextData.containerElement.getNewEcsServiceName())
         .build();
+  }
+
+  private boolean getRollbackAtOnce(List<AwsAutoScalarConfig> awsAutoScalarConfigs) {
+    if (isNotEmpty(awsAutoScalarConfigs)) {
+      rollbackAllPhases = true;
+    }
+    return rollbackAllPhases;
   }
 }

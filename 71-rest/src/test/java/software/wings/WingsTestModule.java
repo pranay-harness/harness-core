@@ -21,6 +21,7 @@ import software.wings.service.impl.ArtifactoryBuildServiceImpl;
 import software.wings.service.impl.ContainerServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
+import software.wings.service.impl.aws.delegate.AwsAppAutoScalingHelperServiceDelegateImpl;
 import software.wings.service.impl.aws.delegate.AwsCFHelperServiceDelegateImpl;
 import software.wings.service.impl.elk.ElkDelegateServiceImpl;
 import software.wings.service.impl.newrelic.NewRelicDelgateServiceImpl;
@@ -35,6 +36,7 @@ import software.wings.service.intfc.ArtifactoryBuildService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EcrBuildService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsCFHelperServiceDelegate;
 import software.wings.service.intfc.elk.ElkDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
@@ -65,6 +67,7 @@ public class WingsTestModule extends AbstractModule {
     bind(ArtifactoryService.class).to(ArtifactoryServiceImpl.class);
     bind(EcrBuildService.class).to(EcrBuildServiceImpl.class);
     bind(ContainerService.class).to(ContainerServiceImpl.class);
+    bind(AwsAppAutoScalingHelperServiceDelegate.class).to(AwsAppAutoScalingHelperServiceDelegateImpl.class);
     // bind(PcfDeploymentManager.class).to(PcfDeploymentManagerImpl.class);
 
     bind(PcfClient.class).to(PcfClientImpl.class);

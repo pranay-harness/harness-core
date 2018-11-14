@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.Label;
 
 import java.util.List;
@@ -25,4 +26,5 @@ public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData
   private String ecsServiceArn;
   private String ecsTaskDefintion;
   private List<Label> lookupLabels;
+  private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
 }

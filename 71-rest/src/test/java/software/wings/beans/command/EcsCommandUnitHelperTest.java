@@ -48,6 +48,7 @@ import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,6 +66,7 @@ public class EcsCommandUnitHelperTest extends WingsBaseTest {
   public static final String DOCKER_IMG_NAME = "dockerImgName";
   public static final String DOCKER_DOMAIN_NAME = "dockerDomainName";
   @Mock private AwsClusterService awsClusterService;
+  @Mock private AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingServiceDelegate;
   @InjectMocks @Inject private EcsSetupCommandUnit ecsSetupCommandUnit;
   @Inject private EcsCommandUnitHelper ecsCommandUnitHelper;
   private static Logger logger = LoggerFactory.getLogger(EcsSetupCommandUnitTest.class);
@@ -86,7 +88,7 @@ public class EcsCommandUnitHelperTest extends WingsBaseTest {
           .build();
   private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
 
-  private String jsonString = "{\n"
+  private String ecsSErviceSpecJsonString = "{\n"
       + "\"placementConstraints\":[],\n"
       + "\"placementStrategy\":[],\n"
       + "\"healthCheckGracePeriodSeconds\":null,\n"
@@ -99,6 +101,27 @@ public class EcsCommandUnitHelperTest extends WingsBaseTest {
       + "            ],\n"
       + "\"schedulingStrategy\":\"REPLICA\"\n"
       + "}";
+
+  private static String scalingPolicyJson = "{\n"
+      + "            \"policyName\": \"TrackingPolicyTest\",\n"
+      + "            \"policyType\": \"TargetTrackingScaling\",\n"
+      + "            \"targetTrackingScalingPolicyConfiguration\": {\n"
+      + "                \"targetValue\": 60.0,\n"
+      + "                \"predefinedMetricSpecification\": {\n"
+      + "                    \"predefinedMetricType\": \"ECSServiceAverageCPUUtilization\"\n"
+      + "                },\n"
+      + "                \"scaleOutCooldown\": 300,\n"
+      + "                \"scaleInCooldown\": 300\n"
+      + "            }"
+      + "        }";
+
+  private static String registerTargetJson = "{\n"
+      + "            \"scalableDimension\": \"ecs:service:DesiredCount\",\n"
+      + "            \"minCapacity\": 1,\n"
+      + "            \"maxCapacity\": 3,\n"
+      + "            \"roleARN\": \"arn:aws:iam::448640225317:role/aws-service-role/ecs.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_ECSService\"\n"
+      + "        }";
+
   private TaskDefinition taskDefinition;
 
   /**
@@ -223,7 +246,7 @@ public class EcsCommandUnitHelperTest extends WingsBaseTest {
     setupParams.setLoadBalancerName(null);
 
     setupParams.setEcsServiceSpecification(
-        EcsServiceSpecification.builder().serviceId(SERVICE_ID).serviceSpecJson(jsonString).build());
+        EcsServiceSpecification.builder().serviceId(SERVICE_ID).serviceSpecJson(ecsSErviceSpecJsonString).build());
     TaskDefinition taskDefinition = getTaskDefinition();
 
     List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
@@ -250,7 +273,7 @@ public class EcsCommandUnitHelperTest extends WingsBaseTest {
     ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
     doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
 
-    Service service = ecsCommandUnitHelper.getAwsServiceFromJson(jsonString, logger);
+    Service service = ecsCommandUnitHelper.getAwsServiceFromJson(ecsSErviceSpecJsonString, logger);
     assertNotNull(service);
     assertNotNull(service.getServiceRegistries());
     assertEquals(1, service.getServiceRegistries().size());
@@ -320,6 +343,7 @@ public class EcsCommandUnitHelperTest extends WingsBaseTest {
         .withRoleArn(ROLE_ARN)
         .withRegion(Regions.US_EAST_1.getName())
         .withUseLoadBalancer(true)
+        .withImageDetails(ImageDetails.builder().name("ImageName").tag("Tag").build())
         .build();
   }
 
@@ -363,4 +387,17 @@ public class EcsCommandUnitHelperTest extends WingsBaseTest {
             .withPortMappings(new PortMapping().withContainerPort(80).withProtocol("http"))
             .withName(CONTAINER_NAME));
   }
+
+  //  @Test
+  //  public void TestSerializeJsonToAwsClasses() {
+  //    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
+  //    doNothing().when(executionLogCallback).saveExecutionLog(anyString(), any());
+  //    PutScalingPolicyRequest putScalingPolicyRequest =
+  //        ecsCommandUnitHelper.getPutScalingPolicyRequestFromJson(scalingPolicyJson, executionLogCallback);
+  //    RegisterScalableTargetRequest registerScalableTargetRequest =
+  //        ecsCommandUnitHelper.getRegisterScalableTargetRequestFromJson(registerTargetJson, executionLogCallback);
+  //    registerScalableTargetRequest.setServiceNamespace(ServiceNamespace.Ecs);
+  //    registerScalableTargetRequest.setResourceId("service/cluster/serviceName");
+  //    int i = 0;
+  //  }
 }

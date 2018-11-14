@@ -250,6 +250,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
                 .controllerNamePrefix(commandStepExecutionSummary.getControllerNamePrefix())
                 .previousEcsServiceSnapshotJson(commandStepExecutionSummary.getPreviousEcsServiceSnapshotJson())
                 .ecsServiceArn(commandStepExecutionSummary.getEcsServiceArn())
+                .previousAwsAutoScalarConfigs(commandStepExecutionSummary.getPreviousAwsAutoScalarConfigs())
                 .build());
       }
       case ROUTE_UPDATE: {

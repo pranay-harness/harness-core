@@ -54,6 +54,7 @@ import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.WingsTestConstants;
 
@@ -75,6 +76,7 @@ public class EcsSetupCommandUnitTest extends WingsBaseTest {
   public static final String DOCKER_IMG_NAME = "dockerImgName";
   public static final String DOCKER_DOMAIN_NAME = "dockerDomainName";
   @Mock private AwsClusterService awsClusterService;
+  @Mock private AwsAppAutoScalingHelperServiceDelegate scalingHelperServiceDelegate;
   @InjectMocks @Inject private EcsSetupCommandUnit ecsSetupCommandUnit;
   @Inject private EcsCommandUnitHelper ecsCommandUnitHelper;
   private static Logger logger = LoggerFactory.getLogger(EcsSetupCommandUnitTest.class);

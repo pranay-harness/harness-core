@@ -2,9 +2,12 @@ package software.wings.beans.command;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
+
+import java.util.List;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -28,6 +31,8 @@ public class EcsSetupParams extends ContainerSetupParams {
   private String ecsServiceArn;
   private EcsServiceSpecification ecsServiceSpecification;
   private boolean isDaemonSchedulingStrategy;
+  private List<AwsAutoScalarConfig> newAwsAutoScalarConfigList;
+  private List<AwsAutoScalarConfig> previousAutoScalarConfigList;
 
   public static final class EcsSetupParamsBuilder {
     private String taskFamily;
@@ -57,6 +62,8 @@ public class EcsSetupParams extends ContainerSetupParams {
     private String ecsServiceArn;
     private EcsServiceSpecification ecsServiceSpecification;
     private boolean isDaemonSchedulingStrategy;
+    private List<AwsAutoScalarConfig> newAwsAutoScalarConfigList;
+    private List<AwsAutoScalarConfig> previousAutoScalarConfigList;
 
     private EcsSetupParamsBuilder() {}
 
@@ -199,6 +206,17 @@ public class EcsSetupParams extends ContainerSetupParams {
       return this;
     }
 
+    public EcsSetupParamsBuilder withPreviousAutoScalarConfigList(
+        List<AwsAutoScalarConfig> previousAutoScalarConfigList) {
+      this.previousAutoScalarConfigList = previousAutoScalarConfigList;
+      return this;
+    }
+
+    public EcsSetupParamsBuilder withNewAwsAutoScalarConfigList(List<AwsAutoScalarConfig> newAwsAutoScalarConfigList) {
+      this.newAwsAutoScalarConfigList = newAwsAutoScalarConfigList;
+      return this;
+    }
+
     public EcsSetupParams build() {
       EcsSetupParams ecsSetupParams = new EcsSetupParams();
       ecsSetupParams.setTaskFamily(taskFamily);
@@ -228,6 +246,8 @@ public class EcsSetupParams extends ContainerSetupParams {
       ecsSetupParams.setEcsServiceSpecification(ecsServiceSpecification);
       ecsSetupParams.setEcsServiceArn(ecsServiceArn);
       ecsSetupParams.setDaemonSchedulingStrategy(isDaemonSchedulingStrategy);
+      ecsSetupParams.setNewAwsAutoScalarConfigList(newAwsAutoScalarConfigList);
+      ecsSetupParams.setPreviousAutoScalarConfigList(previousAutoScalarConfigList);
       return ecsSetupParams;
     }
   }

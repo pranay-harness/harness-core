@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -13,6 +14,7 @@ import software.wings.beans.Application;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.command.ContainerSetupParams;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
@@ -51,6 +53,7 @@ public class EcsStateHelper {
 
     EcsInfrastructureMapping ecsInfrastructureMapping =
         (EcsInfrastructureMapping) ecsSetupStateConfig.getInfrastructureMapping();
+
     return anEcsSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -80,6 +83,8 @@ public class EcsStateHelper {
             getServiceSpecWithRenderedExpression(ecsSetupStateConfig.getEcsServiceSpecification(), context))
         .withEcsServiceArn(ecsSetupStateConfig.getEcsServiceArn())
         .withIsDaemonSchedulingStrategy(ecsSetupStateConfig.isDaemonSchedulingStrategy())
+        .withNewAwsAutoScalarConfigList(
+            getNewAwsAutoScalarConfigListWithRenderedExpression(ecsSetupStateConfig.getAwsAutoScalarConfigs(), context))
         .build();
   }
 
@@ -91,6 +96,31 @@ public class EcsStateHelper {
 
     ecsServiceSpecification.setServiceSpecJson(context.renderExpression(ecsServiceSpecification.getServiceSpecJson()));
     return ecsServiceSpecification;
+  }
+
+  private List<AwsAutoScalarConfig> getNewAwsAutoScalarConfigListWithRenderedExpression(
+      List<AwsAutoScalarConfig> awsAutoScalarConfigs, ExecutionContext context) {
+    if (isEmpty(awsAutoScalarConfigs)) {
+      return awsAutoScalarConfigs;
+    }
+
+    awsAutoScalarConfigs.forEach(awsAutoScalarConfig -> {
+      if (isNotBlank(awsAutoScalarConfig.getScalableTargetJson())) {
+        awsAutoScalarConfig.setScalableTargetJson(
+            context.renderExpression(awsAutoScalarConfig.getScalableTargetJson()));
+      }
+
+      if (isNotBlank(awsAutoScalarConfig.getScalingPolicyForTarget())) {
+        awsAutoScalarConfig.setScalingPolicyForTarget(
+            context.renderExpression(awsAutoScalarConfig.getScalingPolicyForTarget()));
+        // Field " String ScalingPolicyForTarget", is only used when UI sends policyJson.
+        // actual field used in all delegate tasks is "String[] ScalingPolicyJson". So we initialize this field using
+        // vaoue set by UI.
+        awsAutoScalarConfig.setScalingPolicyJson(new String[] {awsAutoScalarConfig.getScalingPolicyForTarget()});
+      }
+    });
+
+    return awsAutoScalarConfigs;
   }
 
   private String[] getArrayFromList(List<String> input) {

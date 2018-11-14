@@ -3,8 +3,13 @@ package software.wings.sm.states;
 import static software.wings.beans.command.EcsResizeParams.EcsResizeParamsBuilder.anEcsResizeParams;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import software.wings.api.CommandStateExecutionData;
+import software.wings.api.ContainerServiceElement;
+import software.wings.api.PhaseElement;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.command.ContainerResizeParams;
+import software.wings.beans.command.EcsResizeParams;
+import software.wings.common.Constants;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.StateType;
@@ -84,7 +89,29 @@ public class EcsServiceDeploy extends ContainerServiceDeploy {
         .withMaxInstances(contextData.containerElement.getMaxInstances())
         .withFixedInstances(contextData.containerElement.getFixedInstances())
         .withOriginalServiceCounts(contextData.containerElement.getActiveServiceCounts())
+        .withContainerServiceName(contextData.containerElement.getNewEcsServiceName())
+        .withAwsAutoScalarConfigForNewService(contextData.containerElement.getNewServiceAutoScalarConfig())
+        .withPreviousEcsAutoScalarsAlreadyRemoved(contextData.containerElement.isPrevAutoscalarsAlreadyRemoved())
+        .withPreviousAwsAutoScalarConfigs(contextData.containerElement.getPreviousAwsAutoScalarConfigs())
         .build();
+  }
+
+  public void updateContainerElementAfterSuccessfulResize(ExecutionContext context) {
+    CommandStateExecutionData executionData = (CommandStateExecutionData) context.getStateExecutionData();
+    if (!(executionData.getContainerResizeParams() instanceof EcsResizeParams)) {
+      return;
+    }
+
+    PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
+    ContainerServiceElement containerElement =
+        context.<ContainerServiceElement>getContextElementList(ContextElementType.CONTAINER_SERVICE)
+            .stream()
+            .filter(cse -> phaseElement.getDeploymentType().equals(cse.getDeploymentType().name()))
+            .filter(cse -> phaseElement.getInfraMappingId().equals(cse.getInfraMappingId()))
+            .findFirst()
+            .orElse(ContainerServiceElement.builder().build());
+
+    containerElement.setPrevAutoscalarsAlreadyRemoved(true);
   }
 
   public static final class EcsServiceDeployBuilder {

@@ -1,13 +1,22 @@
 package software.wings.beans.command;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsRequest;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalableTargetsResult;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalingPoliciesRequest;
+import com.amazonaws.services.applicationautoscaling.model.DescribeScalingPoliciesResult;
+import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
+import com.amazonaws.services.applicationautoscaling.model.ServiceNamespace;
 import com.amazonaws.services.ecs.model.CreateServiceRequest;
 import com.amazonaws.services.ecs.model.CreateServiceResult;
 import com.amazonaws.services.ecs.model.DeleteServiceRequest;
@@ -15,12 +24,10 @@ import com.amazonaws.services.ecs.model.Service;
 import com.amazonaws.services.ecs.model.TaskDefinition;
 import com.amazonaws.services.ecs.model.UpdateServiceRequest;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.WingsException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,15 +37,18 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ContainerSetupCommandUnitExecutionData.ContainerSetupCommandUnitExecutionDataBuilder;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.EcsContainerTask;
-import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
 import software.wings.utils.EcsConvention;
 import software.wings.utils.Misc;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -53,8 +63,8 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
   @Inject @Transient private transient AwsClusterService awsClusterService;
   @Inject @Transient private transient EcsContainerService ecsContainerService;
   @Inject @Transient private transient AwsHelperService awsHelperService;
+  @Inject @Transient private transient AwsAppAutoScalingHelperServiceDelegate awsAppAutoScalingService;
   @Inject @Transient private transient EcsCommandUnitHelper ecsCommandUnitHelper;
-  static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
 
   public EcsSetupCommandUnit() {
     super(CommandUnitType.ECS_SETUP);
@@ -77,78 +87,29 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       if (setupParams.isRollback()) {
         handleRollback(
             setupParams, cloudProviderSetting, commandExecutionDataBuilder, encryptedDataDetails, executionLogCallback);
+        return CommandExecutionStatus.SUCCESS;
+      }
+
+      // 1. Create new Task Definition
+      TaskDefinition taskDefinition = createTaskDefinition(cloudProviderSetting, encryptedDataDetails, serviceVariables,
+          safeDisplayServiceVariables, executionLogCallback, setupParams);
+
+      // 2. Create ECS Service
+      if (!setupParams.isDaemonSchedulingStrategy()) {
+        createServiceWithReplicaSchedulingStrategy(setupParams, taskDefinition, cloudProviderSetting,
+            encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback);
       } else {
-        String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
-        String containerName = EcsConvention.getContainerName(dockerImageName);
-        String domainName = setupParams.getImageDetails().getDomainName();
+        handleDaemonServiceRequest(setupParams, taskDefinition, executionLogCallback, cloudProviderSetting,
+            encryptedDataDetails, commandExecutionDataBuilder);
+      }
 
-        EcsContainerTask ecsContainerTask = (EcsContainerTask) setupParams.getContainerTask();
-        ecsContainerTask = createEcsContainerTaskIfNull(ecsContainerTask);
-
-        executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
-        executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
-        executionLogCallback.saveExecutionLog("Container Name: " + containerName, LogLevel.INFO);
-
-        // create Task definition and register it with AWS
-        TaskDefinition taskDefinition = ecsCommandUnitHelper.createTaskDefinition(ecsContainerTask, containerName,
-            dockerImageName, setupParams, cloudProviderSetting, serviceVariables, safeDisplayServiceVariables,
-            encryptedDataDetails, executionLogCallback, domainName, awsClusterService);
-
-        if (setupParams.getEcsServiceSpecification() != null
-            && StringUtils.isNotBlank(setupParams.getEcsServiceSpecification().getServiceSpecJson())) {
-          EcsServiceSpecification specification = setupParams.getEcsServiceSpecification();
-          specification.setServiceSpecJson(
-              specification.getServiceSpecJson().replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName));
-        }
-
-        // For REPLICA STRATEGY
-        if (!setupParams.isDaemonSchedulingStrategy()) {
-          String containerServiceName =
-              EcsConvention.getServiceName(setupParams.getTaskFamily(), taskDefinition.getRevision());
-
-          Map<String, Integer> activeServiceCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
-              cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
-
-          commandExecutionDataBuilder.containerServiceName(containerServiceName)
-              .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts));
-
-          CreateServiceRequest createServiceRequest =
-              ecsCommandUnitHelper.getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails, setupParams,
-                  taskDefinition, containerServiceName, awsClusterService, executionLogCallback, logger);
-
-          executionLogCallback.saveExecutionLog(
-              format("Creating ECS service %s in cluster %s ", containerServiceName, setupParams.getClusterName()),
-              LogLevel.INFO);
-
-          // create and register service with aws
-          awsClusterService.createService(
-              setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, createServiceRequest);
-
-          try {
-            // This should not halt workflow execution.
-            ecsCommandUnitHelper.downsizeOldOrUnhealthy(cloudProviderSetting, setupParams, containerServiceName,
-                encryptedDataDetails, awsClusterService, awsHelperService, ecsContainerService, executionLogCallback);
-          } catch (Exception e) {
-            logger.warn("Cleaning up of old or unhealthy instances failed while setting up ECS service: ", e);
-          }
-
-          ecsCommandUnitHelper.cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName,
-              setupParams.getClusterName(), encryptedDataDetails, awsClusterService, executionLogCallback);
-
-        } else {
-          // For DAEMON Scheduling Strategy
-          handleDaemonServiceRequest(setupParams, taskDefinition, executionLogCallback, cloudProviderSetting,
-              encryptedDataDetails, commandExecutionDataBuilder);
-        }
-
-        // Log load-balancer details
-        if (setupParams.isUseLoadBalancer()) {
-          executionLogCallback.saveExecutionLog(
-              "Load Balancer Name: " + setupParams.getLoadBalancerName(), LogLevel.INFO);
-          executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), LogLevel.INFO);
-          if (isNotBlank(setupParams.getRoleArn())) {
-            executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), LogLevel.INFO);
-          }
+      // 3.  Log load-balancer details
+      if (setupParams.isUseLoadBalancer()) {
+        executionLogCallback.saveExecutionLog(
+            "Load Balancer Name: " + setupParams.getLoadBalancerName(), LogLevel.INFO);
+        executionLogCallback.saveExecutionLog("Target Group ARN: " + setupParams.getTargetGroupArn(), LogLevel.INFO);
+        if (isNotBlank(setupParams.getRoleArn())) {
+          executionLogCallback.saveExecutionLog("Role ARN: " + setupParams.getRoleArn(), LogLevel.INFO);
         }
       }
       return CommandExecutionStatus.SUCCESS;
@@ -161,6 +122,151 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
     }
   }
 
+  private TaskDefinition createTaskDefinition(SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, Map<String, String> serviceVariables,
+      Map<String, String> safeDisplayServiceVariables, ExecutionLogCallback executionLogCallback,
+      EcsSetupParams setupParams) {
+    String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
+    String containerName = EcsConvention.getContainerName(dockerImageName);
+    String domainName = setupParams.getImageDetails().getDomainName();
+
+    EcsContainerTask ecsContainerTask = (EcsContainerTask) setupParams.getContainerTask();
+    ecsContainerTask = createEcsContainerTaskIfNull(ecsContainerTask);
+
+    executionLogCallback.saveExecutionLog("Cluster Name: " + setupParams.getClusterName(), LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Docker Image Name: " + dockerImageName, LogLevel.INFO);
+    executionLogCallback.saveExecutionLog("Container Name: " + containerName, LogLevel.INFO);
+
+    // create Task definition and register it with AWS
+    return ecsCommandUnitHelper.createTaskDefinition(ecsContainerTask, containerName, dockerImageName, setupParams,
+        cloudProviderSetting, serviceVariables, safeDisplayServiceVariables, encryptedDataDetails, executionLogCallback,
+        domainName, awsClusterService);
+  }
+
+  private void createServiceWithReplicaSchedulingStrategy(EcsSetupParams setupParams, TaskDefinition taskDefinition,
+      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
+      ExecutionLogCallback executionLogCallback) {
+    String containerServiceName = createEcsService(setupParams, taskDefinition, cloudProviderSetting,
+        encryptedDataDetails, commandExecutionDataBuilder, executionLogCallback);
+    commandExecutionDataBuilder.containerServiceName(containerServiceName);
+
+    downsizeOldOrUnhealthyServices(
+        cloudProviderSetting, setupParams, containerServiceName, encryptedDataDetails, executionLogCallback);
+
+    ecsCommandUnitHelper.cleanup(cloudProviderSetting, setupParams.getRegion(), containerServiceName,
+        setupParams.getClusterName(), encryptedDataDetails, awsClusterService, executionLogCallback);
+
+    backupAutoScalarConfig(setupParams, cloudProviderSetting, encryptedDataDetails, containerServiceName,
+        commandExecutionDataBuilder, executionLogCallback);
+  }
+
+  private void backupAutoScalarConfig(EcsSetupParams setupParams, SettingAttribute cloudProviderSetting,
+      List<EncryptedDataDetail> encryptedDataDetails, String containerServiceName,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
+      ExecutionLogCallback executionLogCallback) {
+    Map<String, Integer> activeServiceCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
+        cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
+
+    if (isEmpty(activeServiceCounts)) {
+      return;
+    }
+
+    List<String> resourceIds = activeServiceCounts.keySet()
+                                   .stream()
+                                   .map(serviceName
+                                       -> new StringBuilder("service/")
+                                              .append(setupParams.getClusterName())
+                                              .append("/")
+                                              .append(serviceName)
+                                              .toString())
+                                   .collect(toList());
+
+    executionLogCallback.saveExecutionLog("Checking for Auto-Scalar config for existing services");
+    DescribeScalableTargetsResult targetsResult = awsAppAutoScalingService.listScalableTargets(setupParams.getRegion(),
+        (AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails,
+        new DescribeScalableTargetsRequest().withServiceNamespace(ServiceNamespace.Ecs).withResourceIds(resourceIds));
+
+    if (isEmpty(targetsResult.getScalableTargets())) {
+      executionLogCallback.saveExecutionLog("No Auto-scalar config found for existing services");
+      return;
+    }
+
+    Map<String, AwsAutoScalarConfig> scalarConfigMap = new HashMap<>();
+
+    targetsResult.getScalableTargets().forEach(scalableTarget -> {
+      scalarConfigMap.putIfAbsent(getAutoScalarMapKey(scalableTarget),
+          AwsAutoScalarConfig.builder()
+              .resourceId(scalableTarget.getResourceId())
+              .scalableTargetJson(awsAppAutoScalingService.getJsonForAwsScalableTarget(scalableTarget))
+              .build());
+
+      DescribeScalingPoliciesResult policiesResult = awsAppAutoScalingService.listScalingPolicies(
+          setupParams.getRegion(), (AwsConfig) cloudProviderSetting.getValue(), encryptedDataDetails,
+          new DescribeScalingPoliciesRequest()
+              .withResourceId(scalableTarget.getResourceId())
+              .withScalableDimension(scalableTarget.getScalableDimension())
+              .withServiceNamespace(scalableTarget.getServiceNamespace()));
+
+      List<String> policyJsons = new ArrayList<>();
+      AwsAutoScalarConfig config = scalarConfigMap.get(getAutoScalarMapKey(scalableTarget));
+      if (isNotEmpty(policiesResult.getScalingPolicies())) {
+        policiesResult.getScalingPolicies().forEach(
+            scalingPolicy -> { policyJsons.add(awsAppAutoScalingService.getJsonForAwsScalablePolicy(scalingPolicy)); });
+      }
+      if (isNotEmpty(policyJsons)) {
+        config.setScalingPolicyJson(policyJsons.toArray(new String[policyJsons.size()]));
+      }
+    });
+
+    executionLogCallback.saveExecutionLog("Auto-Scalar Config backed up");
+    commandExecutionDataBuilder.previousAwsAutoScalarConfigs(scalarConfigMap.values().stream().collect(toList()));
+  }
+
+  private String getAutoScalarMapKey(ScalableTarget scalableTarget) {
+    return scalableTarget.getResourceId() + ":" + scalableTarget.getScalableDimension();
+  }
+
+  private String createEcsService(EcsSetupParams setupParams, TaskDefinition taskDefinition,
+      SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails,
+      ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
+      ExecutionLogCallback executionLogCallback) {
+    String containerServiceName =
+        EcsConvention.getServiceName(setupParams.getTaskFamily(), taskDefinition.getRevision());
+
+    Map<String, Integer> activeServiceCounts = awsClusterService.getActiveServiceCounts(setupParams.getRegion(),
+        cloudProviderSetting, encryptedDataDetails, setupParams.getClusterName(), containerServiceName);
+
+    commandExecutionDataBuilder.containerServiceName(containerServiceName)
+        .activeServiceCounts(integerMapToListOfStringArray(activeServiceCounts));
+
+    CreateServiceRequest createServiceRequest =
+        ecsCommandUnitHelper.getCreateServiceRequest(cloudProviderSetting, encryptedDataDetails, setupParams,
+            taskDefinition, containerServiceName, awsClusterService, executionLogCallback, logger);
+
+    executionLogCallback.saveExecutionLog(
+        format("Creating ECS service %s in cluster %s ", containerServiceName, setupParams.getClusterName()),
+        LogLevel.INFO);
+
+    // create and register service with aws
+    awsClusterService.createService(
+        setupParams.getRegion(), cloudProviderSetting, encryptedDataDetails, createServiceRequest);
+
+    return containerServiceName;
+  }
+
+  private void downsizeOldOrUnhealthyServices(SettingAttribute cloudProviderSetting, EcsSetupParams setupParams,
+      String containerServiceName, List<EncryptedDataDetail> encryptedDataDetails,
+      ExecutionLogCallback executionLogCallback) {
+    // This should not halt workflow execution.
+    try {
+      ecsCommandUnitHelper.downsizeOldOrUnhealthy(cloudProviderSetting, setupParams, containerServiceName,
+          encryptedDataDetails, awsClusterService, awsHelperService, ecsContainerService, executionLogCallback);
+    } catch (Exception e) {
+      logger.warn("Cleaning up of old or unhealthy instances failed while setting up ECS service: ", e);
+    }
+  }
+
   private void handleRollback(EcsSetupParams setupParams, SettingAttribute cloudProviderSetting,
       ContainerSetupCommandUnitExecutionDataBuilder commandExecutionDataBuilder,
       List<EncryptedDataDetail> encryptedDataDetails, ExecutionLogCallback executionLogCallback) {
@@ -168,7 +274,7 @@ public class EcsSetupCommandUnit extends ContainerSetupCommandUnit {
       try {
         // For Daemon service, we cache service spec json for existing service before we did actual deployment,
         // as deployment is being rolled back, update service with same service spec to restore it to original state
-        if (EmptyPredicate.isNotEmpty(setupParams.getPreviousEcsServiceSnapshotJson())) {
+        if (isNotEmpty(setupParams.getPreviousEcsServiceSnapshotJson())) {
           Service previousServiceSnapshot =
               ecsCommandUnitHelper.getAwsServiceFromJson(setupParams.getPreviousEcsServiceSnapshotJson(), logger);
           UpdateServiceRequest updateServiceRequest =

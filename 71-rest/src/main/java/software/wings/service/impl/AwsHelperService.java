@@ -30,6 +30,8 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScaling;
+import com.amazonaws.services.applicationautoscaling.AWSApplicationAutoScalingClientBuilder;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClient;
 import com.amazonaws.services.autoscaling.AmazonAutoScalingClientBuilder;
 import com.amazonaws.services.autoscaling.model.Activity;
@@ -250,6 +252,14 @@ public class AwsHelperService {
     AmazonECSClientBuilder builder = AmazonECSClientBuilder.standard().withRegion(region);
     attachCredentials(builder, useEc2IamCredentials, accessKey, secretKey);
     return (AmazonECSClient) builder.build();
+  }
+
+  private AWSApplicationAutoScaling getAWSApplicationAutoScalingClient(
+      String region, String accessKey, char[] secretKey) {
+    return AWSApplicationAutoScalingClientBuilder.standard()
+        .withRegion(region)
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, new String(secretKey))))
+        .build();
   }
 
   private AmazonECRClient getAmazonEcrClient(AwsConfig awsConfig, String region) {

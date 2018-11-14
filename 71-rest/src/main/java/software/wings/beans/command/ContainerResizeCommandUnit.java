@@ -86,8 +86,13 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
         if (contextData.resizeParams.isRollbackAllPhases()) {
           // Roll back to original counts
           executionLogCallback.saveExecutionLog("** Rolling back all phases at once **\n");
-          setDesiredToOriginal(newInstanceDataList, originalServiceCounts, originalTrafficWeights);
-          setDesiredToOriginal(oldInstanceDataList, originalServiceCounts, originalTrafficWeights);
+          if (isNotEmpty(newInstanceDataList)) {
+            setDesiredToOriginal(newInstanceDataList, originalServiceCounts, originalTrafficWeights);
+          }
+
+          if (isNotEmpty(oldInstanceDataList)) {
+            setDesiredToOriginal(oldInstanceDataList, originalServiceCounts, originalTrafficWeights);
+          }
         }
       }
 
