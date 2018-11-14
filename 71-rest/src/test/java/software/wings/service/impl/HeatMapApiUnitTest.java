@@ -166,6 +166,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       timeSeriesMLMetricSummary.setResults(timeSeriesMLHostSummaryMap);
       timeSeriesMLMetricSummaryMap.put(generateUuid(), timeSeriesMLMetricSummary);
       timeSeriesMLHostSummaryMap.put(generateUuid(), TimeSeriesMLHostSummary.builder().risk(2).build());
+      timeSeriesMLMetricSummary.setMax_risk(2);
 
       analysisRecord.setTransactions(txnSummaryMap);
       wingsPersistence.save(analysisRecord);
