@@ -32,7 +32,6 @@ public class EcsServiceSpecificationYamlHandler
         .type(Constants.ECS_SERVICE_SPEC)
         .serviceName(service.getName())
         .serviceSpecJson(bean.getServiceSpecJson())
-        .schedulingStrategy(bean.getSchedulingStrategy())
         .build();
   }
 
@@ -63,11 +62,8 @@ public class EcsServiceSpecificationYamlHandler
     String serviceId = yamlHelper.getServiceId(appId, filePath);
     Validator.notNullCheck("Could not lookup service for the yaml file: " + filePath, serviceId);
 
-    EcsServiceSpecification pcfServiceSpecification = EcsServiceSpecification.builder()
-                                                          .schedulingStrategy(yaml.getSchedulingStrategy())
-                                                          .serviceSpecJson(yaml.getServiceSpecJson())
-                                                          .serviceId(serviceId)
-                                                          .build();
+    EcsServiceSpecification pcfServiceSpecification =
+        EcsServiceSpecification.builder().serviceSpecJson(yaml.getServiceSpecJson()).serviceId(serviceId).build();
     pcfServiceSpecification.setAppId(appId);
     return pcfServiceSpecification;
   }
