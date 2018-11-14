@@ -72,6 +72,7 @@ import software.wings.resources.AppResource;
 import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.BarrierBackupJob;
+import software.wings.scheduler.ExecutionLogsPruneJob;
 import software.wings.scheduler.PersistentLockCleanupJob;
 import software.wings.scheduler.ResourceConstraintBackupJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
@@ -422,6 +423,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         ZombieHunterJob.scheduleJobs(jobScheduler);
         AdministrativeJob.addJob(jobScheduler);
         YamlChangeSetPruneJob.add(jobScheduler);
+        ExecutionLogsPruneJob.addJob(jobScheduler);
       }
     }
   }

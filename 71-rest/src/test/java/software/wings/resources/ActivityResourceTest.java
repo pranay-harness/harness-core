@@ -114,7 +114,7 @@ public class ActivityResourceTest {
     PageResponse<Log> logPageResponse = new PageResponse<>();
     logPageResponse.setResponse(Lists.newArrayList(ACTUAL_LOG));
     logPageResponse.setTotal(1l);
-    when(LOG_SERVICE.list(any(PageRequest.class))).thenReturn(logPageResponse);
+    when(LOG_SERVICE.list(anyString(), any(PageRequest.class))).thenReturn(logPageResponse);
   }
 
   /**
@@ -183,7 +183,7 @@ public class ActivityResourceTest {
                                                     .withCommandUnitName(COMMAND_UNIT_NAME)
                                                     .build()));
     pageResponse.setTotal(1l);
-    when(LOG_SERVICE.list(any(PageRequest.class))).thenReturn(pageResponse);
+    when(LOG_SERVICE.list(anyString(), any(PageRequest.class))).thenReturn(pageResponse);
 
     RestResponse<PageResponse<Log>> restResponse =
         RESOURCES.client()
@@ -196,7 +196,7 @@ public class ActivityResourceTest {
     assertThat(restResponse.getResource().get(0)).isInstanceOf(Log.class);
     assertThat(restResponse.getResource().get(0).getActivityId()).isEqualTo(ACTIVITY_ID);
     assertThat(restResponse.getResource().get(0).getCommandUnitName()).isEqualTo(COMMAND_UNIT_NAME);
-    verify(LOG_SERVICE).list(any(PageRequest.class));
+    verify(LOG_SERVICE).list(anyString(), any(PageRequest.class));
   }
 
   /**

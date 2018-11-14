@@ -24,6 +24,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import software.wings.ExecutionLogsStorageMode;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
@@ -64,6 +65,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty("featuresEnabled") private String featureNames;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
+  @JsonProperty("executionLogStorageMode") private ExecutionLogsStorageMode executionLogsStorageMode;
 
   private int applicationPort;
   private boolean sslEnabled;

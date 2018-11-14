@@ -115,7 +115,7 @@ public class ActivityResource {
       @BeanParam PageRequest<Log> request) {
     request.addFilter("activityId", EQ, activityId);
     request.addFilter("commandUnitName", EQ, unitName);
-    return new RestResponse<>(logService.list(request));
+    return new RestResponse<>(logService.list(appId, request));
   }
 
   /**

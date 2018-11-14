@@ -44,6 +44,7 @@ serviceScheduler:
   #mongoUri: mongodb://localhost:27017/service_scheduler
 
 trialRegistrationAllowed: true
+executionLogStorageMode: MONGO
 
 smtp:
   type: SMTP

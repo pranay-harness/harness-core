@@ -7,6 +7,7 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Names;
 
+import io.harness.exception.WingsException;
 import io.harness.govern.DependencyModule;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.limits.LimitCheckerFactoryImpl;
@@ -20,6 +21,7 @@ import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
+import software.wings.ExecutionLogsStorageMode;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
@@ -120,6 +122,7 @@ import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
 import software.wings.service.impl.GcsBuildServiceImpl;
+import software.wings.service.impl.GoogleLogDataLogStoreServiceImpl;
 import software.wings.service.impl.HarnessUserGroupServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
@@ -127,6 +130,7 @@ import software.wings.service.impl.InfrastructureProvisionerServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.LogServiceImpl;
 import software.wings.service.impl.MigrationServiceImpl;
+import software.wings.service.impl.MongoLogDataStoreServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.NotificationDispatcherServiceImpl;
 import software.wings.service.impl.NotificationServiceImpl;
@@ -263,6 +267,7 @@ import software.wings.service.intfc.InfrastructureProvider;
 import software.wings.service.intfc.InfrastructureProvisionerService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.LearningEngineService;
+import software.wings.service.intfc.LogDataStoreService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.service.intfc.MigrationService;
@@ -588,6 +593,19 @@ public class WingsModule extends DependencyModule {
         MapBinder.newMapBinder(binder(), String.class, TriggerProcessor.class);
 
     triggerProcessorMapBinder.addBinding(Condition.Type.NEW_ARTIFACT.name()).to(ArtifactTriggerProcessor.class);
+    if (configuration.getExecutionLogsStorageMode() == null) {
+      configuration.setExecutionLogsStorageMode(ExecutionLogsStorageMode.MONGO);
+    }
+    switch (configuration.getExecutionLogsStorageMode()) {
+      case GOOGLE_CLOUD_DATA_STORE:
+        bind(LogDataStoreService.class).to(GoogleLogDataLogStoreServiceImpl.class);
+        break;
+      case MONGO:
+        bind(LogDataStoreService.class).to(MongoLogDataStoreServiceImpl.class);
+        break;
+      default:
+        throw new WingsException("Invalid storage mode type " + configuration.getExecutionLogsStorageMode());
+    }
 
     // End of deployment trigger dependencies
   }

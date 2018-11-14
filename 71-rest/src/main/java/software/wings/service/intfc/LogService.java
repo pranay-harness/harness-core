@@ -2,11 +2,8 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.validation.Create;
 import org.hibernate.validator.constraints.NotEmpty;
-import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Log;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.service.intfc.ownership.OwnedByActivity;
 
 import java.io.File;
@@ -20,29 +17,12 @@ public interface LogService extends OwnedByActivity {
   /**
    * List.
    *
+   *
+   * @param appId
    * @param pageRequest the page request  @return the page response
    * @return the page response
    */
-  PageResponse<Log> list(PageRequest<Log> pageRequest);
-
-  /**
-   * Save.
-   *
-   * @param log the log
-   * @return the log
-   */
-  @ValidationGroups(Create.class) void save(@Valid Log log);
-
-  /**
-   * Gets unit execution result.
-   *
-   * @param appId      the app id
-   * @param activityId the activity id
-   * @param name       the name
-   * @return the unit execution result
-   */
-  CommandExecutionStatus getUnitExecutionResult(
-      @NotEmpty String appId, @NotEmpty String activityId, @NotEmpty String name);
+  PageResponse<Log> list(String appId, PageRequest<Log> pageRequest);
 
   /**
    * Export logs file.
@@ -66,5 +46,5 @@ public interface LogService extends OwnedByActivity {
    * @param unitName   the unit name
    * @param logs       the logs
    */
-  String batchedSaveCommandUnitLogs(@NotEmpty String activityId, @NotEmpty String unitName, @Valid Log logs);
+  boolean batchedSaveCommandUnitLogs(@NotEmpty String activityId, @NotEmpty String unitName, @Valid Log logs);
 }
