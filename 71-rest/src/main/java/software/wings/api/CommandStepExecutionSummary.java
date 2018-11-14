@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.command.CodeDeployParams;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.sm.StepExecutionSummary;
 
 import java.util.ArrayList;
@@ -24,6 +25,7 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String previousEcsServiceSnapshotJson;
   private String ecsServiceArn;
   private String ecsTaskDefintion;
+  private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
   private String clusterName;
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;

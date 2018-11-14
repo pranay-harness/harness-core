@@ -286,6 +286,10 @@ public abstract class ContainerServiceSetup extends State {
                                                            .name(setupExecutionData.getContainerServiceName())
                                                            .uniqueIdentifier(setupExecutionData.getEcsTaskDefintion())
                                                            .build()));
+        executionData.setPreviousAwsAutoScalarConfigs(setupExecutionData.getPreviousAwsAutoScalarConfigs());
+
+        containerServiceElement.setPreviousAwsAutoScalarConfigs(setupExecutionData.getPreviousAwsAutoScalarConfigs());
+        containerServiceElement.setNewEcsServiceName(setupExecutionData.getContainerServiceName());
       }
       executionData.setDelegateMetaInfo(executionResult.getDelegateMetaInfo());
     }

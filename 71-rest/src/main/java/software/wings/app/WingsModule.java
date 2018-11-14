@@ -434,6 +434,7 @@ public class WingsModule extends DependencyModule {
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
     bind(EcsContainerService.class).to(EcsContainerServiceImpl.class);
     bind(AwsClusterService.class).to(AwsClusterServiceImpl.class);
+
     bind(GkeClusterService.class).to(GkeClusterServiceImpl.class);
     bind(KubernetesContainerService.class).to(KubernetesContainerServiceImpl.class);
     bind(DockerBuildService.class).to(DockerBuildServiceImpl.class);

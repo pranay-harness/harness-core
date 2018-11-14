@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 import software.wings.beans.ResizeStrategy;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.beans.container.Label;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
@@ -44,6 +45,10 @@ public class ContainerServiceElement implements ContextElement {
   private List<String[]> trafficWeights;
   private String controllerNamePrefix;
   private List<Label> lookupLabels;
+  private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
+  private List<AwsAutoScalarConfig> newServiceAutoScalarConfig;
+  private String newEcsServiceName;
+  private boolean prevAutoscalarsAlreadyRemoved;
 
   @Override
   public ContextElementType getElementType() {

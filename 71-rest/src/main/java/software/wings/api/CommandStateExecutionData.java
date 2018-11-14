@@ -15,9 +15,11 @@ import software.wings.beans.CountsByStatuses;
 import software.wings.beans.command.CodeDeployParams;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails;
+import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.command.EcsSetupParams;
 import software.wings.beans.command.KubernetesSetupParams;
+import software.wings.beans.container.AwsAutoScalarConfig;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ExecutionStatus;
@@ -57,6 +59,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private String previousEcsServiceSnapshotJson;
   private String ecsServiceArn;
   private String ecsTaskDefiniton;
+  private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
   private boolean downsize;
   private String clusterName;
 
@@ -66,6 +69,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CodeDeployParams oldCodeDeployParams;
   private String codeDeployDeploymentId;
   private ContainerSetupParams containerSetupParams;
+  private ContainerResizeParams containerResizeParams;
 
   @Transient @Inject private transient ActivityService activityService;
 
@@ -147,6 +151,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStepExecutionSummary.setPreviousEcsServiceSnapshotJson(previousEcsServiceSnapshotJson);
       commandStepExecutionSummary.setEcsServiceArn(ecsServiceArn);
       commandStepExecutionSummary.setEcsTaskDefintion(ecsTaskDefiniton);
+      commandStepExecutionSummary.setPreviousAwsAutoScalarConfigs(previousAwsAutoScalarConfigs);
     }
 
     commandStepExecutionSummary.setClusterName(clusterName);
@@ -192,6 +197,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private ContainerSetupParams containerSetupParams;
     private transient ActivityService activityService;
     private Map<String, Object> templateVariable;
+    private ContainerResizeParams containerResizeParams;
 
     private Builder() {}
 
@@ -359,6 +365,11 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withContainerResizeParams(ContainerResizeParams containerResizeParams) {
+      this.containerResizeParams = containerResizeParams;
+      return this;
+    }
+
     public Builder withActivityService(ActivityService activityService) {
       this.activityService = activityService;
       return this;
@@ -403,7 +414,8 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withOldCodeDeployParams(oldCodeDeployParams)
           .withCodeDeploymentId(codeDeployDeploymentId)
           .withContainerSetupParams(containerSetupParams)
-          .withActivityService(activityService);
+          .withActivityService(activityService)
+          .withContainerResizeParams(containerResizeParams);
     }
 
     public CommandStateExecutionData build() {
@@ -442,6 +454,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setContainerSetupParams(containerSetupParams);
       commandStateExecutionData.setActivityService(activityService);
       commandStateExecutionData.setTemplateVariable(templateVariable);
+      commandStateExecutionData.setContainerResizeParams(containerResizeParams);
       return commandStateExecutionData;
     }
   }

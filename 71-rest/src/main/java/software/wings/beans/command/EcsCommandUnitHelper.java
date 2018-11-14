@@ -6,6 +6,7 @@ import static io.harness.exception.WingsException.USER;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.command.EcsSetupCommandUnit.ERROR;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
@@ -13,6 +14,11 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Singleton;
 
+import com.amazonaws.services.applicationautoscaling.model.PutScalingPolicyRequest;
+import com.amazonaws.services.applicationautoscaling.model.PutScalingPolicyResult;
+import com.amazonaws.services.applicationautoscaling.model.RegisterScalableTargetRequest;
+import com.amazonaws.services.applicationautoscaling.model.ScalableTarget;
+import com.amazonaws.services.applicationautoscaling.model.ScalingPolicy;
 import com.amazonaws.services.ecs.model.AssignPublicIp;
 import com.amazonaws.services.ecs.model.AwsVpcConfiguration;
 import com.amazonaws.services.ecs.model.ContainerDefinition;
@@ -42,7 +48,9 @@ import io.harness.exception.WingsException;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SettingAttribute;
@@ -53,6 +61,8 @@ import software.wings.cloudprovider.aws.AwsClusterService;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.intfc.aws.delegate.AwsAppAutoScalingHelperServiceDelegate;
+import software.wings.utils.EcsConvention;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -69,6 +79,9 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class EcsCommandUnitHelper {
+  @Transient private static final Logger logger = LoggerFactory.getLogger(EcsCommandUnitHelper.class);
+  private static final String CONTAINER_NAME_PLACEHOLDER_REGEX = "\\$\\{CONTAINER_NAME}";
+
   public Optional<Service> getExistingServiceMetadataSnapshot(EcsSetupParams setupParams,
       SettingAttribute cloudProviderSetting, List<EncryptedDataDetail> encryptedDataDetails, String ecsServiceName,
       AwsHelperService awsHelperService) {
@@ -158,6 +171,16 @@ public class EcsCommandUnitHelper {
     // Handle Advanced Scenario (This is ECS Service json spec provided by user)
     EcsServiceSpecification serviceSpecification = setupParams.getEcsServiceSpecification();
     if (serviceSpecification != null && StringUtils.isNotBlank(serviceSpecification.getServiceSpecJson())) {
+      // Replace $Container_NAME string if exists, with actual container name
+      if (setupParams.getEcsServiceSpecification() != null
+          && StringUtils.isNotBlank(setupParams.getEcsServiceSpecification().getServiceSpecJson())) {
+        String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
+        String containerName = EcsConvention.getContainerName(dockerImageName);
+        EcsServiceSpecification specification = setupParams.getEcsServiceSpecification();
+        specification.setServiceSpecJson(
+            specification.getServiceSpecJson().replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName));
+      }
+
       Service advancedServiceConfig = getAwsServiceFromJson(serviceSpecification.getServiceSpecJson(), logger);
       validateServiceRegistries(advancedServiceConfig.getServiceRegistries(), taskDefinition, executionLogCallback);
 
@@ -367,7 +390,7 @@ public class EcsCommandUnitHelper {
    */
   public boolean isEmptyOrBlank(String input) {
     // empty checkd for null or 0 size, blank checks for only spaces
-    if (StringUtils.isEmpty(input) || StringUtils.isBlank(input)) {
+    if (StringUtils.isEmpty(input) || isBlank(input)) {
       return true;
     }
 
@@ -601,5 +624,70 @@ public class EcsCommandUnitHelper {
       logger.error(errorMsg);
       throw new WingsException(ErrorCode.GENERAL_ERROR, errorMsg, USER).addParam("message", errorMsg);
     }
+  }
+
+  public void upsertScalingPolicyIfRequired(String policyJson, String resourceId, String scalableDimention,
+      String region, AwsConfig awsConfig, AwsAppAutoScalingHelperServiceDelegate appAutoScalingService,
+      List<EncryptedDataDetail> encryptionDetails, ExecutionLogCallback executionLogCallback) {
+    if (isBlank(policyJson) || isBlank(resourceId)) {
+      return;
+    }
+
+    List<ScalingPolicy> scalingPolicies = appAutoScalingService.getScalingPolicyFromJson(policyJson);
+    if (isNotEmpty(scalingPolicies)) {
+      scalingPolicies.forEach(scalingPolicy -> {
+        scalingPolicy.withResourceId(resourceId).withScalableDimension(scalableDimention);
+        upsertScalingPolicyIfRequired(
+            region, awsConfig, appAutoScalingService, encryptionDetails, executionLogCallback, scalingPolicy);
+      });
+    }
+  }
+
+  public void upsertScalingPolicyIfRequired(String region, AwsConfig awsConfig,
+      AwsAppAutoScalingHelperServiceDelegate appAutoScalingService, List<EncryptedDataDetail> encryptionDetails,
+      ExecutionLogCallback executionLogCallback, ScalingPolicy scalingPolicy) {
+    PutScalingPolicyRequest request =
+        new PutScalingPolicyRequest()
+            .withResourceId(scalingPolicy.getResourceId())
+            .withScalableDimension(scalingPolicy.getScalableDimension())
+            .withServiceNamespace(scalingPolicy.getServiceNamespace())
+            .withPolicyName(scalingPolicy.getPolicyName())
+            .withPolicyType(scalingPolicy.getPolicyType())
+            .withTargetTrackingScalingPolicyConfiguration(scalingPolicy.getTargetTrackingScalingPolicyConfiguration())
+            .withStepScalingPolicyConfiguration(scalingPolicy.getStepScalingPolicyConfiguration());
+
+    executionLogCallback.saveExecutionLog(
+        new StringBuilder("Creating Scaling Policy: ").append(scalingPolicy.getPolicyName()).toString());
+    PutScalingPolicyResult result =
+        appAutoScalingService.upsertScalingPolicy(region, awsConfig, encryptionDetails, request);
+    executionLogCallback.saveExecutionLog(
+        new StringBuilder("Created Scaling Policy Successfully.\n").append(result.toString()).append("\n").toString());
+  }
+
+  public void registerScalableTargetForEcsService(AwsAppAutoScalingHelperServiceDelegate appAutoScalingService,
+      String region, AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails,
+      ExecutionLogCallback executionLogCallback, ScalableTarget scalableTarget) {
+    if (scalableTarget == null) {
+      return;
+    }
+
+    executionLogCallback.saveExecutionLog("Registering Scalable Target : " + scalableTarget.getResourceId());
+    RegisterScalableTargetRequest request = new RegisterScalableTargetRequest()
+                                                .withResourceId(scalableTarget.getResourceId())
+                                                .withServiceNamespace(scalableTarget.getServiceNamespace())
+                                                .withScalableDimension(scalableTarget.getScalableDimension())
+                                                .withRoleARN(scalableTarget.getRoleARN())
+                                                .withMinCapacity(scalableTarget.getMinCapacity())
+                                                .withMaxCapacity(scalableTarget.getMaxCapacity());
+
+    appAutoScalingService.registerScalableTarget(region, awsConfig, encryptionDetails, request);
+    executionLogCallback.saveExecutionLog(new StringBuilder("Registered scalable target Successfully\n")
+                                              .append(scalableTarget.toString())
+                                              .append("\n")
+                                              .toString());
+  }
+
+  public String getResourceIdForEcsService(String serviceName, String clusterName) {
+    return new StringBuilder("service/").append(clusterName).append("/").append(serviceName).toString();
   }
 }

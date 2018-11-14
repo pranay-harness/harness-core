@@ -5,6 +5,7 @@ import lombok.EqualsAndHashCode;
 import software.wings.api.ContainerServiceData;
 import software.wings.beans.InstanceUnitType;
 import software.wings.beans.ResizeStrategy;
+import software.wings.beans.container.AwsAutoScalarConfig;
 
 import java.util.List;
 
@@ -12,6 +13,9 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class EcsResizeParams extends ContainerResizeParams {
   private String region;
+  private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
+  private List<AwsAutoScalarConfig> awsAutoScalarConfigForNewService;
+  private boolean previousEcsAutoScalarsAlreadyRemoved;
 
   public static final class EcsResizeParamsBuilder {
     private String region;
@@ -33,6 +37,9 @@ public class EcsResizeParams extends ContainerResizeParams {
     private InstanceUnitType downsizeInstanceUnitType;
     private List<String[]> originalServiceCounts;
     private List<String[]> originalTrafficWeights;
+    private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
+    private List<AwsAutoScalarConfig> awsAutoScalarConfigForNewService;
+    private boolean previousEcsAutoScalarsAlreadyRemoved;
 
     private EcsResizeParamsBuilder() {}
 
@@ -135,6 +142,24 @@ public class EcsResizeParams extends ContainerResizeParams {
       return this;
     }
 
+    public EcsResizeParamsBuilder withPreviousAwsAutoScalarConfigs(
+        List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs) {
+      this.previousAwsAutoScalarConfigs = previousAwsAutoScalarConfigs;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withAwsAutoScalarConfigForNewService(
+        List<AwsAutoScalarConfig> awsAutoScalarConfigForNewService) {
+      this.awsAutoScalarConfigForNewService = awsAutoScalarConfigForNewService;
+      return this;
+    }
+
+    public EcsResizeParamsBuilder withPreviousEcsAutoScalarsAlreadyRemoved(
+        boolean previousEcsAutoScalarsAlreadyRemoved) {
+      this.previousEcsAutoScalarsAlreadyRemoved = previousEcsAutoScalarsAlreadyRemoved;
+      return this;
+    }
+
     public EcsResizeParamsBuilder but() {
       return anEcsResizeParams()
           .withRegion(region)
@@ -155,7 +180,10 @@ public class EcsResizeParams extends ContainerResizeParams {
           .withDownsizeInstanceCount(downsizeInstanceCount)
           .withDownsizeInstanceUnitType(downsizeInstanceUnitType)
           .withOriginalServiceCounts(originalServiceCounts)
-          .withOriginalTrafficWeights(originalTrafficWeights);
+          .withOriginalTrafficWeights(originalTrafficWeights)
+          .withPreviousAwsAutoScalarConfigs(previousAwsAutoScalarConfigs)
+          .withAwsAutoScalarConfigForNewService(awsAutoScalarConfigForNewService)
+          .withPreviousEcsAutoScalarsAlreadyRemoved(previousEcsAutoScalarsAlreadyRemoved);
     }
 
     public EcsResizeParams build() {
@@ -179,6 +207,9 @@ public class EcsResizeParams extends ContainerResizeParams {
       ecsResizeParams.setDownsizeInstanceUnitType(downsizeInstanceUnitType);
       ecsResizeParams.setOriginalServiceCounts(originalServiceCounts);
       ecsResizeParams.setOriginalTrafficWeights(originalTrafficWeights);
+      ecsResizeParams.setPreviousAwsAutoScalarConfigs(previousAwsAutoScalarConfigs);
+      ecsResizeParams.setAwsAutoScalarConfigForNewService(awsAutoScalarConfigForNewService);
+      ecsResizeParams.setPreviousEcsAutoScalarsAlreadyRemoved(previousEcsAutoScalarsAlreadyRemoved);
       return ecsResizeParams;
     }
   }
