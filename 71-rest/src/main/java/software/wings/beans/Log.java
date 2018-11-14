@@ -1,10 +1,11 @@
 package software.wings.beans;
 
-import com.google.common.base.MoreObjects;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import lombok.Builder.Default;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
@@ -14,13 +15,14 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Map;
-import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 /**
  * Created by peeyushaggarwal on 5/27/16.
  */
 @Entity(value = "commandLogs", noClassnameStored = true)
+@Data
+@EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
 public class Log extends Base {
   @NotEmpty @Indexed private String activityId;
   private String hostName;
@@ -33,115 +35,8 @@ public class Log extends Base {
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
+  @Default
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(6).toInstant());
-
-  /**
-   * Gets activity id.
-   *
-   * @return the activity id
-   */
-  public String getActivityId() {
-    return activityId;
-  }
-
-  /**
-   * Sets activity id.
-   *
-   * @param activityId the activity id
-   */
-  public void setActivityId(String activityId) {
-    this.activityId = activityId;
-  }
-
-  /**
-   * Gets host name.
-   *
-   * @return the host name
-   */
-  public String getHostName() {
-    return hostName;
-  }
-
-  /**
-   * Sets host name.
-   *
-   * @param hostName the host name
-   */
-  public void setHostName(String hostName) {
-    this.hostName = hostName;
-  }
-
-  /**
-   * Gets log line.
-   *
-   * @return the log line
-   */
-  public String getLogLine() {
-    return logLine;
-  }
-
-  /**
-   * Sets log line.
-   *
-   * @param logLine the log line
-   */
-  public void setLogLine(String logLine) {
-    this.logLine = logLine;
-  }
-
-  /**
-   * Gets log level.
-   *
-   * @return the log level
-   */
-  public LogLevel getLogLevel() {
-    return logLevel;
-  }
-
-  /**
-   * Sets log level.
-   *
-   * @param logLevel the log level
-   */
-  public void setLogLevel(LogLevel logLevel) {
-    this.logLevel = logLevel;
-  }
-
-  /**
-   * Gets command unit name.
-   *
-   * @return the command unit name
-   */
-  public String getCommandUnitName() {
-    return commandUnitName;
-  }
-
-  /**
-   * Sets command unit name.
-   *
-   * @param commandUnitName the command unit name
-   */
-  public void setCommandUnitName(String commandUnitName) {
-    this.commandUnitName = commandUnitName;
-  }
-
-  /**
-   * Gets execution result.
-   *
-   * @return the execution result
-   */
-  public CommandExecutionStatus getCommandExecutionStatus() {
-    return commandExecutionStatus;
-  }
-
-  /**
-   * Sets execution result.
-   *
-   * @param commandExecutionStatus the execution result
-   */
-  public void setCommandExecutionStatus(CommandExecutionStatus commandExecutionStatus) {
-    this.commandExecutionStatus = commandExecutionStatus;
-  }
 
   @Override
   @JsonIgnore
@@ -149,50 +44,6 @@ public class Log extends Base {
     Map<String, Object> shardKeys = super.getShardKeys();
     shardKeys.put("activityId", activityId);
     return shardKeys;
-  }
-
-  @Override
-  public int hashCode() {
-    return 31 * super.hashCode()
-        + Objects.hash(activityId, hostName, commandUnitName, logLine, logLevel, commandExecutionStatus);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null || getClass() != obj.getClass()) {
-      return false;
-    }
-    if (!super.equals(obj)) {
-      return false;
-    }
-    final Log other = (Log) obj;
-    return Objects.equals(this.activityId, other.activityId) && Objects.equals(this.hostName, other.hostName)
-        && Objects.equals(this.commandUnitName, other.commandUnitName) && Objects.equals(this.logLine, other.logLine)
-        && Objects.equals(this.logLevel, other.logLevel)
-        && Objects.equals(this.commandExecutionStatus, other.commandExecutionStatus);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("activityId", activityId)
-        .add("hostName", hostName)
-        .add("commandUnitName", commandUnitName)
-        .add("logLine", logLine)
-        .add("logLevel", logLevel)
-        .add("commandExecutionStatus", commandExecutionStatus)
-        .toString();
-  }
-
-  public Integer getLinesCount() {
-    return linesCount;
-  }
-
-  public void setLinesCount(Integer linesCount) {
-    this.linesCount = linesCount;
   }
 
   /**

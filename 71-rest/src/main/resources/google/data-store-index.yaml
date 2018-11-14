@@ -1,0 +1,11 @@
+indexes:
+- kind: commandLogs
+  properties:
+  - name: activityId
+  - name: commandUnitName
+  - name: createdAt
+- kind: commandLogs
+  properties:
+  - name: activityId
+  - name: appId
+  - name: createdAt

@@ -20,5 +20,6 @@ public enum FeatureName {
   TRIAL_SUPPORT,
   COPY_ARTIFACT,
   CV_24X7,
-  SMB_ARTIFACT
+  SMB_ARTIFACT,
+  GCD_STORAGE
 }

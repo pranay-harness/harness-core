@@ -3,6 +3,7 @@ package software.wings.sm.states;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.api.CommandStateExecutionData.Builder.aCommandStateExecutionData;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -78,7 +79,6 @@ import software.wings.utils.LambdaConvention;
 import software.wings.utils.Misc;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -268,7 +268,7 @@ public class AwsLambdaState extends State {
                              .withCommandUnitName(commandUnitList.get(0).getName())
                              .withExecutionResult(CommandExecutionStatus.RUNNING);
 
-    logService.save(logBuilder.but().withLogLine("Begin command execution.").build());
+    logService.batchedSave(singletonList(logBuilder.but().withLogLine("Begin command execution.").build()));
 
     CommandStateExecutionData.Builder executionDataBuilder = aCommandStateExecutionData()
                                                                  .withServiceId(service.getUuid())
@@ -280,7 +280,7 @@ public class AwsLambdaState extends State {
     LambdaSpecification specification = serviceResourceService.getLambdaSpecification(app.getUuid(), service.getUuid());
 
     if (isEmpty(specification.getFunctions())) {
-      logService.save(logBuilder.but().withLogLine("No Lambda function to deploy.").build());
+      logService.batchedSave(singletonList(logBuilder.but().withLogLine("No Lambda function to deploy.").build()));
       activityService.updateStatus(activity.getUuid(), activity.getAppId(), SUCCESS);
       List<FunctionMeta> functionArns = new ArrayList<>();
       AwsLambdaContextElement awsLambdaContextElement = AwsLambdaContextElement.Builder.anAwsLambdaContextElement()
@@ -308,7 +308,7 @@ public class AwsLambdaState extends State {
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return anExecutionResponse()
           .withAsync(true)
-          .withCorrelationIds(Collections.singletonList(activity.getUuid()))
+          .withCorrelationIds(singletonList(activity.getUuid()))
           .withDelegateTaskId(delegateTaskId)
           .withStateExecutionData(executionDataBuilder.build())
           .build();
