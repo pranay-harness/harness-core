@@ -139,7 +139,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics = cloudWatchService.getCloudWatchMetrics();
 
     metricAnalysisService.saveMetricTemplates(context.getAppId(), StateType.CLOUD_WATCH,
-        context.getStateExecutionInstanceId(), null, getMetricTemplates(cloudWatchMetrics));
+        context.getStateExecutionInstanceId(), null, fetchMetricTemplates(cloudWatchMetrics));
     final CloudWatchDataCollectionInfo dataCollectionInfo =
         CloudWatchDataCollectionInfo.builder()
             .awsConfig(awsConfig)
@@ -184,7 +184,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
     return delegateService.queueTask(delegateTask);
   }
 
-  private Map<String, TimeSeriesMetricDefinition> getMetricTemplates(
+  public static Map<String, TimeSeriesMetricDefinition> fetchMetricTemplates(
       Map<AwsNameSpace, List<CloudWatchMetric>> timeSeriesToCollect) {
     Map<String, TimeSeriesMetricDefinition> rv = new HashMap<>();
     for (Entry<AwsNameSpace, List<CloudWatchMetric>> entry : timeSeriesToCollect.entrySet()) {

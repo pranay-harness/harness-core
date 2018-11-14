@@ -15,14 +15,17 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.TimeSeriesMetricDefinition;
+import software.wings.service.impl.CloudWatchServiceImpl;
 import software.wings.service.impl.analysis.TimeSeriesMetricTemplates;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.StateType;
+import software.wings.sm.states.CloudWatchState;
 import software.wings.sm.states.DatadogState;
 import software.wings.sm.states.PrometheusState;
 import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
@@ -63,6 +66,10 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
 
       case DATA_DOG:
         cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), DatadogCVServiceConfiguration.class);
+        break;
+
+      case CLOUD_WATCH:
+        cvConfiguration = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
         break;
 
       default:
@@ -122,6 +129,9 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         break;
       case DATA_DOG:
         updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), DatadogCVServiceConfiguration.class);
+        break;
+      case CLOUD_WATCH:
+        updatedConfig = JsonUtils.asObject(JsonUtils.asJson(params), CloudWatchCVServiceConfiguration.class);
         break;
       default:
         throw new WingsException("No matching state type found - " + stateType)
@@ -198,6 +208,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .set("datadogServiceName", ((DatadogCVServiceConfiguration) cvConfiguration).getDatadogServiceName())
             .set("metrics", ((DatadogCVServiceConfiguration) cvConfiguration).getMetrics());
         break;
+      case CLOUD_WATCH:
+        updateOperations
+            .set("loadBalancerMetrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getLoadBalancerMetrics())
+            .set("ec2Metrics", ((CloudWatchCVServiceConfiguration) cvConfiguration).getEc2Metrics())
+            .set("region", ((CloudWatchCVServiceConfiguration) cvConfiguration).getRegion());
+        break;
       default:
         throw new IllegalStateException("Invalid state type: " + stateType);
     }
@@ -254,6 +270,15 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
                              .cvConfigId(cvConfiguration.getUuid())
                              .build();
         break;
+      case CLOUD_WATCH:
+        metricTemplates = CloudWatchState.fetchMetricTemplates(CloudWatchServiceImpl.fetchMetrics());
+        metricTemplate = TimeSeriesMetricTemplates.builder()
+                             .stateType(stateType)
+                             .metricTemplates(metricTemplates)
+                             .cvConfigId(cvConfiguration.getUuid())
+                             .build();
+        break;
+
       default:
         throw new WingsException("No matching state type found " + stateType);
     }
@@ -285,6 +310,14 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
         List<String> metricNames =
             Arrays.asList(((DatadogCVServiceConfiguration) cvConfiguration).getMetrics().split(","));
         metricTemplates = DatadogState.metricDefinitions(DatadogState.metrics(metricNames).values());
+        metricTemplate = TimeSeriesMetricTemplates.builder()
+                             .stateType(stateType)
+                             .metricTemplates(metricTemplates)
+                             .cvConfigId(cvConfiguration.getUuid())
+                             .build();
+        break;
+      case CLOUD_WATCH:
+        metricTemplates = CloudWatchState.fetchMetricTemplates(CloudWatchServiceImpl.fetchMetrics());
         metricTemplate = TimeSeriesMetricTemplates.builder()
                              .stateType(stateType)
                              .metricTemplates(metricTemplates)
