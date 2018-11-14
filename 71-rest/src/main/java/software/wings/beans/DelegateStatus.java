@@ -33,6 +33,8 @@ public class DelegateStatus {
     private List<DelegateScope> includeScopes;
     private List<DelegateScope> excludeScopes;
     private List<String> tags;
+    private long profileExecutedAt;
+    private boolean profileError;
     List<DelegateConnectionInner> connections;
 
     @JsonInclude(Include.NON_NULL)
