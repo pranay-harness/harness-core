@@ -614,7 +614,6 @@ public class AwsAmiHelperServiceDelegateImpl
             .withImageId(artifactRevision)
             .withSecurityGroups(cloneBaseLaunchConfiguration.getSecurityGroups())
             .withClassicLinkVPCId(cloneBaseLaunchConfiguration.getClassicLinkVPCId())
-            .withBlockDeviceMappings(cloneBaseLaunchConfiguration.getBlockDeviceMappings())
             .withEbsOptimized(cloneBaseLaunchConfiguration.getEbsOptimized())
             .withAssociatePublicIpAddress(cloneBaseLaunchConfiguration.getAssociatePublicIpAddress());
 

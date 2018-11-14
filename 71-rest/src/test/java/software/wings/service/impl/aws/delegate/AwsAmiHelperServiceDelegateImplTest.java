@@ -23,7 +23,6 @@ import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelega
 import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
-import com.amazonaws.services.autoscaling.model.BlockDeviceMapping;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.InstanceMonitoring;
@@ -218,7 +217,6 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
         new LaunchConfiguration()
             .withSecurityGroups("sg1", "sg2")
             .withClassicLinkVPCId("cLVI")
-            .withBlockDeviceMappings(new BlockDeviceMapping().withDeviceName("dName"))
             .withEbsOptimized(true)
             .withAssociatePublicIpAddress(true)
             .withInstanceType("iType")
@@ -242,7 +240,6 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(request.getImageId()).isEqualTo("aRev");
     assertThat(request.getSecurityGroups()).isEqualTo(asList("sg1", "sg2"));
     assertThat(request.getClassicLinkVPCId()).isEqualTo("cLVI");
-    assertThat(request.getBlockDeviceMappings().get(0).getDeviceName()).isEqualTo("dName");
     assertThat(request.getEbsOptimized()).isEqualTo(true);
     assertThat(request.getAssociatePublicIpAddress()).isEqualTo(true);
     assertThat(request.getUserData()).isEqualTo("userData");
