@@ -85,7 +85,7 @@ public class FunctionalTestRule implements MethodRule, MongoRuleMixin, InjectorR
     Configuration configuration = getConfiguration(dbName);
 
     modules = getRequiredModules(configuration, distributedLockSvc);
-    modules.add(new QueueModule(false));
+    modules.add(new QueueModule());
 
     return modules;
   }

@@ -21,36 +21,18 @@ import software.wings.service.impl.security.KmsTransitionEventListener;
 import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
 
-/**
- * Created by peeyushaggarwal on 5/25/16.
- */
 public class QueueModule extends AbstractModule {
-  private boolean filterWithVersion;
+  public QueueModule() {}
 
-  /**
-   * Creates a guice module for portal app.
-   *
-   * @param datastore datastore for queues
-   */
-  public QueueModule(boolean filterWithVersion) {
-    this.filterWithVersion = filterWithVersion;
-  }
-
-  /* (non-Javadoc)
-   * @see com.google.inject.AbstractModule#configure()
-   */
   @Override
   protected void configure() {
     bind(new TypeLiteral<Queue<EmailData>>() {}).toInstance(new MongoQueue<>(EmailData.class));
     bind(new TypeLiteral<Queue<CollectEvent>>() {}).toInstance(new MongoQueue<>(CollectEvent.class));
-    bind(new TypeLiteral<Queue<NotifyEvent>>() {})
-        .toInstance(new MongoQueue<>(NotifyEvent.class, 5, filterWithVersion));
-    bind(new TypeLiteral<Queue<DeploymentEvent>>() {})
-        .toInstance(new MongoQueue<>(DeploymentEvent.class, 60, filterWithVersion));
+    bind(new TypeLiteral<Queue<NotifyEvent>>() {}).toInstance(new MongoQueue<>(NotifyEvent.class, 5, true));
+    bind(new TypeLiteral<Queue<DeploymentEvent>>() {}).toInstance(new MongoQueue<>(DeploymentEvent.class, 60, true));
     bind(new TypeLiteral<Queue<KmsTransitionEvent>>() {}).toInstance(new MongoQueue<>(KmsTransitionEvent.class, 30));
-    bind(new TypeLiteral<Queue<ExecutionEvent>>() {})
-        .toInstance(new MongoQueue<>(ExecutionEvent.class, 30, filterWithVersion));
-    bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, 5, filterWithVersion));
+    bind(new TypeLiteral<Queue<ExecutionEvent>>() {}).toInstance(new MongoQueue<>(ExecutionEvent.class, 30, true));
+    bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, 5, true));
 
     bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
     bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);

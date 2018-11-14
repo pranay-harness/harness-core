@@ -272,7 +272,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     if (fakeMongo) {
       modules.add(new QueueModuleTest());
     } else {
-      modules.add(new QueueModule(false));
+      modules.add(new QueueModule());
     }
   }
 

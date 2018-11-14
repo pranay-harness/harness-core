@@ -5,7 +5,6 @@ import static com.google.inject.matcher.Matchers.not;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static java.time.Duration.ofSeconds;
 import static software.wings.app.LoggingInitializer.initializeLogging;
-import static software.wings.beans.FeatureName.MONGO_QUEUE_VERSIONING;
 import static software.wings.common.Constants.USER_CACHE;
 
 import com.google.inject.AbstractModule;
@@ -42,7 +41,6 @@ import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoModule;
 import io.harness.scheduler.PersistentScheduler;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -212,8 +210,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(
-        new QueueModule(StringUtils.contains(configuration.getFeatureNames(), MONGO_QUEUE_VERSIONING.toString())));
+    modules.add(new QueueModule());
     modules.add(new ExecutorModule());
     modules.add(new TemplateModule());
 

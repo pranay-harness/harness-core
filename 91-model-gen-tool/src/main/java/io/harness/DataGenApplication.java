@@ -1,7 +1,6 @@
 package io.harness;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.beans.FeatureName.MONGO_QUEUE_VERSIONING;
 import static software.wings.common.Constants.USER_CACHE;
 
 import com.google.inject.AbstractModule;
@@ -16,7 +15,6 @@ import io.dropwizard.setup.Environment;
 import io.harness.exception.WingsException;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoModule;
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -105,8 +103,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new ValidationModule(validatorFactory));
     modules.addAll(new WingsModule(configuration).cumulativeDependencies());
     modules.add(new YamlModule());
-    modules.add(
-        new QueueModule(StringUtils.contains(configuration.getFeatureNames(), MONGO_QUEUE_VERSIONING.toString())));
+    modules.add(new QueueModule());
     modules.add(new ExecutorModule());
     modules.add(new TemplateModule());
 
