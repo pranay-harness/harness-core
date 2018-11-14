@@ -80,8 +80,10 @@ public class ContainerDeploymentDelegateHelper {
         String configFilePath = KUBE_CONFIG_DIR + md5Hash;
         File file = new File(configFilePath);
         if (!file.exists()) {
+          logger.info(format("File doesn't exist. Creating file at path %s", configFilePath));
           FileUtils.forceMkdir(file.getParentFile());
           FileUtils.writeStringToFile(file, configFileContent, UTF_8);
+          logger.info(format("Created file with size %s", file.length()));
         }
         return file.getAbsolutePath();
       }
@@ -110,17 +112,15 @@ public class ContainerDeploymentDelegateHelper {
       return "";
     }
 
-    String clientCertData = isNotEmpty(config.getClientCert())
-        ? "client-certificate-data: " + new String(config.getClientCert()) + "\n"
-        : "";
+    String clientCertData =
+        isNotEmpty(config.getClientCert()) ? "client-certificate-data: " + new String(config.getClientCert()) : "";
     String clientKeyData =
-        isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) + "\n" : "";
-    String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) + "\n" : "";
-    String username = isNotEmpty(config.getUsername()) ? "username: " + config.getUsername() + "\n" : "";
-    String namespace = isNotEmpty(config.getNamespace()) ? "namespace: " + config.getNamespace() + "\n" : "";
-    String serviceAccountTokenData = isNotEmpty(config.getServiceAccountToken())
-        ? "token: " + new String(config.getServiceAccountToken()) + "\n"
-        : "";
+        isNotEmpty(config.getClientKey()) ? "client-key-data: " + new String(config.getClientKey()) : "";
+    String password = isNotEmpty(config.getPassword()) ? "password: " + new String(config.getPassword()) : "";
+    String username = isNotEmpty(config.getUsername()) ? "username: " + config.getUsername() : "";
+    String namespace = isNotEmpty(config.getNamespace()) ? "namespace: " + config.getNamespace() : "";
+    String serviceAccountTokenData =
+        isNotEmpty(config.getServiceAccountToken()) ? "token: " + new String(config.getServiceAccountToken()) : "";
 
     return KUBE_CONFIG_TEMPLATE.replace("${MASTER_URL}", config.getMasterUrl())
         .replace("${NAMESPACE}", namespace)
@@ -151,7 +151,10 @@ public class ContainerDeploymentDelegateHelper {
     if (settingAttribute.getValue() instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) settingAttribute.getValue();
     } else if (settingAttribute.getValue() instanceof KubernetesClusterConfig) {
-      kubernetesConfig = ((KubernetesClusterConfig) settingAttribute.getValue()).createKubernetesConfig(namespace);
+      KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) settingAttribute.getValue();
+      encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails);
+      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
+      kubernetesConfig.setDecrypted(true);
     } else if (settingAttribute.getValue() instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster(settingAttribute, encryptedDataDetails, clusterName, namespace);
       kubernetesConfig.setDecrypted(true);
@@ -177,7 +180,10 @@ public class ContainerDeploymentDelegateHelper {
     if (cloudProvider instanceof KubernetesConfig) {
       kubernetesConfig = (KubernetesConfig) cloudProvider;
     } else if (cloudProvider instanceof KubernetesClusterConfig) {
-      kubernetesConfig = ((KubernetesClusterConfig) cloudProvider).createKubernetesConfig(namespace);
+      KubernetesClusterConfig kubernetesClusterConfig = (KubernetesClusterConfig) cloudProvider;
+      encryptionService.decrypt(kubernetesClusterConfig, encryptedDataDetails);
+      kubernetesConfig = kubernetesClusterConfig.createKubernetesConfig(namespace);
+      kubernetesConfig.setDecrypted(true);
     } else if (cloudProvider instanceof GcpConfig) {
       kubernetesConfig = gkeClusterService.getCluster((GcpConfig) cloudProvider, encryptedDataDetails,
           k8sClusterConfig.getGcpKubernetesCluster().getClusterName(), namespace);
