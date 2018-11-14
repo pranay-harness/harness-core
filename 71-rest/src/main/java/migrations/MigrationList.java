@@ -152,6 +152,7 @@ public class MigrationList {
         .add(Pair.of(203, UpdateGitSyncErrorMigration.class)) // This is intentional.
         .add(Pair.of(204, InitializeAppCounters.class))
         .add(Pair.of(205, DanglingAppEnvReferenceRemovalMigration.class))
+        .add(Pair.of(206, TerraformProvisionerBranchMigration.class))
         .build();
   }
 }
