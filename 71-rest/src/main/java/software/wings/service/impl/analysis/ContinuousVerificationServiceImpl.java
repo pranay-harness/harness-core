@@ -57,7 +57,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -583,10 +582,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     for (long unitTime = actualUnitStartTime; unitTime <= endTime; unitTime += cronPollIntervalMs) {
       heatMapUnit = dbUnitIndex < unitsFromDB.size() ? unitsFromDB.get(dbUnitIndex) : null;
       if (heatMapUnit != null) {
-        logger.info("heatmap unit time = {}", heatMapUnit.getStartTime());
         long timeDifference = TimeUnit.MILLISECONDS.toSeconds(abs(heatMapUnit.getStartTime() - unitTime));
         if (timeDifference != 0 && timeDifference < 60) {
-          logger.error("Unexpected state: timeDifference = {}, should have been 0 or > 60", timeDifference);
+          logger.error(
+              "Unexpected state: timeDifference = {}, should have been 0 or > 60, heatmap unit start time = {}",
+              timeDifference, heatMapUnit.getStartTime());
         }
       }
 
@@ -604,26 +604,15 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @NotNull
   private List<TimeSeriesMLAnalysisRecord> getAnalysisRecordsInTimeRange(
       String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
-    // Get all records in memory
-    List<TimeSeriesMLAnalysisRecord> records = new ArrayList<>();
-    try (HIterator<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
-             new HIterator<>(wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                 .filter("appId", appId)
-                                 .filter("cvConfigId", cvConfiguration.getUuid())
-                                 .field("analysisMinute")
-                                 .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
-                                 .field("analysisMinute")
-                                 .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-                                 .order("analysisMinute")
-                                 .fetch())) {
-      while (timeSeriesMLAnalysisRecords.hasNext()) {
-        records.add(timeSeriesMLAnalysisRecords.next());
-      }
-    } catch (NoSuchElementException e) {
-      logger.warn("No time series analysis record found for minute greater than equal to "
-          + TimeUnit.MILLISECONDS.toMinutes(startTime) + ", less than " + TimeUnit.MILLISECONDS.toMinutes(endTime));
-    }
-    return records;
+    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+        .filter("appId", appId)
+        .filter("cvConfigId", cvConfiguration.getUuid())
+        .field("analysisMinute")
+        .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
+        .field("analysisMinute")
+        .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+        .order("analysisMinute")
+        .asList();
   }
 
   private int getMaxRiskLevel(TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord) {
@@ -635,15 +624,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       if (isNotEmpty(timeSeriesMLTxnSummary.getMetrics())) {
         for (TimeSeriesMLMetricSummary timeSeriesMLMetricSummary : timeSeriesMLTxnSummary.getMetrics().values()) {
           if (isNotEmpty(timeSeriesMLTxnSummary.getMetrics())) {
-            if (isNotEmpty(timeSeriesMLMetricSummary.getResults())) {
-              for (TimeSeriesMLHostSummary timeSeriesMLHostSummary : timeSeriesMLMetricSummary.getResults().values()) {
-                if (timeSeriesMLHostSummary != null) {
-                  maxRiskLevel = max(maxRiskLevel, timeSeriesMLHostSummary.getRisk());
-                } else {
-                  logger.warn("results is null for timeSeriesAnalysisRecord {}", timeSeriesMLAnalysisRecord.getUuid());
-                }
-              }
-            }
+            maxRiskLevel = max(maxRiskLevel, timeSeriesMLMetricSummary.getMax_risk());
           } else {
             logger.warn("timeSeriesMLMetricSummary is null for timeSeriesAnalysisRecord with uuid={}",
                 timeSeriesMLAnalysisRecord.getUuid());
