@@ -8,6 +8,7 @@ import static org.junit.Assert.assertFalse;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.sm.StateType.APP_DYNAMICS;
+import static software.wings.sm.StateType.CLOUD_WATCH;
 import static software.wings.sm.StateType.DATA_DOG;
 import static software.wings.sm.StateType.DYNA_TRACE;
 import static software.wings.sm.StateType.NEW_RELIC;
@@ -31,17 +32,22 @@ import software.wings.dl.WingsPersistence;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.TimeSeries;
+import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.intfc.AppService;
 import software.wings.utils.JsonUtils;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
+import software.wings.verification.cloudwatch.CloudWatchCVServiceConfiguration;
 import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
@@ -63,6 +69,7 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
   private DynaTraceCVServiceConfiguration dynaTraceCVServiceConfiguration;
   private PrometheusCVServiceConfiguration prometheusCVServiceConfiguration;
   private DatadogCVServiceConfiguration datadogCVServiceConfiguration;
+  private CloudWatchCVServiceConfiguration cloudWatchCVServiceConfiguration;
 
   private SettingAttribute settingAttribute;
   private String settingAttributeId;
@@ -95,6 +102,32 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
     createDynaTraceConfig();
     createPrometheusConfig();
     createDatadogConfig();
+    createCloudWatchConfig();
+  }
+
+  private void createCloudWatchConfig() {
+    cloudWatchCVServiceConfiguration = new CloudWatchCVServiceConfiguration();
+    cloudWatchCVServiceConfiguration.setName("Config 1");
+    cloudWatchCVServiceConfiguration.setAppId(appId);
+    cloudWatchCVServiceConfiguration.setEnvId(envId);
+    cloudWatchCVServiceConfiguration.setServiceId(serviceId);
+    cloudWatchCVServiceConfiguration.setEnabled24x7(true);
+    cloudWatchCVServiceConfiguration.setConnectorId(settingAttributeId);
+    cloudWatchCVServiceConfiguration.setAnalysisTolerance(AnalysisTolerance.MEDIUM);
+
+    Map<String, List<CloudWatchMetric>> loadBalancerMetricsByLoadBalancer = new HashMap<>();
+    List<CloudWatchMetric> loadBalancerMetrics = new ArrayList<>();
+    loadBalancerMetrics.add(
+        new CloudWatchMetric("Latency", "Latenc", "LoadBalancerName", "Load balancer name", "ERROR", true));
+    loadBalancerMetricsByLoadBalancer.put("init-test", loadBalancerMetrics);
+
+    List<CloudWatchMetric> ec2Metrics = new ArrayList<>();
+    ec2Metrics.add(
+        new CloudWatchMetric("CPUUtilization", "CPU Usage", "InstanceId", "Host name expression", "VALUE", true));
+
+    cloudWatchCVServiceConfiguration.setLoadBalancerMetrics(loadBalancerMetricsByLoadBalancer);
+    cloudWatchCVServiceConfiguration.setEc2Metrics(ec2Metrics);
+    cloudWatchCVServiceConfiguration.setRegion("us-east-2");
   }
 
   private void createNewRelicConfig(boolean enabled24x7) {
@@ -408,6 +441,37 @@ public class CVConfigurationIntegrationTest extends BaseIntegrationTest {
       assertEquals(DYNA_TRACE, obj.getStateType());
       assertEquals(dynaTraceCVServiceConfiguration.getServiceMethods(), obj.getServiceMethods());
       assertEquals(AnalysisTolerance.HIGH, obj.getAnalysisTolerance());
+    }
+  }
+
+  @Test
+  public <T extends CVConfiguration> void testCloudWatchConfiguration() {
+    when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
+
+    String url =
+        API_BASE + "/cv-configuration?accountId=" + accountId + "&appId=" + appId + "&stateType=" + CLOUD_WATCH;
+    logger.info("POST " + url);
+    WebTarget target = client.target(url);
+    RestResponse<String> restResponse = getRequestBuilderWithAuthHeader(target).post(
+        entity(cloudWatchCVServiceConfiguration, APPLICATION_JSON), new GenericType<RestResponse<String>>() {});
+    String savedObjectUuid = restResponse.getResource();
+
+    url = API_BASE + "/cv-configuration/" + savedObjectUuid + "?accountId=" + accountId
+        + "&serviceConfigurationId=" + savedObjectUuid;
+
+    target = client.target(url);
+    RestResponse<T> getRequestResponse =
+        getRequestBuilderWithAuthHeader(target).get(new GenericType<RestResponse<T>>() {});
+    T fetchedObject = getRequestResponse.getResource();
+    if (fetchedObject instanceof CloudWatchCVServiceConfiguration) {
+      CloudWatchCVServiceConfiguration obj = (CloudWatchCVServiceConfiguration) fetchedObject;
+      assertEquals(savedObjectUuid, obj.getUuid());
+      assertEquals(accountId, obj.getAccountId());
+      assertEquals(appId, obj.getAppId());
+      assertEquals(envId, obj.getEnvId());
+      assertEquals(serviceId, obj.getServiceId());
+      assertEquals(CLOUD_WATCH, obj.getStateType());
+      assertEquals(cloudWatchCVServiceConfiguration.getLoadBalancerMetrics(), obj.getLoadBalancerMetrics());
     }
   }
 

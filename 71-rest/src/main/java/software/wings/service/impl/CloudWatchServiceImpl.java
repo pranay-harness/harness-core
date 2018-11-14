@@ -65,14 +65,8 @@ public class CloudWatchServiceImpl implements CloudWatchService {
   }
 
   @Inject
-  public CloudWatchServiceImpl(YamlUtils yamlUtils) {
-    try {
-      URL url = this.getClass().getResource(Constants.STATIC_CLOUD_WATCH_METRIC_URL);
-      String yaml = Resources.toString(url, Charsets.UTF_8);
-      cloudWatchMetrics = yamlUtils.read(yaml, new TypeReference<Map<AwsNameSpace, List<CloudWatchMetric>>>() {});
-    } catch (Exception e) {
-      throw new WingsException(e);
-    }
+  public CloudWatchServiceImpl() {
+    cloudWatchMetrics = fetchMetrics();
   }
 
   @Override
@@ -151,5 +145,18 @@ public class CloudWatchServiceImpl implements CloudWatchService {
       throw new WingsException("AWS account setting not found");
     }
     return (AwsConfig) settingAttribute.getValue();
+  }
+
+  public static Map<AwsNameSpace, List<CloudWatchMetric>> fetchMetrics() {
+    Map<AwsNameSpace, List<CloudWatchMetric>> cloudWatchMetrics;
+    YamlUtils yamlUtils = new YamlUtils();
+    try {
+      URL url = CloudWatchService.class.getResource(Constants.STATIC_CLOUD_WATCH_METRIC_URL);
+      String yaml = Resources.toString(url, Charsets.UTF_8);
+      cloudWatchMetrics = yamlUtils.read(yaml, new TypeReference<Map<AwsNameSpace, List<CloudWatchMetric>>>() {});
+    } catch (Exception e) {
+      throw new WingsException(e);
+    }
+    return cloudWatchMetrics;
   }
 }
