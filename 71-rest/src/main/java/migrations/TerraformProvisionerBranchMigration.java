@@ -3,9 +3,11 @@ package migrations;
 import com.google.inject.Inject;
 
 import io.harness.persistence.HIterator;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.GitConfig;
+import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.dl.WingsPersistence;
@@ -19,19 +21,20 @@ public class TerraformProvisionerBranchMigration implements Migration {
 
   @Override
   public void migrate() {
-    try (HIterator<TerraformInfrastructureProvisioner> iterator = new HIterator<TerraformInfrastructureProvisioner>(
-             wingsPersistence.createQuery(TerraformInfrastructureProvisioner.class)
-                 .filter("sourceRepoBranch", null)
-                 .fetch())) {
+    try (HIterator<InfrastructureProvisioner> iterator =
+             new HIterator<>(wingsPersistence.createQuery(InfrastructureProvisioner.class)
+                                 .filter("infrastructureProvisionerType", "TERRAFORM")
+                                 .fetch())) {
       while (iterator.hasNext()) {
-        TerraformInfrastructureProvisioner provisioner = iterator.next();
+        TerraformInfrastructureProvisioner provisioner = (TerraformInfrastructureProvisioner) iterator.next();
+        if (StringUtils.isEmpty(provisioner.getSourceRepoBranch())) {
+          SettingAttribute settingAttribute = settingService.get(provisioner.getSourceRepoSettingId());
+          if (settingAttribute != null) {
+            GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
 
-        SettingAttribute settingAttribute = settingService.get(provisioner.getSourceRepoSettingId());
-        if (settingAttribute != null) {
-          GitConfig gitConfig = (GitConfig) settingAttribute.getValue();
-
-          provisioner.setSourceRepoBranch(gitConfig.getBranch());
-          wingsPersistence.save(provisioner);
+            provisioner.setSourceRepoBranch(gitConfig.getBranch());
+            wingsPersistence.save(provisioner);
+          }
         }
       }
     }
