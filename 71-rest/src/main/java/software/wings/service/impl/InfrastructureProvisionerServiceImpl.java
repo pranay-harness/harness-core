@@ -391,7 +391,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public List<NameValuePair> getTerraformVariables(
-      String appId, String scmSettingId, String terraformDirectory, String accountId) {
+      String appId, String scmSettingId, String terraformDirectory, String accountId, String sourceRepoBranch) {
     SettingAttribute gitSettingAttribute = settingService.get(scmSettingId);
     Validator.notNullCheck("Source repo provided is not Valid", gitSettingAttribute);
     if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
@@ -412,6 +412,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                     .scriptPath(terraformDirectory)
                     .sourceRepo(gitConfig)
                     .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, appId, null))
+                    .sourceRepoBranch(sourceRepoBranch)
                     .build()})
             .withTimeout(TimeUnit.SECONDS.toMillis(30))
             .withAsync(false)

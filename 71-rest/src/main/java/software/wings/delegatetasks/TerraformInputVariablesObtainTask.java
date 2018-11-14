@@ -6,6 +6,7 @@ import com.bertramlabs.plugins.hcl4j.HCLParser;
 import com.bertramlabs.plugins.hcl4j.HCLParserException;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.TerraformExecutionData;
@@ -54,8 +55,10 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
       encryptionService.decrypt(gitConfig, parameters.getSourceRepoEncryptionDetails());
 
       // TODO VS: do not fetch all files, only the ones mentioned in the main tf file
+      String branch = StringUtils.isNotEmpty(parameters.getSourceRepoBranch()) ? parameters.getSourceRepoBranch()
+                                                                               : gitConfig.getBranch();
       GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(gitConfig, UUID.randomUUID().toString(), "",
-          gitConfig.getBranch(), Collections.singletonList(parameters.getScriptPath()), true);
+          branch, Collections.singletonList(parameters.getScriptPath()), true);
 
       HCLParser hclParser = new HCLParser();
       Set<NameValuePair> variablesList = new HashSet<>();

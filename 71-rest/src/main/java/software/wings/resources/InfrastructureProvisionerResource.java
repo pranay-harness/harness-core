@@ -32,6 +32,7 @@ import software.wings.service.intfc.InfrastructureProvisionerService;
 
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -158,9 +159,10 @@ public class InfrastructureProvisionerResource {
   @ExceptionMetered
   @AuthRule(permissionType = PROVISIONER, action = READ)
   public RestResponse<List<NameValuePair>> getTerraformVariables(@QueryParam("appId") String appId,
-      @QueryParam("sourceRepoSettingId") String scmSettingId, @QueryParam("path") String terraformDirectory,
-      @QueryParam("accountId") String accountId) {
-    return new RestResponse<>(
-        infrastructureProvisionerService.getTerraformVariables(appId, scmSettingId, terraformDirectory, accountId));
+      @QueryParam("sourceRepoSettingId") @NotNull String scmSettingId,
+      @QueryParam("path") @NotNull String terraformDirectory, @QueryParam("accountId") String accountId,
+      @QueryParam("branch") String sourceRepoBranch) {
+    return new RestResponse<>(infrastructureProvisionerService.getTerraformVariables(
+        appId, scmSettingId, terraformDirectory, accountId, sourceRepoBranch));
   }
 }

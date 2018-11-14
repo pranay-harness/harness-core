@@ -54,5 +54,5 @@ public interface InfrastructureProvisionerService extends OwnedByApplication {
   void delete(String appId, String infrastructureProvisionerId, boolean syncFromGit);
 
   List<NameValuePair> getTerraformVariables(
-      String appId, String scmSettingId, String terraformDirectory, String accountId);
+      String appId, String scmSettingId, String terraformDirectory, String accountId, String sourceRepoBranch);
 }

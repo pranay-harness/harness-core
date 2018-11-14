@@ -29,6 +29,7 @@ public class TerraformProvisionParameters {
   private final String entityId;
   private final String currentStateFileId;
   private final GitConfig sourceRepo;
+  private final String sourceRepoBranch;
   List<EncryptedDataDetail> sourceRepoEncryptionDetails;
   private final String scriptPath;
   private final Map<String, String> variables;
