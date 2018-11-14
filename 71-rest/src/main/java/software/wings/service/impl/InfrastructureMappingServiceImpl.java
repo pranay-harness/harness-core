@@ -83,7 +83,6 @@ import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.Event.Type;
-import software.wings.beans.FeatureName;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.HostValidationRequest;
 import software.wings.beans.HostValidationResponse;
@@ -1786,13 +1785,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     if (artifactType == ArtifactType.DOCKER) {
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
-      String accountId = appService.getAccountIdByAppId(appId);
       infraTypes.put(KUBERNETES,
           asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
-      if (featureFlagService.isEnabled(FeatureName.HELM, accountId)) {
-        infraTypes.put(HELM,
-            asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
-      }
+      infraTypes.put(
+          HELM, asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));
     } else if (artifactType == ArtifactType.AWS_CODEDEPLOY) {
       infraTypes.put(AWS_CODEDEPLOY, asList(SettingVariableTypes.AWS));
