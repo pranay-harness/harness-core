@@ -182,6 +182,11 @@ public class YamlGitServiceImpl implements YamlGitService {
     GitConfig gitConfig = null;
     if (EmptyPredicate.isNotEmpty(ygs.getGitConnectorId())) {
       SettingAttribute settingAttributeForGitConnector = settingsService.get(ygs.getGitConnectorId());
+      if (settingAttributeForGitConnector == null) {
+        logger.info(
+            format(GIT_YAML_LOG_PREFIX + "Setting attribute deleted with connector Id %s", ygs.getGitConnectorId()));
+        return null;
+      }
       gitConfig = (GitConfig) settingAttributeForGitConnector.getValue();
       if (gitConfig != null) {
         gitConfig.setBranch(ygs.getBranchName());
@@ -488,6 +493,13 @@ public class YamlGitServiceImpl implements YamlGitService {
 
     String waitId = generateUuid();
     GitConfig gitConfig = getGitConfig(yamlGitConfig);
+    if (gitConfig == null) {
+      logger.warn(format(GIT_YAML_LOG_PREFIX + "GitConfig is null for accountId %s, entity %s, connectorId %s",
+          accountId, appId, yamlGitConfig.getGitConnectorId()));
+      String yamlChangeSetId = yamlChangeSets.get(0).getUuid();
+      yamlChangeSetService.updateStatus(accountId, yamlChangeSetId, Status.FAILED);
+      return true;
+    }
 
     if (yamlChangeSets.size() > 1) {
       logger.info(new StringBuilder(GIT_YAML_LOG_PREFIX)
@@ -608,7 +620,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
       String branchName = obtainBranchFromPayload(yamlWebHookPayload, headers);
       if (isEmpty(branchName)) {
-        logger.error(GIT_YAML_LOG_PREFIX
+        logger.warn(GIT_YAML_LOG_PREFIX
                 + "Could not obtain valid branch from yaml webhook payload for git webhook request [{}]",
             webhookToken);
         return;
