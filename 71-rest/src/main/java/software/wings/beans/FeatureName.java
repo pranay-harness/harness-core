@@ -6,7 +6,6 @@ package software.wings.beans;
  */
 public enum FeatureName {
   RBAC,
-  HELM,
   WHITELIST,
   AWS_CLOUD_FORMATION_TEMPLATE,
   CV_DEMO,
