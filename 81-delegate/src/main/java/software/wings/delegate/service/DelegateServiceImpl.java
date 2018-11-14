@@ -604,10 +604,11 @@ public class DelegateServiceImpl implements DelegateService {
         RestResponse<VersionInfo> versionInfo =
             timeLimiter.callWithTimeout(() -> execute(managerClient.getManagerVersion()), 15L, TimeUnit.SECONDS, true);
         if (versionInfo != null && versionInfo.getResource().getVersion().equals(getVersion())) {
-          logger.info("Checking for initialization...");
+          logger.info("Checking for profile ...");
           DelegateProfileParams profileParams = getProfile();
+          boolean resultExists = new File("profile.result").exists();
           String profileId = profileParams == null ? "" : profileParams.getProfileId();
-          long updated = profileParams == null ? 0L : profileParams.getProfileLastUpdatedAt();
+          long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
           RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
               ()
                   -> execute(managerClient.checkForProfile(delegateId, accountId, profileId, updated)),
@@ -617,18 +618,18 @@ public class DelegateServiceImpl implements DelegateService {
           }
         }
       } catch (UncheckedTimeoutException ex) {
-        logger.warn("Timed out checking for initialization");
+        logger.warn("Timed out checking for profile");
       } catch (Exception e) {
-        logger.error("Error checking for initialization", e);
+        logger.error("Error checking for profile", e);
       }
     }
   }
 
   private DelegateProfileParams getProfile() {
-    File file = new File("profile");
-    if (file.exists()) {
+    File profile = new File("profile");
+    if (profile.exists()) {
       try {
-        return JsonUtils.asObject(FileUtils.readFileToString(file, UTF_8), DelegateProfileParams.class);
+        return JsonUtils.asObject(FileUtils.readFileToString(profile, UTF_8), DelegateProfileParams.class);
       } catch (Exception e) {
         logger.error("Error reading profile", e);
       }

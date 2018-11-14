@@ -318,6 +318,8 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                   .excludeScopes(delegate.getExcludeScopes())
                                   .includeScopes(delegate.getIncludeScopes())
                                   .tags(delegate.getTags())
+                                  .profileExecutedAt(delegate.getProfileExecutedAt())
+                                  .profileError(delegate.isProfileError())
                                   .connections(delegateConnections.stream()
                                                    .filter(delegateConnection
                                                        -> StringUtils.equals(
