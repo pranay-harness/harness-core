@@ -41,6 +41,7 @@ import io.harness.persistence.HQuery;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
+import io.harness.persistence.UuidAware;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.DatastoreImpl;
@@ -77,7 +78,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -140,25 +140,15 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends Base> String save(T object) {
+  public <T extends PersistentEntity> String save(T object) {
     encryptIfNecessary(object);
-    Key<T> key = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).save(object);
-    updateParentIfNecessary(object, (String) key.getId());
-    return (String) key.getId();
+    String key = super.save(object);
+    updateParentIfNecessary(object, key);
+    return key;
   }
 
   @Override
-  public <T extends Base> List<String> save(List<T> ts) {
-    ts.removeIf(Objects::isNull);
-    List<String> ids = new ArrayList<>();
-    for (T t : ts) {
-      ids.add(save(t));
-    }
-    return ids;
-  }
-
-  @Override
-  public <T extends Base> List<String> saveIgnoringDuplicateKeys(List<T> ts) {
+  public <T extends PersistentEntity> List<String> saveIgnoringDuplicateKeys(List<T> ts) {
     for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
       T t = iterator.next();
       if (t == null) {
@@ -765,15 +755,19 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     }
   }
 
-  private <T extends Base> void encryptIfNecessary(T o) {
+  private <T extends PersistentEntity> void encryptIfNecessary(T entity) {
     // if its an update
     Object savedObject = null;
-    if (isNotBlank(o.getUuid()) && (SettingAttribute.class.isInstance(o) || EncryptableSetting.class.isInstance(o))) {
-      savedObject = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).get((Class<T>) o.getClass(), o.getUuid());
+    if (entity instanceof UuidAware) {
+      String uuid = ((UuidAware) entity).getUuid();
+      if (isNotBlank(uuid)
+          && (SettingAttribute.class.isInstance(entity) || EncryptableSetting.class.isInstance(entity))) {
+        savedObject = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).get((Class<T>) entity.getClass(), uuid);
+      }
     }
-    Object toEncrypt = o;
-    if (SettingAttribute.class.isInstance(o)) {
-      toEncrypt = ((SettingAttribute) o).getValue();
+    Object toEncrypt = entity;
+    if (SettingAttribute.class.isInstance(entity)) {
+      toEncrypt = ((SettingAttribute) entity).getValue();
       savedObject = savedObject == null ? null : ((SettingAttribute) savedObject).getValue();
     }
 

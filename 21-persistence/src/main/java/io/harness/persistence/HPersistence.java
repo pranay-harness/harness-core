@@ -7,6 +7,7 @@ import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -110,4 +111,29 @@ public interface HPersistence {
    * @return             the query
    */
   <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks);
+
+  /**
+   * Save.
+   *
+   * @param tList list of entities to save
+   * @return list of keys
+   */
+  <T extends PersistentEntity> List<String> save(List<T> tList);
+
+  /**
+   * Save ignoring duplicate key errors.
+   * This saves any new records and skips existing records
+   *
+   * @param tList list of entities to save
+   * @return list of keys of new entities
+   */
+  <T extends PersistentEntity> List<String> saveIgnoringDuplicateKeys(List<T> tList);
+
+  /**
+   * Save.
+   *
+   * @param entity   the entity
+   * @return the key of the entity
+   */
+  <T extends PersistentEntity> String save(T t);
 }
