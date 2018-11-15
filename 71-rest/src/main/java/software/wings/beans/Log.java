@@ -28,7 +28,7 @@ public class Log extends Base {
   private String hostName;
   @NotEmpty @Indexed private String commandUnitName;
   private String logLine;
-  private Integer linesCount;
+  private int linesCount;
   @NotNull private LogLevel logLevel;
   @NotNull private CommandExecutionStatus commandExecutionStatus;
 
