@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.annotation.EncryptableSetting;
@@ -90,9 +91,7 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
   @SchemaIgnore
   @Override
   public boolean isDecrypted() {
-    return decrypted || isNotBlank(encryptedCaCert) || isNotBlank(encryptedClientCert) || isNotBlank(encryptedClientKey)
-        || isNotBlank(encryptedClientKeyPassphrase) || isNotBlank(encryptedServiceAccountToken)
-        || isNotBlank(encryptedPassword);
+    return decrypted || StringUtils.isNotBlank(delegateName);
   }
 
   public KubernetesConfig createKubernetesConfig(String namespace) {
