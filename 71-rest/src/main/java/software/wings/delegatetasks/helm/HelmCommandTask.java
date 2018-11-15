@@ -13,6 +13,7 @@ import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.LogCallback;
+import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.exception.HarnessException;
@@ -106,17 +107,6 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
         ? new ExecutionLogCallback(delegateLogService, helmCommandRequest.getAccountId(), helmCommandRequest.getAppId(),
               helmCommandRequest.getActivityId(), helmCommandRequest.getCommandName())
         : new NoopExecutionCallback();
-  }
-
-  public static class NoopExecutionCallback implements LogCallback {
-    @Override
-    public void saveExecutionLog(String line) {}
-
-    @Override
-    public void saveExecutionLog(String line, LogLevel logLevel) {}
-
-    @Override
-    public void saveExecutionLog(String line, LogLevel logLevel, CommandExecutionStatus commandExecutionStatus) {}
   }
 
   private void ensureHelmCliAndTillerInstalled(HelmCommandRequest helmCommandRequest) throws Exception {

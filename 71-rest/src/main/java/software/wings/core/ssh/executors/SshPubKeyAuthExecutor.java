@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import io.harness.exception.WingsException;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 
@@ -31,8 +32,15 @@ public class SshPubKeyAuthExecutor extends AbstractSshExecutor {
    */
   @Override
   public Session getSession(SshSessionConfig config) {
+    return getSession(config,
+        new ExecutionLogCallback(logService, config.getAccountId(), config.getAppId(), config.getExecutionId(),
+            config.getCommandUnitName()));
+  }
+
+  @Override
+  public Session getSession(SshSessionConfig config, ExecutionLogCallback executionLogCallback) {
     try {
-      return SshSessionFactory.getSSHSession(config);
+      return SshSessionFactory.getSSHSession(config, executionLogCallback);
     } catch (JSchException jschEx) {
       throw new WingsException(normalizeError(jschEx), normalizeError(jschEx).name(), jschEx);
     }
