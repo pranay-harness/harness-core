@@ -659,7 +659,7 @@ public class TriggerServiceImpl implements TriggerService {
     }
     notNullCheck("Resolved environment [" + envNameOrId
             + "] does not exist. Please ensure the environment variable mapped to the right payload value in the trigger",
-        environment);
+        environment, USER);
 
     return environment.getUuid();
   }
