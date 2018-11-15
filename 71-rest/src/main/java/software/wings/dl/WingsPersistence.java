@@ -13,7 +13,6 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -95,34 +94,6 @@ public interface WingsPersistence extends HPersistence {
    * @return the string
    */
   <T extends Base> String merge(T t);
-
-  /**
-   * Save.
-   *
-   * @param <T>   the generic type
-   * @param tList the t list
-   * @return the list
-   */
-  <T extends Base> List<String> save(List<T> tList);
-
-  /**
-   * Save ignoring duplicate key errors.
-   * This saves any new records and skips existing records
-   *
-   * @param <T>   the generic type
-   * @param tList the t list
-   * @return the list
-   */
-  <T extends Base> List<String> saveIgnoringDuplicateKeys(List<T> tList);
-
-  /**
-   * Save.
-   *
-   * @param <T> the generic type
-   * @param t   the t
-   * @return the string
-   */
-  <T extends Base> String save(T t);
 
   /**
    * Save and get.
