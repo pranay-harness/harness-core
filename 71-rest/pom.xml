@@ -742,6 +742,18 @@
         </dependency>
 
         <dependency>
+            <groupId>net.rcarz</groupId>
+            <artifactId>jira-client</artifactId>
+            <version>0.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>          
+      
+        <dependency>      
             <groupId>com.google.cloud</groupId>
             <artifactId>google-cloud-datastore</artifactId>
             <version>1.51.0</version>

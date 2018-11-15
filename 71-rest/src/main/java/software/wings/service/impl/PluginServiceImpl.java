@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toMap;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
+import static software.wings.beans.FeatureName.JIRA_INTEGRATION;
 import static software.wings.beans.PluginCategory.Artifact;
 import static software.wings.beans.PluginCategory.CloudProvider;
 import static software.wings.beans.PluginCategory.Collaboration;
@@ -37,6 +38,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
@@ -334,6 +336,19 @@ public class PluginServiceImpl implements PluginService {
                          .withType("SMB")
                          .withPluginCategories(asList(Artifact))
                          .withUiSchema(readUiSchema("SMB"))
+                         .build());
+    }
+
+    boolean jiraEnabled = featureFlagService.isEnabled(JIRA_INTEGRATION, accountId);
+    if (jiraEnabled) {
+      pluginList.add(anAccountPlugin()
+                         .withSettingClass(JiraConfig.class)
+                         .withAccountId(accountId)
+                         .withIsEnabled(true)
+                         .withDisplayName("JIRA")
+                         .withType("JIRA")
+                         .withPluginCategories(asList(Collaboration))
+                         .withUiSchema(readUiSchema("JIRA"))
                          .build());
     }
 

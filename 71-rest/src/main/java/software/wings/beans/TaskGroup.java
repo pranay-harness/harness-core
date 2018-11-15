@@ -44,5 +44,6 @@ public enum TaskGroup {
   LDAP,
   K8S,
   SMB,
-  TRIGGER
+  TRIGGER,
+  JIRA
 }
