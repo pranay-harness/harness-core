@@ -17,7 +17,7 @@ public enum PrAction {
   UNASSIGNED("Unassigned", "unassigned"),
   LABELED("Labeled", "labeled"),
   UNLABELED("Unlabeled", "unlabeled"),
-  SYNCHRONIZED("Synchronized", "synchronized"),
+  SYNCHRONIZED("Synchronized", "synchronize"),
   REVIEW_REQUESTED("Review Requested", "review_requested"),
   REVIEW_REQUESTED_REMOVED("Review Request Removed", "review_request_removed");
 
