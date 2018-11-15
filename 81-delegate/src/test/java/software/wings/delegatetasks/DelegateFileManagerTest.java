@@ -10,7 +10,6 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import io.harness.CategoryTest;
-import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -104,7 +103,6 @@ public class DelegateFileManagerTest extends CategoryTest {
           .build();
 
   @Test
-  @Owner(emails = "aaditi.joag@harness.io", intermittent = true)
   public void testDownloadArtifactAtRuntimeForS3() throws IOException, ExecutionException {
     String fileContent = "test";
     InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
@@ -117,7 +115,7 @@ public class DelegateFileManagerTest extends CategoryTest {
     String text =
         Files.toString(new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_S3 + "-" + BUILD_NO), Charsets.UTF_8);
     assertThat(text).isEqualTo(fileContent);
-    FileUtils.deleteQuietly(new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_S3 + "-" + BUILD_NO));
+    FileUtils.deleteQuietly(FileUtils.getFile(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_S3 + "-" + BUILD_NO));
   }
 
   @Test
@@ -133,7 +131,8 @@ public class DelegateFileManagerTest extends CategoryTest {
     String text = Files.toString(
         new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_ARTIFACTORY + "-" + BUILD_NO), Charsets.UTF_8);
     assertThat(text).isEqualTo(fileContent);
-    FileUtils.deleteQuietly(new File(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_ARTIFACTORY + "-" + BUILD_NO));
+    FileUtils.deleteQuietly(
+        FileUtils.getFile(ARTIFACT_REPO_BASE_DIR + "_" + ARTIFACT_STREAM_ID_ARTIFACTORY + "-" + BUILD_NO));
   }
 
   @Test
