@@ -28,6 +28,7 @@ import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.FeatureName;
+import software.wings.service.intfc.verification.CVConfigurationService;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -54,6 +55,8 @@ public class VerificationJob implements Job {
   @Inject private VerificationManagerClient verificationManagerClient;
 
   @Inject private VerificationManagerClientHelper verificationManagerClientHelper;
+
+  @Inject private CVConfigurationService cvConfigurationService;
 
   private List<Account> lastAvailableAccounts = new ArrayList<>();
 
@@ -95,6 +98,8 @@ public class VerificationJob implements Job {
     // delete lastAvailableAccounts that are no longer available
     logger.info("Trying to Delete crons for Deleted Accounts");
     deleteCrons(lastAvailableAccounts);
+    logger.info("Deleting any stale configurations if available.");
+    cleanUpAfterDeletionOfEntity();
     lastAvailableAccounts = accountsFetched;
   }
 
@@ -186,6 +191,10 @@ public class VerificationJob implements Job {
         jobScheduler.deleteJob(account.getUuid(), LOG_DATA_PROCESSOR_CRON_GROUP);
       }
     });
+  }
+
+  private void cleanUpAfterDeletionOfEntity() {
+    cvConfigurationService.deleteStaleConfigs();
   }
 
   @VisibleForTesting

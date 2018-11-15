@@ -56,6 +56,7 @@ import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
+import software.wings.beans.Environment;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
 import software.wings.beans.LicenseInfo;
@@ -792,6 +793,14 @@ public class AccountServiceImpl implements AccountService {
                                     .field("_id")
                                     .in(services)
                                     .asList();
+
+    List<Environment> envList =
+        wingsPersistence.createQuery(Environment.class).field("appId").in(userAppPermissions.keySet()).asList();
+
+    List<String> envIds = envList.stream().map(Environment::getUuid).collect(Collectors.toList());
+
+    // keep only the environments that actually exist
+    allowedEnvs.retainAll(envIds);
 
     for (Service service : serviceList) {
       if (serviceId != null && !serviceId.equals(service.getUuid())) {
