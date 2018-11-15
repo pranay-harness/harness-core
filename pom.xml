@@ -26,6 +26,7 @@
         <module>62-rest-utils</module>
 
         <module>63-limits</module>
+        <module>64-events-framework</module>
         <module>71-rest</module>
 
         <module>79-verification</module>
