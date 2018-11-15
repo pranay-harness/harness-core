@@ -134,7 +134,9 @@ public class ContainerDeploymentDelegateHelper {
   public String getKubeConfigFileContent(ContainerServiceParams containerServiceParam) {
     try {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParam);
-      encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
+      if (!kubernetesConfig.isDecrypted()) {
+        encryptionService.decrypt(kubernetesConfig, containerServiceParam.getEncryptionDetails());
+      }
       return getConfigFileContent(kubernetesConfig);
     } catch (Exception e) {
       throw new InvalidRequestException(Misc.getMessage(e), e);
