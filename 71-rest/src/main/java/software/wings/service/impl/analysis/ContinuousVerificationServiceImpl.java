@@ -53,6 +53,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -457,28 +458,27 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @Override
   public List<HeatMap> getHeatMap(
       String accountId, String appId, String serviceId, long startTime, long endTime, boolean detailed) {
-    List<HeatMap> rv = new ArrayList<>();
-    try (HIterator<CVConfiguration> cvConfigurations =
-             new HIterator<>(wingsPersistence.createQuery(CVConfiguration.class)
-                                 .filter("appId", appId)
-                                 .filter("serviceId", serviceId)
-                                 .fetch())) {
-      if (!cvConfigurations.hasNext()) {
-        logger.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
-        return new ArrayList<>();
-      }
-      while (cvConfigurations.hasNext()) {
-        CVConfiguration cvConfiguration = cvConfigurationService.getConfiguration(cvConfigurations.next().getUuid());
-        String envName = cvConfiguration.getEnvName();
-        logger.info("Environment name = " + envName);
-        final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfiguration).build();
-        rv.add(heatMap);
-
-        List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfiguration);
-        List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
-        heatMap.getRiskLevelSummary().addAll(resolvedUnits);
-      }
+    List<HeatMap> rv = Collections.synchronizedList(new ArrayList<>());
+    List<CVConfiguration> cvConfigurations = wingsPersistence.createQuery(CVConfiguration.class)
+                                                 .filter("appId", appId)
+                                                 .filter("serviceId", serviceId)
+                                                 .asList();
+    if (isEmpty(cvConfigurations)) {
+      logger.info("No cv config found for appId={}, serviceId={}", appId, serviceId);
+      return new ArrayList<>();
     }
+
+    cvConfigurations.parallelStream().forEach(cvConfig -> {
+      cvConfigurationService.fillInServiceAndConnectorNames(cvConfig);
+      String envName = cvConfig.getEnvName();
+      logger.info("Environment name = " + envName);
+      final HeatMap heatMap = HeatMap.builder().cvConfiguration(cvConfig).build();
+      rv.add(heatMap);
+
+      List<HeatMapUnit> units = createAllHeatMapUnits(appId, startTime, endTime, cvConfig);
+      List<HeatMapUnit> resolvedUnits = resolveHeatMapUnits(units, startTime, endTime);
+      heatMap.getRiskLevelSummary().addAll(resolvedUnits);
+    });
 
     return rv;
   }
