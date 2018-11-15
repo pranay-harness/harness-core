@@ -104,6 +104,7 @@ public class DelegateFileManagerTest extends CategoryTest {
 
   @Test
   public void testDownloadArtifactAtRuntimeForS3() throws IOException, ExecutionException {
+    when(delegateConfiguration.getMaxCachedArtifacts()).thenReturn(10);
     String fileContent = "test";
     InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
     Pair<String, InputStream> pair = new ImmutablePair<>(fileContent, is);
@@ -120,6 +121,7 @@ public class DelegateFileManagerTest extends CategoryTest {
 
   @Test
   public void testDownloadArtifactAtRuntimeForArtifactory() throws IOException, ExecutionException {
+    when(delegateConfiguration.getMaxCachedArtifacts()).thenReturn(10);
     String fileContent = "test";
     InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
     Pair<String, InputStream> pair = new ImmutablePair<>(fileContent, is);
