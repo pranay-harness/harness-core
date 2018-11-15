@@ -121,6 +121,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
     if (timeSeriesMLAnalysisRecord == null) {
       return null;
     }
+    timeSeriesMLAnalysisRecord.decompressTransactions();
 
     Map<String, String> txnNameToIdMap = new HashMap<>();
 
@@ -275,6 +276,7 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
 
     Map<String, TimeSeriesMLAnalysisRecord> groupVsAnalysisRecord = new HashMap<>();
     allAnalysisRecords.forEach(analysisRecord -> {
+      analysisRecord.decompressTransactions();
       if (!groupVsAnalysisRecord.containsKey(analysisRecord.getGroupName())) {
         groupVsAnalysisRecord.put(analysisRecord.getGroupName(), analysisRecord);
       }
