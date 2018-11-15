@@ -32,8 +32,10 @@ import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Vaibhav Tulsyan
@@ -347,5 +349,28 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .get();
 
     wingsPersistence.update(savedTimeSeriesMetricTemplates, updateOperations);
+  }
+
+  public void deleteStaleConfigs() {
+    List<CVConfiguration> cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class).asList();
+
+    Set<String> deleteList = new HashSet<>();
+    for (CVConfiguration configuration : cvConfigurationList) {
+      Environment environment = wingsPersistence.get(Environment.class, configuration.getEnvId());
+      if (environment == null) {
+        deleteList.add(configuration.getUuid());
+        continue;
+      }
+      Application app = wingsPersistence.get(Application.class, configuration.getAppId());
+      if (app == null) {
+        deleteList.add(configuration.getUuid());
+      }
+    }
+
+    logger.info("Deleting {} stale CVConfigurations: {}", deleteList.size(), deleteList);
+
+    Query<CVConfiguration> query = wingsPersistence.createQuery(CVConfiguration.class).field("_id").in(deleteList);
+
+    wingsPersistence.delete(query);
   }
 }

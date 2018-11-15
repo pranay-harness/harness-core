@@ -32,6 +32,7 @@ import software.wings.beans.AccountStatus;
 import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
+import software.wings.beans.Environment;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
@@ -550,6 +551,8 @@ public class AccountServiceTest extends WingsBaseTest {
     config.setUuid(cvConfigId);
     config.setName("NewRelic");
     config.setStateType(StateType.NEW_RELIC);
+
+    wingsPersistence.save(Environment.Builder.anEnvironment().withAppId(appId).withUuid(envId).build());
 
     wingsPersistence.saveAndGet(
         Service.class, Service.builder().name("serviceTest").appId(appId).uuid(serviceId).build());
