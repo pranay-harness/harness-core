@@ -1,9 +1,14 @@
 package io.harness.apm;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
@@ -16,6 +21,11 @@ import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord;
 import software.wings.sm.StateType;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -170,5 +180,37 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     assertEquals("Historical list should be of size 0", 0, historicalRecordsBadAppId.size());
     assertNotNull(historicalRecordsBadCvConfigId);
     assertEquals("Historical list should be of size 0", 0, historicalRecordsBadCvConfigId.size());
+  }
+
+  @Test
+  public void testCompression() throws IOException {
+    long analysisMinute = TimeUnit.MILLISECONDS.toMinutes(System.currentTimeMillis());
+    String cvConfigId = generateUuid();
+    final Gson gson = new Gson();
+    File file = new File(getClass().getClassLoader().getResource("./ts_analysis_record.json").getFile());
+    TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord;
+    try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+      Type type = new TypeToken<TimeSeriesMLAnalysisRecord>() {}.getType();
+      timeSeriesMLAnalysisRecord = gson.fromJson(br, type);
+      timeSeriesMLAnalysisRecord.setAppId(appId);
+      timeSeriesMLAnalysisRecord.setCvConfigId(generateUuid());
+      timeSeriesMLAnalysisRecord.setAnalysisMinute((int) analysisMinute);
+    }
+    assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactions()));
+    assertNull(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson());
+    metricDataAnalysisService.saveAnalysisRecordsML(StateType.APP_DYNAMICS, accountId, appId, stateExecutionId,
+        workflowExecutionId, workflowId, serviceId, generateUuid(), (int) analysisMinute, generateUuid(),
+        generateUuid(), cvConfigId, timeSeriesMLAnalysisRecord);
+
+    final TimeSeriesMLAnalysisRecord savedRecord = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                                       .filter("appId", appId)
+                                                       .filter("stateExecutionId", stateExecutionId)
+                                                       .get();
+    assertNull(savedRecord.getTransactions());
+    assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson()));
+    TimeSeriesMLAnalysisRecord readRecord =
+        metricDataAnalysisService.getPreviousAnalysis(appId, cvConfigId, analysisMinute);
+    assertFalse(isEmpty(readRecord.getTransactions()));
+    assertNull(readRecord.getTransactionsCompressedJson());
   }
 }

@@ -604,15 +604,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   @NotNull
   private List<TimeSeriesMLAnalysisRecord> getAnalysisRecordsInTimeRange(
       String appId, long startTime, long endTime, CVConfiguration cvConfiguration) {
-    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-        .filter("appId", appId)
-        .filter("cvConfigId", cvConfiguration.getUuid())
-        .field("analysisMinute")
-        .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
-        .field("analysisMinute")
-        .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
-        .order("analysisMinute")
-        .asList();
+    final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+            .filter("appId", appId)
+            .filter("cvConfigId", cvConfiguration.getUuid())
+            .field("analysisMinute")
+            .greaterThanOrEq(TimeUnit.MILLISECONDS.toMinutes(startTime))
+            .field("analysisMinute")
+            .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+            .order("analysisMinute")
+            .asList();
+    timeSeriesMLAnalysisRecords.forEach(
+        timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
+    return timeSeriesMLAnalysisRecords;
   }
 
   private int getMaxRiskLevel(TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord) {
@@ -655,7 +659,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
              new HIterator<>(getTimeSeriesAnalysisRecordIterator(startTime, endTime, cvConfiguration))) {
       while (timeSeriesAnalysisRecords.hasNext()) {
         TimeSeriesMLAnalysisRecord record = timeSeriesAnalysisRecords.next();
-        if (record != null && record.getTransactions() != null) {
+        if (record != null && (record.getTransactions() != null || record.getTransactionsCompressedJson() != null)) {
+          record.decompressTransactions();
           record.getTransactions().forEach((transactionKey, transaction) -> {
             String transactionName = transaction.getTxn_name();
 

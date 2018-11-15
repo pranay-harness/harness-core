@@ -1,10 +1,15 @@
 package software.wings.service.impl.analysis;
 
+import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.exception.WingsException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -13,7 +18,9 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
 import software.wings.sm.StateType;
+import software.wings.utils.JsonUtils;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Map;
@@ -44,6 +51,8 @@ public class MetricAnalysisRecord extends Base {
 
   private Map<String, TimeSeriesMLTxnSummary> transactions;
 
+  private byte[] transactionsCompressedJson;
+
   private String message;
 
   private String cvConfigId;
@@ -52,4 +61,30 @@ public class MetricAnalysisRecord extends Base {
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
   private Date validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
+
+  public void compressTransactions() {
+    if (isEmpty(transactions)) {
+      return;
+    }
+    try {
+      setTransactionsCompressedJson(compressString(JsonUtils.asJson(transactions)));
+      setTransactions(null);
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  public void decompressTransactions() {
+    if (isEmpty(transactionsCompressedJson)) {
+      return;
+    }
+    try {
+      String decompressedTransactionsJson = deCompressString(getTransactionsCompressedJson());
+      setTransactions(JsonUtils.asObject(
+          decompressedTransactionsJson, new TypeReference<Map<String, TimeSeriesMLTxnSummary>>() {}));
+      setTransactionsCompressedJson(null);
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
+  }
 }

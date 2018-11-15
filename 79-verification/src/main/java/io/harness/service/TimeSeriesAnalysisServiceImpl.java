@@ -196,6 +196,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
         stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName, analysisMinute);
     learningEngineService.markCompleted(taskId);
 
+    mlAnalysisResponse.compressTransactions();
     wingsPersistence.save(mlAnalysisResponse);
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
             + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
@@ -430,6 +431,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     Map<String, TimeSeriesMLAnalysisRecord> groupVsAnalysisRecord = new HashMap<>();
     allAnalysisRecords.forEach(analysisRecord -> {
+      analysisRecord.decompressTransactions();
       if (!groupVsAnalysisRecord.containsKey(analysisRecord.getGroupName())) {
         groupVsAnalysisRecord.put(analysisRecord.getGroupName(), analysisRecord);
       }
@@ -794,11 +796,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
   @Override
   public TimeSeriesMLAnalysisRecord getPreviousAnalysis(String appId, String cvConfigId, long dataCollectionMin) {
-    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-        .filter("appId", appId)
-        .filter("cvConfigId", cvConfigId)
-        .filter("analysisMinute", dataCollectionMin)
-        .get();
+    final TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+            .filter("appId", appId)
+            .filter("cvConfigId", cvConfigId)
+            .filter("analysisMinute", dataCollectionMin)
+            .get();
+    timeSeriesMLAnalysisRecord.decompressTransactions();
+    return timeSeriesMLAnalysisRecord;
   }
 
   @Override
@@ -814,12 +819,16 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       return new ArrayList<>();
     }
 
-    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-        .filter("appId", appId)
-        .filter("cvConfigId", cvConfigId)
-        .field("analysisMinute")
-        .in(historicalAnalysisTimes)
-        .asList();
+    final List<TimeSeriesMLAnalysisRecord> timeSeriesMLAnalysisRecords =
+        wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+            .filter("appId", appId)
+            .filter("cvConfigId", cvConfigId)
+            .field("analysisMinute")
+            .in(historicalAnalysisTimes)
+            .asList();
+    timeSeriesMLAnalysisRecords.forEach(
+        timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
+    return timeSeriesMLAnalysisRecords;
   }
 
   @Override
