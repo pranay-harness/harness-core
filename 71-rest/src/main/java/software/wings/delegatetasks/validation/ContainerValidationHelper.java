@@ -41,7 +41,8 @@ public class ContainerValidationHelper {
     SettingValue value = containerServiceParams.getSettingAttribute().getValue();
 
     // see if we can decrypt from this delegate
-    if (EncryptableSetting.class.isInstance(value) && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
+    if (value instanceof EncryptableSetting && !value.isDecrypted()
+        && isNotEmpty(containerServiceParams.getEncryptionDetails())) {
       try {
         encryptionService.decrypt((EncryptableSetting) value, containerServiceParams.getEncryptionDetails());
       } catch (Exception e) {

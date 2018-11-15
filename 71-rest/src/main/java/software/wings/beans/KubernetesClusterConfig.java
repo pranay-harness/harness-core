@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.annotation.Encrypted;
 import lombok.Builder;
@@ -84,6 +85,14 @@ public class KubernetesClusterConfig extends SettingValue implements Encryptable
     this.encryptedServiceAccountToken = encryptedServiceAccountToken;
     this.accountId = accountId;
     this.decrypted = decrypted;
+  }
+
+  @SchemaIgnore
+  @Override
+  public boolean isDecrypted() {
+    return decrypted || isNotBlank(encryptedCaCert) || isNotBlank(encryptedClientCert) || isNotBlank(encryptedClientKey)
+        || isNotBlank(encryptedClientKeyPassphrase) || isNotBlank(encryptedServiceAccountToken)
+        || isNotBlank(encryptedPassword);
   }
 
   public KubernetesConfig createKubernetesConfig(String namespace) {
