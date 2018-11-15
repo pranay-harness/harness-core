@@ -3,6 +3,7 @@ package software.wings.core.ssh.executors;
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
+import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
 
 import com.google.common.base.Charsets;
@@ -18,6 +19,8 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.KerberosConfig;
+import software.wings.beans.command.LogCallback;
+import software.wings.beans.command.NoopExecutionCallback;
 import software.wings.security.encryption.EncryptionUtils;
 
 import java.io.File;
@@ -36,14 +39,17 @@ public class SshSessionFactory {
    * Gets the SSH session with jumpbox.
    *
    * @param config the config
+   * @param logCallback the LogCallback
    * @return the SSH session with jumpbox
    * @throws JSchException the j sch exception
    */
-  public static Session getSSHSessionWithJumpbox(SshSessionConfig config) throws JSchException {
+  public static Session getSSHSessionWithJumpbox(SshSessionConfig config, LogCallback logCallback)
+      throws JSchException {
     Session session = null;
     Session jumpboxSession = getSSHSession(config.getBastionHostConfig());
     int forwardingPort = jumpboxSession.setPortForwardingL(0, config.getHost(), config.getPort());
     logger.info("portforwarding port " + forwardingPort);
+    logCallback.saveExecutionLog("portforwarding port " + forwardingPort);
 
     SshSessionConfig newConfig = aSshSessionConfig()
                                      .withUserName(config.getUserName())
@@ -65,23 +71,39 @@ public class SshSessionFactory {
    * @throws JSchException the j sch exception
    */
   public static Session getSSHSession(SshSessionConfig config) throws JSchException {
+    return getSSHSession(config, new NoopExecutionCallback());
+  }
+
+  /**
+   * Gets the SSH session.
+   *
+   * @param config the config
+   * @param logCallback the LogCallback
+   * @return the SSH session
+   * @throws JSchException the j sch exception
+   */
+  public static Session getSSHSession(SshSessionConfig config, LogCallback logCallback) throws JSchException {
     JSch jsch = new JSch();
     //    JSch.setLogger(new jschLogger());
 
     Session session;
     if (config.getAuthenticationScheme() != null && config.getAuthenticationScheme().equals(KERBEROS)) {
+      logCallback.saveExecutionLog("SSH using Kerberos Auth");
       logger.info("SSH using Kerberos Auth");
       logger.info("Do we need to generate Ticket Granting Ticket(TGT)? " + config.getKerberosConfig().isGenerateTGT());
       if (config.getKerberosConfig() != null && config.getKerberosConfig().isGenerateTGT()) {
         if (!isValidKeyTabFile(config.getKerberosConfig().getKeyTabFilePath())) {
+          logCallback.saveExecutionLog("Cannot proceed with Ticket Granting Ticket(TGT) generation.", ERROR);
           logger.error("Cannot proceed with Ticket Granting Ticket(TGT) generation");
           throw new JSchException(
               "Failure: Invalid keytab file path. Cannot proceed with Ticket Granting Ticket(TGT) generation");
         }
         logger.info("Generating Ticket Granting Ticket(TGT)...");
-        boolean ticketGenerated = generateTGT(
-            config.getKerberosConfig(), config.getPassword() != null ? new String(config.getPassword()) : null);
+        boolean ticketGenerated = generateTGT(config.getKerberosConfig(),
+            config.getPassword() != null ? new String(config.getPassword()) : null, logCallback);
         if (ticketGenerated) {
+          logCallback.saveExecutionLog("Ticket Granting Ticket(TGT) generated successfully for "
+              + config.getKerberosConfig().getPrincipalWithRealm());
           logger.info("Ticket Granting Ticket(TGT) generated successfully for "
               + config.getKerberosConfig().getPrincipalWithRealm());
         } else {
@@ -126,7 +148,9 @@ public class SshSessionFactory {
     return session;
   }
 
-  private static boolean generateTGT(KerberosConfig kerberosConfig, String password) {
+  private static boolean generateTGT(KerberosConfig kerberosConfig, String password, LogCallback logCallback) {
+    logCallback.saveExecutionLog(
+        "Generating Ticket Granting Ticket(TGT) for principal: " + kerberosConfig.getPrincipalWithRealm());
     logger.info("Generating Ticket Granting Ticket(TGT) for principal: " + kerberosConfig.getPrincipalWithRealm());
     String commandString = !StringUtils.isEmpty(password)
         ? format("echo %s | kinit %s", password, kerberosConfig.getPrincipalWithRealm())

@@ -41,6 +41,7 @@ import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CopyConfigCommandUnit.ConfigFileMetaData;
+import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.ShellExecutionData;
 import software.wings.beans.command.ShellExecutionData.ShellExecutionDataBuilder;
 import software.wings.delegatetasks.DelegateFile;
@@ -603,6 +604,16 @@ public abstract class AbstractSshExecutor implements SshExecutor {
    * @throws JSchException the jsch exception
    */
   public abstract Session getSession(SshSessionConfig config);
+
+  /**
+   * Gets the session.
+   *
+   * @param config the config
+   * @param executionLogCallback the ExecutionLogCallback
+   * @return the session
+   * @throws JSchException the jsch exception
+   */
+  public abstract Session getSession(SshSessionConfig config, ExecutionLogCallback executionLogCallback);
 
   /**
    * Gets cached session.
