@@ -51,7 +51,6 @@ public class ArtifactCollectionState extends State {
   public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
   public static final String BUILD_NO_KEY = "buildNo";
 
-  private static final String LATEST = "LATEST";
   @EnumData(enumDataProvider = ArtifactSourceProvider.class)
   @Attributes(title = "Artifact Source")
   @NotEmpty
@@ -83,13 +82,15 @@ public class ArtifactCollectionState extends State {
     }
 
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
+
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         ArtifactCollectionExecutionData.builder()
             .timeout(getTimeoutMillis() != null ? valueOf(getTimeoutMillis()) : null)
             .artifactSource(artifactStream.getSourceName())
             .buildNo(evaluatedBuildNo)
-            .message("Waiting for [" + evaluatedBuildNo + "] to be collected from ["
-                + artifactStream.getArtifactStreamType() + "] repository")
+            .message(String.format(
+                "Waiting for [%s] to be collected from [" + artifactStream.getArtifactStreamType() + "] repository",
+                evaluatedBuildNo == null ? "latest artifact" : evaluatedBuildNo))
             .build();
 
     String resumeId = delayEventHelper.delay(60, Collections.emptyMap());
@@ -120,11 +121,9 @@ public class ArtifactCollectionState extends State {
     artifactCollectionExecutionData.setArtifactSource(artifactStream.getSourceName());
 
     if (lastCollectedArtifact == null || !lastCollectedArtifact.getStatus().isFinalStatus()) {
-      String message = "Waiting for [" + evaluatedBuildNo + "] to be collected from ["
-          + artifactStream.getArtifactStreamType() + "] repository";
-      logger.info(message);
-
-      artifactCollectionExecutionData.setMessage(message);
+      artifactCollectionExecutionData.setMessage(String.format(
+          "Waiting for [%s] to be collected from [" + artifactStream.getArtifactStreamType() + "] repository",
+          evaluatedBuildNo == null ? "latest artifact" : evaluatedBuildNo));
       artifactCollectionExecutionData.setBuildNo(evaluatedBuildNo);
 
       String resumeId = delayEventHelper.delay(DELAY_TIME_IN_SEC, Collections.emptyMap());
@@ -151,8 +150,8 @@ public class ArtifactCollectionState extends State {
 
   private String getEvaluatedBuildNo(ExecutionContext context) {
     String evaluatedBuildNo;
-    if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
-      evaluatedBuildNo = LATEST;
+    if (isBlank(buildNo)) {
+      evaluatedBuildNo = buildNo;
     } else {
       evaluatedBuildNo = context.renderExpression(buildNo);
     }
@@ -216,7 +215,7 @@ public class ArtifactCollectionState extends State {
 
   private Artifact getLastCollectedArtifact(
       ExecutionContext context, String artifactStreamId, String sourceName, String buildNo) {
-    if (isBlank(buildNo) || buildNo.equalsIgnoreCase(LATEST)) {
+    if (isBlank(buildNo)) {
       return artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
           context.getAppId(), artifactStreamId, sourceName);
     } else {
