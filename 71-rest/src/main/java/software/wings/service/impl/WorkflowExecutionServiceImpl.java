@@ -2192,9 +2192,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       for (StateExecutionInstance next = stateExecutionInstance; next != null;
            next = prevInstanceIdMap.get(next.getUuid())) {
         StateType nextStateType = StateType.valueOf(next.getStateType());
-        if (nextStateType == null) {
-          continue;
-        }
+
         if ((nextStateType == StateType.REPEAT || nextStateType == StateType.FORK || nextStateType == StateType.PHASE
                 || nextStateType == PHASE_STEP || nextStateType == StateType.SUB_WORKFLOW)
             && next.getStateExecutionData() instanceof ElementStateExecutionData) {
@@ -2216,7 +2214,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
           AwsAmiDeployStateExecutionData awsAmiDeployStateExecutionData =
               (AwsAmiDeployStateExecutionData) next.getStateExecutionData();
           instanceStatusSummaries.addAll(awsAmiDeployStateExecutionData.getNewInstanceStatusSummaries());
-        } else if (nextStateType == nextStateType.HELM_DEPLOY) {
+        } else if (nextStateType == StateType.HELM_DEPLOY) {
           StateExecutionData stateExecutionData = next.getStateExecutionData();
           if (stateExecutionData instanceof HelmDeployStateExecutionData) {
             HelmDeployStateExecutionData helmDeployStateExecutionData =
@@ -2225,7 +2223,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
               instanceStatusSummaries.addAll(helmDeployStateExecutionData.getNewInstanceStatusSummaries());
             }
           }
-        } else if (nextStateType == nextStateType.KUBERNETES_STEADY_STATE_CHECK) {
+        } else if (nextStateType == StateType.KUBERNETES_STEADY_STATE_CHECK) {
           KubernetesSteadyStateCheckExecutionData kubernetesSteadyStateCheckExecutionData =
               (KubernetesSteadyStateCheckExecutionData) next.getStateExecutionData();
           if (isNotEmpty(kubernetesSteadyStateCheckExecutionData.getNewInstanceStatusSummaries())) {

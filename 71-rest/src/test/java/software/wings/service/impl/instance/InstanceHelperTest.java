@@ -189,7 +189,7 @@ public class InstanceHelperTest extends WingsBaseTest {
     Set<String> names = new HashSet<>();
     names.add("name1");
     names.add("name2");
-    doReturn(names).when(containerSync).getControllerNames(any(), any());
+    doReturn(names).when(containerSync).getControllerNames(any(), any(), any());
   }
 
   @Test

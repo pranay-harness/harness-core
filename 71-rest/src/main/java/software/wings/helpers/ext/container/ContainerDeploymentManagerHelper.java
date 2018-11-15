@@ -150,7 +150,7 @@ public class ContainerDeploymentManagerHelper {
   }
 
   public ContainerServiceParams getContainerServiceParams(
-      ContainerInfrastructureMapping containerInfraMapping, String containerServiceName) {
+      ContainerInfrastructureMapping containerInfraMapping, String containerServiceName, ExecutionContext context) {
     String clusterName = containerInfraMapping.getClusterName();
     SettingAttribute settingAttribute;
     String namespace = null;
@@ -185,7 +185,7 @@ public class ContainerDeploymentManagerHelper {
         .containerServiceName(containerServiceName)
         .encryptionDetails(encryptionDetails)
         .clusterName(clusterName)
-        .namespace(namespace)
+        .namespace(context.renderExpression(namespace))
         .region(region)
         .subscriptionId(subscriptionId)
         .resourceGroup(resourceGroup)

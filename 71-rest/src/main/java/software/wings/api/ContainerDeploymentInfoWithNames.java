@@ -19,13 +19,16 @@ public class ContainerDeploymentInfoWithNames extends BaseContainerDeploymentInf
    * In case of Kubernetes, this would be a list of controllerNames.
    */
   private String containerSvcName;
+  private String namespace;
   // use this when containerSvcName is not unique as in case of ECS Daemon scheduling
   private String uniqueNameIdentifier;
 
   @Builder
-  public ContainerDeploymentInfoWithNames(String clusterName, String containerSvcName, String uniqueNameIdentifier) {
+  public ContainerDeploymentInfoWithNames(
+      String clusterName, String containerSvcName, String namespace, String uniqueNameIdentifier) {
     super(clusterName);
     this.containerSvcName = containerSvcName;
+    this.namespace = namespace;
     this.uniqueNameIdentifier = uniqueNameIdentifier;
   }
 }

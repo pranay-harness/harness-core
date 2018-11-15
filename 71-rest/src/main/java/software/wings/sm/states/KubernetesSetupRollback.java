@@ -56,8 +56,9 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
       resourceGroup = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup();
     }
 
-    String namespace =
-        isNotBlank(infrastructureMapping.getNamespace()) ? infrastructureMapping.getNamespace() : "default";
+    String namespace = isNotBlank(infrastructureMapping.getNamespace())
+        ? context.renderExpression(infrastructureMapping.getNamespace())
+        : "default";
 
     int serviceSteadyStateTimeout =
         getServiceSteadyStateTimeout() > 0 ? getServiceSteadyStateTimeout() : DEFAULT_STEADY_STATE_TIMEOUT;

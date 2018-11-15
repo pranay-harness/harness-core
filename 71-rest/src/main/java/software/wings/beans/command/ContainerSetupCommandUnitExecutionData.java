@@ -18,6 +18,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class ContainerSetupCommandUnitExecutionData extends CommandExecutionData {
   private String containerServiceName;
+  private String namespace;
   private List<String[]> activeServiceCounts;
   private List<String[]> trafficWeights;
   private String autoscalerYaml;

@@ -204,6 +204,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     try {
       KubernetesSetupParams setupParams = (KubernetesSetupParams) containerSetupParams;
+      commandExecutionDataBuilder.namespace(setupParams.getNamespace());
 
       harnessAnnotations = getHarnessAnnotations(setupParams);
       lookupLabels = ImmutableMap.of(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
@@ -279,9 +280,10 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
       String dockerImageName = setupParams.getImageDetails().getName() + ":" + setupParams.getImageDetails().getTag();
 
-      summaryOutput.append(format("%nCluster Name: %s", setupParams.getClusterName()));
-      summaryOutput.append(format("%nController Name: %s", containerServiceName));
-      summaryOutput.append(format("%nDocker Image Name: %s", dockerImageName));
+      summaryOutput.append(format("%nCluster: %s", setupParams.getClusterName()));
+      summaryOutput.append(format("%nNamespace: %s", setupParams.getNamespace()));
+      summaryOutput.append(format("%nController: %s", containerServiceName));
+      summaryOutput.append(format("%nDocker Image: %s", dockerImageName));
 
       if (setupParams.isRollback()) {
         executionLogCallback.saveExecutionLog("Rolling back setup");

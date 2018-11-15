@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -86,7 +87,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.utils.KubernetesConvention;
 import software.wings.utils.Misc;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -167,7 +167,7 @@ public class HelmDeployState extends State {
     updateHelmReleaseNameInInfraMappingElement(context, releaseName);
 
     ContainerServiceParams containerServiceParams =
-        containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName);
+        containerDeploymentHelper.getContainerServiceParams(containerInfraMapping, releaseName, context);
 
     HelmChartSpecification helmChartSpecification =
         serviceResourceService.getHelmChartSpecification(context.getAppId(), serviceElement.getUuid());
@@ -179,8 +179,11 @@ public class HelmDeployState extends State {
       }
     }
 
-    HelmDeployStateExecutionData stateExecutionData =
-        HelmDeployStateExecutionData.builder().activityId(activity.getUuid()).releaseName(releaseName).build();
+    HelmDeployStateExecutionData stateExecutionData = HelmDeployStateExecutionData.builder()
+                                                          .activityId(activity.getUuid())
+                                                          .releaseName(releaseName)
+                                                          .namespace(containerServiceParams.getNamespace())
+                                                          .build();
 
     if (helmChartSpecification != null) {
       stateExecutionData.setChartName(helmChartSpecification.getChartName());
@@ -209,20 +212,18 @@ public class HelmDeployState extends State {
         releaseName, app.getAccountId(), app.getUuid(), activity.getUuid(), imageDetails, containerInfraMapping,
         repoName, gitConfig, encryptedDataDetails);
 
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(app.getAccountId())
-                                    .withAppId(app.getUuid())
-                                    .withTaskType(TaskType.HELM_COMMAND_TASK)
-                                    .withWaitId(activity.getUuid())
-                                    .withParameters(new Object[] {commandRequest})
-                                    .withEnvId(env.getUuid())
-                                    .withTimeout(TimeUnit.HOURS.toMillis(1))
-                                    .withInfrastructureMappingId(containerInfraMapping.getUuid())
-                                    .build();
-
-    String delegateTaskId = delegateService.queueTask(delegateTask);
+    delegateService.queueTask(aDelegateTask()
+                                  .withAccountId(app.getAccountId())
+                                  .withAppId(app.getUuid())
+                                  .withTaskType(TaskType.HELM_COMMAND_TASK)
+                                  .withWaitId(activity.getUuid())
+                                  .withParameters(new Object[] {commandRequest})
+                                  .withEnvId(env.getUuid())
+                                  .withTimeout(TimeUnit.HOURS.toMillis(1))
+                                  .withInfrastructureMappingId(containerInfraMapping.getUuid())
+                                  .build());
     return ExecutionResponse.Builder.anExecutionResponse()
-        .withCorrelationIds(Arrays.asList(activity.getUuid()))
+        .withCorrelationIds(singletonList(activity.getUuid()))
         .withStateExecutionData(stateExecutionData)
         .withAsync(true)
         .build();
@@ -271,7 +272,7 @@ public class HelmDeployState extends State {
                               getImageName(yamlFileContent, imageDetails.getName(), imageDetails.getDomainName()));
                 }
                 yamlFileContent =
-                    yamlFileContent.replaceAll(HELM_NAMESPACE_PLACEHOLDER_REGEX, infrastructureMapping.getNamespace());
+                    yamlFileContent.replaceAll(HELM_NAMESPACE_PLACEHOLDER_REGEX, containerServiceParams.getNamespace());
                 return yamlFileContent;
               })
               .map(context::renderExpression)
@@ -288,7 +289,7 @@ public class HelmDeployState extends State {
             .commandName(HELM_COMMAND_NAME)
             .chartSpecification(helmChartSpecification)
             .releaseName(releaseName)
-            .namespace(infrastructureMapping.getNamespace())
+            .namespace(containerServiceParams.getNamespace())
             .containerServiceParams(containerServiceParams)
             .variableOverridesYamlFiles(helmValueOverridesYamlFilesEvaluated)
             .timeoutInMillis(TimeUnit.MINUTES.toMillis(steadyStateTimeout))

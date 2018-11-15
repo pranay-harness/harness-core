@@ -71,7 +71,6 @@ import software.wings.sm.State;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Misc;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -282,10 +281,11 @@ public abstract class ContainerServiceSetup extends State {
         // This will be non-null, when its ECS Daemon workflow
         executionData.setPreviousEcsServiceSnapshotJson(setupExecutionData.getPreviousEcsServiceSnapshotJson());
         executionData.setEcsServiceArn(setupExecutionData.getEcsServiceArn());
-        executionData.setNewInstanceData(Arrays.asList(ContainerServiceData.builder()
+        executionData.setNewInstanceData(singletonList(ContainerServiceData.builder()
                                                            .name(setupExecutionData.getContainerServiceName())
                                                            .uniqueIdentifier(setupExecutionData.getEcsTaskDefintion())
                                                            .build()));
+        executionData.setNamespace(containerServiceElement.getNamespace());
         executionData.setPreviousAwsAutoScalarConfigs(setupExecutionData.getPreviousAwsAutoScalarConfigs());
 
         containerServiceElement.setPreviousAwsAutoScalarConfigs(setupExecutionData.getPreviousAwsAutoScalarConfigs());

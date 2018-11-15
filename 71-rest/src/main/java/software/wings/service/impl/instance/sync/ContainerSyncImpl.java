@@ -17,7 +17,6 @@ import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.infrastructure.instance.ContainerDeploymentInfo;
@@ -25,6 +24,7 @@ import software.wings.beans.infrastructure.instance.info.ContainerInfo;
 import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
@@ -69,7 +69,6 @@ public class ContainerSyncImpl implements ContainerSync {
 
         SettingAttribute settingAttribute;
         String clusterName = null;
-        String namespace = null;
         String region = null;
         String subscriptionId = null;
         String resourceGroup = null;
@@ -80,14 +79,10 @@ public class ContainerSyncImpl implements ContainerSync {
           settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
               ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
               : settingsService.get(directInfraMapping.getComputeProviderSettingId());
-          namespace = directInfraMapping.getNamespace();
         } else {
           settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
           clusterName = containerInfraMapping.getClusterName();
-          if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
-            namespace = containerInfraMapping.getNamespace();
-          } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
-            namespace = containerInfraMapping.getNamespace();
+          if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
             subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
             resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
           } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
@@ -115,7 +110,7 @@ public class ContainerSyncImpl implements ContainerSync {
                 .containerServiceName(containerDeploymentInfo.getContainerSvcName())
                 .encryptionDetails(encryptionDetails)
                 .clusterName(clusterName)
-                .namespace(namespace)
+                .namespace(containerDeploymentInfo.getNamespace())
                 .region(region)
                 .subscriptionId(subscriptionId)
                 .resourceGroup(resourceGroup)
@@ -136,19 +131,19 @@ public class ContainerSyncImpl implements ContainerSync {
 
   @Override
   public ContainerSyncResponse getInstances(
-      ContainerInfrastructureMapping containerInfraMapping, List<String> containerSvcNameList) {
+      ContainerInfrastructureMapping containerInfraMapping, List<ContainerMetadata> containerMetadataList) {
     List<ContainerInfo> result = Lists.newArrayList();
 
     logger.info("getInstances() call for app {} , infraMapping {}", containerInfraMapping.getAppId(),
         containerInfraMapping.getUuid());
 
-    containerSvcNameList.forEach(containerSvcName -> {
+    for (ContainerMetadata containerMetadata : containerMetadataList) {
       try {
         logger.info("getInstances() call for app {} , infraMapping {} and containerSvcName {}",
-            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), containerSvcName);
+            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), containerMetadata);
 
-        ContainerServiceParams containerServiceParams =
-            getContainerServiceParams(containerInfraMapping, containerSvcName);
+        ContainerServiceParams containerServiceParams = getContainerServiceParams(
+            containerInfraMapping, containerMetadata.getContainerServiceName(), containerMetadata.getNamespace());
         Application app = appService.get(containerInfraMapping.getAppId());
         SyncTaskContext syncTaskContext = aContext()
                                               .withAccountId(app.getAccountId())
@@ -163,21 +158,21 @@ public class ContainerSyncImpl implements ContainerSync {
       } catch (Exception ex) {
         logger.warn(
             "Error while getting instances for container for appId {} and infraMappingId {} and containerSvcName {}",
-            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), containerSvcName, ex);
+            containerInfraMapping.getAppId(), containerInfraMapping.getUuid(), containerMetadata, ex);
         throw new WingsException(ErrorCode.GENERAL_ERROR, ex)
             .addParam("message",
                 "Error while getting instances for container for appId " + containerInfraMapping.getAppId()
                     + " and infraMappingId " + containerInfraMapping.getUuid() + " and containerSvcName "
-                    + containerSvcName);
+                    + containerMetadata);
       }
-    });
+    }
     return ContainerSyncResponse.builder().containerInfoList(result).build();
   }
 
   @Override
   public Set<String> getControllerNames(
-      ContainerInfrastructureMapping containerInfraMapping, Map<String, String> labels) {
-    ContainerServiceParams containerServiceParams = getContainerServiceParams(containerInfraMapping, null);
+      ContainerInfrastructureMapping containerInfraMapping, Map<String, String> labels, String namespace) {
+    ContainerServiceParams containerServiceParams = getContainerServiceParams(containerInfraMapping, null, namespace);
 
     Application app = appService.get(containerInfraMapping.getAppId());
     SyncTaskContext syncTaskContext = aContext()
@@ -193,10 +188,9 @@ public class ContainerSyncImpl implements ContainerSync {
   }
 
   private ContainerServiceParams getContainerServiceParams(
-      ContainerInfrastructureMapping containerInfraMapping, String containerSvcName) {
+      ContainerInfrastructureMapping containerInfraMapping, String containerSvcName, String namespace) {
     SettingAttribute settingAttribute;
     String clusterName = null;
-    String namespace = null;
     String region = null;
     String resourceGroup = null;
     String subscriptionId = null;
@@ -206,16 +200,12 @@ public class ContainerSyncImpl implements ContainerSync {
       settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
           ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
           : settingsService.get(directInfraMapping.getComputeProviderSettingId());
-      namespace = directInfraMapping.getNamespace();
     } else {
       settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
       clusterName = containerInfraMapping.getClusterName();
-      if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
-        namespace = containerInfraMapping.getNamespace();
-      } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+      if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
         subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
         resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
-        namespace = containerInfraMapping.getNamespace();
       } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
         region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
       }

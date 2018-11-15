@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
@@ -56,6 +57,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -98,7 +100,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 /**
  * Created by rsingh on 7/6/17.
@@ -259,24 +260,24 @@ public abstract class AbstractAnalysisState extends State {
     getLogger().info("Deployed hosts so far: {}", phaseHosts);
 
     if (containerInstanceHandler.isContainerDeployment(infrastructureMapping)) {
-      Set<String> containerServiceNames =
+      Set<ContainerMetadata> containerMetadataSet =
           containerInstanceHandler.getContainerServiceNames(context, serviceId, infraMappingId);
 
-      if (isEmpty(containerServiceNames)) {
+      if (isEmpty(containerMetadataSet)) {
         getLogger().info("state {} has no containers deployed for service {} infra {}. Returning empty",
             context.getStateExecutionInstanceId(), serviceId, infraMappingId);
         return Collections.emptyMap();
       }
 
       if (infrastructureMapping instanceof EcsInfrastructureMapping) {
-        Map<String, String> hosts =
-            getEcsLastExecutionNodes(context, (EcsInfrastructureMapping) infrastructureMapping, containerServiceNames);
-        phaseHosts.keySet().forEach(host -> hosts.remove(host));
+        Map<String, String> hosts = getEcsLastExecutionNodes(context, (EcsInfrastructureMapping) infrastructureMapping,
+            containerMetadataSet.stream().map(ContainerMetadata::getContainerServiceName).collect(toSet()));
+        phaseHosts.keySet().forEach(hosts::remove);
         return hosts;
       }
 
-      List<ContainerInfo> containerInfoForService = containerInstanceHandler.getContainerInfoForService(
-          containerServiceNames, context, infraMappingId, serviceId);
+      List<ContainerInfo> containerInfoForService =
+          containerInstanceHandler.getContainerInfoForService(containerMetadataSet, context, infraMappingId, serviceId);
       Map<String, String> podNameToIp = new HashMap<>();
       Set<String> serviceHosts = containerInfoForService.stream()
                                      .map(containerInfo -> {
@@ -292,7 +293,7 @@ public abstract class AbstractAnalysisState extends State {
 
                                        throw new IllegalStateException("Invalid type " + containerInfo);
                                      })
-                                     .collect(Collectors.toSet());
+                                     .collect(toSet());
       final Map<String, String> hosts = new HashMap<>();
       serviceHosts.forEach(serviceHost -> {
         if (isEmpty(hostnameTemplate)) {

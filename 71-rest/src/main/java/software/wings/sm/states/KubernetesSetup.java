@@ -43,6 +43,7 @@ import software.wings.beans.container.KubernetesBlueGreenConfig;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.beans.container.KubernetesPortProtocol;
 import software.wings.beans.container.KubernetesServiceType;
+import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ExecutionContext;
@@ -170,8 +171,11 @@ public class KubernetesSetup extends ContainerServiceSetup {
       resourceGroup = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getResourceGroup();
     }
 
-    String namespace =
-        isNotBlank(infrastructureMapping.getNamespace()) ? infrastructureMapping.getNamespace() : "default";
+    String namespace = isNotBlank(infrastructureMapping.getNamespace())
+        ? context.renderExpression(infrastructureMapping.getNamespace())
+        : "default";
+
+    KubernetesHelperService.validateNamespace(namespace);
 
     String serviceYamlEvaluated = null;
     if (serviceType == KubernetesServiceType.Yaml && isNotBlank(serviceYaml)) {

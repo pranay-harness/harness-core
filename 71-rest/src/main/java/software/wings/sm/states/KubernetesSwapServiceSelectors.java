@@ -217,7 +217,7 @@ public class KubernetesSwapServiceSelectors extends State {
             .activityId(activity.getUuid())
             .commandName(KUBERNETES_SWAP_SERVICE_SELECTORS_COMMAND_NAME)
             .containerServiceParams(
-                containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, ""))
+                containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context))
             .service1(renderedService1)
             .service2(renderedService2)
             .build();

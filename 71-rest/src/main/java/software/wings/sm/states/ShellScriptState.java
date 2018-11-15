@@ -283,7 +283,7 @@ public class ShellScriptState extends State {
           infrastructureMappingService.get(context.getAppId(), infrastructureMappingId);
       if (infraMapping instanceof ContainerInfrastructureMapping) {
         containerServiceParams = containerDeploymentManagerHelper.getContainerServiceParams(
-            (ContainerInfrastructureMapping) infraMapping, "");
+            (ContainerInfrastructureMapping) infraMapping, "", context);
       }
     }
 

@@ -23,6 +23,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.fabric8.kubernetes.api.model.DoneableHorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.fabric8.kubernetes.api.model.HorizontalPodAutoscalerList;
+import io.fabric8.kubernetes.api.model.NamespaceBuilder;
 import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
@@ -33,6 +34,8 @@ import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import io.fabric8.kubernetes.client.dsl.internal.HorizontalPodAutoscalerOperationsImpl;
 import io.fabric8.kubernetes.client.internal.SSLUtils;
+import io.harness.exception.InvalidArgumentsException;
+import io.harness.expression.ExpressionEvaluator;
 import io.harness.network.Http;
 import me.snowdrop.istio.api.model.IstioResource;
 import me.snowdrop.istio.api.model.v1.networking.DestinationWeight;
@@ -50,6 +53,7 @@ import okhttp3.Response;
 import okhttp3.Route;
 import okhttp3.logging.HttpLoggingInterceptor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.KubernetesConfig;
@@ -90,6 +94,20 @@ public class KubernetesHelperService {
   private static final Logger logger = LoggerFactory.getLogger(KubernetesHelperService.class);
 
   @Inject private EncryptionService encryptionService;
+
+  public static void validateNamespace(String namespace) {
+    if (!ExpressionEvaluator.containsVariablePattern(namespace)) {
+      try {
+        new NamespaceBuilder().withNewMetadata().withName(namespace).endMetadata().build();
+      } catch (Exception e) {
+        throw new InvalidArgumentsException(
+            Pair.of("Namespace",
+                "\"" + namespace
+                    + "\" is an invalid name. Namespaces may only contain lowercase letters, numbers, and '-'."),
+            e);
+      }
+    }
+  }
 
   public KubernetesClient getKubernetesClient(
       KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails) {

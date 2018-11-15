@@ -19,11 +19,14 @@ import java.util.List;
 public class ContainerDeploymentInfoWithLabels extends BaseContainerDeploymentInfo {
   private List<Label> labels;
   private String newVersion;
+  private String namespace;
 
   @Builder
-  public ContainerDeploymentInfoWithLabels(String clusterName, List<Label> labels, String newVersion) {
+  public ContainerDeploymentInfoWithLabels(
+      String clusterName, List<Label> labels, String newVersion, String namespace) {
     super(clusterName);
     this.labels = labels;
     this.newVersion = newVersion;
+    this.namespace = namespace;
   }
 }

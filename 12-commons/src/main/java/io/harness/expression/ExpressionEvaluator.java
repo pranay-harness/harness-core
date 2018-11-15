@@ -182,6 +182,13 @@ public class ExpressionEvaluator {
     return ExpressionEvaluator.wingsVariablePattern.matcher(expression).matches();
   }
 
+  public static boolean containsVariablePattern(String expression) {
+    if (isEmpty(expression)) {
+      return false;
+    }
+    return ExpressionEvaluator.wingsVariablePattern.matcher(expression).find();
+  }
+
   protected JexlContext prepareContext(Map<String, Object> context) {
     final LateBindingContext lateBindingContext = new LateBindingContext(context);
     lateBindingContext.putAll(expressionFunctorMap);
