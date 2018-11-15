@@ -22,6 +22,7 @@ import static software.wings.settings.SettingValue.SettingVariableTypes.GCS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GIT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.HOST_CONNECTION_ATTRIBUTES;
 import static software.wings.settings.SettingValue.SettingVariableTypes.JENKINS;
+import static software.wings.settings.SettingValue.SettingVariableTypes.JIRA;
 import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.LOGZ;
 import static software.wings.settings.SettingValue.SettingVariableTypes.NEW_RELIC;
@@ -95,7 +96,7 @@ public class SettingAttribute extends Base {
 
     CONNECTOR(Lists.newArrayList(SMTP, JENKINS, BAMBOO, SPLUNK, ELK, LOGZ, SUMO, APP_DYNAMICS, NEW_RELIC, DYNA_TRACE,
         BUG_SNAG, DATA_DOG, APM_VERIFICATION, PROMETHEUS, ELB, SLACK, DOCKER, ECR, GCR, NEXUS, ARTIFACTORY, AMAZON_S3,
-        GCS, GIT, SMB)),
+        GCS, GIT, SMB, JIRA)),
 
     SETTING(Lists.newArrayList(HOST_CONNECTION_ATTRIBUTES, BASTION_HOST_CONNECTION_ATTRIBUTES, STRING));
 

@@ -300,6 +300,11 @@ public abstract class SettingValue implements ExtensionPoint {
      */
     KMS,
 
+    /**
+     * Jira setting variable types.
+     */
+    JIRA("JIRA"),
+
     SECRET_TEXT,
 
     YAML_GIT_SYNC,

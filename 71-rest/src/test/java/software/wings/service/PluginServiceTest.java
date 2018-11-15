@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.AccountPlugin.Builder.anAccountPlugin;
@@ -27,10 +28,12 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.ElasticLoadBalancerConfig;
 import software.wings.beans.ElkConfig;
+import software.wings.beans.FeatureName;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
@@ -66,12 +69,13 @@ public class PluginServiceTest {
   public void setup() throws IOException {
     initMocks(this);
     setInternalState(pluginService, "featureFlagService", mockFeatureFlagService);
+    when(mockFeatureFlagService.isEnabled(FeatureName.JIRA_INTEGRATION, accountId)).thenReturn(true);
   }
 
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(27)
+        .hasSize(28)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -295,16 +299,24 @@ public class PluginServiceTest {
                 .withDisplayName("Git Repository")
                 .withType("GIT")
                 .withPluginCategories(asList(SourceRepo))
+                .build(),
+            anAccountPlugin()
+                .withSettingClass(JiraConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("JIRA")
+                .withType("JIRA")
+                .withPluginCategories(asList(Collaboration))
                 .build());
   }
 
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(27)
+        .hasSize(28)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
             "JENKINS", "BAMBOO", "SMTP", "SLACK", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY", "PCF", "GIT");
+            "ARTIFACTORY", "PCF", "GIT", "JIRA");
   }
 }

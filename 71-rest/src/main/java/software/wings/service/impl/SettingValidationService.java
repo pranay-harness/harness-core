@@ -35,6 +35,7 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
@@ -97,6 +98,7 @@ public class SettingValidationService {
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private SettingsService settingsService;
   @Inject private ManagerDecryptionService managerDecryptionService;
+  @Inject private JiraHelperService jiraHelperService;
 
   public boolean validate(SettingAttribute settingAttribute) {
     // Name has leading/trailing spaces
@@ -176,6 +178,8 @@ public class SettingValidationService {
       validateGitConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof HostConnectionAttributes) {
       validateHostConnectionAttributes((HostConnectionAttributes) settingValue);
+    } else if (settingValue instanceof JiraConfig) {
+      jiraHelperService.validateCredential((JiraConfig) settingValue);
     }
 
     if (EncryptableSetting.class.isInstance(settingValue)) {

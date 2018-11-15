@@ -134,6 +134,7 @@ import software.wings.service.impl.yaml.handler.setting.cloudprovider.Kubernetes
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.PcfConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.PhysicalDataCenterConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.collaborationprovider.JiraConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SlackConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.SmtpConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.verificationprovider.AppDynamicsConfigYamlHandler;
@@ -271,6 +272,8 @@ public class YamlModule extends AbstractModule {
         .to(SmtpConfigYamlHandler.class);
     collaborationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.SLACK.name())
         .to(SlackConfigYamlHandler.class);
+    collaborationProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.JIRA.name())
+        .to(JiraConfigYamlHandler.class);
 
     MapBinder<String, CloudProviderYamlHandler> cloudProviderYamlHelperMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CloudProviderYamlHandler.class);
