@@ -288,7 +288,9 @@ public enum ErrorCode {
 
   KUBERNETES_YAML_ERROR,
 
-  USAGE_LIMITS_EXCEEDED(Status.FORBIDDEN, "Usage Limit Exceeded");
+  USAGE_LIMITS_EXCEEDED(Status.FORBIDDEN, "Usage Limit Exceeded"),
+
+  EVENT_PUBLISH_FAILED("Event published failed");
 
   private Status status = BAD_REQUEST;
   private String description;
