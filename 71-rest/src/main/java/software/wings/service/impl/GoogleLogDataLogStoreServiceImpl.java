@@ -69,10 +69,10 @@ public class GoogleLogDataLogStoreServiceImpl implements LogDataStoreService {
       List<Entity> logList = new ArrayList<>();
       logs.forEach(log -> logList.add(convertToCloudStorageEntity(datastore, log)));
       datastore.put(logList.stream().toArray(Entity[] ::new));
-      mongoLogDataStoreService.saveExecutionLog(logs);
     } catch (Exception e) {
       logger.error("Error saving execution logs", e);
     }
+    mongoLogDataStoreService.saveExecutionLog(logs);
   }
 
   @Override
@@ -174,7 +174,7 @@ public class GoogleLogDataLogStoreServiceImpl implements LogDataStoreService {
 
   private com.google.cloud.datastore.Entity convertToCloudStorageEntity(Datastore datastore, Log log) {
     Key taskKey = datastore.newKeyFactory()
-                      .setKind(this.getClass().getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
+                      .setKind(Log.class.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                       .newKey(generateUuid());
     com.google.cloud.datastore.Entity.Builder logEntityBuilder =
         com.google.cloud.datastore.Entity.newBuilder(taskKey)
