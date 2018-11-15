@@ -1,6 +1,7 @@
 package software.wings.service.impl.instance.sync;
 
 import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.instance.sync.request.ContainerSyncRequest;
 import software.wings.service.impl.instance.sync.response.ContainerSyncResponse;
 
@@ -16,7 +17,8 @@ public interface ContainerSync {
   ContainerSyncResponse getInstances(ContainerSyncRequest syncRequest);
 
   ContainerSyncResponse getInstances(
-      ContainerInfrastructureMapping containerInfraMapping, List<String> containerSvcNameList);
+      ContainerInfrastructureMapping containerInfraMapping, List<ContainerMetadata> containerMetadataList);
 
-  Set<String> getControllerNames(ContainerInfrastructureMapping containerInfraMapping, Map<String, String> labels);
+  Set<String> getControllerNames(
+      ContainerInfrastructureMapping containerInfraMapping, Map<String, String> labels, String namespace);
 }

@@ -20,6 +20,7 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private String serviceId;
   private List<ContainerServiceData> newInstanceData = new ArrayList<>();
   private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
+  private String namespace;
   private String controllerNamePrefix;
   // Following 3 fields are required while Daemon ECS service rollback
   private String previousEcsServiceSnapshotJson;

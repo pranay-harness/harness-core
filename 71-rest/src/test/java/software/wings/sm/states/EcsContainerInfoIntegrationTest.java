@@ -42,6 +42,7 @@ import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.ContainerMetadata;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ContainerService;
@@ -135,8 +136,14 @@ public class EcsContainerInfoIntegrationTest extends WingsBaseTest {
                         .withComputeProviderSettingId(awsConfigid)
                         .build());
     when(containerInstanceHandler.getContainerServiceNames(anyObject(), anyString(), anyString()))
-        .thenReturn(Sets.newHashSet(
-            "Harness__Verification__Learning__Engine__ECS__2", "Harness__Verification__Learning__Engine__ECS__3"));
+        .thenReturn(Sets.newHashSet(ContainerMetadata.builder()
+                                        .containerServiceName("Harness__Verification__Learning__Engine__ECS__2")
+                                        .namespace("default")
+                                        .build(),
+            ContainerMetadata.builder()
+                .containerServiceName("Harness__Verification__Learning__Engine__ECS__3")
+                .namespace("default")
+                .build()));
 
     SplunkV2State splunkV2State = spy(new SplunkV2State("SplunkState"));
     doReturn(workflowId).when(splunkV2State).getWorkflowId(context);

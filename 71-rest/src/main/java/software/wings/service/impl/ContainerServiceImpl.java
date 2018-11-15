@@ -3,6 +3,7 @@ package software.wings.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.infrastructure.instance.info.EcsContainerInfo.Builder.anEcsContainerInfo;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 
@@ -143,6 +144,7 @@ public class ContainerServiceImpl implements ContainerService {
                            .ip(pod.getStatus().getPodIP())
                            .controllerName(containerServiceName)
                            .serviceName(serviceName)
+                           .namespace(containerServiceParams.getNamespace())
                            .build());
           }
         }
@@ -216,8 +218,12 @@ public class ContainerServiceImpl implements ContainerService {
     if (isKubernetesClusterConfig(value)) {
       KubernetesConfig kubernetesConfig = getKubernetesConfig(containerServiceParams);
       Validator.notNullCheck("KubernetesConfig", kubernetesConfig);
-      List<? extends HasMetadata> controllers = kubernetesContainerService.getControllers(
-          kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels);
+      List<? extends HasMetadata> controllers =
+          kubernetesContainerService
+              .getControllers(kubernetesConfig, containerServiceParams.getEncryptionDetails(), labels)
+              .stream()
+              .filter(ctrl -> !(ctrl.getKind().equals("ReplicaSet") && ctrl.getMetadata().getOwnerReferences() != null))
+              .collect(toList());
 
       if (isNotEmpty(controllers)) {
         return controllers.stream().map(controller -> controller.getMetadata().getName()).collect(Collectors.toSet());
@@ -296,7 +302,7 @@ public class ContainerServiceImpl implements ContainerService {
         }
       });
 
-      List<String> taskArns = tasks.stream().map(Task::getTaskArn).collect(Collectors.toList());
+      List<String> taskArns = tasks.stream().map(Task::getTaskArn).collect(toList());
 
       return ecsContainerService.generateContainerInfos(tasks, containerServiceParams.getClusterName(),
           containerServiceParams.getRegion(), containerServiceParams.getEncryptionDetails(), null, awsConfig, taskArns,

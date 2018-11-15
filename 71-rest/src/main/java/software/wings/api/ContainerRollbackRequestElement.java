@@ -19,6 +19,7 @@ import java.util.Map;
 public class ContainerRollbackRequestElement implements ContextElement {
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
+  private String namespace;
   private String controllerNamePrefix;
   private String previousEcsServiceSnapshotJson;
   private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;

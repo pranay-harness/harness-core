@@ -33,6 +33,7 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
   private Integer releaseOldVersion;
   private Integer releaseNewVersion;
   private Integer rollbackVersion;
+  private String namespace;
   private boolean rollback;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
@@ -68,6 +69,8 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
         ExecutionDataValue.builder().value(releaseOldVersion).displayName("Release Old Version").build());
     putNotNull(executionDetails, "releaseNewVersion",
         ExecutionDataValue.builder().value(releaseNewVersion).displayName("Release New Version").build());
+    putNotNull(
+        executionDetails, "namespace", ExecutionDataValue.builder().value(namespace).displayName("Namespace").build());
     putNotNull(executionDetails, "rollbackVersion",
         ExecutionDataValue.builder().value(rollbackVersion).displayName("Release rollback Version").build());
     return executionDetails;
@@ -80,6 +83,7 @@ public class HelmDeployStateExecutionData extends StateExecutionData implements 
         .prevVersion(releaseOldVersion)
         .newVersion(releaseNewVersion)
         .rollbackVersion(rollbackVersion)
+        .namespace(namespace)
         .build();
   }
 }

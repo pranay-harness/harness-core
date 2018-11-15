@@ -57,6 +57,10 @@ public abstract class ContainerResizeCommandUnit extends AbstractCommandUnit {
     try {
       ContextData contextData = new ContextData(context);
 
+      if (contextData.resizeParams instanceof KubernetesResizeParams) {
+        executionDataBuilder.namespace(((KubernetesResizeParams) contextData.resizeParams).getNamespace());
+      }
+
       List<ContainerServiceData> newInstanceDataList;
       List<ContainerServiceData> oldInstanceDataList;
 

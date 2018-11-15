@@ -3,6 +3,7 @@ package software.wings.service.impl.instance;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 import software.wings.api.AmiStepExecutionSummary;
@@ -214,7 +215,7 @@ public class InstanceHelperTestHelper {
     if (InfrastructureMappingType.GCP_KUBERNETES.equals(infrastructureMappingType)) {
       if (helm) {
         HelmSetupExecutionSummary helmSetupExecutionSummary =
-            new HelmSetupExecutionSummary("version1", Integer.valueOf(1), Integer.valueOf(0), 0);
+            new HelmSetupExecutionSummary("version1", 1, 0, 0, "default");
 
         stepExecutionSummaries =
             asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),
@@ -223,10 +224,10 @@ public class InstanceHelperTestHelper {
       } else {
         CommandStepExecutionSummary commandStepExecutionSummary = new CommandStepExecutionSummary();
         commandStepExecutionSummary.setClusterName(InstanceHelperTest.CLUSTER_NAME);
-        commandStepExecutionSummary.setNewInstanceData(
-            asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesNew").previousCount(1).build()));
-        commandStepExecutionSummary.setOldInstanceData(
-            asList(ContainerServiceData.builder().desiredCount(1).name("kubernetesOld").previousCount(1).build()));
+        commandStepExecutionSummary.setNewInstanceData(ImmutableList.of(
+            ContainerServiceData.builder().desiredCount(1).name("kubernetesNew").previousCount(1).build()));
+        commandStepExecutionSummary.setOldInstanceData(ImmutableList.of(
+            ContainerServiceData.builder().desiredCount(1).name("kubernetesOld").previousCount(1).build()));
 
         stepExecutionSummaries =
             asList(StepExecutionSummaryBuilder.aStepExecutionSummary().withStatus(ExecutionStatus.SUCCESS).build(),

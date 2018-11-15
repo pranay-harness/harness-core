@@ -53,6 +53,7 @@ import migrations.all.RemoveServiceVariablesFromActivity;
 import migrations.all.RenameProvisionNodeToInfrastructureNodeWorkflows;
 import migrations.all.SecretTextNameKeyWordsMigration;
 import migrations.all.SetIsDeletedFlagForInstances;
+import migrations.all.SetNamespaceToKubernetesInstanceInfo;
 import migrations.all.SetRollbackFlagToWorkflows;
 import migrations.all.SweepingPhaseMigration;
 import migrations.all.SystemTemplateGalleryMigration;
@@ -153,6 +154,7 @@ public class MigrationList {
         .add(Pair.of(204, InitializeAppCounters.class))
         .add(Pair.of(205, DanglingAppEnvReferenceRemovalMigration.class))
         .add(Pair.of(206, TerraformProvisionerBranchMigration.class))
+        .add(Pair.of(207, SetNamespaceToKubernetesInstanceInfo.class))
         .build();
   }
 }

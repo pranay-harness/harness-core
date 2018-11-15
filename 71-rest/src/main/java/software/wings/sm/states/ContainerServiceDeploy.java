@@ -142,6 +142,7 @@ public abstract class ContainerServiceDeploy extends State {
         logger.info("Executing rollback");
         executionDataBuilder.withNewInstanceData(contextData.rollbackElement.getNewInstanceData());
         executionDataBuilder.withOldInstanceData(contextData.rollbackElement.getOldInstanceData());
+        executionDataBuilder.withNamespace(contextData.rollbackElement.getNamespace());
       }
 
       CommandStateExecutionData executionData = executionDataBuilder.build();
@@ -262,6 +263,7 @@ public abstract class ContainerServiceDeploy extends State {
       if (resizeExecutionData != null) {
         executionData.setNewInstanceData(resizeExecutionData.getNewInstanceData());
         executionData.setOldInstanceData(resizeExecutionData.getOldInstanceData());
+        executionData.setNamespace(resizeExecutionData.getNamespace());
       }
       executionData.setDelegateMetaInfo(executionResult.getDelegateMetaInfo());
     }

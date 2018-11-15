@@ -18,4 +18,5 @@ public class ResizeCommandUnitExecutionData extends CommandExecutionData {
   private List<ContainerInfo> containerInfos;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
+  private String namespace;
 }

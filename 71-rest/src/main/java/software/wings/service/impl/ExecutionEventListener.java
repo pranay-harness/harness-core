@@ -29,6 +29,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutor;
 
@@ -40,6 +41,7 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
   @Inject private WingsPersistence wingsPersistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private StateMachineExecutor stateMachineExecutor;
+  @Inject private InfrastructureMappingService infrastructureMappingService;
   public ExecutionEventListener() {
     super(false);
   }
@@ -73,6 +75,35 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
           wingsPersistence.query(WorkflowExecution.class, pageRequestBuilder.build());
 
       if (isNotEmpty(runningWorkflowExecutions)) {
+        // TODO(brett): Uncomment the following for templatized namespace to never queue. Resource constraint must first
+        // allow identifying constraints by expression.
+        /*
+        boolean namespaceExpression = false;
+        for (String infraId : message.getInfraMappingIds()) {
+          InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(message.getAppId(), infraId);
+          if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping
+              && containsVariablePattern(
+                     ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
+            namespaceExpression = true;
+            break;
+          }
+          if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
+              && containsVariablePattern(
+                     ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
+            namespaceExpression = true;
+            break;
+          }
+          if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
+              && containsVariablePattern(((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
+            namespaceExpression = true;
+            break;
+          }
+        }
+
+        if (!namespaceExpression) {
+          return;
+        }
+        */
         return;
       }
 

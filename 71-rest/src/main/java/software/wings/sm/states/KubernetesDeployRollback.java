@@ -85,6 +85,7 @@ public class KubernetesDeployRollback extends ContainerServiceDeploy {
         .withFixedInstances(contextData.containerElement.getFixedInstances())
         .withNewInstanceData(contextData.rollbackElement.getNewInstanceData())
         .withOldInstanceData(contextData.rollbackElement.getOldInstanceData())
+        .withNamespace(contextData.rollbackElement.getNamespace())
         .withOriginalServiceCounts(contextData.containerElement.getActiveServiceCounts())
         .withOriginalTrafficWeights(contextData.containerElement.getTrafficWeights())
         .withRollback(true)

@@ -2,6 +2,7 @@ package software.wings.api;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.unhandled;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.inject.Inject;
 
@@ -55,6 +56,7 @@ public class CommandStateExecutionData extends StateExecutionData {
   private CountsByStatuses countsByStatuses;
   private List<ContainerServiceData> newInstanceData;
   private List<ContainerServiceData> oldInstanceData;
+  private String namespace;
   // Following 3 fields are required while Daemon ECS service rollback
   private String previousEcsServiceSnapshotJson;
   private String ecsServiceArn;
@@ -142,6 +144,9 @@ public class CommandStateExecutionData extends StateExecutionData {
     if (isNotEmpty(oldInstanceData)) {
       commandStepExecutionSummary.setOldInstanceData(oldInstanceData);
     }
+    if (isNotBlank(namespace)) {
+      commandStepExecutionSummary.setNamespace(namespace);
+    }
     if (containerSetupParams instanceof KubernetesSetupParams) {
       KubernetesSetupParams kubernetesSetupParams = (KubernetesSetupParams) containerSetupParams;
       commandStepExecutionSummary.setControllerNamePrefix(kubernetesSetupParams.getControllerNamePrefix());
@@ -188,6 +193,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     private CountsByStatuses countsByStatuses;
     private List<ContainerServiceData> newInstanceData = new ArrayList<>();
     private List<ContainerServiceData> oldInstanceData = new ArrayList<>();
+    private String namespace;
     private boolean downsize;
     private String clusterName;
     private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
@@ -330,6 +336,11 @@ public class CommandStateExecutionData extends StateExecutionData {
       return this;
     }
 
+    public Builder withNamespace(String namespace) {
+      this.namespace = namespace;
+      return this;
+    }
+
     public Builder withDownsize(boolean downsize) {
       this.downsize = downsize;
       return this;
@@ -407,6 +418,7 @@ public class CommandStateExecutionData extends StateExecutionData {
           .withCountsByStatuses(countsByStatuses)
           .withNewInstanceData(newInstanceData)
           .withOldInstanceData(oldInstanceData)
+          .withNamespace(namespace)
           .withDownsize(downsize)
           .withClusterName(clusterName)
           .withNewInstanceStatusSummaries(newInstanceStatusSummaries)
@@ -445,6 +457,7 @@ public class CommandStateExecutionData extends StateExecutionData {
       commandStateExecutionData.setCountsByStatuses(countsByStatuses);
       commandStateExecutionData.setNewInstanceData(newInstanceData);
       commandStateExecutionData.setOldInstanceData(oldInstanceData);
+      commandStateExecutionData.setNamespace(namespace);
       commandStateExecutionData.setDownsize(downsize);
       commandStateExecutionData.setClusterName(clusterName);
       commandStateExecutionData.setNewInstanceStatusSummaries(newInstanceStatusSummaries);

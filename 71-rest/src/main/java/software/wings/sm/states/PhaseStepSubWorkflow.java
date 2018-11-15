@@ -205,6 +205,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         return singletonList(ContainerRollbackRequestElement.builder()
                                  .oldInstanceData(reverse(commandStepExecutionSummary.getNewInstanceData()))
                                  .newInstanceData(reverse(commandStepExecutionSummary.getOldInstanceData()))
+                                 .namespace(commandStepExecutionSummary.getNamespace())
                                  .build());
       }
       case DEPLOY_AWSCODEDEPLOY: {

@@ -23,6 +23,7 @@ public class KubernetesSteadyStateCheckExecutionData extends StateExecutionData 
   private String activityId;
   private String commandName;
   private List<Label> labels;
+  private String namespace;
   @Builder.Default private List<InstanceStatusSummary> newInstanceStatusSummaries = new ArrayList<>();
 
   @Override
@@ -41,12 +42,14 @@ public class KubernetesSteadyStateCheckExecutionData extends StateExecutionData 
         ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
     putNotNull(executionDetails, "labels",
         ExecutionDataValue.builder().value((labels != null) ? labels.toString() : null).displayName("Labels").build());
+    putNotNull(
+        executionDetails, "namespace", ExecutionDataValue.builder().value(namespace).displayName("Namespace").build());
 
     return executionDetails;
   }
 
   @Override
   public KubernetesSteadyStateCheckExecutionSummary getStepExecutionSummary() {
-    return KubernetesSteadyStateCheckExecutionSummary.builder().labels(labels).build();
+    return KubernetesSteadyStateCheckExecutionSummary.builder().labels(labels).namespace(namespace).build();
   }
 }

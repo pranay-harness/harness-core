@@ -98,7 +98,7 @@ public class GcpClusterSetup extends State {
     String zoneCluster = zone + "/" + clusterName;
 
     gkeClusterService.createCluster(computeProviderSetting, encryptionDetails, zoneCluster,
-        gcpInfraMapping.getNamespace(),
+        context.renderExpression(gcpInfraMapping.getNamespace()),
         ImmutableMap.<String, String>builder()
             .put("nodeCount", Integer.toString(nodeCount))
             .put("machineType", machineType)

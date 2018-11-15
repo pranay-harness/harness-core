@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
@@ -18,8 +19,6 @@ import io.harness.exception.WingsException;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
 import software.wings.api.InstanceElementListParam;
 import software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder;
@@ -42,8 +41,6 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.service.intfc.SettingsService;
-import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -56,22 +53,17 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public class KubernetesSteadyStateCheck extends State {
-  private static final Logger logger = LoggerFactory.getLogger(KubernetesSteadyStateCheck.class);
-
-  @Inject private SecretManager secretManager;
-  @Inject private SettingsService settingsService;
   @Inject private transient AppService appService;
   @Inject private transient InfrastructureMappingService infrastructureMappingService;
   @Inject private transient DelegateService delegateService;
   @Inject private transient ActivityService activityService;
-  @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
+  @Inject private transient ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
 
   @Getter @Setter @Attributes(title = "Labels") private List<Label> labels = Lists.newArrayList();
 
@@ -105,8 +97,7 @@ public class KubernetesSteadyStateCheck extends State {
 
       labels.forEach(label -> label.setValue(context.renderExpression(label.getValue())));
 
-      Map<String, String> labelMap =
-          labels.stream().collect(Collectors.toMap(label -> label.getName(), label -> label.getValue()));
+      Map<String, String> labelMap = labels.stream().collect(Collectors.toMap(Label::getName, Label::getValue));
 
       Activity activity = createActivity(context);
       KubernetesSteadyStateCheckParams kubernetesSteadyStateCheckParams =
@@ -116,7 +107,7 @@ public class KubernetesSteadyStateCheck extends State {
               .activityId(activity.getUuid())
               .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
               .containerServiceParams(
-                  containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, ""))
+                  containerDeploymentManagerHelper.getContainerServiceParams(containerInfraMapping, "", context))
               .labels(labelMap)
               .timeoutMillis(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
               .build();
@@ -134,12 +125,14 @@ public class KubernetesSteadyStateCheck extends State {
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return ExecutionResponse.Builder.anExecutionResponse()
           .withAsync(true)
-          .withCorrelationIds(Arrays.asList(activity.getUuid()))
-          .withStateExecutionData(KubernetesSteadyStateCheckExecutionData.builder()
-                                      .activityId(activity.getUuid())
-                                      .labels(labels)
-                                      .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
-                                      .build())
+          .withCorrelationIds(singletonList(activity.getUuid()))
+          .withStateExecutionData(
+              KubernetesSteadyStateCheckExecutionData.builder()
+                  .activityId(activity.getUuid())
+                  .labels(labels)
+                  .commandName(KUBERNETES_STEADY_STATE_CHECK_COMMAND_NAME)
+                  .namespace(kubernetesSteadyStateCheckParams.getContainerServiceParams().getNamespace())
+                  .build())
           .withDelegateTaskId(delegateTaskId)
           .build();
     } catch (WingsException e) {

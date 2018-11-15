@@ -31,6 +31,7 @@ public class ContainerDeploymentInfo extends Base {
   private String stateExecutionInstanceId;
   private InstanceType instanceType;
   private String clusterName;
+  private String namespace;
   @Indexed private long lastVisited;
 
   /**
@@ -46,7 +47,7 @@ public class ContainerDeploymentInfo extends Base {
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String accountId,
       String serviceId, String envId, String infraMappingId, String computeProviderId, String workflowId,
       String workflowExecutionId, String pipelineExecutionId, String stateExecutionInstanceId,
-      InstanceType instanceType, String clusterName, long lastVisited, String containerSvcName,
+      InstanceType instanceType, String clusterName, String namespace, long lastVisited, String containerSvcName,
       String containerSvcNameNoRevision) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.accountId = accountId;
@@ -60,6 +61,7 @@ public class ContainerDeploymentInfo extends Base {
     this.stateExecutionInstanceId = stateExecutionInstanceId;
     this.instanceType = instanceType;
     this.clusterName = clusterName;
+    this.namespace = namespace;
     this.lastVisited = lastVisited;
     this.containerSvcName = containerSvcName;
     this.containerSvcNameNoRevision = containerSvcNameNoRevision;

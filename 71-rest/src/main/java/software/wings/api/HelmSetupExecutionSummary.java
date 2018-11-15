@@ -15,13 +15,15 @@ public class HelmSetupExecutionSummary extends StepExecutionSummary {
   private Integer prevVersion;
   private Integer newVersion;
   private Integer rollbackVersion;
+  private String namespace;
 
   @Builder
   public HelmSetupExecutionSummary(
-      String releaseName, Integer prevVersion, Integer newVersion, Integer rollbackVersion) {
+      String releaseName, Integer prevVersion, Integer newVersion, Integer rollbackVersion, String namespace) {
     this.releaseName = releaseName;
     this.prevVersion = prevVersion;
     this.newVersion = newVersion;
     this.rollbackVersion = rollbackVersion;
+    this.namespace = namespace;
   }
 }

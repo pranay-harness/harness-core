@@ -12,9 +12,11 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class KubernetesSteadyStateCheckExecutionSummary extends StepExecutionSummary {
   private List<Label> labels;
+  private String namespace;
 
   @Builder
-  public KubernetesSteadyStateCheckExecutionSummary(List<Label> labels) {
+  public KubernetesSteadyStateCheckExecutionSummary(List<Label> labels, String namespace) {
     this.labels = labels;
+    this.namespace = namespace;
   }
 }
