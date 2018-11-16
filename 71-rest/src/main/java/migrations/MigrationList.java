@@ -16,6 +16,7 @@ import migrations.all.CleanUpDatadogCallLogMigration;
 import migrations.all.CleanupOrphanInstances;
 import migrations.all.DanglingAppEnvReferenceRemovalMigration;
 import migrations.all.DeleteLETaskDelCronMigration;
+import migrations.all.DeleteNewRelicMetricNameCronMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import migrations.all.DeleteStaleSecretUsageLogs;
 import migrations.all.DeleteStaleYamlChangeSetsMigration;
@@ -155,6 +156,7 @@ public class MigrationList {
         .add(Pair.of(205, DanglingAppEnvReferenceRemovalMigration.class))
         .add(Pair.of(206, TerraformProvisionerBranchMigration.class))
         .add(Pair.of(207, SetNamespaceToKubernetesInstanceInfo.class))
+        .add(Pair.of(208, DeleteNewRelicMetricNameCronMigration.class))
         .build();
   }
 }
