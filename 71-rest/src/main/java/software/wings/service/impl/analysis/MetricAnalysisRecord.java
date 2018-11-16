@@ -57,8 +57,6 @@ public class MetricAnalysisRecord extends Base {
 
   private String cvConfigId;
 
-  private int aggregatedRisk;
-
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

@@ -1,8 +1,10 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
+import static java.lang.Math.max;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
@@ -565,7 +567,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
               .startTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
               .endTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()))
               .build();
-      heatMapUnit.increment(RiskLevel.getRiskLevel(record.getAggregatedRisk()));
+      heatMapUnit.increment(RiskLevel.getRiskLevel(getMaxRiskLevel(record)));
       unitsFromDB.add(heatMapUnit);
     });
 
@@ -611,12 +613,30 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .field("analysisMinute")
             .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
             .order("analysisMinute")
-            .project("transactions", false)
-            .project("transactionsCompressedJson", false)
             .asList();
     timeSeriesMLAnalysisRecords.forEach(
         timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
     return timeSeriesMLAnalysisRecords;
+  }
+
+  private int getMaxRiskLevel(TimeSeriesMLAnalysisRecord timeSeriesMLAnalysisRecord) {
+    int maxRiskLevel = -1;
+    if (isEmpty(timeSeriesMLAnalysisRecord.getTransactions())) {
+      return maxRiskLevel;
+    }
+    for (TimeSeriesMLTxnSummary timeSeriesMLTxnSummary : timeSeriesMLAnalysisRecord.getTransactions().values()) {
+      if (isNotEmpty(timeSeriesMLTxnSummary.getMetrics())) {
+        for (TimeSeriesMLMetricSummary timeSeriesMLMetricSummary : timeSeriesMLTxnSummary.getMetrics().values()) {
+          if (isNotEmpty(timeSeriesMLTxnSummary.getMetrics())) {
+            maxRiskLevel = max(maxRiskLevel, timeSeriesMLMetricSummary.getMax_risk());
+          } else {
+            logger.warn("timeSeriesMLMetricSummary is null for timeSeriesAnalysisRecord with uuid={}",
+                timeSeriesMLAnalysisRecord.getUuid());
+          }
+        }
+      }
+    }
+    return maxRiskLevel;
   }
 
   @NotNull
