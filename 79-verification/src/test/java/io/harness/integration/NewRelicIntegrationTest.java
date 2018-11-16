@@ -562,11 +562,11 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     String serverConfigId;
     if (settingAttribute == null) {
       serverConfigId = wingsPersistence
-                           .saveIgnoringDuplicateKeys(Lists.newArrayList(SettingAttribute.Builder.aSettingAttribute()
-                                                                             .withAccountId(accountId)
-                                                                             .withName("datadog_connector")
-                                                                             .withValue(config)
-                                                                             .build()))
+                           .save(Lists.newArrayList(SettingAttribute.Builder.aSettingAttribute()
+                                                        .withAccountId(accountId)
+                                                        .withName("datadog_connector")
+                                                        .withValue(config)
+                                                        .build()))
                            .get(0);
     } else {
       serverConfigId = settingAttribute.getUuid();

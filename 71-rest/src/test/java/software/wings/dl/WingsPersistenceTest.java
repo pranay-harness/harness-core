@@ -50,7 +50,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.IntStream;
 import javax.ws.rs.core.AbstractMultivaluedMap;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -70,22 +69,6 @@ public class WingsPersistenceTest extends WingsBaseTest {
   @Inject private KmsService kmsService;
   @Inject private SecretManager secretManager;
   @Inject private EncryptionService encryptionService;
-
-  /**
-   * Should query by in operator.
-   */
-  @Test
-  public void shouldSaveList() {
-    List<TestEntity> list = Lists.newArrayList();
-    IntStream.range(0, 5).forEach(i -> {
-      TestEntity entity = new TestEntity();
-      entity.setFieldA("fieldA" + i);
-      list.add(entity);
-    });
-    List<String> ids = wingsPersistence.save(list);
-
-    assertThat(ids).isNotNull().hasSize(list.size()).doesNotContainNull();
-  }
 
   /**
    * Should query by in operator.

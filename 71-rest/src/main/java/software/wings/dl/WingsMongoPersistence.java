@@ -22,7 +22,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
@@ -46,7 +45,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.InsertOptions;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -71,7 +69,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -148,26 +145,15 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends PersistentEntity> List<String> saveIgnoringDuplicateKeys(List<T> ts) {
+  public <T extends PersistentEntity> void saveIgnoringDuplicateKeys(List<T> ts) {
     for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
       T t = iterator.next();
-      if (t == null) {
-        iterator.remove();
-        continue;
+      if (t != null) {
+        this.encryptIfNecessary(t);
       }
-      this.encryptIfNecessary(t);
     }
-    InsertOptions insertOptions = new InsertOptions();
-    insertOptions.continueOnError(true);
-    Iterable<Key<T>> keys = new ArrayList<>();
-    try {
-      keys = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).insert(ts, insertOptions);
-    } catch (DuplicateKeyException dke) {
-      // ignore
-    }
-    List<String> ids = new ArrayList<>();
-    keys.forEach(tKey -> ids.add((String) tKey.getId()));
-    return ids;
+
+    super.saveIgnoringDuplicateKeys(ts);
   }
 
   @Override
@@ -340,7 +326,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends Base> boolean delete(Class<T> cls, String uuid) {
+  public <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid) {
     final AdvancedDatastore datastore = getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
     if (cls.equals(SettingAttribute.class) || EncryptableSetting.class.isAssignableFrom(cls)) {
       Query<T> query = datastore.createQuery(cls).filter(ID_KEY, uuid);
@@ -351,7 +337,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends Base> boolean delete(String accountId, Class<T> cls, String uuid) {
+  public <T extends PersistentEntity> boolean delete(String accountId, Class<T> cls, String uuid) {
     Query<T> query = getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
                          .createQuery(cls)
                          .filter(ID_KEY, uuid)
@@ -360,14 +346,14 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends Base> boolean delete(Class<T> cls, String appId, String uuid) {
+  public <T extends PersistentEntity> boolean delete(Class<T> cls, String appId, String uuid) {
     Query<T> query =
         getDatastore(DEFAULT_STORE, ReadPref.NORMAL).createQuery(cls).filter(ID_KEY, uuid).filter("appId", appId);
     return delete(query);
   }
 
   @Override
-  public <T extends Base> boolean delete(Query<T> query) {
+  public <T extends PersistentEntity> boolean delete(Query<T> query) {
     if (query.getEntityClass().equals(SettingAttribute.class)
         || EncryptableSetting.class.isAssignableFrom(query.getEntityClass())) {
       try (HIterator<T> records = new HIterator<>(query.fetch())) {
@@ -381,7 +367,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends Base> boolean delete(T object) {
+  public <T extends PersistentEntity> boolean delete(T object) {
     if (SettingAttribute.class.isInstance(object) || EncryptableSetting.class.isInstance(object)) {
       deleteEncryptionReferenceIfNecessary(object);
     }
@@ -786,12 +772,16 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     }
   }
 
-  private <T extends Base> void deleteEncryptionReferenceIfNecessary(T o) {
-    if (isBlank(o.getUuid())) {
+  private <T extends PersistentEntity> void deleteEncryptionReferenceIfNecessary(T entity) {
+    if (!(entity instanceof UuidAware)) {
+      return;
+    }
+    String uuid = ((UuidAware) entity).getUuid();
+    if (isBlank(uuid)) {
       return;
     }
 
-    Object toDelete = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).get(o.getClass(), o.getUuid());
+    Object toDelete = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).get(entity.getClass(), uuid);
     if (toDelete == null) {
       return;
     }
@@ -800,7 +790,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     }
 
     if (EncryptableSetting.class.isInstance(toDelete)) {
-      deleteEncryptionReference((EncryptableSetting) toDelete, null, o.getUuid());
+      deleteEncryptionReference((EncryptableSetting) toDelete, null, uuid);
     }
   }
 }
