@@ -11,4 +11,5 @@ public class WebHookResponse {
   private String error;
   private String uiUrl;
   private String apiUrl;
+  private String message;
 }

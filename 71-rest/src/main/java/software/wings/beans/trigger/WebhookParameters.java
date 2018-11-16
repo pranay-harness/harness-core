@@ -27,6 +27,10 @@ public class WebhookParameters {
   public static final String SOURCE_COMMIT_HASH = "${pullrequest.fromRef.commit.hash}";
   public static final String DESTINATION_COMMIT_HASH = "${pullrequest.toRef.commit.hash}";
 
+  // Bit Bucket Push Request suggestions
+  public static final String BIT_BUCKET_BRANCH_REF = "${push.changes[0].'new'.name}";
+  public static final String BIT_BUCKET_COMMIT_ID = "${push.changes[0].'new'.target.hash}";
+
   // Git Hub Pull request suggestions
   public static final String GH_PR_ID = "${pull_request.id}";
   public static final String GH_PR_NUMBER = "${pull_request.number}";
@@ -40,6 +44,13 @@ public class WebhookParameters {
   public static final String GH_PUSH_HEAD_COMMIT_ID = "${head_commit.id}";
   public static final String GH_PUSH_REPOSITORY_NAME = "${repository.name}";
   public static final String GH_PUSH_REPOSITORY_ID = "${repository.id}";
+
+  // Git Lab Push Event Suggestions
+  public static final String GIT_LAB_PUSH_REF = "${ref}";
+  public static final String GIT_LAB_PUSH_REF_BRANCH = "${ref.split('/')[2]}";
+  public static final String GIT_LAB_PUSH_COMMIT_ID = "${checkout_sha}";
+  public static final String GIT_LAB_PUSH_REPOSITORY_NAME = "${repository.name}";
+  public static final String GIT_LAB_PUSH_REPOSITORY_ID = "${repository.id}";
 
   public List<String> bitBucketPullRequestExpressions() {
     List<String> prSuggestions = new ArrayList<>();
@@ -76,6 +87,15 @@ public class WebhookParameters {
     return pushSuggestions;
   }
 
+  public List<String> gitLabPushEventExpressions() {
+    List<String> pushSuggestions = new ArrayList<>();
+    pushSuggestions.add(GIT_LAB_PUSH_REF);
+    pushSuggestions.add(GIT_LAB_PUSH_REF_BRANCH);
+    pushSuggestions.add(GIT_LAB_PUSH_COMMIT_ID);
+    pushSuggestions.add(GIT_LAB_PUSH_REPOSITORY_NAME);
+    pushSuggestions.add(GIT_LAB_PUSH_REPOSITORY_ID);
+    return pushSuggestions;
+  }
   public List<String> suggestExpressions(WebhookSource webhookSource, WebhookEventType eventType) {
     if (webhookSource == null || eventType == null) {
       return bitBucketPullRequestExpressions();
@@ -89,6 +109,12 @@ public class WebhookParameters {
         return gitHubPullRequestExpressions();
       } else if (WebhookEventType.PUSH.equals(eventType)) {
         return gitHubPushEventExpressions();
+      }
+    } else if (WebhookSource.GITLAB.equals(webhookSource)) {
+      if (WebhookEventType.PUSH.equals(eventType)) {
+        return gitLabPushEventExpressions();
+      } else if (WebhookEventType.PULL_REQUEST.equals(eventType)) {
+        return new ArrayList<>();
       }
     }
     return new ArrayList<>();

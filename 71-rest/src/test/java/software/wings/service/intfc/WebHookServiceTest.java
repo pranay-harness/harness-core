@@ -4,11 +4,13 @@ import static com.google.common.collect.ImmutableMap.of;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
+import static software.wings.service.impl.WebHookServiceImpl.X_BIT_BUCKET_EVENT;
 import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
 import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -84,6 +86,7 @@ public class WebHookServiceTest extends WingsBaseTest {
                         .name(TRIGGER_NAME)
                         .webHookToken(token)
                         .condition(WebHookTriggerCondition.builder()
+                                       .webhookSource(WebhookSource.BITBUCKET)
                                        .parameters(of("PullRequestId", "${pullrequest.id}"))
                                        .webHookToken(WebHookToken.builder().webHookToken(token).build())
                                        .build())
@@ -94,7 +97,9 @@ public class WebHookServiceTest extends WingsBaseTest {
     final Application application =
         anApplication().withUuid(APP_ID).withAppId(APP_ID).withAccountId(ACCOUNT_ID).build();
     doReturn(application).when(appService).get(APP_ID);
-    doReturn(execution).when(triggerService).triggerExecutionByWebHook(eq(APP_ID), eq(token), anyMap(), anyMap());
+    doReturn(execution)
+        .when(triggerService)
+        .triggerExecutionByWebHook(anyString(), anyString(), anyMap(), anyMap(), any());
     when(configuration.getPortal().getUrl()).thenReturn(PORTAL_URL);
   }
 
@@ -145,8 +150,9 @@ public class WebHookServiceTest extends WingsBaseTest {
         new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_pull_request.json").getFile());
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
-    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
-    WebHookResponse response = webHookService.executeByEvent(token, payLoad, null);
+    doReturn("pull_request").when(httpHeaders).getHeaderString(X_BIT_BUCKET_EVENT);
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
+    WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
     assertThat(response).isNotNull();
     assertThat(response.getStatus()).isEqualTo(RUNNING.name());
   }
@@ -191,6 +197,22 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldTestJsonBitBucketPushParsing() throws IOException {
+    when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
+
+    ClassLoader classLoader = getClass().getClassLoader();
+    File file =
+        new File(classLoader.getResource("software/wings/service/impl/webhook/bitbucket_push_request.json").getFile());
+    String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
+
+    // convert JSON string to Map
+    Map<String, Object> map = JsonUtils.asObject(payLoad, new TypeReference<Map<String, Object>>() {
+    }); // mapper.readValue(payLoad, new TypeReference<Map<String, Object>>(){});
+    final String value = expressionEvaluator.substitute("${push.changes[0].'new'.name}", map);
+    assertThat(value).isNotEmpty().isEqualTo("master");
+  }
+
+  @Test
   public void shouldTriggerGitHubPRWithoutActions() throws IOException {
     Trigger webhookTrigger = Trigger.builder()
                                  .workflowId(PIPELINE_ID)
@@ -211,7 +233,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
-    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
     WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
     assertThat(response).isNotNull();
@@ -241,7 +263,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
-    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
     WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
     assertThat(response).isNotNull();
@@ -272,7 +294,6 @@ public class WebHookServiceTest extends WingsBaseTest {
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
-    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
 
     WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
     assertThat(response).isNotNull();
@@ -303,7 +324,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("pull_request").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
-    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
     WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
     assertThat(response).isNotNull();
@@ -333,7 +354,7 @@ public class WebHookServiceTest extends WingsBaseTest {
     String payLoad = FileUtils.readFileToString(file, Charset.defaultCharset());
 
     doReturn("push").when(httpHeaders).getHeaderString(X_GIT_HUB_EVENT);
-    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(Trigger.class), anyMap());
+    doReturn(execution).when(triggerService).triggerExecutionByWebHook(any(), anyMap(), any());
 
     WebHookResponse response = webHookService.executeByEvent(token, payLoad, httpHeaders);
     assertThat(response).isNotNull();
@@ -352,7 +373,9 @@ public class WebHookServiceTest extends WingsBaseTest {
                                             .withStatus(RUNNING)
                                             .build();
     final String token = CryptoUtil.secureRandAlphaNumString(40);
-    doReturn(execution).when(triggerService).triggerExecutionByWebHook(eq(APP_ID), eq(token), anyMap(), anyMap());
+    doReturn(execution)
+        .when(triggerService)
+        .triggerExecutionByWebHook(eq(APP_ID), eq(token), anyMap(), anyMap(), any());
 
     WebHookRequest request = WebHookRequest.builder().application(APP_ID).build();
     WebHookResponse response = webHookService.execute(token, request);

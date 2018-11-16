@@ -46,6 +46,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.api.DeploymentType;
 import software.wings.beans.CanaryOrchestrationWorkflow;
 import software.wings.beans.EntityType;
 import software.wings.beans.Event.Type;
@@ -448,6 +449,7 @@ public class PipelineServiceImpl implements PipelineService {
       List<String> invalidWorkflows = new ArrayList<>();
       List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
       List<Variable> pipelineVariables = new ArrayList<>();
+      List<DeploymentType> deploymentTypes = new ArrayList<>();
       for (PipelineStage pipelineStage : pipelineStages) {
         List<String> invalidStageWorkflows = new ArrayList<>();
         for (PipelineStageElement pse : pipelineStage.getPipelineStageElements()) {
@@ -464,6 +466,7 @@ public class PipelineServiceImpl implements PipelineService {
                 hasSshInfraMapping = workflowServiceHelper.workflowHasSshDeploymentPhase(
                     (CanaryOrchestrationWorkflow) workflow.getOrchestrationWorkflow());
               }
+              deploymentTypes.addAll(workflowServiceHelper.obtainDeploymentTypes(workflow.getOrchestrationWorkflow()));
               if (!templatized && isNotEmpty(pse.getWorkflowVariables())) {
                 templatized = true;
               }
@@ -496,6 +499,7 @@ public class PipelineServiceImpl implements PipelineService {
       pipeline.setHasSshInfraMapping(hasSshInfraMapping);
       pipeline.setEnvParameterized(pipelineParameterized);
       pipeline.setTemplatized(templatized);
+      pipeline.setDeploymentTypes(deploymentTypes.stream().distinct().collect(toList()));
     }
   }
 

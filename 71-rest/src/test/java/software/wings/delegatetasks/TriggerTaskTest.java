@@ -17,7 +17,6 @@ import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.GitConfig;
 import software.wings.beans.TaskType;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
 import software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest;
@@ -25,6 +24,7 @@ import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededRespon
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.ArrayList;
@@ -68,7 +68,7 @@ public class TriggerTaskTest extends WingsBaseTest {
 
     TriggerDeploymentNeededResponse triggerResponse =
         (TriggerDeploymentNeededResponse) triggerTask.run(new Object[] {triggerRequest});
-    assertThat(triggerResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(triggerResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(triggerResponse.isDeploymentNeeded()).isEqualTo(true);
   }
 
@@ -86,7 +86,7 @@ public class TriggerTaskTest extends WingsBaseTest {
 
     TriggerDeploymentNeededResponse triggerResponse =
         (TriggerDeploymentNeededResponse) triggerTask.run(new Object[] {triggerRequest});
-    assertThat(triggerResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    assertThat(triggerResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(triggerResponse.isDeploymentNeeded()).isEqualTo(false);
   }
 
@@ -97,7 +97,7 @@ public class TriggerTaskTest extends WingsBaseTest {
         .thenThrow(new WingsException(ErrorCode.YAML_GIT_SYNC_ERROR).addParam("message", ""));
 
     TriggerResponse triggerResponse = triggerTask.run(new Object[] {triggerRequest});
-    assertThat(triggerResponse.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
+    assertThat(triggerResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.FAILED);
   }
 
   private TriggerDeploymentNeededRequest getTriggerDeploymentNeededRequest() {

@@ -1,6 +1,7 @@
 package software.wings.beans.trigger;
 
 import io.harness.exception.WingsException;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,10 +9,10 @@ import java.util.Map;
 public enum WebhookEventType {
   PULL_REQUEST("Pull Request", "pull_request"),
   PUSH("Push", "push"),
-  PING("ping", "ping");
+  PING("Ping", "ping");
 
-  private String displayName;
-  private String value;
+  @Getter private String displayName;
+  @Getter private String value;
 
   WebhookEventType(String displayName, String value) {
     this.displayName = displayName;
@@ -27,13 +28,5 @@ public enum WebhookEventType {
       throw new WingsException(String.format("Unsupported Webhook Event Type %s.", val));
     }
     return t;
-  }
-
-  public String getDisplayName() {
-    return displayName;
-  }
-
-  public String getValue() {
-    return value;
   }
 }

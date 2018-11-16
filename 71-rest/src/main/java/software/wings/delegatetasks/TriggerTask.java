@@ -12,7 +12,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitConfig.GitRepositoryType;
-import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.trigger.TriggerCommand.TriggerCommandType;
 import software.wings.beans.yaml.GitFetchFilesResult;
 import software.wings.beans.yaml.GitFile;
@@ -23,6 +22,7 @@ import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
+import software.wings.sm.ExecutionStatus;
 import software.wings.utils.Misc;
 
 import java.util.HashSet;
@@ -68,7 +68,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
       logger.error(format("Exception in processing trigger task for account %s, triggerCommandType %s",
                        triggerRequest.getAccountId(), triggerCommandType),
           ex);
-      return new TriggerResponse(CommandExecutionStatus.FAILURE, Misc.getMessage(ex));
+      return new TriggerResponse(ExecutionStatus.FAILED, Misc.getMessage(ex));
     }
   }
 
@@ -92,7 +92,7 @@ public class TriggerTask extends AbstractDelegateRunnableTask {
 
       boolean deploymentNeeded = isDeploymentNeeded(filePaths, gitFetchFilesResult.getFiles());
       return TriggerDeploymentNeededResponse.builder()
-          .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
+          .executionStatus(ExecutionStatus.SUCCESS)
           .deploymentNeeded(deploymentNeeded)
           .build();
     } catch (Exception ex) {

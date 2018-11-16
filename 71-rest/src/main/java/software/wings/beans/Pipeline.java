@@ -17,6 +17,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.DeploymentType;
 import software.wings.yaml.BaseEntityYaml;
 
 import java.util.ArrayList;
@@ -55,6 +56,7 @@ public class Pipeline extends Base {
   private transient List<String> envIds = new ArrayList<>();
   private transient boolean envParameterized;
   @JsonIgnore private transient Map<String, String> resolvedPipelineVariables = new LinkedHashMap<>();
+  private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
 
   @Builder
   public Pipeline(String uuid, String appId, EmbeddedUser createdBy, long createdAt, EmbeddedUser lastUpdatedBy,
