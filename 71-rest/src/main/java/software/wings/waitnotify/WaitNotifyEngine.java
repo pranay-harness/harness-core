@@ -3,7 +3,9 @@ package software.wings.waitnotify;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
@@ -73,7 +75,12 @@ public class WaitNotifyEngine {
 
     // create queue
     for (String correlationId : correlationIds) {
-      wingsPersistence.save(new WaitQueue(waitInstanceId, correlationId));
+      wingsPersistence.save(WaitQueue.builder()
+                                .uuid(generateUuid())
+                                .createdAt(currentTimeMillis())
+                                .waitInstanceId(waitInstanceId)
+                                .correlationId(correlationId)
+                                .build());
     }
 
     return waitInstanceId;
