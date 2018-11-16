@@ -1,6 +1,7 @@
 package software.wings.service.impl.verification;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Inject;
 
@@ -352,7 +353,8 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
   }
 
   public void deleteStaleConfigs() {
-    List<CVConfiguration> cvConfigurationList = wingsPersistence.createQuery(CVConfiguration.class).asList();
+    List<CVConfiguration> cvConfigurationList =
+        wingsPersistence.createQuery(CVConfiguration.class, excludeAuthority).asList();
 
     Set<String> deleteList = new HashSet<>();
     for (CVConfiguration configuration : cvConfigurationList) {
