@@ -598,3 +598,5 @@ software.wings.helpers.ext.trigger.response.TriggerResponse, 5556
 software.wings.helpers.ext.trigger.request.TriggerRequest, 5557
 software.wings.beans.yaml.GitFilesBetweenCommitsRequest, 5558
 software.wings.beans.container.AwsAutoScalarConfig, 5559
+software.wings.beans.SftpConfig, 5560
+

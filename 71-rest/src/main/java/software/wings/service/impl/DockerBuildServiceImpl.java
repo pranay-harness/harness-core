@@ -99,4 +99,10 @@ public class DockerBuildServiceImpl implements DockerBuildService {
   public List<String> getSmbPaths(DockerConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Docker Build Service", WingsException.USER);
   }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      DockerConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by Docker Build Service", WingsException.USER);
+  }
 }

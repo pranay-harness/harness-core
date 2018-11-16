@@ -86,4 +86,10 @@ public class GcsBuildServiceImpl implements GcsBuildService {
   public List<String> getSmbPaths(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by GCS Build Service", WingsException.USER);
   }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      GcpConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by GCS Build Service", WingsException.USER);
+  }
 }

@@ -44,6 +44,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.SftpConfig;
 import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
@@ -327,15 +328,25 @@ public class PluginServiceImpl implements PluginService {
                        .withPluginCategories(asList(SourceRepo))
                        .withUiSchema(readUiSchema("GIT"))
                        .build());
-    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
+    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)
+        && featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
       pluginList.add(anAccountPlugin()
                          .withSettingClass(SmbConfig.class)
                          .withAccountId(accountId)
                          .withIsEnabled(true)
-                         .withDisplayName("Smb")
+                         .withDisplayName("SMB")
                          .withType("SMB")
                          .withPluginCategories(asList(Artifact))
                          .withUiSchema(readUiSchema("SMB"))
+                         .build());
+      pluginList.add(anAccountPlugin()
+                         .withSettingClass(SftpConfig.class)
+                         .withAccountId(accountId)
+                         .withIsEnabled(true)
+                         .withDisplayName("SFTP")
+                         .withType("SFTP")
+                         .withPluginCategories(asList(Artifact))
+                         .withUiSchema(readUiSchema("SFTP"))
                          .build());
     }
 

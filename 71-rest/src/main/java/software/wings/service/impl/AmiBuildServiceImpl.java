@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.WingsException;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.artifact.ArtifactStreamAttributes;
 import software.wings.beans.artifact.ArtifactStreamType;
@@ -83,11 +84,17 @@ public class AmiBuildServiceImpl implements AmiBuildService {
   @Override
   public Map<String, String> getBuckets(
       AwsConfig config, String projectId, List<EncryptedDataDetail> encryptionDetails) {
-    throw new InvalidRequestException("Operation not supported by Ami Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by Ami Artifact Stream", WingsException.USER);
   }
 
   @Override
   public List<String> getSmbPaths(AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new InvalidRequestException("Operation not supported by AWS Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by AWS Artifact Stream", WingsException.USER);
+  }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      AwsConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by AWS Artifact Stream", WingsException.USER);
   }
 }

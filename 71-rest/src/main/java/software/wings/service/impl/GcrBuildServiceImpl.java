@@ -95,4 +95,10 @@ public class GcrBuildServiceImpl implements GcrBuildService {
   public List<String> getSmbPaths(GcpConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by GCR Build Service", WingsException.USER);
   }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      GcpConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by GCR Build Service", WingsException.USER);
+  }
 }

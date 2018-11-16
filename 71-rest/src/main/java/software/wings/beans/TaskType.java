@@ -85,6 +85,7 @@ import software.wings.delegatetasks.validation.PCFCommandValidation;
 import software.wings.delegatetasks.validation.PrometheusValidation;
 import software.wings.delegatetasks.validation.SecretManagerDecryptValidation;
 import software.wings.delegatetasks.validation.SecretManagerValidation;
+import software.wings.delegatetasks.validation.SftpValidation;
 import software.wings.delegatetasks.validation.ShellScriptValidation;
 import software.wings.delegatetasks.validation.SmbValidation;
 import software.wings.delegatetasks.validation.SplunkValidation;
@@ -145,6 +146,9 @@ public enum TaskType {
   GCS_GET_BUILDS(TaskGroup.GCS, ServiceImplDelegateTask.class, GcsValidation.class),
   GCS_GET_BUCKETS(TaskGroup.GCS, ServiceImplDelegateTask.class, GcsValidation.class),
   GCS_GET_PLANS(TaskGroup.GCS, ServiceImplDelegateTask.class, GcsValidation.class),
+  SFTP_GET_BUILDS(TaskGroup.SFTP, ServiceImplDelegateTask.class, SftpValidation.class),
+  SFTP_GET_ARTIFACT_PATHS(TaskGroup.SFTP, ServiceImplDelegateTask.class, SftpValidation.class),
+  SFTP_VALIDATE_ARTIFACT_SERVER(TaskGroup.SFTP, ServiceImplDelegateTask.class, SftpValidation.class),
   SMB_GET_BUILDS(TaskGroup.SMB, ServiceImplDelegateTask.class, SmbValidation.class),
   SMB_GET_SMB_PATHS(TaskGroup.SMB, ServiceImplDelegateTask.class, SmbValidation.class),
   SMB_VALIDATE_ARTIFACT_SERVER(TaskGroup.SMB, ServiceImplDelegateTask.class, SmbValidation.class),

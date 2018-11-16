@@ -71,6 +71,10 @@ ARTIFACT_STREAM_TYPE:
       value: AMI
     - name: GCS
       value: Google Cloud Storage
+    - name: SMB
+      value: SMB
+    - name: SFTP
+      value: SFTP
 
 
 DEPLOYMENT_STRATEGY:

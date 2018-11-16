@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.artifact.ArtifactStreamAttributes.Builder.anArtifactStreamAttributes;
-import static software.wings.beans.artifact.ArtifactStreamType.SMB;
+import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -18,22 +18,22 @@ import org.hibernate.validator.constraints.NotEmpty;
 import java.util.Date;
 import java.util.List;
 
-@JsonTypeName("SMB")
+@JsonTypeName("SFTP")
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class SmbArtifactStream extends ArtifactStream {
+public class SftpArtifactStream extends ArtifactStream {
   @NotEmpty private List<String> artifactPaths;
 
-  public SmbArtifactStream() {
-    super(SMB.name());
+  public SftpArtifactStream() {
+    super(SFTP.name());
     super.setMetadataOnly(true);
   }
 
   @Builder
-  public SmbArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
+  public SftpArtifactStream(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, String sourceName,
       String settingId, String name, boolean autoPopulate, String serviceId, List<String> artifactPaths) {
-    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, SMB.name(),
+    super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath, SFTP.name(),
         sourceName, settingId, name, autoPopulate, serviceId, true);
     this.artifactPaths = artifactPaths;
   }
@@ -65,8 +65,9 @@ public class SmbArtifactStream extends ArtifactStream {
     private List<String> artifactPaths;
 
     @lombok.Builder
-    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, List<String> artifactPaths) {
-      super(SMB.name(), harnessApiVersion, serverName, metadataOnly);
+    public Yaml(String harnessApiVersion, String serverName, boolean metadataOnly, String bucketName,
+        List<String> artifactPaths) {
+      super(SFTP.name(), harnessApiVersion, serverName, metadataOnly);
       this.artifactPaths = artifactPaths;
     }
   }

@@ -134,9 +134,24 @@ public class BuildSourceResource {
   @Path("smb-paths")
   @Timed
   @ExceptionMetered
-  public RestResponse<List<String>> getArtifactPaths(
+  public RestResponse<List<String>> getSmbPaths(
       @QueryParam("appId") String appId, @QueryParam("settingId") String settingId) {
     return new RestResponse<>(buildSourceService.getSmbPaths(appId, settingId));
+  }
+
+  /**
+   * Get SFTP artifact paths.
+   *
+   * @param settingId the setting id
+   * @return the artifact paths
+   */
+  @GET
+  @Path("artifact-paths")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<List<String>> getSftpPaths(@QueryParam("appId") String appId,
+      @QueryParam("settingId") String settingId, @QueryParam("streamType") String streamType) {
+    return new RestResponse<>(buildSourceService.getArtifactPathsByStreamType(appId, settingId, streamType));
   }
 
   /**

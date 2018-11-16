@@ -83,6 +83,8 @@ import software.wings.helpers.ext.pcf.PcfClientImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerImpl;
 import software.wings.helpers.ext.pcf.request.PcfCommandRequest.PcfCommandType;
+import software.wings.helpers.ext.sftp.SftpService;
+import software.wings.helpers.ext.sftp.SftpServiceImpl;
 import software.wings.helpers.ext.smb.SmbService;
 import software.wings.helpers.ext.smb.SmbServiceImpl;
 import software.wings.service.EcrClassicBuildServiceImpl;
@@ -102,6 +104,7 @@ import software.wings.service.impl.GitServiceImpl;
 import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
+import software.wings.service.impl.SftpBuildServiceImpl;
 import software.wings.service.impl.SmbBuildServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.WinRMCommandUnitExecutorServiceImpl;
@@ -149,6 +152,7 @@ import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
+import software.wings.service.intfc.SftpBuildService;
 import software.wings.service.intfc.SmbBuildService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
@@ -342,6 +346,8 @@ public class DelegateModule extends DependencyModule {
     bind(GitService.class).to(GitServiceImpl.class);
     bind(LdapDelegateService.class).to(LdapDelegateServiceImpl.class);
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
+    bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
+    bind(SftpService.class).to(SftpServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
