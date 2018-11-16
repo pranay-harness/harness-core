@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.exception.WingsException;
+import lombok.Builder.Default;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -56,6 +57,8 @@ public class MetricAnalysisRecord extends Base {
   private String message;
 
   private String cvConfigId;
+
+  @Default private int aggregatedRisk = -1;
 
   @SchemaIgnore
   @JsonIgnore
