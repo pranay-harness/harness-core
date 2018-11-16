@@ -3,6 +3,7 @@ package io.harness.mongo;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.ReadPref.CRITICAL;
 import static io.harness.persistence.ReadPref.NORMAL;
+import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -128,9 +129,19 @@ public class MongoPersistence implements HPersistence {
     insertOptions.continueOnError(true);
     try {
       datastore.insert(ts, insertOptions);
-    } catch (DuplicateKeyException dke) {
+    } catch (DuplicateKeyException ignore) {
       // ignore
     }
+  }
+
+  @Override
+  public <T extends PersistentEntity> T get(Class<T> cls, String id) {
+    return get(cls, id, NORMAL);
+  }
+
+  @Override
+  public <T extends PersistentEntity> T get(Class<T> cls, String id, ReadPref readPref) {
+    return createQuery(cls, readPref).filter(ID_KEY, id).get();
   }
 
   @Override

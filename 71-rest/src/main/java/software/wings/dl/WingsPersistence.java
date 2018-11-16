@@ -33,16 +33,6 @@ public interface WingsPersistence extends HPersistence {
   /**
    * Gets the.
    *
-   * @param <T> the generic type
-   * @param cls the cls
-   * @param id  the id
-   * @return the t
-   */
-  <T extends Base> T get(Class<T> cls, String id);
-
-  /**
-   * Gets the.
-   *
    * @param <T>   the generic type
    * @param cls   the cls
    * @param appId the app id
@@ -62,17 +52,6 @@ public interface WingsPersistence extends HPersistence {
    * @return the t
    */
   <T extends Base> T get(Class<T> cls, String appId, String id, ReadPref readPref);
-
-  /**
-   * Gets the.
-   *
-   * @param <T>      the generic type
-   * @param cls      the cls
-   * @param id       the id
-   * @param readPref the read pref
-   * @return the t
-   */
-  <T extends Base> T get(Class<T> cls, String id, ReadPref readPref);
 
   /**
    * Find and modify t.

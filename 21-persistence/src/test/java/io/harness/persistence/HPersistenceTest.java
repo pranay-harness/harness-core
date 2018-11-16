@@ -68,6 +68,15 @@ public class HPersistenceTest extends PersistenceTest {
   }
 
   @Test
+  public void shouldGet() {
+    TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldGet").build();
+    persistence.save(entity);
+
+    final TestEntity obtainedEntity = persistence.get(TestEntity.class, entity.getUuid());
+    assertThat(obtainedEntity.getTest()).isEqualTo("shouldGet");
+  }
+
+  @Test
   public void shouldDeleteUuid() {
     TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteUuid").build();
 

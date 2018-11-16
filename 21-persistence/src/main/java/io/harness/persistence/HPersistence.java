@@ -137,13 +137,33 @@ public interface HPersistence {
   <T extends PersistentEntity> void saveIgnoringDuplicateKeys(List<T> entityList);
 
   /**
+   * Get returns the entity with id.
+   *
+   * @param cls the class of the entity
+   * @param id  the id of the entity
+   * @return the t
+   */
+  <T extends PersistentEntity> T get(Class<T> cls, String id);
+
+  /**
+   * Get returns the entity with id.
+   *
+   * @param <T>      the generic type
+   * @param cls      the cls
+   * @param id       the id
+   * @param readPref the read pref
+   * @return the t
+   */
+  <T extends PersistentEntity> T get(Class<T> cls, String id, ReadPref readPref);
+
+  /**
    * Delete.
    *
    * @param cls  the class of the entity
-   * @param uuid the uuid
+   * @param id the id
    * @return true, if successful
    */
-  <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid);
+  <T extends PersistentEntity> boolean delete(Class<T> cls, String id);
 
   /**
    * Delete.
