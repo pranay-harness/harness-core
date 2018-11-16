@@ -10,6 +10,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import io.harness.CategoryTest;
+import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -103,6 +104,7 @@ public class DelegateFileManagerTest extends CategoryTest {
           .build();
 
   @Test
+  @Owner(emails = "aaditi.joag@harness.io", intermittent = true)
   public void testDownloadArtifactAtRuntimeForS3() throws IOException, ExecutionException {
     when(delegateConfiguration.getMaxCachedArtifacts()).thenReturn(10);
     String fileContent = "test";

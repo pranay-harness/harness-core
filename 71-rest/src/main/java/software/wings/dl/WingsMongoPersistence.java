@@ -22,7 +22,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.mongodb.WriteResult;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
@@ -327,13 +326,13 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
   @Override
   public <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid) {
-    final AdvancedDatastore datastore = getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
     if (cls.equals(SettingAttribute.class) || EncryptableSetting.class.isAssignableFrom(cls)) {
+      final AdvancedDatastore datastore = getDatastore(cls, ReadPref.NORMAL);
       Query<T> query = datastore.createQuery(cls).filter(ID_KEY, uuid);
       return delete(query);
     }
-    WriteResult result = datastore.delete(cls, uuid);
-    return !(result == null || result.getN() == 0);
+
+    return super.delete(cls, uuid);
   }
 
   @Override
@@ -362,17 +361,16 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
         }
       }
     }
-    WriteResult result = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).delete(query);
-    return !(result == null || result.getN() == 0);
+
+    return super.delete(query);
   }
 
   @Override
-  public <T extends PersistentEntity> boolean delete(T object) {
-    if (SettingAttribute.class.isInstance(object) || EncryptableSetting.class.isInstance(object)) {
-      deleteEncryptionReferenceIfNecessary(object);
+  public <T extends PersistentEntity> boolean delete(T entity) {
+    if (SettingAttribute.class.isInstance(entity) || EncryptableSetting.class.isInstance(entity)) {
+      deleteEncryptionReferenceIfNecessary(entity);
     }
-    WriteResult result = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).delete(object);
-    return !(result == null || result.getN() == 0);
+    return super.delete(entity);
   }
 
   @Override

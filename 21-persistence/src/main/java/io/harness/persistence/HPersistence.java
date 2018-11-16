@@ -135,4 +135,29 @@ public interface HPersistence {
    * @param entityList list of entities to save
    */
   <T extends PersistentEntity> void saveIgnoringDuplicateKeys(List<T> entityList);
+
+  /**
+   * Delete.
+   *
+   * @param cls  the class of the entity
+   * @param uuid the uuid
+   * @return true, if successful
+   */
+  <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid);
+
+  /**
+   * Delete.
+   *
+   * @param query query that selects one or more items to delete
+   * @return true, if successful
+   */
+  <T extends PersistentEntity> boolean delete(Query<T> query);
+
+  /**
+   * Delete.
+   *
+   * @param entity entity to delete
+   * @return true, if successful
+   */
+  <T extends PersistentEntity> boolean delete(T entity);
 }
