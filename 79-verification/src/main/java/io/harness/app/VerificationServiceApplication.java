@@ -15,7 +15,6 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Names;
 
-import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.github.dirkraft.dropwizard.fileassets.FileAssetsBundle;
@@ -179,8 +178,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
   }
 
   private void initMetrics() {
-    harnessMetricRegistry.registerMeterMetric(DATA_ANALYSIS_TASKS_PER_MINUTE, new Meter());
-    harnessMetricRegistry.registerMeterMetric(DATA_COLLECTION_TASKS_PER_MINUTE, new Meter());
+    harnessMetricRegistry.registerGaugeMetric(DATA_ANALYSIS_TASKS_PER_MINUTE, null, null);
+    harnessMetricRegistry.registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null, null);
   }
 
   private void registerResources(Environment environment, Injector injector) {
