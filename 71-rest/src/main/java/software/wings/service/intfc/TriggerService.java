@@ -11,9 +11,11 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
+import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.service.intfc.ownership.OwnedByApplication;
 import software.wings.service.intfc.ownership.OwnedByArtifactStream;
 import software.wings.service.intfc.ownership.OwnedByPipeline;
@@ -103,10 +105,11 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    * @param webHookToken
    * @param serviceBuildNumbers
    * @param parameters
+   * @param triggerExecution
    * @return
    */
-  WorkflowExecution triggerExecutionByWebHook(
-      String appId, String webHookToken, Map<String, String> serviceBuildNumbers, Map<String, String> parameters);
+  WorkflowExecution triggerExecutionByWebHook(String appId, String webHookToken,
+      Map<String, String> serviceBuildNumbers, Map<String, String> parameters, TriggerExecution triggerExecution);
 
   /**
    * Triggers that have actions on Pipeline
@@ -161,9 +164,11 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
    * Trigger execution by webhook
    * @param trigger
    * @param parameters
+   * @param triggerExecution
    * @return
    */
-  WorkflowExecution triggerExecutionByWebHook(Trigger trigger, Map<String, String> parameters);
+  WorkflowExecution triggerExecutionByWebHook(
+      Trigger trigger, Map<String, String> parameters, TriggerExecution triggerExecution);
 
   /***
    *
@@ -185,4 +190,7 @@ public interface TriggerService extends OwnedByApplication, OwnedByPipeline, Own
   boolean triggerExecutionByServiceInfra(String appId, String infraMappingId);
 
   List<String> obtainTriggerNamesReferencedByTemplatedEntityId(String appId, @NotEmpty String entityId);
+
+  void handleTriggerTaskResponse(
+      @NotEmpty String appId, @NotEmpty String triggerExecutionId, TriggerResponse triggerResponse);
 }

@@ -13,9 +13,12 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.validator.EntityName;
+import lombok.Getter;
+import lombok.Setter;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Transient;
+import software.wings.api.DeploymentType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +61,8 @@ public class Workflow extends Base {
   private transient List<String> templatizedServiceIds = new ArrayList<>();
 
   @Indexed private List<String> linkedTemplateUuids = new ArrayList<>();
+
+  @Getter @Setter private transient List<DeploymentType> deploymentTypes = new ArrayList<>();
 
   public List<String> getLinkedTemplateUuids() {
     return linkedTemplateUuids;

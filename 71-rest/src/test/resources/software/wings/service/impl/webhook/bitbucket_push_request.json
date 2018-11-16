@@ -1,0 +1,311 @@
+{
+  "push": {
+    "changes": [
+      {
+        "forced": false,
+        "old": {
+          "target": {
+            "hash": "399356b25cb9c6d01c31c8916b428179761d5b34",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commit/399356b25cb9c6d01c31c8916b428179761d5b34"
+              },
+              "html": {
+                "href": "https://bitbucket.org/anshul-harness/anshul-test/commits/399356b25cb9c6d01c31c8916b428179761d5b34"
+              }
+            },
+            "author": {
+              "raw": "anshul anshul <anshul@harness.io>",
+              "type": "author",
+              "user": {
+                "username": "anshul-harness",
+                "display_name": "anshul anshul",
+                "account_id": "5b02f25488605c21e2f1dd0c",
+                "links": {
+                  "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/anshul-harness"
+                  },
+                  "html": {
+                    "href": "https://bitbucket.org/anshul-harness/"
+                  },
+                  "avatar": {
+                    "href": "https://bitbucket.org/account/anshul-harness/avatar/"
+                  }
+                },
+                "type": "user",
+                "nickname": "anshul-harness",
+                "uuid": "{a53471db-7b18-418b-a078-2605da10fc2d}"
+              }
+            },
+            "summary": {
+              "raw": "values.yaml edited online with Bitbucket",
+              "markup": "markdown",
+              "html": "<p>values.yaml edited online with Bitbucket</p>",
+              "type": "rendered"
+            },
+            "parents": [
+              {
+                "type": "commit",
+                "hash": "f6a0860bafe88633cf943b5329d1a6df53e85f62",
+                "links": {
+                  "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commit/f6a0860bafe88633cf943b5329d1a6df53e85f62"
+                  },
+                  "html": {
+                    "href": "https://bitbucket.org/anshul-harness/anshul-test/commits/f6a0860bafe88633cf943b5329d1a6df53e85f62"
+                  }
+                }
+              }
+            ],
+            "date": "2018-09-11T17:20:25+00:00",
+            "message": "values.yaml edited online with Bitbucket",
+            "type": "commit"
+          },
+          "links": {
+            "commits": {
+              "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commits/master"
+            },
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/refs/branches/master"
+            },
+            "html": {
+              "href": "https://bitbucket.org/anshul-harness/anshul-test/branch/master"
+            }
+          },
+          "default_merge_strategy": "merge_commit",
+          "merge_strategies": [
+            "merge_commit",
+            "squash",
+            "fast_forward"
+          ],
+          "type": "branch",
+          "name": "master"
+        },
+        "links": {
+          "commits": {
+            "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commits?include=b603ef9afef725673e908cef5c377f79aa532de0&exclude=399356b25cb9c6d01c31c8916b428179761d5b34"
+          },
+          "html": {
+            "href": "https://bitbucket.org/anshul-harness/anshul-test/branches/compare/b603ef9afef725673e908cef5c377f79aa532de0..399356b25cb9c6d01c31c8916b428179761d5b34"
+          },
+          "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/diff/b603ef9afef725673e908cef5c377f79aa532de0..399356b25cb9c6d01c31c8916b428179761d5b34"
+          }
+        },
+        "truncated": false,
+        "commits": [
+          {
+            "hash": "b603ef9afef725673e908cef5c377f79aa532de0",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commit/b603ef9afef725673e908cef5c377f79aa532de0"
+              },
+              "comments": {
+                "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commit/b603ef9afef725673e908cef5c377f79aa532de0/comments"
+              },
+              "patch": {
+                "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/patch/b603ef9afef725673e908cef5c377f79aa532de0"
+              },
+              "html": {
+                "href": "https://bitbucket.org/anshul-harness/anshul-test/commits/b603ef9afef725673e908cef5c377f79aa532de0"
+              },
+              "diff": {
+                "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/diff/b603ef9afef725673e908cef5c377f79aa532de0"
+              },
+              "approve": {
+                "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commit/b603ef9afef725673e908cef5c377f79aa532de0/approve"
+              },
+              "statuses": {
+                "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commit/b603ef9afef725673e908cef5c377f79aa532de0/statuses"
+              }
+            },
+            "author": {
+              "raw": "anshul anshul <anshul@harness.io>",
+              "type": "author",
+              "user": {
+                "username": "anshul-harness",
+                "display_name": "anshul anshul",
+                "account_id": "5b02f25488605c21e2f1dd0c",
+                "links": {
+                  "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/anshul-harness"
+                  },
+                  "html": {
+                    "href": "https://bitbucket.org/anshul-harness/"
+                  },
+                  "avatar": {
+                    "href": "https://bitbucket.org/account/anshul-harness/avatar/"
+                  }
+                },
+                "type": "user",
+                "nickname": "anshul-harness",
+                "uuid": "{a53471db-7b18-418b-a078-2605da10fc2d}"
+              }
+            },
+            "summary": {
+              "raw": "values.yaml edited online with Bitbucket",
+              "markup": "markdown",
+              "html": "<p>values.yaml edited online with Bitbucket</p>",
+              "type": "rendered"
+            },
+            "parents": [
+              {
+                "type": "commit",
+                "hash": "399356b25cb9c6d01c31c8916b428179761d5b34",
+                "links": {
+                  "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commit/399356b25cb9c6d01c31c8916b428179761d5b34"
+                  },
+                  "html": {
+                    "href": "https://bitbucket.org/anshul-harness/anshul-test/commits/399356b25cb9c6d01c31c8916b428179761d5b34"
+                  }
+                }
+              }
+            ],
+            "date": "2018-10-25T22:40:28+00:00",
+            "message": "values.yaml edited online with Bitbucket",
+            "type": "commit"
+          }
+        ],
+        "created": false,
+        "closed": false,
+        "new": {
+          "target": {
+            "hash": "b603ef9afef725673e908cef5c377f79aa532de0",
+            "links": {
+              "self": {
+                "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commit/b603ef9afef725673e908cef5c377f79aa532de0"
+              },
+              "html": {
+                "href": "https://bitbucket.org/anshul-harness/anshul-test/commits/b603ef9afef725673e908cef5c377f79aa532de0"
+              }
+            },
+            "author": {
+              "raw": "anshul anshul <anshul@harness.io>",
+              "type": "author",
+              "user": {
+                "username": "anshul-harness",
+                "display_name": "anshul anshul",
+                "account_id": "5b02f25488605c21e2f1dd0c",
+                "links": {
+                  "self": {
+                    "href": "https://api.bitbucket.org/2.0/users/anshul-harness"
+                  },
+                  "html": {
+                    "href": "https://bitbucket.org/anshul-harness/"
+                  },
+                  "avatar": {
+                    "href": "https://bitbucket.org/account/anshul-harness/avatar/"
+                  }
+                },
+                "type": "user",
+                "nickname": "anshul-harness",
+                "uuid": "{a53471db-7b18-418b-a078-2605da10fc2d}"
+              }
+            },
+            "summary": {
+              "raw": "values.yaml edited online with Bitbucket",
+              "markup": "markdown",
+              "html": "<p>values.yaml edited online with Bitbucket</p>",
+              "type": "rendered"
+            },
+            "parents": [
+              {
+                "type": "commit",
+                "hash": "399356b25cb9c6d01c31c8916b428179761d5b34",
+                "links": {
+                  "self": {
+                    "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commit/399356b25cb9c6d01c31c8916b428179761d5b34"
+                  },
+                  "html": {
+                    "href": "https://bitbucket.org/anshul-harness/anshul-test/commits/399356b25cb9c6d01c31c8916b428179761d5b34"
+                  }
+                }
+              }
+            ],
+            "date": "2018-10-25T22:40:28+00:00",
+            "message": "values.yaml edited online with Bitbucket",
+            "type": "commit"
+          },
+          "links": {
+            "commits": {
+              "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/commits/master"
+            },
+            "self": {
+              "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test/refs/branches/master"
+            },
+            "html": {
+              "href": "https://bitbucket.org/anshul-harness/anshul-test/branch/master"
+            }
+          },
+          "default_merge_strategy": "merge_commit",
+          "merge_strategies": [
+            "merge_commit",
+            "squash",
+            "fast_forward"
+          ],
+          "type": "branch",
+          "name": "master"
+        }
+      }
+    ]
+  },
+  "repository": {
+    "scm": "git",
+    "website": "",
+    "name": "anshul-test",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/repositories/anshul-harness/anshul-test"
+      },
+      "html": {
+        "href": "https://bitbucket.org/anshul-harness/anshul-test"
+      },
+      "avatar": {
+        "href": "https://bytebucket.org/ravatar/%7B43e704a2-09d3-401e-b709-338201d2c45d%7D?ts=default"
+      }
+    },
+    "full_name": "anshul-harness/anshul-test",
+    "owner": {
+      "username": "anshul-harness",
+      "display_name": "anshul anshul",
+      "account_id": "5b02f25488605c21e2f1dd0c",
+      "links": {
+        "self": {
+          "href": "https://api.bitbucket.org/2.0/users/anshul-harness"
+        },
+        "html": {
+          "href": "https://bitbucket.org/anshul-harness/"
+        },
+        "avatar": {
+          "href": "https://bitbucket.org/account/anshul-harness/avatar/"
+        }
+      },
+      "type": "user",
+      "nickname": "anshul-harness",
+      "uuid": "{a53471db-7b18-418b-a078-2605da10fc2d}"
+    },
+    "type": "repository",
+    "is_private": true,
+    "uuid": "{43e704a2-09d3-401e-b709-338201d2c45d}"
+  },
+  "actor": {
+    "username": "anshul-harness",
+    "display_name": "anshul anshul",
+    "account_id": "5b02f25488605c21e2f1dd0c",
+    "links": {
+      "self": {
+        "href": "https://api.bitbucket.org/2.0/users/anshul-harness"
+      },
+      "html": {
+        "href": "https://bitbucket.org/anshul-harness/"
+      },
+      "avatar": {
+        "href": "https://bitbucket.org/account/anshul-harness/avatar/"
+      }
+    },
+    "type": "user",
+    "nickname": "anshul-harness",
+    "uuid": "{a53471db-7b18-418b-a078-2605da10fc2d}"
+  }
+}

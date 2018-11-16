@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.time.Duration.ofHours;
 import static java.time.Duration.ofSeconds;
@@ -13,6 +14,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
+import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
 import static software.wings.beans.trigger.ArtifactSelection.Type.LAST_COLLECTED;
@@ -39,12 +41,14 @@ import com.google.inject.name.Named;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.data.structure.ListUtils;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
+import org.apache.commons.lang3.StringUtils;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,6 +76,8 @@ import software.wings.beans.trigger.PipelineTriggerCondition;
 import software.wings.beans.trigger.ScheduledTriggerCondition;
 import software.wings.beans.trigger.ServiceInfraWorkflow;
 import software.wings.beans.trigger.Trigger;
+import software.wings.beans.trigger.TriggerExecution;
+import software.wings.beans.trigger.TriggerExecution.Status;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookParameters;
@@ -79,6 +85,8 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
+import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.scheduler.ScheduledTriggerJob;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.service.intfc.ArtifactCollectionService;
@@ -91,6 +99,10 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.trigger.TriggerExecutionService;
+import software.wings.sm.ExecutionStatus;
+import software.wings.utils.Misc;
+import software.wings.utils.Validator;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -126,6 +138,8 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private MongoIdempotentRegistry<String> idempotentRegistry;
   @Inject private TriggerServiceHelper triggerServiceHelper;
   @Inject private EnvironmentService environmentService;
+  @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
+  @Inject private TriggerExecutionService triggerExecutionService;
 
   @Override
   public PageResponse<Trigger> list(PageRequest<Trigger> pageRequest) {
@@ -225,8 +239,8 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public WorkflowExecution triggerExecutionByWebHook(
-      String appId, String webHookToken, Map<String, String> serviceBuildNumbers, Map<String, String> parameters) {
+  public WorkflowExecution triggerExecutionByWebHook(String appId, String webHookToken,
+      Map<String, String> serviceBuildNumbers, Map<String, String> parameters, TriggerExecution triggerExecution) {
     List<Artifact> artifacts = new ArrayList<>();
     Trigger trigger = triggerServiceHelper.getTrigger(appId, webHookToken);
     logger.info(
@@ -244,7 +258,7 @@ public class TriggerServiceImpl implements TriggerService {
         throw new InvalidRequestException(s, USER);
       }
     }
-    return triggerExecution(artifacts, trigger, parameters);
+    return triggerDeployment(artifacts, trigger, parameters, triggerExecution);
   }
 
   @Override
@@ -253,8 +267,9 @@ public class TriggerServiceImpl implements TriggerService {
   }
 
   @Override
-  public WorkflowExecution triggerExecutionByWebHook(Trigger trigger, Map<String, String> parameters) {
-    return triggerExecution(null, trigger, parameters);
+  public WorkflowExecution triggerExecutionByWebHook(
+      Trigger trigger, Map<String, String> parameters, TriggerExecution triggerExecution) {
+    return triggerDeployment(null, trigger, parameters, triggerExecution);
   }
 
   @Override
@@ -358,7 +373,7 @@ public class TriggerServiceImpl implements TriggerService {
         logger.info("The artifacts  set for the trigger {} are {}", trigger.getUuid(),
             artifacts.stream().map(Artifact::getUuid).collect(toList()));
         try {
-          triggerExecution(artifacts, trigger);
+          triggerDeployment(artifacts, trigger, null);
         } catch (WingsException exception) {
           exception.addContext(Application.class, trigger.getAppId());
           exception.addContext(ArtifactStream.class, artifactStreamId);
@@ -389,7 +404,7 @@ public class TriggerServiceImpl implements TriggerService {
           logger.warn(
               "No last deployed artifacts found. Triggering execution {} without artifacts", trigger.getWorkflowId());
         }
-        triggerExecution(lastDeployedArtifacts, trigger);
+        triggerDeployment(lastDeployedArtifacts, trigger, null);
       } else {
         List<Artifact> artifacts = new ArrayList<>();
         boolean artifactNeeded = false;
@@ -409,7 +424,7 @@ public class TriggerServiceImpl implements TriggerService {
             return;
           }
         }
-        triggerExecution(artifacts, trigger);
+        triggerDeployment(artifacts, trigger, null);
       }
     });
   }
@@ -432,10 +447,10 @@ public class TriggerServiceImpl implements TriggerService {
       if (!artifactNeeded) {
         logger.info("No artifactSelection configuration setup found. Executing workflow / pipeline {} ",
             trigger.getWorkflowId());
-        triggerExecution(lastDeployedArtifacts, trigger, null);
+        triggerDeployment(lastDeployedArtifacts, trigger, null, null);
       } else if (isNotEmpty(artifacts)) {
         if (!scheduledTriggerCondition.isOnNewArtifactOnly()) {
-          triggerExecution(artifacts, trigger);
+          triggerDeployment(artifacts, trigger, null);
         } else {
           List<String> lastDeployedArtifactIds =
               lastDeployedArtifacts.stream().map(Artifact::getUuid).distinct().collect(toList());
@@ -444,7 +459,7 @@ public class TriggerServiceImpl implements TriggerService {
             logger.info("New version of artifacts found from the last successful execution "
                     + "of pipeline/ workflow {}. So, triggering  execution",
                 trigger.getWorkflowId());
-            triggerExecution(artifacts, trigger);
+            triggerDeployment(artifacts, trigger, null);
           } else {
             logger.info("No new version of artifacts found from the last successful execution "
                     + "of pipeline/ workflow {}. So, not triggering execution",
@@ -566,24 +581,42 @@ public class TriggerServiceImpl implements TriggerService {
     return false;
   }
 
-  private WorkflowExecution triggerExecution(List<Artifact> artifacts, Trigger trigger) {
-    return triggerExecution(artifacts, trigger, null);
+  private WorkflowExecution triggerDeployment(
+      List<Artifact> artifacts, Trigger trigger, TriggerExecution triggerExecution) {
+    return triggerDeployment(artifacts, trigger, null, triggerExecution);
   }
 
-  private WorkflowExecution triggerExecution(
-      List<Artifact> artifacts, Trigger trigger, Map<String, String> parameters) {
+  private WorkflowExecution triggerDeployment(
+      List<Artifact> artifacts, Trigger trigger, Map<String, String> parameters, TriggerExecution triggerExecution) {
     WorkflowExecution workflowExecution;
     ExecutionArgs executionArgs = new ExecutionArgs();
     prepareExecutionArgs(artifacts, trigger, parameters, executionArgs);
+
     if (ORCHESTRATION.equals(trigger.getWorkflowType())) {
-      workflowExecution = triggerOrchestrationExecution(trigger, executionArgs);
+      workflowExecution = triggerOrchestrationExecution(trigger, executionArgs, triggerExecution);
     } else {
       logger.info(
           "Triggering  execution of appId {} with  pipeline id {}", trigger.getAppId(), trigger.getWorkflowId());
       resolveTriggerPipelineVariables(trigger, executionArgs);
-      workflowExecution = workflowExecutionService.triggerPipelineExecution(
-          trigger.getAppId(), trigger.getWorkflowId(), executionArgs, trigger);
-
+      if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
+        logger.info("Check file content option selected. Invoking delegate task to verify the file content.");
+        TriggerExecution lastTriggerExecution = webhookTriggerProcessor.fetchLastExecutionForContentChanged(trigger);
+        if (lastTriggerExecution == null) {
+          triggerExecution.setExecutionArgs(executionArgs);
+          triggerExecution.setStatus(Status.SUCCESS);
+          triggerExecutionService.save(triggerExecution);
+          workflowExecution = workflowExecutionService.triggerPipelineExecution(
+              trigger.getAppId(), trigger.getWorkflowId(), executionArgs, trigger);
+        } else {
+          triggerExecution.setExecutionArgs(executionArgs);
+          webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
+              trigger, lastTriggerExecution, triggerExecution);
+          workflowExecution = aWorkflowExecution().withStatus(ExecutionStatus.NEW).build();
+        }
+      } else {
+        workflowExecution = workflowExecutionService.triggerPipelineExecution(
+            trigger.getAppId(), trigger.getWorkflowId(), executionArgs, trigger);
+      }
       logger.info(
           "Pipeline execution of appId {} with  pipeline id {} triggered", trigger.getAppId(), trigger.getWorkflowId());
     }
@@ -686,7 +719,8 @@ public class TriggerServiceImpl implements TriggerService {
       triggerWorkflowVariableValues.put(serviceInfraVarName, infrastructureMapping.getUuid());
     }
   }
-  private WorkflowExecution triggerOrchestrationExecution(Trigger trigger, ExecutionArgs executionArgs) {
+  private WorkflowExecution triggerOrchestrationExecution(
+      Trigger trigger, ExecutionArgs executionArgs, TriggerExecution triggerExecution) {
     logger.info("Triggering  workflow execution of appId {} with with workflow id {}", trigger.getAppId(),
         trigger.getWorkflowId());
 
@@ -717,9 +751,27 @@ public class TriggerServiceImpl implements TriggerService {
     }
 
     executionArgs.setWorkflowVariables(triggerWorkflowVariableValues);
+    // Validate if the file path content changed
     logger.info("Triggering workflow execution of appId {} with workflow id {} triggered", trigger.getAppId(),
         trigger.getWorkflowId());
-    return workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs, trigger);
+    if (webhookTriggerProcessor.checkFileContentOptionSelected(trigger)) {
+      TriggerExecution lastTriggerExecution = webhookTriggerProcessor.fetchLastExecutionForContentChanged(trigger);
+      if (lastTriggerExecution == null) {
+        triggerExecution.setStatus(Status.SUCCESS);
+        triggerExecution.setExecutionArgs(executionArgs);
+        triggerExecution.setEnvId(envId);
+        triggerExecutionService.save(triggerExecution);
+        return workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs, trigger);
+      } else {
+        logger.info("Check file content option selected. Invoking delegate task to verify the file content.");
+        triggerExecution.setExecutionArgs(executionArgs);
+        webhookTriggerProcessor.initiateTriggerContentChangeDelegateTask(
+            trigger, lastTriggerExecution, triggerExecution);
+        return aWorkflowExecution().withStatus(ExecutionStatus.NEW).build();
+      }
+    } else {
+      return workflowExecutionService.triggerEnvExecution(trigger.getAppId(), envId, executionArgs, trigger);
+    }
   }
 
   private Map<String, String> overrideTriggerVariables(Trigger trigger, ExecutionArgs executionArgs) {
@@ -780,6 +832,62 @@ public class TriggerServiceImpl implements TriggerService {
     return true;
   }
 
+  @Override
+  public void handleTriggerTaskResponse(String appId, String triggerExecutionId, TriggerResponse triggerResponse) {
+    logger.info("Received the call back from delegate with the task response {}", triggerResponse);
+    TriggerExecution triggerExecution = triggerExecutionService.get(appId, triggerExecutionId);
+    Validator.notNullCheck("Trigger execution might have pruned", triggerExecution);
+    Trigger trigger = get(triggerExecution.getAppId(), triggerExecution.getTriggerId());
+    Validator.notNullCheck("Trigger might have been deleted", trigger);
+    final ExecutionStatus taskStatus = triggerResponse.getExecutionStatus();
+    if (ExecutionStatus.SUCCESS.equals(taskStatus)) {
+      if (triggerResponse instanceof TriggerDeploymentNeededResponse) {
+        TriggerDeploymentNeededResponse triggerDeploymentNeededResponse =
+            (TriggerDeploymentNeededResponse) triggerResponse;
+        if (triggerDeploymentNeededResponse.isDeploymentNeeded()) {
+          try {
+            logger.info("File path content changed for the trigger {}.", trigger.getUuid());
+            switch (trigger.getWorkflowType()) {
+              case ORCHESTRATION:
+                logger.info("Starting deployment for the workflow {}", trigger.getWorkflowId());
+                workflowExecutionService.triggerEnvExecution(
+                    trigger.getAppId(), triggerExecution.getEnvId(), triggerExecution.getExecutionArgs(), trigger);
+                triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.SUCCESS, "File content changed");
+                break;
+              case PIPELINE:
+                logger.info("Starting deployment for the pipeline {}", trigger.getPipelineId());
+                workflowExecutionService.triggerPipelineExecution(
+                    trigger.getAppId(), triggerExecution.getWorkflowId(), triggerExecution.getExecutionArgs(), trigger);
+                triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.SUCCESS, "File content changed");
+                break;
+              default:
+                unhandled(triggerExecution.getWorkflowType());
+            }
+          } catch (WingsException exception) {
+            // Update trigger Status Failed
+            triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.FAILED, Misc.getMessage(exception));
+            exception.addContext(Application.class, trigger.getAppId());
+            exception.addContext(TriggerExecution.class, triggerExecution.getUuid());
+            exception.addContext(Trigger.class, trigger.getUuid());
+            WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+          } catch (Exception exception) {
+            triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.FAILED, Misc.getMessage(exception));
+            logger.error("Exception occurred while starting deployment of the trigger execution {}",
+                triggerExecution.getUuid(), exception);
+          }
+        } else {
+          logger.info("File  content not changed for the trigger {}. Skipping the execution", trigger.getUuid());
+          triggerExecutionService.updateStatus(
+              appId, triggerExecutionId, Status.SUCCESS, "File content not changed. Skipped deployment");
+        }
+      } else {
+        logger.error("Wrong Response {} Received from trigger callback", triggerResponse);
+      }
+    } else {
+      triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.FAILED, triggerResponse.getErrorMsg());
+    }
+  }
+
   private void validateAndSetTriggerCondition(Trigger trigger, Trigger existingTrigger) {
     switch (trigger.getCondition().getConditionType()) {
       case NEW_ARTIFACT:
@@ -800,6 +908,30 @@ public class TriggerServiceImpl implements TriggerService {
           }
         }
         trigger.setWebHookToken(webHookTriggerCondition.getWebHookToken().getWebHookToken());
+        if (webHookTriggerCondition.isCheckFileContentChanged()) {
+          logger.info("File paths to watch selected");
+          List<String> filePaths = ListUtils.trimStrings(webHookTriggerCondition.getFilePaths());
+          if (isEmpty(filePaths)) {
+            throw new InvalidRequestException("At least one file path is required to check content changed");
+          }
+          if (isEmpty(webHookTriggerCondition.getGitConnectorId())) {
+            throw new InvalidRequestException("Git connector is required to check content changed");
+          }
+          String branchName = StringUtils.trim(webHookTriggerCondition.getBranchName());
+          if (isEmpty(branchName)) {
+            throw new InvalidRequestException("Branch name is required to check content changed");
+          } else {
+            webHookTriggerCondition.setBranchName(branchName);
+          }
+          if (isEmpty(webHookTriggerCondition.getEventTypes())
+              || !webHookTriggerCondition.getEventTypes().contains(WebhookEventType.PUSH)) {
+            throw new InvalidRequestException("File content check supported only for PUSH events");
+          }
+        } else {
+          // Clear the content
+          webHookTriggerCondition.setFilePaths(null);
+          webHookTriggerCondition.setBranchName(null);
+        }
         break;
       case SCHEDULED:
         ScheduledTriggerCondition scheduledTriggerCondition = (ScheduledTriggerCondition) trigger.getCondition();

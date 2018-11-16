@@ -1233,7 +1233,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .thenReturn(artifact);
 
     triggerService.triggerExecutionByWebHook(
-        APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>());
+        APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>(), null);
 
     when(artifactCollectionService.collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(Arrays.asList(artifact));
     verify(artifactCollectionService).collectNewArtifacts(APP_ID, ARTIFACT_STREAM_ID);
@@ -1276,7 +1276,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .thenReturn(artifact);
 
     triggerService.triggerExecutionByWebHook(
-        APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>());
+        APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>(), null);
 
     verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
@@ -1345,7 +1345,7 @@ public class TriggerServiceTest extends WingsBaseTest {
         .thenReturn(artifact);
 
     triggerService.triggerExecutionByWebHook(
-        APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>());
+        APP_ID, webhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>(), null);
 
     verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
@@ -1407,8 +1407,8 @@ public class TriggerServiceTest extends WingsBaseTest {
              APP_ID, ARTIFACT_STREAM_ID, artifactStream.getSourceName(), "123", false))
         .thenReturn(artifact);
 
-    triggerService.triggerExecutionByWebHook(
-        APP_ID, workflowWebhookConditionTrigger.getWebHookToken(), ImmutableMap.of("Catalog", "123"), new HashMap<>());
+    triggerService.triggerExecutionByWebHook(APP_ID, workflowWebhookConditionTrigger.getWebHookToken(),
+        ImmutableMap.of("Catalog", "123"), new HashMap<>(), null);
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
@@ -1575,7 +1575,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     parameters.put("MyVar", "MyValue");
     executionArgs.setWorkflowVariables(parameters);
 
-    triggerService.triggerExecutionByWebHook(workflowWebhookConditionTrigger, parameters);
+    triggerService.triggerExecutionByWebHook(workflowWebhookConditionTrigger, parameters, null);
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
@@ -1591,7 +1591,7 @@ public class TriggerServiceTest extends WingsBaseTest {
     parameters.put("MyVar", "MyValue");
     executionArgs.setWorkflowVariables(parameters);
 
-    triggerService.triggerExecutionByWebHook(trigger, parameters);
+    triggerService.triggerExecutionByWebHook(trigger, parameters, null);
 
     verify(workflowExecutionService)
         .triggerEnvExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));
@@ -1693,7 +1693,7 @@ public class TriggerServiceTest extends WingsBaseTest {
                         .withComputeProviderType("AWS")
                         .build());
 
-    triggerService.triggerExecutionByWebHook(webhookConditionTrigger, parameters);
+    triggerService.triggerExecutionByWebHook(webhookConditionTrigger, parameters, null);
 
     verify(workflowExecutionService)
         .triggerPipelineExecution(anyString(), anyString(), any(ExecutionArgs.class), any(Trigger.class));

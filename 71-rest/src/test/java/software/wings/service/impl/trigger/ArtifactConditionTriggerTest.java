@@ -47,6 +47,7 @@ public class ArtifactConditionTriggerTest extends WingsBaseTest {
     when(pipelineService.fetchPipelineName(APP_ID, PIPELINE_ID)).thenReturn(PIPELINE_NAME);
     when(workflowService.fetchWorkflowName(APP_ID, WORKFLOW_ID)).thenReturn(WORKFLOW_NAME);
   }
+
   @Test
   public void shouldCRUDArtifactConditionTrigger() {
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID))

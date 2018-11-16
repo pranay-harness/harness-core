@@ -205,6 +205,7 @@ import software.wings.service.impl.splunk.SplunkAnalysisServiceImpl;
 import software.wings.service.impl.sumo.SumoLogicAnalysisServiceImpl;
 import software.wings.service.impl.trigger.ArtifactTriggerProcessor;
 import software.wings.service.impl.trigger.DeploymentTriggerServiceImpl;
+import software.wings.service.impl.trigger.TriggerExecutionServiceImpl;
 import software.wings.service.impl.trigger.TriggerProcessor;
 import software.wings.service.impl.trigger.TriggerServiceImpl;
 import software.wings.service.impl.verification.CVConfigurationServiceImpl;
@@ -336,6 +337,7 @@ import software.wings.service.intfc.security.VaultService;
 import software.wings.service.intfc.splunk.SplunkAnalysisService;
 import software.wings.service.intfc.sumo.SumoLogicAnalysisService;
 import software.wings.service.intfc.trigger.DeploymentTriggerService;
+import software.wings.service.intfc.trigger.TriggerExecutionService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.service.intfc.yaml.AppYamlResourceService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
@@ -589,6 +591,7 @@ public class WingsModule extends DependencyModule {
 
     // Start of deployment trigger dependencies
     bind(DeploymentTriggerService.class).to(DeploymentTriggerServiceImpl.class);
+    bind(TriggerExecutionService.class).to(TriggerExecutionServiceImpl.class);
     MapBinder<String, TriggerProcessor> triggerProcessorMapBinder =
         MapBinder.newMapBinder(binder(), String.class, TriggerProcessor.class);
 

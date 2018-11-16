@@ -200,6 +200,20 @@ public class WorkflowServiceHelper {
     return false;
   }
 
+  public List<DeploymentType> obtainDeploymentTypes(OrchestrationWorkflow orchestrationWorkflow) {
+    if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
+      List<WorkflowPhase> workflowPhases = ((CanaryOrchestrationWorkflow) orchestrationWorkflow).getWorkflowPhases();
+      if (isNotEmpty(workflowPhases)) {
+        return workflowPhases.stream()
+            .map(WorkflowPhase::getDeploymentType)
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(toList());
+      }
+    }
+    return new ArrayList<>();
+  }
+
   public boolean needArtifactCheckStep(String appId, CanaryOrchestrationWorkflow canaryOrchestrationWorkflow) {
     List<WorkflowPhase> workflowPhases = canaryOrchestrationWorkflow.getWorkflowPhases();
     if (isNotEmpty(canaryOrchestrationWorkflow.getWorkflowPhases())) {
