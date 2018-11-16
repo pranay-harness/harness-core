@@ -129,7 +129,7 @@ public class NotificationDispatcherServiceImpl implements NotificationDispatcher
     List<SettingAttribute> settingAttributes = settingsService.getGlobalSettingAttributesByType(
         notifications.get(0).getAccountId(), SettingVariableTypes.SLACK.name());
     if (isEmpty(settingAttributes)) {
-      logger.error("No slack configuration found ");
+      logger.warn("No slack configuration found ");
       return;
     }
     SettingAttribute settingAttribute = settingAttributes.iterator().next();
