@@ -5,6 +5,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.govern.Switch.noop;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.persistence.HQuery.excludeCount;
+import static java.lang.Integer.max;
 import static java.util.Arrays.asList;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.delegatetasks.AbstractDelegateDataCollectionTask.HARNESS_HEARTBEAT_METRIC_NAME;
@@ -162,6 +163,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                                                 .build();
     int txnId = 0;
     int metricId;
+
+    int aggregatedRisk = -1;
+
     for (TimeSeriesMLTxnSummary txnSummary : mlAnalysisResponse.getTransactions().values()) {
       TimeSeriesMLTxnScores txnScores =
           TimeSeriesMLTxnScores.builder().transactionName(txnSummary.getTxn_name()).scoresMap(new HashMap<>()).build();
@@ -186,10 +190,14 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
           }
           mlMetricSummary.setResults(timeSeriesMLHostSummaryMap);
           ++metricId;
+
+          aggregatedRisk = max(aggregatedRisk, mlMetricSummary.getMax_risk());
         }
       }
       ++txnId;
     }
+
+    mlAnalysisResponse.setAggregatedRisk(aggregatedRisk);
 
     saveTimeSeriesMLScores(timeSeriesMLScores);
     bumpCollectionMinuteToProcess(
