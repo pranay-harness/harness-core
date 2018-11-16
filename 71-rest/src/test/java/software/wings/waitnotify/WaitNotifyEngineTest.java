@@ -225,9 +225,14 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
 
   @Test
   public void shouldCleanZombieWaitQueue() {
-    final WaitQueue waitQueue = new WaitQueue(generateUuid(), generateUuid());
-    waitQueue.setCreatedAt(System.currentTimeMillis() - Duration.ofMinutes(1).toMillis());
+    final WaitQueue waitQueue = WaitQueue.builder()
+                                    .uuid(generateUuid())
+                                    .createdAt(System.currentTimeMillis() - Duration.ofMinutes(1).toMillis())
+                                    .waitInstanceId(generateUuid())
+                                    .correlationId(generateUuid())
+                                    .build();
     String waitQueueId = wingsPersistence.save(waitQueue);
+    assertThat(wingsPersistence.get(WaitQueue.class, waitQueueId)).isNotNull();
 
     notifyEventListener.onMessage(aNotifyEvent()
                                       .withWaitInstanceId(waitQueue.getWaitInstanceId())

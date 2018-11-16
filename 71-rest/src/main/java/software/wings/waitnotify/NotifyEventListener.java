@@ -17,6 +17,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.ReadPref;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,10 +71,12 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
 
       // Removing the wait queues that are for instance that does not exist. It is safe, because the instance is
       // added to the DB first ... and we adding 30 seconds buffer.
-      wingsPersistence.delete(wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
-                                  .filter(WaitQueue.WAIT_INSTANCE_ID_KEY, waitInstanceId)
-                                  .field(WaitQueue.CREATED_AT_KEY)
-                                  .lessThan(System.currentTimeMillis() - ofSeconds(30).toMillis()));
+      final Query<WaitQueue> query = wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
+                                         .filter(WaitQueue.WAIT_INSTANCE_ID_KEY, waitInstanceId)
+                                         .field(WaitQueue.CREATED_AT_KEY)
+                                         .lessThan(System.currentTimeMillis() - ofSeconds(30).toMillis());
+
+      wingsPersistence.delete(query);
 
       // Note that we do not need to remove the responses from here. They will go away as soon as they are selected the
       // next time and no wait queue is found for them.
