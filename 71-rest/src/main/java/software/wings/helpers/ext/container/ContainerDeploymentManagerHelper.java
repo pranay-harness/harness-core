@@ -5,7 +5,6 @@ import static java.lang.String.format;
 import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.artifact.ArtifactStreamType.ACR;
 import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.DOCKER;
@@ -157,24 +156,17 @@ public class ContainerDeploymentManagerHelper {
     String region = null;
     String resourceGroup = null;
     String subscriptionId = null;
+    settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
-      DirectKubernetesInfrastructureMapping directInfraMapping =
-          (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-      settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
-          ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
-          : settingsService.get(directInfraMapping.getComputeProviderSettingId());
-      namespace = directInfraMapping.getNamespace();
-    } else {
-      settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
-      if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
-        namespace = containerInfraMapping.getNamespace();
-      } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
-        subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
-        resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
-        namespace = containerInfraMapping.getNamespace();
-      } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
-        region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
-      }
+      namespace = containerInfraMapping.getNamespace();
+    } else if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
+      namespace = containerInfraMapping.getNamespace();
+    } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+      subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
+      resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
+      namespace = containerInfraMapping.getNamespace();
+    } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
+      region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
     }
     Validator.notNullCheck("SettingAttribute", settingAttribute);
 
@@ -197,19 +189,20 @@ public class ContainerDeploymentManagerHelper {
     AzureKubernetesCluster azureKubernetesCluster = null;
     GcpKubernetesCluster gcpKubernetesCluster = null;
     String namespace = null;
+    String clusterName = null;
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directInfraMapping =
           (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-      settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
-          ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
-          : settingsService.get(directInfraMapping.getComputeProviderSettingId());
+      settingAttribute = settingsService.get(directInfraMapping.getComputeProviderSettingId());
       namespace = directInfraMapping.getNamespace();
+      clusterName = settingAttribute.getName();
     } else {
       settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
       if (containerInfraMapping instanceof GcpKubernetesInfrastructureMapping) {
         gcpKubernetesCluster =
             GcpKubernetesCluster.builder().clusterName(containerInfraMapping.getClusterName()).build();
         namespace = containerInfraMapping.getNamespace();
+        clusterName = gcpKubernetesCluster.getClusterName();
       } else if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
         azureKubernetesCluster =
             AzureKubernetesCluster.builder()
@@ -218,6 +211,7 @@ public class ContainerDeploymentManagerHelper {
                 .name(containerInfraMapping.getClusterName())
                 .build();
         namespace = containerInfraMapping.getNamespace();
+        clusterName = azureKubernetesCluster.getName();
       }
     }
     Validator.notNullCheck("SettingAttribute", settingAttribute);
@@ -230,6 +224,7 @@ public class ContainerDeploymentManagerHelper {
         .cloudProviderEncryptionDetails(encryptionDetails)
         .azureKubernetesCluster(azureKubernetesCluster)
         .gcpKubernetesCluster(gcpKubernetesCluster)
+        .clusterName(clusterName)
         .namespace(namespace)
         .build();
   }

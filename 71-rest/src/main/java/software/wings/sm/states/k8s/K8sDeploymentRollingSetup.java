@@ -142,6 +142,9 @@ public class K8sDeploymentRollingSetup extends State {
           .withStateExecutionData(K8sDeploymentRollingSetupStateExecutionData.builder()
                                       .activityId(activity.getUuid())
                                       .commandName(K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME)
+                                      .namespace(commandRequest.getK8sClusterConfig().getNamespace())
+                                      .clusterName(commandRequest.getK8sClusterConfig().getClusterName())
+                                      .releaseName(infraMapping.getUuid())
                                       .build())
           .withDelegateTaskId(delegateTaskId)
           .build();

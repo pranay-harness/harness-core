@@ -20,8 +20,6 @@ import migrations.all.DeleteNewRelicMetricNameCronMigration;
 import migrations.all.DeleteOldThirdPartyApiCallsMigration;
 import migrations.all.DeleteStaleSecretUsageLogs;
 import migrations.all.DeleteStaleYamlChangeSetsMigration;
-import migrations.all.DirectKubernetesOrphanRemoval;
-import migrations.all.DirectKubernetesOrphanRemovalMirgation;
 import migrations.all.DropDelegateScopeCollectionMigration;
 import migrations.all.DropOldCollectionMigration;
 import migrations.all.DropStringCollectionMigration;
@@ -112,9 +110,9 @@ public class MigrationList {
         .add(Pair.of(161, DropStringCollectionMigration.class))
         .add(Pair.of(162, DropDelegateScopeCollectionMigration.class))
         .add(Pair.of(163, PreferenceUserIdRemoveDollarSignMigration.class))
-        .add(Pair.of(164, DirectKubernetesOrphanRemovalMirgation.class))
+        .add(Pair.of(164, BaseMigration.class))
         .add(Pair.of(165, DropYamlGitSyncCollectionMigration.class))
-        .add(Pair.of(166, DirectKubernetesOrphanRemoval.class))
+        .add(Pair.of(166, BaseMigration.class))
         .add(Pair.of(167, AddReplCtrlNameToKubeSetupProperties.class))
         .add(Pair.of(168, BaseMigration.class))
         .add(Pair.of(169, AddValidUntilToDelegateConnectionResults.class))

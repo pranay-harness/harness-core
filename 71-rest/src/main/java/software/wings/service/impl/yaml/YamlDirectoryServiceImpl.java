@@ -1407,7 +1407,6 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case SSH_SESSION_CONFIG:
       case YAML_GIT_SYNC:
       case KUBERNETES:
-      case DIRECT:
         break;
       case STRING:
         String path = getRootPathByDefaultVariable(settingAttribute);
