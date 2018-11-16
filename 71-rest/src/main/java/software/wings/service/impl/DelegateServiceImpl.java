@@ -4,7 +4,7 @@ import static com.google.common.base.Charsets.UTF_8;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.eraro.ErrorCode.UNAVAILABLE_DELEGATES;
 import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.USER;
@@ -1013,8 +1013,9 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       fileService.downloadToStream(profileResultFileId, os, FileBucket.PROFILE_RESULTS);
       os.flush();
       return new String(os.toByteArray(), UTF_8);
-    } catch (IOException e) {
-      throw new WingsException(INVALID_ARGUMENT, e).addParam("args", "Failed to get content");
+    } catch (Exception e) {
+      throw new WingsException(GENERAL_ERROR, e)
+          .addParam("message", "Profile execution log temporarily unavailable. Try again in a few moments.");
     }
   }
 
