@@ -136,4 +136,10 @@ public class ArtifactoryBuildServiceImpl implements ArtifactoryBuildService {
   public List<String> getSmbPaths(ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Artifactory Build Service", WingsException.USER);
   }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      ArtifactoryConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by Artifactory Build Service", WingsException.USER);
+  }
 }

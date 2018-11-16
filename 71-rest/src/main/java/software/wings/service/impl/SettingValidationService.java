@@ -41,6 +41,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -135,7 +136,8 @@ public class SettingValidationService {
       }
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
-        || settingValue instanceof ArtifactoryConfig || settingValue instanceof SmbConfig) {
+        || settingValue instanceof ArtifactoryConfig || settingValue instanceof SmbConfig
+        || settingValue instanceof SftpConfig) {
       buildSourceService.getBuildService(settingAttribute, Base.GLOBAL_APP_ID)
           .validateArtifactServer(settingValue, encryptedDataDetails);
     } else if (settingValue instanceof AppDynamicsConfig) {

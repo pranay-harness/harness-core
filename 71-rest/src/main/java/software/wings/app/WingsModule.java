@@ -29,6 +29,7 @@ import software.wings.beans.DockerConfig;
 import software.wings.beans.EcrConfig;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.JenkinsConfig;
+import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
@@ -73,6 +74,8 @@ import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.helpers.ext.pcf.PcfDeploymentManager;
 import software.wings.helpers.ext.pcf.PcfDeploymentManagerUnsupported;
+import software.wings.helpers.ext.sftp.SftpService;
+import software.wings.helpers.ext.sftp.SftpServiceImpl;
 import software.wings.helpers.ext.smb.SmbService;
 import software.wings.helpers.ext.smb.SmbServiceImpl;
 import software.wings.licensing.DatabaseLicenseProviderImpl;
@@ -148,6 +151,7 @@ import software.wings.service.impl.ServiceResourceServiceImpl;
 import software.wings.service.impl.ServiceTemplateServiceImpl;
 import software.wings.service.impl.ServiceVariableServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
+import software.wings.service.impl.SftpBuildServiceImpl;
 import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.impl.SmbBuildServiceImpl;
 import software.wings.service.impl.StateExecutionServiceImpl;
@@ -288,6 +292,7 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.SftpBuildService;
 import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.SmbBuildService;
 import software.wings.service.intfc.StateExecutionService;
@@ -526,6 +531,8 @@ public class WingsModule extends DependencyModule {
     bind(StatsCollector.class).to(StatsCollectorImpl.class);
     bind(SmbService.class).to(SmbServiceImpl.class);
     bind(SmbBuildService.class).to(SmbBuildServiceImpl.class);
+    bind(SftpService.class).to(SftpServiceImpl.class);
+    bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
@@ -551,6 +558,7 @@ public class WingsModule extends DependencyModule {
     buildServiceMapBinder.addBinding(NexusConfig.class).toInstance(NexusBuildService.class);
     buildServiceMapBinder.addBinding(ArtifactoryConfig.class).toInstance(ArtifactoryBuildService.class);
     buildServiceMapBinder.addBinding(SmbConfig.class).toInstance(SmbBuildService.class);
+    buildServiceMapBinder.addBinding(SftpConfig.class).toInstance(SftpBuildService.class);
 
     install(new FactoryModuleBuilder().implement(Jenkins.class, JenkinsImpl.class).build(JenkinsFactory.class));
 

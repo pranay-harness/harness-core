@@ -258,4 +258,10 @@ public class JenkinsBuildServiceImpl implements JenkinsBuildService {
   public List<String> getSmbPaths(JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Jenkins Build Service", WingsException.USER);
   }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      JenkinsConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by GCR Build Service", WingsException.USER);
+  }
 }

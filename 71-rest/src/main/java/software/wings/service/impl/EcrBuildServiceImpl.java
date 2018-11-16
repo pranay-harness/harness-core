@@ -98,4 +98,10 @@ public class EcrBuildServiceImpl implements EcrBuildService {
   public List<String> getSmbPaths(AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by ECR Build Service", WingsException.USER);
   }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      AwsConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by ECR Build Service", WingsException.USER);
+  }
 }

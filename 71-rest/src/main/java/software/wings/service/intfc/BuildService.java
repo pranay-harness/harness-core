@@ -100,6 +100,13 @@ public interface BuildService<T> {
    * @return the smb paths
    */
   List<String> getSmbPaths(T config, List<EncryptedDataDetail> encryptionDetails);
+  /**
+   * Get SFTP paths
+   *
+   * @param config the  config
+   * @return the sftp paths
+   */
+  List<String> getArtifactPathsByStreamType(T config, List<EncryptedDataDetail> encryptionDetails, String streamType);
 
   /**
    * Gets plans.

@@ -91,4 +91,10 @@ public class AcrBuildServiceImpl implements AcrBuildService {
   public List<String> getSmbPaths(AzureConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Azure Build Service", WingsException.USER);
   }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      AzureConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by Azure Build Service", WingsException.USER);
+  }
 }

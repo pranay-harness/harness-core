@@ -56,7 +56,7 @@ public class SmbBuildServiceImpl implements SmbBuildService {
   @Override
   public List<JobDetails> getJobs(
       SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDetails, Optional<String> parentJobName) {
-    throw new InvalidRequestException("Operation not supported by SMB Build Service", USER);
+    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream", WingsException.USER);
   }
 
   @Override
@@ -69,34 +69,40 @@ public class SmbBuildServiceImpl implements SmbBuildService {
   @Override
   public BuildDetails getLastSuccessfulBuild(String appId, ArtifactStreamAttributes artifactStreamAttributes,
       SmbConfig smbConfig, List<EncryptedDataDetail> encryptionDetails) {
-    throw new InvalidRequestException("Operation not supported by SMB Build Service", USER);
+    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream", WingsException.USER);
   }
 
   @Override
   public Map<String, String> getPlans(SmbConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream", WingsException.USER);
   }
 
   @Override
   public Map<String, String> getBuckets(
       SmbConfig smbConfig, String projectId, List<EncryptedDataDetail> encryptionDetails) {
-    throw new InvalidRequestException("Operation not supported by SMB Artifact Server");
+    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream", WingsException.USER);
   }
 
   @Override
   public Map<String, String> getPlans(
       SmbConfig config, List<EncryptedDataDetail> encryptionDetails, ArtifactType artifactType, String repositoryType) {
-    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream", WingsException.USER);
   }
 
   @Override
   public List<String> getGroupIds(String repoType, SmbConfig config, List<EncryptedDataDetail> encryptionDetails) {
-    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream", WingsException.USER);
   }
 
   @Override
   public boolean validateArtifactSource(SmbConfig config, List<EncryptedDataDetail> encryptionDetails,
       ArtifactStreamAttributes artifactStreamAttributes) {
-    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream");
+    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream", WingsException.USER);
+  }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      SmbConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by SMB Artifact Stream", WingsException.USER);
   }
 }

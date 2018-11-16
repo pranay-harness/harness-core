@@ -14,6 +14,7 @@ import software.wings.service.intfc.GcrBuildService;
 import software.wings.service.intfc.GcsBuildService;
 import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
+import software.wings.service.intfc.SftpBuildService;
 import software.wings.service.intfc.SmbBuildService;
 
 import java.lang.reflect.Field;
@@ -54,6 +55,8 @@ public class ServiceClassLocator {
         return AmiBuildService.class;
       case SMB:
         return SmbBuildService.class;
+      case SFTP:
+        return SftpBuildService.class;
       default:
         throw new WingsException("Unsupported artifact stream type: " + artifactStreamType);
     }

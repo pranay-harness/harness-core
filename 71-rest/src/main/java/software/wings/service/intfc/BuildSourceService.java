@@ -64,6 +64,15 @@ public interface BuildSourceService {
    * @return the paths (now SMB only)
    */
   List<String> getSmbPaths(String appId, String settingId);
+  /**
+   * Get Artifact paths by stream id.
+   *
+   * @param appId     the app id
+   * @param settingId the setting id
+   * @param streamType artifact stream type
+   * @return the paths
+   */
+  List<String> getArtifactPathsByStreamType(String appId, String settingId, String streamType);
 
   /**
    * Gets plans.

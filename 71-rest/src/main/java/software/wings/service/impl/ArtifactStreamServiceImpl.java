@@ -19,6 +19,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 
 import com.google.common.base.Joiner;
@@ -325,7 +326,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } else if (service.getArtifactType().equals(ArtifactType.AMI)) {
       return ImmutableMap.of(AMI.name(), AMI.name());
     } else if (service.getArtifactType().equals(ArtifactType.OTHER)) {
-      if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
+      if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)
+          && featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
         return new ImmutableMap.Builder<String, String>()
             .put(DOCKER.name(), DOCKER.name())
             .put(ECR.name(), ECR.name())
@@ -339,6 +341,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .put(AMAZON_S3.name(), AMAZON_S3.name())
             .put(AMI.name(), AMI.name())
             .put(SMB.name(), SMB.name())
+            .put(SFTP.name(), SFTP.name())
             .build();
       } else {
         return new ImmutableMap.Builder<String, String>()
@@ -357,7 +360,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
       }
     }
 
-    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
+    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)
+        && featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
       return new ImmutableMap.Builder<String, String>()
           .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
           .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
@@ -367,6 +371,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
           .put(AMAZON_S3.name(), AMAZON_S3.name())
           .put(AMI.name(), AMI.name())
           .put(SMB.name(), SMB.name())
+          .put(SFTP.name(), SFTP.name())
           .build();
     } else {
       return new ImmutableMap.Builder<String, String>()

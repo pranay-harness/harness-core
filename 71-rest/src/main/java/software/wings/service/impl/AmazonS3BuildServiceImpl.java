@@ -89,4 +89,10 @@ public class AmazonS3BuildServiceImpl implements AmazonS3BuildService {
   public List<String> getSmbPaths(AwsConfig config, List<EncryptedDataDetail> encryptionDetails) {
     throw new InvalidRequestException("Operation not supported by Amazon S3 Build Service", WingsException.USER);
   }
+
+  @Override
+  public List<String> getArtifactPathsByStreamType(
+      AwsConfig config, List<EncryptedDataDetail> encryptionDetails, String streamType) {
+    throw new InvalidRequestException("Operation not supported by Amazon S3 Build Service", WingsException.USER);
+  }
 }

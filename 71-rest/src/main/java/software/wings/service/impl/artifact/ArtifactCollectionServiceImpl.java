@@ -21,6 +21,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ECR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCR;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
+import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.service.impl.artifact.ArtifactCollectionUtil.getArtifact;
@@ -74,7 +75,7 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionServiceImpl.class);
 
   private static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
-      asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), SMB.name()));
+      asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), SMB.name(), SFTP.name()));
 
   @Override
   public Artifact collectArtifact(String appId, String artifactStreamId, BuildDetails buildDetails) {
