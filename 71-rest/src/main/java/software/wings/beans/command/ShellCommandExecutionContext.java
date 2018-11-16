@@ -43,7 +43,7 @@ public class ShellCommandExecutionContext extends CommandExecutionContext {
   }
 
   public CommandExecutionStatus executeCommandString(String commandString) {
-    return executor.executeCommandString(commandString, true);
+    return executor.executeCommandString(commandString, false);
   }
 
   public CommandExecutionStatus executeCommandString(String commandString, boolean displayCommand) {

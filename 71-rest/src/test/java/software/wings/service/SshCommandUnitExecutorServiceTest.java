@@ -242,7 +242,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
     sshCommandUnitExecutorService.execute(host, EXEC_COMMAND_UNIT,
         commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
-    verify(sshPwdAuthExecutor).executeCommandString(EXEC_COMMAND_UNIT.getPreparedCommand(), true);
+    verify(sshPwdAuthExecutor).executeCommandString(EXEC_COMMAND_UNIT.getPreparedCommand(), false);
   }
 
   /**
@@ -291,7 +291,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
 
     sshCommandUnitExecutorService.execute(host, commandUnit,
         commandExecutionContextBuider.but().withHostConnectionAttributes(HOST_CONN_ATTR_PWD).build());
-    verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", true);
+    verify(sshPwdAuthExecutor).executeCommandString("mkdir -p /tmp/ACTIVITY_ID", false);
 
     String actualLauncherScript =
         new File(System.getProperty("java.io.tmpdir"), "harnesslauncherACTIVITY_ID.sh").getAbsolutePath();
@@ -304,7 +304,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         new File(System.getProperty("java.io.tmpdir"), "harness" + DigestUtils.md5Hex("dolsACTIVITY_ID"))
             .getAbsolutePath();
     verify(sshPwdAuthExecutor).copyFiles("/tmp/ACTIVITY_ID", asList(expectedExecCommandUnitScript));
-    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", true);
+    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);
 
     assertThat(new File(expectedExecCommandUnitScript)).hasContent("ls");
     assertThat((ExecCommandUnit) command.getCommandUnits().get(1))
@@ -365,6 +365,6 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
         .contains("/tmp/ACTIVITY_ID/harnesslauncherACTIVITY_ID.sh -w '/home/tomcat' harness"
             + DigestUtils.md5Hex("start1startscriptACTIVITY_ID"));
 
-    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", true);
+    verify(sshPwdAuthExecutor).executeCommandString("chmod 0744 /tmp/ACTIVITY_ID/*", false);
   }
 }

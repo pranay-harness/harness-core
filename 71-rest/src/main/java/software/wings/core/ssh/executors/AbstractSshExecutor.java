@@ -152,7 +152,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   @Override
   public CommandExecutionStatus executeCommandString(String command) {
-    return executeCommandString(command, null, true);
+    return executeCommandString(command, null, false);
   }
 
   @Override
@@ -162,7 +162,7 @@ public abstract class AbstractSshExecutor implements SshExecutor {
 
   @Override
   public CommandExecutionStatus executeCommandString(String command, StringBuffer output) {
-    return executeCommandString(command, output, true);
+    return executeCommandString(command, output, false);
   }
 
   @Override
