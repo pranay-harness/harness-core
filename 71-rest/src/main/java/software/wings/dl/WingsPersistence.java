@@ -187,16 +187,6 @@ public interface WingsPersistence extends HPersistence {
   <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove);
 
   /**
-   * Delete.
-   *
-   * @param <T>  the generic type
-   * @param cls  the cls
-   * @param uuid the uuid
-   * @return true, if successful
-   */
-  <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid);
-
-  /**
    * Delete with account id
    * @param accountId
    * @param cls
@@ -216,24 +206,6 @@ public interface WingsPersistence extends HPersistence {
    * @return the boolean
    */
   <T extends PersistentEntity> boolean delete(Class<T> cls, String appId, String uuid);
-
-  /**
-   * Delete.
-   *
-   * @param <T>   the generic type
-   * @param query the query
-   * @return true, if successful
-   */
-  <T extends PersistentEntity> boolean delete(Query<T> query);
-
-  /**
-   * Delete.
-   *
-   * @param <T>    the generic type
-   * @param entity the entity
-   * @return true, if successful
-   */
-  <T extends PersistentEntity> boolean delete(T entity);
 
   /**
    * Query.

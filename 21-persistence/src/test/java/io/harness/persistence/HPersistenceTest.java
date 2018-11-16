@@ -1,6 +1,7 @@
 package io.harness.persistence;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Inject;
@@ -13,6 +14,7 @@ import lombok.NoArgsConstructor;
 import org.assertj.core.util.Lists;
 import org.junit.Test;
 import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.query.Query;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -58,9 +60,64 @@ public class HPersistenceTest extends PersistenceTest {
     persistence.save(list.get(0));
     persistence.saveIgnoringDuplicateKeys(list);
 
-    final List<TestEntity> testEntities =
-        persistence.createQuery(TestEntity.class).filter("test", "shouldSaveIgnoringDuplicateKeysList").asList();
+    final List<TestEntity> testEntities = persistence.createQuery(TestEntity.class, excludeAuthority)
+                                              .filter("test", "shouldSaveIgnoringDuplicateKeysList")
+                                              .asList();
 
     assertThat(testEntities).hasSize(5);
+  }
+
+  @Test
+  public void shouldDeleteUuid() {
+    TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteUuid").build();
+
+    persistence.save(entity);
+
+    final Query<TestEntity> query =
+        persistence.createQuery(TestEntity.class, excludeAuthority).filter("test", "shouldDeleteUuid");
+
+    List<TestEntity> testEntities = query.asList();
+    assertThat(testEntities).hasSize(1);
+
+    persistence.delete(TestEntity.class, entity.getUuid());
+
+    testEntities = query.asList();
+    assertThat(testEntities).hasSize(0);
+  }
+
+  @Test
+  public void shouldDeleteQuery() {
+    TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteQuery").build();
+
+    persistence.save(entity);
+
+    final Query<TestEntity> query =
+        persistence.createQuery(TestEntity.class, excludeAuthority).filter("test", "shouldDeleteQuery");
+
+    List<TestEntity> testEntities = query.asList();
+    assertThat(testEntities).hasSize(1);
+
+    persistence.delete(query);
+
+    testEntities = query.asList();
+    assertThat(testEntities).hasSize(0);
+  }
+
+  @Test
+  public void shouldDeleteEntity() {
+    TestEntity entity = TestEntity.builder().uuid(generateUuid()).test("shouldDeleteEntity").build();
+
+    persistence.save(entity);
+
+    final Query<TestEntity> query =
+        persistence.createQuery(TestEntity.class, excludeAuthority).filter("test", "shouldDeleteEntity");
+
+    List<TestEntity> testEntities = query.asList();
+    assertThat(testEntities).hasSize(1);
+
+    persistence.delete(entity);
+
+    testEntities = query.asList();
+    assertThat(testEntities).hasSize(0);
   }
 }

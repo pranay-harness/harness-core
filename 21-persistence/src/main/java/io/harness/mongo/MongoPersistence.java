@@ -10,6 +10,7 @@ import com.google.inject.name.Named;
 
 import com.mongodb.DBCollection;
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.WriteResult;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 import io.harness.persistence.HQuery.QueryChecks;
@@ -130,5 +131,24 @@ public class MongoPersistence implements HPersistence {
     } catch (DuplicateKeyException dke) {
       // ignore
     }
+  }
+
+  @Override
+  public <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid) {
+    final AdvancedDatastore datastore = getDatastore(cls, ReadPref.NORMAL);
+    WriteResult result = datastore.delete(cls, uuid);
+    return !(result == null || result.getN() == 0);
+  }
+
+  @Override
+  public <T extends PersistentEntity> boolean delete(Query<T> query) {
+    WriteResult result = getDatastore(query.getEntityClass(), ReadPref.NORMAL).delete(query);
+    return !(result == null || result.getN() == 0);
+  }
+
+  @Override
+  public <T extends PersistentEntity> boolean delete(T entity) {
+    WriteResult result = getDatastore(entity, ReadPref.NORMAL).delete(entity);
+    return !(result == null || result.getN() == 0);
   }
 }
