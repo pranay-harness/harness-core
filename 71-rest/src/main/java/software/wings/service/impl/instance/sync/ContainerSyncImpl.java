@@ -1,7 +1,6 @@
 package software.wings.service.impl.instance.sync;
 
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -15,7 +14,6 @@ import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask.SyncTaskContext;
-import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
@@ -33,7 +31,6 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.utils.Validator;
 
 import java.util.List;
@@ -73,21 +70,13 @@ public class ContainerSyncImpl implements ContainerSync {
         String subscriptionId = null;
         String resourceGroup = null;
         ContainerInfrastructureMapping containerInfraMapping = (ContainerInfrastructureMapping) infrastructureMapping;
-        if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
-          DirectKubernetesInfrastructureMapping directInfraMapping =
-              (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-          settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
-              ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
-              : settingsService.get(directInfraMapping.getComputeProviderSettingId());
-        } else {
-          settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
-          clusterName = containerInfraMapping.getClusterName();
-          if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
-            subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
-            resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
-          } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
-            region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
-          }
+        settingAttribute = settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+        clusterName = containerInfraMapping.getClusterName();
+        if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+          subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
+          resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
+        } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
+          region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
         }
         Validator.notNullCheck("SettingAttribute", settingAttribute);
 
@@ -194,21 +183,13 @@ public class ContainerSyncImpl implements ContainerSync {
     String region = null;
     String resourceGroup = null;
     String subscriptionId = null;
-    if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
-      DirectKubernetesInfrastructureMapping directInfraMapping =
-          (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-      settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
-          ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
-          : settingsService.get(directInfraMapping.getComputeProviderSettingId());
-    } else {
-      settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
-      clusterName = containerInfraMapping.getClusterName();
-      if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
-        subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
-        resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
-      } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
-        region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
-      }
+    settingAttribute = settingsService.get(containerInfraMapping.getComputeProviderSettingId());
+    clusterName = containerInfraMapping.getClusterName();
+    if (containerInfraMapping instanceof AzureKubernetesInfrastructureMapping) {
+      subscriptionId = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getSubscriptionId();
+      resourceGroup = ((AzureKubernetesInfrastructureMapping) containerInfraMapping).getResourceGroup();
+    } else if (containerInfraMapping instanceof EcsInfrastructureMapping) {
+      region = ((EcsInfrastructureMapping) containerInfraMapping).getRegion();
     }
     Validator.notNullCheck("SettingAttribute", settingAttribute);
 

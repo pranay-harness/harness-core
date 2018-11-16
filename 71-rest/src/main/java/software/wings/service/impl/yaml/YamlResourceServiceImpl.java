@@ -462,7 +462,6 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case SSH_SESSION_CONFIG:
       case YAML_GIT_SYNC:
       case KUBERNETES:
-      case DIRECT:
       case STRING:
         break;
       default:

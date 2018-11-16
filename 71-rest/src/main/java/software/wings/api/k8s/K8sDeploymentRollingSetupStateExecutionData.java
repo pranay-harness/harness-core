@@ -20,11 +20,10 @@ import java.util.Map;
 @AllArgsConstructor
 public class K8sDeploymentRollingSetupStateExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
-  private String accountId;
-  private String appId;
-  private String serviceId;
-  private String envId;
-  private String infraMappingId;
+  private String releaseName;
+  private String namespace;
+  private String clusterName;
+  private String releaseNumber;
   private String commandName;
 
   @Override
@@ -43,6 +42,14 @@ public class K8sDeploymentRollingSetupStateExecutionData extends StateExecutionD
     // in activity window
     putNotNull(executionDetails, "activityId",
         ExecutionDataValue.builder().value(activityId).displayName("Activity Id").build());
+    putNotNull(executionDetails, "releaseName",
+        ExecutionDataValue.builder().value(releaseName).displayName("Release Name").build());
+    putNotNull(
+        executionDetails, "namespace", ExecutionDataValue.builder().value(namespace).displayName("Namespace").build());
+    putNotNull(executionDetails, "cluster",
+        ExecutionDataValue.builder().value(clusterName).displayName("Cluster Name").build());
+    putNotNull(executionDetails, "releaseNumber",
+        ExecutionDataValue.builder().value(releaseNumber).displayName("Release Number").build());
 
     return executionDetails;
   }

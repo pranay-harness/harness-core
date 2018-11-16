@@ -26,7 +26,6 @@ import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
@@ -351,51 +350,6 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       DirectKubernetesInfrastructureMapping directKubernetesInfrastructureMapping =
           (DirectKubernetesInfrastructureMapping) infrastructureMapping;
       validateInfraMapping(directKubernetesInfrastructureMapping, fromYaml);
-      if (directKubernetesInfrastructureMapping.getMasterUrl() != null) {
-        keyValuePairs.put("masterUrl", directKubernetesInfrastructureMapping.getMasterUrl());
-      } else {
-        fieldsToRemove.add("masterUrl");
-      }
-      if (directKubernetesInfrastructureMapping.getUsername() != null) {
-        keyValuePairs.put("username", directKubernetesInfrastructureMapping.getUsername());
-      } else {
-        fieldsToRemove.add("username");
-      }
-      if (directKubernetesInfrastructureMapping.getPassword() != null) {
-        keyValuePairs.put("password", directKubernetesInfrastructureMapping.getPassword());
-      } else {
-        fieldsToRemove.add("password");
-      }
-      if (directKubernetesInfrastructureMapping.getCaCert() != null) {
-        keyValuePairs.put("caCert", directKubernetesInfrastructureMapping.getCaCert());
-      } else {
-        fieldsToRemove.add("caCert");
-      }
-      if (directKubernetesInfrastructureMapping.getClientCert() != null) {
-        keyValuePairs.put("clientCert", directKubernetesInfrastructureMapping.getClientCert());
-      } else {
-        fieldsToRemove.add("clientCert");
-      }
-      if (directKubernetesInfrastructureMapping.getClientKey() != null) {
-        keyValuePairs.put("clientKey", directKubernetesInfrastructureMapping.getClientKey());
-      } else {
-        fieldsToRemove.add("clientKey");
-      }
-      if (directKubernetesInfrastructureMapping.getClientKeyPassphrase() != null) {
-        keyValuePairs.put("clientKeyPassphrase", directKubernetesInfrastructureMapping.getClientKeyPassphrase());
-      } else {
-        fieldsToRemove.add("clientKeyPassphrase");
-      }
-      if (directKubernetesInfrastructureMapping.getServiceAccountToken() != null) {
-        keyValuePairs.put("serviceAccountToken", directKubernetesInfrastructureMapping.getServiceAccountToken());
-      } else {
-        fieldsToRemove.add("serviceAccountToken");
-      }
-      if (directKubernetesInfrastructureMapping.getClientKeyAlgo() != null) {
-        keyValuePairs.put("clientKeyAlgo", directKubernetesInfrastructureMapping.getClientKeyAlgo());
-      } else {
-        fieldsToRemove.add("clientKeyAlgo");
-      }
       if (isNotBlank(directKubernetesInfrastructureMapping.getNamespace())) {
         keyValuePairs.put("namespace", directKubernetesInfrastructureMapping.getNamespace());
       } else {
@@ -748,17 +702,12 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validateDirectKubernetesInfraMapping(DirectKubernetesInfrastructureMapping infraMapping) {
-    SettingAttribute settingAttribute =
-        (infraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
-        ? aSettingAttribute().withValue(infraMapping.createKubernetesConfig()).build()
-        : settingsService.get(infraMapping.getComputeProviderSettingId());
+    SettingAttribute settingAttribute = settingsService.get(infraMapping.getComputeProviderSettingId());
     String namespace = infraMapping.getNamespace();
     KubernetesHelperService.validateNamespace(namespace);
 
     List<EncryptedDataDetail> encryptionDetails =
-        (infraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
-        ? emptyList()
-        : secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
 
     Application app = appService.get(infraMapping.getAppId());
     SyncTaskContext syncTaskContext = aContext()
@@ -1674,9 +1623,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (containerInfraMapping instanceof DirectKubernetesInfrastructureMapping) {
       DirectKubernetesInfrastructureMapping directInfraMapping =
           (DirectKubernetesInfrastructureMapping) containerInfraMapping;
-      settingAttribute = (directInfraMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name()))
-          ? aSettingAttribute().withValue(directInfraMapping.createKubernetesConfig()).build()
-          : settingsService.get(directInfraMapping.getComputeProviderSettingId());
+      settingAttribute = settingsService.get(directInfraMapping.getComputeProviderSettingId());
       namespace = directInfraMapping.getNamespace();
 
       containerServiceName = kubernetesName;

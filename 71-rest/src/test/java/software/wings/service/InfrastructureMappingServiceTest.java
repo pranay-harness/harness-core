@@ -33,8 +33,8 @@ import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
-import static software.wings.settings.SettingValue.SettingVariableTypes.DIRECT;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
+import static software.wings.settings.SettingValue.SettingVariableTypes.KUBERNETES_CLUSTER;
 import static software.wings.settings.SettingValue.SettingVariableTypes.PHYSICAL_DATA_CENTER;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -86,6 +86,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
+import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm;
@@ -802,9 +803,14 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withEnvId(ENV_ID)
             .withServiceId(SERVICE_ID)
             .withServiceTemplateId(TEMPLATE_ID)
-            .withComputeProviderType(DIRECT.name())
+            .withComputeProviderType(KUBERNETES_CLUSTER.name())
+            .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
             .withUuid(INFRA_MAPPING_ID)
             .build();
+
+    SettingAttribute computeProviderSetting =
+        aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(KubernetesClusterConfig.builder().build()).build();
+    when(settingsService.get(COMPUTE_PROVIDER_ID)).thenReturn(computeProviderSetting);
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));

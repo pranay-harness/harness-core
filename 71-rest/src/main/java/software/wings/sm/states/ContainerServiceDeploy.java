@@ -8,7 +8,6 @@ import static software.wings.api.CommandStateExecutionData.Builder.aCommandState
 import static software.wings.api.InstanceElementListParam.InstanceElementListParamBuilder.anInstanceElementListParam;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
-import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.command.CommandExecutionContext.Builder.aCommandExecutionContext;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
@@ -35,7 +34,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
-import software.wings.beans.DirectKubernetesInfrastructureMapping;
 import software.wings.beans.EcsInfrastructureMapping;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -62,7 +60,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -327,12 +324,8 @@ public abstract class ContainerServiceDeploy extends State {
       InfrastructureMapping infrastructureMapping = containerServiceDeploy.infrastructureMappingService.get(
           workflowStandardParams.getAppId(), phaseElement.getInfraMappingId());
       infrastructureMappingId = infrastructureMapping.getUuid();
-      settingAttribute = infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
-              && infrastructureMapping.getComputeProviderType().equals(SettingVariableTypes.DIRECT.name())
-          ? aSettingAttribute()
-                .withValue(((DirectKubernetesInfrastructureMapping) infrastructureMapping).createKubernetesConfig())
-                .build()
-          : containerServiceDeploy.settingsService.get(infrastructureMapping.getComputeProviderSettingId());
+      settingAttribute =
+          containerServiceDeploy.settingsService.get(infrastructureMapping.getComputeProviderSettingId());
       encryptedDataDetails = containerServiceDeploy.secretManager.getEncryptionDetails(
           (EncryptableSetting) settingAttribute.getValue(), context.getAppId(), context.getWorkflowExecutionId());
       region = infrastructureMapping instanceof EcsInfrastructureMapping

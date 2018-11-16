@@ -16,5 +16,6 @@ public class K8sClusterConfig {
   private List<EncryptedDataDetail> cloudProviderEncryptionDetails;
   private AzureKubernetesCluster azureKubernetesCluster;
   private GcpKubernetesCluster gcpKubernetesCluster;
+  private String clusterName;
   private String namespace;
 }
