@@ -115,25 +115,24 @@ public interface HPersistence {
   /**
    * Save.
    *
-   * @param tList list of entities to save
+   * @param entity   the entity
+   * @return the key of the entity
+   */
+  <T extends PersistentEntity> String save(T entity);
+
+  /**
+   * Save.
+   *
+   * @param entityList list of entities to save
    * @return list of keys
    */
-  <T extends PersistentEntity> List<String> save(List<T> tList);
+  <T extends PersistentEntity> List<String> save(List<T> entityList);
 
   /**
    * Save ignoring duplicate key errors.
    * This saves any new records and skips existing records
    *
-   * @param tList list of entities to save
-   * @return list of keys of new entities
+   * @param entityList list of entities to save
    */
-  <T extends PersistentEntity> List<String> saveIgnoringDuplicateKeys(List<T> tList);
-
-  /**
-   * Save.
-   *
-   * @param entity   the entity
-   * @return the key of the entity
-   */
-  <T extends PersistentEntity> String save(T t);
+  <T extends PersistentEntity> void saveIgnoringDuplicateKeys(List<T> entityList);
 }

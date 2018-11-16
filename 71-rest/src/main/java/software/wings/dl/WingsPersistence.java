@@ -194,7 +194,7 @@ public interface WingsPersistence extends HPersistence {
    * @param uuid the uuid
    * @return true, if successful
    */
-  <T extends Base> boolean delete(Class<T> cls, String uuid);
+  <T extends PersistentEntity> boolean delete(Class<T> cls, String uuid);
 
   /**
    * Delete with account id
@@ -204,7 +204,7 @@ public interface WingsPersistence extends HPersistence {
    * @param <T>
    * @return
    */
-  <T extends Base> boolean delete(String accountId, Class<T> cls, String uuid);
+  <T extends PersistentEntity> boolean delete(String accountId, Class<T> cls, String uuid);
 
   /**
    * Delete boolean.
@@ -215,7 +215,7 @@ public interface WingsPersistence extends HPersistence {
    * @param uuid  the uuid
    * @return the boolean
    */
-  <T extends Base> boolean delete(Class<T> cls, String appId, String uuid);
+  <T extends PersistentEntity> boolean delete(Class<T> cls, String appId, String uuid);
 
   /**
    * Delete.
@@ -224,7 +224,7 @@ public interface WingsPersistence extends HPersistence {
    * @param query the query
    * @return true, if successful
    */
-  <T extends Base> boolean delete(Query<T> query);
+  <T extends PersistentEntity> boolean delete(Query<T> query);
 
   /**
    * Delete.
@@ -233,7 +233,7 @@ public interface WingsPersistence extends HPersistence {
    * @param entity the entity
    * @return true, if successful
    */
-  <T extends Base> boolean delete(T entity);
+  <T extends PersistentEntity> boolean delete(T entity);
 
   /**
    * Query.

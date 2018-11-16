@@ -18,7 +18,6 @@ import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.InsertOptions;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 
 import java.util.ArrayList;
@@ -109,7 +108,7 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Override
-  public <T extends PersistentEntity> List<String> saveIgnoringDuplicateKeys(List<T> ts) {
+  public <T extends PersistentEntity> void saveIgnoringDuplicateKeys(List<T> ts) {
     for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
       T t = iterator.next();
       if (t == null) {
@@ -118,22 +117,18 @@ public class MongoPersistence implements HPersistence {
       }
     }
 
-    List<String> ids = new ArrayList<>();
     if (isEmpty(ts)) {
-      return ids;
+      return;
     }
 
     final AdvancedDatastore datastore = getDatastore(ts.get(0), ReadPref.NORMAL);
 
     InsertOptions insertOptions = new InsertOptions();
     insertOptions.continueOnError(true);
-    Iterable<Key<T>> keys = new ArrayList<>();
     try {
-      keys = datastore.insert(ts, insertOptions);
+      datastore.insert(ts, insertOptions);
     } catch (DuplicateKeyException dke) {
       // ignore
     }
-    keys.forEach(tKey -> ids.add((String) tKey.getId()));
-    return ids;
   }
 }
