@@ -2,6 +2,7 @@ package software.wings.sm.states;
 
 import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.common.Constants.BUILD_NO;
 import static software.wings.common.Constants.DEFAULT_ARTIFACT_COLLECTION_STATE_TIMEOUT_MILLIS;
@@ -88,16 +89,16 @@ public class ArtifactCollectionState extends State {
             .timeout(getTimeoutMillis() != null ? valueOf(getTimeoutMillis()) : null)
             .artifactSource(artifactStream.getSourceName())
             .buildNo(evaluatedBuildNo)
-            .message(String.format(
-                "Waiting for [%s] to be collected from [" + artifactStream.getArtifactStreamType() + "] repository",
-                evaluatedBuildNo == null ? "latest artifact" : evaluatedBuildNo))
+            .message(String.format("Waiting for [%s] to be collected from [%s] repository",
+                evaluatedBuildNo == null ? "latest artifact" : evaluatedBuildNo,
+                artifactStream.getArtifactStreamType()))
             .build();
 
     String resumeId = delayEventHelper.delay(60, Collections.emptyMap());
 
     return anExecutionResponse()
         .withAsync(true)
-        .withCorrelationIds(asList(resumeId))
+        .withCorrelationIds(singletonList(resumeId))
         .withStateExecutionData(artifactCollectionExecutionData)
         .build();
   }
@@ -121,9 +122,8 @@ public class ArtifactCollectionState extends State {
     artifactCollectionExecutionData.setArtifactSource(artifactStream.getSourceName());
 
     if (lastCollectedArtifact == null || !lastCollectedArtifact.getStatus().isFinalStatus()) {
-      artifactCollectionExecutionData.setMessage(String.format(
-          "Waiting for [%s] to be collected from [" + artifactStream.getArtifactStreamType() + "] repository",
-          evaluatedBuildNo == null ? "latest artifact" : evaluatedBuildNo));
+      artifactCollectionExecutionData.setMessage(String.format("Waiting for [%s] to be collected from [%s] repository",
+          evaluatedBuildNo == null ? "latest artifact" : evaluatedBuildNo, artifactStream.getArtifactStreamType()));
       artifactCollectionExecutionData.setBuildNo(evaluatedBuildNo);
 
       String resumeId = delayEventHelper.delay(DELAY_TIME_IN_SEC, Collections.emptyMap());
