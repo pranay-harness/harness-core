@@ -169,6 +169,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       timeSeriesMLMetricSummary.setMax_risk(2);
 
       analysisRecord.setTransactions(txnSummaryMap);
+      analysisRecord.setAggregatedRisk(2);
       wingsPersistence.save(analysisRecord);
     }
     List<HeatMap> heatMaps = continuousVerificationService.getHeatMap(
