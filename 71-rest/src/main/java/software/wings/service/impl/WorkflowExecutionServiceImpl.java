@@ -94,6 +94,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Value;
+import org.json.JSONObject;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -1433,6 +1434,18 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   WorkflowExecution triggerEnvExecution(String appId, String envId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
+    // logging as JSON because logDNA automatically parses json objects.
+    // https://docs.logdna.com/docs/ingestion#section-json-parsing
+    JSONObject context = new JSONObject().put("appId", appId);
+
+    try {
+      String accountId = appService.getAccountIdByAppId(appId);
+      context.put("accountId", accountId);
+      logger.info("Execution Triggered. {}", context.toString());
+    } catch (Exception e) {
+      logger.error("Error getting accountId. {}", context.toString());
+    }
+
     switch (executionArgs.getWorkflowType()) {
       case PIPELINE: {
         logger.debug("Received an pipeline execution request");
