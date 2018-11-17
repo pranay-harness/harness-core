@@ -158,6 +158,9 @@ public class StateMachineExecutionSimulator {
         entityTypes.add(EntityType.SSH_KEY_PASSPHRASE);
         break;
       }
+      case KERBEROS: {
+        break;
+      }
       default:
         unhandled(accessType);
     }
