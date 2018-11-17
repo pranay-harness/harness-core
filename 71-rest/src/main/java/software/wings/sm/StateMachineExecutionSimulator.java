@@ -65,7 +65,7 @@ public class StateMachineExecutionSimulator {
    * @param appId                   the app id
    * @param envId                   the env id
    * @param stateMachine            the state machine
-   * @param stateExecutionStatuses the state execution instances
+   * @param stateExecutionInstances the state execution instances
    * @return the status breakdown
    */
   public CountsByStatuses getStatusBreakdown(
@@ -155,9 +155,7 @@ public class StateMachineExecutionSimulator {
         break;
       }
       case KEY: {
-        break;
-      }
-      case KERBEROS: {
+        entityTypes.add(EntityType.SSH_KEY_PASSPHRASE);
         break;
       }
       default:
