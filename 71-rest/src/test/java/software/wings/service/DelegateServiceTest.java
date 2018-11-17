@@ -321,8 +321,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTags(new ArrayList<>())
                                     .build();
     delegateService.queueTask(delegateTask);
-    assertThat(wingsPersistence.get(
-                   DelegateTask.class, aPageRequest().addFilter(DelegateTask.APP_ID_KEY, Operator.EQ, APP_ID).build()))
+    assertThat(wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.APP_ID_KEY, APP_ID).get())
         .isEqualTo(delegateTask);
   }
 
@@ -339,8 +338,8 @@ public class DelegateServiceTest extends WingsBaseTest {
                                     .withTags(new ArrayList<>())
                                     .build();
     delegateService.queueTask(delegateTask);
-    DelegateTask delegateTask1 = wingsPersistence.get(
-        DelegateTask.class, aPageRequest().addFilter(DelegateTask.APP_ID_KEY, Operator.EQ, APP_ID).build());
+    DelegateTask delegateTask1 =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.APP_ID_KEY, APP_ID).get();
     assertThat(delegateTask1.getPreAssignedDelegateId()).isEqualTo(DELEGATE_ID);
   }
 
@@ -360,8 +359,8 @@ public class DelegateServiceTest extends WingsBaseTest {
             .accountId(ACCOUNT_ID)
             .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-    assertThat(wingsPersistence.get(DelegateTask.class,
-                   aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build()))
+    assertThat(
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.ID_KEY, delegateTask.getUuid()).get())
         .isEqualTo(null);
     verify(waitNotifyEngine)
         .notify(delegateTask.getWaitId(), anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build());
@@ -382,8 +381,8 @@ public class DelegateServiceTest extends WingsBaseTest {
             .accountId(ACCOUNT_ID)
             .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .build());
-    assertThat(wingsPersistence.get(DelegateTask.class,
-                   aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build()))
+    assertThat(
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.ID_KEY, delegateTask.getUuid()).get())
         .isEqualTo(null);
   }
 
@@ -428,8 +427,8 @@ public class DelegateServiceTest extends WingsBaseTest {
             .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
             .build());
-    DelegateTask updatedDelegateTask = wingsPersistence.get(
-        DelegateTask.class, aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build());
+    DelegateTask updatedDelegateTask =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.ID_KEY, delegateTask.getUuid()).get();
 
     assertThat(updatedDelegateTask != null);
     assertThat(updatedDelegateTask.getDelegateId() == null);
@@ -458,9 +457,8 @@ public class DelegateServiceTest extends WingsBaseTest {
             .response(anExecutionStatusData().withExecutionStatus(ExecutionStatus.SUCCESS).build())
             .responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE)
             .build());
-    DelegateTask updatedDelegateTask = wingsPersistence.get(
-        DelegateTask.class, aPageRequest().addFilter(DelegateTask.ID_KEY, Operator.EQ, delegateTask.getUuid()).build());
-
+    DelegateTask updatedDelegateTask =
+        wingsPersistence.createQuery(DelegateTask.class).filter(DelegateTask.ID_KEY, delegateTask.getUuid()).get();
     assertThat(updatedDelegateTask).isEqualTo(null);
   }
 

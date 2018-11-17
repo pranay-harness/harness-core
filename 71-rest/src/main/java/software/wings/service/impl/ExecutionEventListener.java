@@ -1,11 +1,7 @@
 package software.wings.service.impl;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder;
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
-import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.ExecutionStatus.PAUSED;
@@ -16,12 +12,10 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
-import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,23 +52,22 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
         return;
       }
       logger.info("Acquired the lock {}. Verifying to see if the execution can be started", lockId);
-      PageRequestBuilder pageRequestBuilder =
-          aPageRequest()
-              .addFilter(WorkflowExecution.APP_ID_KEY, EQ, message.getAppId())
-              .addFilter(WorkflowExecution.STATUS_KEY, Operator.IN, RUNNING, PAUSED)
-              .addFieldsIncluded("uuid")
-              .addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId())
-              .withLimit("1");
+
+      final Query<WorkflowExecution> runningQuery =
+          wingsPersistence.createQuery(WorkflowExecution.class)
+              .filter(WorkflowExecution.APP_ID_KEY, message.getAppId())
+              .filter(WorkflowExecution.WORKFLOW_ID_KEY, message.getWorkflowId())
+              .field(WorkflowExecution.STATUS_KEY)
+              .in(asList(RUNNING, PAUSED))
+              .project(WorkflowExecution.UUID_KEY, true);
 
       if (isNotEmpty(message.getInfraMappingIds())) {
-        pageRequestBuilder.addFilter(
-            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
+        runningQuery.field(WorkflowExecution.INFRA_MAPPING_IDS_KEY).in(message.getInfraMappingIds());
       }
 
-      PageResponse<WorkflowExecution> runningWorkflowExecutions =
-          wingsPersistence.query(WorkflowExecution.class, pageRequestBuilder.build());
+      WorkflowExecution runningWorkflowExecutions = runningQuery.get();
 
-      if (isNotEmpty(runningWorkflowExecutions)) {
+      if (runningWorkflowExecutions != null) {
         // TODO(brett): Uncomment the following for templatized namespace to never queue. Resource constraint must first
         // allow identifying constraints by expression.
         /*
@@ -107,18 +100,17 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
         return;
       }
 
-      pageRequestBuilder = aPageRequest()
-                               .addFilter(WorkflowExecution.APP_ID_KEY, EQ, message.getAppId())
-                               .addFilter(WorkflowExecution.STATUS_KEY, EQ, QUEUED)
-                               .addOrder(WorkflowExecution.CREATED_AT_KEY, OrderType.ASC)
-                               .addFilter(WorkflowExecution.WORKFLOW_ID_KEY, EQ, message.getWorkflowId());
-
+      final Query<WorkflowExecution> queueQuery =
+          wingsPersistence.createQuery(WorkflowExecution.class)
+              .filter(WorkflowExecution.APP_ID_KEY, message.getAppId())
+              .filter(WorkflowExecution.WORKFLOW_ID_KEY, message.getWorkflowId())
+              .filter(WorkflowExecution.STATUS_KEY, QUEUED)
+              .order(Sort.ascending(WorkflowExecution.CREATED_AT_KEY));
       if (isNotEmpty(message.getInfraMappingIds())) {
-        pageRequestBuilder.addFilter(
-            WorkflowExecution.INFRAMAPPING_IDS_KEY, Operator.IN, message.getInfraMappingIds().toArray());
+        queueQuery.field(WorkflowExecution.INFRA_MAPPING_IDS_KEY).in(message.getInfraMappingIds());
       }
 
-      WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, pageRequestBuilder.build());
+      WorkflowExecution workflowExecution = queueQuery.get();
       if (workflowExecution == null) {
         return;
       }
@@ -136,13 +128,14 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
 
         // TODO: findAndModify
         Query<WorkflowExecution> query = wingsPersistence.createQuery(WorkflowExecution.class)
-                                             .filter("appId", workflowExecution.getAppId())
-                                             .filter(ID_KEY, workflowExecution.getUuid())
-                                             .field("status")
+                                             .filter(WorkflowExecution.APP_ID_KEY, workflowExecution.getAppId())
+                                             .filter(WorkflowExecution.ID_KEY, workflowExecution.getUuid())
+                                             .field(WorkflowExecution.STATUS_KEY)
                                              .in(asList(NEW, QUEUED));
-        UpdateOperations<WorkflowExecution> updateOps = wingsPersistence.createUpdateOperations(WorkflowExecution.class)
-                                                            .set("status", status)
-                                                            .set("startTs", System.currentTimeMillis());
+        UpdateOperations<WorkflowExecution> updateOps =
+            wingsPersistence.createUpdateOperations(WorkflowExecution.class)
+                .set(WorkflowExecution.STATUS_KEY, status)
+                .set(WorkflowExecution.START_TS_KEY, System.currentTimeMillis());
         wingsPersistence.update(query, updateOps);
       } catch (Exception e) {
         logger.error("Exception in generating execution log context", e);

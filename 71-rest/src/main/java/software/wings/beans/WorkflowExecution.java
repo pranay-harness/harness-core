@@ -43,17 +43,18 @@ import java.util.Map;
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class WorkflowExecution extends Base {
   public static final String ARGS_PIPELINE_PHASE_ELEMENT_ID_KEY = "executionArgs.pipelinePhaseElementId";
-  public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
+  public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
+  public static final String DISPLAY_NAME_KEY = "displayName";
   public static final String END_TS_KEY = "endTs";
+  public static final String INFRA_MAPPING_IDS_KEY = "infraMappingIds";
+  public static final String NAME_KEY = "name";
+  public static final String PIPELINE_EXECUTION_ID_KEY = "pipelineExecutionId";
   public static final String START_TS_KEY = "startTs";
   public static final String STATUS_KEY = "status";
+  public static final String TRIGGERED_BY = "triggeredBy";
+  public static final String UUID_KEY = "uuid";
   public static final String WORKFLOW_ID_KEY = "workflowId";
   public static final String WORKFLOW_TYPE_ID_KEY = "workflowType";
-  public static final String INFRAMAPPING_IDS_KEY = "infraMappingIds";
-  public static final String DEPLOYMENT_TRIGGERED_ID_KEY = "deploymentTriggerId";
-  public static final String TRIGGERED_BY = "triggeredBy";
-  public static final String NAME_KEY = "name";
-  public static final String DISPLAY_NAME_KEY = "displayName";
 
   // TODO: Determine the right expiry duration for workflow exceptions
   public static final Duration EXPIRY = Duration.ofDays(7);

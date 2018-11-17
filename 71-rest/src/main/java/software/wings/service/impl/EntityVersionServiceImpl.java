@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -11,11 +10,11 @@ import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HQuery;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
@@ -48,15 +47,16 @@ public class EntityVersionServiceImpl implements EntityVersionService {
 
   @Override
   public EntityVersion lastEntityVersion(String appId, EntityType entityType, String entityUuid, String parentUuid) {
-    PageRequest<EntityVersionCollection> pageRequest = aPageRequest()
-                                                           .addFilter("appId", Operator.EQ, appId)
-                                                           .addFilter("entityType", Operator.EQ, entityType)
-                                                           .addFilter("entityUuid", Operator.EQ, entityUuid)
-                                                           .build();
+    final Query<EntityVersionCollection> query = wingsPersistence.createQuery(EntityVersionCollection.class)
+                                                     .filter(EntityVersionCollection.APP_ID_KEY, appId)
+                                                     .filter(EntityVersionCollection.ENTITY_TYPE_KEY, entityType)
+                                                     .filter(EntityVersionCollection.ENTITY_UUID_KEY, entityUuid)
+                                                     .order(Sort.descending(EntityVersionCollection.CREATED_AT_KEY));
+
     if (isNotBlank(parentUuid)) {
-      pageRequest.addFilter("entityParentUuid", Operator.EQ, parentUuid);
+      query.filter(EntityVersionCollection.ENTITY_PARENT_UUID_KEY, parentUuid);
     }
-    return wingsPersistence.get(EntityVersionCollection.class, pageRequest);
+    return query.get();
   }
 
   @Override

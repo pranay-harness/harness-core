@@ -23,16 +23,6 @@ public interface WingsPersistence extends HPersistence {
   /**
    * Gets the.
    *
-   * @param <T> the generic type
-   * @param cls the cls
-   * @param req the req
-   * @return the t
-   */
-  <T extends Base> T get(Class<T> cls, PageRequest<T> req);
-
-  /**
-   * Gets the.
-   *
    * @param <T>   the generic type
    * @param cls   the cls
    * @param appId the app id

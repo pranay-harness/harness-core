@@ -110,16 +110,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends Base> T get(Class<T> cls, PageRequest<T> req) {
-    req.setLimit("1");
-    PageResponse<T> res = query(cls, req);
-    if (isEmpty(res)) {
-      return null;
-    }
-    return res.get(0);
-  }
-
-  @Override
   public <T extends Base> String merge(T t) {
     Key<T> key = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).merge(t);
     return (String) key.getId();

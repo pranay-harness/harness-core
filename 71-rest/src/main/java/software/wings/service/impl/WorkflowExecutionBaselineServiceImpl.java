@@ -1,6 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
@@ -8,8 +7,6 @@ import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 
-import io.harness.beans.PageRequest;
-import io.harness.beans.SearchFilter.Operator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Base;
@@ -178,14 +175,12 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
 
   @Override
   public String getBaselineExecutionId(String appId, String workflowId, String envId, String serviceId) {
-    PageRequest<WorkflowExecutionBaseline> pageRequest = aPageRequest()
-                                                             .addFilter("appId", Operator.EQ, appId)
-                                                             .addFilter("workflowId", Operator.EQ, workflowId)
-                                                             .addFilter("envId", Operator.EQ, envId)
-                                                             .addFilter("serviceId", Operator.EQ, serviceId)
-                                                             .withLimit("1")
-                                                             .build();
-    WorkflowExecutionBaseline executionBaseline = wingsPersistence.get(WorkflowExecutionBaseline.class, pageRequest);
+    WorkflowExecutionBaseline executionBaseline = wingsPersistence.createQuery(WorkflowExecutionBaseline.class)
+                                                      .filter(WorkflowExecutionBaseline.APP_ID_KEY, appId)
+                                                      .filter(WorkflowExecutionBaseline.WORKFLOW_ID_KEY, workflowId)
+                                                      .filter(WorkflowExecutionBaseline.ENV_ID_KEY, envId)
+                                                      .filter(WorkflowExecutionBaseline.SERVICE_ID_KEY, serviceId)
+                                                      .get();
     return executionBaseline == null ? null : executionBaseline.getWorkflowExecutionId();
   }
 }

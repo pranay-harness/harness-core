@@ -277,13 +277,12 @@ public class InstanceServiceImpl implements InstanceService {
   }
 
   private SyncStatus getSyncStatus(String appId, String serviceId, String envId, String infraMappingId) {
-    PageRequest<SyncStatus> pageRequest = aPageRequest()
-                                              .addFilter("appId", EQ, appId)
-                                              .addFilter("serviceId", EQ, serviceId)
-                                              .addFilter("envId", EQ, envId)
-                                              .addFilter("infraMappingId", EQ, infraMappingId)
-                                              .build();
-    return wingsPersistence.get(SyncStatus.class, pageRequest);
+    return wingsPersistence.createQuery(SyncStatus.class)
+        .filter(SyncStatus.APP_ID_KEY, appId)
+        .filter(SyncStatus.SERVICE_ID_KEY, serviceId)
+        .filter(SyncStatus.ENV_ID_KEY, envId)
+        .filter(SyncStatus.INFRA_MAPPING_ID_KEY, infraMappingId)
+        .get();
   }
 
   @Override

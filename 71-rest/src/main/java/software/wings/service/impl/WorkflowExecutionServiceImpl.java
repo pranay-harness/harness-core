@@ -2622,7 +2622,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (isNotEmpty(workflowExecution.getInfraMappingIds())) {
       pageRequestBuilder.addFilter(
-          WorkflowExecution.INFRAMAPPING_IDS_KEY, IN, workflowExecution.getInfraMappingIds().toArray());
+          WorkflowExecution.INFRA_MAPPING_IDS_KEY, IN, workflowExecution.getInfraMappingIds().toArray());
     }
     return wingsPersistence.query(WorkflowExecution.class, pageRequestBuilder.build());
   }

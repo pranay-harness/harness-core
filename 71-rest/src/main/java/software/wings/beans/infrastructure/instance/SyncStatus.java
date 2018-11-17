@@ -30,6 +30,10 @@ import java.util.List;
                         , @Field("infraMappingId") }, options = @IndexOptions(name = "compositeIdx2"))
 })
 public class SyncStatus extends Base {
+  public static final String SERVICE_ID_KEY = "serviceId";
+  public static final String ENV_ID_KEY = "envId";
+  public static final String INFRA_MAPPING_ID_KEY = "infraMappingId";
+
   private String envId;
   private String serviceId;
   private String infraMappingId;
