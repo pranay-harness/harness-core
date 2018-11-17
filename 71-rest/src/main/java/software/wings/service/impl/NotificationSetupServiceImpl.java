@@ -117,11 +117,10 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup readNotificationGroupByName(String accountId, String notificationGroupName) {
-    PageRequest<NotificationGroup> pageRequest = aPageRequest()
-                                                     .addFilter("accountId", Operator.EQ, accountId)
-                                                     .addFilter("name", Operator.EQ, notificationGroupName)
-                                                     .build();
-    return wingsPersistence.get(NotificationGroup.class, pageRequest);
+    return wingsPersistence.createQuery(NotificationGroup.class)
+        .filter(NotificationGroup.ACCOUNT_ID_KEY, accountId)
+        .filter(NotificationGroup.NAME_KEY, notificationGroupName)
+        .get();
   }
 
   @Override

@@ -109,11 +109,11 @@ public class UserGroupServiceImpl implements UserGroupService {
 
   @Override
   public UserGroup get(String accountId, String userGroupId, boolean loadUsers) {
-    PageRequest<UserGroup> req = aPageRequest()
-                                     .addFilter("accountId", Operator.EQ, accountId)
-                                     .addFilter(ID_KEY, Operator.EQ, userGroupId)
-                                     .build();
-    UserGroup userGroup = wingsPersistence.get(UserGroup.class, req);
+    UserGroup userGroup = wingsPersistence.createQuery(UserGroup.class)
+                              .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
+                              .filter(UserGroup.ID_KEY, userGroupId)
+                              .get();
+
     if (loadUsers && userGroup != null) {
       Account account = accountService.get(accountId);
       loadUsers(userGroup, account);

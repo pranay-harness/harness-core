@@ -1,7 +1,5 @@
 package software.wings.service.impl;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.mongo.MongoUtils.setUnset;
@@ -45,8 +43,10 @@ public class DelegateProfileServiceImpl implements DelegateProfileService {
 
   @Override
   public DelegateProfile get(String accountId, String delegateProfileId) {
-    return wingsPersistence.get(DelegateProfile.class,
-        aPageRequest().addFilter("accountId", EQ, accountId).addFilter(ID_KEY, EQ, delegateProfileId).build());
+    return wingsPersistence.createQuery(DelegateProfile.class)
+        .filter(DelegateProfile.ACCOUNT_ID_KEY, accountId)
+        .filter(DelegateProfile.ID_KEY, delegateProfileId)
+        .get();
   }
 
   @Override

@@ -25,6 +25,10 @@ import software.wings.beans.Base;
 @Builder
 @EqualsAndHashCode(callSuper = false, exclude = {"workflowExecutionId"})
 public class WorkflowExecutionBaseline extends Base {
+  public static final String WORKFLOW_ID_KEY = "workflowId";
+  public static final String ENV_ID_KEY = "envId";
+  public static final String SERVICE_ID_KEY = "serviceId";
+
   @NotEmpty @Indexed private String workflowId;
   @NotEmpty @Indexed private String envId;
   @NotEmpty @Indexed private String serviceId;

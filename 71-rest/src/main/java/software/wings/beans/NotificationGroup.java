@@ -31,6 +31,8 @@ import javax.validation.constraints.NotNull;
                                                                              , @Field("name") }))
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class NotificationGroup extends Base {
+  public static final String NAME_KEY = "name";
+
   @NotEmpty private String accountId;
   @NotNull private String name;
   private boolean editable = true;

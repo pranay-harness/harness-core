@@ -704,8 +704,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public UserInvite getInvite(String accountId, String inviteId) {
-    return wingsPersistence.get(
-        UserInvite.class, aPageRequest().addFilter("accountId", EQ, accountId).addFilter("uuid", EQ, inviteId).build());
+    return wingsPersistence.createQuery(UserInvite.class)
+        .filter(UserInvite.ACCOUNT_ID_KEY, accountId)
+        .filter(UserInvite.UUID_KEY, inviteId)
+        .get();
   }
 
   @Override

@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.network.Localhost.getLocalHostName;
 import static java.lang.String.format;
@@ -31,7 +30,6 @@ import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.DirectEncrypter;
 import com.nimbusds.jwt.EncryptedJWT;
 import com.nimbusds.jwt.JWTClaimsSet;
-import io.harness.beans.SearchFilter.Operator;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.mindrot.jbcrypt.BCrypt;
@@ -128,8 +126,8 @@ public class UserResourceRestClient {
       }
     }
 
-    User user =
-        wingsPersistence.get(User.class, aPageRequest().addFilter("email", Operator.EQ, adminUserEmail).build());
+    User user = wingsPersistence.createQuery(User.class).filter(User.EMAIL_KEY, adminUserEmail).get();
+
     if (user == null) {
       user = anUser().withEmail(adminUserEmail).withName(adminUserName).withPassword(adminPassword).build();
       user.setAppId(Base.GLOBAL_APP_ID);
@@ -142,7 +140,7 @@ public class UserResourceRestClient {
       try {
         wingsPersistence.saveAndGet(User.class, user);
       } catch (Exception e) {
-        user = wingsPersistence.get(User.class, aPageRequest().addFilter("email", Operator.EQ, adminUserEmail).build());
+        user = wingsPersistence.createQuery(User.class).filter(User.EMAIL_KEY, adminUserEmail).get();
       }
     } else {
       Account finalAccount = account;

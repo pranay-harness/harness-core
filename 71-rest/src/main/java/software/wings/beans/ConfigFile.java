@@ -52,10 +52,11 @@ import javax.ws.rs.DefaultValue;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ConfigFile extends BaseFile implements EncryptableSetting {
-  /**
-   * The constant DEFAULT_TEMPLATE_ID.
-   */
   public static final String DEFAULT_TEMPLATE_ID = "__TEMPLATE_ID";
+  public static final String ENTITY_TYPE_KEY = "entityType";
+  public static final String ENTITY_ID_KEY = "entityId";
+  public static final String ENV_ID_KEY = "envId";
+  public static final String RELATIVE_FILE_PATH_KEY = "relativeFilePath";
 
   @NotEmpty private String accountId;
 

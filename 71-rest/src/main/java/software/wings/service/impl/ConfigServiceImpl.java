@@ -19,7 +19,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.PageRequest;
-import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.beans.SearchFilter.Operator;
@@ -200,22 +199,22 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public ConfigFile get(String appId, String entityId, EntityType entityType, String relativeFilePath) {
-    PageRequestBuilder builder = aPageRequest();
+    final Query<ConfigFile> query = wingsPersistence.createQuery(ConfigFile.class);
+
     String columnName;
     if (EntityType.SERVICE.equals(entityType)) {
-      columnName = "entityId";
-      builder.addFilter("entityType", Operator.EQ, entityType.name());
+      columnName = ConfigFile.ENTITY_ID_KEY;
+      query.filter(ConfigFile.ENTITY_TYPE_KEY, entityType.name());
     } else if (EntityType.ENVIRONMENT.equals(entityType)) {
-      columnName = "envId";
+      columnName = ConfigFile.ENV_ID_KEY;
     } else {
       return null;
     }
 
-    builder.addFilter(columnName, Operator.EQ, entityId);
-    builder.addFilter("appId", Operator.EQ, appId);
-    builder.addFilter("relativeFilePath", Operator.EQ, relativeFilePath);
-
-    return wingsPersistence.get(ConfigFile.class, builder.build());
+    return query.filter(columnName, entityId)
+        .filter(ConfigFile.APP_ID_KEY, appId)
+        .filter(ConfigFile.RELATIVE_FILE_PATH_KEY, relativeFilePath)
+        .get();
   }
 
   @Override
@@ -443,14 +442,13 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public void delete(String appId, String entityId, EntityType entityType, String configFileName) {
-    PageRequest<ConfigFile> pageRequest = aPageRequest()
-                                              .addFilter("appId", Operator.EQ, appId)
-                                              .addFilter("entityType", Operator.EQ, entityType.name())
-                                              .addFilter("entityId", Operator.EQ, entityId)
-                                              .addFilter("relativeFilePath", Operator.EQ, configFileName)
-                                              .build();
+    ConfigFile configFile = wingsPersistence.createQuery(ConfigFile.class)
+                                .filter(ConfigFile.APP_ID_KEY, appId)
+                                .filter(ConfigFile.ENTITY_TYPE_KEY, entityType.name())
+                                .filter(ConfigFile.ENTITY_ID_KEY, entityId)
+                                .filter(ConfigFile.RELATIVE_FILE_PATH_KEY, configFileName)
+                                .get();
 
-    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, pageRequest);
     boolean deleted = wingsPersistence.delete(ConfigFile.class, configFile.getUuid());
     if (deleted) {
       List<ConfigFile> childConfigFiles = wingsPersistence.createQuery(ConfigFile.class)

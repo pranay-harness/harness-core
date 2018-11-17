@@ -563,7 +563,7 @@ public class UserServiceTest extends WingsBaseTest {
   public void shouldCompleteInvite() {
     when(wingsPersistence.get(User.class, USER_ID)).thenReturn(userBuilder.withUuid(USER_ID).build());
     when(accountService.get(ACCOUNT_ID)).thenReturn(Account.Builder.anAccount().withUuid(ACCOUNT_ID).build());
-    when(wingsPersistence.get(eq(UserInvite.class), any(PageRequest.class)))
+    when(userInviteQuery.get())
         .thenReturn(anUserInvite().withUuid(USER_INVITE_ID).withAccountId(ACCOUNT_ID).withEmail(USER_EMAIL).build());
     when(query.get()).thenReturn(userBuilder.withUuid(USER_ID).build());
 

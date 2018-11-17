@@ -819,11 +819,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   }
 
   private WorkflowElement getWorkflowElement(String appId, WorkflowExecution workflowExecution) {
-    StateExecutionInstance stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class,
-        PageRequestBuilder.aPageRequest()
-            .addFilter("appId", EQ, appId)
-            .addFilter("executionUuid", EQ, workflowExecution.getUuid())
-            .build());
+    StateExecutionInstance stateExecutionInstance =
+        wingsPersistence.createQuery(StateExecutionInstance.class)
+            .filter(StateExecutionInstance.APP_ID_KEY, appId)
+            .filter(StateExecutionInstance.EXECUTION_UUID_KEY, workflowExecution.getUuid())
+            .get();
 
     assertThat(stateExecutionInstance).isNotNull();
     assertThat(stateExecutionInstance.getContextElements()).isNotNull();
@@ -864,11 +864,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   public void shouldUpdateFailedCount() throws InterruptedException {
     String appId = app.getUuid();
     triggerWorkflow(appId, env);
-    WorkflowExecution workflowExecution = wingsPersistence.get(
-        WorkflowExecution.class, aPageRequest().addFilter(WorkflowExecution.APP_ID_KEY, EQ, appId).build());
+    WorkflowExecution workflowExecution =
+        wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecution.APP_ID_KEY, appId).get();
     workflowExecutionService.incrementFailed(workflowExecution.getAppId(), workflowExecution.getUuid(), 1);
-    workflowExecution = wingsPersistence.get(
-        WorkflowExecution.class, aPageRequest().addFilter(WorkflowExecution.APP_ID_KEY, EQ, appId).build());
+    workflowExecution =
+        wingsPersistence.createQuery(WorkflowExecution.class).filter(WorkflowExecution.APP_ID_KEY, appId).get();
     assertThat(workflowExecution.getBreakdown().getFailed()).isEqualTo(1);
     logger.info("shouldUpdateFailedCount test done");
   }

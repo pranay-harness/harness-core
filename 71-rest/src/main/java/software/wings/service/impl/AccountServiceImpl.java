@@ -37,7 +37,6 @@ import com.google.inject.name.Named;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
-import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -364,8 +363,7 @@ public class AccountServiceImpl implements AccountService {
     String suggestedAccountName = accountName;
     Random rand = new Random();
     do {
-      Account res = wingsPersistence.get(
-          Account.class, aPageRequest().addFilter("accountName", Operator.EQ, suggestedAccountName).build());
+      Account res = wingsPersistence.createQuery(Account.class).filter(ACCOUNT_NAME_KEY, suggestedAccountName).get();
       if (res == null) {
         return suggestedAccountName;
       }

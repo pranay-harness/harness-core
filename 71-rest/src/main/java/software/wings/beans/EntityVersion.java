@@ -8,6 +8,10 @@ import io.harness.beans.EmbeddedUser;
  */
 @SuppressFBWarnings({"EQ_DOESNT_OVERRIDE_EQUALS"})
 public class EntityVersion extends Base {
+  public static final String ENTITY_TYPE_KEY = "entityType";
+  public static final String ENTITY_UUID_KEY = "entityUuid";
+  public static final String ENTITY_PARENT_UUID_KEY = "entityParentUuid";
+
   public static final Integer INITIAL_VERSION = 1;
 
   private EntityType entityType;

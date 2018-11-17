@@ -88,9 +88,10 @@ public class WhitelistServiceImpl implements WhitelistService {
 
   @Override
   public Whitelist get(String accountId, String whitelistId) {
-    PageRequest<Whitelist> req =
-        aPageRequest().addFilter("accountId", EQ, accountId).addFilter(ID_KEY, EQ, whitelistId).build();
-    return wingsPersistence.get(Whitelist.class, req);
+    return wingsPersistence.createQuery(Whitelist.class)
+        .filter(Whitelist.ACCOUNT_ID_KEY, accountId)
+        .filter(Whitelist.ID_KEY, whitelistId)
+        .get();
   }
 
   @Override
