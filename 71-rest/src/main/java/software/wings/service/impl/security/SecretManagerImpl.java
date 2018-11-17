@@ -947,12 +947,12 @@ public class SecretManagerImpl implements SecretManager {
       encryptedData.setUuid(uuid);
       encryptedData.setType(SettingVariableTypes.CONFIG_FILE);
       encryptedData.setAccountId(accountId);
-      encryptedData.setBase64Encoded(true);
     }
     encryptedData.setName(name);
     encryptedData.setEncryptionType(encryptionType);
     encryptedData.setFileSize(inputStream.getTotalBytesRead());
     encryptedData.setUsageRestrictions(usageRestrictions);
+    encryptedData.setBase64Encoded(true);
 
     String recordId;
     try {
