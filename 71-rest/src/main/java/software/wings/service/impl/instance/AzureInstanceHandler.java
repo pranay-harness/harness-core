@@ -126,9 +126,9 @@ public class AzureInstanceHandler extends InstanceHandler {
   @Override
   public Optional<List<DeploymentInfo>> getDeploymentInfo(PhaseExecutionData phaseExecutionData,
       PhaseStepExecutionData phaseStepExecutionData, WorkflowExecution workflowExecution,
-      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact)
-      throws HarnessException {
-    throw new HarnessException("Deployments should be handled at InstanceHelper for azure type.");
+      InfrastructureMapping infrastructureMapping, String stateExecutionInstanceId, Artifact artifact) {
+    logger.warn("Deployments should be handled at InstanceHelper for azure type.");
+    return Optional.empty();
   }
 
   @Override
