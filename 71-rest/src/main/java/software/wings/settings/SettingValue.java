@@ -221,6 +221,11 @@ public abstract class SettingValue implements ExtensionPoint {
     PCF("Pivotal Cloud Foundry"),
 
     /**
+     * Direct connection setting variable types.
+     */
+    @Deprecated DIRECT("Direct Kubernetes"),
+
+    /**
      * Kubernetes Cluster setting variable types.
      */
     KUBERNETES_CLUSTER("Kubernetes Cluster"),
