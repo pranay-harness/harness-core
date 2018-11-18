@@ -44,12 +44,6 @@ public class AwsUtils {
       if (isNotEmpty(instanceFilter.getVpcIds())) {
         filters.add(new Filter("vpc-id", instanceFilter.getVpcIds()));
       }
-      if (isNotEmpty(instanceFilter.getSecurityGroupIds())) {
-        filters.add(new Filter("instance.group-id", instanceFilter.getSecurityGroupIds()));
-      }
-      if (isNotEmpty(instanceFilter.getSubnetIds())) {
-        filters.add(new Filter("network-interface.subnet-id", instanceFilter.getSubnetIds()));
-      }
       if (isNotEmpty(instanceFilter.getTags())) {
         Multimap<String, String> tags = ArrayListMultimap.create();
         instanceFilter.getTags().forEach(tag -> tags.put(tag.getKey(), tag.getValue()));

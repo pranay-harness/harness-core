@@ -82,20 +82,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
             builder.vpcIds(getList(entry.getValue()));
             break;
           }
-          case "subnets": {
-            if (builder == null) {
-              builder = AwsInstanceFilter.builder();
-            }
-            builder.subnetIds(getList(entry.getValue()));
-            break;
-          }
-          case "securityGroups": {
-            if (builder == null) {
-              builder = AwsInstanceFilter.builder();
-            }
-            builder.securityGroupIds(getList(entry.getValue()));
-            break;
-          }
           case "tags": {
             if (builder == null) {
               builder = AwsInstanceFilter.builder();
@@ -230,8 +216,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
 
     // These four fields map to AwsInstanceFilter
     private List<String> vpcs = new ArrayList<>();
-    private List<String> subnetIds = new ArrayList<>();
-    private List<String> securityGroupIds = new ArrayList<>();
     private List<NameValuePair.Yaml> tags = new ArrayList<>();
 
     @lombok.Builder
@@ -239,8 +223,7 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
         String infraMappingType, String deploymentType, String computeProviderName, String name, String restrictions,
         String expression, String region, String provisionerName, String connectionType, String loadBalancer,
         boolean usePublicDns, boolean provisionInstances, String autoScalingGroup, int desiredCapacity,
-        List<String> vpcs, List<String> subnetIds, List<String> securityGroupIds, List<NameValuePair.Yaml> tags,
-        String hostNameConvention) {
+        List<String> vpcs, List<NameValuePair.Yaml> tags, String hostNameConvention) {
       super(type, harnessApiVersion, computeProviderType, serviceName, infraMappingType, deploymentType,
           computeProviderName);
       this.restrictions = restrictions;
@@ -254,8 +237,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
       this.autoScalingGroup = autoScalingGroup;
       this.desiredCapacity = desiredCapacity;
       this.vpcs = vpcs;
-      this.subnetIds = subnetIds;
-      this.securityGroupIds = securityGroupIds;
       this.tags = tags;
       this.hostNameConvention = hostNameConvention;
     }

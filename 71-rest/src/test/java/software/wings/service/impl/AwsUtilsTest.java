@@ -43,17 +43,13 @@ public class AwsUtilsTest extends WingsBaseTest {
   public void testGetAwsFilters() {
     AwsInfrastructureMapping awsInfrastructureMapping =
         anAwsInfrastructureMapping()
-            .withAwsInstanceFilter(AwsInstanceFilter.builder()
-                                       .vpcIds(Collections.singletonList("vpc-id"))
-                                       .securityGroupIds(Collections.singletonList("sg-id"))
-                                       .build())
+            .withAwsInstanceFilter(AwsInstanceFilter.builder().vpcIds(Collections.singletonList("vpc-id")).build())
             .build();
     List<Filter> filters = utils.getAwsFilters(awsInfrastructureMapping);
     assertThat(filters).isNotNull();
-    assertThat(filters.size()).isEqualTo(3);
+    assertThat(filters.size()).isEqualTo(2);
     verifyFilter(filters.get(0), "instance-state-name", Collections.singletonList("running"));
     verifyFilter(filters.get(1), "vpc-id", Collections.singletonList("vpc-id"));
-    verifyFilter(filters.get(2), "instance.group-id", Collections.singletonList("sg-id"));
   }
 
   private void verifyFilter(Filter filter, String name, List<String> values) {

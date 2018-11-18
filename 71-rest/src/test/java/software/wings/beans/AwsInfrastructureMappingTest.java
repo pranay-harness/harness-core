@@ -34,17 +34,12 @@ public class AwsInfrastructureMappingTest extends WingsBaseTest {
     assertThat(awsInfrastructureMapping.isProvisionInstances()).isFalse();
 
     map.put("vpcs", asList("dummy-vpc"));
-    map.put("subnets", asList("dummy-subnets"));
-    map.put("securityGroups", asList("dummy-securityGroups"));
     map.put("tags", ImmutableMap.<String, Object>of("key", "value"));
 
     awsInfrastructureMapping.applyProvisionerVariables(map, AWS_INSTANCE_FILTER);
     assertThat(awsInfrastructureMapping.isProvisionInstances()).isFalse();
     assertThat(awsInfrastructureMapping.getRegion()).isEqualTo("dummy-region");
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getVpcIds()).containsExactly("dummy-vpc");
-    assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getSubnetIds()).containsExactly("dummy-subnets");
-    assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getSecurityGroupIds())
-        .containsExactly("dummy-securityGroups");
     assertThat(awsInfrastructureMapping.getAwsInstanceFilter().getTags().size()).isEqualTo(1);
   }
 
