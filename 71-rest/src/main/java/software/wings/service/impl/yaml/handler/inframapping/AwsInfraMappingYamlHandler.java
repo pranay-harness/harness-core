@@ -33,13 +33,9 @@ public class AwsInfraMappingYamlHandler
   public Yaml toYaml(AwsInfrastructureMapping bean, String appId) {
     AwsInstanceFilter awsInstanceFilter = bean.getAwsInstanceFilter();
     List<String> vpcIds = Lists.newArrayList();
-    List<String> subnetIds = Lists.newArrayList();
-    List<String> securityGroupIds = Lists.newArrayList();
     List<Tag> tagList = Lists.newArrayList();
     if (awsInstanceFilter != null) {
       vpcIds = awsInstanceFilter.getVpcIds();
-      subnetIds = awsInstanceFilter.getSubnetIds();
-      securityGroupIds = awsInstanceFilter.getSecurityGroupIds();
       tagList = awsInstanceFilter.getTags();
     }
 
@@ -68,8 +64,6 @@ public class AwsInfraMappingYamlHandler
     if (bean.getProvisionerId() == null) {
       yaml.setRegion(bean.getRegion());
       yaml.setVpcs(vpcIds);
-      yaml.setSubnetIds(subnetIds);
-      yaml.setSecurityGroupIds(securityGroupIds);
       yaml.setTags(getTagsYaml(tagList));
     } else {
       final InfrastructureProvisioner infrastructureProvisioner =
@@ -128,10 +122,7 @@ public class AwsInfraMappingYamlHandler
       String computeProviderId, String serviceId, String provisionerId) throws HarnessException {
     Yaml yaml = changeContext.getYaml();
 
-    AwsInstanceFilterBuilder builder = AwsInstanceFilter.builder()
-                                           .securityGroupIds(yaml.getSecurityGroupIds())
-                                           .subnetIds(yaml.getSubnetIds())
-                                           .vpcIds(yaml.getVpcs());
+    AwsInstanceFilterBuilder builder = AwsInstanceFilter.builder().vpcIds(yaml.getVpcs());
     if (yaml.getTags() != null) {
       builder.tags(getTags(yaml.getTags()));
     }
