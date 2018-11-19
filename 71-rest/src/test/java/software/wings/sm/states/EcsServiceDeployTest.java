@@ -10,6 +10,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -76,6 +77,7 @@ import software.wings.beans.command.CommandType;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -117,6 +119,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
   @Mock private ArtifactService artifactService;
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
+  @Mock private AwsCommandHelper mockAwsCommandHelper;
 
   @InjectMocks
   private EcsServiceDeploy ecsServiceDeploy =
@@ -212,6 +215,7 @@ public class EcsServiceDeployTest extends WingsBaseTest {
     when(artifactService.get(any(), any())).thenReturn(anArtifact().build());
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
+    doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
   }
 
   @Test

@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static com.google.common.collect.Sets.newHashSet;
 import static freemarker.template.Configuration.VERSION_2_3_23;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -13,6 +14,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.Comparator.naturalOrder;
 import static java.util.stream.Collectors.joining;
@@ -283,6 +285,22 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
         .distinct()
         .sorted(naturalOrder())
         .collect(toList());
+  }
+
+  @Override
+  public Set<String> getAllDelegateTags(String accountId) {
+    List<Delegate> delegates =
+        wingsPersistence.createQuery(Delegate.class).filter("accountId", accountId).field("tags").exists().asList();
+    if (isNotEmpty(delegates)) {
+      Set<String> tags = newHashSet();
+      delegates.forEach(delegate -> {
+        if (isNotEmpty(delegate.getTags())) {
+          tags.addAll(delegate.getTags());
+        }
+      });
+      return tags;
+    }
+    return emptySet();
   }
 
   @Override

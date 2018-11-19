@@ -11,6 +11,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -93,6 +94,7 @@ import software.wings.beans.container.ContainerDefinition;
 import software.wings.beans.container.ImageDetails;
 import software.wings.beans.container.KubernetesContainerTask;
 import software.wings.common.VariableProcessor;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.service.intfc.ActivityService;
@@ -142,6 +144,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
   @Mock private ConfigService configService;
   @Mock private ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private AwsCommandHelper mockAwsCommandHelper;
 
   @InjectMocks private KubernetesSetup kubernetesSetup = new KubernetesSetup("name");
 
@@ -272,6 +275,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     portalConfig.setUrl(BASE_URL);
     when(configuration.getPortal()).thenReturn(portalConfig);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
+    doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
   }
 
   @Test

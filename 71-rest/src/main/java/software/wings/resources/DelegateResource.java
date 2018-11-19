@@ -53,6 +53,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -141,6 +142,15 @@ public class DelegateResource {
   public RestResponse<List<String>> kubernetesDelegateNames(
       @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(delegateService.getKubernetesDelegateNames(accountId));
+  }
+
+  @GET
+  @Path("delegate-tags")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Set<String>> delegateTags(
+      @Context HttpServletRequest request, @QueryParam("accountId") @NotEmpty String accountId) {
+    return new RestResponse<>(delegateService.getAllDelegateTags(accountId));
   }
 
   @GET

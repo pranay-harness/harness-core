@@ -68,6 +68,7 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -129,6 +130,7 @@ public class CommandState extends State {
   @Inject @Transient private transient SettingsService settingsService;
   @Inject @Transient private transient WorkflowExecutionService workflowExecutionService;
   @Inject @Transient private transient FeatureFlagService featureFlagService;
+  @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
 
   @Inject @Transient private transient WingsPersistence wingsPersistence;
 
@@ -398,6 +400,7 @@ public class CommandState extends State {
                                       .withAppId(appId)
                                       .withTaskType(TaskType.COMMAND)
                                       .withWaitId(activityId)
+                                      .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
                                       .withParameters(new Object[] {command, commandExecutionContext})
                                       .withEnvId(envId)
                                       .withTimeout(TimeUnit.MINUTES.toMillis(30))

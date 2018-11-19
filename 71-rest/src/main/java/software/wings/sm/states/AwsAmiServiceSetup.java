@@ -277,15 +277,19 @@ public class AwsAmiServiceSetup extends State {
                                 .resizeStrategy(resizeStrategy)
                                 .build();
 
-      DelegateTask delegateTask = aDelegateTask()
-                                      .withAccountId(app.getAccountId())
-                                      .withAppId(app.getUuid())
-                                      .withTaskType(TaskType.AWS_AMI_ASYNC_TASK)
-                                      .withWaitId(activity.getUuid())
-                                      .withParameters(new Object[] {requestBuilder.build()})
-                                      .withEnvId(env.getUuid())
-                                      .withAsync(true)
-                                      .build();
+      AwsAmiServiceSetupRequest request = requestBuilder.build();
+      DelegateTask delegateTask =
+          aDelegateTask()
+              .withAccountId(app.getAccountId())
+              .withAppId(app.getUuid())
+              .withTaskType(TaskType.AWS_AMI_ASYNC_TASK)
+              .withWaitId(activity.getUuid())
+              .withTags(
+                  isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+              .withParameters(new Object[] {request})
+              .withEnvId(env.getUuid())
+              .withAsync(true)
+              .build();
       delegateService.queueTask(delegateTask);
     } catch (Exception exception) {
       logger.error("Ami setup step failed with error ", exception);

@@ -1,6 +1,8 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
@@ -47,6 +49,7 @@ public class CloudFormationDeleteStackState extends CloudFormationState {
         .withTaskType(CLOUD_FORMATION_TASK)
         .withAccountId(executionContext.getApp().getAccountId())
         .withWaitId(activityId)
+        .withTags(isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
         .withAppId(executionContext.getApp().getUuid())
         .withParameters(new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
         .build();

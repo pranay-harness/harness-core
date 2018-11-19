@@ -48,6 +48,7 @@ import software.wings.beans.command.CommandExecutionContext;
 import software.wings.beans.command.CommandExecutionResult;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
@@ -121,6 +122,8 @@ public class AwsCodeDeployState extends State {
   @Inject @Transient protected transient ServiceTemplateService serviceTemplateService;
 
   @Inject @Transient private transient AwsHelperService awsHelperService;
+
+  @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
 
   @Inject @Transient protected transient SecretManager secretManager;
 
@@ -208,6 +211,7 @@ public class AwsCodeDeployState extends State {
                                       .withTaskType(TaskType.COMMAND)
                                       .withWaitId(activity.getUuid())
                                       .withTimeout(getTaskTimeout())
+                                      .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
                                       .withParameters(new Object[] {command, commandExecutionContext})
                                       .withEnvId(envId)
                                       .withInfrastructureMappingId(infrastructureMapping.getUuid())

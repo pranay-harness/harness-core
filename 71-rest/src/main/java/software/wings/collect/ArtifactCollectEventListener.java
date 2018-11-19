@@ -1,7 +1,9 @@
 package software.wings.collect;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.String.format;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Event.Builder.anEvent;
 
@@ -166,6 +168,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
         return aDelegateTask()
             .withTaskType(TaskType.AMAZON_S3_COLLECTION)
             .withAccountId(accountId)
+            .withTags(isNotEmpty(awsConfig.getTag()) ? singletonList(awsConfig.getTag()) : null)
             .withAppId(amazonS3ArtifactStream.getAppId())
             .withWaitId(waitId)
             .withParameters(new Object[] {awsConfig, secretManager.getEncryptionDetails(awsConfig, null, null),

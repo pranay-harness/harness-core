@@ -48,6 +48,7 @@ import software.wings.beans.command.ContainerSetupParams;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
@@ -98,6 +99,7 @@ public abstract class ContainerServiceSetup extends State {
   @Inject @Transient protected transient ActivityService activityService;
   @Inject @Transient protected transient DelegateService delegateService;
   @Inject @Transient protected transient ContainerDeploymentManagerHelper containerDeploymentHelper;
+  @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
 
   ContainerServiceSetup(String name, String type) {
     super(name, type);
@@ -203,6 +205,7 @@ public abstract class ContainerServiceSetup extends State {
                                         .withWaitId(activity.getUuid())
                                         .withParameters(new Object[] {command, commandExecutionContext})
                                         .withEnvId(env.getUuid())
+                                        .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
                                         .withInfrastructureMappingId(infrastructureMapping.getUuid())
                                         .withTimeout(TimeUnit.HOURS.toMillis(1))
                                         .build());

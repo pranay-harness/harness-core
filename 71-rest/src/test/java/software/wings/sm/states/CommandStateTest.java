@@ -11,6 +11,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -94,6 +95,7 @@ import software.wings.beans.command.ScpCommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -222,6 +224,7 @@ public class CommandStateTest extends WingsBaseTest {
   @Mock private SecretManager secretManager;
   @Mock private InfrastructureMappingService infrastructureMappingService;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private AwsCommandHelper mockAwsCommandHelper;
 
   @InjectMocks private CommandState commandState = new CommandState("start1", "START");
 
@@ -284,6 +287,7 @@ public class CommandStateTest extends WingsBaseTest {
     when(hostService.getHostByEnv(APP_ID, ENV_ID, HOST_ID)).thenReturn(HOST);
     commandState.setExecutorService(executorService);
     when(secretManager.getEncryptionDetails(anyObject(), anyString(), anyString())).thenReturn(Collections.emptyList());
+    doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
     setInternalState(commandState, "secretManager", secretManager);
   }
 

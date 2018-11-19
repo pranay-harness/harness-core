@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
@@ -116,6 +118,8 @@ public class EcsSteadyStateCheck extends State {
               .withAppId(app.getUuid())
               .withTaskType(TaskType.ECS_STEADY_STATE_CHECK_TASK)
               .withWaitId(activity.getUuid())
+              .withTags(
+                  isNotEmpty(params.getAwsConfig().getTag()) ? singletonList(params.getAwsConfig().getTag()) : null)
               .withParameters(new Object[] {params})
               .withEnvId(env.getUuid())
               .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
@@ -123,7 +127,7 @@ public class EcsSteadyStateCheck extends State {
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return anExecutionResponse()
           .withAsync(true)
-          .withCorrelationIds(Collections.singletonList(activity.getUuid()))
+          .withCorrelationIds(singletonList(activity.getUuid()))
           .withStateExecutionData(ScriptStateExecutionData.builder().activityId(activity.getUuid()).build())
           .withDelegateTaskId(delegateTaskId)
           .build();

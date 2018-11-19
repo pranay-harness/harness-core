@@ -1,16 +1,17 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.reflection.ReflectUtils.getEncryptedFields;
 import static io.harness.reflection.ReflectUtils.getEncryptedRefField;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
+import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -67,7 +68,6 @@ import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
 import software.wings.sm.StateType;
-import software.wings.utils.Misc;
 import software.wings.utils.WingsReflectionUtils;
 
 import java.lang.reflect.Field;
@@ -162,7 +162,7 @@ public class SettingValidationService {
               .setKibanaVersion(elkAnalysisService.getVersion(
                   settingAttribute.getAccountId(), (ElkConfig) settingValue, Collections.emptyList()));
         } catch (Exception ex) {
-          throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, USER, ex).addParam("reason", Misc.getMessage(ex));
+          throw new WingsException(ErrorCode.ELK_CONFIGURATION_ERROR, USER, ex).addParam("reason", getMessage(ex));
         }
       }
       analysisService.validateConfig(settingAttribute, StateType.ELK, encryptedDataDetails);
@@ -219,20 +219,26 @@ public class SettingValidationService {
     try {
       delegateProxyFactory.get(ContainerService.class, syncTaskContext).validate(containerServiceParams);
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+      logger.warn(getMessage(e), e);
+      throw new InvalidRequestException(getMessage(e), USER);
     }
   }
 
   private void validateAwsConfig(SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
-    try {
-      AwsConfig value = (AwsConfig) settingAttribute.getValue();
-      if (!value.isUseEc2IamCredentials()) {
-        awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
+    AwsConfig value = (AwsConfig) settingAttribute.getValue();
+    if (value.isUseEc2IamCredentials()) {
+      if (isEmpty(value.getTag())) {
+        throw new InvalidRequestException("When creating an Aws cloud provider with Ec2 Iam role. Please "
+                + "give a tag",
+            USER);
       }
-    } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+    } else {
+      try {
+        awsEc2HelperServiceManager.validateAwsAccountCredential(value, encryptedDataDetails);
+      } catch (Exception e) {
+        logger.warn(getMessage(e), e);
+        throw new InvalidRequestException(getMessage(e), USER);
+      }
     }
   }
 
@@ -242,8 +248,8 @@ public class SettingValidationService {
       gitConfig.setDecrypted(true);
       gitConfigHelperService.validateGitConfig(gitConfig, fetchEncryptionDetails(gitConfig));
     } catch (Exception e) {
-      logger.warn(Misc.getMessage(e), e);
-      throw new InvalidRequestException(Misc.getMessage(e), USER);
+      logger.warn(getMessage(e), e);
+      throw new InvalidRequestException(getMessage(e), USER);
     }
   }
 
@@ -252,11 +258,11 @@ public class SettingValidationService {
         && hostConnectionAttributes.getAuthenticationScheme().equals(
                HostConnectionAttributes.AuthenticationScheme.SSH_KEY)) {
       if (hostConnectionAttributes.isKeyless()) {
-        if (EmptyPredicate.isEmpty(hostConnectionAttributes.getKeyPath())) {
+        if (isEmpty(hostConnectionAttributes.getKeyPath())) {
           throw new InvalidRequestException("Private key file path is not specified", USER);
         }
       } else {
-        if (EmptyPredicate.isEmpty(hostConnectionAttributes.getKey())) {
+        if (isEmpty(hostConnectionAttributes.getKey())) {
           throw new InvalidRequestException("Private key is not specified", USER);
         }
       }

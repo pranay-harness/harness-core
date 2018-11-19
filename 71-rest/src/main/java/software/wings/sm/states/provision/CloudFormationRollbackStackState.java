@@ -2,6 +2,7 @@ package software.wings.sm.states.provision;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.TaskType.CLOUD_FORMATION_TASK;
@@ -118,14 +119,17 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
                                                      .awsConfig(awsConfig)
                                                      .build();
       setTimeOutOnRequest(request);
-      delegateTask = aDelegateTask()
-                         .withTaskType(CLOUD_FORMATION_TASK)
-                         .withAccountId(executionContext.getApp().getAccountId())
-                         .withWaitId(activityId)
-                         .withAppId(executionContext.getApp().getUuid())
-                         .withParameters(
-                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
-                         .build();
+      delegateTask =
+          aDelegateTask()
+              .withTaskType(CLOUD_FORMATION_TASK)
+              .withAccountId(executionContext.getApp().getAccountId())
+              .withWaitId(activityId)
+              .withTags(
+                  isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+              .withAppId(executionContext.getApp().getUuid())
+              .withParameters(
+                  new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+              .build();
     } else {
       CloudFormationCreateStackRequestBuilder builder = CloudFormationCreateStackRequest.builder();
       builder.createType(CloudFormationCreateStackRequest.CLOUD_FORMATION_STACK_CREATE_BODY)
@@ -141,14 +145,17 @@ public class CloudFormationRollbackStackState extends CloudFormationState {
           .awsConfig(awsConfig);
       CloudFormationCreateStackRequest request = builder.build();
       setTimeOutOnRequest(request);
-      delegateTask = aDelegateTask()
-                         .withTaskType(CLOUD_FORMATION_TASK)
-                         .withAccountId(executionContext.getApp().getAccountId())
-                         .withWaitId(activityId)
-                         .withAppId(executionContext.getApp().getUuid())
-                         .withParameters(
-                             new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
-                         .build();
+      delegateTask =
+          aDelegateTask()
+              .withTaskType(CLOUD_FORMATION_TASK)
+              .withAccountId(executionContext.getApp().getAccountId())
+              .withWaitId(activityId)
+              .withTags(
+                  isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+              .withAppId(executionContext.getApp().getUuid())
+              .withParameters(
+                  new Object[] {request, secretManager.getEncryptionDetails(awsConfig, GLOBAL_APP_ID, null)})
+              .build();
     }
     if (getTimeoutMillis() != null) {
       delegateTask.setTimeout(getTimeoutMillis());
