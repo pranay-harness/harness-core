@@ -8,6 +8,7 @@ import static software.wings.beans.ServiceSecretKey.ServiceType.LEARNING_ENGINE;
 import static software.wings.common.VerificationConstants.DATA_ANALYSIS_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -31,12 +32,14 @@ import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.health.VerificationServiceHealthCheck;
 import io.harness.jobs.VerificationJob;
+import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.registry.HarnessMetricRegistry;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
@@ -53,6 +56,7 @@ import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.WingsApplication;
+import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
@@ -74,6 +78,13 @@ import javax.ws.rs.Path;
 public class VerificationServiceApplication extends Application<VerificationServiceConfiguration> {
   // pool interval at which the job will schedule. But here in verificationJob it will schedule at POLL_INTERVAL / 2
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceApplication.class);
+
+  public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
+                                                      .add(Base.class)
+                                                      .addAll(PersistenceMorphiaClasses.classes)
+                                                      .addAll(LimitsMorphiaClasses.classes)
+                                                      .build();
+
   public HarnessMetricRegistry harnessMetricRegistry;
   private static String APPLICATION_NAME = "Verification Service Application";
   private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -127,7 +138,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory());
+    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory(), morphiaClasses);
 
     ValidatorFactory validatorFactory = Validation.byDefaultProvider()
                                             .configure()

@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-cat $1
-
 CHECK_MESSAGE=hook.commit-msg.check
 if [ "`git config $CHECK_MESSAGE`" == "false" ]
 then

@@ -19,8 +19,9 @@ public interface HPersistence {
    *
    * @param store the store
    * @param uri the datastore uri
+   * @param classes classes this datastore serves
    */
-  void register(Store store, String uri);
+  void register(Store store, String uri, Set<Class> classes);
 
   /**
    * Gets the datastore.

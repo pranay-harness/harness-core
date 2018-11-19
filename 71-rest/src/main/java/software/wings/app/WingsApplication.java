@@ -9,6 +9,7 @@ import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.common.Constants.USER_CACHE;
 import static software.wings.dl.WingsPersistence.LOCKS_STORE;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -36,12 +37,14 @@ import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import io.harness.exception.WingsException;
+import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
 import io.harness.scheduler.PersistentScheduler;
 import org.eclipse.jetty.server.Connector;
@@ -56,6 +59,7 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
+import software.wings.beans.Base;
 import software.wings.beans.User;
 import software.wings.common.Constants;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -124,6 +128,12 @@ import javax.ws.rs.Path;
 public class WingsApplication extends Application<MainConfiguration> {
   private static final Logger logger = LoggerFactory.getLogger(WingsApplication.class);
 
+  public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
+                                                      .add(Base.class)
+                                                      .addAll(LimitsMorphiaClasses.classes)
+                                                      .addAll(PersistenceMorphiaClasses.classes)
+                                                      .build();
+
   private final MetricRegistry metricRegistry = new MetricRegistry();
 
   /**
@@ -178,7 +188,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory());
+    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory(), morphiaClasses);
     List<Module> modules = new ArrayList<>();
     modules.add(databaseModule);
 
@@ -333,7 +343,9 @@ public class WingsApplication extends Application<MainConfiguration> {
     if (isNotEmpty(configuration.getMongoConnectionFactory().getLocksUri())
         && !configuration.getMongoConnectionFactory().getLocksUri().equals(
                configuration.getMongoConnectionFactory().getUri())) {
-      persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri());
+      Set<Class> classes = ImmutableSet.<Class>of();
+
+      persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri(), classes);
     }
   }
 

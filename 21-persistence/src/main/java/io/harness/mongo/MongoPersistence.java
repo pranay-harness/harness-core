@@ -18,6 +18,8 @@ import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
+import lombok.Builder;
+import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.InsertOptions;
 import org.mongodb.morphia.query.Query;
@@ -32,7 +34,14 @@ import java.util.Set;
 
 @Singleton
 public class MongoPersistence implements HPersistence {
-  private Map<String, String> storeUri = new HashMap<>();
+  @Builder
+  @Value
+  private static class Info {
+    private String uri;
+    private Set<Class> classes;
+  }
+
+  private Map<String, Info> storeInfo = new HashMap<>();
   private Map<Class, Store> classStores = new HashMap<>();
   private Map<String, AdvancedDatastore> datastoreMap;
 
@@ -49,18 +58,18 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Override
-  public void register(Store store, String uri) {
-    storeUri.put(store.getName(), uri);
+  public void register(Store store, String uri, Set<Class> classes) {
+    storeInfo.put(store.getName(), Info.builder().uri(uri).classes(classes).build());
   }
 
   @Override
   public AdvancedDatastore getDatastore(Store store, ReadPref readPref) {
     return datastoreMap.computeIfAbsent(key(store, readPref), key -> {
-      final String uri = storeUri.get(store.getName());
-      if (isEmpty(uri)) {
+      final Info info = storeInfo.get(store.getName());
+      if (info == null || isEmpty(info.getUri())) {
         return getDatastore(DEFAULT_STORE, readPref);
       }
-      return MongoModule.createDatastore(storeUri.get(store.getName()), readPref);
+      return MongoModule.createDatastore(info.getUri(), info.getClasses(), readPref);
     });
   }
 
