@@ -42,6 +42,7 @@ public class VerificationConstants {
 
   public static final String DATA_COLLECTION_TASKS_PER_MINUTE = "data_collection_tasks_per_min";
   public static final String DATA_ANALYSIS_TASKS_PER_MINUTE = "data_analysis_tasks_per_min";
+  public static final String HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
 
   private VerificationConstants() {}
 

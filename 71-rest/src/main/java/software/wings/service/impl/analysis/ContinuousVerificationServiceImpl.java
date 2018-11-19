@@ -6,6 +6,7 @@ import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
 
 import com.google.common.base.Preconditions;
@@ -16,10 +17,9 @@ import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.beans.SortOrder.OrderType;
-import io.harness.persistence.HIterator;
+import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.jetbrains.annotations.NotNull;
-import org.mongodb.morphia.query.MorphiaIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +32,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -41,7 +42,6 @@ import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
-import software.wings.verification.TimeSeriesDataPoint;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
 import software.wings.verification.dashboard.HeatMapUnit;
@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -627,126 +628,110 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     if (TimeUnit.MILLISECONDS.toDays(endTime - historyStartTime) > 30L) {
       historyStartTime = startTime - TimeUnit.HOURS.toMillis(2) + 1;
     }
-    return getTimeSeriesForTimeRange(historyStartTime, endTime, cvConfiguration, startTime);
+    return getTimeSeriesForTimeRangeFromDataRecords(historyStartTime, endTime, cvConfiguration, startTime);
   }
 
-  @NotNull
-  private Map<String, Map<String, TimeSeriesOfMetric>> getTimeSeriesForTimeRange(
+  private Map<String, Map<String, TimeSeriesOfMetric>> getTimeSeriesForTimeRangeFromDataRecords(
       long startTime, long endTime, CVConfiguration cvConfiguration, long riskCutOffTime) {
     // The object to be returned which contains the map txn => metrics => timeseries per metric
     Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries = new HashMap<>();
-    try (HIterator<TimeSeriesMLAnalysisRecord> timeSeriesAnalysisRecords =
-             new HIterator<>(getTimeSeriesAnalysisRecordIterator(startTime, endTime, cvConfiguration))) {
-      while (timeSeriesAnalysisRecords.hasNext()) {
-        TimeSeriesMLAnalysisRecord record = timeSeriesAnalysisRecords.next();
-        if (record != null && (record.getTransactions() != null || record.getTransactionsCompressedJson() != null)) {
-          record.decompressTransactions();
-          record.getTransactions().forEach((transactionKey, transaction) -> {
-            String transactionName = transaction.getTxn_name();
 
-            // Add empty hashmap corresponding to txn name if not already present in observedTimeSeries hashmap
-            if (!observedTimeSeries.containsKey(transactionName)) {
-              observedTimeSeries.put(transactionName, new HashMap<>());
-            }
+    // int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(endTime));
+    // int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(startTime));
 
-            transaction.getMetrics().forEach((metricKey, metric) -> {
-              // Add empty arraylist corresponding to current metric name, for above transaction name
-              if (!observedTimeSeries.get(transactionName).containsKey(metric.getMetric_name())) {
-                observedTimeSeries.get(transactionName)
-                    .put(metric.getMetric_name(),
-                        TimeSeriesOfMetric.builder()
-                            .metricName(metric.getMetric_name())
-                            .timeSeries(initializeTimeSeriesDataPointsList(
-                                startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1))
-                            .risk(-1)
-                            .build());
-              }
+    int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
+    int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
 
-              // Update risk if record's analysisMinute is >= risk cut-off time
-              if (TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()) > riskCutOffTime) {
-                int candidateRisk = metric.getMax_risk();
-                int currentMaxRisk = observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getRisk();
-                if (candidateRisk > currentMaxRisk) {
-                  observedTimeSeries.get(transactionName).get(metric.getMetric_name()).setRisk(candidateRisk);
-                }
-              }
+    List<NewRelicMetricDataRecord> metricRecords = new ArrayList<>();
 
-              // Logic to insert time series data points
+    PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
+        PageRequestBuilder.aPageRequest()
+            .withLimit("500")
+            .withOffset("0")
+            .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
+            .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
+            .addFilter("dataCollectionMinute", Operator.GE, startMinute)
+            .addFilter("dataCollectionMinute", Operator.LT_EQ, endMinute)
+            .addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME)
+            .build();
 
-              Map<String, TimeSeriesMLHostSummary> results = metric.getResults();
-              Map.Entry<String, TimeSeriesMLHostSummary> metricHostResultsEntry;
-              if (isEmpty(results)) {
-                logger.info("results is empty for time series analysis record with uuid {}", record.getUuid());
-              } else {
-                // For CV 24x7, there has to exist exactly one host
-                if (results.size() > 1) {
-                  logger.info("More than 1 host found for time series analysis record {}", record.getUuid());
-                }
+    int previousOffSet = 0;
+    PageResponse<NewRelicMetricDataRecord> response =
+        wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest);
+    while (!response.isEmpty()) {
+      metricRecords.addAll(response.getResponse());
+      previousOffSet += response.size();
+      dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
+      response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest);
+    }
 
-                // Here we get the iterator to the first entry and dereference it and ignore other entries
-                metricHostResultsEntry = results.entrySet().iterator().next();
-
-                // size of list = CRON INTERVAL IN MINUTES
-                // contains value at each minute
-                List<Double> datapoints = metricHostResultsEntry.getValue().getTest_data();
-
-                Map<Long, TimeSeriesDataPoint> existingPoints =
-                    observedTimeSeries.get(transactionName).get(metric.getMetric_name()).getTimeSeriesMap();
-
-                observedTimeSeries.get(transactionName)
-                    .get(metric.getMetric_name())
-                    .addToRiskMap(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()), metric.getMax_risk());
-
-                if (datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES) {
-                  logger.error(
-                      "datapoints.size() != CRON_POLL_INTERVAL_IN_MINUTES. Cron poll interval = {}, datapoints.size() = {}",
-                      CRON_POLL_INTERVAL_IN_MINUTES, datapoints.size());
-                }
-
-                long timestamp =
-                    TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1;
-                timestamp = Timestamp.nextMinuteBoundary(timestamp);
-                long period = TimeUnit.MINUTES.toMillis(1);
-                for (int j = 0; j < datapoints.size(); j++, timestamp += period) {
-                  if (timestamp > endTime) {
-                    break;
-                  }
-                  if (existingPoints.containsKey(timestamp)) {
-                    existingPoints.get(timestamp).setValue(datapoints.get(j));
-                  } else {
-                    logger.error("Timestamp {} does not exist in timeseries map. txnName={}, metricName={}", timestamp,
-                        transactionName, metric.getMetric_name());
-                  }
-                }
-              }
-            });
-          });
+    for (NewRelicMetricDataRecord metricRecord : metricRecords) {
+      if (!observedTimeSeries.containsKey(metricRecord.getName())) {
+        observedTimeSeries.put(metricRecord.getName(), new HashMap<>());
+      }
+      Map<String, TimeSeriesOfMetric> metricMap = observedTimeSeries.get(metricRecord.getName());
+      for (Entry<String, Double> metricData : metricRecord.getValues().entrySet()) {
+        final String metricName = metricData.getKey();
+        final Double metricValue = metricData.getValue();
+        if (!metricMap.containsKey(metricName)) {
+          metricMap.put(metricName,
+              TimeSeriesOfMetric.builder()
+                  .metricName(metricName)
+                  .timeSeries(initializeTimeSeriesDataPointsList(startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1))
+                  .risk(-1)
+                  .build());
         }
+
+        // fill in the metrics for this record at the correct spots
+        metricMap.get(metricName).addToTimeSeriesMap(metricRecord.getDataCollectionMinute(), metricValue);
       }
     }
+
+    // Find and add the risks for those metrics above
+    updateRisksForTimeSeries(startTime, endTime, riskCutOffTime, cvConfiguration, observedTimeSeries);
     return observedTimeSeries;
   }
 
-  private MorphiaIterator<TimeSeriesMLAnalysisRecord, TimeSeriesMLAnalysisRecord> getTimeSeriesAnalysisRecordIterator(
-      long startTime, long endTime, CVConfiguration cvConfiguration) {
-    TimeSeriesMLAnalysisRecord record = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-                                            .filter("appId", cvConfiguration.getAppId())
-                                            .filter("cvConfigId", cvConfiguration.getUuid())
-                                            .filter("analysisMinute", TimeUnit.MILLISECONDS.toMinutes(endTime))
-                                            .get();
-    long recordEndTime = endTime;
-    if (record == null) {
-      recordEndTime = endTime + TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES);
+  private void updateRisksForTimeSeries(long startTime, long endTime, long riskCutOff, CVConfiguration cvConfiguration,
+      Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries) {
+    List<TimeSeriesMLAnalysisRecord> analysisRecords = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
+                                                           .filter("appId", cvConfiguration.getAppId())
+                                                           .filter("cvConfigId", cvConfiguration.getUuid())
+                                                           .field("analysisMinute")
+                                                           .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime))
+                                                           .field("analysisMinute")
+                                                           .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(endTime))
+                                                           .order("analysisMinute")
+                                                           .asList();
+    analysisRecords.forEach(timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
+    try {
+      for (TimeSeriesMLAnalysisRecord record : analysisRecords) {
+        for (Entry<String, TimeSeriesMLTxnSummary> transaction : record.getTransactions().entrySet()) {
+          Map<String, TimeSeriesOfMetric> metricMap = observedTimeSeries.get(transaction.getValue().getTxn_name());
+          if (metricMap == null) {
+            // there's no data in this time range for this txn, so we're  moving on.
+            continue;
+          }
+
+          for (TimeSeriesMLMetricSummary metricSummary : transaction.getValue().getMetrics().values()) {
+            final String metricName = metricSummary.getMetric_name();
+            if (!metricMap.containsKey(metricName)) {
+              // there's no data in this time range for this metric, so we're  moving on.
+              continue;
+            }
+            if (TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()) > riskCutOff) {
+              metricMap.get(metricSummary.getMetric_name()).updateRisk(metricSummary.getMax_risk());
+            }
+
+            metricMap.get(metricSummary.getMetric_name())
+                .addToRiskMap(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()), metricSummary.getMax_risk());
+          }
+        }
+      }
+    } catch (Exception ex) {
+      logger.error("Exception while computing timeSeries data for cvConfiguration: {}", cvConfiguration.getUuid());
+      throw new WingsException("Exception while computing TimeSeries data", ex);
     }
-    return wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
-        .filter("appId", cvConfiguration.getAppId())
-        .filter("cvConfigId", cvConfiguration.getUuid())
-        .field("analysisMinute")
-        .greaterThan(TimeUnit.MILLISECONDS.toMinutes(startTime))
-        .field("analysisMinute")
-        .lessThanOrEq(TimeUnit.MILLISECONDS.toMinutes(recordEndTime))
-        .order("analysisMinute")
-        .fetch();
   }
 
   public SortedSet<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
@@ -775,7 +760,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
       resp.add(txnTimeSeries);
     }
-    logger.info("Timeseries response = {}", resp);
+    // logger.info("Timeseries response = {}", resp);
     return resp;
   }
 }

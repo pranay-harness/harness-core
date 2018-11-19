@@ -1,5 +1,6 @@
 package software.wings.verification;
 
+import io.harness.time.Timestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,8 +25,9 @@ public class TimeSeriesDataPoint {
   public static SortedMap<Long, TimeSeriesDataPoint> initializeTimeSeriesDataPointsList(
       long startTime, long endTime, long period, int initialValue) {
     SortedMap<Long, TimeSeriesDataPoint> timeSeriesDataPoints = new TreeMap<>();
-    for (long i = startTime; i <= endTime; i += period) {
-      timeSeriesDataPoints.put(i, TimeSeriesDataPoint.builder().timestamp(i).value(initialValue).build());
+    for (long i = endTime; i >= startTime; i -= period) {
+      timeSeriesDataPoints.put(
+          Timestamp.minuteBoundary(i), TimeSeriesDataPoint.builder().timestamp(i).value(initialValue).build());
     }
     return timeSeriesDataPoints;
   }
