@@ -13,11 +13,14 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidRequestException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.beans.trigger.WebhookSource.BitBucketEventType;
 import software.wings.beans.trigger.WebhookSource.GitHubEventType;
 import software.wings.beans.trigger.WebhookSource.GitLabEventType;
 import software.wings.expression.ManagerExpressionEvaluator;
+import software.wings.service.impl.WebHookServiceImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,6 +34,8 @@ public class WebhookEventUtils {
   public static final String X_BIT_BUCKET_EVENT = "X-Event-Key";
 
   @Inject private ManagerExpressionEvaluator expressionEvaluator;
+
+  private static final Logger logger = LoggerFactory.getLogger(WebHookServiceImpl.class);
 
   public static final List<String> eventHeaders =
       Collections.unmodifiableList(asList(X_GIT_HUB_EVENT, X_GIT_LAB_EVENT, X_BIT_BUCKET_EVENT));
@@ -51,75 +56,127 @@ public class WebhookEventUtils {
   }
 
   public String obtainBranchName(WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
-    switch (webhookSource) {
-      case GITHUB: {
-        switch (GitHubEventType.find(httpHeaders.getHeaderString(X_GIT_HUB_EVENT))) {
-          case PUSH:
-            return expressionEvaluator.substitute(GH_PUSH_REF_BRANCH, payload);
-          default:
+    try {
+      switch (webhookSource) {
+        case GITHUB: {
+          GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
+          if (gitHubEventType == null) {
             return null;
+          }
+          switch (gitHubEventType) {
+            case PUSH:
+              return expressionEvaluator.substitute(GH_PUSH_REF_BRANCH, payload);
+            default:
+              return null;
+          }
         }
+        case GITLAB: {
+          GitLabEventType gitLabEventType = getGitLabEventType(httpHeaders);
+          if (gitLabEventType == null) {
+            return null;
+          }
+          switch (gitLabEventType) {
+            case PUSH:
+              return expressionEvaluator.substitute(GIT_LAB_PUSH_REF_BRANCH, payload);
+            default:
+              return null;
+          }
+        }
+        case BITBUCKET:
+          BitBucketEventType bitBucketEventType = getBitBucketEventType(httpHeaders);
+          if (bitBucketEventType == null) {
+            return null;
+          }
+          switch (bitBucketEventType) {
+            case PUSH:
+              return expressionEvaluator.substitute(BIT_BUCKET_BRANCH_REF, payload);
+            default:
+              return null;
+          }
+        default:
+          unhandled(webhookSource);
+          return null;
       }
-      case GITLAB: {
-        switch (GitLabEventType.find(httpHeaders.getHeaderString(X_GIT_LAB_EVENT))) {
-          case PUSH:
-            return expressionEvaluator.substitute(GIT_LAB_PUSH_REF_BRANCH, payload);
-          default:
-            return null;
-        }
-      }
-      case BITBUCKET:
-        switch (BitBucketEventType.find(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT))) {
-          case PUSH:
-            return expressionEvaluator.substitute(BIT_BUCKET_BRANCH_REF, payload);
-          default:
-            return null;
-        }
-      default:
-        unhandled(webhookSource);
+    } catch (Exception e) {
+      logger.error("Failed to resolve the branch name from payload {} and headers {}", payload, httpHeaders);
+      return null;
     }
+  }
 
-    throw new InvalidRequestException("Failed to obtain branch from the payload");
+  private GitHubEventType getGitHubEventType(HttpHeaders httpHeaders) {
+    logger.info("Git Hub Event header {}", httpHeaders.getHeaderString(X_GIT_HUB_EVENT));
+    return GitHubEventType.find(httpHeaders.getHeaderString(X_GIT_HUB_EVENT));
   }
 
   public String obtainCommitId(WebhookSource webhookSource, HttpHeaders httpHeaders, Map<String, Object> payload) {
-    switch (webhookSource) {
-      case GITHUB: {
-        switch (GitHubEventType.find(httpHeaders.getHeaderString(X_GIT_HUB_EVENT))) {
-          case PUSH:
-            return expressionEvaluator.substitute(GH_PUSH_HEAD_COMMIT_ID, payload);
-          default:
+    try {
+      switch (webhookSource) {
+        case GITHUB: {
+          GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
+          if (gitHubEventType == null) {
             return null;
+          }
+          switch (gitHubEventType) {
+            case PUSH:
+              return expressionEvaluator.substitute(GH_PUSH_HEAD_COMMIT_ID, payload);
+            default:
+              return null;
+          }
         }
+        case GITLAB:
+          GitLabEventType gitLabEventType = getGitLabEventType(httpHeaders);
+          if (gitLabEventType == null) {
+            return null;
+          }
+          switch (gitLabEventType) {
+            case PUSH:
+              return expressionEvaluator.substitute(GIT_LAB_PUSH_COMMIT_ID, payload);
+            default:
+              return null;
+          }
+        case BITBUCKET:
+          BitBucketEventType bitBucketEventType = getBitBucketEventType(httpHeaders);
+          if (bitBucketEventType == null) {
+            return null;
+          }
+          switch (bitBucketEventType) {
+            case PUSH:
+              return expressionEvaluator.substitute(BIT_BUCKET_COMMIT_ID, payload);
+            default:
+              return null;
+          }
+        default:
+          unhandled(webhookSource);
+          return null;
       }
-      case GITLAB:
-        switch (GitLabEventType.find(httpHeaders.getHeaderString(X_GIT_LAB_EVENT))) {
-          case PUSH:
-            return expressionEvaluator.substitute(GIT_LAB_PUSH_COMMIT_ID, payload);
-          default:
-            return null;
-        }
-      case BITBUCKET:
-        switch (BitBucketEventType.find(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT))) {
-          case PUSH:
-            return expressionEvaluator.substitute(BIT_BUCKET_COMMIT_ID, payload);
-          default:
-            return null;
-        }
-      default:
-        unhandled(webhookSource);
-        return null;
+    } catch (Exception ex) {
+      logger.error("Failed to resolve the branch name from payload {} and headers {}", payload, httpHeaders);
+      return null;
     }
+  }
+
+  private BitBucketEventType getBitBucketEventType(HttpHeaders httpHeaders) {
+    logger.info("Bit Bucket event header {}", httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT));
+    return BitBucketEventType.find(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT));
+  }
+
+  private GitLabEventType getGitLabEventType(HttpHeaders httpHeaders) {
+    logger.info("Git Lab Event header {}", httpHeaders.getHeaderString(X_GIT_LAB_EVENT));
+    return GitLabEventType.find(httpHeaders.getHeaderString(X_GIT_LAB_EVENT));
   }
 
   public String obtainEventType(WebhookSource webhookSource, HttpHeaders httpHeaders) {
     switch (webhookSource) {
       case GITHUB:
-        return GitHubEventType.find(httpHeaders.getHeaderString(X_GIT_HUB_EVENT)).getValue();
+        GitHubEventType gitHubEventType = getGitHubEventType(httpHeaders);
+        return gitHubEventType == null ? httpHeaders.getHeaderString(X_GIT_HUB_EVENT) : gitHubEventType.getValue();
       case GITLAB:
-        return GitLabEventType.find(httpHeaders.getHeaderString(X_GIT_LAB_EVENT)).getValue();
+        GitLabEventType gitLabEventType = getGitLabEventType(httpHeaders);
+        return gitLabEventType == null ? httpHeaders.getHeaderString(X_GIT_LAB_EVENT) : gitLabEventType.getValue();
       case BITBUCKET:
-        return BitBucketEventType.find(httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT)).getValue();
+        BitBucketEventType bitBucketEventType = getBitBucketEventType(httpHeaders);
+        return bitBucketEventType == null ? httpHeaders.getHeaderString(X_BIT_BUCKET_EVENT)
+                                          : bitBucketEventType.getValue();
       default:
         unhandled(webhookSource);
         return null;
