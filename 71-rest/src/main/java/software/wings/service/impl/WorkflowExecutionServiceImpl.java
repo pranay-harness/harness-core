@@ -291,7 +291,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   void trigger(String appId, String stateMachineId, String executionUuid, String executionName,
       StateMachineExecutionCallback callback) {
-    preDeploymentChecker.check(appId);
+    preDeploymentChecker.checkIfAccountExpired(appId);
     stateMachineExecutor.execute(appId, stateMachineId, executionUuid, executionName, null, callback);
   }
 
@@ -912,7 +912,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   public WorkflowExecution triggerPipelineExecution(String appId, String pipelineId, ExecutionArgs executionArgs,
       WorkflowExecutionUpdate workflowExecutionUpdate, Trigger trigger) {
-    preDeploymentChecker.check(appId);
+    preDeploymentChecker.checkIfAccountExpired(appId);
     Pipeline pipeline =
         pipelineService.readPipelineWithResolvedVariables(appId, pipelineId, executionArgs.getWorkflowVariables());
     if (pipeline == null) {
@@ -1011,7 +1011,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public WorkflowExecution triggerOrchestrationWorkflowExecution(String appId, String envId, String workflowId,
       String pipelineExecutionId, @NotNull ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate,
       Trigger trigger) {
-    preDeploymentChecker.check(appId);
+    preDeploymentChecker.checkIfAccountExpired(appId);
 
     // TODO - validate list of artifact Ids if it's matching for all the services involved in this orchestration
 
@@ -1437,14 +1437,14 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     // logging as JSON because logDNA automatically parses json objects.
     // https://docs.logdna.com/docs/ingestion#section-json-parsing
     JSONObject context = new JSONObject().put("appId", appId);
+    String accountId = appService.getAccountIdByAppId(appId);
+    context.put("accountId", accountId);
 
-    try {
-      String accountId = appService.getAccountIdByAppId(appId);
-      context.put("accountId", accountId);
-      logger.info("Execution Triggered. {}", context.toString());
-    } catch (Exception e) {
-      logger.error("Error getting accountId. {}", context.toString());
-    }
+    // This log is used to derive deployment metrics in logDNA, so if you change it, update the logDNA dashboard.
+    logger.info("Execution Triggered. {}", context.toString());
+
+    // throws exception if account exceeds deployment rate limits
+    preDeploymentChecker.checkDeploymentRateLimit(accountId, appId);
 
     switch (executionArgs.getWorkflowType()) {
       case PIPELINE: {
@@ -1493,7 +1493,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
    */
   private WorkflowExecution triggerSimpleExecution(
       String appId, String envId, ExecutionArgs executionArgs, WorkflowExecutionUpdate workflowExecutionUpdate) {
-    preDeploymentChecker.check(appId);
+    preDeploymentChecker.checkIfAccountExpired(appId);
     Workflow workflow = workflowService.readLatestSimpleWorkflow(appId, envId);
     String workflowId = workflow.getUuid();
 
