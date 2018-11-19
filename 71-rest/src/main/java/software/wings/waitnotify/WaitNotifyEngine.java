@@ -1,7 +1,5 @@
 package software.wings.waitnotify;
 
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.beans.SearchFilter.Operator.EQ;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -15,17 +13,16 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.mongodb.DuplicateKeyException;
-import io.harness.beans.PageRequest;
-import io.harness.beans.PageResponse;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * WaitNotifyEngine allows tasks to register in waitQueue and get notified via callback.
@@ -39,7 +36,7 @@ public class WaitNotifyEngine {
 
   private static final long NO_TIMEOUT = 0L;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   @Inject private Queue<NotifyEvent> notifyQueue;
 
@@ -113,10 +110,12 @@ public class WaitNotifyEngine {
     try {
       String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response, error));
 
-      PageRequest<WaitQueue> req =
-          aPageRequest().withReadPref(ReadPref.CRITICAL).addFilter("correlationId", EQ, correlationId).build();
-      PageResponse<WaitQueue> waitQueuesResponse = wingsPersistence.query(WaitQueue.class, req, excludeAuthority);
-      waitQueuesResponse.forEach(waitQueue
+      final List<WaitQueue> waitQueues =
+          wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
+              .filter(WaitQueue.CORRELATION_ID_KEY, correlationId)
+              .asList();
+
+      waitQueues.forEach(waitQueue
           -> notifyQueue.send(
               aNotifyEvent().withWaitInstanceId(waitQueue.getWaitInstanceId()).withError(error).build()));
 

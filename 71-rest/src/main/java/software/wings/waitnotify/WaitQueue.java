@@ -1,6 +1,5 @@
 package software.wings.waitnotify;
 
-import com.esotericsoftware.kryo.NotNull;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
@@ -15,6 +14,7 @@ import org.mongodb.morphia.annotations.Indexed;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import javax.validation.constraints.NotNull;
 
 /**
  * Represents WaitQueue.
