@@ -4,6 +4,7 @@ import static com.google.common.base.Joiner.on;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -22,6 +23,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
+import com.amazonaws.services.autoscaling.model.BlockDeviceMapping;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.LaunchConfiguration;
@@ -46,6 +48,7 @@ import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.utils.AsgConvention;
 
@@ -67,6 +70,7 @@ public class AwsAmiHelperServiceDelegateImpl
   @Inject private ExecutorService executorService;
   @Inject private AwsAsgHelperServiceDelegate awsAsgHelperServiceDelegate;
   @Inject private AwsElbHelperServiceDelegate awsElbHelperServiceDelegate;
+  @Inject private AwsEc2HelperServiceDelegate awsEc2HelperServiceDelegate;
 
   @Override
   public AwsAmiSwitchRoutesResponse switchAmiRoutes(
@@ -461,8 +465,8 @@ public class AwsAmiHelperServiceDelegateImpl
       logCallback.saveExecutionLog(
           format("Creating new launch configuration [%s]", baseLaunchConfiguration.getLaunchConfigurationName()));
       awsAsgHelperServiceDelegate.createLaunchConfiguration(awsConfig, encryptionDetails, region,
-          createNewLaunchConfigurationRequest(
-              request.getArtifactRevision(), baseLaunchConfiguration, newAutoScalingGroupName, request.getUserData()));
+          createNewLaunchConfigurationRequest(awsConfig, encryptionDetails, region, request.getArtifactRevision(),
+              baseLaunchConfiguration, newAutoScalingGroupName, request.getUserData()));
 
       logCallback.saveExecutionLog(format("Creating new AutoScalingGroup [%s]", newAutoScalingGroupName));
       awsAsgHelperServiceDelegate.createAutoScalingGroup(awsConfig, encryptionDetails, region,
@@ -606,12 +610,28 @@ public class AwsAmiHelperServiceDelegateImpl
     return createAutoScalingGroupRequest;
   }
 
-  private CreateLaunchConfigurationRequest createNewLaunchConfigurationRequest(String artifactRevision,
+  private List<BlockDeviceMapping> getBlockDeviceMappings(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, LaunchConfiguration baseLaunchConfiguration) {
+    Set<String> deviceNamesInBaseAmi = awsEc2HelperServiceDelegate.listBlockDeviceNamesOfAmi(
+        awsConfig, encryptedDataDetails, region, baseLaunchConfiguration.getImageId());
+    List<BlockDeviceMapping> baseMappings = baseLaunchConfiguration.getBlockDeviceMappings();
+    if (isNotEmpty(baseMappings)) {
+      return baseMappings.stream()
+          .filter(mapping -> !deviceNamesInBaseAmi.contains(mapping.getDeviceName()))
+          .collect(toList());
+    }
+    return emptyList();
+  }
+
+  private CreateLaunchConfigurationRequest createNewLaunchConfigurationRequest(AwsConfig awsConfig,
+      List<EncryptedDataDetail> encryptedDataDetails, String region, String artifactRevision,
       LaunchConfiguration cloneBaseLaunchConfiguration, String newAutoScalingGroupName, String userData) {
     CreateLaunchConfigurationRequest createLaunchConfigurationRequest =
         new CreateLaunchConfigurationRequest()
             .withLaunchConfigurationName(newAutoScalingGroupName)
             .withImageId(artifactRevision)
+            .withBlockDeviceMappings(
+                getBlockDeviceMappings(awsConfig, encryptedDataDetails, region, cloneBaseLaunchConfiguration))
             .withSecurityGroups(cloneBaseLaunchConfiguration.getSecurityGroups())
             .withClassicLinkVPCId(cloneBaseLaunchConfiguration.getClassicLinkVPCId())
             .withEbsOptimized(cloneBaseLaunchConfiguration.getEbsOptimized())
