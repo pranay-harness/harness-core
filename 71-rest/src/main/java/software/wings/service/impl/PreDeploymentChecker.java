@@ -28,19 +28,11 @@ public class PreDeploymentChecker {
 
   private static final Logger log = LoggerFactory.getLogger(PreDeploymentChecker.class);
 
-  public void check(String appId) {
-    Application application = appService.get(appId, false);
-    requireNonNull(application, "Application not found. Is the application ID correct? AppId: " + appId);
-
-    checkDeploymentRateLimit(application.getAccountId(), appId);
-    checkIfAccountExpired(application.getAccountId(), appId);
-  }
-
   /**
    * checks if the deployments being done is within allowed rate limits.
    * @throws WingsException with errorCode {@link ErrorCode#USAGE_LIMITS_EXCEEDED} in case limits are exceeded.
    */
-  private void checkDeploymentRateLimit(String accountId, String appId) {
+  public void checkDeploymentRateLimit(String accountId, String appId) {
     Action deployAction = new Action(accountId, ActionType.DEPLOY);
     try {
       LimitChecker checker = limitCheckerFactory.getInstance(deployAction);
@@ -55,8 +47,11 @@ public class PreDeploymentChecker {
     }
   }
 
-  private void checkIfAccountExpired(String accountId, String appId) throws WingsException {
-    boolean isAccountExpired = accountService.isAccountExpired(accountId);
+  public void checkIfAccountExpired(String appId) throws WingsException {
+    Application application = appService.get(appId, false);
+    requireNonNull(application, "Application not found. Is the application ID correct? AppId: " + appId);
+
+    boolean isAccountExpired = accountService.isAccountExpired(application.getAccountId());
     if (isAccountExpired) {
       throw new WingsException(GENERAL_ERROR, USER)
           .addParam("message", "Trial license expired!!! Please contact Harness Support.");
