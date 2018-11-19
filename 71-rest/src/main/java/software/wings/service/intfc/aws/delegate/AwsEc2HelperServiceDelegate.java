@@ -22,4 +22,6 @@ public interface AwsEc2HelperServiceDelegate {
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, List<Filter> filters);
   List<Instance> listEc2Instances(
       AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, List<String> instanceIds, String region);
+  Set<String> listBlockDeviceNamesOfAmi(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String amiId);
 }

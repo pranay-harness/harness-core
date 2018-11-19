@@ -1,8 +1,11 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -14,6 +17,9 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.ec2.AmazonEC2ClientBuilder;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
+import com.amazonaws.services.ec2.model.BlockDeviceMapping;
+import com.amazonaws.services.ec2.model.DescribeImagesRequest;
+import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesRequest;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsRequest;
@@ -23,6 +29,7 @@ import com.amazonaws.services.ec2.model.DescribeTagsRequest;
 import com.amazonaws.services.ec2.model.DescribeTagsResult;
 import com.amazonaws.services.ec2.model.DescribeVpcsRequest;
 import com.amazonaws.services.ec2.model.Filter;
+import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.SecurityGroup;
@@ -36,8 +43,8 @@ import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Singleton
 public class AwsEc2HelperServiceDelegateImpl
@@ -170,7 +177,7 @@ public class AwsEc2HelperServiceDelegateImpl
                                              .withNextToken(nextToken)
                                              .withFilters(new Filter("resource-type").withValues(resourceType))
                                              .withMaxResults(1000));
-        tags.addAll(describeTagsResult.getTags().stream().map(TagDescription::getKey).collect(Collectors.toSet()));
+        tags.addAll(describeTagsResult.getTags().stream().map(TagDescription::getKey).collect(toSet()));
         nextToken = describeTagsResult.getNextToken();
       } while (nextToken != null);
     } catch (AmazonServiceException amazonServiceException) {
@@ -232,6 +239,36 @@ public class AwsEc2HelperServiceDelegateImpl
       handleAmazonClientException(amazonClientException);
     }
     return emptyList();
+  }
+
+  @Override
+  public Set<String> listBlockDeviceNamesOfAmi(
+      AwsConfig awsConfig, List<EncryptedDataDetail> encryptionDetails, String region, String amiId) {
+    try {
+      if (isEmpty(amiId)) {
+        return emptySet();
+      }
+      encryptionService.decrypt(awsConfig, encryptionDetails);
+      AmazonEC2Client amazonEC2Client = getAmazonEc2Client(
+          region, awsConfig.getAccessKey(), awsConfig.getSecretKey(), awsConfig.isUseEc2IamCredentials());
+      DescribeImagesRequest request = new DescribeImagesRequest().withImageIds(amiId);
+      DescribeImagesResult result = amazonEC2Client.describeImages(request);
+      List<Image> images = result.getImages();
+      if (isNotEmpty(images)) {
+        Optional<Image> optionalImage = images.stream().filter(image -> amiId.equals(image.getImageId())).findFirst();
+        if (optionalImage.isPresent()) {
+          List<BlockDeviceMapping> blockDeviceMappings = optionalImage.get().getBlockDeviceMappings();
+          if (isNotEmpty(blockDeviceMappings)) {
+            return blockDeviceMappings.stream().map(BlockDeviceMapping::getDeviceName).collect(toSet());
+          }
+        }
+      }
+    } catch (AmazonServiceException amazonServiceException) {
+      handleAmazonServiceException(amazonServiceException);
+    } catch (AmazonClientException amazonClientException) {
+      handleAmazonClientException(amazonClientException);
+    }
+    return emptySet();
   }
 
   private List<Instance> getInstanceList(DescribeInstancesResult result) {

@@ -11,12 +11,15 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 
 import com.amazonaws.services.ec2.AmazonEC2Client;
+import com.amazonaws.services.ec2.model.BlockDeviceMapping;
+import com.amazonaws.services.ec2.model.DescribeImagesResult;
 import com.amazonaws.services.ec2.model.DescribeInstancesResult;
 import com.amazonaws.services.ec2.model.DescribeRegionsResult;
 import com.amazonaws.services.ec2.model.DescribeSecurityGroupsResult;
 import com.amazonaws.services.ec2.model.DescribeSubnetsResult;
 import com.amazonaws.services.ec2.model.DescribeTagsResult;
 import com.amazonaws.services.ec2.model.DescribeVpcsResult;
+import com.amazonaws.services.ec2.model.Image;
 import com.amazonaws.services.ec2.model.Instance;
 import com.amazonaws.services.ec2.model.Region;
 import com.amazonaws.services.ec2.model.Reservation;
@@ -177,5 +180,27 @@ public class AwsEc2HelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(instances.size()).isEqualTo(2);
     assertThat(instances.get(0).getInstanceId()).isEqualTo("id1");
     assertThat(instances.get(1).getInstanceId()).isEqualTo("id2");
+  }
+
+  @Test
+  public void testListBlockDeviceNamesOfAmi() {
+    AmazonEC2Client mockClient = mock(AmazonEC2Client.class);
+    doReturn(mockClient)
+        .when(awsEc2HelperServiceDelegate)
+        .getAmazonEc2Client(anyString(), anyString(), any(), anyBoolean());
+    doReturn(null).when(mockEncryptionService).decrypt(any(), anyList());
+    doReturn(new DescribeImagesResult().withImages(
+                 new Image()
+                     .withBlockDeviceMappings(new BlockDeviceMapping().withDeviceName("name0"),
+                         new BlockDeviceMapping().withDeviceName("name1"))
+                     .withImageId("ami")))
+        .when(mockClient)
+        .describeImages(any());
+    Set<String> names = awsEc2HelperServiceDelegate.listBlockDeviceNamesOfAmi(
+        AwsConfig.builder().build(), emptyList(), "us-east-1", "ami");
+    assertThat(names).isNotNull();
+    assertThat(names.size()).isEqualTo(2);
+    assertThat(names.contains("name0")).isTrue();
+    assertThat(names.contains("name1")).isTrue();
   }
 }

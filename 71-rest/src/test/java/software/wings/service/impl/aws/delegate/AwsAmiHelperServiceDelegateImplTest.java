@@ -21,8 +21,10 @@ import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelega
 import static software.wings.service.impl.aws.delegate.AwsAmiHelperServiceDelegateImpl.NAME_TAG;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import com.amazonaws.services.autoscaling.model.AutoScalingGroup;
+import com.amazonaws.services.autoscaling.model.BlockDeviceMapping;
 import com.amazonaws.services.autoscaling.model.CreateAutoScalingGroupRequest;
 import com.amazonaws.services.autoscaling.model.CreateLaunchConfigurationRequest;
 import com.amazonaws.services.autoscaling.model.InstanceMonitoring;
@@ -42,6 +44,7 @@ import software.wings.service.impl.aws.model.AwsAmiServiceSetupResponse.AwsAmiSe
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesRequest;
 import software.wings.service.impl.aws.model.AwsAmiSwitchRoutesResponse;
 import software.wings.service.intfc.aws.delegate.AwsAsgHelperServiceDelegate;
+import software.wings.service.intfc.aws.delegate.AwsEc2HelperServiceDelegate;
 import software.wings.service.intfc.aws.delegate.AwsElbHelperServiceDelegate;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -54,6 +57,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   @Mock private ExecutorService mockExecutorService;
   @Mock private AwsAsgHelperServiceDelegate mockAwsAsgHelperServiceDelegate;
   @Mock private AwsElbHelperServiceDelegate mockAwsElbHelperServiceDelegate;
+  @Mock private AwsEc2HelperServiceDelegate mockAwsEc2HelperServiceDelegate;
   @Mock private EncryptionService mockEncryptionService;
 
   @InjectMocks private AwsAmiHelperServiceDelegateImpl awsAmiHelperServiceDelegate;
@@ -212,6 +216,25 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
   }
 
   @Test
+  public void testGetBlockDeviceMappings() {
+    LaunchConfiguration baseLC = new LaunchConfiguration().withBlockDeviceMappings(
+        new BlockDeviceMapping().withDeviceName("name0"), new BlockDeviceMapping().withDeviceName("name1"));
+    doReturn(ImmutableSet.of("name1"))
+        .when(mockAwsEc2HelperServiceDelegate)
+        .listBlockDeviceNamesOfAmi(any(), anyList(), anyString(), anyString());
+    List<BlockDeviceMapping> result = null;
+    try {
+      result = (List<BlockDeviceMapping>) invokeMethod(awsAmiHelperServiceDelegate, true, "getBlockDeviceMappings",
+          new Object[] {AwsConfig.builder().build(), emptyList(), "us-east-1", baseLC});
+    } catch (Exception ex) {
+      fail(format("Exception: [%s]", ex.getMessage()));
+    }
+    assertThat(result).isNotNull();
+    assertThat(result.size()).isEqualTo(1);
+    assertThat(result.get(0).getDeviceName()).isEqualTo("name0");
+  }
+
+  @Test
   public void testCreateNewLaunchConfigurationRequest() {
     LaunchConfiguration cloneBaseLaunchConfiguration =
         new LaunchConfiguration()
@@ -220,6 +243,7 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
             .withEbsOptimized(true)
             .withAssociatePublicIpAddress(true)
             .withInstanceType("iType")
+            .withBlockDeviceMappings(new BlockDeviceMapping().withDeviceName("name0"))
             .withKernelId("kId")
             .withRamdiskId("rId")
             .withInstanceMonitoring(new InstanceMonitoring().withEnabled(true))
@@ -231,7 +255,8 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     try {
       request = (CreateLaunchConfigurationRequest) invokeMethod(awsAmiHelperServiceDelegate, true,
           "createNewLaunchConfigurationRequest",
-          new Object[] {"aRev", cloneBaseLaunchConfiguration, "newName", "userData"});
+          new Object[] {AwsConfig.builder().build(), emptyList(), "us-east-1", "aRev", cloneBaseLaunchConfiguration,
+              "newName", "userData"});
     } catch (Exception ex) {
       fail(format("Exception: [%s]", ex.getMessage()));
     }
@@ -241,6 +266,8 @@ public class AwsAmiHelperServiceDelegateImplTest extends WingsBaseTest {
     assertThat(request.getSecurityGroups()).isEqualTo(asList("sg1", "sg2"));
     assertThat(request.getClassicLinkVPCId()).isEqualTo("cLVI");
     assertThat(request.getEbsOptimized()).isEqualTo(true);
+    assertThat(request.getBlockDeviceMappings().size()).isEqualTo(1);
+    assertThat(request.getBlockDeviceMappings().get(0).getDeviceName()).isEqualTo("name0");
     assertThat(request.getAssociatePublicIpAddress()).isEqualTo(true);
     assertThat(request.getUserData()).isEqualTo("userData");
     assertThat(request.getInstanceType()).isEqualTo("iType");
