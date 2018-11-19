@@ -30,6 +30,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.rule.OwnerRule.Owner;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Answers;
 import org.mockito.InjectMocks;
@@ -133,6 +134,7 @@ public class WebHookServiceTest extends WingsBaseTest {
   }
 
   @Test
+  @Ignore
   public void shouldExecuteByEventTriggerInvalidJson() {
     when(triggerService.getTriggerByWebhookToken(token)).thenReturn(trigger);
     String payLoad = "Some payload";

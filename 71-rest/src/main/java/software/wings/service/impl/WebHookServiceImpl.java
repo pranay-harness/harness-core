@@ -126,7 +126,8 @@ public class WebHookServiceImpl implements WebHookService {
     TriggerExecutionBuilder triggerExecutionBuilder = TriggerExecution.builder();
     TriggerExecution triggerExecution = triggerExecutionBuilder.build();
     try {
-      logger.debug("Received the webhook event payload {}", webhookEventPayload);
+      logger.info("Received the webhook event payload {}", webhookEventPayload);
+      logger.info("Received the webhook event payload headers {}", httpHeaders);
       Trigger trigger = triggerService.getTriggerByWebhookToken(token);
       if (trigger == null) {
         return WebHookResponse.builder().error("Trigger not associated to the given token").build();
@@ -175,7 +176,7 @@ public class WebHookServiceImpl implements WebHookService {
       triggerExecutionService.save(triggerExecution);
       return WebHookResponse.builder().error(triggerExecution.getMessage()).build();
     } catch (Exception ex) {
-      logger.warn(format("Webhook Request call failed "), ex);
+      logger.error(format("Webhook Request call failed "), ex);
       triggerExecution.setStatus(Status.FAILED);
       triggerExecution.setMessage(Misc.getMessage(ex));
       triggerExecutionService.save(triggerExecution);
@@ -239,13 +240,12 @@ public class WebHookServiceImpl implements WebHookService {
     if (WebhookSource.GITHUB.equals(webhookSource)) {
       validateGitHubWebhook(trigger, webhookTriggerCondition, payLoadMap, httpHeaders);
     }
-
+    webhookEventDetails.setPayload(payload);
     webhookEventDetails.setBranchName(webhookEventUtils.obtainBranchName(webhookSource, httpHeaders, payLoadMap));
     webhookEventDetails.setCommitId(webhookEventUtils.obtainCommitId(webhookSource, httpHeaders, payLoadMap));
     webhookEventDetails.setWebhookSource(webhookSource.name());
     webhookEventDetails.setWebhookEventType(webhookEventUtils.obtainEventType(webhookSource, httpHeaders));
     webhookEventDetails.setPrAction(webhookEventUtils.obtainPrAction(webhookSource, payLoadMap));
-    webhookEventDetails.setPayload(payload);
     webhookEventDetails.setGitConnectorId(webhookTriggerCondition.getGitConnectorId());
     webhookEventDetails.setFilePaths(webhookTriggerCondition.getFilePaths());
 
