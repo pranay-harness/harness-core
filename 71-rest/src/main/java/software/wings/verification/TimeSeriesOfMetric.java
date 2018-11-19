@@ -54,6 +54,12 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
     return risksForTimeSeries;
   }
 
+  public void updateRisk(int newRisk) {
+    if (newRisk > risk) {
+      risk = newRisk;
+    }
+  }
+
   public void addToRiskMap(long analysisTime, int risk) {
     if (risksForTimeSeries == null) {
       risksForTimeSeries = new TreeMap<>();
@@ -64,6 +70,16 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
             .endTime(analysisTime)
             .risk(risk)
             .build());
+  }
+
+  public void addToTimeSeriesMap(long dataCollectionMinute, double metricValue) {
+    long dataCollectionMillis = TimeUnit.MINUTES.toMillis(dataCollectionMinute);
+    if (!timeSeries.containsKey(dataCollectionMillis)) {
+      logger.error("Incorrect time " + dataCollectionMinute + " in TimeSeries API for metric: " + metricName);
+      return;
+    }
+    timeSeries.put(
+        dataCollectionMillis, TimeSeriesDataPoint.builder().timestamp(dataCollectionMillis).value(metricValue).build());
   }
 
   @Override
