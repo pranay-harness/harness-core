@@ -3,9 +3,11 @@ package software.wings.app;
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.time.Duration.ofSeconds;
 import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.common.Constants.USER_CACHE;
+import static software.wings.dl.WingsPersistence.LOCKS_STORE;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -40,6 +42,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.HazelcastListener;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoModule;
+import io.harness.persistence.HPersistence;
 import io.harness.scheduler.PersistentScheduler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
@@ -238,6 +241,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
+    registerStores(configuration, injector);
+
     registerResources(environment, injector);
 
     registerManagedBeans(environment, injector);
@@ -321,6 +326,15 @@ public class WingsApplication extends Application<MainConfiguration> {
     MaintenanceController.resetForceMaintenance();
 
     logger.info("Starting app done");
+  }
+
+  private void registerStores(MainConfiguration configuration, Injector injector) {
+    final HPersistence persistence = injector.getInstance(HPersistence.class);
+    if (isNotEmpty(configuration.getMongoConnectionFactory().getLocksUri())
+        && !configuration.getMongoConnectionFactory().getLocksUri().equals(
+               configuration.getMongoConnectionFactory().getUri())) {
+      persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri());
+    }
   }
 
   private void registerAuditResponseFilter(Environment environment, Injector injector) {

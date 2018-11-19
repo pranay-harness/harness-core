@@ -1,7 +1,7 @@
 package software.wings.scheduler;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+import static software.wings.dl.WingsPersistence.LOCKS_STORE;
 
 import com.google.inject.Inject;
 
@@ -63,7 +63,7 @@ public class PersistentLockCleanupJob implements Job {
                                      .append("lockState", "unlocked")
                                      .append("lastUpdated", new BasicDBObject("$lt", Date.from(date.toInstant())));
 
-    return wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "locks").find(filter).limit(1000);
+    return wingsPersistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks").find(filter).limit(1000);
   }
 
   @Override
