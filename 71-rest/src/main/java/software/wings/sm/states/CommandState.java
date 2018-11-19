@@ -413,7 +413,12 @@ public class CommandState extends State {
       delegateTaskId = delegateService.queueTask(delegateTask);
       logger.info("DelegateTaskId [{}] sent for activityId [{}]", delegateTaskId, activityId);
     } catch (Exception e) {
-      logger.error("Exception in command execution", e);
+      if (e instanceof WingsException) {
+        logger.warn("Exception in command execution", e);
+      } else {
+        // unhandled exception
+        logger.error("Exception in command execution", e);
+      }
       handleCommandException(context, activityId, appId);
       updateWorkflowExecutionStats(ExecutionStatus.FAILED, context);
       return anExecutionResponse()
