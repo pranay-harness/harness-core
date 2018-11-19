@@ -79,7 +79,7 @@ public class MongoModule extends AbstractModule {
     JAVA_PACKAGES_TO_SCAN.forEach(morphia::mapPackage);
 
     MongoClientURI clientUri = new MongoClientURI(uri, MongoClientOptions.builder(mongoClientOptions));
-    MongoClient mongoClient = new MongoClient(uri);
+    MongoClient mongoClient = new MongoClient(clientUri);
 
     AdvancedDatastore datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, clientUri.getDatabase());
     datastore.setQueryFactory(new QueryFactory());

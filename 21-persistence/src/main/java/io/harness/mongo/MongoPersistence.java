@@ -55,8 +55,13 @@ public class MongoPersistence implements HPersistence {
 
   @Override
   public AdvancedDatastore getDatastore(Store store, ReadPref readPref) {
-    return datastoreMap.computeIfAbsent(
-        key(store, readPref), key -> MongoModule.createDatastore(storeUri.get(store.getName()), readPref));
+    return datastoreMap.computeIfAbsent(key(store, readPref), key -> {
+      final String uri = storeUri.get(store.getName());
+      if (isEmpty(uri)) {
+        return getDatastore(DEFAULT_STORE, readPref);
+      }
+      return MongoModule.createDatastore(storeUri.get(store.getName()), readPref);
+    });
   }
 
   @Override
