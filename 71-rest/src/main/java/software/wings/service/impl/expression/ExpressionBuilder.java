@@ -113,6 +113,7 @@ public abstract class ExpressionBuilder {
   protected static final String HOST_INSTANCE_VPCID = "host.ec2Instance.vpcId";
 
   protected static final String INFRA_KUBERNETES_NAMESPACE = "infra.kubernetes.namespace";
+  protected static final String INFRA_KUBERNETES_INFRAID = "infra.kubernetes.infraId";
   protected static final String INFRA_HELM_SHORTID = "infra.helm.shortId";
   protected static final String INFRA_HELM_RELEASENAME = "infra.helm.releaseName";
 
@@ -166,7 +167,7 @@ public abstract class ExpressionBuilder {
         HOST_INSTANCE_PRIVATEIP, HOST_INSTANCE_PUBLICDNS, HOST_INSTANCE_PUBLICIP, HOST_INSTANCE_SUBNETID,
         HOST_INSTANCE_VPCID));
 
-    expressions.addAll(asList(INFRA_KUBERNETES_NAMESPACE));
+    expressions.addAll(asList(INFRA_KUBERNETES_NAMESPACE, INFRA_KUBERNETES_INFRAID));
     expressions.addAll(asList(INFRA_ROUTE_PCF, INFRA_TEMP_ROUTE_PCF));
     expressions.add(DEPLOYMENT_TRIGGERED_BY);
 

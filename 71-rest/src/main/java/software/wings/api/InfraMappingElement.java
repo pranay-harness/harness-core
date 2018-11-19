@@ -21,6 +21,7 @@ public class InfraMappingElement {
   @Data
   public static class Kubernetes {
     private String namespace;
+    private String infraId;
   }
 
   @Builder

@@ -243,6 +243,7 @@ public class KubernetesSetupTest extends WingsBaseTest {
     when(artifactStreamService.get(any(), any())).thenReturn(artifactStream);
 
     InfrastructureMapping infrastructureMapping = aGcpKubernetesInfrastructureMapping()
+                                                      .withUuid(generateUuid())
                                                       .withClusterName(CLUSTER_NAME)
                                                       .withComputeProviderSettingId(COMPUTE_PROVIDER_ID)
                                                       .build();

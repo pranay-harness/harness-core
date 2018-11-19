@@ -93,6 +93,7 @@ public class KubernetesSetupCommandUnitTest extends WingsBaseTest {
                                                   .withClusterName("cluster")
                                                   .withUseFixedInstances(true)
                                                   .withFixedInstances(3)
+                                                  .withReleaseName("release-Name")
                                                   .build();
   private SettingAttribute computeProvider = aSettingAttribute().withValue(GcpConfig.builder().build()).build();
   private CommandExecutionContext context = aCommandExecutionContext()

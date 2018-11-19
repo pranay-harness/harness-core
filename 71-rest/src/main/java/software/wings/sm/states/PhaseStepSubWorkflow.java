@@ -249,6 +249,7 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         return singletonList(
             ContainerRollbackRequestElement.builder()
                 .controllerNamePrefix(commandStepExecutionSummary.getControllerNamePrefix())
+                .releaseName(commandStepExecutionSummary.getReleaseName())
                 .previousEcsServiceSnapshotJson(commandStepExecutionSummary.getPreviousEcsServiceSnapshotJson())
                 .ecsServiceArn(commandStepExecutionSummary.getEcsServiceArn())
                 .previousAwsAutoScalarConfigs(commandStepExecutionSummary.getPreviousAwsAutoScalarConfigs())
