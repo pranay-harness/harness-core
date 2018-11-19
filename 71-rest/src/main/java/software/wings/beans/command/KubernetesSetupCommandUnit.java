@@ -38,7 +38,6 @@ import static software.wings.utils.KubernetesConvention.getInternalHarnessConfig
 import static software.wings.utils.KubernetesConvention.getKubernetesRegistrySecretName;
 import static software.wings.utils.KubernetesConvention.getKubernetesServiceName;
 import static software.wings.utils.KubernetesConvention.getLabelValue;
-import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getPrimaryServiceName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
@@ -207,8 +206,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
       commandExecutionDataBuilder.namespace(setupParams.getNamespace());
 
       harnessAnnotations = getHarnessAnnotations(setupParams);
-      lookupLabels = ImmutableMap.of(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
-          getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()));
+      lookupLabels = ImmutableMap.of(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName());
 
       KubernetesConfig kubernetesConfig;
       List<EncryptedDataDetail> encryptedDataDetails;
@@ -656,23 +654,20 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private ImmutableMap<String, String> getLabels(KubernetesSetupParams setupParams) {
     return ImmutableMap.<String, String>builder()
         .put(HARNESS_KUBERNETES_MANAGED_LABEL_KEY, "true")
-        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
-            getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
+        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName())
         .build();
   }
 
   private ImmutableMap<String, String> getNewLabelSelectors(KubernetesSetupParams setupParams) {
     return ImmutableMap.<String, String>builder()
-        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
-            getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
+        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName())
         .build();
   }
 
   private ImmutableMap<String, String> getLabelsWithRevision(KubernetesSetupParams setupParams, String revision) {
     return ImmutableMap.<String, String>builder()
         .put(HARNESS_KUBERNETES_MANAGED_LABEL_KEY, "true")
-        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
-            getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
+        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName())
         .put(HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision)
         .build();
   }
@@ -688,8 +683,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
   private ImmutableMap<String, String> getNewLabelSelectorsWithRevision(
       KubernetesSetupParams setupParams, String revision) {
     return ImmutableMap.<String, String>builder()
-        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY,
-            getNormalizedInfraMappingIdLabelValue(setupParams.getInfraMappingId()))
+        .put(HARNESS_KUBERNETES_INFRA_MAPPING_ID_LABEL_KEY, setupParams.getReleaseName())
         .put(HARNESS_KUBERNETES_REVISION_LABEL_KEY, revision)
         .build();
   }

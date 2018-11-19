@@ -10,6 +10,7 @@ import static software.wings.beans.ResizeStrategy.RESIZE_NEW_FIRST;
 import static software.wings.beans.command.KubernetesSetupParams.KubernetesSetupParamsBuilder.aKubernetesSetupParams;
 import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.KUBERNETES_SETUP;
+import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
 import com.google.inject.Inject;
@@ -87,6 +88,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
   private String customMetricYamlConfig;
   private boolean useIstioRouteRule;
   private IstioConfig istioConfig;
+  private String releaseName;
 
   private boolean blueGreen;
   private KubernetesBlueGreenConfig blueGreenConfig;
@@ -193,6 +195,14 @@ public class KubernetesSetup extends ContainerServiceSetup {
       evaluatedIstioConfig.setHosts(context.renderExpressionList(istioConfig.getHosts()));
     }
 
+    String evaluatedReleaseName;
+    if (isNotBlank(releaseName)) {
+      evaluatedReleaseName = context.renderExpression(releaseName);
+    } else {
+      // This takes care of existing workflows which have null label selector
+      evaluatedReleaseName = getNormalizedInfraMappingIdLabelValue(infrastructureMapping.getUuid());
+    }
+
     return aKubernetesSetupParams()
         .withAppName(app.getName())
         .withEnvName(env.getName())
@@ -235,6 +245,7 @@ public class KubernetesSetup extends ContainerServiceSetup {
         .withEncryptedConfigFiles(encryptedConfigFiles)
         .withConfigMapYaml(configMapYamlEvaluated)
         .withUseNewLabelMechanism(useNewLabelMechanism)
+        .withReleaseName(evaluatedReleaseName)
         .build();
   }
 
@@ -541,5 +552,13 @@ public class KubernetesSetup extends ContainerServiceSetup {
 
   public void setBlueGreenConfig(KubernetesBlueGreenConfig blueGreenConfig) {
     this.blueGreenConfig = blueGreenConfig;
+  }
+
+  public void setReleaseName(String releaseName) {
+    this.releaseName = releaseName;
+  }
+
+  public String getReleaseName() {
+    return releaseName;
   }
 }

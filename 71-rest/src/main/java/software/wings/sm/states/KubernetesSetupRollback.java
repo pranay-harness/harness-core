@@ -79,6 +79,7 @@ public class KubernetesSetupRollback extends ContainerServiceSetup {
         .withSubscriptionId(subscriptionId)
         .withResourceGroup(resourceGroup)
         .withUseNewLabelMechanism(useNewLabelMechanism)
+        .withReleaseName(rollbackElement.getReleaseName())
         .build();
   }
 

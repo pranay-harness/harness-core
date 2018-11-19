@@ -31,4 +31,5 @@ public class CommandStepExecutionSummary extends StepExecutionSummary {
   private CodeDeployParams codeDeployParams;
   private CodeDeployParams oldCodeDeployParams;
   private String codeDeployDeploymentId;
+  private String releaseName;
 }

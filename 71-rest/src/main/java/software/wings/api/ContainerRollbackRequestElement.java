@@ -24,6 +24,7 @@ public class ContainerRollbackRequestElement implements ContextElement {
   private String previousEcsServiceSnapshotJson;
   private List<AwsAutoScalarConfig> previousAwsAutoScalarConfigs;
   private String ecsServiceArn;
+  private String releaseName;
 
   @Override
   public ContextElementType getElementType() {

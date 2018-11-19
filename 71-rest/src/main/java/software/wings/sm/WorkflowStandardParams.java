@@ -9,6 +9,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.OrchestrationWorkflowType.BUILD;
 import static software.wings.common.Constants.DEPLOYMENT_TRIGGERED_BY;
 import static software.wings.common.Constants.PHASE_PARAM;
+import static software.wings.utils.KubernetesConvention.getNormalizedInfraMappingIdLabelValue;
 
 import com.google.inject.Inject;
 
@@ -222,7 +223,10 @@ public class WorkflowStandardParams implements ExecutionContextAware, ContextEle
         namespace = "default";
       }
 
-      builder.kubernetes(Kubernetes.builder().namespace(namespace).build());
+      builder.kubernetes(Kubernetes.builder()
+                             .namespace(namespace)
+                             .infraId(getNormalizedInfraMappingIdLabelValue(infrastructureMapping.getUuid()))
+                             .build());
     }
   }
 

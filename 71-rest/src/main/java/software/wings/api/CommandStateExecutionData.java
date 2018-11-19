@@ -150,6 +150,7 @@ public class CommandStateExecutionData extends StateExecutionData {
     if (containerSetupParams instanceof KubernetesSetupParams) {
       KubernetesSetupParams kubernetesSetupParams = (KubernetesSetupParams) containerSetupParams;
       commandStepExecutionSummary.setControllerNamePrefix(kubernetesSetupParams.getControllerNamePrefix());
+      commandStepExecutionSummary.setReleaseName(kubernetesSetupParams.getReleaseName());
     }
 
     if (containerSetupParams instanceof EcsSetupParams) {
