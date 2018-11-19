@@ -124,6 +124,7 @@ public class AppdynamicsServiceImpl implements AppdynamicsService {
       return delegateProxyFactory.get(AppdynamicsDelegateService.class, syncTaskContext)
           .validateConfig(appDynamicsConfig, encryptedDataDetails);
     } catch (Exception e) {
+      logger.info("Failed to validate", e);
       throw new WingsException(ErrorCode.APPDYNAMICS_CONFIGURATION_ERROR).addParam("reason", Misc.getMessage(e));
     }
   }

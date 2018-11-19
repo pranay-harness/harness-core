@@ -58,6 +58,7 @@ import migrations.all.SweepingPhaseMigration;
 import migrations.all.SystemTemplateGalleryMigration;
 import migrations.all.TimeSeriesAnalysisRecordsMigration;
 import migrations.all.TimeSeriesMLAnalysisCompressionSaveMigration;
+import migrations.all.TimeSeriesMLAnalysisDeleteUncompressedMigration;
 import migrations.all.TimeSeriesMLScoresMigration;
 import migrations.all.UnregisteredUserNameMigration;
 import migrations.all.UpdateGitSyncErrorMigration;
@@ -157,6 +158,7 @@ public class MigrationList {
         .add(Pair.of(207, SetNamespaceToKubernetesInstanceInfo.class))
         .add(Pair.of(208, DeleteNewRelicMetricNameCronMigration.class))
         .add(Pair.of(209, TimeSeriesMLAnalysisCompressionSaveMigration.class))
+        .add(Pair.of(210, TimeSeriesMLAnalysisDeleteUncompressedMigration.class))
         .build();
   }
 }
