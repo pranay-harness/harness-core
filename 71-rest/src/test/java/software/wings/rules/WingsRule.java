@@ -219,6 +219,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
+
     datastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, dbName);
     datastore.setQueryFactory(new QueryFactory());
 

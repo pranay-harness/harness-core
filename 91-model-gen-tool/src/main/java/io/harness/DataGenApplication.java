@@ -3,6 +3,7 @@ package io.harness;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static software.wings.common.Constants.USER_CACHE;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -13,8 +14,10 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import io.harness.exception.WingsException;
+import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoModule;
+import io.harness.mongo.PersistenceMorphiaClasses;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -31,6 +34,7 @@ import software.wings.app.StreamModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
+import software.wings.beans.Base;
 import software.wings.beans.User;
 import software.wings.common.Constants;
 import software.wings.health.WingsHealthCheck;
@@ -40,6 +44,7 @@ import software.wings.utils.CacheHelper;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.cache.Caching;
 import javax.cache.configuration.Configuration;
 import javax.validation.Validation;
@@ -47,6 +52,12 @@ import javax.validation.ValidatorFactory;
 
 public class DataGenApplication extends Application<MainConfiguration> {
   private static final Logger logger = LoggerFactory.getLogger(DataGenApplication.class);
+
+  public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
+                                                      .add(Base.class)
+                                                      .addAll(PersistenceMorphiaClasses.classes)
+                                                      .addAll(LimitsMorphiaClasses.classes)
+                                                      .build();
 
   public static void main(String... args) throws Exception {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -67,7 +78,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     logger.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
 
-    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory());
+    MongoModule databaseModule = new MongoModule(configuration.getMongoConnectionFactory(), morphiaClasses);
     List<Module> modules = new ArrayList<>();
     modules.add(databaseModule);
 

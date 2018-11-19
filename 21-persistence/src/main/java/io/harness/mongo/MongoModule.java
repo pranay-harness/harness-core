@@ -53,10 +53,6 @@ import java.util.Set;
 public class MongoModule extends AbstractModule {
   private static final Logger logger = LoggerFactory.getLogger(MongoModule.class);
 
-  // Java packages which Morphia will map
-  // Indexes will not be created for any class outside these.
-  private static final List<String> JAVA_PACKAGES_TO_SCAN = Arrays.asList("software.wings", "io.harness");
-
   private AdvancedDatastore primaryDatastore;
   private AdvancedDatastore secondaryDatastore;
   private DistributedLockSvc distributedLockSvc;
@@ -72,11 +68,11 @@ public class MongoModule extends AbstractModule {
           .connectionsPerHost(300)
           .build();
 
-  public static AdvancedDatastore createDatastore(String uri, ReadPref readPref) {
+  public static AdvancedDatastore createDatastore(String uri, Set<Class> collectionClasses, ReadPref readPref) {
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
-    JAVA_PACKAGES_TO_SCAN.forEach(morphia::mapPackage);
+    morphia.map(collectionClasses);
 
     MongoClientURI clientUri = new MongoClientURI(uri, MongoClientOptions.builder(mongoClientOptions));
     MongoClient mongoClient = new MongoClient(clientUri);
@@ -87,12 +83,13 @@ public class MongoModule extends AbstractModule {
     return datastore;
   }
 
-  public MongoModule(MongoConfig mongoConfig) {
+  public MongoModule(MongoConfig mongoConfig, Set<Class> collectionClasses) {
     registerLogger(MorphiaLoggerFactory.class);
 
     Morphia morphia = new Morphia();
     morphia.getMapper().getOptions().setObjectFactory(new NoDefaultConstructorMorphiaObjectFactory());
     morphia.getMapper().getOptions().setMapSubPackages(true);
+    morphia.map(collectionClasses);
 
     MongoClientURI uri = new MongoClientURI(mongoConfig.getUri(), MongoClientOptions.builder(mongoClientOptions));
     MongoClient mongoClient = new MongoClient(uri);
@@ -119,7 +116,6 @@ public class MongoModule extends AbstractModule {
       secondaryDatastore = primaryDatastore;
     }
 
-    JAVA_PACKAGES_TO_SCAN.forEach(morphia::mapPackage);
     ensureIndex(morphia);
   }
 

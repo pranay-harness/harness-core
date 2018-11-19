@@ -2,15 +2,10 @@ package software.wings.app;
 
 import io.harness.eraro.MessageManager;
 import io.harness.exception.WingsException;
-import org.mongodb.morphia.logging.MorphiaLoggerFactory;
-import org.mongodb.morphia.logging.slf4j.SLF4JLoggerImplFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
 
-/**
- * Created by peeyushaggarwal on 6/16/16.
- */
 public class LoggingInitializer {
   private static boolean initialized;
 
@@ -19,8 +14,6 @@ public class LoggingInitializer {
    */
   public static void initializeLogging() {
     if (!initialized) {
-      MorphiaLoggerFactory.registerLogger(SLF4JLoggerImplFactory.class);
-
       try (InputStream in = WingsModule.class.getResourceAsStream(WingsModule.RESPONSE_MESSAGE_FILE)) {
         MessageManager.getInstance().addMessages(in);
       } catch (IOException exception) {
