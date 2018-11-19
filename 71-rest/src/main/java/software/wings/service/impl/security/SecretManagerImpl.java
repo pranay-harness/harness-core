@@ -1046,24 +1046,79 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
       String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException {
-    PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
-
-    List<EncryptedData> encryptedDataList = pageResponse.getResponse();
-
     List<EncryptedData> filteredEncryptedDataList = Lists.newArrayList();
+
+    int batchOffSet = pageRequest.getStart();
+    final int batchPageSize;
+
+    // Increase the batch fetch page size to 2 times the requested, just in case some of the data
+    // are filtered out based on usage restrictions. Or decrease the batch fetch size to 1000 if
+    // the requested page size is too big (>1000);
+    final int inputPageSize = pageRequest.getPageSize();
+    if (2 * inputPageSize > PageRequest.DEFAULT_UNLIMITED) {
+      batchPageSize = PageRequest.DEFAULT_UNLIMITED;
+    } else {
+      batchPageSize = 2 * inputPageSize;
+    }
+
+    boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
 
     RestrictionsAndAppEnvMap restrictionsAndAppEnvMap =
         usageRestrictionsService.getRestrictionsAndAppEnvMapFromCache(accountId, Action.READ);
     Map<String, Set<String>> appEnvMapFromPermissions = restrictionsAndAppEnvMap.getAppEnvMap();
     UsageRestrictions restrictionsFromUserPermissions = restrictionsAndAppEnvMap.getUsageRestrictions();
 
-    boolean isAccountAdmin = usageRestrictionsService.isAccountAdmin(accountId);
+    int numRecordsReturnedCurrentBatch;
+    do {
+      PageRequest<EncryptedData> batchPageRequest = new PageRequest<>();
+      batchPageRequest.setFieldsExcluded(pageRequest.getFieldsExcluded());
+      batchPageRequest.setFieldsIncluded(pageRequest.getFieldsIncluded());
+      batchPageRequest.setFilters(pageRequest.getFilters());
+      batchPageRequest.setOffset(String.valueOf(batchOffSet));
+      batchPageRequest.setLimit(String.valueOf(batchPageSize));
+
+      PageResponse<EncryptedData> batchPageResponse = wingsPersistence.query(EncryptedData.class, batchPageRequest);
+      List<EncryptedData> encryptedDataList = batchPageResponse.getResponse();
+      numRecordsReturnedCurrentBatch = encryptedDataList.size();
+
+      // Set the new offset if another batch retrieval is needed if the requested page size is not fulfilled yet.
+      batchOffSet = filterSecreteDataBasedOnUsageRestrictions(accountId, isAccountAdmin, appIdFromRequest,
+          envIdFromRequest, details, inputPageSize, batchOffSet, appEnvMapFromPermissions,
+          restrictionsFromUserPermissions, encryptedDataList, filteredEncryptedDataList);
+    } while (numRecordsReturnedCurrentBatch == batchPageSize && filteredEncryptedDataList.size() < inputPageSize);
+
+    // UI should read the adjust batchOffSet while sending another page request!
+    return aPageResponse()
+        .withOffset(String.valueOf(batchOffSet))
+        .withLimit(String.valueOf(inputPageSize))
+        .withResponse(filteredEncryptedDataList)
+        .withTotal(Long.valueOf(filteredEncryptedDataList.size()))
+        .build();
+  }
+
+  /**
+   * Filter the retrieved encrypted data list based on usage restrictions. Some of the
+   * encrypted data won't be presented to the end-user if the end-user doesn't have
+   * access permissions.
+   *
+   * The filtered list size should never exceed the over page size from the page request.
+   *
+   * It will return an adjusted batch offset if another batch retrieval is needed as the original page request
+   * has not fulfilled. The new batch load will start from the adjusted offset.
+   */
+  private int filterSecreteDataBasedOnUsageRestrictions(String accountId, boolean isAccountAdmin,
+      String appIdFromRequest, String envIdFromRequest, boolean details, int inputPageSize, int batchOffSet,
+      Map<String, Set<String>> appEnvMapFromPermissions, UsageRestrictions restrictionsFromUserPermissions,
+      List<EncryptedData> encryptedDataList, List<EncryptedData> filteredEncryptedDataList)
+      throws IllegalAccessException {
+    int index = 0;
     for (EncryptedData encryptedData : encryptedDataList) {
+      index++;
+
       UsageRestrictions usageRestrictionsFromEntity = encryptedData.getUsageRestrictions();
       if (usageRestrictionsService.hasAccess(accountId, isAccountAdmin, appIdFromRequest, envIdFromRequest,
               usageRestrictionsFromEntity, restrictionsFromUserPermissions, appEnvMapFromPermissions)) {
         filteredEncryptedDataList.add(encryptedData);
-
         encryptedData.setEncryptedValue(SECRET_MASK.toCharArray());
         encryptedData.setEncryptionKey(SECRET_MASK);
 
@@ -1077,12 +1132,18 @@ public class SecretManagerImpl implements SecretManager {
               getChangeLogs(encryptedData.getAccountId(), encryptedData.getUuid(), SettingVariableTypes.SECRET_TEXT)
                   .size());
         }
+
+        // Already got all data the page request wanted. Break out of the loop, no more filtering
+        // to save some CPU cycles and reduce the latency.
+        if (filteredEncryptedDataList.size() == inputPageSize) {
+          break;
+        }
       }
     }
 
-    pageResponse.setResponse(filteredEncryptedDataList);
-    pageResponse.setTotal(Long.valueOf(filteredEncryptedDataList.size()));
-    return pageResponse;
+    // The requested page size may have not been filled, may need to fetch another batch and adjusting the offset
+    // accordingly;
+    return batchOffSet + index;
   }
 
   @Override
