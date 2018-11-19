@@ -28,6 +28,7 @@ import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
 import software.wings.helpers.ext.k8s.request.K8sCommandRequest.K8sCommandType;
@@ -69,6 +70,7 @@ public class K8sDeploymentRollingSetup extends State {
   @Inject private ContainerDeploymentManagerHelper containerDeploymentManagerHelper;
   @Inject private transient K8sStateHelper k8sStateHelper;
   @Inject private transient ApplicationManifestService applicationManifestService;
+  @Inject private transient AwsCommandHelper awsCommandHelper;
 
   public static final String K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME = "Rolling Deployment";
 
@@ -128,6 +130,7 @@ public class K8sDeploymentRollingSetup extends State {
               .withAppId(app.getUuid())
               .withTaskType(TaskType.K8S_COMMAND_TASK)
               .withWaitId(activity.getUuid())
+              .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(commandRequest))
               .withParameters(new Object[] {commandRequest})
               .withEnvId(env.getUuid())
               .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)

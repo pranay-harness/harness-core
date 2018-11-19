@@ -298,13 +298,16 @@ public class AwsLambdaState extends State {
       AwsLambdaExecuteWfRequest wfRequest = constructLambdaWfRequestParams(specification, context, context.getAppId(),
           env.getUuid(), infrastructureMapping, (AwsConfig) cloudProviderSetting.getValue(), region, artifact,
           app.getAccountId(), activity.getUuid());
-      DelegateTask delegateTask = aDelegateTask()
-                                      .withTaskType(AWS_LAMBDA_ASYNC_TASK)
-                                      .withAccountId(app.getAccountId())
-                                      .withWaitId(activity.getUuid())
-                                      .withAppId(context.getAppId())
-                                      .withParameters(new Object[] {wfRequest})
-                                      .build();
+      DelegateTask delegateTask =
+          aDelegateTask()
+              .withTaskType(AWS_LAMBDA_ASYNC_TASK)
+              .withAccountId(app.getAccountId())
+              .withWaitId(activity.getUuid())
+              .withAppId(context.getAppId())
+              .withTags(isNotEmpty(wfRequest.getAwsConfig().getTag()) ? singletonList(wfRequest.getAwsConfig().getTag())
+                                                                      : null)
+              .withParameters(new Object[] {wfRequest})
+              .build();
       String delegateTaskId = delegateService.queueTask(delegateTask);
       return anExecutionResponse()
           .withAsync(true)

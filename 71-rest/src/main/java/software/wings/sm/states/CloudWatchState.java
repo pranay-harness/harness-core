@@ -1,7 +1,9 @@
 package software.wings.sm.states;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 import static software.wings.sm.states.DynatraceState.CONTROL_HOST_NAME;
@@ -175,6 +177,9 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
                                     .withAccountId(appService.get(context.getAppId()).getAccountId())
                                     .withAppId(context.getAppId())
                                     .withWaitId(waitId)
+                                    .withTags(isNotEmpty(dataCollectionInfo.getAwsConfig().getTag())
+                                            ? singletonList(dataCollectionInfo.getAwsConfig().getTag())
+                                            : null)
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)

@@ -1,5 +1,7 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -152,6 +154,9 @@ public class AwsAmiSwitchRoutesState extends State {
             .withWaitId(activity.getUuid())
             .withTimeout(TimeUnit.MINUTES.toMillis(serviceSetupElement.getAutoScalingSteadyStateTimeout()))
             .withParameters(new Object[] {routesRequest})
+            .withTags(isNotEmpty(routesRequest.getAwsConfig().getTag())
+                    ? singletonList(routesRequest.getAwsConfig().getTag())
+                    : null)
             .withTaskType(AWS_AMI_ASYNC_TASK)
             .withAsync(true)
             .withEnvId(infrastructureMapping.getEnvId())

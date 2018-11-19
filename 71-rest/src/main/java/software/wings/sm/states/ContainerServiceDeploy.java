@@ -50,6 +50,7 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ContainerResizeParams;
 import software.wings.beans.command.ResizeCommandUnitExecutionData;
 import software.wings.common.Constants;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.ActivityService;
@@ -88,6 +89,7 @@ public abstract class ContainerServiceDeploy extends State {
   @Inject @Transient private transient SecretManager secretManager;
   @Inject @Transient private transient ContainerDeploymentManagerHelper containerDeploymentHelper;
   @Inject @Transient protected transient FeatureFlagService featureFlagService;
+  @Inject @Transient private transient AwsCommandHelper awsCommandHelper;
 
   ContainerServiceDeploy(String name, String type) {
     super(name, type);
@@ -164,6 +166,7 @@ public abstract class ContainerServiceDeploy extends State {
                                         .withAppId(contextData.appId)
                                         .withTaskType(TaskType.COMMAND)
                                         .withWaitId(waitId)
+                                        .withTags(awsCommandHelper.getAwsConfigTagsFromContext(commandExecutionContext))
                                         .withParameters(new Object[] {contextData.command, commandExecutionContext})
                                         .withEnvId(contextData.env.getUuid())
                                         .withInfrastructureMappingId(contextData.infrastructureMappingId)

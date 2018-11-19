@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Set;
 import javax.validation.Valid;
 
 /**
@@ -32,6 +33,8 @@ public interface DelegateService {
   PageResponse<Delegate> list(PageRequest<Delegate> pageRequest);
 
   List<String> getKubernetesDelegateNames(String accountId);
+
+  Set<String> getAllDelegateTags(String accountId);
 
   DelegateStatus getDelegateStatus(String accountId);
 

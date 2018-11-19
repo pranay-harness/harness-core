@@ -351,16 +351,19 @@ public class AwsAmiServiceDeployState extends State {
                                              .infraMappingClassisLbs(classicLBs)
                                              .infraMappingTargetGroupArns(targetGroupArns)
                                              .build();
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withAccountId(accountId)
-                                    .withAppId(appId)
-                                    .withWaitId(activityId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(autoScalingSteadyStateTimeout))
-                                    .withParameters(new Object[] {request})
-                                    .withTaskType(AWS_AMI_ASYNC_TASK)
-                                    .withAsync(true)
-                                    .withEnvId(envId)
-                                    .build();
+    DelegateTask delegateTask =
+        aDelegateTask()
+            .withAccountId(accountId)
+            .withAppId(appId)
+            .withWaitId(activityId)
+            .withTimeout(TimeUnit.MINUTES.toMillis(autoScalingSteadyStateTimeout))
+            .withParameters(new Object[] {request})
+            .withTaskType(AWS_AMI_ASYNC_TASK)
+            .withTags(
+                isNotEmpty(request.getAwsConfig().getTag()) ? singletonList(request.getAwsConfig().getTag()) : null)
+            .withAsync(true)
+            .withEnvId(envId)
+            .build();
     delegateService.queueTask(delegateTask);
   }
 

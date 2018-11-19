@@ -13,6 +13,7 @@ import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
@@ -84,6 +85,7 @@ import software.wings.beans.command.KubernetesResizeParams;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.common.VariableProcessor;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
@@ -131,6 +133,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
   @Mock private VariableProcessor variableProcessor;
   @Mock private ManagerExpressionEvaluator evaluator;
   @Mock private FeatureFlagService featureFlagService;
+  @Mock private AwsCommandHelper mockAwsCommandHelper;
 
   @InjectMocks
   private KubernetesDeploy kubernetesDeploy = aKubernetesDeploy(STATE_NAME)
@@ -235,6 +238,7 @@ public class KubernetesDeployTest extends WingsBaseTest {
     when(variableProcessor.getVariables(any(), any())).thenReturn(emptyMap());
     when(evaluator.substitute(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
     when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
+    doReturn(null).when(mockAwsCommandHelper).getAwsConfigTagsFromContext(any());
   }
 
   @Test

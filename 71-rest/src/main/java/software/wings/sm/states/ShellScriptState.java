@@ -1,7 +1,9 @@
 package software.wings.sm.states;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.Environment.EnvironmentType.ALL;
@@ -32,6 +34,7 @@ import software.wings.api.ScriptType;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
@@ -58,6 +61,7 @@ import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.security.SecretManager;
+import software.wings.settings.SettingValue;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
@@ -246,8 +250,8 @@ public class ShellScriptState extends State {
     String keyPath = null;
     boolean keyless = false;
     WinRmConnectionAttributes winRmConnectionAttributes = null;
-    List<EncryptedDataDetail> winrmEdd = Collections.emptyList();
-    List<EncryptedDataDetail> keyEncryptionDetails = Collections.emptyList();
+    List<EncryptedDataDetail> winrmEdd = emptyList();
+    List<EncryptedDataDetail> keyEncryptionDetails = emptyList();
 
     HostConnectionAttributes hostConnectionAttributes = null;
 
@@ -295,12 +299,21 @@ public class ShellScriptState extends State {
       }
     }
 
+    List<String> allTags = newArrayList();
+    String cloudProviderTag = getTagFromCloudProvider(containerServiceParams);
+    if (isNotEmpty(cloudProviderTag)) {
+      allTags.add(cloudProviderTag);
+    }
+    if (isNotEmpty(tags)) {
+      allTags.addAll(tags);
+    }
+
     DelegateTask delegateTask =
         aDelegateTask()
             .withTaskType(TaskType.SCRIPT)
             .withAccountId(executionContext.getApp().getAccountId())
             .withWaitId(activityId)
-            .withTags(tags)
+            .withTags(allTags)
             .withAppId(((ExecutionContextImpl) context).getApp().getAppId())
             .withParameters(new Object[] {ShellScriptParameters.builder()
                                               .accountId(executionContext.getApp().getAccountId())
@@ -339,6 +352,17 @@ public class ShellScriptState extends State {
         .withCorrelationIds(Collections.singletonList(activityId))
         .withDelegateTaskId(delegateTaskId)
         .build();
+  }
+
+  private String getTagFromCloudProvider(ContainerServiceParams containerServiceParams) {
+    if (containerServiceParams != null) {
+      SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
+      SettingValue settingValue = settingAttribute.getValue();
+      if (settingValue instanceof AwsConfig) {
+        return ((AwsConfig) settingValue).getTag();
+      }
+    }
+    return null;
   }
 
   private String createActivity(ExecutionContext executionContext) {
