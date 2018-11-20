@@ -186,4 +186,12 @@ public interface HPersistence {
    * @return true, if successful
    */
   <T extends PersistentEntity> boolean delete(T entity);
+
+  /**
+   * Merge.
+   *
+   * @param entity   the entity to merge
+   * @return the key of the entity
+   */
+  <T extends PersistentEntity> String merge(T entity);
 }

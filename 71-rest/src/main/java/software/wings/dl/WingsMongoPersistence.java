@@ -43,7 +43,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.DatastoreImpl;
 import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.Key;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -106,12 +105,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   @Override
   public <T extends Base> T get(Class<T> cls, String appId, String id, ReadPref readPref) {
     return createQuery(cls, readPref).filter("appId", appId).filter(ID_KEY, id).get();
-  }
-
-  @Override
-  public <T extends Base> String merge(T t) {
-    Key<T> key = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).merge(t);
-    return (String) key.getId();
   }
 
   @Override

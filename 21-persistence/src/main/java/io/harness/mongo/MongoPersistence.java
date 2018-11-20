@@ -187,4 +187,9 @@ public class MongoPersistence implements HPersistence {
     WriteResult result = getDatastore(entity, ReadPref.NORMAL).delete(entity);
     return !(result == null || result.getN() == 0);
   }
+
+  @Override
+  public <T extends PersistentEntity> String merge(T entity) {
+    return getDatastore(entity, ReadPref.NORMAL).merge(entity).getId().toString();
+  }
 }
