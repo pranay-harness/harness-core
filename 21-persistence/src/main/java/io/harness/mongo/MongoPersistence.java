@@ -26,6 +26,7 @@ import org.mongodb.morphia.query.Query;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -81,6 +82,16 @@ public class MongoPersistence implements HPersistence {
   @Override
   public DBCollection getCollection(Store store, ReadPref readPref, String collectionName) {
     return getDatastore(store, readPref).getDB().getCollection(collectionName);
+  }
+
+  @Override
+  public void close() {
+    Set<AdvancedDatastore> datastores = new HashSet<>();
+    datastores.addAll(datastoreMap.values());
+
+    for (AdvancedDatastore datastore : datastores) {
+      datastore.getMongo().close();
+    }
   }
 
   @Override

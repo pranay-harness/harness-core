@@ -393,11 +393,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public void close() {
-    getDatastore(DEFAULT_STORE, ReadPref.NORMAL).getMongo().close();
-  }
-
-  @Override
   public void start() throws Exception {
     // Do nothing
   }
