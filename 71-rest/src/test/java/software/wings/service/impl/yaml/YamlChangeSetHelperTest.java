@@ -93,10 +93,10 @@ public class YamlChangeSetHelperTest {
         yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, newValue, true});
 
     ArgumentCaptor<List> gitFileChangesCaptor = ArgumentCaptor.forClass(List.class);
-    ArgumentCaptor<YamlGitConfig> yamlGitConfigCaptor = ArgumentCaptor.forClass(YamlGitConfig.class);
+    ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
     verify(yamlChangeSetService)
-        .saveChangeSet(yamlGitConfigCaptor.capture(), gitFileChangesCaptor.capture(), entityCaptor.capture());
+        .saveChangeSet(accountIdCaptor.capture(), gitFileChangesCaptor.capture(), entityCaptor.capture());
 
     assertEquals(2, gitFileChangesCaptor.getValue().size());
     gitFileChangeForDelete = (GitFileChange) gitFileChangesCaptor.getValue().get(0);
@@ -133,10 +133,10 @@ public class YamlChangeSetHelperTest {
         yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, oldValue, false});
 
     ArgumentCaptor<List> fileChangesCaptor = ArgumentCaptor.forClass(List.class);
-    ArgumentCaptor<YamlGitConfig> gitConfigCaptor = ArgumentCaptor.forClass(YamlGitConfig.class);
+    ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
     verify(yamlChangeSetService)
-        .saveChangeSet(gitConfigCaptor.capture(), fileChangesCaptor.capture(), entityCaptor.capture());
+        .saveChangeSet(accountIdCaptor.capture(), fileChangesCaptor.capture(), entityCaptor.capture());
 
     assertEquals(1, fileChangesCaptor.getValue().size());
     gitFileChangeForModify = (GitFileChange) fileChangesCaptor.getValue().get(0);
@@ -177,10 +177,10 @@ public class YamlChangeSetHelperTest {
         yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, newValue, true});
 
     ArgumentCaptor<List> gitFileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
-    ArgumentCaptor<YamlGitConfig> yamlGitConfigCaptorForAS = ArgumentCaptor.forClass(YamlGitConfig.class);
+    ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
     verify(yamlChangeSetService)
-        .saveChangeSet(yamlGitConfigCaptorForAS.capture(), gitFileChangesCaptorForAS.capture(), entityCaptor.capture());
+        .saveChangeSet(accountIdCaptor.capture(), gitFileChangesCaptorForAS.capture(), entityCaptor.capture());
 
     assertEquals(2, gitFileChangesCaptorForAS.getValue().size());
     gitFileChangeForDelete = (GitFileChange) gitFileChangesCaptorForAS.getValue().get(0);
@@ -213,10 +213,10 @@ public class YamlChangeSetHelperTest {
         yamlChangeSetHelper, true, "entityUpdateYamlChange", new Object[] {ACCOUNTID, oldValue, oldValue, false});
 
     ArgumentCaptor<List> fileChangesCaptorForAS = ArgumentCaptor.forClass(List.class);
-    ArgumentCaptor<YamlGitConfig> gitConfigCaptorForAS = ArgumentCaptor.forClass(YamlGitConfig.class);
+    ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
     ArgumentCaptor<Base> entityCaptor = ArgumentCaptor.forClass(Base.class);
     verify(yamlChangeSetService)
-        .saveChangeSet(gitConfigCaptorForAS.capture(), fileChangesCaptorForAS.capture(), entityCaptor.capture());
+        .saveChangeSet(accountIdCaptor.capture(), fileChangesCaptorForAS.capture(), entityCaptor.capture());
 
     assertEquals(1, fileChangesCaptorForAS.getValue().size());
     gitFileChangeForModify = (GitFileChange) fileChangesCaptorForAS.getValue().get(0);
