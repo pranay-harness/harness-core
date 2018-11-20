@@ -212,8 +212,9 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Override
   public boolean existsLinkedUserGroup(String ssoId) {
     return 0
-        != wingsPersistence.getCount(
-               UserGroup.class, aPageRequest().addFilter(UserGroup.LINKED_SSO_ID_KEY, Operator.EQ, ssoId).build());
+        != wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+               .filter(UserGroup.LINKED_SSO_ID_KEY, ssoId)
+               .count();
   }
 
   private UserGroup update(UserGroup userGroup, UpdateOperations<UserGroup> operations) {

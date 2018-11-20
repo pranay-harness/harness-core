@@ -805,8 +805,7 @@ public class YamlGitServiceImpl implements YamlGitService {
 
   @Override
   public long getGitSyncErrorCount(String accountId) {
-    PageRequest<GitSyncError> pageRequest = aPageRequest().addFilter("accountId", EQ, accountId).build();
-    return wingsPersistence.getCount(GitSyncError.class, pageRequest);
+    return wingsPersistence.createQuery(GitSyncError.class).filter(GitSyncError.ACCOUNT_ID_KEY, accountId).count();
   }
 
   @Override
