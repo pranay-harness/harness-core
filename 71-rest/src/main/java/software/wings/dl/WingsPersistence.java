@@ -59,15 +59,6 @@ public interface WingsPersistence extends HPersistence {
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions);
 
   /**
-   * Merge string.
-   *
-   * @param <T> the type parameter
-   * @param t   the t
-   * @return the string
-   */
-  <T extends Base> String merge(T t);
-
-  /**
    * Save and get.
    *
    * @param <T> the generic type
