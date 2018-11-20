@@ -308,6 +308,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .build();
     } finally {
       FileUtils.deleteQuietly(tfVariablesFile);
+      FileUtils.deleteQuietly(tfBackendConfigsFile);
     }
   }
 
