@@ -209,11 +209,6 @@ public interface WingsPersistence extends HPersistence {
   GridFSBucket getOrCreateGridFSBucket(String bucketName);
 
   /**
-   * Close.
-   */
-  void close();
-
-  /**
    * Creates a query and runs the authFilter to it.
    * This api is preferred over createQuery() api.
    *

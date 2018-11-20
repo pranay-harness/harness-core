@@ -74,6 +74,11 @@ public interface HPersistence {
   DBCollection getCollection(Store store, ReadPref readPref, String collectionName);
 
   /**
+   * Close.
+   */
+  void close();
+
+  /**
    * Creates the query.
    *
    * @param <T> the generic type
