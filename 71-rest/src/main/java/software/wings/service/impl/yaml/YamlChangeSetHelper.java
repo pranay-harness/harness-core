@@ -45,7 +45,7 @@ public class YamlChangeSetHelper {
       List<GitFileChange> gitFileChanges =
           entityUpdateService.obtainDefaultVariableChangeSet(accountId, appId, changeType);
 
-      yamlChangeSetService.saveChangeSet(ygs, gitFileChanges, appId);
+      yamlChangeSetService.saveChangeSet(accountId, gitFileChanges, appId);
     }
   }
 
@@ -69,7 +69,7 @@ public class YamlChangeSetHelper {
       List<GitFileChange> changeSet =
           entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, service, entity, crudType);
 
-      yamlChangeSetService.saveChangeSet(ygs, changeSet, entity);
+      yamlChangeSetService.saveChangeSet(accountId, changeSet, entity);
     }
   }
 
@@ -82,58 +82,60 @@ public class YamlChangeSetHelper {
   }
 
   private <T> void nonLeafEntityRenameYamlChange(String accountId, T oldEntity, T newEntity) {
-    String appId = entityUpdateService.obtainAppIdFromEntity(newEntity);
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
+    // We dont need to check whether the entity has valid enabled yamlGitConfig. This is to handle the case where you
+    // dont have account level yamlGit configured but some app has. In such case we want to push changes for that app to
+    // git still.
+    // ToDo Optimize the changeSet generation for dry run. We shouldnt even generate the changeSet if the entity doesnt
+    // have yamlGit configured
 
-    if (ygs != null) {
-      String oldPath = yamlDirectoryService.obtainEntityRootPath(null, oldEntity);
-      String newPath = yamlDirectoryService.obtainEntityRootPath(null, newEntity);
+    String oldPath = yamlDirectoryService.obtainEntityRootPath(null, oldEntity);
+    String newPath = yamlDirectoryService.obtainEntityRootPath(null, newEntity);
 
-      List<GitFileChange> changeSet = new ArrayList<>();
-      changeSet.add(GitFileChange.Builder.aGitFileChange()
-                        .withAccountId(accountId)
-                        .withChangeType(ChangeType.RENAME)
-                        .withFilePath(newPath)
-                        .withOldFilePath(oldPath)
-                        .build());
-      changeSet.addAll(
-          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, newEntity, ChangeType.MODIFY));
-      YamlChangeSet savedChangeSet = yamlChangeSetService.saveChangeSet(ygs, changeSet, newEntity);
-      String parentYamlChangeSetId = savedChangeSet.getUuid();
+    List<GitFileChange> changeSet = new ArrayList<>();
+    changeSet.add(GitFileChange.Builder.aGitFileChange()
+                      .withAccountId(accountId)
+                      .withChangeType(ChangeType.RENAME)
+                      .withFilePath(newPath)
+                      .withOldFilePath(oldPath)
+                      .build());
+    changeSet.addAll(
+        entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, newEntity, ChangeType.MODIFY));
+    YamlChangeSet savedChangeSet = yamlChangeSetService.saveChangeSet(accountId, changeSet, newEntity);
+    String parentYamlChangeSetId = savedChangeSet.getUuid();
 
-      List<YamlChangeSet> yamlChangeSets = yamlGitService.obtainChangeSetFromFullSyncDryRun(accountId);
-      for (YamlChangeSet yamlChangeSet : yamlChangeSets) {
-        yamlChangeSet.setParentYamlChangeSetId(parentYamlChangeSetId);
-        yamlChangeSetService.save(yamlChangeSet);
-      }
+    List<YamlChangeSet> yamlChangeSets = yamlGitService.obtainChangeSetFromFullSyncDryRun(accountId);
+    for (YamlChangeSet yamlChangeSet : yamlChangeSets) {
+      yamlChangeSet.setParentYamlChangeSetId(parentYamlChangeSetId);
+      yamlChangeSetService.save(yamlChangeSet);
     }
   }
 
   private <T> void leafEntityRenameYamlChange(String accountId, T oldEntity, T newEntity) {
-    String appId = entityUpdateService.obtainAppIdFromEntity(newEntity);
-    YamlGitConfig ygs = yamlDirectoryService.weNeedToPushChanges(accountId, appId);
+    // We dont need to check whether the entity has valid enabled yamlGitConfig. This is to handle the case where you
+    // dont have account level yamlGit configured but some app has. In such case we want to push changes for that app to
+    // git still.
+    // ToDo Optimize the changeSet generation for dry run. We shouldnt even generate the changeSet if the entity doesnt
+    // have yamlGit configured
 
-    if (ygs != null) {
-      List<GitFileChange> changeSet = new ArrayList<>();
+    List<GitFileChange> changeSet = new ArrayList<>();
 
-      if (newEntity instanceof SettingAttribute) {
-        changeSet.addAll(entityUpdateService.obtainSettingAttributeRenameChangeSet(
-            accountId, (SettingAttribute) oldEntity, (SettingAttribute) newEntity));
-      } else {
-        // Rename is delete old and add new
-        changeSet.addAll(
-            entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, oldEntity, ChangeType.DELETE));
-        changeSet.addAll(
-            entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, newEntity, ChangeType.ADD));
-      }
-      YamlChangeSet savedChangeSet = yamlChangeSetService.saveChangeSet(ygs, changeSet, newEntity);
-      String parentYamlChangeSetId = savedChangeSet.getUuid();
+    if (newEntity instanceof SettingAttribute) {
+      changeSet.addAll(entityUpdateService.obtainSettingAttributeRenameChangeSet(
+          accountId, (SettingAttribute) oldEntity, (SettingAttribute) newEntity));
+    } else {
+      // Rename is delete old and add new
+      changeSet.addAll(
+          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, oldEntity, ChangeType.DELETE));
+      changeSet.addAll(
+          entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, newEntity, ChangeType.ADD));
+    }
+    YamlChangeSet savedChangeSet = yamlChangeSetService.saveChangeSet(accountId, changeSet, newEntity);
+    String parentYamlChangeSetId = savedChangeSet.getUuid();
 
-      List<YamlChangeSet> yamlChangeSets = yamlGitService.obtainChangeSetFromFullSyncDryRun(accountId);
-      for (YamlChangeSet yamlChangeSet : yamlChangeSets) {
-        yamlChangeSet.setParentYamlChangeSetId(parentYamlChangeSetId);
-        yamlChangeSetService.save(yamlChangeSet);
-      }
+    List<YamlChangeSet> yamlChangeSets = yamlGitService.obtainChangeSetFromFullSyncDryRun(accountId);
+    for (YamlChangeSet yamlChangeSet : yamlChangeSets) {
+      yamlChangeSet.setParentYamlChangeSetId(parentYamlChangeSetId);
+      yamlChangeSetService.save(yamlChangeSet);
     }
   }
 }

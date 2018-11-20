@@ -7,7 +7,6 @@ import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.util.List;
 import javax.validation.Valid;
@@ -68,13 +67,7 @@ public interface YamlChangeSetService {
    */
   boolean deleteChangeSet(@NotEmpty String accountId, @NotEmpty String changeSetId);
 
-  /**
-   * Queue change set.
-   *
-   * @param yamlGitConfig       the yamlGitConfig
-   * @param changeSet the change set
-   */
-  <T> YamlChangeSet saveChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> changeSet, T entity);
+  <T> YamlChangeSet saveChangeSet(String accountId, List<GitFileChange> changeSet, T entity);
 
   boolean updateStatusForGivenYamlChangeSets(
       String accountId, Status newStatus, List<Status> currentStatus, List<String> yamlChangeSetIds);

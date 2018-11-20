@@ -35,7 +35,6 @@ import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.yaml.gitSync.YamlChangeSet;
 import software.wings.yaml.gitSync.YamlChangeSet.Status;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.time.Duration;
 import java.util.Arrays;
@@ -289,13 +288,13 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
   }
 
   @Override
-  public <T> YamlChangeSet saveChangeSet(YamlGitConfig yamlGitConfig, List<GitFileChange> gitFileChanges, T entity) {
+  public <T> YamlChangeSet saveChangeSet(String accountId, List<GitFileChange> gitFileChanges, T entity) {
     if (isEmpty(gitFileChanges)) {
       return null;
     }
 
     YamlChangeSet yamlChangeSet = YamlChangeSet.builder()
-                                      .accountId(yamlGitConfig.getAccountId())
+                                      .accountId(accountId)
                                       .gitFileChanges(gitFileChanges)
                                       .status(Status.QUEUED)
                                       .queuedOn(System.currentTimeMillis())
