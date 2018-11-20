@@ -45,11 +45,16 @@ elif [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETE
     else
         MANAGER_SERVICE="harness-manager"
     fi
+    if [[ -v "HAZELCAST_NAMESPACE" ]]; then
+        NAMESPACE=${HAZELCAST_NAMESPACE}
+    else
+        NAMESPACE="harness"
+    fi
     sed -i "s|<property name=\"hazelcast.discovery.enabled\">false|<property name=\"hazelcast.discovery.enabled\">true|" /opt/harness/hazelcast.xml
     sed -i "s|<discovery-strategy enabled=\"false\" class=\"com.hazelcast.aws.AwsDiscoveryStrategy\"| <discovery-strategy enabled=\"true\" class=\"com.hazelcast.kubernetes.HazelcastKubernetesDiscoveryStrategy\"|" /opt/harness/hazelcast.xml
 
     sed -i "s|<property name=\"access-key\">my-access-key|<property name=\"service-name\">${MANAGER_SERVICE}|" /opt/harness/hazelcast.xml
-    sed -i "s|<property name=\"secret-key\">my-secret-key|<property name=\"namespace\">harness|" /opt/harness/hazelcast.xml
+    sed -i "s|<property name=\"secret-key\">my-secret-key|<property name=\"namespace\">${NAMESPACE}|" /opt/harness/hazelcast.xml
     sed -i "s|<property name=\"iam-role\">s3access</property>||" /opt/harness/hazelcast.xml
     sed -i "s|<property name=\"region\">us-west-1</property>||" /opt/harness/hazelcast.xml
     sed -i "s|<property name=\"host-header\">ec2.amazonaws.com</property>||" /opt/harness/hazelcast.xml
