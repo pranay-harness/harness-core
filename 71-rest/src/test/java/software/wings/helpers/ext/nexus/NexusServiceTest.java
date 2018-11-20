@@ -538,8 +538,8 @@ public class NexusServiceTest extends WingsBaseTest {
             "/nexus/service/local/repositories/releases/index_content/software/wings/nexus/rest-client/3.0/rest-client-3.0.jar"))
                              .willReturn(aResponse().withBody(new byte[] {1, 2, 3, 4})));
     // TODO: Need to mock the file input stream
-    Pair<String, InputStream> fileInfo =
-        nexusService.downloadArtifact(nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "LATEST");
+    Pair<String, InputStream> fileInfo = nexusService.downloadArtifacts(
+        nexusConfig, null, "releases", "software.wings.nexus", "rest-client", "LATEST", null, null, null, null);
 
     assertThat(fileInfo).isNotNull();
     assertThat(fileInfo.getKey()).isEqualTo("rest-client-3.0.jar");

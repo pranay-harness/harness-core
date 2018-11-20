@@ -2,7 +2,6 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import com.google.inject.Inject;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -15,7 +14,6 @@ import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
-import java.io.InputStream;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -54,26 +52,11 @@ public class NexusCollectionTask extends AbstractDelegateRunnableTask {
     try {
       for (String artifactPath : artifactPaths) {
         logger.info("Collecting artifact {}  from Nexus server {}", artifactPath, nexusConfig.getNexusUrl());
-        Pair<String, InputStream> fileInfo =
-            nexusService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactPath, version);
-        artifactCollectionTaskHelper.addDataToResponse(
-            fileInfo, artifactPath, res, getDelegateId(), getTaskId(), getAccountId());
+        nexusService.downloadArtifacts(nexusConfig, encryptionDetails, repoType, groupId, artifactPath, version,
+            getDelegateId(), getTaskId(), getAccountId(), res);
       }
     } catch (Exception e) {
       logger.warn("Exception: " + Misc.getMessage(e), e);
-      // TODO: better error handling
-
-      //      if (e instanceof WingsException)
-      //        WingsException ex = (WingsException) e;
-      //        errorMessage = Joiner.on(",").join(ex.getResponseMessageList().stream()
-      //            .map(responseMessage ->
-      //            MessageManager.getInstance().getResponseMessage(responseMessage.getCode(),
-      //            ex.getParams()).getMessage()) .collect(toList()));
-      //      } else {
-      //        errorMessage = e.getMessage();
-      //      }
-      //      executionStatus = executionStatus.FAILED;
-      //      jenkinsExecutionResponse.setErrorMessage(errorMessage);
     }
     return res;
   }
