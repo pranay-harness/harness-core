@@ -25,13 +25,13 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
+import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javax.xml.stream.XMLStreamException;
 
@@ -127,17 +127,16 @@ public class NexusServiceImpl implements NexusService {
   @Override
   public List<String> getGroupIdPaths(
       NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repoId) {
+    List<String> groupIds = new ArrayList<>();
     try {
       boolean isNexusTwo = nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x");
-      return timeLimiter.callWithTimeout(()
-                                             -> isNexusTwo
-              ? nexusTwoService.getGroupIdPaths(nexusConfig, encryptionDetails, repoId)
-              : nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId),
+      timeLimiter.callWithTimeout(()
+                                      -> isNexusTwo
+              ? nexusTwoService.collectGroupIds(nexusConfig, encryptionDetails, repoId, groupIds)
+              : nexusThreeService.getDockerImages(nexusConfig, encryptionDetails, repoId, groupIds),
           20L, TimeUnit.SECONDS, true);
     } catch (UncheckedTimeoutException e) {
-      logger.warn("Nexus server request did not succeed within 20 secs");
-      throw new WingsException(INVALID_ARTIFACT_SERVER, USER)
-          .addParam("message", "Nexus server took too long to respond");
+      logger.warn("Nexus server request did not succeed within 20 secs. Returning the list so far", e);
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -148,6 +147,7 @@ public class NexusServiceImpl implements NexusService {
       }
       throw new WingsException(INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
     }
+    return groupIds;
   }
 
   @Override
@@ -179,22 +179,16 @@ public class NexusServiceImpl implements NexusService {
   }
 
   @Override
-  public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactName,
-      String version) {
+  public Pair<String, InputStream> downloadArtifacts(NexusConfig nexusConfig,
+      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactName, String version,
+      String delegateId, String taskId, String accountId, ListNotifyResponseData notifyResponseData) {
     try {
-      return nexusTwoService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactName, version);
+      return nexusTwoService.downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactName, version,
+          delegateId, taskId, accountId, notifyResponseData);
     } catch (IOException e) {
       logger.error("Error occurred while downloading the artifact", e);
       throw new WingsException(ARTIFACT_SERVER_ERROR, USER).addParam("message", Misc.getMessage(e));
     }
-  }
-
-  @Override
-  public Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig,
-      List<EncryptedDataDetail> encryptionDetails, String repoType, String groupId, String artifactName) {
-    // First Get the maven pom model
-    return downloadArtifact(nexusConfig, encryptionDetails, repoType, groupId, artifactName, null);
   }
 
   @Override
@@ -250,14 +244,11 @@ public class NexusServiceImpl implements NexusService {
 
   @Override
   public boolean isRunning(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails) {
-    List<String> images = new ArrayList<>();
     if (nexusConfig.getVersion() == null || nexusConfig.getVersion().equalsIgnoreCase("2.x")) {
       return getRepositories(nexusConfig, encryptionDetails) != null;
     } else {
-      Map<String, String> repositories;
-
       try {
-        repositories = getRepositories(nexusConfig, encryptionDetails, ArtifactType.DOCKER);
+        return getRepositories(nexusConfig, encryptionDetails, ArtifactType.DOCKER) != null;
       } catch (WingsException e) {
         if (Misc.getMessage(e).contains("Invalid Nexus credentials")) {
           throw e;
@@ -268,11 +259,6 @@ public class NexusServiceImpl implements NexusService {
             "Failed to retrieve repositories. Ignoring validation for Nexus 3 for now. User can give custom path");
         return true;
       }
-      Optional<String> repoKey = repositories.keySet().stream().findFirst();
-      if (repoKey.isPresent()) {
-        images = getGroupIdPaths(nexusConfig, encryptionDetails, repoKey.get());
-      }
     }
-    return images != null;
   }
 }

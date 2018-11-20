@@ -425,7 +425,7 @@ public class JenkinsImpl implements Jenkins {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.helpers.ext.jenkins.Jenkins#downloadArtifact(java.lang.String, java.lang.String)
+   * @see software.wings.helpers.ext.jenkins.Jenkins#downloadArtifacts(java.lang.String, java.lang.String)
    */
   @Override
   public Pair<String, InputStream> downloadArtifact(String jobname, String artifactpathRegex)
@@ -439,7 +439,7 @@ public class JenkinsImpl implements Jenkins {
   }
 
   /* (non-Javadoc)
-   * @see software.wings.helpers.ext.jenkins.Jenkins#downloadArtifact(java.lang.String, java.lang.String,
+   * @see software.wings.helpers.ext.jenkins.Jenkins#downloadArtifacts(java.lang.String, java.lang.String,
    * java.lang.String)
    */
   @Override

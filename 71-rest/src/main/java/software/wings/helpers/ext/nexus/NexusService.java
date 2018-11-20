@@ -5,6 +5,7 @@ import software.wings.beans.config.NexusConfig;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
+import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
 import java.util.List;
@@ -52,24 +53,13 @@ public interface NexusService {
    * @param nexusConfig
    * @param repoType
    * @param groupId
-   * @param artifactNames
-   * @return Input stream
-   */
-  Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoType, String groupId, String artifactNames);
-
-  /**
-   * Download artifact pair
-   *
-   * @param nexusConfig
-   * @param repoType
-   * @param groupId
    * @param artifactName
    * @param version
    * @return Input stream
    */
-  Pair<String, InputStream> downloadArtifact(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
-      String repoType, String groupId, String artifactName, String version);
+  Pair<String, InputStream> downloadArtifacts(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repoType, String groupId, String artifactName, String version, String delegateId, String taskId,
+      String accountId, ListNotifyResponseData res);
 
   /***
    * Get GroupId paths

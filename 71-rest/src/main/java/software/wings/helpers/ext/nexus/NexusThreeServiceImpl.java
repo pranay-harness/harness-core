@@ -78,8 +78,8 @@ public class NexusThreeServiceImpl {
     return emptyMap();
   }
 
-  public List<String> getDockerImages(
-      NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails, String repository) throws IOException {
+  public List<String> getDockerImages(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,
+      String repository, List<String> images) throws IOException {
     logger.info("Retrieving docker images for repository {} from url {}", repository, nexusConfig.getNexusUrl());
     NexusThreeRestClient nexusThreeRestClient = getNexusThreeClient(nexusConfig, encryptionDetails);
     Response<DockerImageResponse> response =
@@ -91,13 +91,13 @@ public class NexusThreeServiceImpl {
       if (response.body() != null && response.body().getRepositories() != null) {
         logger.info(
             "Retrieving docker images for repository {} from url {} success", repository, nexusConfig.getNexusUrl());
-        return response.body().getRepositories().stream().collect(toList());
+        images.addAll(response.body().getRepositories().stream().collect(toList()));
       }
     } else {
       logger.warn("Failed to fetch the docker images as request is not success");
     }
     logger.info("No images found for repository {}", repository);
-    return new ArrayList<>();
+    return images;
   }
 
   public List<BuildDetails> getDockerTags(NexusConfig nexusConfig, List<EncryptedDataDetail> encryptionDetails,

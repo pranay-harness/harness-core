@@ -18,9 +18,14 @@ public class IndexBrowserTreeNode implements Serializable {
   private String type;
   private boolean leaf;
   private String nodeName;
+  private String repositoryId;
+  private String groupId;
+  private String artifactId;
+  private String version;
   private String path;
   private String packaging;
   private String extension;
+  private String classifier;
 
   @XmlElementWrapper(name = "children")
   @XmlElement(name = "indexBrowserTreeNode")
