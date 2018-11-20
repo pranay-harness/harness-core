@@ -78,16 +78,6 @@ public interface WingsPersistence extends HPersistence {
   <T extends Base> T saveAndGet(Class<T> cls, T t);
 
   /**
-   * Gets count.
-   *
-   * @param <T> the type parameter
-   * @param cls the cls
-   * @param req the req
-   * @return the count
-   */
-  <T> long getCount(Class<T> cls, PageRequest<T> req);
-
-  /**
    * Creates the update operations.
    *
    * @param <T> the generic type

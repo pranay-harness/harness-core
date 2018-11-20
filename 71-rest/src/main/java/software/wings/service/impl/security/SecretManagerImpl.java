@@ -9,6 +9,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static io.harness.reflection.ReflectUtils.getEncryptedFields;
 import static io.harness.reflection.ReflectUtils.getEncryptedRefField;
@@ -347,9 +348,10 @@ public class SecretManagerImpl implements SecretManager {
   @Override
   public long getUsageLogsSize(String entityId, SettingVariableTypes variableType) throws IllegalAccessException {
     final List<String> secretIds = getSecretIds(entityId, variableType);
-    final PageRequest<SecretUsageLog> request =
-        aPageRequest().addFilter("encryptedDataId", Operator.IN, secretIds.toArray()).build();
-    return wingsPersistence.getCount(SecretUsageLog.class, request);
+    return wingsPersistence.createQuery(SecretUsageLog.class, excludeAuthority)
+        .field(SecretUsageLog.ENCRYPTED_DATA_ID_KEY)
+        .in(secretIds)
+        .count();
   }
 
   @Override

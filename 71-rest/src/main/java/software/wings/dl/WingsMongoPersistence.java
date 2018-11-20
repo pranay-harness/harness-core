@@ -32,7 +32,6 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import io.harness.mongo.MongoPersistence;
-import io.harness.mongo.MongoUtils;
 import io.harness.mongo.PageController;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HQuery;
@@ -370,15 +369,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
 
     return PageController.queryPageRequest(advancedDatastore, query, mapper, cls, req);
-  }
-
-  @Override
-  public <T> long getCount(Class<T> cls, PageRequest<T> req) {
-    AdvancedDatastore advancedDatastore = getDatastore(DEFAULT_STORE, req.getReadPref());
-    Query<T> query = advancedDatastore.createQuery(cls);
-    Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
-
-    return MongoUtils.getCount(advancedDatastore, query, mapper, cls, req);
   }
 
   @Override
