@@ -326,64 +326,46 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
     } else if (service.getArtifactType().equals(ArtifactType.AMI)) {
       return ImmutableMap.of(AMI.name(), AMI.name());
     } else if (service.getArtifactType().equals(ArtifactType.OTHER)) {
-      if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)
-          && featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
-        return new ImmutableMap.Builder<String, String>()
-            .put(DOCKER.name(), DOCKER.name())
-            .put(ECR.name(), ECR.name())
-            .put(ACR.name(), ACR.name())
-            .put(GCR.name(), GCR.name())
-            .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-            .put(NEXUS.name(), NEXUS.name())
-            .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
-            .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
-            .put(GCS.name(), GCS.name())
-            .put(AMAZON_S3.name(), AMAZON_S3.name())
-            .put(AMI.name(), AMI.name())
-            .put(SMB.name(), SMB.name())
-            .put(SFTP.name(), SFTP.name())
-            .build();
-      } else {
-        return new ImmutableMap.Builder<String, String>()
-            .put(DOCKER.name(), DOCKER.name())
-            .put(ECR.name(), ECR.name())
-            .put(ACR.name(), ACR.name())
-            .put(GCR.name(), GCR.name())
-            .put(ARTIFACTORY.name(), ARTIFACTORY.name())
-            .put(NEXUS.name(), NEXUS.name())
-            .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
-            .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
-            .put(GCS.name(), GCS.name())
-            .put(AMAZON_S3.name(), AMAZON_S3.name())
-            .put(AMI.name(), AMI.name())
-            .build();
+      ImmutableMap.Builder<String, String> builder =
+          new ImmutableMap.Builder<String, String>()
+              .put(DOCKER.name(), DOCKER.name())
+              .put(ECR.name(), ECR.name())
+              .put(ACR.name(), ACR.name())
+              .put(GCR.name(), GCR.name())
+              .put(ARTIFACTORY.name(), ARTIFACTORY.name())
+              .put(NEXUS.name(), NEXUS.name())
+              .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
+              .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
+              .put(GCS.name(), GCS.name())
+              .put(AMAZON_S3.name(), AMAZON_S3.name())
+              .put(AMI.name(), AMI.name());
+      if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
+        builder.put(SMB.name(), SMB.name());
       }
+
+      if (featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
+        builder.put(SFTP.name(), SFTP.name());
+      }
+      return builder.build();
     }
 
-    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)
-        && featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
-      return new ImmutableMap.Builder<String, String>()
-          .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
-          .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
-          .put(GCS.name(), GCS.name())
-          .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
-          .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
-          .put(AMAZON_S3.name(), AMAZON_S3.name())
-          .put(AMI.name(), AMI.name())
-          .put(SMB.name(), SMB.name())
-          .put(SFTP.name(), SFTP.name())
-          .build();
-    } else {
-      return new ImmutableMap.Builder<String, String>()
-          .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
-          .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
-          .put(GCS.name(), GCS.name())
-          .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
-          .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
-          .put(AMAZON_S3.name(), AMAZON_S3.name())
-          .put(AMI.name(), AMI.name())
-          .build();
+    ImmutableMap.Builder<String, String> builder =
+        new ImmutableMap.Builder<String, String>()
+            .put(ArtifactStreamType.JENKINS.name(), ArtifactStreamType.JENKINS.name())
+            .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
+            .put(GCS.name(), GCS.name())
+            .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
+            .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
+            .put(AMAZON_S3.name(), AMAZON_S3.name())
+            .put(AMI.name(), AMI.name());
+    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
+      builder.put(SMB.name(), SMB.name());
     }
+
+    if (featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
+      builder.put(SFTP.name(), SFTP.name());
+    }
+    return builder.build();
   }
 
   @Override

@@ -19,6 +19,7 @@ import com.hierynomus.smbj.share.DiskShare;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.common.Constants;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
@@ -48,13 +49,17 @@ public class SmbHelperService {
 
     SMBClient client = new SMBClient(getSMBConnectionConfig());
     try (Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
-      AuthenticationContext ac = new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), null);
+      AuthenticationContext ac =
+          new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), smbConfig.getDomain());
       Session session = connection.authenticate(ac);
 
       // Connect to Shared folder
       String sharedFolderName = getSharedFolderName(smbConfig.getSmbUrl());
       try (DiskShare share = (DiskShare) session.connectShare(sharedFolderName)) {
         for (FileIdBothDirectoryInformation f : share.list("", "*")) {
+          if (f.getFileName().equals(".") || f.getFileName().equals("..")) {
+            continue;
+          }
           artifactPaths.add(f.getFileName());
         }
       }
@@ -94,7 +99,7 @@ public class SmbHelperService {
         .build();
   }
 
-  private String getSharedFolderName(String smbUrl) {
+  public String getSharedFolderName(String smbUrl) {
     String smbHost = smbUrl;
     String sharedFolderName = "";
     if (smbHost.contains("/")) {
@@ -113,7 +118,8 @@ public class SmbHelperService {
     encryptionService.decrypt(smbConfig, encryptionDetails);
     SMBClient client = new SMBClient(getSMBConnectionConfig());
     try (Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
-      AuthenticationContext ac = new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), null);
+      AuthenticationContext ac =
+          new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), smbConfig.getDomain());
       Session session = connection.authenticate(ac);
 
       // Connect to Shared folder
@@ -157,7 +163,8 @@ public class SmbHelperService {
     encryptionService.decrypt(smbConfig, encryptionDetails);
     SMBClient client = new SMBClient(getSMBConnectionConfig());
     try (Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
-      AuthenticationContext ac = new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), null);
+      AuthenticationContext ac =
+          new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), smbConfig.getDomain());
       Session session = connection.authenticate(ac);
 
       // Connect to Shared folder
@@ -201,7 +208,7 @@ public class SmbHelperService {
                       String aPath = Paths.get(path, f.getFileName()).toString();
                       map.put(ARTIFACT_PATH, aPath);
                       map.put(URL, smbConfig.getSmbUrl());
-                      map.put("fileName", f.getFileName());
+                      map.put(Constants.ARTIFACT_FILE_NAME, f.getFileName());
                       map.put("allocationSize", Long.toString(f.getAllocationSize()));
                       map.put("fileAttributes", Long.toString(f.getFileAttributes()));
                       buildDetailsListForArtifactPath.add(aBuildDetails()

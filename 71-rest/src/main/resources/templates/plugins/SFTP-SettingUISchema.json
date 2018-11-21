@@ -2,5 +2,5 @@
   "password": { "ui:widget": "password" },
   "type": { "ui:widget": "hidden" },
   "custom:encryptedFields": [ "password"],
-  "ui:order": [ "type", "sftpUrl", "username", "password"]
+  "ui:order": [ "type", "sftpUrl", "domain", "username", "password"]
 }
