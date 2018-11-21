@@ -10,7 +10,7 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import io.harness.CategoryTest;
-import io.harness.rule.OwnerRule.Owner;
+import io.harness.rule.RepeatRule.Repeat;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -46,7 +46,8 @@ public class DelegateFileManagerTest extends CategoryTest {
 
   @Mock ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   @Mock ManagerClient managerClient;
-  @Mock DelegateConfiguration delegateConfiguration;
+
+  DelegateConfiguration delegateConfiguration = DelegateConfiguration.builder().maxCachedArtifacts(10).build();
   @InjectMocks
   private DelegateFileManagerImpl delegateFileManager =
       new DelegateFileManagerImpl(managerClient, delegateConfiguration);
@@ -104,9 +105,8 @@ public class DelegateFileManagerTest extends CategoryTest {
           .build();
 
   @Test
-  @Owner(emails = "aaditi.joag@harness.io", intermittent = true)
+  @Repeat(times = 3, successes = 1)
   public void testDownloadArtifactAtRuntimeForS3() throws IOException, ExecutionException {
-    when(delegateConfiguration.getMaxCachedArtifacts()).thenReturn(10);
     String fileContent = "test";
     InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
     Pair<String, InputStream> pair = new ImmutablePair<>(fileContent, is);
@@ -123,7 +123,6 @@ public class DelegateFileManagerTest extends CategoryTest {
 
   @Test
   public void testDownloadArtifactAtRuntimeForArtifactory() throws IOException, ExecutionException {
-    when(delegateConfiguration.getMaxCachedArtifacts()).thenReturn(10);
     String fileContent = "test";
     InputStream is = new ByteArrayInputStream(fileContent.getBytes(Charset.defaultCharset()));
     Pair<String, InputStream> pair = new ImmutablePair<>(fileContent, is);

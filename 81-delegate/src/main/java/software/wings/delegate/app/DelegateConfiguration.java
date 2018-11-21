@@ -1,11 +1,13 @@
 package software.wings.delegate.app;
 
+import lombok.Builder;
 import lombok.Data;
 
 /**
  * Created by peeyushaggarwal on 11/29/16.
  */
 @Data
+@Builder
 public class DelegateConfiguration {
   private String accountId;
 
