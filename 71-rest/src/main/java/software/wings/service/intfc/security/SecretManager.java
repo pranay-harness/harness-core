@@ -10,6 +10,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.security.ExportableSecret;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.BoundedInputStream;
@@ -97,6 +98,25 @@ public interface SecretManager {
 
   PageResponse<EncryptedData> listSecrets(String accountId, PageRequest<EncryptedData> pageRequest,
       String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException;
+
+  /**
+   * Export all secrets (and their usage restriction, change log) belonging to the given account. The secret text or
+   * config file will be decrypted first. The resulting document can be used to import into a different Harness cluster
+   * as part of data migration.
+   *
+   * A temporary encryption key is used to encrypt the secret values to prevent plain text secret is exposed in the
+   * exported data files.
+   */
+  List<ExportableSecret> exportSecrets(String accountId, String encryptionKey) throws IOException;
+
+  /**
+   * Import the previous exported secrets into a specified account. This happens typically when importing secrets that
+   * was exported from another environment.
+   *
+   * A encryption key is used to decrypt the temporarily encrypted secret values in the exported file.
+   */
+  void importSecrets(String accountId, List<ExportableSecret> exportableSecrets, String encryptionKey)
+      throws IOException;
 
   PageResponse<EncryptedData> listSecretsMappedToAccount(
       String accountId, PageRequest<EncryptedData> pageRequest, boolean details) throws IllegalAccessException;
