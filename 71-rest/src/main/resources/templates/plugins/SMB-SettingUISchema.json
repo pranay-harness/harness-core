@@ -2,6 +2,6 @@
   "password": { "ui:widget": "password" },
   "type": { "ui:widget": "hidden" },
   "custom:encryptedFields": [ "password"],
-  "ui:order": [ "type", "smbUrl", "username", "password"]
+  "ui:order": [ "type", "smbUrl", "domain", "username", "password"]
 }
 

@@ -1,6 +1,7 @@
 package software.wings.beans.command;
 
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.Log.Builder.aLog;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -23,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.SmbConfig;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -30,6 +32,7 @@ import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.SmbHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
 import java.nio.charset.Charset;
@@ -55,6 +58,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Inject private EncryptionService encryptionService;
   @Inject @Transient private transient DelegateLogService delegateLogService;
   @Inject private AwsHelperService awsHelperService;
+  @Inject private SmbHelperService smbHelperService;
   private static Map<String, String> bucketRegions = new HashMap<>();
 
   /**
@@ -89,6 +93,12 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         return context.executeCommandString(command, false);
       case ARTIFACTORY:
         command = constructCommandStringForArtifactory(context);
+        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        saveExecutionLog(
+            context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        return context.executeCommandString(command, false);
+      case SMB:
+        command = constructCommandStringForSMB(context);
         logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
@@ -243,6 +253,28 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
     bucketRegions.put("eu-west-2", "-eu-west-2");
     bucketRegions.put("eu-west-3", "-eu-west-3");
     bucketRegions.put("sa-east-1", "-sa-east-1");
+  }
+
+  private String constructCommandStringForSMB(ShellCommandExecutionContext context) {
+    Map<String, String> metadata = context.getMetadata();
+    String artifactFileName = metadata.get(Constants.ARTIFACT_FILE_NAME);
+    SmbConfig smbConfig = (SmbConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
+    List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
+    encryptionService.decrypt(smbConfig, encryptionDetails);
+    String command;
+    switch (this.getScriptType()) {
+      case POWERSHELL:
+        String domain = isNotEmpty(smbConfig.getDomain()) ? smbConfig.getDomain() + "\\" : "";
+        String userPassword = "/user:" + domain + smbConfig.getUsername() + " " + new String(smbConfig.getPassword());
+        String shareUrl = smbHelperService.getSMBConnectionHost(smbConfig.getSmbUrl()) + "\\"
+            + smbHelperService.getSharedFolderName(smbConfig.getSmbUrl());
+        String roboCopyCommand = "robocopy \\\\" + shareUrl + " " + getCommandPath() + " " + artifactFileName;
+        command = "net use \\\\" + shareUrl + " " + userPassword + " /persistent:no\n " + roboCopyCommand;
+        break;
+      default:
+        throw new WingsException("Invalid Script type");
+    }
+    return command;
   }
 
   private String constructCommandStringForArtifactory(ShellCommandExecutionContext context) {

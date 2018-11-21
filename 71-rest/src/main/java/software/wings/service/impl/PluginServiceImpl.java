@@ -328,8 +328,7 @@ public class PluginServiceImpl implements PluginService {
                        .withPluginCategories(asList(SourceRepo))
                        .withUiSchema(readUiSchema("GIT"))
                        .build());
-    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)
-        && featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
+    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
       pluginList.add(anAccountPlugin()
                          .withSettingClass(SmbConfig.class)
                          .withAccountId(accountId)
@@ -339,6 +338,8 @@ public class PluginServiceImpl implements PluginService {
                          .withPluginCategories(asList(Artifact))
                          .withUiSchema(readUiSchema("SMB"))
                          .build());
+    }
+    if (featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
       pluginList.add(anAccountPlugin()
                          .withSettingClass(SftpConfig.class)
                          .withAccountId(accountId)
