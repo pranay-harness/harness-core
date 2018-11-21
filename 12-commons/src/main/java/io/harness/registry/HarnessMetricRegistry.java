@@ -3,12 +3,13 @@ package io.harness.registry;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;
 
+import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
-import io.harness.exception.WingsException;
-import io.prometheus.client.Collector;
 import io.prometheus.client.Collector.MetricFamilySamples;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
+import io.prometheus.client.Histogram;
+import io.prometheus.client.Summary;
 import io.prometheus.client.dropwizard.DropwizardExports;
 import lombok.NoArgsConstructor;
 
@@ -35,7 +36,7 @@ public class HarnessMetricRegistry {
   // Prometheus Collector Registry used for exposing metrics to prometheus by rest endpoint
   private CollectorRegistry collectorRegistry;
 
-  private final Map<String, Collector> namesToCollectors = new HashMap<>();
+  private final Map<String, Object> namesToCollectors = new HashMap<>();
 
   // Default metric path for Custom Metrics
   // Any new custom metric that needs to be registered should have this path as prefix.
@@ -59,8 +60,29 @@ public class HarnessMetricRegistry {
     } else {
       builder.help(metricName);
     }
-    builder.register(collectorRegistry);
-    namesToCollectors.put(name, builder.create());
+    Gauge metric = builder.create();
+
+    collectorRegistry.register(metric);
+    namesToCollectors.put(name, metric);
+  }
+
+  public void registerMeteredMetric(String metricName) {
+    String name = getAbsoluteMetricName(metricName);
+    Meter metric = metricRegistry.meter(name);
+    namesToCollectors.put(name, metric);
+  }
+
+  public void registerSummaryMetric(String metricName) {
+    String name = getAbsoluteMetricName(metricName);
+    Summary metric2 =
+        Summary.build().name(name).help(metricName).quantile(0.5, 0.1).create().register(collectorRegistry);
+    namesToCollectors.put(name, metric2);
+  }
+
+  public void registerHistogramMetric(String metricName) {
+    String name = getAbsoluteMetricName(metricName);
+    Histogram metric1 = Histogram.build().name(name).help(metricName).register(collectorRegistry);
+    namesToCollectors.put(name, metric1);
   }
 
   public void recordGaugeInc(String metricName, String[] labelValues) {
@@ -84,15 +106,16 @@ public class HarnessMetricRegistry {
   public void updateMetricValue(String metricName, double value) {
     String name = getAbsoluteMetricName(metricName);
 
-    Collector metric = namesToCollectors.get(name);
+    Object metric = namesToCollectors.get(name);
     if (metric != null) {
-      String metricType = metric.getClass().getSimpleName();
-      switch (metricType) {
-        case "Gauge":
-          ((Gauge) metric).set(value);
-          break;
-        default:
-          throw new WingsException("Invalid Metric Type found " + metricType);
+      if (metric instanceof Gauge) {
+        ((Gauge) metric).set(value);
+      } else if (metric instanceof Meter) {
+        ((Meter) metric).mark((long) value);
+      } else if (metric instanceof Summary) {
+        ((Summary) metric).observe(value);
+      } else if (metric instanceof Histogram) {
+        ((Histogram) metric).observe(value);
       }
     }
   }
@@ -109,7 +132,7 @@ public class HarnessMetricRegistry {
   }
 
   @VisibleForTesting
-  public Map<String, Collector> getNamesToCollectors() {
+  public Map<String, Object> getNamesToCollectors() {
     return namesToCollectors;
   }
 }
