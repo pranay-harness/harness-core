@@ -630,8 +630,6 @@ public class AwsAmiHelperServiceDelegateImpl
         new CreateLaunchConfigurationRequest()
             .withLaunchConfigurationName(newAutoScalingGroupName)
             .withImageId(artifactRevision)
-            .withBlockDeviceMappings(
-                getBlockDeviceMappings(awsConfig, encryptedDataDetails, region, cloneBaseLaunchConfiguration))
             .withSecurityGroups(cloneBaseLaunchConfiguration.getSecurityGroups())
             .withClassicLinkVPCId(cloneBaseLaunchConfiguration.getClassicLinkVPCId())
             .withEbsOptimized(cloneBaseLaunchConfiguration.getEbsOptimized())
