@@ -19,6 +19,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.ConstraintException;
+import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.ConsumerId;
 import io.harness.exception.InvalidRequestException;
@@ -68,6 +69,7 @@ public class ResourceConstraintState extends State {
   @Inject private transient WorkflowNotificationHelper workflowNotificationHelper;
 
   @Getter @Setter private String resourceConstraintId;
+  @Getter @Setter private String resourceUnit;
 
   @Getter @Setter @Min(value = 1) private int permits;
 
@@ -114,7 +116,7 @@ public class ResourceConstraintState extends State {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
     final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
 
-    if (notificationEvents.contains(NotificationEvent.UNBLOCKED)) {
+    if (isNotEmpty(notificationEvents) && notificationEvents.contains(NotificationEvent.UNBLOCKED)) {
       sendNotification(accountId, context, resourceConstraint, RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION);
     }
 
@@ -145,10 +147,12 @@ public class ResourceConstraintState extends State {
     constraintContext.put(
         ResourceConstraintInstance.ORDER_KEY, resourceConstraintService.getMaxOrder(resourceConstraintId) + 1);
 
+    ConstraintUnit renderedResourceUnit = new ConstraintUnit(context.renderExpression(resourceUnit));
+
     String consumerId = generateUuid();
     try {
-      final Consumer.State state = constraint.registerConsumer(
-          new ConsumerId(consumerId), permits, constraintContext, resourceConstraintService.getRegistry());
+      final Consumer.State state = constraint.registerConsumer(renderedResourceUnit, new ConsumerId(consumerId),
+          permits, constraintContext, resourceConstraintService.getRegistry());
 
       if (state == Consumer.State.ACTIVE) {
         return executionResponseBuilder.withExecutionStatus(ExecutionStatus.SUCCESS).build();

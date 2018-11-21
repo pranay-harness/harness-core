@@ -100,7 +100,7 @@ public class Constraint {
   }
 
   public State registerConsumer(
-      ConsumerId consumerId, int permits, Map<String, Object> context, ConstraintRegistry registry)
+      ConstraintUnit unit, ConsumerId consumerId, int permits, Map<String, Object> context, ConstraintRegistry registry)
       throws InvalidPermitsException, UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
     if (permits <= 0) {
       throw new InvalidPermitsException("The permits should be positive number.");
@@ -112,7 +112,7 @@ public class Constraint {
 
     final Random random = new Random();
     do {
-      List<Consumer> consumers = registry.loadConsumers(id);
+      List<Consumer> consumers = registry.loadConsumers(id, unit);
       final int usedPermits = getUsedPermits(consumers);
 
       State state = null;
@@ -136,7 +136,7 @@ public class Constraint {
         checkForBadBlock(consumer, consumers, registry);
       }
 
-      if (registry.registerConsumer(id, consumer, usedPermits)) {
+      if (registry.registerConsumer(id, unit, consumer, usedPermits)) {
         return state;
       }
 
@@ -146,16 +146,17 @@ public class Constraint {
     throw new UnableToRegisterConsumerException("Unable to register the constraint.");
   }
 
-  public boolean consumerUnblocked(ConsumerId consumerId, Map<String, Object> context, ConstraintRegistry registry) {
-    return registry.consumerUnblocked(id, consumerId, context);
+  public boolean consumerUnblocked(
+      ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context, ConstraintRegistry registry) {
+    return registry.consumerUnblocked(id, unit, consumerId, context);
   }
 
-  boolean consumerFinished(ConsumerId consumerId, ConstraintRegistry registry) {
-    return registry.consumerFinished(id, consumerId, null);
+  boolean consumerFinished(ConstraintUnit unit, ConsumerId consumerId, ConstraintRegistry registry) {
+    return registry.consumerFinished(id, unit, consumerId, null);
   }
 
-  public RunnableConsumers runnableConsumers(ConstraintRegistry registry) {
-    final List<Consumer> consumers = registry.loadConsumers(id);
+  public RunnableConsumers runnableConsumers(ConstraintUnit unit, ConstraintRegistry registry) {
+    final List<Consumer> consumers = registry.loadConsumers(id, unit);
     int usedPermits = getUsedPermits(consumers);
 
     final RunnableConsumersBuilder builder = RunnableConsumers.builder().usedPermits(usedPermits);
