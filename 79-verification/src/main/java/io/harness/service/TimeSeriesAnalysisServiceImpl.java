@@ -810,7 +810,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .filter("cvConfigId", cvConfigId)
             .filter("analysisMinute", dataCollectionMin)
             .get();
-    timeSeriesMLAnalysisRecord.decompressTransactions();
+    if (timeSeriesMLAnalysisRecord != null) {
+      timeSeriesMLAnalysisRecord.decompressTransactions();
+    }
     return timeSeriesMLAnalysisRecord;
   }
 
@@ -834,8 +836,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
             .field("analysisMinute")
             .in(historicalAnalysisTimes)
             .asList();
-    timeSeriesMLAnalysisRecords.forEach(
-        timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
+    if (timeSeriesMLAnalysisRecords != null) {
+      timeSeriesMLAnalysisRecords.forEach(
+          timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
+    }
     return timeSeriesMLAnalysisRecords;
   }
 
