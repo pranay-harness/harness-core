@@ -1,4 +1,4 @@
-package software.wings.delegate.app;
+package software.wings.delegate.service;
 
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 
@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
+import software.wings.delegate.app.DelegateConfiguration;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -25,11 +26,7 @@ public class InstallUtils {
     return kubectlPath;
   }
 
-  public static void installClientTools(DelegateConfiguration configuration) {
-    installKubectl(configuration);
-  }
-
-  private static void installKubectl(DelegateConfiguration configuration) {
+  static void installKubectl(DelegateConfiguration configuration, String proxySetupScript) {
     try {
       if (StringUtils.isNotEmpty(configuration.getKubectlPath())) {
         kubectlPath = configuration.getKubectlPath();
@@ -49,9 +46,6 @@ public class InstallUtils {
         logger.info("No version configured. Using default kubectl version", version);
       }
 
-      String installScriptPath =
-          new File(InstallUtils.class.getResource("/install-kubectl.sh").getFile()).getAbsolutePath();
-
       String kubectlDirectory = kubectlBaseDir + version;
 
       if (Files.exists(Paths.get(kubectlDirectory + "/kubectl"))) {
@@ -67,11 +61,15 @@ public class InstallUtils {
 
       logger.info("download Url is {}", downloadUrl);
 
-      ProcessExecutor processExecutor =
-          new ProcessExecutor()
-              .timeout(10, TimeUnit.MINUTES)
-              .command("/bin/bash", "-c", installScriptPath + " " + kubectlDirectory + " " + downloadUrl)
-              .readOutput(true);
+      String script = "curl -LO " + downloadUrl + "\n"
+          + "chmod +x ./kubectl\n"
+          + "./kubectl version --short --client\n";
+
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(kubectlDirectory))
+                                            .command("/bin/bash", "-c", proxySetupScript + script)
+                                            .readOutput(true);
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {

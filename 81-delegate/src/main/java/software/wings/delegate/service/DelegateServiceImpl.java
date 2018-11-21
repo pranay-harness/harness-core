@@ -24,6 +24,7 @@ import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static software.wings.beans.Delegate.Builder.aDelegate;
 import static software.wings.common.Constants.SELF_DESTRUCT;
 import static software.wings.delegate.app.DelegateApplication.getProcessId;
+import static software.wings.delegate.service.InstallUtils.installKubectl;
 import static software.wings.managerclient.ManagerClientFactory.TRUST_ALL_CERTS;
 import static software.wings.utils.Misc.getDurationString;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
@@ -285,6 +286,8 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         logger.info("Delegate process started");
       }
+
+      installKubectl(delegateConfiguration, PROXY_SETUP);
 
       String proxyHost = System.getProperty("https.proxyHost");
 
