@@ -1,6 +1,7 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
 import static java.util.Arrays.asList;
 import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.NEW;
@@ -19,6 +20,10 @@ import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.core.queue.AbstractQueueListener;
@@ -68,36 +73,34 @@ public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent
       WorkflowExecution runningWorkflowExecutions = runningQuery.get();
 
       if (runningWorkflowExecutions != null) {
-        // TODO(brett): Uncomment the following for templatized namespace to never queue. Resource constraint must first
-        // allow identifying constraints by expression.
-        /*
         boolean namespaceExpression = false;
-        for (String infraId : message.getInfraMappingIds()) {
-          InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(message.getAppId(), infraId);
-          if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping
-              && containsVariablePattern(
-                     ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
-            namespaceExpression = true;
-            break;
-          }
-          if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
-              && containsVariablePattern(
-                     ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
-            namespaceExpression = true;
-            break;
-          }
-          if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
-              && containsVariablePattern(((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
-            namespaceExpression = true;
-            break;
+        if (message.getInfraMappingIds() != null) {
+          for (String infraId : message.getInfraMappingIds()) {
+            InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(message.getAppId(), infraId);
+            if (infrastructureMapping instanceof AzureKubernetesInfrastructureMapping
+                && containsVariablePattern(
+                       ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
+              namespaceExpression = true;
+              break;
+            }
+            if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping
+                && containsVariablePattern(
+                       ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
+              namespaceExpression = true;
+              break;
+            }
+            if (infrastructureMapping instanceof GcpKubernetesInfrastructureMapping
+                && containsVariablePattern(
+                       ((GcpKubernetesInfrastructureMapping) infrastructureMapping).getNamespace())) {
+              namespaceExpression = true;
+              break;
+            }
           }
         }
 
         if (!namespaceExpression) {
           return;
         }
-        */
-        return;
       }
 
       final Query<WorkflowExecution> queueQuery =
