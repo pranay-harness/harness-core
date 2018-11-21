@@ -88,6 +88,8 @@ delegateMetadataUrl: https://ci.harness.io/storage/wingsdelegates/delegateci.txt
 apiUrl:
 deployMode: AWS
 
+kubectlVersion: v1.12.2
+
 portal:
   url: https://localhost:8000
   allowedDomains: harness.io, wings.software, localhost, 127.0.0.1

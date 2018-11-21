@@ -30,4 +30,6 @@ public class DelegateConfiguration {
   private boolean pollForTasks;
 
   private String description;
+
+  private String kubectlPath;
 }

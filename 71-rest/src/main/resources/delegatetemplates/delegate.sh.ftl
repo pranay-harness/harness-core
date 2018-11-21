@@ -118,6 +118,8 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   fi
 fi
 
+export KUBECTL_VERSION=${kubectlVersion}
+
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"
 

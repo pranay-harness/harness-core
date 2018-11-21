@@ -34,6 +34,7 @@ node_modules/
 package-lock.json
 infer-out
 infer-out/*
+client-tools
 
 # The Terraform code in this app is just an example, so ignore any files that may store Terraform state from a real
 # deployment. You may want to remove these gitignore entries for a real app.

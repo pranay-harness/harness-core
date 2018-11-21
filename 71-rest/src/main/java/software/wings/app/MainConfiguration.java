@@ -64,6 +64,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty("featuresEnabled") private String featureNames;
+  @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
   @JsonProperty("executionLogStorageMode") private ExecutionLogsStorageMode executionLogsStorageMode;
 

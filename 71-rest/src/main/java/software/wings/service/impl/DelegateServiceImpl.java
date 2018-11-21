@@ -625,6 +625,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                         .put("delegateStorageUrl", delegateStorageUrl)
                                                         .put("delegateCheckLocation", delegateCheckLocation)
                                                         .put("deployMode", mainConfiguration.getDeployMode().name())
+                                                        .put("kubectlVersion", mainConfiguration.getKubectlVersion())
                                                         .put("kubernetesAccountLabel", getAccountIdentifier(accountId));
       if (isNotBlank(delegateName)) {
         params.put("delegateName", delegateName);
