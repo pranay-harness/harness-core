@@ -150,7 +150,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
               .name(UserThreadLocal.get().getName())
               .build());
     }
-    return getDatastore(DEFAULT_STORE, ReadPref.NORMAL).update(updateQuery, updateOperations);
+    return getDatastore(updateQuery.getEntityClass(), ReadPref.NORMAL).update(updateQuery, updateOperations);
   }
 
   @Override
@@ -174,14 +174,15 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     }
     updateOperations.setOnInsert("createdAt", currentTimeMillis());
     updateOperations.setOnInsert("_id", generateUuid());
-    return getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+    return getDatastore(query.getEntityClass(), ReadPref.NORMAL)
         .findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true));
   }
 
   @Override
   public <T extends Base> T findAndModify(
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions) {
-    return getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(query, updateOperations, findAndModifyOptions);
+    return getDatastore(query.getEntityClass(), ReadPref.NORMAL)
+        .findAndModify(query, updateOperations, findAndModifyOptions);
   }
 
   @Override
@@ -197,7 +198,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
               .name(UserThreadLocal.get().getName())
               .build());
     }
-    return getDatastore(DEFAULT_STORE, ReadPref.NORMAL).update(ent, ops);
+    return getDatastore(ent, ReadPref.NORMAL).update(ent, ops);
   }
 
   @Override
@@ -215,12 +216,12 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   @Override
   public <T> void updateFields(
       Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove) {
-    final AdvancedDatastore datastore = getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+    final AdvancedDatastore datastore = getDatastore(cls, ReadPref.NORMAL);
 
     Query<T> query = datastore.createQuery(cls).filter(ID_KEY, entityId);
     UpdateOperations<T> operations = datastore.createUpdateOperations(cls);
     boolean encryptable = EncryptableSetting.class.isAssignableFrom(cls);
-    Object savedObject = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).get(cls, entityId);
+    Object savedObject = datastore.get(cls, entityId);
     List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(cls);
     for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
       Object value = entry.getValue();
@@ -318,8 +319,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
   @Override
   public <T extends PersistentEntity> boolean delete(Class<T> cls, String appId, String uuid) {
-    Query<T> query =
-        getDatastore(DEFAULT_STORE, ReadPref.NORMAL).createQuery(cls).filter(ID_KEY, uuid).filter("appId", appId);
+    Query<T> query = getDatastore(cls, ReadPref.NORMAL).createQuery(cls).filter(ID_KEY, uuid).filter("appId", appId);
     return delete(query);
   }
 
@@ -355,7 +355,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     if (!authFilters(req, cls)) {
       return aPageResponse().withTotal(0).build();
     }
-    AdvancedDatastore advancedDatastore = getDatastore(DEFAULT_STORE, req.getReadPref());
+    AdvancedDatastore advancedDatastore = getDatastore(cls, req.getReadPref());
     Query<T> query = advancedDatastore.createQuery(cls);
 
     ((HQuery) query).setQueryChecks(queryChecks);
@@ -366,7 +366,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
 
   @Override
   public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
-    return getDatastore(DEFAULT_STORE, ReadPref.NORMAL).createUpdateOperations(cls);
+    return getDatastore(cls, ReadPref.NORMAL).createUpdateOperations(cls);
   }
 
   @Override
@@ -704,7 +704,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       String uuid = ((UuidAware) entity).getUuid();
       if (isNotBlank(uuid)
           && (SettingAttribute.class.isInstance(entity) || EncryptableSetting.class.isInstance(entity))) {
-        savedObject = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).get((Class<T>) entity.getClass(), uuid);
+        savedObject = getDatastore(entity, ReadPref.NORMAL).get((Class<T>) entity.getClass(), uuid);
       }
     }
     Object toEncrypt = entity;
@@ -737,7 +737,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       return;
     }
 
-    Object toDelete = getDatastore(DEFAULT_STORE, ReadPref.NORMAL).get(entity.getClass(), uuid);
+    Object toDelete = getDatastore(entity, ReadPref.NORMAL).get(entity.getClass(), uuid);
     if (toDelete == null) {
       return;
     }
