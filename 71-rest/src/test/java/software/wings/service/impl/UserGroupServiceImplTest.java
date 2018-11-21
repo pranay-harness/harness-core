@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
@@ -18,6 +19,7 @@ import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.User.Builder.anUser;
 import static software.wings.security.EnvFilter.FilterType.PROD;
 import static software.wings.security.PermissionAttribute.PermissionType.ENV;
+import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.service.impl.UserServiceImpl.ADD_ROLE_EMAIL_TEMPLATE_NAME;
 import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
@@ -35,7 +37,6 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
-import io.harness.data.structure.UUIDGenerator;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -63,6 +64,7 @@ import software.wings.service.intfc.EmailNotificationService;
 import software.wings.service.intfc.RoleService;
 import software.wings.service.intfc.UserService;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -80,6 +82,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                                 .withUuid(ACCOUNT_ID)
                                 .build();
   private User user = anUser()
+                          .withUuid(generateUuid())
                           .withAppId(APP_ID)
                           .withEmail(USER_EMAIL)
                           .withName(USER_NAME)
@@ -88,6 +91,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
                           .withCompanyName(COMPANY_NAME)
                           .build();
   private User userWithAccount = anUser()
+                                     .withUuid(generateUuid())
                                      .withAppId(APP_ID)
                                      .withEmail(USER_EMAIL)
                                      .withName(USER_NAME)
@@ -102,14 +106,14 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @InjectMocks @Inject private UserService userService = spy(UserServiceImpl.class);
   @InjectMocks @Inject private UserGroupServiceImpl userGroupService = spy(UserGroupServiceImpl.class);
 
-  private String accountId = UUIDGenerator.generateUuid();
-  private String userGroupId = UUIDGenerator.generateUuid();
-  private String userGroup2Id = UUIDGenerator.generateUuid();
+  private String accountId = generateUuid();
+  private String userGroupId = generateUuid();
+  private String userGroup2Id = generateUuid();
   private String description = "test description";
   private String name = "userGroup1";
   private String name2 = "userGroup2";
-  private String user1Id = UUIDGenerator.generateUuid();
-  private String user2Id = UUIDGenerator.generateUuid();
+  private String user1Id = generateUuid();
+  private String user2Id = generateUuid();
   private AppPermission envPermission = getEnvPermission();
 
   @Before
@@ -118,7 +122,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     when(accountService.get(anyString())).thenReturn(account);
     when(accountService.save(any())).thenReturn(account);
     when(roleService.getAccountAdminRole(any()))
-        .thenReturn(Role.Builder.aRole().withAccountId(ACCOUNT_ID).withUuid(UUIDGenerator.generateUuid()).build());
+        .thenReturn(Role.Builder.aRole().withAccountId(ACCOUNT_ID).withUuid(generateUuid()).build());
     try {
       userService.register(user);
     } catch (Exception ex) {
@@ -239,129 +243,133 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  public void shouldUpdateUserGroup() {
-    ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
-    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+  public void shouldUpdateUserGroup() throws IOException {
+    try (UserThreadLocal.Guard guard = userGuard(anUser().withUuid(generateUuid()).build())) {
+      ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
+      when(accountService.get(ACCOUNT_ID)).thenReturn(account);
 
-    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
-    AppPermission appPermission =
-        AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
-    UserGroup userGroup1 = UserGroup.builder()
-                               .accountId(ACCOUNT_ID)
-                               .name("USER_GROUP1")
-                               .appPermissions(Sets.newHashSet(appPermission))
-                               .build();
-    UserGroup userGroup2 = UserGroup.builder()
-                               .accountId(ACCOUNT_ID)
-                               .name("USER_GROUP2")
-                               .appPermissions(Sets.newHashSet(appPermission))
-                               .build();
-    UserGroup userGroup3 = UserGroup.builder()
-                               .accountId(ACCOUNT_ID)
-                               .name("USER_GROUP3")
-                               .appPermissions(Sets.newHashSet(appPermission))
-                               .build();
+      GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      AppPermission appPermission =
+          AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
+      UserGroup userGroup1 = UserGroup.builder()
+                                 .accountId(ACCOUNT_ID)
+                                 .name("USER_GROUP1")
+                                 .appPermissions(Sets.newHashSet(appPermission))
+                                 .build();
+      UserGroup userGroup2 = UserGroup.builder()
+                                 .accountId(ACCOUNT_ID)
+                                 .name("USER_GROUP2")
+                                 .appPermissions(Sets.newHashSet(appPermission))
+                                 .build();
+      UserGroup userGroup3 = UserGroup.builder()
+                                 .accountId(ACCOUNT_ID)
+                                 .name("USER_GROUP3")
+                                 .appPermissions(Sets.newHashSet(appPermission))
+                                 .build();
 
-    userGroup1 = userGroupService.save(userGroup1);
-    userGroup2 = userGroupService.save(userGroup2);
-    userGroup3 = userGroupService.save(userGroup3);
+      userGroup1 = userGroupService.save(userGroup1);
+      userGroup2 = userGroupService.save(userGroup2);
+      userGroup3 = userGroupService.save(userGroup3);
 
-    // Update operation 1
-    User userAfterUpdate =
-        userService.updateUserGroupsOfUser(user.getUuid(), Arrays.asList(userGroup1, userGroup2), ACCOUNT_ID, true);
-    userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
-    userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
-    assertThat(userAfterUpdate.getUserGroups()).size().isEqualTo(2);
-    assertThat(userAfterUpdate.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet()))
-        .containsExactlyInAnyOrder(userGroup1.getUuid(), userGroup2.getUuid());
+      // Update operation 1
+      User userAfterUpdate =
+          userService.updateUserGroupsOfUser(user.getUuid(), Arrays.asList(userGroup1, userGroup2), ACCOUNT_ID, true);
+      userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
+      userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
+      assertThat(userAfterUpdate.getUserGroups()).size().isEqualTo(2);
+      assertThat(userAfterUpdate.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet()))
+          .containsExactlyInAnyOrder(userGroup1.getUuid(), userGroup2.getUuid());
 
-    verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
-    List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
-    assertFalse(emailsData.stream()
-                    .filter(emailData -> emailData.getTemplateName().equals(INVITE_EMAIL_TEMPLATE_NAME))
-                    .collect(Collectors.toList())
-                    .size()
-        == 1);
+      verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
+      List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
+      assertFalse(emailsData.stream()
+                      .filter(emailData -> emailData.getTemplateName().equals(INVITE_EMAIL_TEMPLATE_NAME))
+                      .collect(Collectors.toList())
+                      .size()
+          == 1);
 
-    userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
-    userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
-    userGroup3 = userGroupService.get(ACCOUNT_ID, userGroup3.getUuid());
-    assertThat(userGroup1.getMemberIds()).containsExactly(user.getUuid());
-    assertThat(userGroup2.getMemberIds()).containsExactly(user.getUuid());
-    assertThat(userGroup3.getMemberIds()).isNullOrEmpty();
+      userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
+      userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
+      userGroup3 = userGroupService.get(ACCOUNT_ID, userGroup3.getUuid());
+      assertThat(userGroup1.getMemberIds()).containsExactly(user.getUuid());
+      assertThat(userGroup2.getMemberIds()).containsExactly(user.getUuid());
+      assertThat(userGroup3.getMemberIds()).isNullOrEmpty();
 
-    user.setName("John Doe");
-    userAfterUpdate = userService.updateUserGroupsAndNameOfUser(
-        user.getUuid(), Arrays.asList(userGroup1, userGroup3), user.getName(), ACCOUNT_ID, true);
-    assertThat(userAfterUpdate.getUserGroups().size()).isEqualTo(2);
-    assertThat(userAfterUpdate.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet()))
-        .containsExactlyInAnyOrder(userGroup1.getUuid(), userGroup3.getUuid());
-    assertThat(userAfterUpdate.getName()).isEqualTo("John Doe");
+      user.setName("John Doe");
+      userAfterUpdate = userService.updateUserGroupsAndNameOfUser(
+          user.getUuid(), Arrays.asList(userGroup1, userGroup3), user.getName(), ACCOUNT_ID, true);
+      assertThat(userAfterUpdate.getUserGroups().size()).isEqualTo(2);
+      assertThat(userAfterUpdate.getUserGroups().stream().map(UserGroup::getUuid).collect(Collectors.toSet()))
+          .containsExactlyInAnyOrder(userGroup1.getUuid(), userGroup3.getUuid());
+      assertThat(userAfterUpdate.getName()).isEqualTo("John Doe");
 
-    userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
-    userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
-    userGroup3 = userGroupService.get(ACCOUNT_ID, userGroup3.getUuid());
-    assertThat(userGroup1.getMemberIds()).containsExactly(user.getUuid());
-    assertThat(userGroup2.getMemberIds()).isNullOrEmpty();
-    assertThat(userGroup3.getMemberIds()).containsExactly(user.getUuid());
-    verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
-    emailsData = emailDataArgumentCaptor.getAllValues();
-    assertFalse(emailsData.stream()
-                    .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
-                    .collect(Collectors.toList())
-                    .size()
-        == 1);
+      userGroup1 = userGroupService.get(ACCOUNT_ID, userGroup1.getUuid());
+      userGroup2 = userGroupService.get(ACCOUNT_ID, userGroup2.getUuid());
+      userGroup3 = userGroupService.get(ACCOUNT_ID, userGroup3.getUuid());
+      assertThat(userGroup1.getMemberIds()).containsExactly(user.getUuid());
+      assertThat(userGroup2.getMemberIds()).isNullOrEmpty();
+      assertThat(userGroup3.getMemberIds()).containsExactly(user.getUuid());
+      verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
+      emailsData = emailDataArgumentCaptor.getAllValues();
+      assertFalse(emailsData.stream()
+                      .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
+                      .collect(Collectors.toList())
+                      .size()
+          == 1);
+    }
   }
 
   @Test
-  public void testUpdateMembers() {
-    ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
-    when(accountService.get(ACCOUNT_ID)).thenReturn(account);
+  public void testUpdateMembers() throws IOException {
+    try (UserThreadLocal.Guard guard = userGuard(null)) {
+      ArgumentCaptor<EmailData> emailDataArgumentCaptor = ArgumentCaptor.forClass(EmailData.class);
+      when(accountService.get(ACCOUNT_ID)).thenReturn(account);
 
-    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
-    AppPermission appPermission =
-        AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
-    UserGroup userGroup1 = UserGroup.builder()
-                               .accountId(ACCOUNT_ID)
-                               .name("USER_GROUP1")
-                               .appPermissions(Sets.newHashSet(appPermission))
-                               .build();
-    User user1 = anUser()
-                     .withAppId(APP_ID)
-                     .withEmail("user1@wings.software")
-                     .withName(USER_NAME)
-                     .withPassword(PASSWORD)
-                     .withAccountName(ACCOUNT_NAME)
-                     .withCompanyName(COMPANY_NAME)
-                     .withAccounts(Lists.newArrayList(account))
-                     .build();
+      GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      AppPermission appPermission =
+          AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
+      UserGroup userGroup1 = UserGroup.builder()
+                                 .accountId(ACCOUNT_ID)
+                                 .name("USER_GROUP1")
+                                 .appPermissions(Sets.newHashSet(appPermission))
+                                 .build();
+      User user1 = anUser()
+                       .withAppId(APP_ID)
+                       .withEmail("user1@wings.software")
+                       .withName(USER_NAME)
+                       .withPassword(PASSWORD)
+                       .withAccountName(ACCOUNT_NAME)
+                       .withCompanyName(COMPANY_NAME)
+                       .withAccounts(Lists.newArrayList(account))
+                       .build();
 
-    User user2 = anUser()
-                     .withAppId(APP_ID)
-                     .withEmail("user2@wings.software")
-                     .withName(USER_NAME)
-                     .withPassword(PASSWORD)
-                     .withAccountName(ACCOUNT_NAME)
-                     .withCompanyName(COMPANY_NAME)
-                     .withAccounts(Lists.newArrayList(account))
-                     .build();
+      User user2 = anUser()
+                       .withAppId(APP_ID)
+                       .withEmail("user2@wings.software")
+                       .withName(USER_NAME)
+                       .withPassword(PASSWORD)
+                       .withAccountName(ACCOUNT_NAME)
+                       .withCompanyName(COMPANY_NAME)
+                       .withAccounts(Lists.newArrayList(account))
+                       .build();
 
-    userGroup1 = userGroupService.save(userGroup1);
-    try {
-      userService.register(user1);
-      userService.register(user2);
-    } catch (IndexOutOfBoundsException e) {
-      // Ignoring the primary account fetch failure
+      userGroup1 = userGroupService.save(userGroup1);
+      try {
+        userService.register(user1);
+        userService.register(user2);
+      } catch (IndexOutOfBoundsException e) {
+        // Ignoring the primary account fetch failure
+      }
+      userGroup1.setMembers(Arrays.asList(user1, user2));
+      userGroupService.updateMembers(userGroup1, true);
+      verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
+      List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
+      assertFalse(emailsData.stream()
+                      .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
+                      .collect(Collectors.toList())
+                      .size()
+          == 2);
     }
-    userGroup1.setMembers(Arrays.asList(user1, user2));
-    userGroupService.updateMembers(userGroup1, true);
-    verify(emailNotificationService, atLeastOnce()).send(emailDataArgumentCaptor.capture());
-    List<EmailData> emailsData = emailDataArgumentCaptor.getAllValues();
-    assertFalse(emailsData.stream()
-                    .filter(emailData -> emailData.getTemplateName().equals(ADD_ROLE_EMAIL_TEMPLATE_NAME))
-                    .collect(Collectors.toList())
-                    .size()
-        == 2);
   }
 
   @Test

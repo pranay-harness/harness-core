@@ -56,7 +56,7 @@ import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.CharsetResponseFilter;
 import software.wings.app.WingsApplication;
-import software.wings.beans.Base;
+import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
@@ -80,7 +80,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceApplication.class);
 
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
-                                                      .add(Base.class)
+                                                      .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
                                                       .build();

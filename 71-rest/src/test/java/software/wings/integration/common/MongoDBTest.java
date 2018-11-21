@@ -17,14 +17,14 @@ import software.wings.beans.Base;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
 
-@Entity(value = "!!!testMongo", noClassnameStored = true)
-class MongoEntity extends Base {
-  @Getter @Setter private String data;
-}
-
 @Integration
 public class MongoDBTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(MongoDBTest.class);
+
+  @Entity(value = "!!!testMongo", noClassnameStored = true)
+  public static class MongoEntity extends Base {
+    @Getter @Setter private String data;
+  }
 
   @Inject WingsPersistence wingsPersistence;
 
