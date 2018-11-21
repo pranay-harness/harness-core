@@ -18,7 +18,7 @@ import java.util.Optional;
  */
 
 @Builder
-public class IdempotentLock<T> implements AutoCloseable {
+public class IdempotentLock<T extends IdempotentResult> implements AutoCloseable {
   public static Duration defaultPollingInterval = ofMillis(100);
   public static Duration defaultLockTimeout = ofMinutes(3);
   public static Duration defaultTTL = ofDays(7);

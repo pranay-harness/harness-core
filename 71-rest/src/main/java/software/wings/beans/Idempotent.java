@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.distribution.idempotence.IdempotentResult;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.annotations.Entity;
@@ -24,7 +25,7 @@ public class Idempotent extends Base {
   public static final String SUCCEEDED = "succeeded";
 
   private String state;
-  private List<Object> result;
+  private List<IdempotentResult> result;
 
   @SchemaIgnore
   @JsonIgnore

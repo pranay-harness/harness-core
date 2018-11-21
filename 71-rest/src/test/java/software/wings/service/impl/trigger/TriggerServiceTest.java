@@ -98,6 +98,7 @@ import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.ScheduledTriggerJob;
+import software.wings.service.impl.trigger.TriggerServiceImpl.TriggerIdempotentResult;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -126,7 +127,7 @@ public class TriggerServiceTest extends WingsBaseTest {
   @Mock private ServiceResourceService serviceResourceService;
   @Mock private WorkflowService workflowService;
   @Mock private InfrastructureMappingService infrastructureMappingService;
-  @Mock private MongoIdempotentRegistry<String> idempotentRegistry;
+  @Mock private MongoIdempotentRegistry<TriggerIdempotentResult> idempotentRegistry;
   @Mock private EnvironmentService environmentService;
 
   @Inject @InjectMocks private TriggerService triggerService;
@@ -161,7 +162,10 @@ public class TriggerServiceTest extends WingsBaseTest {
     when(serviceResourceService.get(APP_ID, SERVICE_ID, false))
         .thenReturn(Service.builder().uuid(SERVICE_ID).name("Catalog").build());
     when(idempotentRegistry.create(any(), any(), any(), any()))
-        .thenReturn(IdempotentLock.<String>builder().registry(idempotentRegistry).resultData(Optional.empty()).build());
+        .thenReturn(IdempotentLock.<TriggerIdempotentResult>builder()
+                        .registry(idempotentRegistry)
+                        .resultData(Optional.empty())
+                        .build());
     when(artifactService.getArtifactByBuildNumber(
              APP_ID, ARTIFACT_STREAM_ID, artifactStream.getSourceName(), ARTIFACT_FILTER, false))
         .thenReturn(artifact);
