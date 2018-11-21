@@ -14,10 +14,13 @@ import com.mongodb.MongoCommandException;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentRegistry;
+import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.rule.RealMongo;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.threading.Concurrent;
+import lombok.Builder;
+import lombok.Value;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Idempotent;
@@ -30,7 +33,14 @@ import java.util.ArrayList;
 @RealMongo
 public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Inject WingsPersistence wingsPersistence;
-  @Inject MongoIdempotentRegistry<String> idempotentRegistry;
+
+  @Value
+  @Builder
+  private static class TestIdempotentResult implements IdempotentResult {
+    private String value;
+  }
+
+  @Inject MongoIdempotentRegistry<TestIdempotentResult> idempotentRegistry;
 
   IdempotentId id = new IdempotentId("foo");
   IdempotentId dataId = new IdempotentId("data");
@@ -48,7 +58,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
           }
 
           integers.add(1);
-          idempotent.succeeded("foo");
+          idempotent.succeeded(TestIdempotentResult.builder().value("foo").build());
         } catch (UnableToRegisterIdempotentOperationException e) {
           // do nothing
         }
@@ -148,13 +158,13 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   int index;
 
   public String operation(IdempotentId id) {
-    try (IdempotentLock<String> idempotent = IdempotentLock.create(id, idempotentRegistry)) {
+    try (IdempotentLock<TestIdempotentResult> idempotent = IdempotentLock.create(id, idempotentRegistry)) {
       if (idempotent.alreadyExecuted()) {
-        return idempotent.getResult();
+        return idempotent.getResult().getValue();
       }
 
       String result = id.getValue() + ": result " + ++index;
-      idempotent.succeeded(result);
+      idempotent.succeeded(TestIdempotentResult.builder().value(result).build());
       return result;
     }
   }
@@ -169,7 +179,7 @@ public class MongoIdempotentRegistryTest extends WingsBaseTest {
   @Test
   public void testTimeout() throws InterruptedException, UnableToRegisterIdempotentOperationException {
     wingsPersistence.delete(Idempotent.class, id.getValue());
-    IdempotentLock<String> idempotentLock = IdempotentLock.create(id, idempotentRegistry);
+    IdempotentLock<TestIdempotentResult> idempotentLock = IdempotentLock.create(id, idempotentRegistry);
     assertThatThrownBy(() -> IdempotentLock.create(id, idempotentRegistry, ofMillis(200), ofMillis(100), ofHours(1)));
     idempotentLock.close();
   }

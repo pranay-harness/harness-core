@@ -17,7 +17,7 @@ import java.util.Map;
 
 @Value
 @Builder
-class Record<T> {
+class Record<T extends IdempotentResult> {
   enum InternalState {
     /*
      * Tentative currently running.
@@ -41,8 +41,8 @@ class Record<T> {
 /*
  * InprocIdempotentRegistry implements IdempotentRegistry with in-process synchronization primitive.
  */
-public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
-  @SuppressWarnings("unchecked") private Map<IdempotentId, Record<T>> map = synchronizedMap(new LRUMap(1000));
+public class InprocIdempotentRegistry<T extends IdempotentResult> implements IdempotentRegistry<T> {
+  @SuppressWarnings("unchecked") private Map<IdempotentId, Object> map = synchronizedMap(new LRUMap(1000));
 
   @Override
   public IdempotentLock create(IdempotentId id) {
@@ -56,17 +56,19 @@ public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
 
   @Override
   public Response register(IdempotentId id, Duration ttl) {
-    final Record<T> record = map.compute(id, (k, v) -> {
+    final Record<T> record = (Record<T>) map.compute(id, (k, v) -> {
+      Record<T> r = (Record<T>) v;
+
       final long now = System.currentTimeMillis();
-      if (v == null || v.getValidUntil() < now) {
+      if (r == null || r.getValidUntil() < now) {
         return Record.<T>builder().state(InternalState.TENTATIVE).validUntil(now + ttl.toMillis()).build();
       }
-      switch (v.getState()) {
+      switch (r.getState()) {
         case TENTATIVE:
         case TENTATIVE_ALREADY:
           return Record.<T>builder().state(InternalState.TENTATIVE_ALREADY).validUntil(now + ttl.toMillis()).build();
         case FINISHED:
-          return v;
+          return r;
         default:
           unhandled(v);
       }
@@ -90,7 +92,9 @@ public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
   @Override
   public void unregister(IdempotentId id) {
     map.computeIfPresent(id, (k, v) -> {
-      switch (v.getState()) {
+      Record<T> r = (Record<T>) v;
+
+      switch (r.getState()) {
         case TENTATIVE:
         case TENTATIVE_ALREADY:
           return null;
@@ -104,9 +108,12 @@ public class InprocIdempotentRegistry<T> implements IdempotentRegistry<T> {
   }
 
   @Override
-  public void finish(IdempotentId id, T result) {
-    map.compute(id,
-        (k, v)
-            -> Record.<T>builder().state(InternalState.FINISHED).result(result).validUntil(v.getValidUntil()).build());
+  public <T extends IdempotentResult> void finish(IdempotentId id, T result) {
+    map.compute(id, (k, v) -> {
+      Record<T> r = (Record<T>) v;
+      final Record<T> record =
+          Record.<T>builder().state(InternalState.FINISHED).result(result).validUntil(r.getValidUntil()).build();
+      return record;
+    });
   }
 }

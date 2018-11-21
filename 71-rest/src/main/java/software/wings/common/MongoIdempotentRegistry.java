@@ -4,7 +4,7 @@ import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
 import static io.harness.distribution.idempotence.IdempotentRegistry.State.DONE;
 import static io.harness.distribution.idempotence.IdempotentRegistry.State.NEW;
 import static io.harness.distribution.idempotence.IdempotentRegistry.State.RUNNING;
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static software.wings.beans.Idempotent.SUCCEEDED;
 import static software.wings.beans.Idempotent.TENTATIVE;
 
@@ -17,6 +17,7 @@ import com.mongodb.WriteConcern;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentRegistry;
+import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
@@ -29,7 +30,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 
 @Singleton
-public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
+public class MongoIdempotentRegistry<T extends IdempotentResult> implements IdempotentRegistry<T> {
   public static final FindAndModifyOptions registerOptions =
       new FindAndModifyOptions().returnNew(false).upsert(true).writeConcern(new WriteConcern("majority"));
   public static final FindAndModifyOptions unregisterOptions =
@@ -96,11 +97,11 @@ public class MongoIdempotentRegistry<T> implements IdempotentRegistry<T> {
   }
 
   @Override
-  public void finish(IdempotentId id, T data) {
+  public <T extends IdempotentResult> void finish(IdempotentId id, T data) {
     Idempotent newIdempotent = new Idempotent();
     newIdempotent.setUuid(id.getValue());
     newIdempotent.setState(SUCCEEDED);
-    newIdempotent.setResult(asList((Object) data));
+    newIdempotent.setResult(singletonList(data));
     wingsPersistence.save(newIdempotent);
   }
 }

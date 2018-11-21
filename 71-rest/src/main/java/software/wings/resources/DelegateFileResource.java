@@ -15,7 +15,10 @@ import com.codahale.metrics.annotation.Timed;
 import com.mongodb.client.gridfs.model.GridFSFile;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.distribution.idempotence.IdempotentResult;
 import io.swagger.annotations.Api;
+import lombok.Builder;
+import lombok.Value;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -61,7 +64,13 @@ public class DelegateFileResource {
   @Inject private ConfigService configService;
   @Inject private DelegateService delegateService;
 
-  @Inject MongoIdempotentRegistry<String> idempotentRegistry;
+  @Value
+  @Builder
+  private static class FileIdempotentResult implements IdempotentResult {
+    private String fileId;
+  }
+
+  @Inject MongoIdempotentRegistry<FileIdempotentResult> idempotentRegistry;
 
   @DelegateAuth
   @POST
@@ -80,10 +89,10 @@ public class DelegateFileResource {
 
     IdempotentId idempotentid = new IdempotentId(taskId + ":" + fileDetail.getFileName());
 
-    try (IdempotentLock<String> idempotent =
+    try (IdempotentLock<FileIdempotentResult> idempotent =
              idempotentRegistry.create(idempotentid, ofMinutes(1), ofSeconds(1), ofHours(2))) {
       if (idempotent.alreadyExecuted()) {
-        return new RestResponse<>(idempotent.getResult());
+        return new RestResponse<>(idempotent.getResult().getFileId());
       }
       FileMetadata fileMetadata = new FileMetadata();
       fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
@@ -92,7 +101,7 @@ public class DelegateFileResource {
           fileBucket);
       logger.info("fileId: {} and fileName {}", fileId, fileMetadata.getFileName());
 
-      idempotent.succeeded(fileId);
+      idempotent.succeeded(FileIdempotentResult.builder().fileId(fileId).build());
       return new RestResponse<>(fileId);
     }
   }

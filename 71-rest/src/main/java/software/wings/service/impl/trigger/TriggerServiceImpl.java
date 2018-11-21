@@ -44,10 +44,13 @@ import io.harness.beans.PageResponse;
 import io.harness.data.structure.ListUtils;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
+import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
+import lombok.Builder;
+import lombok.Value;
 import org.apache.commons.lang3.StringUtils;
 import org.quartz.TriggerKey;
 import org.slf4j.Logger;
@@ -135,7 +138,14 @@ public class TriggerServiceImpl implements TriggerService {
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
-  @Inject private MongoIdempotentRegistry<String> idempotentRegistry;
+
+  @Value
+  @Builder
+  public static class TriggerIdempotentResult implements IdempotentResult {
+    private String triggerUuid;
+  }
+
+  @Inject private MongoIdempotentRegistry<TriggerIdempotentResult> idempotentRegistry;
   @Inject private TriggerServiceHelper triggerServiceHelper;
   @Inject private EnvironmentService environmentService;
   @Inject private WebhookTriggerProcessor webhookTriggerProcessor;
@@ -432,7 +442,7 @@ public class TriggerServiceImpl implements TriggerService {
   private void triggerScheduledExecution(Trigger trigger, Date scheduledFireTime) {
     IdempotentId idempotentid = new IdempotentId(trigger.getUuid() + ":" + scheduledFireTime.getTime());
 
-    try (IdempotentLock<String> idempotent =
+    try (IdempotentLock<TriggerIdempotentResult> idempotent =
              idempotentRegistry.create(idempotentid, ofSeconds(10), ofSeconds(1), ofHours(1))) {
       if (idempotent.alreadyExecuted()) {
         return;
@@ -470,7 +480,7 @@ public class TriggerServiceImpl implements TriggerService {
         logger.warn("No artifacts set. So, skipping the execution");
       }
       logger.info("Scheduled trigger for appId {} and Trigger Id {} complete", trigger.getAppId(), trigger.getUuid());
-      idempotent.succeeded(trigger.getUuid());
+      idempotent.succeeded(TriggerIdempotentResult.builder().triggerUuid(trigger.getUuid()).build());
     } catch (UnableToRegisterIdempotentOperationException e) {
       logger.error(format("Failed to trigger scheduled trigger %s", trigger.getName()), e);
     }

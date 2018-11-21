@@ -5,7 +5,7 @@ import lombok.Value;
 
 import java.time.Duration;
 
-public interface IdempotentRegistry<T> {
+public interface IdempotentRegistry<T extends IdempotentResult> {
   enum State {
     /*
      * New indicates that this idempotent operation was not observed before.
@@ -23,7 +23,7 @@ public interface IdempotentRegistry<T> {
 
   @Value
   @Builder
-  class Response<T> {
+  class Response<T extends IdempotentResult> {
     private State state;
     private T result;
   }
@@ -36,7 +36,7 @@ public interface IdempotentRegistry<T> {
   /*
    * Marks the idempotent operation as successfully done.
    */
-  void finish(IdempotentId id, T result);
+  <T extends IdempotentResult> void finish(IdempotentId id, T result);
 
   /*
    * Unregister the idempotent operation.

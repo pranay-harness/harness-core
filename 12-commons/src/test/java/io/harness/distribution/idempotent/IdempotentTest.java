@@ -15,10 +15,13 @@ import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentRegistry;
 import io.harness.distribution.idempotence.IdempotentRegistry.State;
+import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.InprocIdempotentRegistry;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.threading.Concurrent;
+import lombok.Builder;
+import lombok.Value;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -28,10 +31,18 @@ import java.util.ArrayList;
 public class IdempotentTest {
   IdempotentId id = new IdempotentId("foo");
 
-  private static IdempotentRegistry.Response<Boolean> newResponse =
-      IdempotentRegistry.Response.<Boolean>builder().state(State.NEW).build();
-  private static IdempotentRegistry.Response<Boolean> doneResponse =
-      IdempotentRegistry.Response.<Boolean>builder().state(State.DONE).result(Boolean.TRUE).build();
+  @Value
+  @Builder
+  private static class BooleanIdempotentResult implements IdempotentResult {
+    private Boolean value;
+  }
+
+  private static BooleanIdempotentResult TRUE = BooleanIdempotentResult.builder().value(Boolean.TRUE).build();
+
+  private static IdempotentRegistry.Response<BooleanIdempotentResult> newResponse =
+      IdempotentRegistry.Response.<BooleanIdempotentResult>builder().state(State.NEW).build();
+  private static IdempotentRegistry.Response<BooleanIdempotentResult> doneResponse =
+      IdempotentRegistry.Response.<BooleanIdempotentResult>builder().state(State.DONE).result(TRUE).build();
 
   @Test
   public void testNewIdempotentFailed() {
@@ -54,10 +65,10 @@ public class IdempotentTest {
 
     try (IdempotentLock idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
       assertNotNull(idempotent);
-      idempotent.succeeded(Boolean.TRUE);
+      idempotent.succeeded(TRUE);
     }
 
-    verify(mockIdempotentRegistry).finish(id, Boolean.TRUE);
+    verify(mockIdempotentRegistry).finish(id, TRUE);
   }
 
   @Test
@@ -66,28 +77,29 @@ public class IdempotentTest {
 
     when(mockIdempotentRegistry.register(any(), any())).thenReturn(doneResponse);
 
-    try (IdempotentLock<Boolean> idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
+    try (IdempotentLock<BooleanIdempotentResult> idempotent = IdempotentLock.create(id, mockIdempotentRegistry)) {
       assertNotNull(idempotent);
       assertTrue(idempotent.alreadyExecuted());
-      assertTrue(idempotent.getResult());
+      assertTrue(idempotent.getResult().getValue());
     }
   }
 
   @Test
   @Ignore // TODO: find more reliable way to test this
   public void testIdempotentAfterTtl() {
-    final IdempotentRegistry<Boolean> idempotentRegistry = new InprocIdempotentRegistry<>();
-    try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id, ofMillis(1), ofMillis(1), ofMillis(500))) {
+    final IdempotentRegistry<BooleanIdempotentResult> idempotentRegistry = new InprocIdempotentRegistry<>();
+    try (IdempotentLock<BooleanIdempotentResult> idempotent =
+             idempotentRegistry.create(id, ofMillis(1), ofMillis(1), ofMillis(500))) {
       assertNotNull(idempotent);
       assertFalse(idempotent.alreadyExecuted());
-      idempotent.succeeded(true);
+      idempotent.succeeded(TRUE);
     }
-    try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id)) {
+    try (IdempotentLock<BooleanIdempotentResult> idempotent = idempotentRegistry.create(id)) {
       assertNotNull(idempotent);
       assertTrue(idempotent.alreadyExecuted());
     }
     sleep(ofMillis(510));
-    try (IdempotentLock<Boolean> idempotent = idempotentRegistry.create(id)) {
+    try (IdempotentLock<BooleanIdempotentResult> idempotent = idempotentRegistry.create(id)) {
       assertNotNull(idempotent);
       assertFalse(idempotent.alreadyExecuted());
     }
@@ -105,7 +117,7 @@ public class IdempotentTest {
             return;
           }
           integers.add(1);
-          idempotent.succeeded(Boolean.TRUE);
+          idempotent.succeeded(TRUE);
         } catch (UnableToRegisterIdempotentOperationException e) {
           // do nothing
         }
