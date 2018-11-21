@@ -9,6 +9,7 @@ import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.security.encryption.SecretUsageLog;
+import software.wings.service.impl.security.ExportableSecret;
 import software.wings.service.intfc.security.EncryptionConfig;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue.SettingVariableTypes;
@@ -195,6 +196,15 @@ public class NoOpSecretManagerImpl implements SecretManager {
       String appIdFromRequest, String envIdFromRequest, boolean details) throws IllegalAccessException {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public List<ExportableSecret> exportSecrets(String accountId, String encryptionKey) throws IOException {
+    return null;
+  }
+
+  @Override
+  public void importSecrets(String accountId, List<ExportableSecret> exportableSecrets, String encryptionKey)
+      throws IOException {}
 
   @Override
   public PageResponse<EncryptedData> listSecretsMappedToAccount(

@@ -31,6 +31,7 @@ import com.mongodb.DuplicateKeyException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
+import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.eraro.ErrorCode;
@@ -42,6 +43,7 @@ import io.harness.queue.Queue;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.io.IOUtils;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,9 +98,11 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -1146,6 +1150,152 @@ public class SecretManagerImpl implements SecretManager {
     // The requested page size may have not been filled, may need to fetch another batch and adjusting the offset
     // accordingly;
     return batchOffSet + index;
+  }
+
+  @Override
+  public List<ExportableSecret> exportSecrets(String accountId, String encryptionKey) throws IOException {
+    List<EncryptedData> encryptedDataList = getAllSecretsForAccountInternal(accountId);
+
+    SimpleEncryption simpleEncryption = new SimpleEncryption(encryptionKey);
+    List<ExportableSecret> exportableSecrets = new ArrayList<>(encryptedDataList.size());
+    for (EncryptedData encryptedData : encryptedDataList) {
+      if (isEmpty(encryptedData.getEncryptedValue())) {
+        logger.warn("Encrypted value is null for record : {}", encryptedData);
+        continue;
+      }
+
+      SettingVariableTypes type = encryptedData.getType();
+
+      ExportableSecret exportableSecret;
+      switch (type) {
+        case CONFIG_FILE:
+          byte[] fileContent = getFileContents(accountId, encryptedData);
+          IOUtils.toString(fileContent, "UTF-8");
+          exportableSecret = ExportableSecret.builder()
+                                 .uuid(encryptedData.getUuid())
+                                 .name(encryptedData.getName())
+                                 .value(IOUtils.toString(fileContent, "UTF-8"))
+                                 .encryptionType(encryptedData.getEncryptionType())
+                                 .usageRestrictions(encryptedData.getUsageRestrictions())
+                                 .parentIds(encryptedData.getParentIds())
+                                 .type(type)
+                                 .build();
+          break;
+        default:
+          EncryptionType encryptionType = encryptedData.getEncryptionType();
+
+          EncryptionConfig encryptionConfig = getEncryptionConfig(accountId, encryptedData.getKmsId(), encryptionType);
+          char[] decrypted;
+          switch (encryptionType) {
+            case KMS:
+              decrypted = kmsService.decrypt(encryptedData, accountId, (KmsConfig) encryptionConfig);
+              break;
+            case VAULT:
+              decrypted = vaultService.decrypt(encryptedData, accountId, (VaultConfig) encryptionConfig);
+              break;
+            default:
+              decrypted = new SimpleEncryption(encryptedData.getEncryptionKey())
+                              .decryptChars(encryptedData.getEncryptedValue());
+              break;
+          }
+
+          // Use a temporary encryption key to encrypt the secret value to prevent plain text secret is exposed.
+          char[] reencrypted = simpleEncryption.encryptChars(decrypted);
+
+          exportableSecret = ExportableSecret.builder()
+                                 .uuid(encryptedData.getUuid())
+                                 .name(encryptedData.getName())
+                                 .value(new String(reencrypted))
+                                 .type(type)
+                                 .encryptionType(encryptedData.getEncryptionType())
+                                 .parentIds(encryptedData.getParentIds())
+                                 .usageRestrictions(encryptedData.getUsageRestrictions())
+                                 .build();
+          break;
+      }
+
+      exportableSecrets.add(exportableSecret);
+    }
+
+    return exportableSecrets;
+  }
+
+  @Override
+  public void importSecrets(String accountId, List<ExportableSecret> secrets, String encryptionKey) throws IOException {
+    List<EncryptedData> encryptedDataList = getAllSecretsForAccountInternal(accountId);
+    Map<String, EncryptedData> idEncryptedDataMapping = new HashMap<>();
+    for (EncryptedData encryptedData : encryptedDataList) {
+      idEncryptedDataMapping.put(encryptedData.getUuid(), encryptedData);
+    }
+
+    SimpleEncryption simpleEncryption = new SimpleEncryption(encryptionKey);
+
+    // Compare the existing encrypted record in the current persistence store with the secrets to be imported
+    // 1. Secrets with completely new UUID will be INSERTED.
+    // 2. Secrets with same UUID but different name natural key will be SKIPPED. Warning will be emitted.
+    // 3. Secrets with same UUID and the same name natural key will be UPDATED.
+    for (ExportableSecret secret : secrets) {
+      EncryptedData encryptedData = idEncryptedDataMapping.get(secret.getUuid());
+      if (encryptedData != null && Objects.equals(secret.getName(), encryptedData.getName())) {
+        logger.warn(
+            "Secret record with id '{}', name '{}' and type '{}' already exists. Import of this secret is skipped.",
+            secret.getUuid(), secret.getName(), secret.getType());
+        continue;
+      }
+
+      // Use the same temporary encryption key to decrypt the previously encrypted secret values during export.
+      String decryptedValue = new String(simpleEncryption.decryptChars(secret.getValue().toCharArray()));
+
+      // Don't audit log import secret operations.
+      SettingVariableTypes type = secret.getType();
+      switch (type) {
+        case CONFIG_FILE:
+          BoundedInputStream boundedInputStream =
+              new BoundedInputStream(IOUtils.toInputStream(decryptedValue, "UTF-8"));
+          upsertFileInternal(accountId, secret.getUuid(), secret.getName(), secret.getUsageRestrictions(),
+              boundedInputStream, true, false);
+          break;
+        case SECRET_TEXT:
+          // Use account level encrypt type.
+          upsertSecretInternal(accountId, secret.getUuid(), secret.getName(), decryptedValue,
+              getEncryptionType(accountId), type, secret.getUsageRestrictions(), true, false);
+          break;
+        default:
+          // Other types would mostly use the LOCAL encryption type.
+          upsertSecretInternal(accountId, secret.getUuid(), secret.getName(), decryptedValue, EncryptionType.LOCAL,
+              type, secret.getUsageRestrictions(), true, false);
+          break;
+      }
+      logger.info("Secret record with id '{}', name '{}' and type '{}' has been imported.", secret.getUuid(),
+          secret.getName(), secret.getType());
+    }
+  }
+
+  /**
+   * Get all secrets associated with an account. No usage restriction filtering will be applied as this method
+   * is used in secret export/import only right now.
+   */
+  private List<EncryptedData> getAllSecretsForAccountInternal(String accountId) {
+    List<EncryptedData> fullEncryptedDataList = new ArrayList<>();
+
+    boolean loadedAll;
+    int offset = 0;
+    int pageSize = PageRequest.DEFAULT_UNLIMITED;
+    // Load all secrets page by page till exhausted from mongo collection.
+    do {
+      PageRequest<EncryptedData> pageRequest = PageRequestBuilder.aPageRequest()
+                                                   .withLimit(PageRequest.UNLIMITED)
+                                                   .withOffset(String.valueOf(offset))
+                                                   .addFilter("accountId", Operator.EQ, accountId)
+                                                   .build();
+      PageResponse<EncryptedData> pageResponse = wingsPersistence.query(EncryptedData.class, pageRequest);
+      List<EncryptedData> encryptedDataList = pageResponse.getResponse();
+      fullEncryptedDataList.addAll(encryptedDataList);
+      offset += pageSize;
+      loadedAll = encryptedDataList.size() < pageSize;
+    } while (!loadedAll);
+
+    return fullEncryptedDataList;
   }
 
   @Override
