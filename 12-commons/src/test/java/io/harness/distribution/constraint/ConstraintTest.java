@@ -19,6 +19,9 @@ import java.util.stream.Collectors;
 public class ConstraintTest {
   ConstraintId id = new ConstraintId("foo");
 
+  ConstraintUnit unit1 = new ConstraintUnit("unit1");
+  ConstraintUnit unit2 = new ConstraintUnit("unit2");
+
   ConsumerId consumer1 = new ConsumerId("consumer1");
   ConsumerId consumer2 = new ConsumerId("consumer2");
   ConsumerId consumer3 = new ConsumerId("consumer3");
@@ -55,11 +58,11 @@ public class ConstraintTest {
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.FIFO).limits(10).build(), registry);
 
     assertThatExceptionOfType(InvalidPermitsException.class)
-        .isThrownBy(() -> constraint.registerConsumer(consumer1, -5, null, registry));
+        .isThrownBy(() -> constraint.registerConsumer(unit1, consumer1, -5, null, registry));
     assertThatExceptionOfType(InvalidPermitsException.class)
-        .isThrownBy(() -> constraint.registerConsumer(consumer1, 0, null, registry));
+        .isThrownBy(() -> constraint.registerConsumer(unit1, consumer1, 0, null, registry));
     assertThatExceptionOfType(InvalidPermitsException.class)
-        .isThrownBy(() -> constraint.registerConsumer(consumer1, 11, null, registry));
+        .isThrownBy(() -> constraint.registerConsumer(unit1, consumer1, 11, null, registry));
   }
 
   @Test
@@ -68,9 +71,9 @@ public class ConstraintTest {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.FIFO).limits(10).build(), registry);
-    assertThat(constraint.registerConsumer(consumer1, 1, null, registry)).isEqualTo(ACTIVE);
-    assertThat(constraint.registerConsumer(consumer2, 10, null, registry)).isEqualTo(BLOCKED);
-    assertThat(constraint.registerConsumer(consumer3, 1, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer1, 1, null, registry)).isEqualTo(ACTIVE);
+    assertThat(constraint.registerConsumer(unit1, consumer2, 10, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer3, 1, null, registry)).isEqualTo(BLOCKED);
   }
 
   @Test
@@ -79,10 +82,10 @@ public class ConstraintTest {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
-    assertThat(constraint.registerConsumer(consumer1, 1, null, registry)).isEqualTo(ACTIVE);
-    assertThat(constraint.registerConsumer(consumer2, 10, null, registry)).isEqualTo(BLOCKED);
-    assertThat(constraint.registerConsumer(consumer3, 1, null, registry)).isEqualTo(ACTIVE);
-    assertThat(constraint.registerConsumer(consumer4, 9, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer1, 1, null, registry)).isEqualTo(ACTIVE);
+    assertThat(constraint.registerConsumer(unit1, consumer2, 10, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer3, 1, null, registry)).isEqualTo(ACTIVE);
+    assertThat(constraint.registerConsumer(unit1, consumer4, 9, null, registry)).isEqualTo(BLOCKED);
   }
 
   @Test
@@ -92,22 +95,22 @@ public class ConstraintTest {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
-    assertThat(constraint.registerConsumer(consumer1, 10, null, registry)).isEqualTo(ACTIVE);
-    assertThat(constraint.registerConsumer(consumer2, 3, null, registry)).isEqualTo(BLOCKED);
-    assertThat(constraint.registerConsumer(consumer3, 5, null, registry)).isEqualTo(BLOCKED);
-    assertThat(constraint.registerConsumer(consumer4, 5, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer1, 10, null, registry)).isEqualTo(ACTIVE);
+    assertThat(constraint.registerConsumer(unit1, consumer2, 3, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer3, 5, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer4, 5, null, registry)).isEqualTo(BLOCKED);
 
-    assertThat(constraint.consumerFinished(consumer1, registry)).isTrue();
+    assertThat(constraint.consumerFinished(unit1, consumer1, registry)).isTrue();
 
     // Unblock already finished
-    assertThat(constraint.consumerUnblocked(consumer1, null, registry)).isFalse();
+    assertThat(constraint.consumerUnblocked(unit1, consumer1, null, registry)).isFalse();
 
-    assertThat(constraint.consumerUnblocked(consumer2, null, registry)).isTrue();
+    assertThat(constraint.consumerUnblocked(unit1, consumer2, null, registry)).isTrue();
 
     // Unblock already running
-    assertThat(constraint.consumerUnblocked(consumer2, null, registry)).isFalse();
+    assertThat(constraint.consumerUnblocked(unit1, consumer2, null, registry)).isFalse();
 
-    assertThat(constraint.consumerUnblocked(consumer3, null, registry)).isTrue();
+    assertThat(constraint.consumerUnblocked(unit1, consumer3, null, registry)).isTrue();
   }
 
   @Test
@@ -117,16 +120,16 @@ public class ConstraintTest {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
-    assertThat(constraint.registerConsumer(consumer1, 10, null, registry)).isEqualTo(ACTIVE);
-    assertThat(constraint.registerConsumer(consumer2, 3, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer1, 10, null, registry)).isEqualTo(ACTIVE);
+    assertThat(constraint.registerConsumer(unit1, consumer2, 3, null, registry)).isEqualTo(BLOCKED);
 
     // finish blocked
-    assertThat(constraint.consumerFinished(consumer2, registry)).isFalse();
+    assertThat(constraint.consumerFinished(unit1, consumer2, registry)).isFalse();
 
-    assertThat(constraint.consumerFinished(consumer1, registry)).isTrue();
+    assertThat(constraint.consumerFinished(unit1, consumer1, registry)).isTrue();
 
     // finish blocked again with no running
-    assertThat(constraint.consumerFinished(consumer2, registry)).isFalse();
+    assertThat(constraint.consumerFinished(unit1, consumer2, registry)).isFalse();
   }
 
   @Test
@@ -136,16 +139,26 @@ public class ConstraintTest {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
-    assertThat(constraint.registerConsumer(consumer1, 10, null, registry)).isEqualTo(ACTIVE);
-    assertThat(constraint.registerConsumer(consumer2, 3, null, registry)).isEqualTo(BLOCKED);
-    assertThat(constraint.registerConsumer(consumer3, 8, null, registry)).isEqualTo(BLOCKED);
-    assertThat(constraint.registerConsumer(consumer4, 3, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer1, 10, null, registry)).isEqualTo(ACTIVE);
+    assertThat(constraint.registerConsumer(unit1, consumer2, 3, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer3, 8, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer4, 3, null, registry)).isEqualTo(BLOCKED);
 
-    assertThat(constraint.runnableConsumers(registry).getConsumerIds()).isEmpty();
+    assertThat(constraint.runnableConsumers(unit1, registry).getConsumerIds()).isEmpty();
 
-    assertThat(constraint.consumerFinished(consumer1, registry)).isTrue();
+    assertThat(constraint.consumerFinished(unit1, consumer1, registry)).isTrue();
 
-    assertThat(constraint.runnableConsumers(registry).getConsumerIds()).contains(consumer2, consumer4);
+    assertThat(constraint.runnableConsumers(unit1, registry).getConsumerIds()).contains(consumer2, consumer4);
+  }
+
+  @Test
+  public void testUnits() throws UnableToSaveConstraintException, InvalidPermitsException,
+                                 UnableToRegisterConsumerException, PermanentlyBlockedConsumerException {
+    ConstraintRegistry registry = new InprocConstraintRegistry();
+
+    Constraint constraint1 = Constraint.create(id, Spec.builder().strategy(Strategy.ASAP).limits(10).build(), registry);
+    assertThat(constraint1.registerConsumer(unit1, consumer1, 10, null, registry)).isEqualTo(ACTIVE);
+    assertThat(constraint1.registerConsumer(unit2, consumer2, 10, null, registry)).isEqualTo(ACTIVE);
   }
 
   @Test
@@ -155,16 +168,16 @@ public class ConstraintTest {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.FIFO).limits(10).build(), registry);
-    assertThat(constraint.registerConsumer(consumer1, 10, null, registry)).isEqualTo(ACTIVE);
-    assertThat(constraint.registerConsumer(consumer2, 3, null, registry)).isEqualTo(BLOCKED);
-    assertThat(constraint.registerConsumer(consumer3, 8, null, registry)).isEqualTo(BLOCKED);
-    assertThat(constraint.registerConsumer(consumer4, 3, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer1, 10, null, registry)).isEqualTo(ACTIVE);
+    assertThat(constraint.registerConsumer(unit1, consumer2, 3, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer3, 8, null, registry)).isEqualTo(BLOCKED);
+    assertThat(constraint.registerConsumer(unit1, consumer4, 3, null, registry)).isEqualTo(BLOCKED);
 
-    assertThat(constraint.runnableConsumers(registry).getConsumerIds()).isEmpty();
+    assertThat(constraint.runnableConsumers(unit1, registry).getConsumerIds()).isEmpty();
 
-    assertThat(constraint.consumerFinished(consumer1, registry)).isTrue();
+    assertThat(constraint.consumerFinished(unit1, consumer1, registry)).isTrue();
 
-    assertThat(constraint.runnableConsumers(registry).getConsumerIds()).contains(consumer2);
+    assertThat(constraint.runnableConsumers(unit1, registry).getConsumerIds()).contains(consumer2);
   }
 
   @Test
@@ -173,18 +186,19 @@ public class ConstraintTest {
     ConstraintRegistry registry = new InprocConstraintRegistry();
 
     Constraint constraint = Constraint.create(id, Spec.builder().strategy(Strategy.FIFO).limits(10).build(), registry);
-    assertThat(constraint.registerConsumer(consumer1, 10, null, registry)).isEqualTo(ACTIVE);
+    assertThat(constraint.registerConsumer(unit1, consumer1, 10, null, registry)).isEqualTo(ACTIVE);
 
     final Random random = new Random();
     for (int i = 0; i < 100; ++i) {
       ConsumerId consumerId = new ConsumerId("c" + i);
-      assertThat(constraint.registerConsumer(consumerId, random.nextInt(10) + 1, null, registry)).isEqualTo(BLOCKED);
+      assertThat(constraint.registerConsumer(unit1, consumerId, random.nextInt(10) + 1, null, registry))
+          .isEqualTo(BLOCKED);
     }
 
-    Concurrent.test(11, i -> {
+    Concurrent.test(2, i -> {
       while (true) {
         if (i == 0) {
-          final List<Consumer> consumers = registry.loadConsumers(constraint.getId());
+          final List<Consumer> consumers = registry.loadConsumers(constraint.getId(), unit1);
           if (consumers.stream().noneMatch(consumer -> consumer.getState() != FINISHED)) {
             break;
           }
@@ -194,15 +208,15 @@ public class ConstraintTest {
             continue;
           }
           final Consumer consumer = list.get(random.nextInt(list.size()));
-          registry.consumerFinished(constraint.getId(), consumer.getId(), null);
+          registry.consumerFinished(constraint.getId(), unit1, consumer.getId(), null);
         } else {
-          final RunnableConsumers runnableConsumers = constraint.runnableConsumers(registry);
+          final RunnableConsumers runnableConsumers = constraint.runnableConsumers(unit1, registry);
           if (runnableConsumers.getUsedPermits() == 0 && isEmpty(runnableConsumers.getConsumerIds())) {
             break;
           }
 
           for (ConsumerId consumerId : runnableConsumers.getConsumerIds()) {
-            if (!constraint.consumerUnblocked(consumerId, null, registry)) {
+            if (!constraint.consumerUnblocked(unit1, consumerId, null, registry)) {
               break;
             }
           }
@@ -210,7 +224,7 @@ public class ConstraintTest {
       }
     });
 
-    final List<Consumer> consumers = registry.loadConsumers(constraint.getId());
+    final List<Consumer> consumers = registry.loadConsumers(constraint.getId(), unit1);
     assertThat(consumers.stream().anyMatch(consumer -> consumer.getState() != FINISHED)).isFalse();
   }
 }

@@ -4,6 +4,7 @@ import static io.harness.distribution.constraint.Consumer.State.ACTIVE;
 import static io.harness.distribution.constraint.Consumer.State.BLOCKED;
 import static io.harness.distribution.constraint.Consumer.State.FINISHED;
 import static java.util.Collections.synchronizedMap;
+import static org.apache.commons.lang3.StringUtils.defaultString;
 
 import io.harness.distribution.constraint.Constraint.Spec;
 import io.harness.distribution.constraint.Consumer.State;
@@ -13,10 +14,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 public class InprocConstraintRegistry implements ConstraintRegistry {
   private Map<ConstraintId, Spec> map = synchronizedMap(new HashMap<>());
-  private Map<ConstraintId, List<Consumer>> consumers = synchronizedMap(new HashMap<>());
+  private Map<String, List<Consumer>> consumers = synchronizedMap(new HashMap<>());
+
+  private String computeKey(@NotNull ConstraintId id, @NotNull ConstraintUnit unit) {
+    return defaultString(id.getValue(), "null") + "/" + defaultString(unit.getValue(), "null");
+  }
 
   @Override
   public void save(ConstraintId id, Spec spec) throws UnableToSaveConstraintException {
@@ -35,15 +41,15 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
   }
 
   @Override
-  public List<Consumer> loadConsumers(ConstraintId id) {
-    return this.consumers.computeIfAbsent(id, key -> new ArrayList<>());
+  public List<Consumer> loadConsumers(ConstraintId id, ConstraintUnit unit) {
+    return this.consumers.computeIfAbsent(computeKey(id, unit), key -> new ArrayList<>());
   }
 
   @Override
-  public boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning)
+  public boolean registerConsumer(ConstraintId id, ConstraintUnit unit, Consumer consumer, int currentlyRunning)
       throws UnableToRegisterConsumerException {
     synchronized (consumers) {
-      List<Consumer> constraintConsumers = consumers.computeIfAbsent(id, key -> new ArrayList<>());
+      List<Consumer> constraintConsumers = consumers.computeIfAbsent(computeKey(id, unit), key -> new ArrayList<>());
       if (Constraint.getUsedPermits(constraintConsumers) != currentlyRunning) {
         return false;
       }
@@ -59,8 +65,9 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
   }
 
   @Override
-  public boolean consumerFinished(ConstraintId id, ConsumerId consumerId, Map<String, Object> context) {
-    return consumerStateChange(id, consumerId, FINISHED, ACTIVE);
+  public boolean consumerFinished(
+      ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
+    return consumerStateChange(id, unit, consumerId, FINISHED, ACTIVE);
   }
 
   @Override
@@ -69,13 +76,15 @@ public class InprocConstraintRegistry implements ConstraintRegistry {
   }
 
   @Override
-  public boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, Map<String, Object> context) {
-    return consumerStateChange(id, consumerId, ACTIVE, BLOCKED);
+  public boolean consumerUnblocked(
+      ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
+    return consumerStateChange(id, unit, consumerId, ACTIVE, BLOCKED);
   }
 
-  private boolean consumerStateChange(ConstraintId id, ConsumerId consumerId, State newState, State expected) {
+  private boolean consumerStateChange(
+      ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, State newState, State expected) {
     synchronized (consumers) {
-      final List<Consumer> constraintConsumers = this.consumers.get(id);
+      final List<Consumer> constraintConsumers = this.consumers.get(computeKey(id, unit));
 
       final ListIterator<Consumer> iterator = constraintConsumers.listIterator();
       while (iterator.hasNext()) {

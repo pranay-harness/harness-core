@@ -5,6 +5,7 @@ import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.sm.states.ResourceConstraintState.HoldingScope.WORKFLOW;
 
@@ -19,6 +20,7 @@ import io.harness.distribution.constraint.Constraint;
 import io.harness.distribution.constraint.Constraint.Spec;
 import io.harness.distribution.constraint.ConstraintId;
 import io.harness.distribution.constraint.ConstraintRegistry;
+import io.harness.distribution.constraint.ConstraintUnit;
 import io.harness.distribution.constraint.Consumer;
 import io.harness.distribution.constraint.Consumer.State;
 import io.harness.distribution.constraint.ConsumerId;
@@ -58,7 +60,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 
 @Singleton
@@ -161,7 +162,8 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
                   ImmutableMap.of(ResourceConstraintInstance.APP_ID_KEY, instance.getAppId());
 
               if (getRegistry().consumerFinished(new ConstraintId(instance.getResourceConstraintId()),
-                      new ConsumerId(instance.getUuid()), constraintContext)) {
+                      new ConstraintUnit(instance.getResourceUnit()), new ConsumerId(instance.getUuid()),
+                      constraintContext)) {
                 constraintIds.add(instance.getResourceConstraintId());
               }
             }
@@ -204,6 +206,25 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
     return constraintIds;
   }
 
+  private Query<ResourceConstraintInstance> runnableQuery(String constraintId) {
+    return wingsPersistence.createQuery(ResourceConstraintInstance.class)
+        .filter(ResourceConstraintInstance.RESOURCE_CONSTRAINT_ID_KEY, constraintId)
+        .field(ResourceConstraintInstance.STATE_KEY)
+        .in(asList(State.BLOCKED.name(), State.ACTIVE.name()));
+  }
+
+  private List<ConstraintUnit> units(ResourceConstraint constraint) {
+    Set<String> units = new HashSet<>();
+    try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
+             runnableQuery(constraint.getUuid()).project(ResourceConstraintInstance.RESOURCE_UNIT_KEY, true).fetch())) {
+      while (iterator.hasNext()) {
+        ResourceConstraintInstance instance = iterator.next();
+        units.add(instance.getResourceUnit());
+      }
+    }
+    return units.stream().map(unit -> new ConstraintUnit(unit)).collect(toList());
+  }
+
   @Override
   public void updateBlockedConstraints(Set<String> constraintIds) {
     try (HIterator<ResourceConstraint> iterator =
@@ -214,13 +235,16 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
       while (iterator.hasNext()) {
         ResourceConstraint instance = iterator.next();
         final Constraint constraint = createAbstraction(instance);
+        final List<ConstraintUnit> units = units(instance);
 
-        final RunnableConsumers runnableConsumers = constraint.runnableConsumers(getRegistry());
-        for (ConsumerId consumerId : runnableConsumers.getConsumerIds()) {
-          if (!constraint.consumerUnblocked(consumerId, null, getRegistry())) {
-            break;
+        units.forEach(unit -> {
+          final RunnableConsumers runnableConsumers = constraint.runnableConsumers(unit, getRegistry());
+          for (ConsumerId consumerId : runnableConsumers.getConsumerIds()) {
+            if (!constraint.consumerUnblocked(unit, consumerId, null, getRegistry())) {
+              break;
+            }
           }
-        }
+        });
       }
     }
   }
@@ -269,7 +293,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
                    .resourceConstraintId(entry.getKey())
                    .activeScopes(entry.getValue())
                    .build())
-        .collect(Collectors.toList());
+        .collect(toList());
   }
 
   @Override
@@ -302,14 +326,12 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
-  public List<Consumer> loadConsumers(ConstraintId id) {
+  public List<Consumer> loadConsumers(ConstraintId id, ConstraintUnit unit) {
     List<Consumer> consumers = new ArrayList<>();
 
     try (HIterator<ResourceConstraintInstance> iterator = new HIterator<ResourceConstraintInstance>(
-             wingsPersistence.createQuery(ResourceConstraintInstance.class)
-                 .filter(ResourceConstraintInstance.RESOURCE_CONSTRAINT_ID_KEY, id.getValue())
-                 .field(ResourceConstraintInstance.STATE_KEY)
-                 .in(asList(State.BLOCKED.name(), State.ACTIVE.name()))
+             runnableQuery(id.getValue())
+                 .filter(ResourceConstraintInstance.RESOURCE_UNIT_KEY, unit.getValue())
                  .order(Sort.ascending(ResourceConstraintInstance.ORDER_KEY))
                  .fetch())) {
       while (iterator.hasNext()) {
@@ -351,7 +373,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
-  public boolean registerConsumer(ConstraintId id, Consumer consumer, int currentlyRunning)
+  public boolean registerConsumer(ConstraintId id, ConstraintUnit unit, Consumer consumer, int currentlyRunning)
       throws UnableToRegisterConsumerException {
     ResourceConstraint resourceConstraint = get(null, id.getValue());
     if (resourceConstraint == null) {
@@ -363,6 +385,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
             .uuid(consumer.getId().getValue())
             .appId((String) consumer.getContext().get(ResourceConstraintInstance.APP_ID_KEY))
             .resourceConstraintId(id.getValue())
+            .resourceUnit(unit.getValue())
             .releaseEntityType((String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_TYPE_KEY))
             .releaseEntityId((String) consumer.getContext().get(ResourceConstraintInstance.RELEASE_ENTITY_ID_KEY))
             .permits(consumer.getPermits())
@@ -393,12 +416,14 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
-  public boolean consumerUnblocked(ConstraintId id, ConsumerId consumerId, Map<String, Object> context) {
+  public boolean consumerUnblocked(
+      ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
     waitNotifyEngine.notify(consumerId.getValue(), ResourceConstraintStatusData.builder().build());
 
     final Query<ResourceConstraintInstance> query =
         wingsPersistence.createQuery(ResourceConstraintInstance.class)
             .filter(ResourceConstraintInstance.ID_KEY, consumerId.getValue())
+            .filter(ResourceConstraintInstance.RESOURCE_UNIT_KEY, unit.getValue())
             .filter(ResourceConstraintInstance.STATE_KEY, State.BLOCKED.name());
 
     if (context != null && context.containsKey(ResourceConstraintInstance.APP_ID_KEY)) {
@@ -415,11 +440,13 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
   }
 
   @Override
-  public boolean consumerFinished(ConstraintId id, ConsumerId consumerId, Map<String, Object> context) {
+  public boolean consumerFinished(
+      ConstraintId id, ConstraintUnit unit, ConsumerId consumerId, Map<String, Object> context) {
     final Query<ResourceConstraintInstance> query =
         wingsPersistence.createQuery(ResourceConstraintInstance.class)
             .filter(ResourceConstraintInstance.APP_ID_KEY, context.get(ResourceConstraintInstance.APP_ID_KEY))
             .filter(ResourceConstraintInstance.ID_KEY, consumerId.getValue())
+            .filter(ResourceConstraintInstance.RESOURCE_UNIT_KEY, unit.getValue())
             .filter(ResourceConstraintInstance.STATE_KEY, State.ACTIVE.name());
 
     final UpdateOperations<ResourceConstraintInstance> ops =

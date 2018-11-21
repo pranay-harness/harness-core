@@ -18,20 +18,22 @@ import java.util.Date;
 @Entity(value = "resourceConstraintInstances", noClassnameStored = true)
 @EqualsAndHashCode(callSuper = false)
 @Data
-@Indexes(@Index(options = @IndexOptions(unique = true, name = "uniqueOrder"),
+@Indexes(@Index(options = @IndexOptions(unique = true, name = "uniqueUnitOrder"),
     fields = { @Field("resourceConstraintId")
-               , @Field("order") }))
+               , @Field("resourceUnit"), @Field("order") }))
 public class ResourceConstraintInstance extends Base {
   public static final String ACQUIRED_AT_KEY = "acquiredAt";
   public static final String ORDER_KEY = "order";
   public static final String RELEASE_ENTITY_ID_KEY = "releaseEntityId";
   public static final String RELEASE_ENTITY_TYPE_KEY = "releaseEntityType";
   public static final String RESOURCE_CONSTRAINT_ID_KEY = "resourceConstraintId";
+  public static final String RESOURCE_UNIT_KEY = "resourceUnit";
   public static final String STATE_KEY = "state";
 
   private String accountId;
 
   @Indexed private String resourceConstraintId;
+  private String resourceUnit;
   private int order;
 
   @Indexed private String state;
@@ -49,11 +51,13 @@ public class ResourceConstraintInstance extends Base {
 
   @Builder
   private ResourceConstraintInstance(String uuid, String accountId, String appId, String resourceConstraintId,
-      int order, String state, int permits, String releaseEntityType, String releaseEntityId, long acquiredAt) {
+      String resourceUnit, int order, String state, int permits, String releaseEntityType, String releaseEntityId,
+      long acquiredAt) {
     setUuid(uuid);
     setAccountId(accountId);
     setAppId(appId);
     this.resourceConstraintId = resourceConstraintId;
+    this.resourceUnit = resourceUnit;
     this.order = order;
     this.state = state;
     this.permits = permits;
