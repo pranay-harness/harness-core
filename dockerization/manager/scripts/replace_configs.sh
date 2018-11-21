@@ -54,6 +54,10 @@ if [[ -v "DEPLOY_MODE" ]]; then
     sed -i "s|deployMode: AWS|deployMode: ${DEPLOY_MODE}|" /opt/harness/config.yml
 fi
 
+if [[ -v "KUBECTL_VERSION" ]]; then
+    sed -i "s|kubectlVersion:.*|kubectlVersion: ${KUBECTL_VERSION}|" /opt/harness/config.yml
+fi
+
 sed -i "s|91b01067de772de3a12d99bddeab84d82a9f05c8|${NEWRELIC_LICENSE_KEY}|" /opt/harness/newrelic.yml
 
 if [[ "${DISABLE_NEW_RELIC}" == "true" ]]; then

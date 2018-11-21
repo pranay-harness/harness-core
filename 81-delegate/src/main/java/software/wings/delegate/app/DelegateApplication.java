@@ -1,6 +1,7 @@
 package software.wings.delegate.app;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static software.wings.delegate.app.InstallUtils.installClientTools;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
 import static software.wings.utils.message.MessageConstants.NEW_DELEGATE;
 import static software.wings.utils.message.MessageConstants.WATCHER_DATA;
@@ -108,6 +109,8 @@ public class DelegateApplication {
 
     Injector injector = Guice.createInjector(modules);
     final MessageService messageService = injector.getInstance(MessageService.class);
+
+    installClientTools(configuration);
 
     // Add JVM shutdown hook so as to have a clean shutdown
     addShutdownHook(injector, messageService);
