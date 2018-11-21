@@ -34,7 +34,7 @@ import software.wings.app.StreamModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
-import software.wings.beans.Base;
+import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
 import software.wings.common.Constants;
 import software.wings.health.WingsHealthCheck;
@@ -54,7 +54,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
   private static final Logger logger = LoggerFactory.getLogger(DataGenApplication.class);
 
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
-                                                      .add(Base.class)
+                                                      .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
                                                       .build();

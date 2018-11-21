@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory;
 import ro.fortsoft.pf4j.PluginManager;
 import ru.vyarus.guice.validator.ValidationModule;
 import software.wings.app.MainConfiguration.AssetsConfigurationMixin;
-import software.wings.beans.Base;
+import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
 import software.wings.common.Constants;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -129,7 +129,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   private static final Logger logger = LoggerFactory.getLogger(WingsApplication.class);
 
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
-                                                      .add(Base.class)
+                                                      .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .build();

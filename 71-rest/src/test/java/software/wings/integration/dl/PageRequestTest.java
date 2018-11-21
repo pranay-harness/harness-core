@@ -35,7 +35,7 @@ public class PageRequestTest extends WingsBaseTest {
   }
 
   @Entity(value = "!!!testDummies", noClassnameStored = true)
-  private static class Dummy extends Base {
+  public static class Dummy extends Base {
     public List<DummyItem> dummies;
   }
 
