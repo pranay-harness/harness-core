@@ -221,7 +221,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
   @Override
   public InfrastructureProvisioner get(String appId, String infrastructureProvisionerId) {
-    return wingsPersistence.get(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
+    return wingsPersistence.getWithAppId(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
   }
 
   @Override

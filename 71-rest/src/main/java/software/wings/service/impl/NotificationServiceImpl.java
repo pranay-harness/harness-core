@@ -61,7 +61,7 @@ public class NotificationServiceImpl implements NotificationService {
 
   @Override
   public Notification get(@NotEmpty String appId, @NotEmpty String notificationId) {
-    return wingsPersistence.get(Notification.class, appId, notificationId);
+    return wingsPersistence.getWithAppId(Notification.class, appId, notificationId);
   }
 
   @Override

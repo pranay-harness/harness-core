@@ -180,7 +180,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     String key = wingsPersistence.save(artifact);
 
-    Artifact savedArtifact = wingsPersistence.get(Artifact.class, artifact.getAppId(), key);
+    Artifact savedArtifact = wingsPersistence.getWithAppId(Artifact.class, artifact.getAppId(), key);
     if (savedArtifact.getStatus().equals(QUEUED)) {
       logger.info("Sending event to collect artifact {} ", savedArtifact.getUuid());
       collectQueue.send(aCollectEvent().withArtifact(savedArtifact).build());
@@ -228,7 +228,7 @@ public class ArtifactServiceImpl implements ArtifactService {
                                 .filter(APP_ID_KEY, artifact.getAppId())
                                 .filter(ID_KEY, artifact.getUuid()),
         wingsPersistence.createUpdateOperations(Artifact.class).set("displayName", artifact.getDisplayName()));
-    return wingsPersistence.get(Artifact.class, artifact.getAppId(), artifact.getUuid());
+    return wingsPersistence.getWithAppId(Artifact.class, artifact.getAppId(), artifact.getUuid());
   }
 
   @Override
@@ -291,7 +291,7 @@ public class ArtifactServiceImpl implements ArtifactService {
    */
   @Override
   public File download(String appId, String artifactId) {
-    Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
+    Artifact artifact = wingsPersistence.getWithAppId(Artifact.class, appId, artifactId);
     if (artifact == null || artifact.getStatus() != READY || isEmpty(artifact.getArtifactFiles())) {
       return null;
     }
@@ -317,7 +317,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public Artifact get(String appId, String artifactId, boolean withServices) {
-    Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
+    Artifact artifact = wingsPersistence.getWithAppId(Artifact.class, appId, artifactId);
     if (withServices) {
       List<Service> services = artifact.getServiceIds()
                                    .stream()
@@ -448,7 +448,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   @Override
   public Artifact startArtifactCollection(String appId, String artifactId) {
     logger.info("Start collecting artifact {} of appId {}", artifactId, appId);
-    Artifact artifact = wingsPersistence.get(Artifact.class, appId, artifactId);
+    Artifact artifact = wingsPersistence.getWithAppId(Artifact.class, appId, artifactId);
     if (artifact == null) {
       throw new WingsException("Artifact [" + artifactId + "] for the appId [" + appId + "] does not exist", USER);
     }
@@ -487,7 +487,7 @@ public class ArtifactServiceImpl implements ArtifactService {
     ArtifactStream artifactStream = artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId());
     if (artifactStream == null) {
       logger.info("ArtifactStream of artifact {} was deleted", artifact.getUuid());
-      artifact = wingsPersistence.get(Artifact.class, artifact.getAppId(), artifact.getUuid());
+      artifact = wingsPersistence.getWithAppId(Artifact.class, artifact.getAppId(), artifact.getUuid());
       if (artifact == null) {
         return DELETED;
       }

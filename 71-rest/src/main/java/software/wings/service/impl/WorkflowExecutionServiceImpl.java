@@ -822,7 +822,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public WorkflowExecution getWorkflowExecution(String appId, String workflowExecutionId) {
     logger.debug("Retrieving workflow execution details for id {} of App Id {} ", workflowExecutionId, appId);
-    return wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    return wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
   }
 
   private void populateNodeHierarchy(WorkflowExecution workflowExecution, boolean includeGraph, boolean includeStatus,
@@ -1140,7 +1140,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
     if (executionArgs.isTriggeredFromPipeline()) {
       if (executionArgs.getPipelineId() != null) {
-        pipeline = wingsPersistence.get(Pipeline.class, workflowExecution.getAppId(), executionArgs.getPipelineId());
+        pipeline =
+            wingsPersistence.getWithAppId(Pipeline.class, workflowExecution.getAppId(), executionArgs.getPipelineId());
         workflowExecution.setPipelineSummary(
             PipelineSummary.builder().pipelineId(pipeline.getUuid()).pipelineName(pipeline.getName()).build());
         keywords.add(pipeline.getName());
@@ -1329,8 +1330,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     if (workflowExecution.getWorkflowType() != ORCHESTRATION) {
       stateMachineExecutor.startExecution(stateMachine, stateExecutionInstance);
       updateStartStatus(workflowExecution, RUNNING);
-      savedWorkflowExecution =
-          wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+      savedWorkflowExecution = wingsPersistence.getWithAppId(
+          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
       if (workflowExecution.getWorkflowType() == PIPELINE) {
         PipelineElement pipelineElement = PipelineElement.builder()
                                               .displayName(workflowExecution.getDisplayName())
@@ -1352,8 +1353,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                    .workflowId(workflowExecution.getWorkflowId())
                                    .infraMappingIds(workflowExecution.getInfraMappingIds())
                                    .build());
-      savedWorkflowExecution =
-          wingsPersistence.get(WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
+      savedWorkflowExecution = wingsPersistence.getWithAppId(
+          WorkflowExecution.class, workflowExecution.getAppId(), workflowExecution.getUuid());
     }
     return savedWorkflowExecution;
   }
@@ -1555,7 +1556,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public ExecutionInterrupt triggerExecutionInterrupt(ExecutionInterrupt executionInterrupt) {
     String executionUuid = executionInterrupt.getExecutionUuid();
     WorkflowExecution workflowExecution =
-        wingsPersistence.get(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
+        wingsPersistence.getWithAppId(WorkflowExecution.class, executionInterrupt.getAppId(), executionUuid);
     if (workflowExecution == null) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT)
           .addParam("args", "No WorkflowExecution for executionUuid:" + executionUuid);
@@ -1695,7 +1696,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public CountsByStatuses getBreakdown(String appId, String workflowExecutionId) {
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    WorkflowExecution workflowExecution =
+        wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
     refreshBreakdown(workflowExecution);
     return workflowExecution.getBreakdown();
   }
@@ -1704,7 +1706,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public GraphNode getExecutionDetailsForNode(
       String appId, String workflowExecutionId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
-        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+        wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     return graphRenderer.convertToNode(stateExecutionInstance);
   }
 
@@ -1712,7 +1714,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public List<StateExecutionData> getExecutionHistory(
       String appId, String workflowExecutionId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
-        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+        wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     return stateExecutionInstance.getStateExecutionDataHistory();
   }
 
@@ -1726,7 +1728,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public List<StateExecutionInterrupt> getExecutionInterrupts(String appId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
-        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+        wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     Validator.notNullCheck("stateExecutionInstance", stateExecutionInstance);
 
     Map<String, ExecutionInterruptEffect> map = new HashMap<>();
@@ -1763,7 +1765,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Override
   public List<StateExecutionElement> getExecutionElements(String appId, String stateExecutionInstanceId) {
     StateExecutionInstance stateExecutionInstance =
-        wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+        wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
     Validator.notNullCheck("stateExecutionInstance", stateExecutionInstance);
 
     StateExecutionData stateExecutionData = stateExecutionInstance.getStateExecutionData();
@@ -1785,7 +1787,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                                                                          .build())
                                                               .collect(toMap(StateExecutionElement::getName, x -> x));
 
-    final StateMachine stateMachine = wingsPersistence.get(
+    final StateMachine stateMachine = wingsPersistence.getWithAppId(
         StateMachine.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getStateMachineId());
 
     int subStates =
@@ -1856,7 +1858,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public StateExecutionInstance getStateExecutionData(String appId, String stateExecutionInstanceId) {
-    return wingsPersistence.get(StateExecutionInstance.class, appId, stateExecutionInstanceId);
+    return wingsPersistence.getWithAppId(StateExecutionInstance.class, appId, stateExecutionInstanceId);
   }
 
   @Override
@@ -2052,8 +2054,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       breakdown = getBreakdownFromPhases(workflowExecution);
       breakdown.setQueued(total - (breakdown.getFailed() + breakdown.getSuccess() + breakdown.getInprogress()));
     } else {
-      StateMachine sm =
-          wingsPersistence.get(StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
+      StateMachine sm = wingsPersistence.getWithAppId(
+          StateMachine.class, workflowExecution.getAppId(), workflowExecution.getStateMachineId());
 
       Map<String, ExecutionStatus> stateExecutionStatuses = new HashMap<>();
       try (HIterator<StateExecutionInstance> iterator =
@@ -2381,7 +2383,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   public void refreshBuildExecutionSummary(
       String appId, String workflowExecutionId, BuildExecutionSummary buildExecutionSummary) {
     WorkflowExecution workflowExecution =
-        wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId, CRITICAL);
+        wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId, CRITICAL);
     if (workflowExecution == null) {
       return;
     }
@@ -2399,7 +2401,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public Set<WorkflowExecutionBaseline> markBaseline(String appId, String workflowExecutionId, boolean isBaseline) {
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    WorkflowExecution workflowExecution =
+        wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution == null) {
       throw new WingsException(ErrorCode.BASELINE_CONFIGURATION_ERROR,
           "No workflow execution found with id: " + workflowExecutionId + " appId: " + appId);
@@ -2604,7 +2607,8 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
 
   @Override
   public List<WorkflowExecution> listWaitingOnDeployments(String appId, String workflowExecutionId) {
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+    WorkflowExecution workflowExecution =
+        wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
     if (workflowExecution == null || ExecutionStatus.isFinalStatus(workflowExecution.getStatus())) {
       return new ArrayList<>();
     }

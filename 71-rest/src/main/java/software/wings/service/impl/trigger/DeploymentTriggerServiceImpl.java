@@ -51,7 +51,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
   @Override
   public DeploymentTrigger update(DeploymentTrigger trigger) {
     DeploymentTrigger existingTrigger =
-        wingsPersistence.get(DeploymentTrigger.class, trigger.getAppId(), trigger.getUuid());
+        wingsPersistence.getWithAppId(DeploymentTrigger.class, trigger.getAppId(), trigger.getUuid());
     notNullCheck("Trigger was deleted ", existingTrigger, USER);
     equalCheck(trigger.getWorkflowType(), existingTrigger.getWorkflowType());
 
@@ -72,7 +72,7 @@ public class DeploymentTriggerServiceImpl implements DeploymentTriggerService {
 
   @Override
   public DeploymentTrigger get(String appId, String triggerId) {
-    return wingsPersistence.get(DeploymentTrigger.class, appId, triggerId);
+    return wingsPersistence.getWithAppId(DeploymentTrigger.class, appId, triggerId);
   }
 
   @Override

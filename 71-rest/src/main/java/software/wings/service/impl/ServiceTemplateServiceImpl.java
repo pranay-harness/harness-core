@@ -195,7 +195,7 @@ public class ServiceTemplateServiceImpl implements ServiceTemplateService {
 
   @Override
   public ServiceTemplate get(String appId, String serviceTemplateId) {
-    return wingsPersistence.get(ServiceTemplate.class, appId, serviceTemplateId);
+    return wingsPersistence.getWithAppId(ServiceTemplate.class, appId, serviceTemplateId);
   }
 
   @Override

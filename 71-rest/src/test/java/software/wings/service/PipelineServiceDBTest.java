@@ -112,7 +112,7 @@ public class PipelineServiceDBTest extends WingsBaseTest {
 
     pipelineService.updateFailureStrategies(application.getUuid(), pipeline.getUuid(), failureStrategies);
 
-    Pipeline updated = wingsPersistence.get(Pipeline.class, application.getUuid(), pipeline.getUuid());
+    Pipeline updated = wingsPersistence.getWithAppId(Pipeline.class, application.getUuid(), pipeline.getUuid());
 
     assertThat(updated.getFailureStrategies()).isEqualTo(failureStrategies);
   }

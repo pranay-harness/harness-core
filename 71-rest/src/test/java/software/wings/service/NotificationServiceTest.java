@@ -84,7 +84,7 @@ public class NotificationServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldGet() {
-    when(wingsPersistence.get(Notification.class, APP_ID, NOTIFICATION_ID))
+    when(wingsPersistence.getWithAppId(Notification.class, APP_ID, NOTIFICATION_ID))
         .thenReturn(anInformationNotification().withAppId(APP_ID).withUuid(NOTIFICATION_ID).build());
     Notification notification = notificationService.get(APP_ID, NOTIFICATION_ID);
     assertThat(notification)

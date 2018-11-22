@@ -152,7 +152,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
    */
   @Override
   public Environment get(String appId, String envId, boolean withSummary) {
-    Environment environment = wingsPersistence.get(Environment.class, appId, envId);
+    Environment environment = wingsPersistence.getWithAppId(Environment.class, appId, envId);
     if (environment == null) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "Environment doesn't exist");
     }
@@ -164,7 +164,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public Environment get(String appId, String envId) {
-    return wingsPersistence.get(Environment.class, appId, envId);
+    return wingsPersistence.getWithAppId(Environment.class, appId, envId);
   }
 
   @Override
@@ -251,7 +251,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Override
   public Environment update(Environment environment, boolean fromYaml) {
     Environment savedEnvironment =
-        wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
+        wingsPersistence.getWithAppId(Environment.class, environment.getAppId(), environment.getUuid());
 
     List<String> keywords = trimList(environment.generateKeywords());
 
@@ -291,7 +291,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
     wingsPersistence.update(savedEnvironment, updateOperations);
 
     Environment updatedEnvironment =
-        wingsPersistence.get(Environment.class, environment.getAppId(), environment.getUuid());
+        wingsPersistence.getWithAppId(Environment.class, environment.getAppId(), environment.getUuid());
 
     String accountId = appService.getAccountIdByAppId(savedEnvironment.getAppId());
     boolean isRename = !savedEnvironment.getName().equals(updatedEnvironment.getName());
@@ -312,7 +312,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
 
   @Override
   public void delete(String appId, String envId, boolean syncFromGit) {
-    Environment environment = wingsPersistence.get(Environment.class, appId, envId);
+    Environment environment = wingsPersistence.getWithAppId(Environment.class, appId, envId);
     if (environment == null) {
       return;
     }

@@ -151,7 +151,7 @@ public class PipelineServiceImpl implements PipelineService {
    */
   @Override
   public Pipeline update(Pipeline pipeline) {
-    Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    Pipeline savedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     notNullCheck("Pipeline not saved", savedPipeline, USER);
 
     List<Object> keywords = pipeline.generateKeywords();
@@ -172,7 +172,7 @@ public class PipelineServiceImpl implements PipelineService {
 
     wingsPersistence.saveAndGet(StateMachine.class, new StateMachine(pipeline, workflowService.stencilMap()));
 
-    Pipeline updatedPipeline = wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    Pipeline updatedPipeline = wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     String accountId = appService.getAccountIdByAppId(pipeline.getAppId());
     boolean isRename = !savedPipeline.getName().equals(pipeline.getName());
 
@@ -202,7 +202,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public List<FailureStrategy> updateFailureStrategies(
       String appId, String pipelineId, List<FailureStrategy> failureStrategies) {
-    Pipeline savedPipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Pipeline savedPipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("pipeline", savedPipeline);
 
     savedPipeline.setFailureStrategies(failureStrategies);
@@ -222,7 +222,7 @@ public class PipelineServiceImpl implements PipelineService {
           for (PipelineStageElement pipelineStageElement : pipelineStage.getPipelineStageElements()) {
             // Env Id in pipeline
             if (ENV_STATE.name().equals(pipelineStageElement.getType())) {
-              Workflow workflow = wingsPersistence.get(
+              Workflow workflow = wingsPersistence.getWithAppId(
                   Workflow.class, appId, (String) pipelineStageElement.getProperties().get("workflowId"));
               if (!workflow.checkEnvironmentTemplatized()) {
                 if (envId.equals(workflow.getEnvId())) {
@@ -270,7 +270,7 @@ public class PipelineServiceImpl implements PipelineService {
   }
 
   private boolean deletePipeline(String appId, String pipelineId, boolean forceDelete, boolean syncFromGit) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     if (pipeline == null) {
       return true;
     }
@@ -328,7 +328,7 @@ public class PipelineServiceImpl implements PipelineService {
 
   @Override
   public List<EntityType> getRequiredEntities(String appId, String pipelineId) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("pipeline", pipeline, USER);
     List<EntityType> entityTypes = new ArrayList<>();
     for (PipelineStage pipelineStage : pipeline.getPipelineStages()) {
@@ -361,7 +361,7 @@ public class PipelineServiceImpl implements PipelineService {
    */
   @Override
   public Pipeline readPipeline(String appId, String pipelineId, boolean withServices) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
     if (withServices) {
       setServicesAndPipelineVariables(pipeline);
@@ -372,7 +372,7 @@ public class PipelineServiceImpl implements PipelineService {
   @Override
   public Pipeline readPipelineWithResolvedVariables(
       String appId, String pipelineId, Map<String, String> inputPipelineVariables) {
-    Pipeline pipeline = wingsPersistence.get(Pipeline.class, appId, pipelineId);
+    Pipeline pipeline = wingsPersistence.getWithAppId(Pipeline.class, appId, pipelineId);
     notNullCheck("Pipeline does not exist", pipeline, USER);
     List<Service> services = new ArrayList<>();
     List<String> serviceIds = new ArrayList<>();

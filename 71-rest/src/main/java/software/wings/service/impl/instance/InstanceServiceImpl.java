@@ -71,7 +71,7 @@ public class InstanceServiceImpl implements InstanceService {
     Validator.nullCheck("Instance", currentInstance);
 
     String key = wingsPersistence.save(instance);
-    Instance updatedInstance = wingsPersistence.get(Instance.class, instance.getAppId(), key);
+    Instance updatedInstance = wingsPersistence.getWithAppId(Instance.class, instance.getAppId(), key);
     if (logger.isDebugEnabled()) {
       logger.debug("End - Instance save called for uuid:" + instance.getUuid()
           + " and infraMappingId:" + instance.getInfraMappingId());

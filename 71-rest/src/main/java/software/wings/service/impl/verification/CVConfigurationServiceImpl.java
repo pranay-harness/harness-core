@@ -143,11 +143,12 @@ public class CVConfigurationServiceImpl implements CVConfigurationService {
             .addParam("serviceConfigurationId", serviceConfigurationId)
             .addParam("stateType", String.valueOf(stateType));
     }
-    CVConfiguration savedConfiguration = wingsPersistence.get(CVConfiguration.class, appId, serviceConfigurationId);
+    CVConfiguration savedConfiguration =
+        wingsPersistence.getWithAppId(CVConfiguration.class, appId, serviceConfigurationId);
     UpdateOperations<CVConfiguration> updateOperations = getUpdateOperations(stateType, updatedConfig);
     wingsPersistence.update(savedConfiguration, updateOperations);
-    updateMetricTemplate(
-        appId, accountId, wingsPersistence.get(CVConfiguration.class, appId, serviceConfigurationId), stateType);
+    updateMetricTemplate(appId, accountId,
+        wingsPersistence.getWithAppId(CVConfiguration.class, appId, serviceConfigurationId), stateType);
     return savedConfiguration.getUuid();
   }
 

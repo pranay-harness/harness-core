@@ -269,12 +269,12 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                                       .withHostNames(singletonList(HOST_NAME))
                                                                       .build();
 
-    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+    when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(physicalInfrastructureMapping);
 
     InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID);
     assertThat(infrastructureMapping.getUuid()).isEqualTo(INFRA_MAPPING_ID);
-    verify(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    verify(wingsPersistence).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
   }
 
   @Test
@@ -312,7 +312,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
-    doReturn(savedInfra).when(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    doReturn(savedInfra).when(wingsPersistence).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
 
     doReturn(aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(aPhysicalDataCenterConfig().build()).build())
         .when(settingsService)
@@ -324,7 +324,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     InfrastructureMapping returnedInfra = infrastructureMappingService.update(updatedInfra);
     assertThat(returnedInfra).isNotNull();
-    verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    verify(wingsPersistence, times(2)).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getHostConnectionAttrs());
   }
 
@@ -366,7 +366,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
-    doReturn(savedInfra).when(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    doReturn(savedInfra).when(wingsPersistence).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
 
     doReturn(aSettingAttribute()
                  .withUuid(COMPUTE_PROVIDER_ID)
@@ -402,7 +402,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     fieldsToRemove.add("provisionerId");
     verify(wingsPersistence)
         .updateFields(PhysicalInfrastructureMapping.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
-    verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    verify(wingsPersistence, times(2)).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getHostConnectionAttrs());
   }
 
@@ -447,7 +447,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     when(appService.getAccountIdByAppId(APP_ID)).thenReturn(ACCOUNT_ID);
 
-    doReturn(savedInfra).when(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    doReturn(savedInfra).when(wingsPersistence).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
 
     doReturn(aSettingAttribute()
                  .withUuid(COMPUTE_PROVIDER_ID)
@@ -491,7 +491,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
     fieldsToRemove.add("provisionerId");
     verify(wingsPersistence)
         .updateFields(PhysicalInfrastructureMappingWinRm.class, INFRA_MAPPING_ID, keyValuePairs, fieldsToRemove);
-    verify(wingsPersistence, times(2)).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    verify(wingsPersistence, times(2)).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(staticInfrastructureProvider).updateHostConnAttrs(updatedInfra, updatedInfra.getWinRmConnectionAttributes());
   }
 
@@ -509,14 +509,14 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withHostNames(singletonList(HOST_NAME))
             .build();
 
-    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+    when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(physicalInfrastructureMapping);
     when(wingsPersistence.delete(physicalInfrastructureMapping)).thenReturn(true);
     when(workflowService.listWorkflows(any(PageRequest.class))).thenReturn(aPageResponse().build());
 
     infrastructureMappingService.delete(APP_ID, INFRA_MAPPING_ID);
 
-    verify(wingsPersistence).get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
+    verify(wingsPersistence).getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
     verify(wingsPersistence).delete(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID);
   }
 
@@ -552,7 +552,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
             .withHostNames(singletonList(HOST_NAME))
             .build();
 
-    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+    when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(physicalInfrastructureMapping);
   }
 
@@ -757,7 +757,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
                                                             .withDesiredCapacity(1)
                                                             .build();
 
-    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+    when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(awsInfrastructureMapping);
 
     SettingAttribute computeProviderSetting =
@@ -814,7 +814,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
 
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
-    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+    when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(directKubernetesInfrastructureMapping);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
@@ -848,7 +848,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(GcpConfig.builder().build()).build());
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
-    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+    when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(gcpKubernetesInfrastructureMapping);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);
@@ -881,7 +881,7 @@ public class InfrastructureMappingServiceTest extends WingsBaseTest {
         .thenReturn(aSettingAttribute().withUuid(COMPUTE_PROVIDER_ID).withValue(AwsConfig.builder().build()).build());
     when(serviceTemplateService.getTemplateRefKeysByService(APP_ID, SERVICE_ID, ENV_ID))
         .thenReturn(singletonList(new Key<>(ServiceTemplate.class, "serviceTemplate", TEMPLATE_ID)));
-    when(wingsPersistence.get(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
+    when(wingsPersistence.getWithAppId(InfrastructureMapping.class, APP_ID, INFRA_MAPPING_ID))
         .thenReturn(ecsInfrastructureMapping);
     when(delegateProxyFactory.get(eq(ContainerService.class), any(DelegateTask.SyncTaskContext.class)))
         .thenReturn(containerService);

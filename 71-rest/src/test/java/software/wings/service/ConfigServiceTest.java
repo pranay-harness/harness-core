@@ -143,7 +143,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setUuid(FILE_ID);
     BoundedInputStream inputStream = new BoundedInputStream(this.inputStream);
     when(wingsPersistence.save(configFile)).thenReturn(FILE_ID);
-    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     configService.save(configFile, inputStream);
     verify(fileService).saveFile(configFile, inputStream, FileBucket.CONFIGS);
     assertThat(configFile.getRelativeFilePath()).isEqualTo("PATH/" + FILE_NAME);
@@ -176,10 +176,10 @@ public class ConfigServiceTest extends WingsBaseTest {
     ConfigFile configFile = ConfigFile.builder().build();
     configFile.setAppId(APP_ID);
     configFile.setUuid(FILE_ID);
-    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
 
     configFile = configService.get(APP_ID, FILE_ID);
-    verify(wingsPersistence).get(ConfigFile.class, APP_ID, FILE_ID);
+    verify(wingsPersistence).getWithAppId(ConfigFile.class, APP_ID, FILE_ID);
     assertThat(configFile.getUuid()).isEqualTo(FILE_ID);
   }
 
@@ -200,7 +200,7 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setFileName(FILE_NAME);
 
     when(query.asList()).thenReturn(asList(configFile));
-    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     List<ConfigFile> configFiles = configService.getConfigFileByTemplate(APP_ID, ENV_ID, serviceTemplate.getUuid());
 
     verify(query).filter("appId", APP_ID);
@@ -229,9 +229,9 @@ public class ConfigServiceTest extends WingsBaseTest {
     configFile.setChecksum("CHECKSUM");
     configFile.setSize(12);
 
-    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     File file = configService.download(APP_ID, FILE_ID);
-    verify(wingsPersistence).get(ConfigFile.class, APP_ID, FILE_ID);
+    verify(wingsPersistence).getWithAppId(ConfigFile.class, APP_ID, FILE_ID);
     verify(fileService).download(eq("GFS_FILE_ID"), any(File.class), eq(FileBucket.CONFIGS));
     assertThat(file.getName()).isEqualTo("PATH");
   }
@@ -261,7 +261,7 @@ public class ConfigServiceTest extends WingsBaseTest {
 
     when(wingsPersistence.get(EncryptedData.class, configFile.getEncryptedFileId()))
         .thenReturn(EncryptedData.builder().encryptedValue("csd".toCharArray()).build());
-    when(wingsPersistence.get(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
+    when(wingsPersistence.getWithAppId(ConfigFile.class, APP_ID, FILE_ID)).thenReturn(configFile);
     BoundedInputStream boundedInputStream = new BoundedInputStream(this.inputStream);
     configService.update(configFile, boundedInputStream);
     ArgumentCaptor<Map> argumentCaptor = ArgumentCaptor.forClass(Map.class);

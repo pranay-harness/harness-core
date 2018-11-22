@@ -316,7 +316,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
                              .build();
     executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
     final ExecutionInterrupt interrupt =
-        wingsPersistence.get(ExecutionInterrupt.class, resumeAll.getAppId(), resumeAll.getUuid());
+        wingsPersistence.getWithAppId(ExecutionInterrupt.class, resumeAll.getAppId(), resumeAll.getUuid());
     assertThat(interrupt.isSeized()).isTrue();
   }
 
@@ -374,7 +374,7 @@ public class ExecutionInterruptManagerTest extends WingsBaseTest {
     executionInterrupt = executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
 
     final ExecutionInterrupt interrupt =
-        wingsPersistence.get(ExecutionInterrupt.class, pauseAll.getAppId(), pauseAll.getUuid());
+        wingsPersistence.getWithAppId(ExecutionInterrupt.class, pauseAll.getAppId(), pauseAll.getUuid());
     assertThat(interrupt.isSeized()).isTrue();
   }
 

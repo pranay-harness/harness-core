@@ -119,7 +119,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
     when(appService.exist(APP_ID)).thenReturn(true);
     when(artifactStreamService.get(APP_ID, ARTIFACT_STREAM_ID)).thenReturn(jenkinsArtifactStream);
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
   }
 
   @Test
@@ -407,13 +407,13 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test(expected = WingsException.class)
   public void shouldStartArtifactCollectionNoArtifact() {
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(null);
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(null);
     artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
   }
 
   @Test
   public void shouldNotCollectArtifactAlreadyQueued() {
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(QUEUED).build());
     Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
     assertThat(artifact.getStatus()).isEqualTo(QUEUED);
@@ -422,7 +422,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotCollectArtifactAlreadyRunning() {
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(RUNNING).build());
     Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
     assertThat(artifact.getStatus()).isEqualTo(RUNNING);
@@ -431,7 +431,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotCollectArtifactWhenContentStatusMetadata() {
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(METADATA_ONLY).build());
     Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
     assertThat(artifact.getStatus()).isEqualTo(APPROVED);
@@ -440,7 +440,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotCollectArtifactWhenContentStatusDOWNLOADING() {
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(DOWNLOADING).build());
     Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
     assertThat(artifact.getStatus()).isEqualTo(APPROVED);
@@ -449,7 +449,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldNotCollectArtifactWhenContentStatusDOWNLOADED() {
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(DOWNLOADED).build());
     Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
     assertThat(artifact.getContentStatus()).isEqualTo(DOWNLOADED);
@@ -458,7 +458,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldCollectArtifact() {
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID))
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID))
         .thenReturn(artifactBuilder.withStatus(APPROVED).withContentStatus(NOT_DOWNLOADED).build());
     Artifact artifact = artifactService.startArtifactCollection(APP_ID, ARTIFACT_ID);
     assertThat(artifact.getContentStatus()).isEqualTo(NOT_DOWNLOADED);
@@ -468,7 +468,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetArtifactContentStatus() {
     Artifact artifact = artifactBuilder.withStatus(APPROVED).withContentStatus(NOT_DOWNLOADED).build();
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     ContentStatus contentStatus = artifactService.getArtifactContentStatus(artifact);
     assertThat(contentStatus).isEqualTo(NOT_DOWNLOADED);
   }
@@ -476,7 +476,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetArtifactContentStatusDeleted() {
     Artifact artifact = artifactBuilder.withStatus(APPROVED).build();
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId())).thenReturn(null);
     ContentStatus contentStatus = artifactService.getArtifactContentStatus(artifact);
     assertThat(contentStatus).isEqualTo(DELETED);
@@ -485,7 +485,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
   @Test
   public void shouldGetArtifactContentStatusStreamDeleted() {
     Artifact artifact = artifactBuilder.withUuid(ARTIFACT_ID).withStatus(APPROVED).build();
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId())).thenReturn(null);
     ContentStatus contentStatus = artifactService.getArtifactContentStatus(artifact);
     assertThat(contentStatus).isEqualTo(METADATA_ONLY);
@@ -497,7 +497,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
                             .withStatus(APPROVED)
                             .withArtifactFiles(asList(anArtifactFile().build()))
                             .build();
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
     when(artifactStreamService.get(artifact.getAppId(), artifact.getArtifactStreamId())).thenReturn(null);
     ContentStatus contentStatus = artifactService.getArtifactContentStatus(artifact);
     assertThat(contentStatus).isEqualTo(DOWNLOADED);
@@ -643,7 +643,7 @@ public class ArtifactServiceTest extends WingsBaseTest {
 
   @Test
   public void shouldGetArtifactStatusForJenkinsStream() {
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifactBuilder.build());
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifactBuilder.build());
     assertThat(artifactService.getArtifactContentStatus(artifact)).isEqualTo(null);
     assertThat(artifact.getStatus()).isEqualTo(QUEUED);
   }

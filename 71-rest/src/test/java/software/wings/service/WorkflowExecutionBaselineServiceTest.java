@@ -182,7 +182,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     verifyValidUntil(workflowExecutionIds, Date.from(OffsetDateTime.now().plusMonths(7).toInstant()), true);
 
     for (String workflowExecutionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+      WorkflowExecution workflowExecution =
+          wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
       assertFalse(workflowExecution.isBaseline());
     }
 
@@ -214,7 +215,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     }
 
     for (String executionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+      WorkflowExecution workflowExecution1 = wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
       assertTrue(workflowExecution1.isBaseline());
     }
 
@@ -256,7 +257,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     }
 
     for (String executionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+      WorkflowExecution workflowExecution1 = wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
       assertTrue(workflowExecution1.isBaseline());
     }
 
@@ -311,7 +312,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       }
 
       for (String workflowExecutionId : workflowExecutionIds.get(i)) {
-        WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+        WorkflowExecution workflowExecution =
+            wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
         assertFalse(workflowExecution.isBaseline());
       }
 
@@ -345,7 +347,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
 
       for (int pipeline = 0; pipeline <= i; pipeline++) {
         WorkflowExecution pipelineExec =
-            wingsPersistence.get(WorkflowExecution.class, appId, pipelineIds.get(pipeline));
+            wingsPersistence.getWithAppId(WorkflowExecution.class, appId, pipelineIds.get(pipeline));
         if (pipeline == i) {
           assertTrue("failing for loop " + pipeline + " i: " + i, pipelineExec.isBaseline());
         } else {
@@ -353,7 +355,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
         }
 
         for (String executionId : workflowExecutionIds.get(pipeline)) {
-          WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+          WorkflowExecution workflowExecution1 =
+              wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
 
           if (pipeline == i) {
             assertTrue(workflowExecution1.isBaseline());
@@ -376,7 +379,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       }
 
       for (String executionId : workflowExecutionIds.get(i)) {
-        WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+        WorkflowExecution workflowExecution1 =
+            wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
         assertFalse(workflowExecution1.isBaseline());
       }
 
@@ -401,7 +405,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       }
 
       for (String executionId : workflowExecutionIds.get(i)) {
-        WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+        WorkflowExecution workflowExecution1 =
+            wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
         assertTrue(workflowExecution1.isBaseline());
       }
 
@@ -444,7 +449,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     }
 
     for (String workflowExecutionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+      WorkflowExecution workflowExecution =
+          wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
       assertFalse(workflowExecution.isBaseline());
     }
 
@@ -461,7 +467,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       assertEquals(serviceId, baseline.getServiceId());
 
       for (String executionId : workflowExecutionIds) {
-        WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+        WorkflowExecution workflowExecution =
+            wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
         if (workflowExecutionId.equals(executionId)) {
           assertTrue(workflowExecution.isBaseline());
         } else {
@@ -475,7 +482,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       assertEquals(0, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
       for (String executionId : workflowExecutionIds) {
-        WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+        WorkflowExecution workflowExecution =
+            wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
         assertFalse(workflowExecution.isBaseline());
       }
 
@@ -485,7 +493,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
       assertEquals(1, wingsPersistence.createQuery(WorkflowExecutionBaseline.class).count());
 
       for (String executionId : workflowExecutionIds) {
-        WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+        WorkflowExecution workflowExecution =
+            wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
         if (workflowExecutionId.equals(executionId)) {
           assertTrue(workflowExecution.isBaseline());
         } else {
@@ -530,7 +539,8 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     }
 
     for (String workflowExecutionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionId);
+      WorkflowExecution workflowExecution =
+          wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionId);
       assertFalse(workflowExecution.isBaseline());
     }
 
@@ -561,7 +571,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
     }
 
     for (String executionId : workflowExecutionIds) {
-      WorkflowExecution workflowExecution1 = wingsPersistence.get(WorkflowExecution.class, appId, executionId);
+      WorkflowExecution workflowExecution1 = wingsPersistence.getWithAppId(WorkflowExecution.class, appId, executionId);
       assertTrue(workflowExecution1.isBaseline());
     }
 
@@ -673,7 +683,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
 
     for (int i = 0; i < numOfWorkflowExecutions; i++) {
       WorkflowExecution workflowExecution =
-          wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionIds.get(i));
+          wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionIds.get(i));
       assertFalse(workflowExecution.isBaseline());
 
       WorkflowExecutionBaseline baselineDetails = workflowExecutionService.getBaselineDetails(
@@ -711,7 +721,7 @@ public class WorkflowExecutionBaselineServiceTest extends WingsBaseTest {
 
     for (int i = 0; i < numOfWorkflowExecutions; i++) {
       WorkflowExecution workflowExecution1 =
-          wingsPersistence.get(WorkflowExecution.class, appId, workflowExecutionIds.get(i));
+          wingsPersistence.getWithAppId(WorkflowExecution.class, appId, workflowExecutionIds.get(i));
       assertTrue(workflowExecution1.isBaseline());
       WorkflowExecutionBaseline baselineDetails = workflowExecutionService.getBaselineDetails(
           appId, workflowExecutionIds.get(i), stateExecutionIds.get(i), workflowExecutionIds.get(i));

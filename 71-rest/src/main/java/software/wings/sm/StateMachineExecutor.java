@@ -162,8 +162,8 @@ public class StateMachineExecutor {
    */
   public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback) {
-    return execute(wingsPersistence.get(StateMachine.class, appId, smId, CRITICAL), executionUuid, executionName,
-        contextParams, callback, null);
+    return execute(wingsPersistence.getWithAppId(StateMachine.class, appId, smId, CRITICAL), executionUuid,
+        executionName, contextParams, callback, null);
   }
 
   /**
@@ -181,8 +181,8 @@ public class StateMachineExecutor {
   public StateExecutionInstance execute(String appId, String smId, String executionUuid, String executionName,
       List<ContextElement> contextParams, StateMachineExecutionCallback callback,
       ExecutionEventAdvisor executionEventAdvisor) {
-    return execute(wingsPersistence.get(StateMachine.class, appId, smId, CRITICAL), executionUuid, executionName,
-        contextParams, callback, executionEventAdvisor);
+    return execute(wingsPersistence.getWithAppId(StateMachine.class, appId, smId, CRITICAL), executionUuid,
+        executionName, contextParams, callback, executionEventAdvisor);
   }
 
   /**
@@ -359,7 +359,7 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     StateMachine sm =
-        wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
+        wingsPersistence.getWithAppId(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
     startExecution(sm, stateExecutionInstance);
   }
 
@@ -445,7 +445,7 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     StateMachine sm =
-        wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
+        wingsPersistence.getWithAppId(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
     ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
     injector.injectMembers(context);
     startStateExecution(context, stateExecutionInstance);
@@ -1150,7 +1150,7 @@ public class StateMachineExecutor {
     StateExecutionInstance stateExecutionInstance =
         getStateExecutionInstance(appId, executionUuid, stateExecutionInstanceId);
     StateMachine sm =
-        wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
+        wingsPersistence.getWithAppId(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), CRITICAL);
     State currentState =
         sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
     injector.injectMembers(currentState);
@@ -1180,7 +1180,7 @@ public class StateMachineExecutor {
    * @param workflowExecutionInterrupt the workflow execution event
    */
   public void handleInterrupt(ExecutionInterrupt workflowExecutionInterrupt) {
-    WorkflowExecution workflowExecution = wingsPersistence.get(WorkflowExecution.class,
+    WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(WorkflowExecution.class,
         workflowExecutionInterrupt.getAppId(), workflowExecutionInterrupt.getExecutionUuid(), CRITICAL);
 
     final ExecutionInterruptType type = workflowExecutionInterrupt.getExecutionInterruptType();
@@ -1191,7 +1191,7 @@ public class StateMachineExecutor {
 
         updateStatus(stateExecutionInstance, FAILED, Lists.newArrayList(WAITING), null);
 
-        StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
+        StateMachine sm = wingsPersistence.getWithAppId(StateMachine.class, workflowExecutionInterrupt.getAppId(),
             stateExecutionInstance.getStateMachineId(), CRITICAL);
 
         State currentState =
@@ -1260,7 +1260,7 @@ public class StateMachineExecutor {
       return null;
     }
     StateMachine sm =
-        wingsPersistence.get(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), NORMAL);
+        wingsPersistence.getWithAppId(StateMachine.class, appId, stateExecutionInstance.getStateMachineId(), NORMAL);
 
     return new ExecutionContextImpl(stateExecutionInstance, sm, injector);
   }
@@ -1279,7 +1279,7 @@ public class StateMachineExecutor {
             .asList();
 
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
-      StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
+      StateMachine sm = wingsPersistence.getWithAppId(StateMachine.class, workflowExecutionInterrupt.getAppId(),
           stateExecutionInstance.getStateMachineId(), CRITICAL);
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
       injector.injectMembers(context);
@@ -1311,7 +1311,7 @@ public class StateMachineExecutor {
     }
 
     for (StateExecutionInstance stateExecutionInstance : allStateExecutionInstances) {
-      StateMachine sm = wingsPersistence.get(StateMachine.class, workflowExecutionInterrupt.getAppId(),
+      StateMachine sm = wingsPersistence.getWithAppId(StateMachine.class, workflowExecutionInterrupt.getAppId(),
           stateExecutionInstance.getStateMachineId(), CRITICAL);
       ExecutionContextImpl context = new ExecutionContextImpl(stateExecutionInstance, sm, injector);
       injector.injectMembers(context);
@@ -1324,7 +1324,7 @@ public class StateMachineExecutor {
     clearStateExecutionData(stateExecutionInstance, stateParams);
     stateExecutionInstance = getStateExecutionInstance(
         stateExecutionInstance.getAppId(), stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
-    StateMachine sm = wingsPersistence.get(
+    StateMachine sm = wingsPersistence.getWithAppId(
         StateMachine.class, stateExecutionInstance.getAppId(), stateExecutionInstance.getStateMachineId(), CRITICAL);
 
     State currentState =

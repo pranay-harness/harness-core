@@ -524,7 +524,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service get(String appId, String serviceId, boolean includeDetails) {
-    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     if (service != null && includeDetails) {
       setServiceDetails(service, appId);
     }
@@ -558,7 +558,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private void delete(String appId, String serviceId, boolean forceDelete, boolean syncFromGit) {
-    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     if (service == null) {
       return;
     }
@@ -670,9 +670,9 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private Service deleteCommand(String appId, String serviceId, String commandId, boolean syncFromGit) {
-    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("service", service);
-    ServiceCommand serviceCommand = wingsPersistence.get(ServiceCommand.class, service.getAppId(), commandId);
+    ServiceCommand serviceCommand = wingsPersistence.getWithAppId(ServiceCommand.class, service.getAppId(), commandId);
 
     ensureServiceCommandSafeToDelete(service, serviceCommand);
     deleteServiceCommand(service, serviceCommand, syncFromGit);
@@ -837,7 +837,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public EcsServiceSpecification getEcsServiceSpecificationById(String appId, String ecsServiceSpecificationId) {
-    return wingsPersistence.get(EcsServiceSpecification.class, appId, ecsServiceSpecificationId);
+    return wingsPersistence.getWithAppId(EcsServiceSpecification.class, appId, ecsServiceSpecificationId);
   }
 
   @Override
@@ -997,7 +997,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service addCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean pushToYaml) {
-    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("service", service);
 
     validateCommandName(serviceCommand.getCommand());
@@ -1008,7 +1008,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service updateCommandsOrder(String appId, String serviceId, List<ServiceCommand> serviceCommands) {
-    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("service", service);
     if (isEmpty(serviceCommands)) {
       return service;
@@ -1097,7 +1097,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
    */
   @Override
   public Service updateCommand(String appId, String serviceId, ServiceCommand serviceCommand, boolean fromTemplate) {
-    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("Service was deleted", service, USER);
 
     UpdateOperations<ServiceCommand> updateOperation = wingsPersistence.createUpdateOperations(ServiceCommand.class);
@@ -1287,7 +1287,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public Service getServiceWithServiceCommands(String appId, String serviceId) {
-    Service service = wingsPersistence.get(Service.class, appId, serviceId);
+    Service service = wingsPersistence.getWithAppId(Service.class, appId, serviceId);
     notNullCheck("service", service);
     service.setServiceCommands(getServiceCommands(appId, serviceId));
     service.getServiceCommands().forEach(serviceCommand
@@ -1391,7 +1391,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public ContainerTask getContainerTaskById(String appId, String containerTaskId) {
-    return wingsPersistence.get(ContainerTask.class, appId, containerTaskId);
+    return wingsPersistence.getWithAppId(ContainerTask.class, appId, containerTaskId);
   }
 
   @Override
@@ -1424,27 +1424,27 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public HelmChartSpecification getHelmChartSpecificationById(String appId, String helmChartSpecificationId) {
-    return wingsPersistence.get(HelmChartSpecification.class, appId, helmChartSpecificationId);
+    return wingsPersistence.getWithAppId(HelmChartSpecification.class, appId, helmChartSpecificationId);
   }
 
   @Override
   public PcfServiceSpecification getPcfServiceSpecificationById(String appId, String pcfServiceSpecificationId) {
-    return wingsPersistence.get(PcfServiceSpecification.class, appId, pcfServiceSpecificationId);
+    return wingsPersistence.getWithAppId(PcfServiceSpecification.class, appId, pcfServiceSpecificationId);
   }
 
   @Override
   public LambdaSpecification getLambdaSpecificationById(String appId, String lambdaSpecificationId) {
-    return wingsPersistence.get(LambdaSpecification.class, appId, lambdaSpecificationId);
+    return wingsPersistence.getWithAppId(LambdaSpecification.class, appId, lambdaSpecificationId);
   }
 
   @Override
   public UserDataSpecification getUserDataSpecificationById(String appId, String userDataSpecificationId) {
-    return wingsPersistence.get(UserDataSpecification.class, appId, userDataSpecificationId);
+    return wingsPersistence.getWithAppId(UserDataSpecification.class, appId, userDataSpecificationId);
   }
 
   @Override
   public Map<String, String> getData(String appId, Map<String, String> params) {
-    Service service = wingsPersistence.get(Service.class, appId, params.get(EntityType.SERVICE.name()));
+    Service service = wingsPersistence.getWithAppId(Service.class, appId, params.get(EntityType.SERVICE.name()));
     if (service == null) {
       return emptyMap();
     }
