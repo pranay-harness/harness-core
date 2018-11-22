@@ -318,9 +318,9 @@ public abstract class TerraformProvisionState extends State {
 
   protected GitConfig getGitConfig(String sourceRepoSettingId) {
     SettingAttribute gitSettingAttribute = settingsService.get(sourceRepoSettingId);
-    Validator.notNullCheck("gitSettingAttribute", gitSettingAttribute);
+    Validator.notNullCheck("Git connector not found", gitSettingAttribute);
     if (!(gitSettingAttribute.getValue() instanceof GitConfig)) {
-      throw new InvalidRequestException("");
+      throw new InvalidRequestException("Invalid Git Repo");
     }
 
     GitConfig gitConfig = (GitConfig) gitSettingAttribute.getValue();
