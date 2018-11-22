@@ -27,6 +27,7 @@ import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.yaml.BaseEntityYaml;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -359,5 +360,13 @@ public abstract class InfrastructureMapping extends Base implements EncryptableS
       this.computeProviderType = computeProviderType;
       this.computeProviderName = computeProviderName;
     }
+  }
+
+  protected List<String> getList(Object input) {
+    if (input instanceof String) {
+      return Arrays.asList(((String) input).split(","));
+    }
+
+    return (List<String>) input;
   }
 }

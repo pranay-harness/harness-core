@@ -8,7 +8,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
+import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.InfrastructureMappingBlueprint.NodeFilteringType;
 import software.wings.stencils.EnumData;
 import software.wings.utils.Util;
@@ -31,18 +31,14 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
     super(InfrastructureMappingType.AWS_AWS_LAMBDA.name());
   }
 
-  @Override
-  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {}
-
   @Attributes(title = "Region", required = true)
-  @NotEmpty
   @EnumData(enumDataProvider = AwsInfrastructureMapping.AwsRegionDataProvider.class)
   private String region;
 
   @Attributes(title = "VPC") private String vpcId;
   @Attributes(title = "Subnets") private List<String> subnetIds = new ArrayList<>();
   @Attributes(title = "Security Groups") private List<String> securityGroupIds = new ArrayList<>();
-  @Attributes(title = " IAM role") @NotEmpty private String role;
+  @Attributes(title = " IAM role") private String role;
 
   @SchemaIgnore
   @Override
@@ -56,7 +52,60 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
   public String getDefaultName() {
     return Util.normalize(format("%s (AWS_Lambda) %s",
         Optional.ofNullable(this.getComputeProviderName()).orElse(this.getComputeProviderType().toLowerCase()),
-        this.getRegion()));
+        StringUtils.isEmpty(getProvisionerId()) ? this.getRegion() : ""));
+  }
+
+  @Override
+  public void applyProvisionerVariables(Map<String, Object> map, NodeFilteringType nodeFilteringType) {
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      switch (entry.getKey()) {
+        case "region":
+          try {
+            setRegion((String) entry.getValue());
+          } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Region should be of String type. Found : " + entry.getValue());
+          }
+          break;
+        case "role":
+          try {
+            setRole((String) entry.getValue());
+          } catch (ClassCastException e) {
+            throw new IllegalArgumentException("IAM Role should be of String type. Found : " + entry.getValue());
+          }
+          break;
+        case "vpcId":
+          try {
+            setVpcId((String) entry.getValue());
+          } catch (ClassCastException e) {
+            throw new IllegalArgumentException("Vpc Id should be of String type. Found : " + entry.getValue());
+          }
+          break;
+        case "subnetIds":
+          try {
+            setSubnetIds(getList(entry.getValue()));
+          } catch (ClassCastException e) {
+            throw new IllegalArgumentException(
+                "Subnet Ids should be of List or comma-separated String type. Found : " + entry.getValue());
+          }
+          break;
+        case "securityGroups":
+          try {
+            setSecurityGroupIds(getList(entry.getValue()));
+          } catch (ClassCastException e) {
+            throw new IllegalArgumentException(
+                "Security Groups should be of List or comma-separated String type. Found : " + entry.getValue());
+          }
+          break;
+        default:
+          throw new IllegalArgumentException("UnSupported Provisioner Mapping " + entry.getKey());
+      }
+    }
+    if (StringUtils.isEmpty(region)) {
+      throw new IllegalArgumentException("Region Mapping is Required");
+    }
+    if (StringUtils.isEmpty(role)) {
+      throw new IllegalArgumentException("Role Mapping is Required");
+    }
   }
 
   @Data

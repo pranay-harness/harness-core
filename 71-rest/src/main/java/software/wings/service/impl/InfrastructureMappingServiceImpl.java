@@ -274,6 +274,10 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (infraMapping instanceof PcfInfrastructureMapping) {
       validatePcfInfrastructureMapping((PcfInfrastructureMapping) infraMapping);
     }
+
+    if (infraMapping instanceof AwsLambdaInfraStructureMapping) {
+      validateAwsLambdaInfrastructureMapping((AwsLambdaInfraStructureMapping) infraMapping);
+    }
   }
 
   @Override
@@ -795,15 +799,14 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   }
 
   private void validateAwsLambdaInfrastructureMapping(AwsLambdaInfraStructureMapping lambdaInfraStructureMapping) {
-    if (lambdaInfraStructureMapping.getVpcId() != null) {
-      if (lambdaInfraStructureMapping.getSubnetIds().isEmpty()) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "At least one subnet must be provided");
-      }
-      if (lambdaInfraStructureMapping.getSecurityGroupIds().isEmpty()) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args", "At least one security group must be provided");
-      }
+    if (!StringUtils.isEmpty(lambdaInfraStructureMapping.getProvisionerId())) {
+      return;
+    }
+    if (StringUtils.isEmpty(lambdaInfraStructureMapping.getRegion())) {
+      throw new InvalidRequestException("Region is mandatory");
+    }
+    if (StringUtils.isEmpty(lambdaInfraStructureMapping.getRole())) {
+      throw new InvalidRequestException("IAM Role is mandatory");
     }
   }
 
