@@ -731,7 +731,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
   @Override
   public InfrastructureMapping get(String appId, String infraMappingId) {
-    return wingsPersistence.get(InfrastructureMapping.class, appId, infraMappingId);
+    return wingsPersistence.getWithAppId(InfrastructureMapping.class, appId, infraMappingId);
   }
 
   private void handlePcfInfraMapping(

@@ -158,7 +158,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger get(String appId, String triggerId) {
-    return wingsPersistence.get(Trigger.class, appId, triggerId);
+    return wingsPersistence.getWithAppId(Trigger.class, appId, triggerId);
   }
 
   @Override
@@ -175,7 +175,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public Trigger update(Trigger trigger) {
-    Trigger existingTrigger = wingsPersistence.get(Trigger.class, trigger.getAppId(), trigger.getUuid());
+    Trigger existingTrigger = wingsPersistence.getWithAppId(Trigger.class, trigger.getAppId(), trigger.getUuid());
     notNullCheck("Trigger was deleted ", existingTrigger, USER);
     equalCheck(trigger.getWorkflowType(), existingTrigger.getWorkflowType());
 
@@ -194,7 +194,7 @@ public class TriggerServiceImpl implements TriggerService {
 
   @Override
   public WebHookToken generateWebHookToken(String appId, String triggerId) {
-    Trigger trigger = wingsPersistence.get(Trigger.class, appId, triggerId);
+    Trigger trigger = wingsPersistence.getWithAppId(Trigger.class, appId, triggerId);
     notNullCheck("Trigger was deleted", trigger, USER);
     return generateWebHookToken(trigger, null);
   }

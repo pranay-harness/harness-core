@@ -234,8 +234,8 @@ public class AnalysisServiceImpl implements AnalysisService {
       deleteFeedbackHelper(feedback.getLogMLFeedbackId());
     }
 
-    StateExecutionInstance stateExecutionInstance =
-        wingsPersistence.get(StateExecutionInstance.class, feedback.getAppId(), feedback.getStateExecutionId());
+    StateExecutionInstance stateExecutionInstance = wingsPersistence.getWithAppId(
+        StateExecutionInstance.class, feedback.getAppId(), feedback.getStateExecutionId());
 
     if (stateExecutionInstance == null) {
       throw new WingsException("Unable to find state execution for id " + feedback.getStateExecutionId());

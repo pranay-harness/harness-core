@@ -178,7 +178,8 @@ public class ActivityServiceTest extends WingsBaseTest {
                             .build();
     activity.setAppId(APP_ID);
     activityService.save(activity);
-    assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
+    assertThat(wingsPersistence.getWithAppId(Activity.class, activity.getAppId(), activity.getUuid()))
+        .isEqualTo(activity);
     verify(serviceInstanceService).updateActivity(activity);
     verify(eventEmitter)
         .send(Channel.ACTIVITIES,
@@ -341,7 +342,8 @@ public class ActivityServiceTest extends WingsBaseTest {
     activity.setAppId(APP_ID);
     activity.setUuid(ACTIVITY_ID);
     activityService.save(activity);
-    assertThat(wingsPersistence.get(Activity.class, activity.getAppId(), activity.getUuid())).isEqualTo(activity);
+    assertThat(wingsPersistence.getWithAppId(Activity.class, activity.getAppId(), activity.getUuid()))
+        .isEqualTo(activity);
     verify(eventEmitter)
         .send(Channel.ACTIVITIES,
             anEvent()

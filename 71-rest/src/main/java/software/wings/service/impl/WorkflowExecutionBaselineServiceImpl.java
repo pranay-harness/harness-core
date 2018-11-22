@@ -96,14 +96,16 @@ public class WorkflowExecutionBaselineServiceImpl implements WorkflowExecutionBa
 
   private void markPipelineWorkflowBaselineIfNecessary(WorkflowExecutionBaseline baseline, boolean isBaseline) {
     WorkflowExecution execution =
-        wingsPersistence.get(WorkflowExecution.class, baseline.getAppId(), baseline.getWorkflowExecutionId());
+        wingsPersistence.getWithAppId(WorkflowExecution.class, baseline.getAppId(), baseline.getWorkflowExecutionId());
     if (isEmpty(execution.getPipelineExecutionId())) {
       return;
     }
 
     WorkflowExecution workflowExecution = isEmpty(baseline.getPipelineExecutionId())
-        ? wingsPersistence.get(WorkflowExecution.class, baseline.getAppId(), execution.getPipelineExecutionId())
-        : wingsPersistence.get(WorkflowExecution.class, baseline.getAppId(), baseline.getPipelineExecutionId());
+        ? wingsPersistence.getWithAppId(
+              WorkflowExecution.class, baseline.getAppId(), execution.getPipelineExecutionId())
+        : wingsPersistence.getWithAppId(
+              WorkflowExecution.class, baseline.getAppId(), baseline.getPipelineExecutionId());
     if (workflowExecution == null) {
       return;
     }

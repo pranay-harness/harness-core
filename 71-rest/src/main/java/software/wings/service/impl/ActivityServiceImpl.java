@@ -65,7 +65,7 @@ public class ActivityServiceImpl implements ActivityService {
 
   @Override
   public Activity get(String id, String appId) {
-    Activity activity = wingsPersistence.get(Activity.class, appId, id);
+    Activity activity = wingsPersistence.getWithAppId(Activity.class, appId, id);
     if (activity == null) {
       throw new WingsException(INVALID_ARGUMENT, ADMIN).addParam("args", "Activity doesn't exist");
     }

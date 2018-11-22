@@ -31,7 +31,7 @@ public class CommandServiceImpl implements CommandService {
 
   @Override
   public ServiceCommand getServiceCommand(String appId, String serviceCommandId) {
-    return wingsPersistence.get(ServiceCommand.class, appId, serviceCommandId);
+    return wingsPersistence.getWithAppId(ServiceCommand.class, appId, serviceCommandId);
   }
 
   @Override

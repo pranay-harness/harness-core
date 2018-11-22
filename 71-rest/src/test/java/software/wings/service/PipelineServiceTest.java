@@ -253,7 +253,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     pipeline.setName("Changed Pipeline");
     pipeline.setDescription("Description changed");
 
-    when(wingsPersistence.get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
+    when(wingsPersistence.getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid())).thenReturn(pipeline);
 
     Pipeline updatedPipeline = pipelineService.update(pipeline);
 
@@ -263,7 +263,7 @@ public class PipelineServiceTest extends WingsBaseTest {
         .doesNotContainNull()
         .contains(asList(failureStrategy));
 
-    verify(wingsPersistence, times(2)).get(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
+    verify(wingsPersistence, times(2)).getWithAppId(Pipeline.class, pipeline.getAppId(), pipeline.getUuid());
     verify(wingsPersistence).createQuery(Pipeline.class);
     verify(pipelineQuery, times(2)).filter(any(), any());
     verify(wingsPersistence).createUpdateOperations(Pipeline.class);
@@ -285,7 +285,7 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, false);
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
@@ -302,7 +302,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     Pipeline pipeline = pipelineService.readPipeline(APP_ID, PIPELINE_ID, true);
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
@@ -326,12 +326,12 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
     assertThat(pipeline.getEnvIds()).hasSize(1).contains(ENV_ID);
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
   public void shouldNotIncludeDisableStepServices() {
-    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+    when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(
             Pipeline.builder()
                 .appId(APP_ID)
@@ -385,12 +385,12 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").doesNotContain(asList("DISABLE_STEP_SERVICE_ID"));
     assertThat(pipeline.getEnvIds()).hasSize(0).doesNotContain(ENV_ID);
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
   public void shouldGetPipelineWithTemplatizedServices() {
-    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+    when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(
             Pipeline.builder()
                 .appId(APP_ID)
@@ -429,12 +429,12 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
 
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
   public void shouldReadPipelineWithNoPipelineVariables() {
-    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+    when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(
             Pipeline.builder()
                 .appId(APP_ID)
@@ -473,7 +473,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(pipeline).isNotNull().hasFieldOrPropertyWithValue("uuid", PIPELINE_ID);
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
 
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
@@ -500,7 +500,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     pipelineWithVariables.getPipelineVariables().add(
         aVariable().withEntityType(INFRASTRUCTURE_MAPPING).withName("INFRA").build());
 
-    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID)).thenReturn(pipelineWithVariables);
+    when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID)).thenReturn(pipelineWithVariables);
 
     when(workflowService.readWorkflow(APP_ID, WORKFLOW_ID))
         .thenReturn(
@@ -536,7 +536,7 @@ public class PipelineServiceTest extends WingsBaseTest {
         .containsValues(ENV_ID, SERVICE_ID, INFRA_MAPPING_ID, "MyValue");
     assertThat(pipeline.getServices()).hasSize(1).extracting("uuid").isEqualTo(asList(SERVICE_ID));
 
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
@@ -604,7 +604,8 @@ public class PipelineServiceTest extends WingsBaseTest {
 
     when(pipelineIterator.next()).thenReturn(pipeline);
 
-    when(wingsPersistence.get(Workflow.class, APP_ID, WORKFLOW_ID)).thenReturn(aWorkflow().withEnvId(ENV_ID).build());
+    when(wingsPersistence.getWithAppId(Workflow.class, APP_ID, WORKFLOW_ID))
+        .thenReturn(aWorkflow().withEnvId(ENV_ID).build());
 
     List<String> refPipelines = pipelineService.obtainPipelineNamesReferencedByEnvironment(APP_ID, ENV_ID);
     assertThat(!refPipelines.isEmpty() && refPipelines.size() > 0).isTrue();
@@ -910,7 +911,7 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(requiredEntities).isNotEmpty().contains(ARTIFACT, SSH_USER, SSH_PASSWORD);
 
     verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
@@ -929,12 +930,12 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(requiredEntities).isEmpty();
 
     verify(workflowService).readWorkflow(APP_ID, WORKFLOW_ID);
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   @Test
   public void shouldNotIncludeRequiredEntitiesForDisabledStep() {
-    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+    when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(Pipeline.builder()
                         .appId(APP_ID)
                         .uuid(PIPELINE_ID)
@@ -970,11 +971,11 @@ public class PipelineServiceTest extends WingsBaseTest {
     assertThat(requiredEntities).isEmpty();
 
     verify(workflowService, times(0)).readWorkflow(APP_ID, WORKFLOW_ID);
-    verify(wingsPersistence).get(Pipeline.class, APP_ID, PIPELINE_ID);
+    verify(wingsPersistence).getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID);
   }
 
   private void mockPipeline() {
-    when(wingsPersistence.get(Pipeline.class, APP_ID, PIPELINE_ID))
+    when(wingsPersistence.getWithAppId(Pipeline.class, APP_ID, PIPELINE_ID))
         .thenReturn(Pipeline.builder()
                         .appId(APP_ID)
                         .uuid(PIPELINE_ID)

@@ -102,8 +102,8 @@ public class ExecutionInterruptManager {
         throw new WingsException(INVALID_ARGUMENT).addParam("args", "null stateExecutionInstanceId");
       }
 
-      stateExecutionInstance = wingsPersistence.get(StateExecutionInstance.class, executionInterrupt.getAppId(),
-          executionInterrupt.getStateExecutionInstanceId());
+      stateExecutionInstance = wingsPersistence.getWithAppId(StateExecutionInstance.class,
+          executionInterrupt.getAppId(), executionInterrupt.getStateExecutionInstanceId());
       if (stateExecutionInstance == null) {
         throw new WingsException(INVALID_ARGUMENT, USER)
             .addParam("args", "invalid stateExecutionInstanceId: " + executionInterrupt.getStateExecutionInstanceId());
@@ -233,7 +233,7 @@ public class ExecutionInterruptManager {
 
   private void sendNotification(ExecutionInterrupt executionInterrupt, ExecutionStatus status) {
     try {
-      WorkflowExecution workflowExecution = wingsPersistence.get(
+      WorkflowExecution workflowExecution = wingsPersistence.getWithAppId(
           WorkflowExecution.class, executionInterrupt.getAppId(), executionInterrupt.getExecutionUuid());
       PageRequest<StateExecutionInstance> pageRequest =
           aPageRequest()
@@ -251,7 +251,7 @@ public class ExecutionInterruptManager {
         logger.error("No StateExecutionInstance found for sendNotification");
         return;
       }
-      StateMachine sm = wingsPersistence.get(
+      StateMachine sm = wingsPersistence.getWithAppId(
           StateMachine.class, executionInterrupt.getAppId(), pageResponse.get(0).getStateMachineId());
       ExecutionContextImpl context = new ExecutionContextImpl(pageResponse.get(0), sm, injector);
       injector.injectMembers(context);

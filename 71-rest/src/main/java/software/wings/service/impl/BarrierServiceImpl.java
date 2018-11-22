@@ -76,7 +76,7 @@ public class BarrierServiceImpl implements BarrierService, ForceProctor {
 
   @Override
   public BarrierInstance update(String appId, String barrierId) {
-    final BarrierInstance barrierInstance = wingsPersistence.get(BarrierInstance.class, appId, barrierId);
+    final BarrierInstance barrierInstance = wingsPersistence.getWithAppId(BarrierInstance.class, appId, barrierId);
     return update(barrierInstance);
   }
 

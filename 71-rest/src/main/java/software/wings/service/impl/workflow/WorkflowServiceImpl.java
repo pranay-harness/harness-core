@@ -473,12 +473,12 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public Workflow readWorkflowWithoutOrchestration(String appId, String workflowId) {
-    return wingsPersistence.get(Workflow.class, appId, workflowId);
+    return wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
   }
 
   @Override
   public Workflow readWorkflow(String appId, String workflowId, Integer version) {
-    Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
+    Workflow workflow = wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
     if (workflow == null) {
       return null;
     }
@@ -957,7 +957,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete, boolean syncFromGit) {
-    Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
+    Workflow workflow = wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
     if (workflow == null) {
       return true;
     }
@@ -2087,7 +2087,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public GraphNode readGraphNode(String appId, String workflowId, String nodeId) {
-    Workflow workflow = wingsPersistence.get(Workflow.class, appId, workflowId);
+    Workflow workflow = wingsPersistence.getWithAppId(Workflow.class, appId, workflowId);
     Validator.notNullCheck("Workflow was deleted", workflow, WingsException.USER);
 
     loadOrchestrationWorkflow(workflow, workflow.getDefaultVersion(), false);

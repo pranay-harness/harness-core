@@ -175,7 +175,7 @@ public class ServiceTemplateServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdateServiceTemplate() {
     ServiceTemplate template = builder.build();
-    when(wingsPersistence.get(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
+    when(wingsPersistence.getWithAppId(ServiceTemplate.class, APP_ID, TEMPLATE_ID)).thenReturn(template);
     when(infrastructureMappingService.list(any(PageRequest.class))).thenReturn(aPageResponse().build());
     when(environmentService.get(APP_ID, ENV_ID, false)).thenReturn(anEnvironment().build());
     templateService.update(template);

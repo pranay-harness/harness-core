@@ -103,7 +103,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
 
   @Override
   public NotificationGroup readNotificationGroup(String accountId, String notificationGroupId) {
-    return wingsPersistence.get(NotificationGroup.class, GLOBAL_APP_ID, notificationGroupId);
+    return wingsPersistence.getWithAppId(NotificationGroup.class, GLOBAL_APP_ID, notificationGroupId);
   }
 
   @Override
@@ -140,7 +140,7 @@ public class NotificationSetupServiceImpl implements NotificationSetupService {
   public NotificationGroup updateNotificationGroup(NotificationGroup notificationGroup) {
     checkIfChangeInDefaultNotificationGroup(notificationGroup);
     NotificationGroup existingGroup =
-        wingsPersistence.get(NotificationGroup.class, GLOBAL_APP_ID, notificationGroup.getUuid());
+        wingsPersistence.getWithAppId(NotificationGroup.class, GLOBAL_APP_ID, notificationGroup.getUuid());
     if (!existingGroup.isEditable()) {
       throw new InvalidRequestException("Default Notification Group can not be updated");
     }

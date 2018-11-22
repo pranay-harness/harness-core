@@ -308,7 +308,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.update(user);
     verify(wingsPersistence).update(user, updateOperations);
-    verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
+    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
     verify(cache).remove(USER_ID);
   }
 
@@ -323,7 +323,7 @@ public class UserServiceTest extends WingsBaseTest {
 
     userService.update(user);
     verify(wingsPersistence).update(user, updateOperations);
-    verify(wingsPersistence).get(User.class, APP_ID, USER_ID);
+    verify(wingsPersistence).getWithAppId(User.class, APP_ID, USER_ID);
     assertThat(user.getName()).isEqualTo("test");
     verify(cache).remove(USER_ID);
   }
@@ -464,7 +464,7 @@ public class UserServiceTest extends WingsBaseTest {
     userService.inviteUsers(userInvite);
     verify(accountService).get(ACCOUNT_ID);
     verify(wingsPersistence).save(any(UserInvite.class));
-    verify(wingsPersistence).get(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
+    verify(wingsPersistence).getWithAppId(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
     verify(cache).remove(USER_ID);
 
@@ -541,7 +541,7 @@ public class UserServiceTest extends WingsBaseTest {
     verify(end, times(2)).equal(USER_EMAIL);
     verify(accountService).get(ACCOUNT_ID);
     verify(wingsPersistence).save(userInvite);
-    verify(wingsPersistence).get(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
+    verify(wingsPersistence).getWithAppId(UserInvite.class, GLOBAL_APP_ID, USER_INVITE_ID);
   }
 
   /**

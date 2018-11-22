@@ -98,12 +98,12 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends Base> T get(Class<T> cls, String appId, String id) {
-    return get(cls, appId, id, NORMAL);
+  public <T extends Base> T getWithAppId(Class<T> cls, String appId, String id) {
+    return getWithAppId(cls, appId, id, NORMAL);
   }
 
   @Override
-  public <T extends Base> T get(Class<T> cls, String appId, String id, ReadPref readPref) {
+  public <T extends Base> T getWithAppId(Class<T> cls, String appId, String id, ReadPref readPref) {
     return createQuery(cls, readPref).filter("appId", appId).filter(ID_KEY, id).get();
   }
 

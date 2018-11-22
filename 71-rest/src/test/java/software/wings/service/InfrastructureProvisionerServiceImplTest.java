@@ -76,7 +76,7 @@ public class InfrastructureProvisionerServiceImplTest extends WingsBaseTest {
             .build();
     doReturn(infrastructureProvisioner)
         .when(wingsPersistence)
-        .get(eq(InfrastructureProvisioner.class), anyString(), anyString());
+        .getWithAppId(eq(InfrastructureProvisioner.class), anyString(), anyString());
     doReturn(query).when(wingsPersistence).createQuery(eq(InfrastructureMapping.class));
     doReturn(query).doReturn(query).when(query).filter(anyString(), any());
     doReturn(infrastructureMappings).when(query).fetch();

@@ -44,7 +44,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     if (query.get() == null) {
       synchronized (deploymentKey) {
         String key = wingsPersistence.save(deploymentSummary);
-        return wingsPersistence.get(DeploymentSummary.class, deploymentSummary.getAppId(), key);
+        return wingsPersistence.getWithAppId(DeploymentSummary.class, deploymentSummary.getAppId(), key);
       }
     }
 

@@ -98,7 +98,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public ArtifactStream get(String appId, String artifactStreamId) {
-    return wingsPersistence.get(ArtifactStream.class, appId, artifactStreamId);
+    return wingsPersistence.getWithAppId(ArtifactStream.class, appId, artifactStreamId);
   }
 
   @Override
@@ -167,7 +167,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
   @ValidationGroups(Update.class)
   public ArtifactStream update(ArtifactStream artifactStream) {
     ArtifactStream savedArtifactStream =
-        wingsPersistence.get(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
+        wingsPersistence.getWithAppId(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
     if (savedArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
@@ -177,7 +177,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   public ArtifactStream forceUpdate(ArtifactStream artifactStream) {
     ArtifactStream savedArtifactStream =
-        wingsPersistence.get(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
+        wingsPersistence.getWithAppId(ArtifactStream.class, artifactStream.getAppId(), artifactStream.getUuid());
     if (savedArtifactStream == null) {
       throw new NotFoundException("Artifact stream with id " + artifactStream.getUuid() + " not found");
     }
@@ -270,7 +270,7 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
 
   @Override
   public Map<String, String> fetchArtifactSourceProperties(String accountId, String appId, String artifactStreamId) {
-    ArtifactStream artifactStream = wingsPersistence.get(ArtifactStream.class, appId, artifactStreamId);
+    ArtifactStream artifactStream = wingsPersistence.getWithAppId(ArtifactStream.class, appId, artifactStreamId);
     Map<String, String> artifactSourceProperties = new HashMap<>();
     if (artifactStream == null) {
       logger.warn("Failed to construct artifact source properties. Artifact Stream {} was deleted", artifactStreamId);

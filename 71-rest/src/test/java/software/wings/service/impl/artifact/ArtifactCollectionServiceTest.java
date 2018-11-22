@@ -69,7 +69,7 @@ public class ArtifactCollectionServiceTest extends WingsBaseTest {
 
   @Before
   public void setUp() {
-    when(wingsPersistence.get(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
+    when(wingsPersistence.getWithAppId(Artifact.class, APP_ID, ARTIFACT_ID)).thenReturn(artifact);
   }
 
   @Test

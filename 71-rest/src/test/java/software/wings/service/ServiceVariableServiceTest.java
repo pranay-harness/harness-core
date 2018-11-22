@@ -175,9 +175,9 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     ServiceVariable variable = ServiceVariable.builder().build();
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     ServiceVariable serviceVariable = serviceVariableService.get(APP_ID, SERVICE_VARIABLE_ID);
-    verify(wingsPersistence).get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID);
+    verify(wingsPersistence).getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID);
     assertThat(serviceVariable.getUuid()).isEqualTo(SERVICE_VARIABLE_ID);
   }
 
@@ -197,7 +197,8 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     PageResponse<ServiceVariable> resp = new PageResponse<>();
     resp.setResponse(asList(SERVICE_VARIABLE));
     when(wingsPersistence.query(ServiceVariable.class, request)).thenReturn(resp);
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(SERVICE_VARIABLE);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID))
+        .thenReturn(SERVICE_VARIABLE);
     List<ServiceVariable> serviceVariables =
         serviceVariableService.getServiceVariablesByTemplate(APP_ID, ENV_ID, serviceTemplate, OBTAIN_VALUE);
 
@@ -219,7 +220,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
 
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     serviceVariableService.update(variable);
     verify(wingsPersistence, times(0))
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID, ImmutableMap.of("type", TEXT));
@@ -239,7 +240,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     serviceVariableService.update(variable);
 
     verify(wingsPersistence, times(0))
@@ -261,7 +262,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     serviceVariableService.update(variable);
 
     verify(wingsPersistence, times(0))
@@ -283,7 +284,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
 
     String secondVariableId = "SERVICE_VARIABLE_ID";
     ServiceVariable variable2 =
@@ -291,7 +292,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     variable.setAppId(APP_ID);
     variable.setUuid(secondVariableId);
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, secondVariableId)).thenReturn(variable2);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, secondVariableId)).thenReturn(variable2);
     serviceVariableService.update(variable);
   }
 
@@ -309,7 +310,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
 
     String secondVariableName = "SERVICE_VARIABLE_NAME_2";
     String secondVariableId = "SERVICE_VARIABLE_ID";
@@ -322,7 +323,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
 
     variable.setAppId(APP_ID);
     variable.setUuid(secondVariableId);
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, secondVariableId)).thenReturn(variable2);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, secondVariableId)).thenReturn(variable2);
     serviceVariableService.update(variable);
   }
 
@@ -340,7 +341,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
 
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     serviceVariableService.update(variable);
     verify(wingsPersistence)
         .updateFields(ServiceVariable.class, SERVICE_VARIABLE_ID,
@@ -356,7 +357,7 @@ public class ServiceVariableServiceTest extends WingsBaseTest {
     variable.setAppId(APP_ID);
     variable.setUuid(SERVICE_VARIABLE_ID);
 
-    when(wingsPersistence.get(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
+    when(wingsPersistence.getWithAppId(ServiceVariable.class, APP_ID, SERVICE_VARIABLE_ID)).thenReturn(variable);
     when(wingsPersistence.delete(any(Query.class))).thenReturn(false);
     when(wingsPersistence.createQuery(ServiceVariable.class)).thenReturn(query);
     when(wingsPersistence.createUpdateOperations(ServiceVariable.class)).thenReturn(updateOperations);

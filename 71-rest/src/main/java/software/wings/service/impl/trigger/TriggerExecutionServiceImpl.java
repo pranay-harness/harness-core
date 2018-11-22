@@ -29,7 +29,7 @@ public class TriggerExecutionServiceImpl implements TriggerExecutionService {
 
   @Override
   public TriggerExecution get(String appId, String triggerExecutionId) {
-    return wingsPersistence.get(TriggerExecution.class, appId, triggerExecutionId);
+    return wingsPersistence.getWithAppId(TriggerExecution.class, appId, triggerExecutionId);
   }
 
   @Override

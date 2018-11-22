@@ -190,7 +190,7 @@ public class ConfigServiceImpl implements ConfigService {
    */
   @Override
   public ConfigFile get(String appId, String configId) {
-    ConfigFile configFile = wingsPersistence.get(ConfigFile.class, appId, configId);
+    ConfigFile configFile = wingsPersistence.getWithAppId(ConfigFile.class, appId, configId);
     if (configFile == null) {
       throw new WingsException(INVALID_ARGUMENT).addParam("args", "ConfigFile not found");
     }

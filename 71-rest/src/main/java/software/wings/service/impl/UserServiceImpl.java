@@ -516,7 +516,7 @@ public class UserServiceImpl implements UserService {
       userGroups = pageResponse.getResponse();
       addUserToUserGroups(accountId, user, userGroups, sendNotification);
     }
-    return wingsPersistence.get(UserInvite.class, userInvite.getAppId(), inviteId);
+    return wingsPersistence.getWithAppId(UserInvite.class, userInvite.getAppId(), inviteId);
   }
 
   private void addUserToUserGroups(String accountId, User user, List<UserGroup> userGroups, boolean sendNotification) {
@@ -1001,7 +1001,7 @@ public class UserServiceImpl implements UserService {
 
     wingsPersistence.update(user, updateOperations);
     evictUserFromCache(user.getUuid());
-    return wingsPersistence.get(User.class, user.getAppId(), user.getUuid());
+    return wingsPersistence.getWithAppId(User.class, user.getAppId(), user.getUuid());
   }
 
   @Override
