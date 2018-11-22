@@ -1,37 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>81-delegate</artifactId>
-
     <parent>
         <groupId>software.wings</groupId>
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-
+    <artifactId>81-delegate</artifactId>
     <dependencies>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>62-rest-utils</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.squareup.retrofit2</groupId>
-            <artifactId>retrofit</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.squareup.retrofit2</groupId>
-            <artifactId>converter-jackson</artifactId>
-            <version>2.1.0</version>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <version>2.5.2</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -43,38 +23,17 @@
             <artifactId>nimbus-jose-jwt</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.squareup.retrofit2</groupId>
+            <artifactId>converter-jackson</artifactId>
+            <version>2.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup.retrofit2</groupId>
+            <artifactId>retrofit</artifactId>
+        </dependency>
+        <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>71-rest</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.zeroturnaround</groupId>
-            <artifactId>zt-exec</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.atmosphere</groupId>
-            <artifactId>wasync</artifactId>
-            <version>2.1.5</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <version>2.5.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -82,17 +41,75 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>wasync</artifactId>
+            <version>2.1.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.zeroturnaround</groupId>
+            <artifactId>zt-exec</artifactId>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>11-commons-test</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>12-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>62-rest-utils</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>71-rest</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
     </dependencies>
-
     <build>
         <finalName>delegate</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+            <resource>
+                <targetPath>mailtemplates/</targetPath>
+                <directory>../rest/src/main/resources/mailtemplates</directory>
+            </resource>
+        </resources>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <configuration>
+                    <mainClass>software.wings.delegate.app.DelegateApplication</mainClass>
+                    <arguments>
+                        <argument>./config-delegate.yml</argument>
+                    </arguments>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>sg.enixsoft</groupId>
                 <artifactId>capsule-maven-plugin</artifactId>
@@ -136,36 +153,8 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>1.6.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>java</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <mainClass>software.wings.delegate.app.DelegateApplication</mainClass>
-                    <arguments>
-                        <argument>./config-delegate.yml</argument>
-                    </arguments>
-                </configuration>
-            </plugin>
         </plugins>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
-            <resource>
-                <directory>../rest/src/main/resources/mailtemplates</directory>
-                <targetPath>mailtemplates/</targetPath>
-            </resource>
-        </resources>
     </build>
-
     <profiles>
         <profile>
             <id>deploy-int</id>
@@ -176,17 +165,17 @@
                 </property>
             </activation>
             <properties>
-                <deployHost>ec2-50-16-106-255.compute-1.amazonaws.com</deployHost>
-                <deployUsername>ubuntu</deployUsername>
                 <accountId>kmpySmUISimoRrJL6NL73w</accountId>
                 <accountSecret>2f6b0988b6fb3370073c3d0505baee59</accountSecret>
-                <checkstyle.skip>true</checkstyle.skip>
-                <skipTests>true</skipTests>
-                <jacoco.skip>true</jacoco.skip>
-                <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
-                <managerHost>wingsci-api.wings.software</managerHost>
                 <app.name>CI Delegate</app.name>
+                <checkstyle.skip>true</checkstyle.skip>
+                <deployHost>ec2-50-16-106-255.compute-1.amazonaws.com</deployHost>
+                <deployUsername>ubuntu</deployUsername>
+                <embedmongo.skip>true</embedmongo.skip>
+                <findbugs.skip>true</findbugs.skip>
+                <jacoco.skip>true</jacoco.skip>
+                <managerHost>wingsci-api.wings.software</managerHost>
+                <skipTests>true</skipTests>
             </properties>
         </profile>
         <profile>
@@ -198,19 +187,18 @@
                 </property>
             </activation>
             <properties>
-                <deployHost>ec2-52-45-103-102.compute-1.amazonaws.com</deployHost>
-                <deployUsername>ubuntu</deployUsername>
                 <accountId>kmpySmUISimoRrJL6NL73w</accountId>
                 <accountSecret>2f6b0988b6fb3370073c3d0505baee59</accountSecret>
-                <checkstyle.skip>true</checkstyle.skip>
-                <skipTests>true</skipTests>
-                <jacoco.skip>true</jacoco.skip>
-                <findbugs.skip>true</findbugs.skip>
-                <embedmongo.skip>true</embedmongo.skip>
-                <managerHost>demo-api.wings.software</managerHost>
                 <app.name>Demo Delegate</app.name>
+                <checkstyle.skip>true</checkstyle.skip>
+                <deployHost>ec2-52-45-103-102.compute-1.amazonaws.com</deployHost>
+                <deployUsername>ubuntu</deployUsername>
+                <embedmongo.skip>true</embedmongo.skip>
+                <findbugs.skip>true</findbugs.skip>
+                <jacoco.skip>true</jacoco.skip>
+                <managerHost>demo-api.wings.software</managerHost>
+                <skipTests>true</skipTests>
             </properties>
         </profile>
     </profiles>
-
 </project>

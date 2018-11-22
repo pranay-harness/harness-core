@@ -2,6 +2,7 @@
 *.ipr
 *.iws
 *.orig
+*.xml.bak
 */delegate*.log
 */upgrade.sh
 .checkstyle
