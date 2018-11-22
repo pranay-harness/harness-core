@@ -3,7 +3,8 @@ package software.wings.waitnotify;
 import static com.google.common.collect.ImmutableMap.of;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static java.util.Arrays.asList;
+import static java.time.Duration.ofMinutes;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
@@ -16,13 +17,13 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
 import io.harness.threading.Concurrent;
+import io.harness.waiter.WaitQueue;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Listeners;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -215,7 +216,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
   @Test
   public void shouldCleanZombieNotifyResponse() {
     final NotifyResponse notifyResponse = new NotifyResponse(generateUuid(), null, false);
-    notifyResponse.setCreatedAt(System.currentTimeMillis() - Duration.ofMinutes(6).toMillis());
+    notifyResponse.setCreatedAt(System.currentTimeMillis() - ofMinutes(6).toMillis());
     String notificationId = wingsPersistence.save(notifyResponse);
 
     notifier.executeUnderLock();
@@ -227,7 +228,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
   public void shouldCleanZombieWaitQueue() {
     final WaitQueue waitQueue = WaitQueue.builder()
                                     .uuid(generateUuid())
-                                    .createdAt(System.currentTimeMillis() - Duration.ofMinutes(1).toMillis())
+                                    .createdAt(System.currentTimeMillis() - ofMinutes(1).toMillis())
                                     .waitInstanceId(generateUuid())
                                     .correlationId(generateUuid())
                                     .build();
@@ -236,7 +237,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
 
     notifyEventListener.onMessage(aNotifyEvent()
                                       .withWaitInstanceId(waitQueue.getWaitInstanceId())
-                                      .withCorrelationIds(asList(waitQueue.getCorrelationId()))
+                                      .withCorrelationIds(singletonList(waitQueue.getCorrelationId()))
                                       .build());
 
     assertThat(wingsPersistence.get(WaitQueue.class, waitQueueId)).isNull();

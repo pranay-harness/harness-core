@@ -16,6 +16,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.ReadPref;
+import io.harness.waiter.WaitQueue;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;

@@ -9,12 +9,12 @@ import com.mongodb.BulkWriteOperation;
 import com.mongodb.DBCollection;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
+import io.harness.waiter.WaitQueue;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
-import software.wings.waitnotify.WaitQueue;
 
 import java.time.Instant;
 import java.time.ZoneOffset;

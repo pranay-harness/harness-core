@@ -18,7 +18,7 @@ public class NoDefaultConstructorMorphiaObjectFactory extends DefaultCreator {
         return constructor.newInstance();
       }
       try {
-        if (clazz.getName().startsWith("software.wings")) {
+        if (clazz.getName().startsWith("software.wings") || clazz.getName().startsWith("io.harness")) {
           return objenesis.newInstance(clazz);
         } else {
           return super.createInstance(clazz);

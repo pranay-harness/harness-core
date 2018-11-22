@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.waiter.WaitQueue;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
@@ -101,7 +102,6 @@ import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyResponse;
 import software.wings.waitnotify.WaitInstance;
 import software.wings.waitnotify.WaitInstanceError;
-import software.wings.waitnotify.WaitQueue;
 import software.wings.yaml.YamlHistory;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.errorhandling.GitSyncError;
