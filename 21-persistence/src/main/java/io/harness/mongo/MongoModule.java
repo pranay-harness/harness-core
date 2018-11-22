@@ -230,8 +230,8 @@ public class MongoModule extends AbstractModule {
         // Alert for every index that left:
         .forEach(entry -> {
           Duration passed = Duration.between(ZonedDateTime.now().toInstant(), entry.getValue().getSince().toInstant());
-          logger.error(format("(work in progress alert): Index %s.%s is not used at for days %d", collection.getName(),
-              entry.getKey(), passed.toDays()));
+          logger.info(
+              format("Index %s.%s is not used at for days %d", collection.getName(), entry.getKey(), passed.toDays()));
         });
   }
 
