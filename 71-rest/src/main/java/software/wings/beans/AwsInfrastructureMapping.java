@@ -183,14 +183,6 @@ public class AwsInfrastructureMapping extends InfrastructureMapping {
     }
   }
 
-  private List<String> getList(Object input) {
-    if (input instanceof String) {
-      return Arrays.asList(((String) input).split(","));
-    }
-
-    return (List<String>) input;
-  }
-
   /**
    * The type Yaml.
    */
