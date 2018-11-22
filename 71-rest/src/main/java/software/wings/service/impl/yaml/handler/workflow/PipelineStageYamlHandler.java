@@ -17,6 +17,8 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
 import software.wings.beans.Environment;
 import software.wings.beans.InfrastructureMapping;
@@ -49,6 +51,7 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStage> {
+  private static final Logger logger = LoggerFactory.getLogger(PipelineStageYamlHandler.class);
   @Inject YamlHelper yamlHelper;
   @Inject WorkflowService workflowService;
   @Inject EnvironmentService environmentService;
@@ -81,22 +84,26 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
     if (!yaml.getType().equals(StateType.APPROVAL.name())) {
       workflow = workflowService.readWorkflowByName(appId, yaml.getWorkflowName());
       notNullCheck("Invalid workflow with the given name:" + yaml.getWorkflowName(), workflow, USER);
-
-      properties.put("envId", workflow.getEnvId());
       properties.put("workflowId", workflow.getUuid());
-
+      if (workflow.checkEnvironmentTemplatized()) {
+        logger.info("Workflow environment templatized. Workflow envId of appId {} and workflowId {} is {}", appId,
+            workflow.getUuid(), workflow.getEnvId());
+      }
+      properties.put("envId", workflow.getEnvId());
       if (isNotEmpty(yaml.getWorkflowVariables())) {
-        final String[] envId = {workflow.getEnvId()};
+        final String[] envId = new String[1];
         yaml.getWorkflowVariables().forEach((PipelineStage.WorkflowVariable variable) -> {
           String entityType = variable.getEntityType();
           String variableName = variable.getName();
           String variableValue = variable.getValue();
           if (entityType != null) {
-            if (matchesVariablePattern(variableValue)) {
-              workflowVariables.put(variableName, variableValue);
-              return;
-            }
             if (ENVIRONMENT.name().equals(entityType)) {
+              if (matchesVariablePattern(variableValue)) {
+                workflowVariables.put(variableName, variableValue);
+                logger.info("Environment parameterized in pipeline and the value is {}", variableValue);
+                properties.put("envId", variableValue);
+                return;
+              }
               Environment environment = environmentService.getEnvironmentByName(appId, variableValue, false);
               if (environment != null) {
                 envId[0] = environment.getUuid();
@@ -106,6 +113,10 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                 notNullCheck("Environment [" + variableValue + "] does not exist", environment, USER);
               }
             } else if (SERVICE.name().equals(entityType)) {
+              if (matchesVariablePattern(variableValue)) {
+                workflowVariables.put(variableName, variableValue);
+                return;
+              }
               Service service = serviceResourceService.getServiceByName(appId, variableValue, false);
               if (service != null) {
                 workflowVariables.put(variableName, service.getUuid());
@@ -113,6 +124,10 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
                 notNullCheck("Service [" + variableValue + "] does not exist", service, USER);
               }
             } else if (INFRASTRUCTURE_MAPPING.name().equals(entityType)) {
+              if (matchesVariablePattern(variableValue)) {
+                workflowVariables.put(variableName, variableValue);
+                return;
+              }
               InfrastructureMapping infrastructureMapping =
                   infrastructureMappingService.getInfraMappingByName(appId, envId[0], variableValue);
               if (infrastructureMapping != null) {
@@ -131,6 +146,8 @@ public class PipelineStageYamlHandler extends BaseYamlHandler<Yaml, PipelineStag
           }
         });
       }
+      logger.info("The pipeline env stage properties for appId {} wrokflowId {} are {}", appId, workflow.getUuid(),
+          String.valueOf(properties));
     } else if (StateType.APPROVAL.name().equals(yaml.getType())) {
       Map<String, Object> yamlProperties = yaml.getProperties();
 

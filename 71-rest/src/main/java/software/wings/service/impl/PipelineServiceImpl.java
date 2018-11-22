@@ -743,6 +743,8 @@ public class PipelineServiceImpl implements PipelineService {
         resolveServicesOfWorkflow(services, serviceIds, stageElement.getWorkflowVariables(), workflow);
         if (workflow.getOrchestrationWorkflow().getOrchestrationWorkflowType() != BUILD
             && isNullOrEmpty((String) stageElement.getProperties().get("envId"))) {
+          logger.info("It should not happen. If happens printing the properties of appId {} are {}",
+              pipeline.getAppId(), String.valueOf(stageElement.getProperties()));
           throw new WingsException(INVALID_ARGUMENT, USER)
               .addParam("args", "Environment can not be null for non-build state");
         }
