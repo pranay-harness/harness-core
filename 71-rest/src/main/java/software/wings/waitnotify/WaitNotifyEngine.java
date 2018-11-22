@@ -17,6 +17,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
+import io.harness.waiter.WaitQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,4 +1,4 @@
-package software.wings.waitnotify;
+package io.harness.waiter;
 
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
