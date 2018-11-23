@@ -1,5 +1,8 @@
 package io.harness.filesystem;
 
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
@@ -9,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.concurrent.TimeUnit;
 
 public class FileIo {
   public static void createDirectoryIfDoesNotExist(final String directoryPath) throws IOException {
@@ -51,5 +55,50 @@ public class FileIo {
 
   public static void writeFile(final String directoryPath, byte[] content) throws IOException {
     Files.write(Paths.get(directoryPath), content);
+  }
+
+  public static boolean acquireLock(File file) {
+    File lockFile = new File(file.getPath() + ".lock");
+    final long finishAt = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5);
+    boolean wasInterrupted = false;
+    try {
+      while (lockFile.exists()) {
+        final long remaining = finishAt - System.currentTimeMillis();
+        if (remaining < 0) {
+          break;
+        }
+        try {
+          Thread.sleep(Math.min(100, remaining));
+        } catch (InterruptedException e) {
+          wasInterrupted = true;
+          return false;
+        }
+      }
+      FileUtils.touch(lockFile);
+      return true;
+    } catch (Exception e) {
+      return false;
+    } finally {
+      if (wasInterrupted) {
+        Thread.currentThread().interrupt();
+      }
+    }
+  }
+
+  public static boolean releaseLock(File file) {
+    File lockFile = new File(file.getPath() + ".lock");
+    try {
+      if (lockFile.exists()) {
+        FileUtils.forceDelete(lockFile);
+      }
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  public static boolean isLocked(File file) {
+    File lockFile = new File(file.getPath() + ".lock");
+    return lockFile.exists();
   }
 }
