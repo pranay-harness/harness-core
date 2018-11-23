@@ -10,7 +10,6 @@ import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
 import io.prometheus.client.Histogram;
 import io.prometheus.client.Summary;
-import io.prometheus.client.dropwizard.DropwizardExports;
 import lombok.NoArgsConstructor;
 
 import java.util.Enumeration;
@@ -46,7 +45,7 @@ public class HarnessMetricRegistry {
   public HarnessMetricRegistry(MetricRegistry metricRegistry, CollectorRegistry collectorRegistry) {
     this.metricRegistry = metricRegistry;
     this.collectorRegistry = collectorRegistry;
-    this.collectorRegistry.register(new DropwizardExports(metricRegistry));
+    this.collectorRegistry.register(new CustomDropWizardExports(metricRegistry));
   }
 
   public void registerGaugeMetric(String metricName, String[] labels, String doc) {
