@@ -3,6 +3,9 @@ package software.wings.delegate.service;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.filesystem.FileIo.acquireLock;
+import static io.harness.filesystem.FileIo.isLocked;
+import static io.harness.filesystem.FileIo.releaseLock;
 import static io.harness.network.Localhost.getLocalHostAddress;
 import static io.harness.network.Localhost.getLocalHostName;
 import static io.harness.network.SafeHttpCall.execute;
@@ -66,7 +69,6 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.security.TokenGenerator;
-import io.harness.version.VersionInfo;
 import io.harness.version.VersionInfoManager;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody.Part;
@@ -199,7 +201,7 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("taskPollExecutor") private ScheduledExecutorService taskPollExecutor;
-  @Inject @Named("installCheckExecutor") private ScheduledExecutorService installCheckExecutor;
+  @Inject @Named("installCheckExecutor") private ScheduledExecutorService profileExecutor;
   @Inject @Named("systemExecutor") private ExecutorService systemExecutorService;
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutorService;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutorService;
@@ -228,7 +230,7 @@ public class DelegateServiceImpl implements DelegateService {
   private final AtomicBoolean upgradeNeeded = new AtomicBoolean(false);
   private final AtomicBoolean restartNeeded = new AtomicBoolean(false);
   private final AtomicBoolean acquireTasks = new AtomicBoolean(true);
-  private final AtomicBoolean initializing = new AtomicBoolean(false);
+  private final AtomicBoolean executingProfile = new AtomicBoolean(false);
   private final AtomicBoolean selfDestruct = new AtomicBoolean(false);
   private final AtomicBoolean multiVersionWatcherStarted = new AtomicBoolean(false);
   private final AtomicBoolean pollingForTasks = new AtomicBoolean(false);
@@ -593,7 +595,7 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void startProfileCheck() {
-    installCheckExecutor.scheduleWithFixedDelay(() -> {
+    profileExecutor.scheduleWithFixedDelay(() -> {
       boolean forCodeFormattingOnly; // This line is here for clang-format
       synchronized (this) {
         checkForProfile();
@@ -602,23 +604,19 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void checkForProfile() {
-    if (!initializing.get()) {
+    if (!executingProfile.get() && !isLocked(new File("profile"))) {
       try {
-        RestResponse<VersionInfo> versionInfo =
-            timeLimiter.callWithTimeout(() -> execute(managerClient.getManagerVersion()), 15L, TimeUnit.SECONDS, true);
-        if (versionInfo != null && versionInfo.getResource().getVersion().equals(getVersion())) {
-          logger.info("Checking for profile ...");
-          DelegateProfileParams profileParams = getProfile();
-          boolean resultExists = new File("profile.result").exists();
-          String profileId = profileParams == null ? "" : profileParams.getProfileId();
-          long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
-          RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
-              ()
-                  -> execute(managerClient.checkForProfile(delegateId, accountId, profileId, updated)),
-              15L, TimeUnit.SECONDS, true);
-          if (response != null) {
-            applyProfile(response.getResource());
-          }
+        logger.info("Checking for profile ...");
+        DelegateProfileParams profileParams = getProfile();
+        boolean resultExists = new File("profile.result").exists();
+        String profileId = profileParams == null ? "" : profileParams.getProfileId();
+        long updated = profileParams == null || !resultExists ? 0L : profileParams.getProfileLastUpdatedAt();
+        RestResponse<DelegateProfileParams> response = timeLimiter.callWithTimeout(
+            ()
+                -> execute(managerClient.checkForProfile(delegateId, accountId, profileId, updated)),
+            15L, TimeUnit.SECONDS, true);
+        if (response != null) {
+          applyProfile(response.getResource());
         }
       } catch (UncheckedTimeoutException ex) {
         logger.warn("Timed out checking for profile");
@@ -641,57 +639,62 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   private void applyProfile(DelegateProfileParams profile) {
-    if (profile != null && initializing.compareAndSet(false, true)) {
-      if ("NONE".equals(profile.getProfileId())) {
-        FileUtils.deleteQuietly(new File("profile"));
-        FileUtils.deleteQuietly(new File("profile.result"));
-        initializing.set(false);
-        return;
-      }
+    if (profile != null && executingProfile.compareAndSet(false, true)) {
+      File profileFile = new File("profile");
+      if (acquireLock(profileFile)) {
+        try {
+          if ("NONE".equals(profile.getProfileId())) {
+            FileUtils.deleteQuietly(profileFile);
+            FileUtils.deleteQuietly(new File("profile.result"));
+            return;
+          }
 
-      try {
-        logger.info("Updating delegate profile to [{} : {}], last update {} ...", profile.getProfileId(),
-            profile.getName(), profile.getProfileLastUpdatedAt());
-        String script = PROXY_SETUP + profile.getScriptContent();
+          logger.info("Updating delegate profile to [{} : {}], last update {} ...", profile.getProfileId(),
+              profile.getName(), profile.getProfileLastUpdatedAt());
+          String script = PROXY_SETUP + profile.getScriptContent();
 
-        Logger scriptLogger = LoggerFactory.getLogger("delegate-profile-" + profile.getProfileId());
-        scriptLogger.info("Executing profile script: {}", profile.getName());
-        List<String> result = new ArrayList<>();
+          Logger scriptLogger = LoggerFactory.getLogger("delegate-profile-" + profile.getProfileId());
+          scriptLogger.info("Executing profile script: {}", profile.getName());
+          List<String> result = new ArrayList<>();
 
-        ProcessExecutor processExecutor = new ProcessExecutor()
-                                              .timeout(10, TimeUnit.MINUTES)
-                                              .command("/bin/bash", "-c", script)
-                                              .readOutput(true)
-                                              .redirectOutput(new LogOutputStream() {
-                                                @Override
-                                                protected void processLine(String line) {
-                                                  scriptLogger.info(line);
-                                                  result.add(line);
-                                                }
-                                              })
-                                              .redirectError(new LogOutputStream() {
-                                                @Override
-                                                protected void processLine(String line) {
-                                                  scriptLogger.error(line);
-                                                  result.add("ERROR: " + line);
-                                                }
-                                              });
-        int exitCode = processExecutor.execute().getExitValue();
-        saveProfile(profile, result);
-        uploadProfileResult(exitCode);
-        logger.info("Profile applied");
-      } catch (IOException e) {
-        logger.error(format("Error applying profile [%s]", profile.getName()), e);
-      } catch (InterruptedException e) {
-        logger.info("Interrupted", e);
-      } catch (TimeoutException e) {
-        logger.info("Timed out", e);
-      } catch (UncheckedTimeoutException ex) {
-        logger.error("Timed out sending profile result");
-      } catch (Exception e) {
-        logger.error("Error applying profile", e);
-      } finally {
-        initializing.set(false);
+          ProcessExecutor processExecutor = new ProcessExecutor()
+                                                .timeout(10, TimeUnit.MINUTES)
+                                                .command("/bin/bash", "-c", script)
+                                                .readOutput(true)
+                                                .redirectOutput(new LogOutputStream() {
+                                                  @Override
+                                                  protected void processLine(String line) {
+                                                    scriptLogger.info(line);
+                                                    result.add(line);
+                                                  }
+                                                })
+                                                .redirectError(new LogOutputStream() {
+                                                  @Override
+                                                  protected void processLine(String line) {
+                                                    scriptLogger.error(line);
+                                                    result.add("ERROR: " + line);
+                                                  }
+                                                });
+          int exitCode = processExecutor.execute().getExitValue();
+          saveProfile(profile, result);
+          uploadProfileResult(exitCode);
+          logger.info("Profile applied");
+        } catch (IOException e) {
+          logger.error(format("Error applying profile [%s]", profile.getName()), e);
+        } catch (InterruptedException e) {
+          logger.info("Interrupted", e);
+        } catch (TimeoutException e) {
+          logger.info("Timed out", e);
+        } catch (UncheckedTimeoutException ex) {
+          logger.error("Timed out sending profile result");
+        } catch (Exception e) {
+          logger.error("Error applying profile", e);
+        } finally {
+          executingProfile.set(false);
+          if (!releaseLock(profileFile)) {
+            logger.error("Failed to release lock {}", profileFile.getPath());
+          }
+        }
       }
     }
   }

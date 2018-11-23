@@ -1,6 +1,5 @@
 package software.wings.managerclient;
 
-import io.harness.version.VersionInfo;
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -34,12 +33,7 @@ import software.wings.sm.StateType;
 
 import java.util.List;
 
-/**
- * Created by peeyushaggarwal on 11/29/16.
- */
 public interface ManagerClient {
-  @GET("version") Call<RestResponse<VersionInfo>> getManagerVersion();
-
   @POST("delegates/register")
   Call<RestResponse<Delegate>> registerDelegate(@Query("accountId") String accountId, @Body Delegate delegate);
 

@@ -1,5 +1,7 @@
 package software.wings.utils.message;
 
+import static io.harness.filesystem.FileIo.acquireLock;
+import static io.harness.filesystem.FileIo.releaseLock;
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
@@ -94,17 +96,17 @@ public class MessageServiceImpl implements MessageService {
       if (params != null) {
         messageContent.add(Joiner.on(SECONDARY_DELIMITER).join(params));
       }
-      try {
-        if (acquireLock(channel)) {
+      if (acquireLock(channel)) {
+        try {
           FileUtils.touch(channel);
           FileUtils.writeLines(channel, singletonList(Joiner.on(PRIMARY_DELIMITER).join(messageContent)), true);
-        } else {
-          logger.error("Failed to acquire lock {}", channel.getPath());
+        } finally {
+          if (!releaseLock(channel)) {
+            logger.error("Failed to release lock {}", channel.getPath());
+          }
         }
-      } finally {
-        if (!releaseLock(channel)) {
-          logger.error("Failed to release lock {}", channel.getPath());
-        }
+      } else {
+        logger.error("Failed to acquire lock {}", channel.getPath());
       }
     } catch (Exception e) {
       logger.error("Error writing message to channel: {}({})", message, params, e);
@@ -353,8 +355,8 @@ public class MessageServiceImpl implements MessageService {
     logger.debug("Writing data to {}: {}", name, dataToWrite);
     try {
       File file = getDataFile(name);
-      try {
-        if (acquireLock(file)) {
+      if (acquireLock(file)) {
+        try {
           Map<String, Object> data = getDataMap(file);
           data.putAll(dataToWrite);
           if (file.exists()) {
@@ -362,13 +364,13 @@ public class MessageServiceImpl implements MessageService {
           }
           FileUtils.touch(file);
           FileUtils.write(file, JsonUtils.asPrettyJson(data), UTF_8);
-        } else {
-          logger.error("Failed to acquire lock {}", file.getPath());
+        } finally {
+          if (!releaseLock(file)) {
+            logger.error("Failed to release lock {}", file.getPath());
+          }
         }
-      } finally {
-        if (!releaseLock(file)) {
-          logger.error("Failed to release lock {}", file.getPath());
-        }
+      } else {
+        logger.error("Failed to acquire lock {}", file.getPath());
       }
     } catch (UncheckedTimeoutException e) {
       logger.error("Timed out writing data to {}. Couldn't store {}", name, dataToWrite);
@@ -401,16 +403,16 @@ public class MessageServiceImpl implements MessageService {
   public Map<String, Object> getAllData(String name) {
     try {
       File file = getDataFile(name);
-      try {
-        if (acquireLock(file)) {
+      if (acquireLock(file)) {
+        try {
           return getDataMap(file);
-        } else {
-          logger.error("Failed to acquire lock {}", file.getPath());
+        } finally {
+          if (!releaseLock(file)) {
+            logger.error("Failed to release lock {}", file.getPath());
+          }
         }
-      } finally {
-        if (!releaseLock(file)) {
-          logger.error("Failed to release lock {}", file.getPath());
-        }
+      } else {
+        logger.error("Failed to acquire lock {}", file.getPath());
       }
     } catch (UncheckedTimeoutException e) {
       logger.error("Timed out reading data from {}", name);
@@ -444,8 +446,8 @@ public class MessageServiceImpl implements MessageService {
     logger.debug("Removing data from {}: {}", name, key);
     try {
       File file = getDataFile(name);
-      try {
-        if (acquireLock(file)) {
+      if (acquireLock(file)) {
+        try {
           Map<String, Object> data = getDataMap(file);
           data.remove(key);
           if (file.exists()) {
@@ -453,13 +455,13 @@ public class MessageServiceImpl implements MessageService {
           }
           FileUtils.touch(file);
           FileUtils.write(file, JsonUtils.asPrettyJson(data), UTF_8);
-        } else {
-          logger.error("Failed to acquire lock {}", file.getPath());
+        } finally {
+          if (!releaseLock(file)) {
+            logger.error("Failed to release lock {}", file.getPath());
+          }
         }
-      } finally {
-        if (!releaseLock(file)) {
-          logger.error("Failed to release lock {}", file.getPath());
-        }
+      } else {
+        logger.error("Failed to acquire lock {}", file.getPath());
       }
     } catch (UncheckedTimeoutException e) {
       logger.error("Timed out removing data from {}. Couldn't remove {}", name, key);
@@ -531,45 +533,5 @@ public class MessageServiceImpl implements MessageService {
         Thread.sleep(200L);
       }
     }, 1L, TimeUnit.SECONDS, true);
-  }
-
-  private boolean acquireLock(File file) {
-    File lockFile = new File(file.getPath() + ".lock");
-    final long finishAt = clock.millis() + TimeUnit.SECONDS.toMillis(5);
-    boolean wasInterrupted = false;
-    try {
-      while (lockFile.exists()) {
-        final long remaining = finishAt - clock.millis();
-        if (remaining < 0) {
-          break;
-        }
-        try {
-          Thread.sleep(Math.min(100, remaining));
-        } catch (InterruptedException e) {
-          wasInterrupted = true;
-          return false;
-        }
-      }
-      FileUtils.touch(lockFile);
-      return true;
-    } catch (Exception e) {
-      return false;
-    } finally {
-      if (wasInterrupted) {
-        Thread.currentThread().interrupt();
-      }
-    }
-  }
-
-  private boolean releaseLock(File file) {
-    File lockFile = new File(file.getPath() + ".lock");
-    try {
-      if (lockFile.exists()) {
-        FileUtils.forceDelete(lockFile);
-      }
-      return true;
-    } catch (Exception e) {
-      return false;
-    }
   }
 }
