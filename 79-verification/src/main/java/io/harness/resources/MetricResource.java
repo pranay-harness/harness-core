@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.registry.HarnessMetricRegistry;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.exporter.common.TextFormat;
 import io.swagger.annotations.Api;
 import org.slf4j.Logger;

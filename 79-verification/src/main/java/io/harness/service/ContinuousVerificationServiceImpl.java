@@ -23,7 +23,7 @@ import com.codahale.metrics.annotation.Counted;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
-import io.harness.registry.HarnessMetricRegistry;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.service.intfc.TimeSeriesAnalysisService;

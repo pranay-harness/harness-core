@@ -38,9 +38,9 @@ import io.harness.lock.ManageDistributedLockSvc;
 import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.managerclient.VerificationManagerClientModule;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
-import io.harness.registry.HarnessMetricRegistry;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.VerificationServiceExecutorService;
@@ -76,18 +76,16 @@ import javax.ws.rs.Path;
  * @author Raghu
  */
 public class VerificationServiceApplication extends Application<VerificationServiceConfiguration> {
-  // pool interval at which the job will schedule. But here in verificationJob it will schedule at POLL_INTERVAL / 2
-  private static final Logger logger = LoggerFactory.getLogger(VerificationServiceApplication.class);
-
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
                                                       .build();
-
-  public HarnessMetricRegistry harnessMetricRegistry;
+  // pool interval at which the job will schedule. But here in verificationJob it will schedule at POLL_INTERVAL / 2
+  private static final Logger logger = LoggerFactory.getLogger(VerificationServiceApplication.class);
   private static String APPLICATION_NAME = "Verification Service Application";
   private final MetricRegistry metricRegistry = new MetricRegistry();
+  public HarnessMetricRegistry harnessMetricRegistry;
   private WingsPersistence wingsPersistence;
 
   /**

@@ -3,7 +3,7 @@ package io.harness.app;
 import com.google.inject.AbstractModule;
 
 import com.codahale.metrics.MetricRegistry;
-import io.harness.registry.HarnessMetricRegistry;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.CollectorRegistry;
 
 /**
