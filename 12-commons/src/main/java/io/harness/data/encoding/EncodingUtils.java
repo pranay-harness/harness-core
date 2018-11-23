@@ -29,18 +29,16 @@ public class EncodingUtils {
 
   public static String deCompressString(byte[] toDecompress) throws IOException {
     Preconditions.checkNotNull(toDecompress);
-    ByteArrayInputStream bis = new ByteArrayInputStream(toDecompress);
-    GZIPInputStream gis = new GZIPInputStream(bis);
-    BufferedReader br = new BufferedReader(new InputStreamReader(gis, "UTF-8"));
-    StringBuilder sb = new StringBuilder();
-    String line;
-    while ((line = br.readLine()) != null) {
-      sb.append(line);
+    try (ByteArrayInputStream bis = new ByteArrayInputStream(toDecompress);
+         GZIPInputStream gis = new GZIPInputStream(bis);
+         BufferedReader br = new BufferedReader(new InputStreamReader(gis, "UTF-8"))) {
+      StringBuilder sb = new StringBuilder();
+      String line;
+      while ((line = br.readLine()) != null) {
+        sb.append(line);
+      }
+      return sb.toString();
     }
-    br.close();
-    gis.close();
-    bis.close();
-    return sb.toString();
   }
 
   public static String encodeBase64(byte[] toEncode) {

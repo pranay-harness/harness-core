@@ -36,7 +36,7 @@ public class SftpValidation extends AbstractDelegateValidateTask {
       String connectionHost = sftpHelperService.getSFTPConnectionHost(criteria);
       return singletonList(DelegateConnectionResult.builder()
                                .criteria(criteria)
-                               .validated(sftpHelperService.isConnetableSFTPServer(connectionHost))
+                               .validated(sftpHelperService.isConnectibleSFTPServer(connectionHost))
                                .build());
     } catch (Exception e) {
       return emptyList();

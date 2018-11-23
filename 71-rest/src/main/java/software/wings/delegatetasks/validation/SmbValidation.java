@@ -36,7 +36,7 @@ public class SmbValidation extends AbstractDelegateValidateTask {
       String connectionHost = smbHelperService.getSMBConnectionHost(criteria);
       return singletonList(DelegateConnectionResult.builder()
                                .criteria(criteria)
-                               .validated(smbHelperService.isConnetableSMBServer(connectionHost))
+                               .validated(smbHelperService.isConnectibleSOBServer(connectionHost))
                                .build());
     } catch (Exception e) {
       return emptyList();

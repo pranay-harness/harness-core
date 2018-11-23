@@ -11,7 +11,6 @@ import net.schmizz.sshj.DefaultConfig;
 import net.schmizz.sshj.SSHClient;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.SFTPClient;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SftpConfig;
@@ -35,35 +34,30 @@ public class SftpHelperService {
   private static final String ROOT_DIR_ARTIFACT_PATH = ".";
   @Inject private EncryptionService encryptionService;
 
-  public List<String> getSftpPaths(SftpConfig sftpConfig, List<EncryptedDataDetail> encryptionDetails)
-      throws IOException {
+  public List<String> getSftpPaths(SftpConfig sftpConfig, List<EncryptedDataDetail> encryptionDetails) {
     encryptionService.decrypt(sftpConfig, encryptionDetails);
     List<String> artifactPaths = new ArrayList<>();
 
-    final SSHClient ssh = new SSHClient(new DefaultConfig());
-    try {
+    try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
       ssh.loadKnownHosts();
       ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
       ssh.authPassword(sftpConfig.getUsername(), sftpConfig.getPassword());
-      final SFTPClient sftp = ssh.newSFTPClient();
 
-      List<RemoteResourceInfo> resourceInfos = Collections.EMPTY_LIST;
-      // Get artifact paths
-      try {
+      try (SFTPClient sftp = ssh.newSFTPClient()) {
+        List<RemoteResourceInfo> resourceInfos = Collections.EMPTY_LIST;
+        // Get artifact paths
         resourceInfos = sftp.ls(ROOT_DIR_ARTIFACT_PATH);
         for (RemoteResourceInfo resourceInfo : resourceInfos) {
           artifactPaths.add(resourceInfo.getName());
         }
       } finally {
         logger.info("Closing SFTP connection :{}", sftpConfig.getSftpUrl());
-        sftp.close();
       }
     } catch (IOException e) {
       logger.error(
           "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
     } finally {
       logger.info("Closing SSH connection for SFTP URL :{}", sftpConfig.getSftpUrl());
-      ssh.disconnect();
     }
 
     return artifactPaths;
@@ -75,9 +69,8 @@ public class SftpHelperService {
     return sftpHost;
   }
 
-  public boolean isConnetableSFTPServer(String sftpUrl) {
-    try {
-      final SSHClient ssh = new SSHClient(new DefaultConfig());
+  public boolean isConnectibleSFTPServer(String sftpUrl) {
+    try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
       ssh.loadKnownHosts();
       ssh.connect(getSFTPConnectionHost(sftpUrl));
       return true;
@@ -92,8 +85,7 @@ public class SftpHelperService {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     encryptionService.decrypt(sftpConfig, encryptionDetails);
 
-    final SSHClient ssh = new SSHClient(new DefaultConfig());
-    try {
+    try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
       ssh.loadKnownHosts();
       ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
       ssh.authPassword(sftpConfig.getUsername(), sftpConfig.getPassword());
@@ -140,7 +132,6 @@ public class SftpHelperService {
           "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
     } finally {
       logger.info("Closing SSH connection for SFTP URL :{}", sftpConfig.getSftpUrl());
-      ssh.disconnect();
     }
 
     logger.info("SFTP server {} returned {} build details for artifact paths : ", sftpConfig.getSftpUrl(),
