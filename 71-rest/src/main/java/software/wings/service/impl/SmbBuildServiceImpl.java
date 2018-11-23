@@ -46,7 +46,7 @@ public class SmbBuildServiceImpl implements SmbBuildService {
   @Override
   public boolean validateArtifactServer(SmbConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     String smbConnectionHost = smbHelperService.getSMBConnectionHost(config.getSmbUrl());
-    if (!smbHelperService.isConnetableSMBServer(smbConnectionHost)) {
+    if (!smbHelperService.isConnectibleSOBServer(smbConnectionHost)) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach SMB Server at : " + config.getSmbUrl());
     }

@@ -1,5 +1,6 @@
 package software.wings.beans.container;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
@@ -32,6 +33,7 @@ import software.wings.utils.EcsConvention;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -116,28 +118,33 @@ public class EcsContainerTask extends ContainerTask {
   @Override
   public void validateAdvanced() {
     // Instantiating doesn't work when service variable expressions are used so only check for placeholder
-    if (isNotEmpty(getAdvancedConfig())) {
-      boolean foundImagePlaceholder = false;
+    if (isEmpty(getAdvancedConfig())) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+          .addParam("args", "ECS advanced configuration is empty.");
+    }
 
-      LineIterator lineIterator = new LineIterator(new StringReader(getAdvancedConfig()));
+    boolean foundImagePlaceholder = false;
+
+    try (LineIterator lineIterator = new LineIterator(new StringReader(getAdvancedConfig()))) {
       while (lineIterator.hasNext()) {
         String line = lineIterator.nextLine();
         if (line.trim().charAt(0) == '#') {
           continue;
         }
+
         if (line.contains("${DOCKER_IMAGE_NAME}")) {
           foundImagePlaceholder = true;
         }
       }
-      if (!foundImagePlaceholder) {
-        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-            .addParam("args",
-                "Task definition spec must have a container definition with "
-                    + "${DOCKER_IMAGE_NAME} placeholder.");
-      }
-    } else {
+    } catch (IOException ignore) {
+      foundImagePlaceholder = false;
+    }
+
+    if (!foundImagePlaceholder) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-          .addParam("args", "ECS advanced configuration is empty.");
+          .addParam("args",
+              "Task definition spec must have a container definition with "
+                  + "${DOCKER_IMAGE_NAME} placeholder.");
     }
   }
 

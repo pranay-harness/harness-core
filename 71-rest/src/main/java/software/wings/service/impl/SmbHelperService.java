@@ -16,7 +16,6 @@ import com.hierynomus.smbj.auth.AuthenticationContext;
 import com.hierynomus.smbj.connection.Connection;
 import com.hierynomus.smbj.session.Session;
 import com.hierynomus.smbj.share.DiskShare;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.common.Constants;
@@ -47,8 +46,8 @@ public class SmbHelperService {
     encryptionService.decrypt(smbConfig, encryptionDetails);
     List<String> artifactPaths = new ArrayList<>();
 
-    SMBClient client = new SMBClient(getSMBConnectionConfig());
-    try (Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
+    try (SMBClient client = new SMBClient(getSMBConnectionConfig());
+         Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
       AuthenticationContext ac =
           new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), smbConfig.getDomain());
       Session session = connection.authenticate(ac);
@@ -80,12 +79,11 @@ public class SmbHelperService {
     return smbHost;
   }
 
-  public boolean isConnetableSMBServer(String smbUrl) {
-    try {
-      SMBClient client = new SMBClient(getSMBConnectionConfig());
-      try (Connection connection = client.connect(getSMBConnectionHost(smbUrl))) {
-        return true;
-      }
+  public boolean isConnectibleSOBServer(String smbUrl) {
+    try (SMBClient client = new SMBClient(getSMBConnectionConfig());
+         Connection connection = client.connect(getSMBConnectionHost(smbUrl))) {
+      return true;
+
     } catch (Exception ex) {
       logger.warn("SMB server {} could not be reached. Exception Message {}", smbUrl, ex.getMessage());
     }
@@ -116,8 +114,8 @@ public class SmbHelperService {
     Map<String, String> buildNumbers = new HashMap<>();
 
     encryptionService.decrypt(smbConfig, encryptionDetails);
-    SMBClient client = new SMBClient(getSMBConnectionConfig());
-    try (Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
+    try (SMBClient client = new SMBClient(getSMBConnectionConfig());
+         Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
       AuthenticationContext ac =
           new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), smbConfig.getDomain());
       Session session = connection.authenticate(ac);
@@ -161,8 +159,8 @@ public class SmbHelperService {
     List<BuildDetails> buildDetailsList = Lists.newArrayList();
     Map<String, String> buildNos = Collections.EMPTY_MAP;
     encryptionService.decrypt(smbConfig, encryptionDetails);
-    SMBClient client = new SMBClient(getSMBConnectionConfig());
-    try (Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
+    try (SMBClient client = new SMBClient(getSMBConnectionConfig());
+         Connection connection = client.connect(getSMBConnectionHost(smbConfig.getSmbUrl()))) {
       AuthenticationContext ac =
           new AuthenticationContext(smbConfig.getUsername(), smbConfig.getPassword(), smbConfig.getDomain());
       Session session = connection.authenticate(ac);

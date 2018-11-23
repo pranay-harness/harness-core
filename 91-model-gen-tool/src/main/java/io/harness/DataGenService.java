@@ -691,9 +691,10 @@ public class DataGenService {
       file = testFolder.newFile(name);
     }
 
-    BufferedWriter out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
-    out.write(randomText(100));
-    out.close();
+    try (BufferedWriter out =
+             new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8))) {
+      out.write(randomText(100));
+    }
     return file;
   }
 

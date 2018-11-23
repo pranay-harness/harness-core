@@ -47,7 +47,7 @@ public class SftpBuildServiceImpl implements SftpBuildService {
   @Override
   public boolean validateArtifactServer(SftpConfig config, List<EncryptedDataDetail> encryptedDataDetails) {
     String sftpConnectionHost = sftpHelperService.getSFTPConnectionHost(config.getSftpUrl());
-    if (!sftpHelperService.isConnetableSFTPServer(sftpConnectionHost)) {
+    if (!sftpHelperService.isConnectibleSFTPServer(sftpConnectionHost)) {
       throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
           .addParam("message", "Could not reach SFTP Server at : " + config.getSftpUrl());
     }
