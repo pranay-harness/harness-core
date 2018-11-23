@@ -1,4 +1,4 @@
-package io.harness.registry;
+package io.harness.metrics;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Singleton;

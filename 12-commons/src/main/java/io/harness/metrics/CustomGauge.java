@@ -1,4 +1,4 @@
-package io.harness.registry;
+package io.harness.metrics;
 
 import com.codahale.metrics.Gauge;
 

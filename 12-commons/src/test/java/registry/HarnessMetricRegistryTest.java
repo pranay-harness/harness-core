@@ -1,11 +1,11 @@
 package registry;
 
-import static io.harness.registry.HarnessMetricRegistry.getAbsoluteMetricName;
+import static io.harness.metrics.HarnessMetricRegistry.getAbsoluteMetricName;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.codahale.metrics.MetricRegistry;
-import io.harness.registry.HarnessMetricRegistry;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.CollectorRegistry;
 import io.prometheus.client.Gauge;
 import org.junit.Before;

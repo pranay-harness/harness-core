@@ -5,7 +5,7 @@ import com.google.inject.AbstractModule;
 import com.codahale.metrics.MetricRegistry;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientFactory;
-import io.harness.registry.HarnessMetricRegistry;
+import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.security.VerificationTokenGenerator;
 import io.harness.service.ContinuousVerificationServiceImpl;
 import io.harness.service.intfc.ContinuousVerificationService;
