@@ -57,7 +57,6 @@ import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
@@ -106,6 +105,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   @Inject protected KmsService kmsService;
   @Inject protected SecretManager secretManager;
   @Inject protected AuthHandler authHandler;
+  @Inject protected SecretManagementDelegateService delegateService;
   @Mock private DelegateProxyFactory delegateProxyFactory;
 
   protected String accountId = "INVALID_ID";
@@ -152,7 +152,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
   @Before
   public void setUp() throws Exception {
     when(delegateProxyFactory.get(eq(SecretManagementDelegateService.class), any(SyncTaskContext.class)))
-        .thenReturn(new SecretManagementDelegateServiceImpl());
+        .thenReturn(delegateService);
     setInternalState(kmsService, "delegateProxyFactory", delegateProxyFactory);
     setInternalState(secretManager, "kmsService", kmsService);
     setInternalState(wingsPersistence, "secretManager", secretManager);
