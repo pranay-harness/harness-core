@@ -22,6 +22,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import migrations.all.SystemTemplateGalleryMigration;
+import migrations.seedata.IISInstallCommandMigration;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -42,6 +43,7 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.sm.states.HttpState;
 import software.wings.utils.WingsTestConstants;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -57,6 +59,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Inject private SystemTemplateGalleryMigration migration;
   @Inject private TemplateService templateService;
   @Inject private TemplateGalleryService templateGalleryService;
+  @Inject private IISInstallCommandMigration iisInstallCommandMigration;
 
   @Test
   public void shouldMigrateGallery() {
@@ -64,10 +67,20 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   }
 
   @Test
+  public void shouldMigrateIISTemplateGallery() {
+    iisInstallCommandMigration.migrate();
+  }
+
+  @Test
   public void shouldLoadTemplateFolders() {
     wingsPersistence.delete(
         wingsPersistence.createQuery(TemplateFolder.class).filter(ACCOUNT_ID_KEY, GLOBAL_ACCOUNT_ID));
     templateFolderService.loadDefaultTemplateFolders();
+  }
+
+  @Test
+  public void shouldUpdate() throws IOException {
+    iisInstallCommandMigration.updateExistingInstallCommand();
   }
 
   @Test

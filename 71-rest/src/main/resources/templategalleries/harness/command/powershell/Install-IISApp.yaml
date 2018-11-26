@@ -1,0 +1,60 @@
+name: "Install IIS Application"
+gallery: "Harness"
+folderPath: "Harness/Power Shell Commands"
+version: "1"
+description: "This is a command to install IIS Application or IIS Virtual Directory by invoking scripts over SSH to the individual instances."
+keywords: [ssh, iisapp, powershell, install]
+referencedTemplateUri: "Harness/Power Shell Commands/Install IIS Application:1"
+variables:
+- name: "ReleaseNo"
+  description: "ReleaseId."
+- name: "ServiceName"
+  description: "Service Name"
+- name: "AppPoolName"
+  value: "DefaultAppPool"
+  description: "Default Application Pool"
+- name: "AppPoolDotNetVersion"
+  value: "v4.0"
+  description: "Application pool DotNet Version"
+- name: "DownloadDirectory"
+  value: "$env:TEMP"
+  description: "Download Directory"
+templateObject:
+  type: "SSH"
+  commandType: "INSTALL"
+  commands:
+  - commandUnitType: DOWNLOAD_ARTIFACT
+    deploymentType: SSH
+    name: Download Artifact
+    scriptType: POWERSHELL
+    workingDirectory: ${DownloadDirectory}
+  - command: |-
+      $serviceName="${service.Name}"
+      $releaseId="${workflow.ReleaseNo}"
+      $artifactFilename = "${DownloadDirectory}" + "\" + "${artifact.fileName}"
+      $appPhysicalDirectory=$env:SYSTEMDRIVE + "\Artifacts\" + $serviceName + "\release-" + $releaseId
+
+      Write-Host "Extracting package from" $artifactFilename "to" $appPhysicalDirectory
+      Expand-Archive -Path $artifactFilename -DestinationPath $appPhysicalDirectory -Force
+      Write-Host "Done."
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Expand Artifacts
+    scriptType: POWERSHELL
+  - command: |-
+      Import-Module WebAdministration
+
+      $siteName="Default Web Site"
+      $releaseId="${workflow.ReleaseNo}"
+      $virtualDirectoryName="${service.Name}"
+      $appPhysicalDirectory=$env:SYSTEMDRIVE + "\Artifacts\" + $virtualDirectoryName + "\release-" + $releaseId
+
+      Write-Host "Creating Virtual Directory" $virtualDirectoryName ".."
+      $VirtualDirPath = 'IIS:\Sites\' + $siteName + '\' + $virtualDirectoryName
+      New-Item -Path $VirtualDirPath -Type VirtualDirectory -PhysicalPath $appPhysicalDirectory -Force
+
+      Write-Host "Done."
+    commandUnitType: EXEC
+    deploymentType: SSH
+    name: Create Virtual Directory
+    scriptType: POWERSHELL

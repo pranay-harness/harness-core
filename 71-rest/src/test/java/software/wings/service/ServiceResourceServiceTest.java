@@ -253,6 +253,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(mockWingsPersistence.query(ServiceCommand.class, serviceCommandPageRequest))
         .thenReturn(aPageResponse()
                         .withResponse(asList(aServiceCommand()
+                                                 .withUuid(SERVICE_COMMAND_ID)
                                                  .withTargetToAllEnv(true)
                                                  .withName("START")
                                                  .withDefaultVersion(1)
@@ -359,6 +360,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   public void shouldDeleteService() {
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
     when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID)).thenReturn(asList());
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList()).build());
     ArgumentCaptor<Runnable> runnableCaptor = ArgumentCaptor.forClass(Runnable.class);
     when(executorService.submit(runnableCaptor.capture())).then(executeRunnable(runnableCaptor));
     srs.delete(APP_ID, SERVICE_ID);
@@ -375,6 +378,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(mockWingsPersistence.delete(any(), any())).thenReturn(true);
     when(workflowService.obtainWorkflowNamesReferencedByService(APP_ID, SERVICE_ID))
         .thenReturn(asList("Referenced Workflow"));
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList()).build());
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
@@ -393,6 +398,9 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
                             asList(TerraformInfrastructureProvisioner.builder().name("Referenced Provisioner").build()))
                         .build());
 
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList()).build());
+
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage(INVALID_REQUEST.name());
@@ -409,6 +417,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
         .thenReturn(aPageResponse().build());
     when(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, SERVICE_ID))
         .thenReturn(asList("Referenced Pipeline"));
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList()).build());
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)
@@ -428,6 +438,8 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     when(pipelineService.obtainPipelineNamesReferencedByTemplatedEntity(APP_ID, SERVICE_ID)).thenReturn(asList());
     when(triggerService.obtainTriggerNamesReferencedByTemplatedEntityId(APP_ID, SERVICE_ID))
         .thenReturn(asList("Referenced Trigger"));
+    when(workflowService.listWorkflows(any(PageRequest.class)))
+        .thenReturn(aPageResponse().withResponse(asList()).build());
 
     assertThatThrownBy(() -> srs.delete(APP_ID, SERVICE_ID))
         .isInstanceOf(WingsException.class)

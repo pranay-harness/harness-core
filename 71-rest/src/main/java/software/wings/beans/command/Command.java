@@ -5,6 +5,7 @@ import static software.wings.beans.command.Command.Builder.aCommand;
 
 import com.google.common.collect.Lists;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
@@ -70,6 +71,9 @@ public class Command extends Base implements CommandUnit {
   @SchemaIgnore private CommandType commandType = CommandType.OTHER;
 
   @SchemaIgnore private List<Variable> templateVariables = new ArrayList<>();
+
+  @JsonIgnore private transient String templateId;
+  @JsonIgnore private transient String templateVersion;
 
   public Command() {
     this.commandUnitType = CommandUnitType.COMMAND;
@@ -270,6 +274,24 @@ public class Command extends Base implements CommandUnit {
     this.templateVariables = templateVariables;
   }
 
+  @SchemaIgnore
+  public String getTemplateId() {
+    return templateId;
+  }
+
+  public void setTemplateId(String templateId) {
+    this.templateId = templateId;
+  }
+
+  @SchemaIgnore
+  public String getTemplateVersion() {
+    return templateVersion;
+  }
+
+  public void setTemplateVersion(String templateVersion) {
+    this.templateVersion = templateVersion;
+  }
+
   /**
    * Transform graph.
    */
@@ -396,7 +418,8 @@ public class Command extends Base implements CommandUnit {
     private boolean artifactNeeded;
     private CommandType commandType = CommandType.OTHER;
     private List<Variable> templateVariables = new ArrayList<>();
-
+    private String templateId;
+    private String templateVersion;
     private Builder() {}
 
     /**
@@ -508,6 +531,17 @@ public class Command extends Base implements CommandUnit {
       this.templateVariables = templateVariables;
       return this;
     }
+
+    public Builder withTemplateId(String templateId) {
+      this.templateId = templateId;
+      return this;
+    }
+
+    public Builder withTemplateVersion(String templateVersion) {
+      this.templateVersion = templateVersion;
+      return this;
+    }
+
     /**
      * But builder.
      *
@@ -521,7 +555,9 @@ public class Command extends Base implements CommandUnit {
           .withName(name)
           .withExecutionResult(commandExecutionStatus)
           .withArtifactNeeded(artifactNeeded)
-          .withCommandType(commandType);
+          .withCommandType(commandType)
+          .withTemplateId(templateId)
+          .withTemplateVersion(templateVersion);
     }
 
     /**
@@ -540,6 +576,8 @@ public class Command extends Base implements CommandUnit {
       command.setArtifactNeeded(artifactNeeded);
       command.setCommandType(commandType);
       command.setTemplateVariables(templateVariables);
+      command.setTemplateId(templateId);
+      command.setTemplateVersion(templateVersion);
       return command;
     }
   }

@@ -3,7 +3,9 @@ package software.wings.service.intfc.template;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.hibernate.validator.constraints.NotEmpty;
+import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateGallery;
+import software.wings.beans.template.TemplateType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import javax.validation.Valid;
@@ -62,5 +64,15 @@ public interface TemplateGalleryService extends OwnedByAccount {
 
   void copyHarnessTemplatesToAccount(@NotEmpty String accountId, @NotEmpty String accountName);
 
+  void copyHarnessTemplatesToAccountV2(@NotEmpty String accountId, @NotEmpty String accountName);
+
   void deleteAccountGalleryByName(String accountId, String galleryName);
+
+  void copyHarnessTemplateFromGalleryToAccounts(
+      String sourceFolderPath, TemplateType templateType, String templateName, String yamlFilePath);
+
+  void copyHarnessTemplateFromGalleryToAccount(String sourceFolderPath, TemplateType templateType, String templateName,
+      String yamlFilePath, String accountId, String accountName);
+
+  void copyNewVersionFromGlobalToAllAccounts(Template template, String keyword);
 }

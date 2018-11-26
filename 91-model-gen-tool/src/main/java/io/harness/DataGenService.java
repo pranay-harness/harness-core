@@ -139,6 +139,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateGalleryService;
+import software.wings.service.intfc.template.TemplateService;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.BoundedInputStream;
@@ -215,6 +216,7 @@ public class DataGenService {
   @Inject protected AuthHandler authHandler;
   @Inject private AppContainerService appContainerService;
   @Inject private TemplateGalleryService templateGalleryService;
+  @Inject private TemplateService templateService;
   @Inject private ExecutorService executorService;
   @Inject private ConfigService configService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
@@ -232,8 +234,8 @@ public class DataGenService {
    */
   public void populateData() throws IOException {
     dropDBAndEnsureIndexes();
-    templateGalleryService.loadHarnessGallery();
-    templateGalleryService.copyHarnessTemplates();
+    //    templateGalleryService.loadHarnessGallery();
+    //    templateGalleryService.copyHarnessTemplates();
 
     Account account = createLicenseAndDefaultUsers();
     accountGenerator.setAccount(account);

@@ -14,7 +14,7 @@ import java.util.Map;
 @SuppressFBWarnings("MS_MUTABLE_COLLECTION_PKGPROTECT")
 public class PowerShellScriptsLoader {
   public enum PsScript {
-    DownloadArtifacts(1, "Download Artifacts"),
+    DownloadArtifact(1, "Download Artifact"),
     ExpandArtifacts(2, "Expand Artifacts"),
     CreateIISAppPool(3, "Create AppPool"),
     CreateIISWebsite(4, "Create Website"),
@@ -42,7 +42,7 @@ public class PowerShellScriptsLoader {
 
   private static final Map<PsScript, String> filePathMap =
       ImmutableMap.<PsScript, String>builder()
-          .put(PsScript.DownloadArtifacts, "powershell-scripts/Download-Artifacts.ps1")
+          .put(PsScript.DownloadArtifact, "powershell-scripts/Download-Artifacts.ps1")
           .put(PsScript.ExpandArtifacts, "powershell-scripts/Expand-Artifacts.ps1")
           .put(PsScript.CreateIISAppPool, "powershell-scripts/Create-IISAppPool.ps1")
           .put(PsScript.CreateIISWebsite, "powershell-scripts/Create-IISWebsite.ps1")

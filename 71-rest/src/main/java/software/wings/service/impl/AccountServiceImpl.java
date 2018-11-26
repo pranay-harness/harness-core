@@ -228,7 +228,7 @@ public class AccountServiceImpl implements AccountService {
     authHandler.createDefaultUserGroups(account, null);
 
     executorService.submit(
-        () -> templateGalleryService.copyHarnessTemplatesToAccount(account.getUuid(), account.getAccountName()));
+        () -> templateGalleryService.copyHarnessTemplatesToAccountV2(account.getUuid(), account.getAccountName()));
   }
 
   List<Role> createDefaultRoles(Account account) {

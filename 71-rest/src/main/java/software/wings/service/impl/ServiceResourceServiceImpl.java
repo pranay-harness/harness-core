@@ -107,6 +107,7 @@ import software.wings.helpers.ext.helm.HelmHelper;
 import software.wings.scheduler.PruneEntityJob;
 import software.wings.service.ServiceHelper;
 import software.wings.service.impl.command.CommandHelper;
+import software.wings.service.impl.template.SshCommandTemplateProcessor;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -159,6 +160,8 @@ import javax.validation.executable.ValidateOnExecution;
 @Singleton
 public class ServiceResourceServiceImpl implements ServiceResourceService, DataProvider {
   private static final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
+  private static final String IISWEBSITE_KEYWORD = "iiswebsite";
+  public static final String IISAPP_KEYWORD = "iisapp";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
@@ -186,6 +189,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private YamlPushService yamlPushService;
   @Inject private PipelineService pipelineService;
+  @Inject private SshCommandTemplateProcessor sshCommandTemplateProcessor;
 
   /**
    * {@inheritDoc}
@@ -421,13 +425,34 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   }
 
   private Service addDefaultCommands(Service service, boolean pushToYaml) {
+    String accountId = appService.getAccountIdByAppId(service.getAppId());
     List<Command> commands = emptyList();
     ArtifactType artifactType = service.getArtifactType();
     AppContainer appContainer = service.getAppContainer();
     if (appContainer != null && appContainer.getFamily() != null) {
       commands = appContainer.getFamily().getDefaultCommands(artifactType, appContainer);
     } else if (artifactType != null) {
-      commands = artifactType.getDefaultCommands();
+      Command command;
+      Template template;
+      switch (artifactType) {
+        case IIS:
+          template = templateService.fetchTemplateByKeyword(accountId, IISWEBSITE_KEYWORD);
+          command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template);
+          if (command != null) {
+            commands = asList(command);
+          }
+          break;
+        case IIS_APP:
+        case IIS_VirtualDirectory:
+          template = templateService.fetchTemplateByKeyword(accountId, IISAPP_KEYWORD);
+          command = sshCommandTemplateProcessor.fetchEntityFromTemplate(template);
+          if (command != null) {
+            commands = asList(command);
+          }
+          break;
+        default:
+          commands = artifactType.getDefaultCommands();
+      }
     }
 
     // Default Commands are pushed to yaml only if it matches both the conditions
@@ -437,7 +462,14 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     Service serviceToReturn = service;
     for (Command command : commands) {
       serviceToReturn = addCommand(service.getAppId(), service.getUuid(),
-          aServiceCommand().withTargetToAllEnv(true).withCommand(command).build(), shouldPushCommandsToYaml);
+          aServiceCommand()
+              .withName(command.getName())
+              .withTargetToAllEnv(true)
+              .withTemplateVersion(command.getTemplateVersion())
+              .withTemplateUuid(command.getTemplateId())
+              .withCommand(command)
+              .build(),
+          shouldPushCommandsToYaml);
     }
 
     return serviceToReturn;
@@ -562,6 +594,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     if (service == null) {
       return;
     }
+    deleteCommands(appId, serviceId);
 
     if (!forceDelete) {
       // Ensure service is safe to delete
@@ -583,8 +616,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
   @Override
   public void pruneDescendingEntities(@NotEmpty String appId, @NotEmpty String serviceId) {
-    executorService.submit(() -> deleteCommands(appId, serviceId));
-
     List<OwnedByService> services =
         ServiceClassLocator.descendingServices(this, ServiceResourceServiceImpl.class, OwnedByService.class);
     PruneEntityJob.pruneDescendingEntities(services, descending -> descending.pruneByService(appId, serviceId));
