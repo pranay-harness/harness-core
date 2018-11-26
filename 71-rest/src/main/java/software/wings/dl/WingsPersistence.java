@@ -69,15 +69,6 @@ public interface WingsPersistence extends HPersistence {
   <T extends Base> T saveAndGet(Class<T> cls, T t);
 
   /**
-   * Creates the update operations.
-   *
-   * @param <T> the generic type
-   * @param cls the cls
-   * @return the update operations
-   */
-  <T> UpdateOperations<T> createUpdateOperations(Class<T> cls);
-
-  /**
    * Upsert t.
    *
    * @param <T>              the type parameter

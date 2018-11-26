@@ -5,6 +5,7 @@ import io.harness.annotation.StoreIn;
 import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.Arrays;
 import java.util.List;
@@ -117,6 +118,14 @@ public interface HPersistence {
    * @return             the query
    */
   <T extends PersistentEntity> Query<T> createQuery(Class<T> cls, ReadPref readPref, Set<QueryChecks> queryChecks);
+
+  /**
+   * Creates the update operations.
+   *
+   * @param cls the cls
+   * @return the update operations
+   */
+  <T extends PersistentEntity> UpdateOperations<T> createUpdateOperations(Class<T> cls);
 
   /**
    * Save.

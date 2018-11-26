@@ -365,11 +365,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
-    return getDatastore(cls, ReadPref.NORMAL).createUpdateOperations(cls);
-  }
-
-  @Override
   public GridFSBucket getOrCreateGridFSBucket(String bucketName) {
     final AdvancedDatastore datastore = getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
     return GridFSBuckets.create(datastore.getMongo().getDatabase(datastore.getDB().getName()), bucketName);
