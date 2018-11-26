@@ -5,7 +5,6 @@ import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.ExecutionStatus.FAILED;
 import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import io.harness.delegate.task.protocol.ResponseData;
@@ -75,8 +74,8 @@ public class TerraformRollbackState extends TerraformProvisionState {
 
     if (!configIterator.hasNext()) {
       return anExecutionResponse()
-          .withExecutionStatus(FAILED)
-          .withErrorMessage("Provisioning seems to have failed.")
+          .withExecutionStatus(SUCCESS)
+          .withErrorMessage("No Rollback Required. Provisioning seems to have failed.")
           .build();
     }
 

@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.exception.InvalidRequestException;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -63,28 +64,28 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
           try {
             setRegion((String) entry.getValue());
           } catch (ClassCastException e) {
-            throw new IllegalArgumentException("Region should be of String type. Found : " + entry.getValue());
+            throw new InvalidRequestException("Region should be of String type. Found : " + entry.getValue());
           }
           break;
         case "role":
           try {
             setRole((String) entry.getValue());
           } catch (ClassCastException e) {
-            throw new IllegalArgumentException("IAM Role should be of String type. Found : " + entry.getValue());
+            throw new InvalidRequestException("IAM Role should be of String type. Found : " + entry.getValue());
           }
           break;
         case "vpcId":
           try {
             setVpcId((String) entry.getValue());
           } catch (ClassCastException e) {
-            throw new IllegalArgumentException("Vpc Id should be of String type. Found : " + entry.getValue());
+            throw new InvalidRequestException("Vpc Id should be of String type. Found : " + entry.getValue());
           }
           break;
         case "subnetIds":
           try {
             setSubnetIds(getList(entry.getValue()));
           } catch (ClassCastException e) {
-            throw new IllegalArgumentException(
+            throw new InvalidRequestException(
                 "Subnet Ids should be of List or comma-separated String type. Found : " + entry.getValue());
           }
           break;
@@ -92,19 +93,19 @@ public class AwsLambdaInfraStructureMapping extends InfrastructureMapping {
           try {
             setSecurityGroupIds(getList(entry.getValue()));
           } catch (ClassCastException e) {
-            throw new IllegalArgumentException(
+            throw new InvalidRequestException(
                 "Security Groups should be of List or comma-separated String type. Found : " + entry.getValue());
           }
           break;
         default:
-          throw new IllegalArgumentException("UnSupported Provisioner Mapping " + entry.getKey());
+          throw new InvalidRequestException("UnSupported Provisioner Mapping " + entry.getKey());
       }
     }
     if (StringUtils.isEmpty(region)) {
-      throw new IllegalArgumentException("Region Mapping is Required");
+      throw new InvalidRequestException("Region Mapping is Required");
     }
     if (StringUtils.isEmpty(role)) {
-      throw new IllegalArgumentException("Role Mapping is Required");
+      throw new InvalidRequestException("Role Mapping is Required");
     }
   }
 
