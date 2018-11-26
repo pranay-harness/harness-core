@@ -23,6 +23,7 @@ import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.InsertOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -117,6 +118,11 @@ public class MongoPersistence implements HPersistence {
     Query<T> query = createQuery(cls, readPref);
     ((HQuery) query).setQueryChecks(queryChecks);
     return query;
+  }
+
+  @Override
+  public <T extends PersistentEntity> UpdateOperations<T> createUpdateOperations(Class<T> cls) {
+    return getDatastore(cls, ReadPref.NORMAL).createUpdateOperations(cls);
   }
 
   @Override
