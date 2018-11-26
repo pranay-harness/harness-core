@@ -14,7 +14,7 @@ import software.wings.WingsBaseTest;
  * Created by peeyushaggarwal on 3/22/17.
  */
 public class LicenseInterceptorTest extends WingsBaseTest {
-  @Mock private LicenseManager licenseManager;
+  @Mock private LicenseService licenseManager;
 
   @InjectMocks @Inject private LicenseInterceptor licenseInterceptor;
 

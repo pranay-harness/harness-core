@@ -63,7 +63,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
    * @see software.wings.service.intfc.EmailNotificationService#send(java.lang.Object)
    */
   @Override
-  public void send(EmailData emailData) {
+  public boolean send(EmailData emailData) {
     SmtpConfig config = emailData.isSystem() ? mainConfiguration.getSmtpConfig()
                                              : emailHelperUtil.getSmtpConfig(emailData.getAccountId());
 
@@ -73,7 +73,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
 
     if (!emailHelperUtil.isSmtpConfigValid(config)) {
       sendEmailNotSentAlert(emailData);
-      return;
+      return false;
     }
 
     List<EncryptedDataDetail> encryptionDetails = config.equals(mainConfiguration.getSmtpConfig())
@@ -84,13 +84,15 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
       try {
         mailer.send(config, encryptionDetails, emailData);
         closeEmailNotSentAlert(emailData);
+        return true;
       } catch (WingsException e) {
         String errorString = emailUtil.getErrorString(emailData);
         logger.warn(errorString, e);
         sendEmailNotSentAlert(emailData);
+        return false;
       }
     } else {
-      sendEmailAsDelegateTask(config, encryptionDetails, emailData);
+      return sendEmailAsDelegateTask(config, encryptionDetails, emailData);
     }
   }
 
@@ -104,7 +106,7 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
     alertService.closeAlertsOfType(emailData.getAccountId(), GLOBAL_APP_ID, AlertType.EMAIL_NOT_SENT_ALERT);
   }
 
-  private void sendEmailAsDelegateTask(
+  private boolean sendEmailAsDelegateTask(
       SmtpConfig config, List<EncryptedDataDetail> encryptionDetails, EmailData emailData) {
     String waitId = generateUuid();
     try {
@@ -121,10 +123,12 @@ public class EmailNotificationServiceImpl implements EmailNotificationService {
                                       .build();
       waitNotifyEngine.waitForAll(new EmailNotificationCallBack(), waitId);
       delegateService.queueTask(delegateTask);
+      return true;
     } catch (Exception e) {
       String errorString = emailUtil.getErrorString(emailData);
       logger.warn(errorString, e);
       sendEmailNotSentAlert(emailData);
+      return false;
     }
   }
 

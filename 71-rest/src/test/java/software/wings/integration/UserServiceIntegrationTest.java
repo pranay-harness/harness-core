@@ -23,6 +23,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Role;
@@ -31,6 +34,7 @@ import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.UserInviteSource.SourceType;
 import software.wings.beans.security.HarnessUserGroup;
+import software.wings.common.Constants;
 import software.wings.resources.UserResource.ResendInvitationEmailRequest;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.service.intfc.AccountService;
@@ -361,6 +365,12 @@ public class UserServiceIntegrationTest extends BaseIntegrationTest {
     Account account = Account.Builder.anAccount()
                           .withAccountName(UUID.randomUUID().toString())
                           .withCompanyName(UUID.randomUUID().toString())
+                          .withLicenseInfo(LicenseInfo.builder()
+                                               .accountType(AccountType.PAID)
+                                               .accountStatus(AccountStatus.ACTIVE)
+                                               .licenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS)
+                                               .build())
+
                           .build();
 
     assertFalse(accountService.exists(account.getAccountName()));

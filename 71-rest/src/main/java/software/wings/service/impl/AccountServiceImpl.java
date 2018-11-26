@@ -2,10 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
-import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Arrays.asList;
@@ -25,7 +23,6 @@ import static software.wings.beans.RoleType.APPLICATION_ADMIN;
 import static software.wings.beans.RoleType.NON_PROD_SUPPORT;
 import static software.wings.beans.RoleType.PROD_SUPPORT;
 import static software.wings.beans.SystemCatalog.CatalogType.APPSTACK;
-import static software.wings.common.Constants.SUPPORT_EMAIL;
 import static software.wings.utils.Misc.generateSecretKey;
 import static software.wings.utils.Validator.notNullCheck;
 
@@ -39,19 +36,14 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.StringUtils;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.app.DeployMode;
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
-import software.wings.beans.AccountType;
 import software.wings.beans.AppContainer;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateConfiguration;
@@ -65,16 +57,14 @@ import software.wings.beans.RoleType;
 import software.wings.beans.Service;
 import software.wings.beans.SystemCatalog;
 import software.wings.beans.User;
-import software.wings.common.Constants;
 import software.wings.dl.GenericDbCache;
 import software.wings.dl.WingsPersistence;
-import software.wings.licensing.LicenseManager;
+import software.wings.licensing.LicenseService;
 import software.wings.scheduler.AlertCheckJob;
 import software.wings.scheduler.InstanceStatsCollectorJob;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
-import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.security.auth.AuthHandler;
 import software.wings.service.intfc.AccountService;
@@ -92,15 +82,12 @@ import software.wings.service.intfc.instance.InstanceService;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.verification.CVConfigurationService;
-import software.wings.utils.Validator;
+import software.wings.utils.CacheHelper;
 import software.wings.verification.CVConfiguration;
 
 import java.lang.reflect.Field;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -124,11 +111,12 @@ public class AccountServiceImpl implements AccountService {
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private RoleService roleService;
+  // DO NOT DELETE THIS, PRUNE logic needs it
   @Inject private UserGroupService userGroupService;
   // DO NOT DELETE THIS, PRUNE logic needs it
   @SuppressWarnings("unused") @Inject private InstanceService instanceService;
   @Inject private AuthHandler authHandler;
-  @Inject private LicenseManager licenseManager;
+  @Inject private LicenseService licenseService;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private SettingsService settingsService;
   @Inject private ExecutorService executorService;
@@ -141,6 +129,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private FeatureFlagService featureFlagService;
   @Inject protected AuthService authService;
   @Inject private CVConfigurationService cvConfigurationService;
+  @Inject protected CacheHelper cacheHelper;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
 
@@ -151,71 +140,13 @@ public class AccountServiceImpl implements AccountService {
       account.setUuid(UUIDGenerator.generateUuid());
     }
 
-    if (featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, account.getUuid())) {
-      byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(account.getLicenseInfo(), true);
-      account.setEncryptedLicenseInfo(encryptedLicenseInfo);
-
-      if (isEmpty(account.getSalesContacts())) {
-        account.setSalesContacts(asList(SUPPORT_EMAIL));
-      } else {
-        if (!account.getSalesContacts().contains(SUPPORT_EMAIL)) {
-          account.getSalesContacts().add(SUPPORT_EMAIL);
-        }
-      }
-    }
+    licenseService.addLicenseInfo(account);
 
     wingsPersistence.save(account);
     createDefaultAccountEntities(account);
     AlertCheckJob.add(jobScheduler, account);
     InstanceStatsCollectorJob.add(jobScheduler, account);
     return account;
-  }
-
-  private byte[] getEncryptedLicenseInfo(LicenseInfo licenseInfo, boolean checkAndSetDefaultExpiry) {
-    if (licenseInfo == null) {
-      licenseInfo = new LicenseInfo();
-    }
-
-    if (isEmpty(licenseInfo.getAccountType())) {
-      licenseInfo.setAccountType(AccountType.TRIAL);
-    }
-
-    if (isEmpty(licenseInfo.getAccountStatus())) {
-      licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    }
-
-    if (checkAndSetDefaultExpiry) {
-      // TODO when licensing is implemented, we need to set the expiry time for paid accounts too
-      if (licenseInfo.getAccountType().equals(AccountType.TRIAL)
-          && licenseInfo.getExpiryTime() <= System.currentTimeMillis()) {
-        licenseInfo.setExpiryTime(getDefaultTrialExpiryTime());
-      }
-    }
-
-    return EncryptionUtils.encrypt(LicenseUtil.convertToString(licenseInfo).getBytes(Charset.forName("UTF-8")), null);
-  }
-
-  private long getExpiryTime(int numberOfDays) {
-    Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.DATE, numberOfDays);
-    calendar.set(Calendar.HOUR, 11);
-    calendar.set(Calendar.MINUTE, 59);
-    calendar.set(Calendar.SECOND, 59);
-    calendar.set(Calendar.MILLISECOND, 0);
-    calendar.set(Calendar.AM_PM, Calendar.PM);
-    return calendar.getTimeInMillis();
-  }
-
-  @Override
-  public long getDefaultTrialExpiryTime() {
-    Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.DATE, Constants.TRIAL_PERIOD);
-    calendar.set(Calendar.HOUR, 11);
-    calendar.set(Calendar.MINUTE, 59);
-    calendar.set(Calendar.SECOND, 59);
-    calendar.set(Calendar.MILLISECOND, 0);
-    calendar.set(Calendar.AM_PM, Calendar.PM);
-    return calendar.getTimeInMillis();
   }
 
   private void createDefaultAccountEntities(Account account) {
@@ -266,8 +197,7 @@ public class AccountServiceImpl implements AccountService {
   public Account get(String accountId) {
     Account account = wingsPersistence.get(Account.class, accountId);
     notNullCheck("Account is null for the given id:" + accountId, account, USER);
-
-    decryptLicenseInfo(singletonList(account));
+    licenseService.decryptLicenseInfo(account, false);
     return account;
   }
 
@@ -287,31 +217,7 @@ public class AccountServiceImpl implements AccountService {
       return;
     }
 
-    accounts.forEach(account -> decryptLicenseInfo(account, false));
-  }
-
-  @Override
-  public Account decryptLicenseInfo(Account account, boolean setExpiry) {
-    if (account == null) {
-      return null;
-    }
-
-    if (!featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, account.getUuid())) {
-      return account;
-    }
-
-    byte[] encryptedLicenseInfo = account.getEncryptedLicenseInfo();
-    if (isNotEmpty(encryptedLicenseInfo)) {
-      byte[] decryptedBytes = EncryptionUtils.decrypt(encryptedLicenseInfo, null);
-      if (isNotEmpty(decryptedBytes)) {
-        LicenseInfo licenseInfo = LicenseUtil.convertToObject(decryptedBytes, getDefaultTrialExpiryTime(), setExpiry);
-        account.setLicenseInfo(licenseInfo);
-      } else {
-        logger.error("Error while decrypting license info. Deserialized object is not instance of LicenseInfo");
-      }
-    }
-
-    return account;
+    accounts.forEach(account -> licenseService.decryptLicenseInfo(account, false));
   }
 
   public <T> List<T> descendingServices(Class<T> cls) {
@@ -342,6 +248,7 @@ public class AccountServiceImpl implements AccountService {
         List<OwnedByAccount> services = descendingServices(OwnedByAccount.class);
         services.forEach(service -> service.deleteByAccountId(accountId));
       });
+      //      refreshUsersForAccountDelete(accountId);
     }
   }
 
@@ -377,91 +284,6 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
-  public boolean isAccountDeleted(String accountId) {
-    return AccountStatus.DELETED.equals(getAccountStatus(accountId));
-  }
-
-  @Override
-  public boolean isAccountExpired(String accountId) {
-    Account account = dbCache.get(Account.class, accountId);
-    Validator.notNullCheck("Invalid account with id: " + accountId, account);
-
-    if (!featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, accountId)) {
-      return false;
-    }
-
-    String deployMode = System.getenv().get("DEPLOY_MODE");
-
-    LicenseInfo licenseInfo = account.getLicenseInfo();
-
-    if (licenseInfo == null) {
-      return DeployMode.isOnPrem(deployMode);
-    }
-
-    String accountType = licenseInfo.getAccountType();
-    String accountStatus = licenseInfo.getAccountStatus();
-
-    if (isEmpty(accountType)) {
-      throw new WingsException("Account type is null for account :" + accountId);
-    }
-
-    if (isEmpty(accountStatus)) {
-      throw new WingsException("Account status is null for account :" + accountId);
-    }
-
-    // TODO this check would extend to PAID accounts as well
-    if (AccountType.TRIAL.equals(accountType) && (System.currentTimeMillis() > licenseInfo.getExpiryTime())) {
-      account.getLicenseInfo().setAccountStatus(AccountStatus.EXPIRED);
-      updateAccountLicense(accountId, accountType, AccountStatus.EXPIRED, null, null, false);
-      return true;
-    }
-
-    return false;
-  }
-
-  @Override
-  public void updateAccountLicenseForOnPrem(String encryptedLicenseInfoBase64String) {
-    try {
-      if (isEmpty(encryptedLicenseInfoBase64String)) {
-        String msg = "Couldn't find license info";
-        throw new WingsException(msg);
-      }
-
-      List<Account> accountList = listAllAccounts();
-      if (accountList == null) {
-        String msg = "Couldn't find any accounts in DB";
-        throw new WingsException(msg);
-      }
-
-      accountList.forEach(account -> {
-        if (!featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, account.getUuid())) {
-          return;
-        }
-
-        if (!account.getAccountName().equalsIgnoreCase("Global")) {
-          byte[] encryptedLicenseInfo = Base64.getDecoder().decode(encryptedLicenseInfoBase64String.getBytes());
-          byte[] encryptedLicenseInfoFromDB = account.getEncryptedLicenseInfo();
-
-          boolean noLicenseInfoInDB = isEmpty(encryptedLicenseInfoFromDB);
-
-          if (noLicenseInfoInDB || !Arrays.equals(encryptedLicenseInfo, encryptedLicenseInfoFromDB)) {
-            account.setEncryptedLicenseInfo(encryptedLicenseInfo);
-            decryptLicenseInfo(account, true);
-            LicenseInfo licenseInfo = account.getLicenseInfo();
-            if (licenseInfo != null) {
-              updateAccountLicense(account.getUuid(), licenseInfo, null, false);
-            } else {
-              throw new WingsException("No license info could be extracted from the encrypted license info");
-            }
-          }
-        }
-      });
-    } catch (Exception ex) {
-      throw new WingsException("Error while updating account license for on-prem", ex);
-    }
-  }
-
-  @Override
   public Account update(@Valid Account account) {
     wingsPersistence.update(account,
         wingsPersistence.createUpdateOperations(Account.class)
@@ -469,114 +291,10 @@ public class AccountServiceImpl implements AccountService {
             .set("twoFactorAdminEnforced", account.isTwoFactorAdminEnforced())
             .set("authenticationMechanism", account.getAuthenticationMechanism()));
     dbCache.invalidate(Account.class, account.getUuid());
-    return wingsPersistence.get(Account.class, account.getUuid());
-  }
-
-  @Override
-  public Account updateAccountLicense(
-      @NotEmpty String accountId, LicenseInfo licenseInfo, String salesContacts, boolean checkAndSetDefaultExpiry) {
-    Account accountInDB = get(accountId);
-    if (!featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, accountId)) {
-      logger.error("Feature is not enabled for account {}", accountId);
-      return accountInDB;
-    }
-
-    notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB);
-
-    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
-
-    byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(licenseInfo, checkAndSetDefaultExpiry);
-
-    updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
-
-    if (isNotEmpty(salesContacts)) {
-      updateOperations.set("salesContacts", salesContacts);
-    }
-
-    wingsPersistence.update(accountInDB, updateOperations);
-    dbCache.invalidate(Account.class, accountId);
-    return wingsPersistence.get(Account.class, accountId);
-  }
-
-  @Override
-  public Account updateAccountLicense(@NotEmpty String accountId, String accountType, String accountStatus,
-      String expiryInDaysString, String salesContacts, boolean checkAndSetDefaultExpiry) {
-    Account accountInDB = get(accountId);
-    if (!featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, accountId)) {
-      logger.error("Feature is not enabled for account {}", accountId);
-      return accountInDB;
-    }
-
-    notNullCheck("Invalid Account for the given Id: " + accountId, accountInDB);
-
-    LicenseInfo licenseInfo = accountInDB.getLicenseInfo();
-
-    if (licenseInfo == null) {
-      licenseInfo = new LicenseInfo();
-    }
-
-    if (isNotEmpty(expiryInDaysString)) {
-      try {
-        int expiryInDays = Integer.parseInt(expiryInDaysString);
-        if (expiryInDays > 0) {
-          licenseInfo.setExpiryTime(getExpiryTime(expiryInDays));
-        }
-      } catch (NumberFormatException ex) {
-        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Invalid expiry time " + expiryInDaysString);
-      }
-    } else {
-      if (checkAndSetDefaultExpiry) {
-        licenseInfo.setExpiryTime(getDefaultTrialExpiryTime());
-      }
-    }
-
-    if (AccountStatus.isValid(accountStatus)) {
-      licenseInfo.setAccountStatus(accountStatus);
-    }
-
-    if (AccountType.isValid(accountType)) {
-      licenseInfo.setAccountType(accountType);
-    }
-
-    UpdateOperations<Account> updateOperations = wingsPersistence.createUpdateOperations(Account.class);
-
-    byte[] encryptedLicenseInfo = getEncryptedLicenseInfo(licenseInfo, checkAndSetDefaultExpiry);
-
-    updateOperations.set("encryptedLicenseInfo", encryptedLicenseInfo);
-
-    if (isNotEmpty(salesContacts)) {
-      updateOperations.set("salesContacts", salesContacts);
-    }
-
-    wingsPersistence.update(accountInDB, updateOperations);
-    dbCache.invalidate(Account.class, accountId);
-    return wingsPersistence.get(Account.class, accountId);
-  }
-
-  @Override
-  public String generateLicense(String accountType, String accountStatus, String expiryInDaysString) {
-    LicenseInfo licenseInfo = new LicenseInfo();
-
-    if (isNotEmpty(expiryInDaysString)) {
-      try {
-        int expiryInDays = Integer.parseInt(expiryInDaysString);
-        if (expiryInDays > 0) {
-          licenseInfo.setExpiryTime(getExpiryTime(expiryInDays));
-        }
-      } catch (NumberFormatException ex) {
-        throw new WingsException(GENERAL_ERROR, USER).addParam("message", "Invalid expiry time " + expiryInDaysString);
-      }
-    }
-
-    if (AccountStatus.isValid(accountStatus)) {
-      licenseInfo.setAccountStatus(accountStatus);
-    }
-
-    if (AccountType.isValid(accountType)) {
-      licenseInfo.setAccountType(accountType);
-    }
-
-    return encodeBase64(getEncryptedLicenseInfo(licenseInfo, true));
+    Account updatedAccount = wingsPersistence.get(Account.class, account.getUuid());
+    decryptLicenseInfo(singletonList(updatedAccount));
+    //    refreshUsersForAccountUpdate(updatedAccount);
+    return updatedAccount;
   }
 
   @Override
@@ -593,7 +311,7 @@ public class AccountServiceImpl implements AccountService {
 
   @Override
   public DelegateConfiguration getDelegateConfiguration(String accountId) {
-    if (isAccountDeleted(accountId)) {
+    if (licenseService.isAccountDeleted(accountId)) {
       throw new InvalidRequestException("Deleted AccountId: " + accountId);
     }
 

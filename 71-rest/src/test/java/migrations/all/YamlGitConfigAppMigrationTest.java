@@ -15,9 +15,13 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.Base;
 import software.wings.beans.EntityType;
+import software.wings.beans.LicenseInfo;
+import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.yaml.YamlGitService;
@@ -40,6 +44,11 @@ public class YamlGitConfigAppMigrationTest extends WingsBaseTest {
                           .withCompanyName(HARNESS_NAME)
                           .withAccountName(HARNESS_NAME)
                           .withAccountKey("ACCOUNT_KEY")
+                          .withLicenseInfo(LicenseInfo.builder()
+                                               .accountType(AccountType.PAID)
+                                               .accountStatus(AccountStatus.ACTIVE)
+                                               .licenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS)
+                                               .build())
                           .withUuid(ACCOUNT_ID)
                           .build();
     accountService.save(account);

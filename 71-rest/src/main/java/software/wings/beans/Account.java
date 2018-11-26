@@ -42,8 +42,9 @@ public class Account extends Base {
   private List<String> salesContacts;
 
   @Transient private LicenseInfo licenseInfo;
-
   @JsonIgnore private byte[] encryptedLicenseInfo;
+
+  @JsonIgnore private boolean emailSentToSales;
 
   @JsonIgnore private EncryptionInterface encryption;
   private boolean twoFactorAdminEnforced;
@@ -182,12 +183,24 @@ public class Account extends Base {
     return delegateConfiguration;
   }
 
+  @JsonIgnore
   public List<String> getSalesContacts() {
     return salesContacts;
   }
 
+  @JsonIgnore
   public void setSalesContacts(List<String> salesContacts) {
     this.salesContacts = salesContacts;
+  }
+
+  @JsonIgnore
+  public boolean isEmailSentToSales() {
+    return emailSentToSales;
+  }
+
+  @JsonIgnore
+  public void setEmailSentToSales(boolean emailSentToSales) {
+    this.emailSentToSales = emailSentToSales;
   }
 
   @Override
@@ -235,6 +248,7 @@ public class Account extends Base {
     private DelegateConfiguration delegateConfiguration;
     private Map<String, String> defaults = new HashMap<>();
     private LicenseInfo licenseInfo;
+    private boolean emailSentToSales;
 
     private Builder() {}
 
@@ -312,6 +326,11 @@ public class Account extends Base {
       return this;
     }
 
+    public Builder withEmailSentToSales(boolean emailSentToSales) {
+      this.emailSentToSales = emailSentToSales;
+      return this;
+    }
+
     public Builder but() {
       return anAccount()
           .withCompanyName(companyName)
@@ -327,7 +346,8 @@ public class Account extends Base {
           .withAuthenticationMechanism(authenticationMechanism)
           .withDelegateConfiguration(delegateConfiguration)
           .withDefaults(defaults)
-          .withLicenseInfo(licenseInfo);
+          .withLicenseInfo(licenseInfo)
+          .withEmailSentToSales(emailSentToSales);
     }
 
     public Account build() {
@@ -346,6 +366,7 @@ public class Account extends Base {
       account.setDelegateConfiguration(delegateConfiguration);
       account.setDefaults(defaults);
       account.setLicenseInfo(licenseInfo);
+      account.setEmailSentToSales(emailSentToSales);
       return account;
     }
   }

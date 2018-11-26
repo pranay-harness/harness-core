@@ -1,17 +1,15 @@
 package software.wings.service;
 
-import static io.harness.data.encoding.EncodingUtils.decodeBase64;
-import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.Account.Builder.anAccount;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -23,7 +21,11 @@ import com.google.inject.Inject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
+import io.harness.exception.WingsException;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
@@ -41,26 +43,23 @@ import software.wings.beans.StringValue;
 import software.wings.beans.StringValue.Builder;
 import software.wings.beans.User;
 import software.wings.dl.WingsPersistence;
-import software.wings.licensing.LicenseManager;
+import software.wings.licensing.LicenseService;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserPermissionInfo;
-import software.wings.security.encryption.EncryptionUtils;
+import software.wings.service.impl.LicenseUtil;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.sm.StateType;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,76 +72,57 @@ import java.util.stream.Collectors;
  * Created by peeyushaggarwal on 10/11/16.
  */
 public class AccountServiceTest extends WingsBaseTest {
-  @Mock private LicenseManager licenseManager;
-
   @Mock private AppService appService;
   @Mock private SettingsService settingsService;
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private TemplateGalleryService templateGalleryService;
-  @Mock private FeatureFlagService featureFlagService;
   @Mock private UserPermissionInfo mockUserPermissionInfo;
   @Mock private AuthService authService;
 
+  @InjectMocks @Inject private LicenseService licenseService;
   @InjectMocks @Inject private AccountService accountService;
 
   @Inject private WingsPersistence wingsPersistence;
 
+  @Rule public ExpectedException thrown = ExpectedException.none();
+
+  @Before
+  public void setup() {
+    setInternalState(licenseService, "accountService", accountService);
+    setInternalState(accountService, "licenseService", licenseService);
+  }
+
   @Test
   public void shouldSaveAccount() {
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setAccountType(AccountType.PAID);
+    licenseInfo.setLicenseUnits(100);
+    licenseInfo.setExpireAfterDays(1);
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withLicenseInfo(licenseInfo)
+                                              .build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
     verify(settingsService).createDefaultAccountSettings(account.getUuid());
     verify(jobScheduler, times(2)).deleteJob(eq(account.getUuid()), anyString());
   }
 
   @Test
-  public void shouldSaveTrialAccountWithDefaultValuesAndFeatureDisabled() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    Account account = accountService.save(
+  public void shouldFailSavingAccountWithoutLicense() {
+    thrown.expect(WingsException.class);
+    thrown.expectMessage("Invalid / Null license info");
+    accountService.save(
         anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNull();
-  }
-
-  @Test
-  public void shouldSaveTrialAccountWithDefaultValues() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-    long expiryTime = accountService.getDefaultTrialExpiryTime();
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-  }
-
-  @Test
-  public void shouldSaveAccountWithSpecificType() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.PAID);
-    Account account = accountService.save(anAccount()
-                                              .withCompanyName(HARNESS_NAME)
-                                              .withAccountName(HARNESS_NAME)
-                                              .withAccountKey("ACCOUNT_KEY")
-                                              .withLicenseInfo(licenseInfo)
-                                              .build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(0);
   }
 
   @Test
   public void shouldSaveAccountWithSpecificTypeAndExpiryTime() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-    long expiryTime = accountService.getDefaultTrialExpiryTime() + 100000;
+    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.TRIAL);
-    licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     licenseInfo.setExpiryTime(expiryTime);
     Account account = accountService.save(anAccount()
                                               .withCompanyName(HARNESS_NAME)
@@ -153,186 +133,36 @@ public class AccountServiceTest extends WingsBaseTest {
     Account accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.EXPIRED);
+    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
     assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-  }
-
-  @Test
-  public void shouldUpdateTrialAccountWithDefaultValuesAndFeatureDisabled() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    accountService.updateAccountLicense(accountFromDB.getUuid(), accountFromDB.getLicenseInfo(), null, false);
-    accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNull();
   }
 
   @Test
   public void shouldUpdateTrialAccountWithDefaultValues() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    long expiryTime = accountService.getDefaultTrialExpiryTime();
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-    accountService.updateAccountLicense(accountFromDB.getUuid(), accountFromDB.getLicenseInfo(), null, true);
-    accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-  }
-
-  @Test
-  public void shouldUpdateTrialAccount2WithDefaultValues() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    long expiryTime = accountService.getDefaultTrialExpiryTime();
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-
-    accountService.updateAccountLicense(accountFromDB.getUuid(), null, null, true);
-    accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-  }
-
-  @Test
-  public void shouldUpdateTrialAccount3WithDefaultValues() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    long expiryTime = accountService.getDefaultTrialExpiryTime();
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-
-    accountService.updateAccountLicense(accountFromDB.getUuid(), null, null, null, null, true);
-    accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-  }
-
-  @Test
-  public void shouldUpdateAccountWithSpecificType() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
+    long expiryTime = LicenseUtil.getDefaultTrialExpiryTime() + 100000;
     LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.PAID);
-    accountFromDB.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(accountFromDB.getUuid(), licenseInfo, null, false);
-    accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(0);
-  }
-
-  @Test
-  public void shouldUpdateAccountWithSpecificTypeAndExpiryTime() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-    long expiryTime = accountService.getDefaultTrialExpiryTime() + 100000;
-    LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.PAID);
-    licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
+    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setExpiryTime(expiryTime);
 
-    accountFromDB.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(accountFromDB.getUuid(), licenseInfo, null, false);
-    accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.EXPIRED);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-  }
-
-  @Test
-  public void shouldUpdateOnPremTrialAccountWithDefaultValuesAndFeatureDisabled() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
+    Account account = accountService.save(anAccount()
+                                              .withCompanyName(HARNESS_NAME)
+                                              .withAccountName(HARNESS_NAME)
+                                              .withAccountKey("ACCOUNT_KEY")
+                                              .withLicenseInfo(licenseInfo)
+                                              .build());
     Account accountFromDB = accountService.get(account.getUuid());
-    accountService.updateAccountLicenseForOnPrem("any");
-    accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNull();
-  }
 
-  @Test
-  public void shouldUpdateOnPremTrialAccountWithDefaultValues() throws UnsupportedEncodingException {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    long expiryTime = accountService.getDefaultTrialExpiryTime();
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-    String encryptedString = getEncryptedString(null, null, 0L);
-    accountService.updateAccountLicenseForOnPrem(encryptedString);
+    long newExpiryTime = System.currentTimeMillis() + 400000;
+    LicenseInfo updatedLicenseInfo = new LicenseInfo();
+    updatedLicenseInfo.setExpiryTime(newExpiryTime);
+
+    licenseService.updateAccountLicense(accountFromDB.getUuid(), updatedLicenseInfo, null);
     accountFromDB = accountService.get(account.getUuid());
     assertThat(accountFromDB.getLicenseInfo()).isNotNull();
     assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
     assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-  }
-
-  @Test
-  public void shouldUpdateOnPremTrialAccountWithSpecificValues() throws UnsupportedEncodingException {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(false);
-    long expiryTime = accountService.getDefaultTrialExpiryTime();
-    Account account = accountService.save(
-        anAccount().withCompanyName(HARNESS_NAME).withAccountName(HARNESS_NAME).withAccountKey("ACCOUNT_KEY").build());
-    Account accountFromDB = accountService.get(account.getUuid());
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-    String encryptedString = getEncryptedString("PAID", "ACTIVE", expiryTime);
-    accountService.updateAccountLicenseForOnPrem(encryptedString);
-    accountFromDB = accountService.get(account.getUuid());
-    assertThat(accountFromDB.getLicenseInfo()).isNotNull();
-    assertThat(accountFromDB.getLicenseInfo().getAccountType()).isEqualTo(AccountType.PAID);
-    assertThat(accountFromDB.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-  }
-
-  @Test
-  public void shouldGetNewLicense() {
-    when(featureFlagService.isEnabled(any(), any())).thenReturn(true);
-
-    Calendar calendar = Calendar.getInstance();
-    calendar.add(Calendar.DATE, 1);
-    calendar.set(Calendar.HOUR, 11);
-    calendar.set(Calendar.MINUTE, 59);
-    calendar.set(Calendar.SECOND, 59);
-    calendar.set(Calendar.MILLISECOND, 0);
-    calendar.set(Calendar.AM_PM, Calendar.PM);
-    long expiryTime = calendar.getTimeInMillis();
-
-    String generatedLicense = accountService.generateLicense(AccountType.TRIAL, AccountStatus.ACTIVE, "1");
-
-    Account account = new Account();
-    account.setEncryptedLicenseInfo(decodeBase64(generatedLicense));
-    Account accountWithDecryptedInfo = accountService.decryptLicenseInfo(account, false);
-    assertThat(accountWithDecryptedInfo).isNotNull();
-    assertThat(accountWithDecryptedInfo.getLicenseInfo()).isNotNull();
-    assertThat(accountWithDecryptedInfo.getLicenseInfo().getExpiryTime()).isEqualTo(expiryTime);
-    assertThat(accountWithDecryptedInfo.getLicenseInfo().getAccountStatus()).isEqualTo(AccountStatus.ACTIVE);
-    assertThat(accountWithDecryptedInfo.getLicenseInfo().getAccountType()).isEqualTo(AccountType.TRIAL);
-  }
-
-  private String getEncryptedString(String accountType, String accountStatus, long expiryTime)
-      throws UnsupportedEncodingException {
-    String text = accountType + "_" + accountStatus + "_" + expiryTime;
-    byte[] encrypt = EncryptionUtils.encrypt(text.getBytes(), null);
-    return encodeBase64(encrypt);
+    assertThat(accountFromDB.getLicenseInfo().getExpiryTime()).isEqualTo(newExpiryTime);
   }
 
   @Test

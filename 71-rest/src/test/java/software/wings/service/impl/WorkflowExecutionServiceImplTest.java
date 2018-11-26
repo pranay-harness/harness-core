@@ -80,7 +80,6 @@ import software.wings.beans.Environment.Builder;
 import software.wings.beans.ErrorStrategy;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.ExecutionStrategy;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
 import software.wings.beans.HostConnectionAttributes.AccessType;
@@ -107,6 +106,7 @@ import software.wings.beans.artifact.Artifact;
 import software.wings.beans.infrastructure.Host;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
+import software.wings.licensing.LicenseService;
 import software.wings.rules.Listeners;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
@@ -150,6 +150,7 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   @Mock private BackgroundJobScheduler jobScheduler;
   @Mock private FeatureFlagService featureFlagService;
   @Inject @InjectMocks private AccountService accountService;
+  @Inject @InjectMocks private LicenseService licenseService;
   @Inject @InjectMocks private WorkflowExecutionService workflowExecutionService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private InfrastructureMappingService infrastructureMappingService;
@@ -180,8 +181,15 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
   public void setup() {
     when(jobScheduler.deleteJob(any(), any())).thenReturn(false);
     when(jobScheduler.scheduleJob(any(), any())).thenReturn(null);
-    account = accountService.save(
-        Account.Builder.anAccount().withCompanyName(COMPANY_NAME).withAccountName(ACCOUNT_NAME).build());
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setAccountType(AccountType.PAID);
+    licenseInfo.setLicenseUnits(10);
+    account = accountService.save(Account.Builder.anAccount()
+                                      .withCompanyName(COMPANY_NAME)
+                                      .withAccountName(ACCOUNT_NAME)
+                                      .withLicenseInfo(licenseInfo)
+                                      .build());
     app = wingsPersistence.saveAndGet(
         Application.class, anApplication().withName(APP_NAME).withAccountId(account.getUuid()).build());
     env = wingsPersistence.saveAndGet(Environment.class, Builder.anEnvironment().withAppId(app.getUuid()).build());
@@ -919,13 +927,21 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldTriggerWorkflowFailForExpiredTrialLicense() throws InterruptedException {
-    when(featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, account.getUuid())).thenReturn(true);
+    shouldTriggerWorkflowFailForExpiredLicense(AccountType.TRIAL);
+  }
+
+  @Test
+  public void shouldTriggerWorkflowFailForExpiredPaidLicense() throws InterruptedException {
+    shouldTriggerWorkflowFailForExpiredLicense(AccountType.PAID);
+  }
+
+  private void shouldTriggerWorkflowFailForExpiredLicense(String accountType) throws InterruptedException {
     LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountType(accountType);
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 5000);
     account.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(account.getUuid(), licenseInfo, null, false);
+    licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
 
     Thread.sleep(10000);
     Workflow workflow = createExecutableWorkflow(app.getUuid(), env);
@@ -941,11 +957,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
     // Scenario 2, update the license to be valid and test again.
 
     licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountType(accountType);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 1000000);
     account.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(account.getUuid(), licenseInfo, null, false);
+    licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
 
     WorkflowExecution workflowExecution = workflowExecutionService.triggerOrchestrationWorkflowExecution(
         appId, env.getUuid(), workflow.getUuid(), null, executionArgs, callback, null);
@@ -954,13 +970,21 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
   @Test
   public void shouldTriggerPipelineFailForExpiredTrialLicense() throws InterruptedException {
-    when(featureFlagService.isEnabled(FeatureName.TRIAL_SUPPORT, account.getUuid())).thenReturn(true);
+    shouldTriggerPipelineFailForExpiredLicense(AccountType.TRIAL);
+  }
+
+  @Test
+  public void shouldTriggerPipelineFailForExpiredPaidLicense() throws InterruptedException {
+    shouldTriggerPipelineFailForExpiredLicense(AccountType.PAID);
+  }
+
+  private void shouldTriggerPipelineFailForExpiredLicense(String accountType) throws InterruptedException {
     LicenseInfo licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountType(accountType);
     licenseInfo.setAccountStatus(AccountStatus.EXPIRED);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 5000);
     account.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(account.getUuid(), licenseInfo, null, false);
+    licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
 
     Thread.sleep(10000);
     Service service = wingsPersistence.saveAndGet(
@@ -972,11 +996,11 @@ public class WorkflowExecutionServiceImplTest extends WingsBaseTest {
 
     // Scenario 2, update the license to be valid and test again.
     licenseInfo = new LicenseInfo();
-    licenseInfo.setAccountType(AccountType.TRIAL);
+    licenseInfo.setAccountType(accountType);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
     licenseInfo.setExpiryTime(System.currentTimeMillis() + 1000000);
     account.setLicenseInfo(licenseInfo);
-    accountService.updateAccountLicense(account.getUuid(), licenseInfo, null, false);
+    licenseService.updateAccountLicense(account.getUuid(), licenseInfo, null);
 
     WorkflowExecution workflowExecution = triggerPipeline(app.getUuid(), pipeline, service);
     assertNotNull(workflowExecution);

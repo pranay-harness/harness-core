@@ -81,6 +81,7 @@ import software.wings.beans.TaskType;
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.dl.WingsPersistence;
+import software.wings.licensing.LicenseService;
 import software.wings.rules.Cache;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -128,6 +129,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                       .withLastHeartBeat(System.currentTimeMillis());
   @Mock private WaitNotifyEngine waitNotifyEngine;
   @Mock private AccountService accountService;
+  @Mock private LicenseService licenseService;
   @Mock private EventEmitter eventEmitter;
   @Mock private MainConfiguration mainConfiguration;
   @Mock private BroadcasterFactory broadcasterFactory;
@@ -270,7 +272,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                                                 .withStatus(Status.ENABLED)
                                                 .withLastHeartBeat(System.currentTimeMillis())
                                                 .build());
-    when(accountService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
+    when(licenseService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
 
     Delegate registered = delegateService.register(delegate);
     assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);
@@ -287,7 +289,7 @@ public class DelegateServiceTest extends WingsBaseTest {
                             .withStatus(Status.ENABLED)
                             .withLastHeartBeat(System.currentTimeMillis())
                             .build();
-    when(accountService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
+    when(licenseService.isAccountDeleted("DELETED_ACCOUNT")).thenReturn(true);
 
     Delegate registered = delegateService.register(delegate);
     assertThat(registered.getUuid()).isEqualTo(SELF_DESTRUCT);

@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Account status.
  * @author rktummala on 08/30/18
@@ -17,7 +19,7 @@ public interface AccountStatus {
       return false;
     }
 
-    switch (status) {
+    switch (StringUtils.upperCase(status)) {
       case ACTIVE:
       case EXPIRED:
       case DELETED:

@@ -19,10 +19,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
+import software.wings.beans.AccountStatus;
+import software.wings.beans.AccountType;
 import software.wings.beans.Application;
 import software.wings.beans.BuildWorkflow;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.Graph;
+import software.wings.beans.LicenseInfo;
 import software.wings.beans.Pipeline;
 import software.wings.beans.PipelineStage;
 import software.wings.beans.PipelineStage.PipelineStageElement;
@@ -51,7 +54,12 @@ public class PipelineServiceDBTest extends WingsBaseTest {
   @Inject @InjectMocks private WingsPersistence wingsPersistence;
 
   Account createAccount() {
-    Account account = anAccount().withAccountName("test-account").withCompanyName("Harness").build();
+    LicenseInfo licenseInfo = new LicenseInfo();
+    licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
+    licenseInfo.setAccountType(AccountType.PAID);
+    licenseInfo.setLicenseUnits(10);
+    Account account =
+        anAccount().withAccountName("test-account").withCompanyName("Harness").withLicenseInfo(licenseInfo).build();
     return accountService.save(account);
   }
 

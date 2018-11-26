@@ -38,6 +38,7 @@ import migrations.all.HelmReleaseNamePrefixMigration;
 import migrations.all.HelmReleaseNameSuffixMigration;
 import migrations.all.InfraProvisionerFilteringTypeMigration;
 import migrations.all.LearningEngineTaskGroupNameMigration;
+import migrations.all.LicenseDataMigration;
 import migrations.all.LogAnalysisExperimentalRecordsMigration;
 import migrations.all.MetricAnalysisRecordGroupNameMigration;
 import migrations.all.MetricDataRecordGroupNameMigration;
@@ -159,6 +160,7 @@ public class MigrationList {
         .add(Pair.of(208, DeleteNewRelicMetricNameCronMigration.class))
         .add(Pair.of(209, TimeSeriesMLAnalysisCompressionSaveMigration.class))
         .add(Pair.of(210, TimeSeriesMLAnalysisDeleteUncompressedMigration.class))
+        .add(Pair.of(211, LicenseDataMigration.class))
         .build();
   }
 }

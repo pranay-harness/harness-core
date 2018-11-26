@@ -11,7 +11,7 @@ public interface EmailNotificationService {
    *
    * @param emailData the email data
    */
-  void send(EmailData emailData);
+  boolean send(EmailData emailData);
 
   /**
    * Send async.

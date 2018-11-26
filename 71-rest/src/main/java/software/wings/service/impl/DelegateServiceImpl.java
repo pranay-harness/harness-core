@@ -121,6 +121,7 @@ import software.wings.beans.alert.NoActiveDelegatesAlert;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.dl.WingsPersistence;
 import software.wings.expression.SecretFunctor;
+import software.wings.licensing.LicenseService;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.impl.infra.InfraDownloadService;
 import software.wings.service.intfc.AccountService;
@@ -189,6 +190,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private AccountService accountService;
+  @Inject private LicenseService licenseService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private EventEmitter eventEmitter;
   @Inject private BroadcasterFactory broadcasterFactory;
@@ -404,7 +406,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
     Delegate delegate = get(accountId, delegateId, false);
 
-    if (accountService.isAccountDeleted(accountId)) {
+    if (licenseService.isAccountDeleted(accountId)) {
       delegate.setStatus(Status.DELETED);
     }
     return delegate;
@@ -913,7 +915,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
 
   @Override
   public Delegate register(Delegate delegate) {
-    if (accountService.isAccountDeleted(delegate.getAccountId())) {
+    if (licenseService.isAccountDeleted(delegate.getAccountId())) {
       broadcasterFactory.lookup("/stream/delegate/" + delegate.getAccountId(), true).broadcast(SELF_DESTRUCT);
       return aDelegate().withUuid(SELF_DESTRUCT).build();
     }

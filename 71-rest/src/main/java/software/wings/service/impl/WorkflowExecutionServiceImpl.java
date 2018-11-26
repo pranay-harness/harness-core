@@ -160,6 +160,7 @@ import software.wings.common.Constants;
 import software.wings.common.cache.MongoStore;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.WingsExceptionMapper;
+import software.wings.licensing.LicenseService;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.UserThreadLocal;
@@ -255,6 +256,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
   @Inject private GraphRenderer graphRenderer;
   @Inject private AppService appService;
   @Inject private AccountService accountService;
+  @Inject private LicenseService licenseService;
   @Inject private WorkflowService workflowService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private PersistentLocker persistentLocker;

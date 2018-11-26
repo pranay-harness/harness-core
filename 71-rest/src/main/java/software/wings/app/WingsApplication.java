@@ -75,11 +75,13 @@ import software.wings.filter.AuditResponseFilter;
 import software.wings.health.WingsHealthCheck;
 import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
+import software.wings.licensing.LicenseService;
 import software.wings.resources.AppResource;
 import software.wings.scheduler.AdministrativeJob;
 import software.wings.scheduler.ArchivalManager;
 import software.wings.scheduler.BarrierBackupJob;
 import software.wings.scheduler.ExecutionLogsPruneJob;
+import software.wings.scheduler.LicenseCheckJob;
 import software.wings.scheduler.PersistentLockCleanupJob;
 import software.wings.scheduler.ResourceConstraintBackupJob;
 import software.wings.scheduler.WorkflowExecutionMonitorJob;
@@ -92,7 +94,6 @@ import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.workflow.WorkflowServiceImpl;
-import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LearningEngineService;
 import software.wings.service.intfc.MigrationService;
@@ -316,7 +317,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     String deployMode = System.getenv("DEPLOY_MODE");
 
     if (DeployMode.isOnPrem(deployMode)) {
-      AccountService accountService = injector.getInstance(AccountService.class);
+      LicenseService licenseService = injector.getInstance(LicenseService.class);
       String encryptedLicenseInfoBase64String = System.getenv(Constants.LICENSE_INFO);
       logger.info("Encrypted license info read from environment {}", encryptedLicenseInfoBase64String);
       if (isEmpty(encryptedLicenseInfoBase64String)) {
@@ -324,7 +325,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       } else {
         try {
           logger.info("Updating license info read from environment {}", encryptedLicenseInfoBase64String);
-          accountService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
+          licenseService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
           logger.info("Updated license info read from environment {}", encryptedLicenseInfoBase64String);
         } catch (WingsException ex) {
           logger.error("Error while updating license info", ex);
@@ -448,6 +449,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         PersistentLockCleanupJob.add(jobScheduler);
         ZombieHunterJob.scheduleJobs(jobScheduler);
         AdministrativeJob.addJob(jobScheduler);
+        LicenseCheckJob.addJob(jobScheduler);
         YamlChangeSetPruneJob.add(jobScheduler);
         ExecutionLogsPruneJob.addJob(jobScheduler);
       }

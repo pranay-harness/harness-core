@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,5 +28,19 @@ public class LicenseInfo implements Serializable {
    */
   private String accountStatus;
 
+  @JsonIgnore private transient int expireAfterDays;
+
   private long expiryTime;
+
+  private int licenseUnits;
+
+  @JsonIgnore
+  public int getExpireAfterDays() {
+    return expireAfterDays;
+  }
+
+  @JsonIgnore
+  public void setExpireAfterDays(int expireAfterDays) {
+    this.expireAfterDays = expireAfterDays;
+  }
 }
