@@ -1,6 +1,7 @@
 package software.wings.beans;
 
 import static java.lang.String.format;
+import static software.wings.api.DeploymentType.AWS_LAMBDA;
 import static software.wings.api.DeploymentType.ECS;
 import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.SSH;
@@ -44,7 +45,8 @@ public class InfrastructureMappingBlueprint {
 
   private static Map<Pair<DeploymentType, CloudProviderType>, InfrastructureMappingType> infrastructureMappingTypeMap =
       ImmutableMap.of(Pair.of(SSH, AWS), InfrastructureMappingType.AWS_SSH, Pair.of(ECS, AWS), AWS_ECS,
-          Pair.of(KUBERNETES, GCP), InfrastructureMappingType.GCP_KUBERNETES);
+          Pair.of(KUBERNETES, GCP), InfrastructureMappingType.GCP_KUBERNETES, Pair.of(AWS_LAMBDA, AWS),
+          InfrastructureMappingType.AWS_AWS_LAMBDA);
 
   public static final Map<Pair<DeploymentType, CloudProviderType>, Map<String, String>>
       infrastructureMappingPropertiesMap = ImmutableMap.of(Pair.of(SSH, AWS),
