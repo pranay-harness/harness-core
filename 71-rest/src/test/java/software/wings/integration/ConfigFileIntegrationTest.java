@@ -41,7 +41,6 @@ import software.wings.beans.ServiceTemplate;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.rules.SetupScheduler;
 import software.wings.security.encryption.EncryptedData;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.FileService;
@@ -86,8 +85,7 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
     super.setUp();
     setInternalState(configService, "secretManager", secretManager);
     loginAdminUser();
-    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class)))
-        .thenReturn(new SecretManagementDelegateServiceImpl());
+    when(delegateProxyFactory.get(anyObject(), any(SyncTaskContext.class))).thenReturn(delegateService);
     when(limitCheckerFactory.getInstance(Mockito.any())).thenReturn(mockChecker());
 
     app = appService.save(

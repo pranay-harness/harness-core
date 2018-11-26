@@ -10,6 +10,8 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.TimeLimiter;
+import com.google.inject.Inject;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
@@ -46,6 +48,7 @@ import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -60,21 +63,22 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   public static final int NUM_OF_RETRIES = 3;
 
+  @Inject private TimeLimiter timeLimiter;
+
   private boolean isRetryable(Exception e) {
-    if (e instanceof AWSKMSException) {
-      if (e instanceof KMSInternalException || e instanceof DependencyTimeoutException
-          || e instanceof KeyUnavailableException) {
+    // TimeLimiter.callWithTimer will throw a new exception wrapping around the AwsKMS exceptions. Unwrap it.
+    Throwable t = e.getCause() == null ? e : e.getCause();
+
+    if (t instanceof AWSKMSException) {
+      if (t instanceof KMSInternalException || t instanceof DependencyTimeoutException
+          || t instanceof KeyUnavailableException) {
         return true;
       }
       return false;
+    } else {
+      // Else if not IllegalArgumentException, it should retry.
+      return !(t instanceof IllegalArgumentException);
     }
-
-    if (e instanceof IllegalArgumentException) {
-      return false;
-    }
-
-    // By default for client side exceptions - do retry.
-    return true;
   }
 
   @Override
@@ -82,32 +86,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        final AWSKMS kmsClient =
-            AWSKMSClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(
-                    new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
-                .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
-                .build();
-        GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest();
-        dataKeyRequest.setKeyId(kmsConfig.getKmsArn());
-        dataKeyRequest.setKeySpec("AES_128");
-        GenerateDataKeyResult dataKeyResult = kmsClient.generateDataKey(dataKeyRequest);
-
-        ByteBuffer plainTextKey = dataKeyResult.getPlaintext();
-
-        char[] encryptedValue =
-            value == null ? null : encrypt(new String(value), new SecretKeySpec(getByteArray(plainTextKey), "AES"));
-        String encryptedKeyString = StandardCharsets.ISO_8859_1.decode(dataKeyResult.getCiphertextBlob()).toString();
-
-        return EncryptedData.builder()
-            .encryptionKey(encryptedKeyString)
-            .encryptedValue(encryptedValue)
-            .encryptionType(EncryptionType.KMS)
-            .kmsId(kmsConfig.getUuid())
-            .enabled(true)
-            .parentIds(new HashSet<>())
-            .accountId(accountId)
-            .build();
+        return timeLimiter.callWithTimeout(
+            () -> encryptInternal(accountId, value, kmsConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -137,18 +117,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        final AWSKMS kmsClient =
-            AWSKMSClientBuilder.standard()
-                .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(
-                    new String(kmsConfig.getAccessKey()), new String(kmsConfig.getSecretKey()))))
-                .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
-                .build();
-
-        DecryptRequest decryptRequest =
-            new DecryptRequest().withCiphertextBlob(StandardCharsets.ISO_8859_1.encode(data.getEncryptionKey()));
-        ByteBuffer plainTextKey = kmsClient.decrypt(decryptRequest).getPlaintext();
-
-        return decrypt(data.getEncryptedValue(), new SecretKeySpec(getByteArray(plainTextKey), "AES")).toCharArray();
+        return timeLimiter.callWithTimeout(() -> decryptInternal(data, kmsConfig), 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -169,46 +138,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) {
-    String keyUrl = settingType + "/" + name;
-    if (value == null) {
-      keyUrl = savedEncryptedData == null ? keyUrl : savedEncryptedData.getEncryptionKey();
-      char[] encryptedValue = savedEncryptedData == null ? null : keyUrl.toCharArray();
-      return EncryptedData.builder()
-          .encryptionKey(keyUrl)
-          .encryptedValue(encryptedValue)
-          .encryptionType(EncryptionType.VAULT)
-          .enabled(true)
-          .accountId(accountId)
-          .parentIds(new HashSet<>())
-          .kmsId(vaultConfig.getUuid())
-          .build();
-    }
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        if (savedEncryptedData != null && isNotBlank(value)) {
-          logger.info("deleting vault secret {} for {}", savedEncryptedData.getEncryptionKey(), savedEncryptedData);
-          VaultRestClientFactory.create(vaultConfig)
-              .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey());
-        }
-        boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
-                                   .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, settingType, value);
-
-        if (isSuccessful) {
-          logger.info("saving vault secret {} for {}", keyUrl, savedEncryptedData);
-          return EncryptedData.builder()
-              .encryptionKey(keyUrl)
-              .encryptedValue(keyUrl.toCharArray())
-              .encryptionType(EncryptionType.VAULT)
-              .enabled(true)
-              .accountId(accountId)
-              .parentIds(new HashSet<>())
-              .kmsId(vaultConfig.getUuid())
-              .build();
-        } else {
-          String errorMsg = "Request not successful.";
-          logger.error(errorMsg);
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
-        }
+        return timeLimiter.callWithTimeout(
+            ()
+                -> encryptInternal(name, value, accountId, settingType, vaultConfig, savedEncryptedData),
+            15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
           logger.warn(format("encryption failed. trial num: %d", retry), e);
@@ -230,17 +165,19 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
-        String value = VaultRestClientFactory.create(vaultConfig)
-                           .readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
+        return timeLimiter.callWithTimeout(() -> {
+          logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
+          String value = VaultRestClientFactory.create(vaultConfig)
+                             .readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
 
-        if (EmptyPredicate.isNotEmpty(value)) {
-          return value.toCharArray();
-        } else {
-          String errorMsg = "Request not successful.";
-          logger.error(errorMsg);
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
-        }
+          if (EmptyPredicate.isNotEmpty(value)) {
+            return value.toCharArray();
+          } else {
+            String errorMsg = "Request not successful.";
+            logger.error(errorMsg);
+            throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
+          }
+        }, 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (retry < NUM_OF_RETRIES) {
           logger.warn(format("decryption failed. trial num: %d", retry), e);
@@ -293,6 +230,98 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
       }
     }
     return false;
+  }
+
+  private EncryptedData encryptInternal(String accountId, char[] value, KmsConfig kmsConfig) throws Exception {
+    final AWSKMS kmsClient =
+        AWSKMSClientBuilder.standard()
+            .withCredentials(new AWSStaticCredentialsProvider(
+                new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
+            .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
+            .build();
+    GenerateDataKeyRequest dataKeyRequest = new GenerateDataKeyRequest();
+    dataKeyRequest.setKeyId(kmsConfig.getKmsArn());
+    dataKeyRequest.setKeySpec("AES_128");
+    GenerateDataKeyResult dataKeyResult = kmsClient.generateDataKey(dataKeyRequest);
+
+    ByteBuffer plainTextKey = dataKeyResult.getPlaintext();
+
+    char[] encryptedValue =
+        value == null ? null : encrypt(new String(value), new SecretKeySpec(getByteArray(plainTextKey), "AES"));
+    String encryptedKeyString = StandardCharsets.ISO_8859_1.decode(dataKeyResult.getCiphertextBlob()).toString();
+
+    // Shutdown the KMS client so as to prevent resource leaking,
+    kmsClient.shutdown();
+
+    return EncryptedData.builder()
+        .encryptionKey(encryptedKeyString)
+        .encryptedValue(encryptedValue)
+        .encryptionType(EncryptionType.KMS)
+        .kmsId(kmsConfig.getUuid())
+        .enabled(true)
+        .parentIds(new HashSet<>())
+        .accountId(accountId)
+        .build();
+  }
+
+  private char[] decryptInternal(EncryptedData data, KmsConfig kmsConfig) throws Exception {
+    final AWSKMS kmsClient =
+        AWSKMSClientBuilder.standard()
+            .withCredentials(new AWSStaticCredentialsProvider(
+                new BasicAWSCredentials(kmsConfig.getAccessKey(), kmsConfig.getSecretKey())))
+            .withRegion(kmsConfig.getRegion() == null ? Regions.US_EAST_1 : Regions.fromName(kmsConfig.getRegion()))
+            .build();
+
+    DecryptRequest decryptRequest =
+        new DecryptRequest().withCiphertextBlob(StandardCharsets.ISO_8859_1.encode(data.getEncryptionKey()));
+    ByteBuffer plainTextKey = kmsClient.decrypt(decryptRequest).getPlaintext();
+
+    // Shutdown the KMS client so as to prevent resource leaking,
+    kmsClient.shutdown();
+
+    return decrypt(data.getEncryptedValue(), new SecretKeySpec(getByteArray(plainTextKey), "AES")).toCharArray();
+  }
+
+  private EncryptedData encryptInternal(String name, String value, String accountId, SettingVariableTypes settingType,
+      VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws Exception {
+    String keyUrl = settingType + "/" + name;
+    if (value == null) {
+      keyUrl = savedEncryptedData == null ? keyUrl : savedEncryptedData.getEncryptionKey();
+      char[] encryptedValue = savedEncryptedData == null ? null : keyUrl.toCharArray();
+      return EncryptedData.builder()
+          .encryptionKey(keyUrl)
+          .encryptedValue(encryptedValue)
+          .encryptionType(EncryptionType.VAULT)
+          .enabled(true)
+          .accountId(accountId)
+          .parentIds(new HashSet<>())
+          .kmsId(vaultConfig.getUuid())
+          .build();
+    }
+    if (savedEncryptedData != null && isNotBlank(value)) {
+      logger.info("deleting vault secret {} for {}", savedEncryptedData.getEncryptionKey(), savedEncryptedData);
+      VaultRestClientFactory.create(vaultConfig)
+          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey());
+    }
+    boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
+                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, settingType, value);
+
+    if (isSuccessful) {
+      logger.info("saving vault secret {} for {}", keyUrl, savedEncryptedData);
+      return EncryptedData.builder()
+          .encryptionKey(keyUrl)
+          .encryptedValue(keyUrl.toCharArray())
+          .encryptionType(EncryptionType.VAULT)
+          .enabled(true)
+          .accountId(accountId)
+          .parentIds(new HashSet<>())
+          .kmsId(vaultConfig.getUuid())
+          .build();
+    } else {
+      String errorMsg = "Request not successful.";
+      logger.error(errorMsg);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
+    }
   }
 
   public static char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,

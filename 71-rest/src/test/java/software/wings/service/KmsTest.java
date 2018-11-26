@@ -87,7 +87,6 @@ import software.wings.security.encryption.SecretUsageLog;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.SettingValidationService;
 import software.wings.service.impl.security.KmsTransitionEventListener;
-import software.wings.service.impl.security.SecretManagementDelegateServiceImpl;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -144,6 +143,7 @@ public class KmsTest extends WingsBaseTest {
   @Inject private SettingValidationService settingValidationService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
   @Inject private ServiceVariableResource serviceVariableResource;
+  @Inject private SecretManagementDelegateService delegateService;
   @Mock private SecretManagementDelegateService secretManagementDelegateService;
   @Mock private ContainerService containerService;
   @Mock private NewRelicService newRelicService;
@@ -2698,7 +2698,6 @@ public class KmsTest extends WingsBaseTest {
 
   @Test
   public void kmsExceptionTest() {
-    SecretManagementDelegateService delegateService = new SecretManagementDelegateServiceImpl();
     KmsConfig kmsConfig = getKmsConfig();
     kmsConfig.setKmsArn("invalid krn");
     String toEncrypt = UUID.randomUUID().toString();
