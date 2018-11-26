@@ -66,7 +66,7 @@ public class StateExecutionInstance extends Base {
   private String childStateMachineId;
   private String displayName;
   private String stateName;
-  @Indexed private String stateType;
+  private String stateType;
   private ContextElement contextElement;
   private boolean contextTransition;
   private boolean rollback;
@@ -98,7 +98,7 @@ public class StateExecutionInstance extends Base {
 
   private String nextInstanceId;
 
-  @Indexed private String cloneInstanceId;
+  private String cloneInstanceId;
 
   private String notifyId;
   @Indexed private ExecutionStatus status = ExecutionStatus.NEW;
@@ -107,7 +107,7 @@ public class StateExecutionInstance extends Base {
 
   private Long startTs;
   private Long endTs;
-  @Indexed private Long expiryTs;
+  private Long expiryTs;
 
   @Transient private String workflowId;
   @Transient private String pipelineStateElementId;
