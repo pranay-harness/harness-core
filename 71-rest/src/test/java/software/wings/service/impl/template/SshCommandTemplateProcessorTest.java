@@ -15,6 +15,7 @@ import static software.wings.beans.command.ServiceCommand.TEMPATE_UUID_KEY;
 import static software.wings.beans.template.TemplateType.SSH;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.LATEST_TAG;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.TOMCAT_WAR_STOP_PATH;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC_CHANGED;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_NAME;
@@ -58,6 +59,11 @@ public class SshCommandTemplateProcessorTest extends TemplateBaseTest {
   @Test
   public void shouldLoadDefaultCommandTemplates() {
     templateService.loadDefaultTemplates(SSH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+  }
+
+  @Test
+  public void shouldLoadIISCommands() {
+    templateService.loadYaml(SSH, POWER_SHELL_IIS_APP_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
   }
 
   @Test

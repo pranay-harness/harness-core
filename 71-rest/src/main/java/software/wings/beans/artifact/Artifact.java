@@ -128,7 +128,7 @@ public class Artifact extends Base {
    * Gets artifact file Name
    * @return
    */
-  public String getArtifactFileName() {
+  public String getFileName() {
     if (getMetadata() != null) {
       return getMetadata().get(ARTIFACT_FILE_NAME);
     }

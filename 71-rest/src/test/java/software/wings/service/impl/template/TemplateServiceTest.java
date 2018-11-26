@@ -25,6 +25,7 @@ import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommand
 import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderPath;
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V2_INSTALL_PATH;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC_CHANGED;
@@ -48,6 +49,7 @@ import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.service.intfc.template.TemplateVersionService;
 import software.wings.utils.WingsTestConstants;
 
+import java.io.IOException;
 import java.util.List;
 import javax.validation.ConstraintViolationException;
 
@@ -502,5 +504,23 @@ public class TemplateServiceTest extends TemplateBaseTest {
           .extracting(CommandCategory.CommandUnit::getType)
           .contains(PROCESS_CHECK_RUNNING, PORT_CHECK_CLEARED, PORT_CHECK_LISTENING);
     });
+  }
+
+  @Test
+  public void shouldFetchTemplateByKeyword() {
+    Template template = getSshCommandTemplate();
+    Template savedTemplate = templateService.save(template);
+    assertThat(savedTemplate).isNotNull();
+    Template template1 = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, TEMPLATE_CUSTOM_KEYWORD);
+    assertThat(template1.getUuid()).isEqualTo(savedTemplate.getUuid());
+  }
+
+  @Test
+  public void shouldConvertYamlToTemplate() throws IOException {
+    Template template = templateService.convertYamlToTemplate(POWER_SHELL_IIS_V2_INSTALL_PATH);
+    assertThat(template).isNotNull();
+    assertThat(((SshCommandTemplate) template.getTemplateObject()).getCommands().size()).isEqualTo(4);
+    assertThat(((SshCommandTemplate) template.getTemplateObject()).getCommands().get(0).getName())
+        .isEqualTo("Download Artifact");
   }
 }

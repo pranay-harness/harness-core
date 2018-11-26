@@ -5,11 +5,19 @@ import static io.harness.beans.SearchFilter.Operator.EQ;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+import static software.wings.api.ScriptType.POWERSHELL;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.command.CommandType.INSTALL;
+import static software.wings.beans.command.CommandUnitType.DOWNLOAD_ARTIFACT;
+import static software.wings.beans.command.DownloadArtifactCommandUnit.Builder.aDownloadArtifactCommandUnit;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
+import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_INSTALL_PATH;
+import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
+import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY_DESC_CHANGED;
@@ -31,7 +39,9 @@ import software.wings.beans.template.Template;
 import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateGallery;
 import software.wings.beans.template.TemplateType;
+import software.wings.beans.template.command.SshCommandTemplate;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
 import software.wings.service.intfc.template.TemplateService;
 
@@ -42,6 +52,7 @@ import javax.validation.ConstraintViolationException;
 public class TemplateGalleryServiceTest extends WingsBaseTest {
   @Inject @InjectMocks protected TemplateGalleryService templateGalleryService;
   @Inject private TemplateService templateService;
+  @Inject private TemplateFolderService templateFolderService;
 
   @Mock private AccountService accountService;
 
@@ -261,5 +272,57 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
     TemplateGallery harnessGallery = templateGalleryService.get(ACCOUNT_ID, templateGallery.getName());
     assertThat(harnessGallery).isNotNull();
     assertThat(templateGallery.getReferencedGalleryId()).isNull();
+  }
+
+  @Test
+  public void shouldCopyHarnessTemplateFromGalleryToAccounts() {
+    templateGalleryService.loadHarnessGallery();
+    templateGalleryService.copyHarnessTemplatesToAccount(ACCOUNT_ID, ACCOUNT_NAME);
+    templateService.loadYaml(
+        TemplateType.SSH, POWER_SHELL_IIS_WEBSITE_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    when(accountService.listAllAccounts())
+        .thenReturn(asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build()));
+
+    templateGalleryService.copyHarnessTemplateFromGalleryToAccounts(
+        POWER_SHELL_COMMANDS, TemplateType.SSH, "Install IIS Website", POWER_SHELL_IIS_WEBSITE_INSTALL_PATH);
+    Template createdTemplate = templateService.fetchTemplateByKeyword(ACCOUNT_ID, "iiswebsite");
+    assertThat(createdTemplate).isNotNull();
+  }
+
+  @Test
+  public void shouldCopyNewVersionFromGlobalToAllAccounts() {
+    templateGalleryService.loadHarnessGallery();
+    templateGalleryService.copyHarnessTemplatesToAccount(ACCOUNT_ID, ACCOUNT_NAME);
+
+    //    Template template = templateService.fetchTemplateByKeyword(GLOBAL_ACCOUNT_ID, "iis");
+    SshCommandTemplate sshCommandTemplate = SshCommandTemplate.builder()
+                                                .commandType(INSTALL)
+                                                .commandUnits(asList(aDownloadArtifactCommandUnit()
+                                                                         .withName("Download Artifact")
+                                                                         .withCommandPath("${DownloadDirectory}")
+                                                                         .withScriptType(POWERSHELL)
+                                                                         .withCommandUnitType(DOWNLOAD_ARTIFACT)
+                                                                         .build()))
+                                                .build();
+    Template template = Template.builder()
+                            .accountId(GLOBAL_ACCOUNT_ID)
+                            .appId(GLOBAL_APP_ID)
+                            .gallery(HARNESS_GALLERY)
+                            .name("Install")
+                            .type("SSH")
+                            .description(TEMPLATE_DESC)
+                            .folderPath("Harness/Power Shell Commands")
+                            .keywords(asList(TEMPLATE_CUSTOM_KEYWORD))
+                            .templateObject(sshCommandTemplate)
+                            .build();
+
+    when(accountService.listAllAccounts())
+        .thenReturn(asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build()));
+
+    templateGalleryService.copyNewVersionFromGlobalToAllAccounts(template, "iis");
+
+    Template template1 = templateService.fetchTemplateByKeyword(ACCOUNT_ID, "iis");
+    assertThat(template1).isNotNull();
+    assertThat(template1.getVersion()).isEqualTo(2L);
   }
 }

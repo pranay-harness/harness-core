@@ -138,7 +138,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       if (isNotEmpty(artifact.getArtifactFiles())) {
         artifactFileName = artifact.getArtifactFiles().get(0).getName();
       } else if (artifact.getMetadata() != null) {
-        artifactFileName = artifact.getArtifactFileName();
+        artifactFileName = artifact.getFileName();
       }
       if (isNotEmpty(artifactFileName)) {
         map.put(ARTIFACT_FILE_NAME_VARIABLE, artifactFileName);

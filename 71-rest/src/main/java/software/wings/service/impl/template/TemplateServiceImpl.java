@@ -1,11 +1,16 @@
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.ListUtils.trimList;
 import static io.harness.eraro.ErrorCode.TEMPLATES_LINKED;
 import static io.harness.exception.WingsException.USER;
+import static java.util.Arrays.asList;
 import static software.wings.beans.Base.ACCOUNT_ID_KEY;
+import static software.wings.beans.Base.GLOBAL_ACCOUNT_ID;
+import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.ID_KEY;
+import static software.wings.beans.Base.KEYWORDS_KEY;
 import static software.wings.beans.EntityType.SERVICE;
 import static software.wings.beans.EntityType.WORKFLOW;
 import static software.wings.beans.template.Template.FOLDER_PATH_ID_KEY;
@@ -19,19 +24,25 @@ import static software.wings.beans.template.TemplateType.SSH;
 import static software.wings.beans.template.TemplateVersion.ChangeType.CREATED;
 import static software.wings.beans.template.TemplateVersion.TEMPLATE_UUID_KEY;
 import static software.wings.beans.template.VersionedTemplate.TEMPLATE_ID_KEY;
+import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
+import static software.wings.common.TemplateConstants.LATEST_TAG;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import de.danielbechler.diff.ObjectDifferBuilder;
 import de.danielbechler.diff.node.DiffNode;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -56,6 +67,8 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.template.TemplateVersionService;
 import software.wings.utils.Validator;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -76,6 +89,7 @@ public class TemplateServiceImpl implements TemplateService {
   @Inject private TemplateVersionService templateVersionService;
   @Inject private TemplateHelper templateHelper;
   @Inject private TemplateGalleryService templateGalleryService;
+  ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
   @Override
   public PageResponse<Template> list(PageRequest<Template> pageRequest) {
@@ -145,6 +159,7 @@ public class TemplateServiceImpl implements TemplateService {
   @ValidationGroups(Update.class)
   public Template update(Template template) {
     saveOrUpdate(template);
+    processTemplate(template);
     Template oldTemplate;
     if (template.getVersion() == null) {
       oldTemplate = get(template.getUuid());
@@ -412,5 +427,69 @@ public class TemplateServiceImpl implements TemplateService {
   private List<String> getKeywords(Template template) {
     List<String> generatedKeywords = trimList(template.generateKeywords());
     return addUserKeyWords(template.getKeywords(), generatedKeywords);
+  }
+
+  public Template fetchTemplateByKeyword(@NotEmpty String accountId, String keyword) {
+    Template template = null;
+    if (isNotEmpty(keyword)) {
+      Query<Template> templateQuery = wingsPersistence.createQuery(Template.class)
+                                          .filter(ACCOUNT_ID_KEY, accountId)
+                                          .field(KEYWORDS_KEY)
+                                          .in(asList(keyword.toLowerCase()));
+      List<Template> templates = templateQuery.asList();
+      if (EmptyPredicate.isNotEmpty(templates)) {
+        template = templates.get(0);
+      }
+      if (template != null) {
+        setTemplateDetails(template, null);
+      }
+    }
+    return template;
+  }
+
+  public Template convertYamlToTemplate(String templatePath) throws IOException {
+    URL url = this.getClass().getClassLoader().getResource(templatePath);
+    return mapper.readValue(url, Template.class);
+  }
+
+  public void loadDefaultTemplates(List<String> templateFiles, String accountId, String accountName) {
+    // First
+    templateFiles.forEach(templatePath -> {
+      try {
+        logger.info("Loading url file {} for the account {} ", templatePath, accountId);
+        loadAndSaveTemplate(templatePath, accountId, accountName);
+      } catch (WingsException exception) {
+        String msg = "Failed to save template from file [" + templatePath + "] for the account [" + accountId
+            + "] . Reason:" + exception.getMessage();
+        throw new WingsException(msg, exception, WingsException.USER);
+      } catch (IOException exception) {
+        String msg = "Failed to save template from file [" + templatePath + "]. Reason:" + exception.getMessage();
+        throw new WingsException(msg, exception, WingsException.USER);
+      }
+    });
+  }
+
+  private Template loadAndSaveTemplate(String templatePath, String accountId, String accountName) throws IOException {
+    URL url = this.getClass().getClassLoader().getResource(templatePath);
+    Template template = mapper.readValue(url, Template.class);
+
+    if (!GLOBAL_ACCOUNT_ID.equals(accountId)) {
+      String referencedTemplateUri = template.getReferencedTemplateUri();
+      if (isNotEmpty(referencedTemplateUri)) {
+        String referencedTemplateVersion = TemplateHelper.obtainTemplateVersion(referencedTemplateUri);
+        template.setReferencedTemplateId(fetchTemplateIdFromUri(GLOBAL_ACCOUNT_ID, referencedTemplateUri));
+        if (!LATEST_TAG.equals(referencedTemplateVersion)) {
+          if (referencedTemplateVersion != null) {
+            template.setReferencedTemplateVersion(Long.parseLong(referencedTemplateVersion));
+          }
+        }
+      }
+      if (isNotEmpty(template.getFolderPath())) {
+        template.setFolderPath(template.getFolderPath().replace(HARNESS_GALLERY, accountName));
+      }
+    }
+    template.setAppId(GLOBAL_APP_ID);
+    template.setAccountId(accountId);
+    return save(template);
   }
 }

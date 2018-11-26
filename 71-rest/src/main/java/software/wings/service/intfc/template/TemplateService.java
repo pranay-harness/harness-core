@@ -9,6 +9,7 @@ import software.wings.beans.template.TemplateFolder;
 import software.wings.beans.template.TemplateType;
 import software.wings.beans.template.VersionedTemplate;
 
+import java.io.IOException;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -47,4 +48,10 @@ public interface TemplateService {
   String fetchTemplateIdFromUri(@NotEmpty String accountId, @NotEmpty String templateUri);
 
   VersionedTemplate getVersionedTemplate(@NotEmpty String accountId, @NotEmpty String templateUuid, Long version);
+
+  Template fetchTemplateByKeyword(@NotEmpty String accountId, String keyword);
+
+  Template convertYamlToTemplate(String templatePath) throws IOException;
+
+  void loadDefaultTemplates(List<String> templateFiles, String accountId, String accountName);
 }

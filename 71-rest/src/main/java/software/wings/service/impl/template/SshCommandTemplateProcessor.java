@@ -36,6 +36,7 @@ import software.wings.beans.yaml.YamlType;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.command.CommandUnitYamlHandler;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.template.TemplateService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +47,7 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
 
   @Inject YamlHandlerFactory yamlHandlerFactory;
   @Inject ServiceResourceService serviceResourceService;
+  @Inject TemplateService templateService;
 
   @Override
   public Template process(Template template) {
@@ -143,6 +145,17 @@ public class SshCommandTemplateProcessor extends AbstractTemplateProcessor {
         .withCommandUnits(commandTemplate.getCommandUnits())
         .withName(template.getName())
         .withCommandType(commandTemplate.getCommandType())
+        .withTemplateId(template.getUuid())
         .build();
+  }
+
+  public Command fetchEntityFromTemplate(Template template) {
+    Command command = null;
+    if (template != null) {
+      command = (Command) templateService.constructEntityFromTemplate(
+          template.getUuid(), String.valueOf(template.getVersion()));
+      command.setTemplateVersion("latest");
+    }
+    return command;
   }
 }

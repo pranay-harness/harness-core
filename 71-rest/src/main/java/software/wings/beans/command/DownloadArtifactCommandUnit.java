@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.api.ScriptType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.SmbConfig;
@@ -330,5 +331,97 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
 
   private String getArtifactoryUrl(ArtifactoryConfig config, String artifactPath) {
     return config.fetchRegistryUrl() + "/" + artifactPath;
+  }
+
+  /**
+   * The type Builder.
+   */
+  public static final class Builder {
+    private String commandPath;
+    private ScriptType scriptType;
+    private String name;
+    private CommandUnitType commandUnitType;
+
+    private Builder() {}
+
+    /**
+     * A DownloadArtifact command unit builder.
+     *
+     * @return the builder
+     */
+    public static Builder aDownloadArtifactCommandUnit() {
+      return new Builder();
+    }
+
+    /**
+     * With file category builder.
+     *
+     * @param commandPath the default command directory
+     * @return the builder
+     */
+    public Builder withCommandPath(String commandPath) {
+      this.commandPath = commandPath;
+      return this;
+    }
+
+    /**
+     * With destination directory path builder.
+     *
+     * @param scriptType the script type
+     * @return the builder
+     */
+    public Builder withScriptType(ScriptType scriptType) {
+      this.scriptType = scriptType;
+      return this;
+    }
+
+    /**
+     * With name builder.
+     *
+     * @param name the name
+     * @return the builder
+     */
+    public Builder withName(String name) {
+      this.name = name;
+      return this;
+    }
+
+    /**
+     * With command unit type builder.
+     *
+     * @param commandUnitType the command unit type
+     * @return the builder
+     */
+    public Builder withCommandUnitType(CommandUnitType commandUnitType) {
+      this.commandUnitType = commandUnitType;
+      return this;
+    }
+
+    /**
+     * But builder.
+     *
+     * @return the builder
+     */
+    public Builder but() {
+      return aDownloadArtifactCommandUnit()
+          .withCommandPath(commandPath)
+          .withScriptType(scriptType)
+          .withName(name)
+          .withCommandUnitType(commandUnitType);
+    }
+
+    /**
+     * Build scp command unit.
+     *
+     * @return the scp command unit
+     */
+    public DownloadArtifactCommandUnit build() {
+      DownloadArtifactCommandUnit downloadArtifactCommandUnit = new DownloadArtifactCommandUnit();
+      downloadArtifactCommandUnit.setScriptType(scriptType);
+      downloadArtifactCommandUnit.setCommandPath(commandPath);
+      downloadArtifactCommandUnit.setName(name);
+      downloadArtifactCommandUnit.setCommandUnitType(commandUnitType);
+      return downloadArtifactCommandUnit;
+    }
   }
 }

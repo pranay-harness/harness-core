@@ -2,6 +2,7 @@ package software.wings.utils;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static software.wings.api.ScriptType.POWERSHELL;
 import static software.wings.beans.Graph.Builder.aGraph;
 import static software.wings.beans.GraphNode.GraphNodeBuilder.aGraphNode;
 import static software.wings.beans.command.Command.Builder.aCommand;
@@ -18,6 +19,8 @@ import static software.wings.beans.command.CommandUnitType.RESIZE;
 import static software.wings.beans.command.CommandUnitType.RESIZE_KUBERNETES;
 import static software.wings.beans.command.CommandUnitType.SCP;
 import static software.wings.beans.command.CommandUnitType.SETUP_ENV;
+import static software.wings.beans.command.DownloadArtifactCommandUnit.Builder.aDownloadArtifactCommandUnit;
+import static software.wings.beans.command.ExecCommandUnit.Builder.anExecCommandUnit;
 import static software.wings.common.Constants.AMI_SETUP_COMMAND_NAME;
 import static software.wings.common.Constants.ASG_COMMAND_NAME;
 import static software.wings.common.Constants.PCF_RESIZE;
@@ -27,6 +30,7 @@ import static software.wings.utils.PowerShellScriptsLoader.psScriptMap;
 import io.harness.data.structure.UUIDGenerator;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.CommandType;
+import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.ScpCommandUnit.ScpFileCategory;
 import software.wings.beans.command.SetupEnvCommandUnit;
 import software.wings.common.Constants;
@@ -820,41 +824,27 @@ public enum ArtifactType {
     private Command getInstallCommand() {
       return aCommand()
           .withCommandType(CommandType.INSTALL)
-          .withGraph(aGraph()
-                         .withGraphName("Install")
-                         .addNodes(aGraphNode()
-                                       .withOrigin(true)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withType(EXEC.name())
-                                       .withName(PsScript.DownloadArtifacts.getDisplayName())
-                                       .addProperty("scriptType", "POWERSHELL")
-                                       .addProperty("commandString", psScriptMap.get(PsScript.DownloadArtifacts))
-                                       .build(),
-                             aGraphNode()
-                                 .withOrigin(true)
-                                 .withId(UUIDGenerator.graphIdGenerator("node"))
-                                 .withType(EXEC.name())
-                                 .withName(PsScript.ExpandArtifacts.getDisplayName())
-                                 .addProperty("scriptType", "POWERSHELL")
-                                 .addProperty("commandString", psScriptMap.get(PsScript.ExpandArtifacts))
-                                 .build(),
-                             aGraphNode()
-                                 .withOrigin(true)
-                                 .withId(UUIDGenerator.graphIdGenerator("node"))
-                                 .withType(EXEC.name())
-                                 .withName(PsScript.CreateIISAppPool.getDisplayName())
-                                 .addProperty("scriptType", "POWERSHELL")
-                                 .addProperty("commandString", psScriptMap.get(PsScript.CreateIISAppPool))
-                                 .build(),
-                             aGraphNode()
-                                 .withOrigin(true)
-                                 .withId(UUIDGenerator.graphIdGenerator("node"))
-                                 .withType(EXEC.name())
-                                 .withName(PsScript.CreateIISWebsite.getDisplayName())
-                                 .addProperty("scriptType", "POWERSHELL")
-                                 .addProperty("commandString", psScriptMap.get(PsScript.CreateIISWebsite))
-                                 .build())
-                         .buildPipeline())
+          .withName("Install IIS Website")
+          .withCommandUnits(asList(new CommandUnit[] {aDownloadArtifactCommandUnit()
+                                                          .withName(PsScript.DownloadArtifact.getDisplayName())
+                                                          .withScriptType(POWERSHELL)
+                                                          .withCommandPath("$env:TEMP")
+                                                          .build(),
+              anExecCommandUnit()
+                  .withName(PsScript.ExpandArtifacts.getDisplayName())
+                  .withScriptType(POWERSHELL)
+                  .withCommandString(psScriptMap.get(PsScript.ExpandArtifacts))
+                  .build(),
+              anExecCommandUnit()
+                  .withName(PsScript.CreateIISAppPool.getDisplayName())
+                  .withScriptType(POWERSHELL)
+                  .withCommandString(psScriptMap.get(PsScript.CreateIISAppPool))
+                  .build(),
+              anExecCommandUnit()
+                  .withName(PsScript.CreateIISWebsite.getDisplayName())
+                  .withScriptType(POWERSHELL)
+                  .withCommandString(psScriptMap.get(PsScript.CreateIISWebsite))
+                  .build()}))
           .build();
     }
   },
@@ -892,33 +882,22 @@ public enum ArtifactType {
     private Command getInstallCommand() {
       return aCommand()
           .withCommandType(CommandType.INSTALL)
-          .withGraph(aGraph()
-                         .withGraphName("Install")
-                         .addNodes(aGraphNode()
-                                       .withOrigin(true)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withType(EXEC.name())
-                                       .withName(PsScript.DownloadArtifacts.getDisplayName())
-                                       .addProperty("scriptType", "POWERSHELL")
-                                       .addProperty("commandString", psScriptMap.get(PsScript.DownloadArtifacts))
-                                       .build(),
-                             aGraphNode()
-                                 .withOrigin(true)
-                                 .withId(UUIDGenerator.graphIdGenerator("node"))
-                                 .withType(EXEC.name())
-                                 .withName(PsScript.ExpandArtifacts.getDisplayName())
-                                 .addProperty("scriptType", "POWERSHELL")
-                                 .addProperty("commandString", psScriptMap.get(PsScript.ExpandArtifacts))
-                                 .build(),
-                             aGraphNode()
-                                 .withOrigin(true)
-                                 .withId(UUIDGenerator.graphIdGenerator("node"))
-                                 .withType(EXEC.name())
-                                 .withName(PsScript.CreateIISApplication.getDisplayName())
-                                 .addProperty("scriptType", "POWERSHELL")
-                                 .addProperty("commandString", psScriptMap.get(PsScript.CreateIISApplication))
-                                 .build())
-                         .buildPipeline())
+          .withName("Install IIS Application")
+          .withCommandUnits(asList(new CommandUnit[] {aDownloadArtifactCommandUnit()
+                                                          .withName(PsScript.DownloadArtifact.getDisplayName())
+                                                          .withScriptType(POWERSHELL)
+                                                          .withCommandPath("$env:TEMP")
+                                                          .build(),
+              anExecCommandUnit()
+                  .withName(PsScript.ExpandArtifacts.getDisplayName())
+                  .withScriptType(POWERSHELL)
+                  .withCommandString(psScriptMap.get(PsScript.ExpandArtifacts))
+                  .build(),
+              anExecCommandUnit()
+                  .withName(PsScript.CreateIISVirtualDirectory.getDisplayName())
+                  .withScriptType(POWERSHELL)
+                  .withCommandString(psScriptMap.get(PsScript.CreateIISVirtualDirectory))
+                  .build()}))
           .build();
     }
   },
@@ -939,33 +918,22 @@ public enum ArtifactType {
     private Command getInstallCommand() {
       return aCommand()
           .withCommandType(CommandType.INSTALL)
-          .withGraph(aGraph()
-                         .withGraphName("Install")
-                         .addNodes(aGraphNode()
-                                       .withOrigin(true)
-                                       .withId(UUIDGenerator.graphIdGenerator("node"))
-                                       .withType(EXEC.name())
-                                       .withName(PsScript.DownloadArtifacts.getDisplayName())
-                                       .addProperty("scriptType", "POWERSHELL")
-                                       .addProperty("commandString", psScriptMap.get(PsScript.DownloadArtifacts))
-                                       .build(),
-                             aGraphNode()
-                                 .withOrigin(true)
-                                 .withId(UUIDGenerator.graphIdGenerator("node"))
-                                 .withType(EXEC.name())
-                                 .withName(PsScript.ExpandArtifacts.getDisplayName())
-                                 .addProperty("scriptType", "POWERSHELL")
-                                 .addProperty("commandString", psScriptMap.get(PsScript.ExpandArtifacts))
-                                 .build(),
-                             aGraphNode()
-                                 .withOrigin(true)
-                                 .withId(UUIDGenerator.graphIdGenerator("node"))
-                                 .withType(EXEC.name())
-                                 .withName(PsScript.CreateIISVirtualDirectory.getDisplayName())
-                                 .addProperty("scriptType", "POWERSHELL")
-                                 .addProperty("commandString", psScriptMap.get(PsScript.CreateIISVirtualDirectory))
-                                 .build())
-                         .buildPipeline())
+          .withName("Install IIS Application")
+          .withCommandUnits(asList(new CommandUnit[] {aDownloadArtifactCommandUnit()
+                                                          .withName(PsScript.DownloadArtifact.getDisplayName())
+                                                          .withScriptType(POWERSHELL)
+                                                          .withCommandPath("$env:TEMP")
+                                                          .build(),
+              anExecCommandUnit()
+                  .withName(PsScript.ExpandArtifacts.getDisplayName())
+                  .withScriptType(POWERSHELL)
+                  .withCommandString(psScriptMap.get(PsScript.ExpandArtifacts))
+                  .build(),
+              anExecCommandUnit()
+                  .withName(PsScript.CreateIISVirtualDirectory.getDisplayName())
+                  .withScriptType(POWERSHELL)
+                  .withCommandString(psScriptMap.get(PsScript.CreateIISVirtualDirectory))
+                  .build()}))
           .build();
     }
   };

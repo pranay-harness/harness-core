@@ -80,6 +80,10 @@ public abstract class AbstractExecCommandUnitYamlHandler<Y extends AbstractYaml,
   public B toBean(AbstractCommandUnit.Yaml yaml) {
     B bean = super.toBean(yaml);
     final ExecCommandUnit.AbstractYaml execYaml = (ExecCommandUnit.AbstractYaml) yaml;
+    ScriptType scriptType = isEmpty(execYaml.getScriptType())
+        ? ScriptType.BASH
+        : Util.getEnumFromString(ScriptType.class, execYaml.getScriptType());
+    bean.setScriptType(scriptType);
     bean.setCommandString(execYaml.getCommand());
     bean.setCommandPath(execYaml.getWorkingDirectory());
     bean.setDeploymentType(execYaml.getDeploymentType());
