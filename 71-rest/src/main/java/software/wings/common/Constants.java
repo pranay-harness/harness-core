@@ -888,14 +888,33 @@ public interface Constants {
   long ARTIFACT_FILE_SIZE_LIMIT = 4L * 1024L * 1024L * 1024L; // 4GB
 
   String SUPPORT_EMAIL = "support@harness.io";
+
   /**
    * Trial expires end of day - 14 days from the date of creation.
    */
   int TRIAL_PERIOD = 14;
+  /**
+   *
+   */
+  int PAID_PERIOD_IN_YEARS = 1;
   String LICENSE_INFO = "LICENSE_INFO";
 
   long ML_RECORDS_TTL_MONTHS = 6;
 
   String HARNESS_IO_KEY_ = "Harness.io";
   String HARNESS_SUPPORT_EMAIL_KEY = "support@harness.io";
+
+  int DEFAULT_TRIAL_LICENSE_UNITS = 100;
+  int DEFAULT_FREE_LICENSE_UNITS = 5;
+
+  int DEFAULT_PAID_LICENSE_UNITS = 100;
+
+  long MONTH = 30 * 24 * 60 * 60 * 1000L;
+  long WEEK = 7 * 24 * 60 * 60 * 1000L;
+
+  String EMAIL_SUBJECT_ACCOUNT_EXPIRED = "Harness License Expired!";
+  String EMAIL_SUBJECT_ACCOUNT_ABOUT_TO_EXPIRE = "Harness License about to Expire!";
+
+  String EMAIL_BODY_ACCOUNT_EXPIRED = "Customer License has Expired";
+  String EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE = "Customer License is about to Expire";
 }

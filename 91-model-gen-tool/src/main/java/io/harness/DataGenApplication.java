@@ -38,7 +38,7 @@ import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
 import software.wings.common.Constants;
 import software.wings.health.WingsHealthCheck;
-import software.wings.service.intfc.AccountService;
+import software.wings.licensing.LicenseService;
 import software.wings.utils.CacheHelper;
 
 import java.lang.management.ManagementFactory;
@@ -193,13 +193,13 @@ public class DataGenApplication extends Application<MainConfiguration> {
     String deployMode = System.getenv("DEPLOY_MODE");
 
     if (DeployMode.isOnPrem(deployMode)) {
-      AccountService accountService = injector.getInstance(AccountService.class);
+      LicenseService licenseService = injector.getInstance(LicenseService.class);
       String encryptedLicenseInfoBase64String = System.getenv(Constants.LICENSE_INFO);
       if (isEmpty(encryptedLicenseInfoBase64String)) {
         logger.error("No license info is provided");
       } else {
         try {
-          accountService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
+          licenseService.updateAccountLicenseForOnPrem(encryptedLicenseInfoBase64String);
         } catch (WingsException ex) {
           logger.error("Error while updating license info", ex);
         }

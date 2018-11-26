@@ -210,51 +210,6 @@ public class UserResource {
     }
   }
 
-  @PUT
-  @Path("license/account/{accountId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<Account> updateAccountLicense(@PathParam("accountId") @NotEmpty String accountId,
-      @QueryParam("expireAfter") String expireAfterDays, @QueryParam("accountType") String accountType,
-      @QueryParam("accountStatus") String accountStatus, @QueryParam("salesContacts") String salesContacts) {
-    User existingUser = UserThreadLocal.get();
-    if (existingUser == null) {
-      throw new InvalidRequestException("Invalid User");
-    }
-
-    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
-      return new RestResponse<>(accountService.updateAccountLicense(
-          accountId, accountType, accountStatus, expireAfterDays, salesContacts, false));
-    } else {
-      return Builder.aRestResponse()
-          .withResponseMessages(Lists.newArrayList(
-              ResponseMessage.builder().message("User not allowed to update account license").build()))
-          .build();
-    }
-  }
-
-  @GET
-  @Path("license/account/{accountId}")
-  @Timed
-  @ExceptionMetered
-  public RestResponse<String> generateLicense(@PathParam("accountId") @NotEmpty String accountId,
-      @QueryParam("expireAfter") String expireAfterDays, @QueryParam("accountType") String accountType,
-      @QueryParam("accountStatus") String accountStatus, @QueryParam("salesContacts") String salesContacts) {
-    User existingUser = UserThreadLocal.get();
-    if (existingUser == null) {
-      throw new InvalidRequestException("Invalid User");
-    }
-
-    if (harnessUserGroupService.isHarnessSupportUser(existingUser.getUuid())) {
-      return new RestResponse<>(accountService.generateLicense(accountType, accountStatus, expireAfterDays));
-    } else {
-      return Builder.aRestResponse()
-          .withResponseMessages(Lists.newArrayList(
-              ResponseMessage.builder().message("User not allowed to generate a new license").build()))
-          .build();
-    }
-  }
-
   /**
    * Update User group
    *

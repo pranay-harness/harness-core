@@ -97,6 +97,7 @@ import software.wings.beans.sso.SSOSettings;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.licensing.LicenseService;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.SecretManager;
@@ -158,6 +159,7 @@ public class UserServiceImpl implements UserService {
   @Inject private MainConfiguration configuration;
   @Inject private RoleService roleService;
   @Inject private AccountService accountService;
+  @Inject private LicenseService licenseService;
   @Inject private AuthService authService;
   @Inject private UserGroupService userGroupService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
@@ -192,7 +194,8 @@ public class UserServiceImpl implements UserService {
 
     verifyRegisteredOrAllowed(user.getEmail());
 
-    Account account = setupAccount(user.getAccountName(), user.getCompanyName());
+    Account account = setupTrialAccount(user.getAccountName(), user.getCompanyName());
+
     User savedUser = registerNewUser(user, account);
     executorService.execute(() -> sendVerificationEmail(savedUser));
     return savedUser;
@@ -1141,10 +1144,13 @@ public class UserServiceImpl implements UserService {
       throw new WingsException(USER_DOES_NOT_EXIST);
     }
 
-    loadSupportAccounts(user);
+    if (harnessUserGroupService.isHarnessSupportUser(userId)) {
+      loadSupportAccounts(user);
+    }
+
     List<Account> accounts = user.getAccounts();
     if (isNotEmpty(accounts)) {
-      accounts.forEach(account -> accountService.decryptLicenseInfo(account, false));
+      accounts.forEach(account -> licenseService.decryptLicenseInfo(account, false));
     }
 
     return user;
@@ -1388,8 +1394,12 @@ public class UserServiceImpl implements UserService {
     }
   }
 
-  private Account setupAccount(String accountName, String companyName) {
-    Account account = Account.Builder.anAccount().withAccountName(accountName).withCompanyName(companyName).build();
+  private Account setupTrialAccount(String accountName, String companyName) {
+    Account account = Account.Builder.anAccount()
+                          .withAccountName(accountName)
+                          .withCompanyName(companyName)
+                          .withLicenseInfo(LicenseInfo.builder().accountType(AccountType.TRIAL).build())
+                          .build();
     return setupAccount(account);
   }
 

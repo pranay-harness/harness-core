@@ -32,12 +32,12 @@ public class DefaultLimitsServiceImpl implements DefaultLimitsService {
     // Application Limits
     defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.TRIAL), new StaticLimit(1000));
     defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.PAID), new StaticLimit(1000));
-    defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.FREEMIUM), new StaticLimit(1000));
+    defaultLimits.put(new LimitKey(ActionType.CREATE_APPLICATION, AccountType.FREE), new StaticLimit(1000));
 
     // Deployment Limits
     defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.TRIAL), new RateLimit(1000, 24, TimeUnit.HOURS));
     defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.PAID), new RateLimit(1000, 24, TimeUnit.HOURS));
-    defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.FREEMIUM), new RateLimit(1000, 24, TimeUnit.HOURS));
+    defaultLimits.put(new LimitKey(ActionType.DEPLOY, AccountType.FREE), new RateLimit(1000, 24, TimeUnit.HOURS));
 
     defaults = ImmutableMap.copyOf(defaultLimits);
   }

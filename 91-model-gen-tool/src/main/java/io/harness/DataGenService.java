@@ -329,7 +329,7 @@ public class DataGenService {
     LicenseInfo licenseInfo = new LicenseInfo();
     licenseInfo.setAccountType(AccountType.PAID);
     licenseInfo.setAccountStatus(AccountStatus.ACTIVE);
-    licenseInfo.setExpiryTime(-1);
+    licenseInfo.setLicenseUnits(Constants.DEFAULT_PAID_LICENSE_UNITS);
     account.setLicenseInfo(licenseInfo);
 
     account.setUuid(defaultAccountId);

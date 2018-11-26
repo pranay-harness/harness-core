@@ -14,14 +14,14 @@ import java.lang.annotation.Annotation;
  * Created by peeyushaggarwal on 3/22/17.
  */
 public class LicenseInterceptor implements MethodInterceptor {
-  @Inject private LicenseManager licenseManager;
+  @Inject private LicenseService licenseService;
 
   @Override
   public Object invoke(MethodInvocation invocation) throws Throwable {
     String licenseKey = extractLicenseKey(invocation.getMethod().getParameterAnnotations(), invocation.getArguments());
     String operation = invocation.getMethod().getName();
     if (isNotBlank(licenseKey)) {
-      licenseManager.validateLicense(licenseKey, operation);
+      licenseService.validateLicense(licenseKey, operation);
     }
     return invocation.proceed();
   }

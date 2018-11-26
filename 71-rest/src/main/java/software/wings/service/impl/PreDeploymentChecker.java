@@ -17,13 +17,13 @@ import io.harness.limits.lib.LimitChecker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
-import software.wings.service.intfc.AccountService;
+import software.wings.licensing.LicenseService;
 import software.wings.service.intfc.AppService;
 
 @Singleton
 public class PreDeploymentChecker {
   @Inject private AppService appService;
-  @Inject private AccountService accountService;
+  @Inject private LicenseService licenseService;
   @Inject private LimitCheckerFactory limitCheckerFactory;
 
   private static final Logger log = LoggerFactory.getLogger(PreDeploymentChecker.class);
@@ -51,10 +51,10 @@ public class PreDeploymentChecker {
     Application application = appService.get(appId, false);
     requireNonNull(application, "Application not found. Is the application ID correct? AppId: " + appId);
 
-    boolean isAccountExpired = accountService.isAccountExpired(application.getAccountId());
+    boolean isAccountExpired = licenseService.isAccountExpired(application.getAccountId());
     if (isAccountExpired) {
       throw new WingsException(GENERAL_ERROR, USER)
-          .addParam("message", "Trial license expired!!! Please contact Harness Support.");
+          .addParam("message", "License expired!!! Please contact Harness Support.");
     }
   }
 }

@@ -37,6 +37,8 @@ public interface Locker {
    */
   AcquiredLock tryToAcquireLock(Class entityClass, String entityId, Duration timeout);
 
+  AcquiredLock tryToAcquireLock(String name, Duration timeout);
+
   /**
    * Acquire lock.
    *

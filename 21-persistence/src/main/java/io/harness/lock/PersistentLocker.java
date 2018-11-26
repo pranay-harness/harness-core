@@ -56,8 +56,13 @@ public class PersistentLocker implements Locker {
 
   @Override
   public AcquiredLock tryToAcquireLock(Class entityClass, String entityId, Duration timeout) {
+    return tryToAcquireLock(entityClass.getName() + "-" + entityId, timeout);
+  }
+
+  @Override
+  public AcquiredLock tryToAcquireLock(String name, Duration timeout) {
     try {
-      return acquireLock(entityClass.getName() + "-" + entityId, timeout);
+      return acquireLock(name, timeout);
     } catch (WingsException exception) {
       return null;
     }

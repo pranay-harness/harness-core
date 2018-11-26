@@ -5,13 +5,11 @@ import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotBlank;
-import org.hibernate.validator.constraints.NotEmpty;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.beans.Account;
 import software.wings.beans.DelegateConfiguration;
 import software.wings.beans.FeatureFlag;
 import software.wings.beans.FeatureName;
-import software.wings.beans.LicenseInfo;
 import software.wings.beans.Service;
 import software.wings.beans.User;
 import software.wings.service.impl.analysis.CVEnabledService;
@@ -29,23 +27,11 @@ public interface AccountService {
 
   @ValidationGroups(Update.class) Account update(@Valid Account account);
 
-  Account updateAccountLicense(
-      @NotEmpty String accountId, LicenseInfo licenseInfo, String salesContacts, boolean setExpiry);
-
-  Account updateAccountLicense(@NotEmpty String accountId, String accountType, String accountStatus,
-      String expiryInDays, String salesContacts, boolean setExpiry);
-
-  String generateLicense(String accountType, String accountStatus, String expiryInDays);
-
   Account getByName(String companyName);
-
-  long getDefaultTrialExpiryTime();
 
   Account get(String accountId);
 
   String getAccountStatus(String accountId);
-
-  Account decryptLicenseInfo(Account account, boolean setExpiryTime);
 
   void delete(String accountId);
 
@@ -53,17 +39,9 @@ public interface AccountService {
 
   void updateTwoFactorEnforceInfo(String accountId, User user, boolean enabled);
 
-  //  Account findOrCreate(String companyName);
-
   String suggestAccountName(@NotNull String accountName);
 
   boolean exists(String accountName);
-
-  boolean isAccountDeleted(String accountId);
-
-  boolean isAccountExpired(String accountId);
-
-  void updateAccountLicenseForOnPrem(String encryptedLicenseInfoBase64String);
 
   /**
    * List.
