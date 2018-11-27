@@ -7,6 +7,7 @@ public enum Flag {
       return "dry-run";
     }
   },
+  export,
   record,
   watch,
   watchOnly {

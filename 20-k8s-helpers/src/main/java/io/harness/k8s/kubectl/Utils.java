@@ -12,11 +12,10 @@ public class Utils {
 
   public static ProcessResult executeScript(
       String directoryPath, String command, OutputStream output, OutputStream error) throws Exception {
-    String[] commandList = new String[] {"Powershell", "-c", command};
-
     ProcessExecutor processExecutor = new ProcessExecutor()
+
                                           .directory(new File(directoryPath))
-                                          .command(commandList)
+                                          .commandSplit(command)
                                           .readOutput(true)
                                           .redirectOutput(output)
                                           .redirectError(error);
@@ -26,11 +25,9 @@ public class Utils {
 
   public static StartedProcess startScript(
       String directoryPath, String command, OutputStream output, OutputStream error) throws Exception {
-    String[] commandList = new String[] {"Powershell", "-c", command};
-
     ProcessExecutor processExecutor = new ProcessExecutor()
                                           .directory(new File(directoryPath))
-                                          .command(commandList)
+                                          .commandSplit(command)
                                           .readOutput(true)
                                           .redirectOutput(output)
                                           .redirectError(error);

@@ -44,6 +44,8 @@ import software.wings.api.RouteUpdateRollbackElement;
 import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
+import software.wings.api.k8s.K8sDeployRollingSetupExecutionSummary;
+import software.wings.api.k8s.K8sRollingDeploySetupElement;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
 import software.wings.api.pcf.PcfRouteSwapExecutionSummary;
 import software.wings.api.pcf.PcfSetupContextElement;
@@ -302,7 +304,24 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         return emptyList();
       }
       case K8S_PHASE_STEP: {
-        return emptyList();
+        {
+          Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
+                                                     .stream()
+                                                     .filter(s -> s instanceof K8sDeployRollingSetupExecutionSummary)
+                                                     .findFirst();
+          if (!first.isPresent()) {
+            return null;
+          }
+          K8sDeployRollingSetupExecutionSummary k8sDeployRollingSetupExecutionSummary =
+              (K8sDeployRollingSetupExecutionSummary) first.get();
+
+          K8sRollingDeploySetupElement k8sRollingDeploySetupElement =
+              K8sRollingDeploySetupElement.builder()
+                  .releaseNumber(k8sDeployRollingSetupExecutionSummary.getReleaseNumber())
+                  .releaseName(k8sDeployRollingSetupExecutionSummary.getReleaseName())
+                  .build();
+          return asList(k8sRollingDeploySetupElement);
+        }
       }
       default:
         unhandled(phaseStepType);

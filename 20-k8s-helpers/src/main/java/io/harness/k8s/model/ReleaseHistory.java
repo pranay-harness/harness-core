@@ -65,6 +65,16 @@ public class ReleaseHistory {
     return null;
   }
 
+  public Release getPreviousSuccessfulRelease(int currentReleaseNumber) {
+    for (Release release : this.getReleases()) {
+      if (release.getNumber() < currentReleaseNumber
+          && (release.getStatus() == Status.Succeeded || release.getStatus() == Status.RollbackSucceeded)) {
+        return release;
+      }
+    }
+    return null;
+  }
+
   public String getAsYaml() throws YamlException {
     return ObjectYamlUtils.toYaml(this);
   }

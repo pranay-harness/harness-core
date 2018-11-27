@@ -13,7 +13,7 @@ public class K8sCommandRequest {
   private String activityId;
   private K8sClusterConfig k8sClusterConfig;
   private String workflowExecutionId;
-  private String infraMappingId;
+  private String releaseName;
   private Integer timeoutIntervalInMin;
   @NotEmpty private K8sCommandType commandType;
   public enum K8sCommandType {

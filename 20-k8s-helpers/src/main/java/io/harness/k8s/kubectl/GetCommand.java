@@ -10,6 +10,7 @@ public class GetCommand extends AbstractExecutable {
   private String output;
   private boolean watch;
   private boolean watchOnly;
+  private boolean export;
 
   public GetCommand(Kubectl client) {
     this.client = client;
@@ -45,6 +46,11 @@ public class GetCommand extends AbstractExecutable {
     return this;
   }
 
+  public GetCommand export(boolean export) {
+    this.export = export;
+    return this;
+  }
+
   public String command() {
     StringBuilder command = new StringBuilder();
     command.append(client.command()).append("get ");
@@ -71,6 +77,10 @@ public class GetCommand extends AbstractExecutable {
 
     if (this.watchOnly) {
       command.append(Kubectl.flag(Flag.watchOnly));
+    }
+
+    if (this.export) {
+      command.append(Kubectl.flag(Flag.export));
     }
 
     return command.toString().trim();

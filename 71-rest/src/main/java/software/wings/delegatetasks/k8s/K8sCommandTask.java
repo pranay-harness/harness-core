@@ -28,7 +28,7 @@ public class K8sCommandTask extends AbstractDelegateRunnableTask {
   @Inject private Map<String, K8sCommandTaskHandler> k8sCommandTaskTypeToTaskHandlerMap;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
   private static final String WORKING_DIR_BASE = "./repository/k8s/";
-  private static final String KUBECONFIG_FILENAME = ".kubeconfig";
+  private static final String KUBECONFIG_FILENAME = "config";
 
   private static final Logger logger = LoggerFactory.getLogger(K8sCommandTask.class);
 
