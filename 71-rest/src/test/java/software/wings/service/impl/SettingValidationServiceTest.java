@@ -66,7 +66,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   }
 
   @Test
-  public void testHostConnectionValidation() {
+  public void testHostConnectionValidationForPrivateKeyField() {
     HostConnectionAttributes.Builder hostConnectionAttributes =
         HostConnectionAttributes.Builder.aHostConnectionAttributes()
             .withAccessType(AccessType.KEY)
@@ -83,6 +83,30 @@ public class SettingValidationServiceTest extends WingsBaseTest {
     settingValidationService.validate(attribute);
 
     hostConnectionAttributes.withKey("Test Private Key".toCharArray());
+    attribute.setValue(hostConnectionAttributes.build());
+
+    thrown = ExpectedException.none();
+    settingValidationService.validate(attribute);
+  }
+
+  @Test
+  public void testHostConnectionValidationForUsernameField() {
+    HostConnectionAttributes.Builder hostConnectionAttributes =
+        HostConnectionAttributes.Builder.aHostConnectionAttributes()
+            .withAccessType(AccessType.KEY)
+            .withAuthenticationScheme(SSH_KEY)
+            .withConnectionType(ConnectionType.SSH)
+            .withAccountId(UUIDGenerator.generateUuid())
+            .withKey("Test Private Key".toCharArray())
+            .withKeyless(false);
+
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(hostConnectionAttributes.build());
+
+    thrown.expect(InvalidRequestException.class);
+    settingValidationService.validate(attribute);
+
+    hostConnectionAttributes.withUserName("TestUser");
     attribute.setValue(hostConnectionAttributes.build());
 
     thrown = ExpectedException.none();

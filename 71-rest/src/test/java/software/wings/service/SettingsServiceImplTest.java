@@ -23,6 +23,7 @@ import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
+import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.security.EnvFilter.FilterType.NON_PROD;
@@ -73,7 +74,6 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.BastionConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostConnectionAttributes.AccessType;
-import software.wings.beans.HostConnectionAttributes.ConnectionType;
 import software.wings.beans.JenkinsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
@@ -344,6 +344,7 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                            .withConnectionType(SSH)
                            .withHostName(HOST_NAME)
                            .withAccountId("ACCOUNT_ID")
+                           .withUserName(USER_NAME)
                            .build())
             .build();
 
@@ -377,10 +378,10 @@ public class SettingsServiceImplTest extends WingsBaseTest {
   @Test
   public void updateShouldMaskHostConnectionPrivateKey() {
     final String uuid = UUID.randomUUID().toString();
-    HostConnectionAttributes hostConnectionAttributes = HostConnectionAttributes.Builder.aHostConnectionAttributes()
+    HostConnectionAttributes hostConnectionAttributes = aHostConnectionAttributes()
                                                             .withAccessType(AccessType.KEY)
                                                             .withAccountId(UUIDGenerator.generateUuid())
-                                                            .withConnectionType(ConnectionType.SSH)
+                                                            .withConnectionType(SSH)
                                                             .withKey("Test Private Key".toCharArray())
                                                             .withKeyless(false)
                                                             .withUserName("TestUser")
