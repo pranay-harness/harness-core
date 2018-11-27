@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Job;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretVolumeSource;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.function.UnaryOperator;
 
 @Data
@@ -94,6 +96,34 @@ public class KubernetesResource {
       noop();
     }
     return this;
+  }
+
+  public static String redactSecretValues(String spec) {
+    List<HasMetadata> output = k8sClient.load(IOUtils.toInputStream(spec, UTF_8)).get();
+    if (!StringUtils.equals("Secret", output.get(0).getKind())) {
+      return spec;
+    }
+
+    Secret secret = (Secret) output.get(0);
+    final String redacted = "***";
+
+    for (Entry e : secret.getData().entrySet()) {
+      e.setValue(redacted);
+    }
+
+    for (Entry e : secret.getStringData().entrySet()) {
+      e.setValue(redacted);
+    }
+
+    String result = "";
+
+    try {
+      result = KubernetesHelper.toYaml(secret);
+    } catch (IOException e) {
+      // do nothing
+      noop();
+    }
+    return result;
   }
 
   private PodSpec getPodSpec(HasMetadata resource) {

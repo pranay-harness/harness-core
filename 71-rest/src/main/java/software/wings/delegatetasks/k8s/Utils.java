@@ -45,8 +45,7 @@ public class Utils {
     FileIo.writeUtf8StringToFile(
         k8sCommandTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
 
-    ApplyCommand applyCommand =
-        client.apply().filename("manifests.yaml").namespace(namespace).record(true).output("yaml");
+    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").namespace(namespace).record(true);
 
     executionLogCallback.saveExecutionLog(applyCommand.command() + "\n");
 
@@ -141,9 +140,14 @@ public class Utils {
     }
   }
 
-  public static void cleanupForRolling(Kubectl client, K8sCommandTaskParams k8sCommandTaskParams,
-      ReleaseHistory releaseHistory, ExecutionLogCallback executionLogCallback) throws Exception {
+  public static void prepareForRolling(Kubectl client, List<KubernetesResource> resources,
+      K8sCommandTaskParams k8sCommandTaskParams, ReleaseHistory releaseHistory,
+      ExecutionLogCallback executionLogCallback) throws Exception {
     try {
+      executionLogCallback.saveExecutionLog("\nManifests:\n---------\n");
+
+      executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources) + "\n");
+
       Release lastSuccessfulRelease = releaseHistory.getLastSuccessfulRelease();
 
       if (lastSuccessfulRelease == null) {
@@ -155,10 +159,10 @@ public class Utils {
 
       executionLogCallback.saveExecutionLog("\nCleaning up older releases");
 
-      for (int releaseIndex = releaseHistory.getReleases().size() - 1; releaseIndex > 0; releaseIndex--) {
+      for (int releaseIndex = releaseHistory.getReleases().size() - 1; releaseIndex >= 0; releaseIndex--) {
         Release release = releaseHistory.getReleases().get(releaseIndex);
         if (release.getNumber() < lastSuccessfulRelease.getNumber()) {
-          for (int resourceIndex = release.getResources().size() - 1; resourceIndex > 0; resourceIndex--) {
+          for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
             KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
             if (resourceId.isVersioned()) {
               DeleteCommand deleteCommand =

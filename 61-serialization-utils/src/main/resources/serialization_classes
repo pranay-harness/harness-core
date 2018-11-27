@@ -599,4 +599,7 @@ software.wings.helpers.ext.trigger.request.TriggerRequest, 5557
 software.wings.beans.yaml.GitFilesBetweenCommitsRequest, 5558
 software.wings.beans.container.AwsAutoScalarConfig, 5559
 software.wings.beans.SftpConfig, 5560
-
+software.wings.helpers.ext.k8s.response.K8sDeploymentRollingSetupResponse, 5561
+software.wings.api.k8s.K8sDeployRollingSetupExecutionSummary, 5562
+software.wings.api.k8s.K8sRollingDeploySetupElement, 5563
+software.wings.api.k8s.K8sDeploymentRollingSetupStateExecutionData, 5564

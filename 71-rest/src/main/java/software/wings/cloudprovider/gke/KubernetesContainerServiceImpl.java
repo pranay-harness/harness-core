@@ -17,7 +17,6 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.common.Constants.HARNESS_KUBERNETES_REVISION_LABEL_KEY;
 import static software.wings.utils.KubernetesConvention.DASH;
 import static software.wings.utils.KubernetesConvention.ReleaseHistoryKeyName;
-import static software.wings.utils.KubernetesConvention.getInternalHarnessConfigName;
 import static software.wings.utils.KubernetesConvention.getPrefixFromControllerName;
 import static software.wings.utils.KubernetesConvention.getRevisionFromControllerName;
 import static software.wings.utils.KubernetesConvention.getServiceNameFromControllerName;
@@ -1303,10 +1302,9 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public String fetchReleaseHistory(
-      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String infraMappingId) {
+      KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails, String releaseName) {
     String releaseHistory = "";
-    ConfigMap configMap =
-        getConfigMap(kubernetesConfig, encryptedDataDetails, getInternalHarnessConfigName(infraMappingId));
+    ConfigMap configMap = getConfigMap(kubernetesConfig, encryptedDataDetails, releaseName);
     if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
       releaseHistory = configMap.getData().get(ReleaseHistoryKeyName);
     }
@@ -1316,13 +1314,12 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
 
   @Override
   public void saveReleaseHistory(KubernetesConfig kubernetesConfig, List<EncryptedDataDetail> encryptedDataDetails,
-      String infraMappingId, String releaseHistory) {
-    String internalConfigName = getInternalHarnessConfigName(infraMappingId);
-    ConfigMap configMap = getConfigMap(kubernetesConfig, encryptedDataDetails, internalConfigName);
+      String releaseName, String releaseHistory) {
+    ConfigMap configMap = getConfigMap(kubernetesConfig, encryptedDataDetails, releaseName);
     if (configMap == null) {
       configMap = new ConfigMapBuilder()
                       .withNewMetadata()
-                      .withName(internalConfigName)
+                      .withName(releaseName)
                       .withNamespace(kubernetesConfig.getNamespace())
                       .endMetadata()
                       .withData(ImmutableMap.of(ReleaseHistoryKeyName, releaseHistory))

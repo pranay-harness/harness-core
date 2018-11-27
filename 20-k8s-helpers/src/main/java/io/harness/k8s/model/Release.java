@@ -17,6 +17,6 @@ public class Release {
   private int number;
   private Status status;
   private List<KubernetesResourceId> resources;
-  private KubernetesResourceId managedResource;
-  private String managedResourceRevision;
+  private KubernetesResourceId managedWorkload;
+  private String managedWorkloadRevision;
 }

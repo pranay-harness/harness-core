@@ -4,8 +4,9 @@ import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Rollback;
-import static software.wings.beans.command.K8sDummyCommandUnit.StatusCheck;
+import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.delegatetasks.k8s.Utils.doStatusCheck;
+import static software.wings.delegatetasks.k8s.Utils.getLatestRevision;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -60,7 +61,7 @@ public class K8sDeploymentRollingRollbackCommandTaskHandler extends K8sCommandTa
       return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    success = rollback(k8sCommandTaskParams,
+    success = rollback(request, k8sCommandTaskParams,
         new ExecutionLogCallback(
             delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), Rollback));
 
@@ -68,20 +69,22 @@ public class K8sDeploymentRollingRollbackCommandTaskHandler extends K8sCommandTa
       return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    success = doStatusCheck(client, release.getManagedResource(), k8sCommandTaskParams,
+    success = doStatusCheck(client, release.getManagedWorkload(), k8sCommandTaskParams,
         new ExecutionLogCallback(delegateLogService, k8sCommandRequest.getAccountId(), k8sCommandRequest.getAppId(),
-            k8sCommandRequest.getActivityId(), StatusCheck));
+            k8sCommandRequest.getActivityId(), WaitForSteadyState));
 
     if (!success) {
       releaseHistory.setReleaseStatus(Status.RollbackFailed);
       kubernetesContainerService.saveReleaseHistory(
-          kubernetesConfig, Collections.emptyList(), request.getInfraMappingId(), releaseHistory.getAsYaml());
+          kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
       return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    releaseHistory.setReleaseStatus(Status.RollbackSucceeded);
+    release.setStatus(Status.RollbackSucceeded);
+    release.setManagedWorkloadRevision(getLatestRevision(client, release.getManagedWorkload(), k8sCommandTaskParams));
+
     kubernetesContainerService.saveReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), request.getInfraMappingId(), releaseHistory.getAsYaml());
+        kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
 
     return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
   }
@@ -100,45 +103,46 @@ public class K8sDeploymentRollingRollbackCommandTaskHandler extends K8sCommandTa
     client = Kubectl.client(k8sCommandTaskParams.getKubectlPath(), k8sCommandTaskParams.getKubeconfigPath());
 
     String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), request.getInfraMappingId());
+        kubernetesConfig, Collections.emptyList(), request.getReleaseName());
 
     releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     release = releaseHistory.getLatestRelease();
 
-    executionLogCallback.saveExecutionLog("\nManaged Resource is: " + release.getManagedResource().kindNameRef());
+    executionLogCallback.saveExecutionLog("\nManaged Workload is: " + release.getManagedWorkload().kindNameRef());
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
 
     return true;
   }
 
-  public boolean rollback(K8sCommandTaskParams k8sCommandTaskParams, ExecutionLogCallback executionLogCallback)
-      throws Exception {
-    if (release.getStatus() == Status.Succeeded) {
-      executionLogCallback.saveExecutionLog("Latest release is success. Skipping rollback.");
+  public boolean rollback(K8sDeploymentRollingRollbackSetupRequest request, K8sCommandTaskParams k8sCommandTaskParams,
+      ExecutionLogCallback executionLogCallback) throws Exception {
+    if (request.getReleaseNumber() == 0) {
+      executionLogCallback.saveExecutionLog("No releaseNumber found. Skipping rollback.");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return true;
     }
 
-    Release lastSuccessfulRelease = releaseHistory.getLastSuccessfulRelease();
+    Release previousSuccessfulRelease = releaseHistory.getPreviousSuccessfulRelease(request.getReleaseNumber());
 
-    if (lastSuccessfulRelease == null) {
+    if (previousSuccessfulRelease == null) {
       executionLogCallback.saveExecutionLog("No successful release found. Can't rollback.");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return true;
     }
 
-    executionLogCallback.saveExecutionLog("Last Successful Release is " + lastSuccessfulRelease.getNumber());
+    executionLogCallback.saveExecutionLog("Previous Successful Release is " + previousSuccessfulRelease.getNumber());
 
-    executionLogCallback.saveExecutionLog("\nRolling back to release " + lastSuccessfulRelease.getNumber());
+    executionLogCallback.saveExecutionLog("\nRolling back to release " + previousSuccessfulRelease.getNumber());
 
-    RolloutUndoCommand rolloutUndoCommand = client.rollout()
-                                                .undo()
-                                                .resource(lastSuccessfulRelease.getManagedResource().kindNameRef())
-                                                .namespace(lastSuccessfulRelease.getManagedResource().getNamespace())
-                                                .toRevision(lastSuccessfulRelease.getManagedResourceRevision());
+    RolloutUndoCommand rolloutUndoCommand =
+        client.rollout()
+            .undo()
+            .resource(previousSuccessfulRelease.getManagedWorkload().kindNameRef())
+            .namespace(previousSuccessfulRelease.getManagedWorkload().getNamespace())
+            .toRevision(previousSuccessfulRelease.getManagedWorkloadRevision());
 
     executionLogCallback.saveExecutionLog("\n" + rolloutUndoCommand.command());
 

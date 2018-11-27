@@ -1,5 +1,6 @@
 package software.wings.sm.states.k8s;
 
+import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
@@ -18,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.ServiceElement;
 import software.wings.api.k8s.K8sDeploymentRollingSetupStateExecutionData;
+import software.wings.api.k8s.K8sRollingDeploySetupElement;
+import software.wings.api.k8s.K8sRollingDeploySetupElement.K8sRollingDeploySetupElementBuilder;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -34,6 +37,7 @@ import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
 import software.wings.helpers.ext.k8s.request.K8sCommandRequest.K8sCommandType;
 import software.wings.helpers.ext.k8s.request.K8sDeploymentRollingSetupRequest;
 import software.wings.helpers.ext.k8s.response.K8sCommandExecutionResponse;
+import software.wings.helpers.ext.k8s.response.K8sDeploymentRollingSetupResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -107,14 +111,15 @@ public class K8sDeploymentRollingSetup extends State {
           getStateType(), activityService,
           ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
               new K8sDummyCommandUnit(K8sDummyCommandUnit.Prepare), new K8sDummyCommandUnit(K8sDummyCommandUnit.Apply),
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.StatusCheck)));
+              new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState),
+              new K8sDummyCommandUnit(K8sDummyCommandUnit.WrapUp)));
 
       K8sCommandRequest commandRequest =
           K8sDeploymentRollingSetupRequest.builder()
               .activityId(activity.getUuid())
               .appId(app.getUuid())
               .accountId(app.getAccountId())
-              .infraMappingId(infraMapping.getUuid())
+              .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
               .commandName(K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME)
               .k8sCommandType(K8sCommandType.DEPLOYMENT_ROLLING)
               .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping))
@@ -147,7 +152,7 @@ public class K8sDeploymentRollingSetup extends State {
                                       .commandName(K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME)
                                       .namespace(commandRequest.getK8sClusterConfig().getNamespace())
                                       .clusterName(commandRequest.getK8sClusterConfig().getClusterName())
-                                      .releaseName(infraMapping.getUuid())
+                                      .releaseName(commandRequest.getReleaseName())
                                       .build())
           .withDelegateTaskId(delegateTaskId)
           .build();
@@ -170,15 +175,26 @@ public class K8sDeploymentRollingSetup extends State {
           executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
                                                                                                : ExecutionStatus.FAILED;
 
+      K8sDeploymentRollingSetupResponse k8sDeploymentRollingSetupResponse =
+          (K8sDeploymentRollingSetupResponse) executionResponse.getK8sCommandResponse();
+
+      K8sRollingDeploySetupElementBuilder k8sRollingDeploySetupElementBuilder = K8sRollingDeploySetupElement.builder();
+      k8sRollingDeploySetupElementBuilder.releaseNumber(k8sDeploymentRollingSetupResponse.getReleaseNumber());
+
       activityService.updateStatus(activityId, appId, executionStatus);
 
       K8sDeploymentRollingSetupStateExecutionData stateExecutionData =
           (K8sDeploymentRollingSetupStateExecutionData) context.getStateExecutionData();
+      stateExecutionData.setReleaseNumber(k8sDeploymentRollingSetupResponse.getReleaseNumber());
       stateExecutionData.setStatus(executionStatus);
+
+      K8sRollingDeploySetupElement k8sRollingDeploySetupElement = k8sRollingDeploySetupElementBuilder.build();
 
       return anExecutionResponse()
           .withExecutionStatus(executionStatus)
           .withStateExecutionData(context.getStateExecutionData())
+          .addContextElement(k8sRollingDeploySetupElement)
+          .addNotifyElement(k8sRollingDeploySetupElement)
           .build();
     } catch (WingsException e) {
       throw e;

@@ -31,6 +31,10 @@ public class Kubectl {
     return new GetCommand(this);
   }
 
+  public DescribeCommand describe() {
+    return new DescribeCommand(this);
+  }
+
   public RolloutCommand rollout() {
     return new RolloutCommand(this);
   }
@@ -44,7 +48,7 @@ public class Kubectl {
     }
 
     if (StringUtils.isNotBlank(configPath)) {
-      command.append("--kubeconfig='" + configPath + "' ");
+      command.append("--kubeconfig=" + configPath + " ");
     }
 
     return command.toString();

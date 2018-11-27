@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.PhaseElement;
 import software.wings.api.k8s.K8sDeploymentRollingSetupStateExecutionData;
+import software.wings.api.k8s.K8sRollingDeploySetupElement;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
@@ -91,6 +92,9 @@ public class K8sDeploymentRollingRollbackSetup extends State {
       Application app = appService.get(context.getAppId());
       Environment env = workflowStandardParams.getEnv();
 
+      K8sRollingDeploySetupElement k8sRollingDeploySetupElement =
+          context.getContextElement(ContextElementType.K8S_ROLLING_DEPLOY_SETUP);
+
       ContainerInfrastructureMapping infraMapping = (ContainerInfrastructureMapping) infrastructureMappingService.get(
           app.getUuid(), phaseElement.getInfraMappingId());
 
@@ -98,14 +102,15 @@ public class K8sDeploymentRollingRollbackSetup extends State {
           getStateType(), activityService,
           ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
               new K8sDummyCommandUnit(K8sDummyCommandUnit.Rollback),
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.StatusCheck)));
+              new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState)));
 
       K8sCommandRequest commandRequest =
           K8sDeploymentRollingRollbackSetupRequest.builder()
               .activityId(activity.getUuid())
               .appId(app.getUuid())
               .accountId(app.getAccountId())
-              .infraMappingId(infraMapping.getUuid())
+              .releaseName(k8sRollingDeploySetupElement.getReleaseName())
+              .releaseNumber(k8sRollingDeploySetupElement.getReleaseNumber())
               .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
               .k8sCommandType(K8sCommandType.DEPLOYMENT_ROLLING_ROLLBACK)
               .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping))

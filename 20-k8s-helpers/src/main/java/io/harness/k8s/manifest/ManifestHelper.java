@@ -2,6 +2,7 @@ package io.harness.k8s.manifest;
 
 import static io.harness.k8s.manifest.ObjectYamlUtils.YAML_DOCUMENT_DELIMITER;
 import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
+import static io.harness.k8s.model.KubernetesResource.redactSecretValues;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -76,11 +77,26 @@ public class ManifestHelper {
 
   public static String toYaml(List<KubernetesResource> resources) {
     StringBuilder stringBuilder = new StringBuilder();
-    stringBuilder.append(resources.get(0).getSpec());
 
-    for (int i = 1; i < resources.size(); i++) {
-      stringBuilder.append(YAML_DOCUMENT_DELIMITER).append(System.lineSeparator());
-      stringBuilder.append(resources.get(i).getSpec());
+    for (KubernetesResource resource : resources) {
+      if (!resource.getSpec().startsWith(YAML_DOCUMENT_DELIMITER)) {
+        stringBuilder.append(YAML_DOCUMENT_DELIMITER).append(System.lineSeparator());
+      }
+      stringBuilder.append(resource.getSpec());
+    }
+
+    return stringBuilder.toString();
+  }
+
+  public static String toYamlForLogs(List<KubernetesResource> resources) {
+    StringBuilder stringBuilder = new StringBuilder();
+
+    for (KubernetesResource resource : resources) {
+      String spec = redactSecretValues(resource.getSpec());
+      if (!spec.startsWith(YAML_DOCUMENT_DELIMITER)) {
+        stringBuilder.append(YAML_DOCUMENT_DELIMITER).append(System.lineSeparator());
+      }
+      stringBuilder.append(spec);
     }
 
     return stringBuilder.toString();
@@ -88,7 +104,7 @@ public class ManifestHelper {
 
   private static final Set<String> managedWorkloadKinds = ImmutableSet.of("Deployment", "StatefulSet", "DaemonSet");
 
-  public static KubernetesResourceId getManagedResource(List<KubernetesResource> resources) {
+  public static KubernetesResourceId getManagedWorkload(List<KubernetesResource> resources) {
     List<KubernetesResource> result =
         resources.stream()
             .filter(resource -> managedWorkloadKinds.contains(resource.getResourceId().getKind()))
