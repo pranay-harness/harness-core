@@ -146,27 +146,32 @@ public class K8sDeploymentRollingRollbackCommandTaskHandler extends K8sCommandTa
 
     executionLogCallback.saveExecutionLog("\n" + rolloutUndoCommand.command());
 
-    ProcessResult result = rolloutUndoCommand.execute(k8sCommandTaskParams.getWorkingDirectory(),
-        new LogOutputStream() {
-          @Override
-          protected void processLine(String line) {
-            executionLogCallback.saveExecutionLog(line, INFO);
-          }
-        },
-        new LogOutputStream() {
-          @Override
-          protected void processLine(String line) {
-            executionLogCallback.saveExecutionLog(line, ERROR);
-          }
-        });
+    try (LogOutputStream logOutputStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {
+                 executionLogCallback.saveExecutionLog(line, INFO);
+               }
+             };
 
-    if (result.getExitValue() == 0) {
-      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-      return true;
-    } else {
-      executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
-      logger.warn("Failed to rollback resource. Error {}", result.getOutput());
-      return false;
+         LogOutputStream logErrorStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {
+                 executionLogCallback.saveExecutionLog(line, ERROR);
+               }
+             }) {
+      ProcessResult result =
+          rolloutUndoCommand.execute(k8sCommandTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
+
+      if (result.getExitValue() == 0) {
+        executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+        return true;
+      } else {
+        executionLogCallback.saveExecutionLog("\nFailed.", INFO, CommandExecutionStatus.FAILURE);
+        logger.warn("Failed to rollback resource. Error {}", result.getOutput());
+        return false;
+      }
     }
   }
 }
