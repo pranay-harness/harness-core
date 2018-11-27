@@ -257,6 +257,9 @@ public class SettingValidationService {
     if (hostConnectionAttributes.getAuthenticationScheme() != null
         && hostConnectionAttributes.getAuthenticationScheme().equals(
                HostConnectionAttributes.AuthenticationScheme.SSH_KEY)) {
+      if (isEmpty(hostConnectionAttributes.getUserName())) {
+        throw new InvalidRequestException("Username field is mandatory in SSH Configuration", USER);
+      }
       if (hostConnectionAttributes.isKeyless()) {
         if (isEmpty(hostConnectionAttributes.getKeyPath())) {
           throw new InvalidRequestException("Private key file path is not specified", USER);
