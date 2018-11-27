@@ -1,6 +1,5 @@
 package software.wings.service;
 
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
@@ -23,8 +22,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 
-import java.util.ArrayList;
-
 public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
@@ -38,11 +35,8 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     applicationManifest.setAppId(APP_ID);
   }
 
-  private static ApplicationManifest applicationManifest = ApplicationManifest.builder()
-                                                               .serviceId(SERVICE_ID)
-                                                               .storeType(StoreType.Local)
-                                                               .manifestFiles(new ArrayList<>())
-                                                               .build();
+  private static ApplicationManifest applicationManifest =
+      ApplicationManifest.builder().serviceId(SERVICE_ID).storeType(StoreType.Local).build();
 
   private static ManifestFile manifestFile =
       ManifestFile.builder().fileName("deploy.yaml").fileContent("deployment spec").build();
@@ -80,7 +74,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
     ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
 
-    savedManifest.setManifestFiles(asList(manifestFile));
+    // savedManifest.setManifestFiles(asList(manifestFile));
 
     applicationManifestService.update(savedManifest);
 
@@ -89,7 +83,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
                                        .filter(ApplicationManifest.SERVICE_ID_KEY, SERVICE_ID)
                                        .get();
 
-    assertThat(manifest.getManifestFiles()).isEqualTo(asList(manifestFile));
+    // assertThat(manifest.getManifestFiles()).isEqualTo(asList(manifestFile));
   }
 
   @Test

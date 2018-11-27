@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.ConfigFile;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
@@ -37,6 +39,17 @@ public class YamlChangeSetHelper {
   public List<GitFileChange> getConfigFileGitChangeSet(ConfigFile configFile, ChangeType changeType) {
     return entityUpdateService.obtainEntityGitSyncFileChangeSet(
         configFile.getAccountId(), null, configFile, changeType);
+  }
+
+  public List<GitFileChange> getManifestFileGitChangeSet(ManifestFile manifestFile, ChangeType changeType) {
+    String accountId = entityUpdateService.obtainAccountIdFromEntity(manifestFile);
+    return entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, manifestFile, changeType);
+  }
+
+  public List<GitFileChange> getApplicationManifestGitChangeSet(
+      ApplicationManifest applicationManifest, ChangeType changeType) {
+    String accountId = entityUpdateService.obtainAccountIdFromEntity(applicationManifest);
+    return entityUpdateService.obtainEntityGitSyncFileChangeSet(accountId, null, applicationManifest, changeType);
   }
 
   public void defaultVariableChangeSet(String accountId, String appId, ChangeType changeType) {

@@ -15,6 +15,9 @@ import static software.wings.beans.yaml.YamlConstants.ENVIRONMENTS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_EXPRESSION;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.NOTIFICATION_GROUPS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.PATH_DELIMITER;
 import static software.wings.beans.yaml.YamlConstants.PIPELINES_FOLDER;
@@ -50,6 +53,7 @@ import software.wings.beans.TemplateExpression;
 import software.wings.beans.Variable;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.AbstractCommandUnit;
 import software.wings.beans.command.ServiceCommand;
@@ -85,6 +89,17 @@ public enum YamlType {
   SERVICE(EntityType.SERVICE.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, INDEX_YAML),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY), Service.class),
+  APPLICATION_MANIFEST(EntityType.APPLICATION_MANIFEST.name(),
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
+          INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER),
+      Service.class),
+  MANIFEST_FILE(YamlConstants.MANIFEST_FILE,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
+          MANIFEST_FILE_FOLDER, MANIFEST_FILE_EXPRESSION),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, MANIFEST_FOLDER,
+          MANIFEST_FILE_FOLDER),
+      ManifestFile.class),
   PROVISIONER(EntityType.PROVISIONER.name(),
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PROVISIONERS_FOLDER, YAML_EXPRESSION),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, PROVISIONERS_FOLDER, ANY),

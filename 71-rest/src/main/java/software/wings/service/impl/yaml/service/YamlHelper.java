@@ -13,10 +13,13 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.yaml.YamlConstants;
 import software.wings.beans.yaml.YamlType;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -45,6 +48,7 @@ public class YamlHelper {
   @Inject WorkflowService workflowService;
   @Inject PipelineService pipelineService;
   @Inject SettingsService settingsService;
+  @Inject ApplicationManifestService applicationManifestService;
 
   public SettingAttribute getCloudProvider(String accountId, String yamlFilePath) {
     return getSettingAttribute(accountId, YamlType.CLOUD_PROVIDER, yamlFilePath);
@@ -100,6 +104,20 @@ public class YamlHelper {
     String serviceName = extractParentEntityName(YamlType.SERVICE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
     Validator.notNullCheck("Service name null in the given yaml file: " + yamlFilePath, serviceName);
     return serviceResourceService.getServiceByName(appId, serviceName);
+  }
+
+  public ApplicationManifest getApplicationManifest(String appId, String yamlFilePath) {
+    String serviceName = extractParentEntityName(YamlType.SERVICE.getPrefixExpression(), yamlFilePath, PATH_DELIMITER);
+    Validator.notNullCheck("Service name null in the given yaml file: " + yamlFilePath, serviceName);
+    Service service = serviceResourceService.getServiceByName(appId, serviceName);
+    Validator.notNullCheck("Service name  in the given yaml file does not exists: " + yamlFilePath, service);
+    return applicationManifestService.get(appId, service.getUuid());
+  }
+
+  public ManifestFile getManifestFile(String appId, String yamlFilePath, String fileName) {
+    ApplicationManifest applicationManifest = getApplicationManifest(appId, yamlFilePath);
+    Validator.notNullCheck("Application Manifest Null for yaml path: " + yamlFilePath, applicationManifest);
+    return applicationManifestService.getManifestFileByFileName(applicationManifest.getUuid(), fileName);
   }
 
   public String getServiceName(String yamlFilePath) {

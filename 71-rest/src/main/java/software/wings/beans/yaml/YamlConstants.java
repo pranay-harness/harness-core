@@ -6,6 +6,8 @@ package software.wings.beans.yaml;
 public interface YamlConstants {
   String PATH_DELIMITER = "/";
   String ANY = ".[^/]*?";
+  String MANIFEST_FILE_EXPRESSION = ".*";
+  ;
   String YAML_EXPRESSION = ".[^/]*?\\.yaml";
   String ANY_EXCEPT_YAML = ".[^/]*?[^\\.yaml]";
   String YAML_FILE_NAME_PATTERN = ".*?" + PATH_DELIMITER + YAML_EXPRESSION;
@@ -14,6 +16,10 @@ public interface YamlConstants {
   String SETUP_FOLDER_PATH = "Setup/";
   String APPLICATIONS_FOLDER = "Applications";
   String SERVICES_FOLDER = "Services";
+  String MANIFEST_FOLDER = "Manifests";
+  String MANIFEST_FILE_FOLDER = "Files";
+  String MANIFEST_FILE = "MANIFEST_FILE";
+  String APPLICATIONS_MANIFEST = "ApplicationManifest";
   String PROVISIONERS_FOLDER = "Provisioners";
   String COMMANDS_FOLDER = "Commands";
   String CONFIG_FILES_FOLDER = "Config Files";

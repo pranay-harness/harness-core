@@ -28,4 +28,6 @@ public interface EntityUpdateService {
   List<GitFileChange> obtainDefaultVariableChangeSet(String accountId, String appId, ChangeType changeType);
 
   <T> String obtainAppIdFromEntity(T entity);
+
+  <T> String obtainAccountIdFromEntity(T entity);
 }

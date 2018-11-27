@@ -156,5 +156,7 @@ public enum EntityType {
    */
   NEWRELIC_MARKER_APPID,
 
-  ACCOUNT
+  ACCOUNT,
+
+  APPLICATION_MANIFEST
 }

@@ -11,6 +11,7 @@ import io.harness.beans.PageRequest;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.annotations.AuthRule;
@@ -66,5 +67,27 @@ public class ApplicationManifestResource {
     applicationManifest.setAppId(appId);
     applicationManifest.setServiceId(serviceId);
     return new RestResponse<>(applicationManifestService.update(applicationManifest));
+  }
+
+  @POST
+  @Path("{serviceId}/manifest-file")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.CREATE)
+  public RestResponse<ManifestFile> createManifestFile(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
+    manifestFile.setAppId(appId);
+    return new RestResponse<>(applicationManifestService.createManifestFile(manifestFile, serviceId));
+  }
+
+  @PUT
+  @Path("{serviceId}/manifest-file")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  public RestResponse<ManifestFile> updateManifestFile(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
+    manifestFile.setAppId(appId);
+    return new RestResponse<>(applicationManifestService.updateManifestFile(manifestFile, serviceId));
   }
 }

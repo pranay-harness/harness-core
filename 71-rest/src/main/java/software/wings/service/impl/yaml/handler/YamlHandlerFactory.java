@@ -22,6 +22,8 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.EcsContainerTask;
@@ -51,6 +53,8 @@ import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHan
 import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationGroupYamlHandler;
 import software.wings.service.impl.yaml.handler.notification.NotificationRulesYamlHandler;
+import software.wings.service.impl.yaml.handler.service.ApplicationManifestYamlHandler;
+import software.wings.service.impl.yaml.handler.service.ManifestFileYamlHandler;
 import software.wings.service.impl.yaml.handler.service.ServiceYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.artifactserver.ArtifactServerYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.CloudProviderYamlHandler;
@@ -80,6 +84,7 @@ public class YamlHandlerFactory {
   private static final Logger logger = LoggerFactory.getLogger(YamlHandlerFactory.class);
 
   private static final Set<String> nonLeafEntities = new HashSet(obtainNonLeafEntities());
+  private static final Set<String> entitiesWithActualFiles = new HashSet(obtainUseRealFileEntities());
   private static final Set<String> leafEntities = new HashSet<>(obtainLeafEntities());
 
   @Inject private Map<String, ArtifactStreamYamlHandler> artifactStreamHelperMap;
@@ -119,6 +124,8 @@ public class YamlHandlerFactory {
   @Inject private FunctionSpecificationYamlHandler functionSpecificationYamlHandler;
   @Inject private ElasticLoadBalancerConfigYamlHandler elbConfigYamlHandler;
   @Inject private DefaultVariablesYamlHandler defaultsYamlHandler;
+  @Inject private ApplicationManifestYamlHandler applicationManifestYamlHandler;
+  @Inject private ManifestFileYamlHandler manifestFileYamlHandler;
 
   public <T extends BaseYamlHandler> T getYamlHandler(YamlType yamlType) {
     return getYamlHandler(yamlType, null);
@@ -233,6 +240,12 @@ public class YamlHandlerFactory {
       case APPLICATION_DEFAULTS:
         yamlHandler = defaultsYamlHandler;
         break;
+      case APPLICATION_MANIFEST:
+        yamlHandler = applicationManifestYamlHandler;
+        break;
+      case MANIFEST_FILE:
+        yamlHandler = manifestFileYamlHandler;
+        break;
       default:
         break;
     }
@@ -277,6 +290,10 @@ public class YamlHandlerFactory {
       return YamlType.DEPLOYMENT_SPECIFICATION;
     } else if (entity instanceof EcsServiceSpecification) {
       return YamlType.DEPLOYMENT_SPECIFICATION;
+    } else if (entity instanceof ApplicationManifest) {
+      return YamlType.APPLICATION_MANIFEST;
+    } else if (entity instanceof ManifestFile) {
+      return YamlType.MANIFEST_FILE;
     }
 
     throw new InvalidRequestException(
@@ -322,6 +339,10 @@ public class YamlHandlerFactory {
       return ((SettingAttribute) entity).getName();
     } else if (entity instanceof ServiceCommand) {
       return ((ServiceCommand) entity).getName();
+    } else if (entity instanceof ManifestFile) {
+      return ((ManifestFile) entity).getFileName();
+    } else if (entity instanceof ApplicationManifest) {
+      return YamlConstants.APPLICATIONS_MANIFEST;
     }
 
     throw new InvalidRequestException(
@@ -354,6 +375,16 @@ public class YamlHandlerFactory {
         + entity.getClass().getSimpleName());
   }
 
+  public <T> boolean isEntityNeedsActualFile(T entity) {
+    String entityName = entity.getClass().getSimpleName();
+
+    if (entitiesWithActualFiles.contains(entityName)) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
   public <T> String obtainYamlHandlerSubtype(T entity) {
     if (entity instanceof Workflow) {
       return ((Workflow) entity).getOrchestrationWorkflow().getOrchestrationWorkflowType().name();
@@ -381,7 +412,11 @@ public class YamlHandlerFactory {
   }
 
   private static List<String> obtainNonLeafEntities() {
-    return Lists.newArrayList("Environment", "Application", "Service");
+    return Lists.newArrayList("Environment", "Application", "Service", "ApplicationManifest");
+  }
+
+  private static List<String> obtainUseRealFileEntities() {
+    return Lists.newArrayList("ManifestFile");
   }
 
   private static List<String> obtainLeafEntities() {
@@ -395,6 +430,7 @@ public class YamlHandlerFactory {
         "EcrArtifactStream", "DockerArtifactStream", "BambooArtifactStream", "ArtifactoryArtifactStream",
         "AmiArtifactStream", "AmazonS3ArtifactStream", "AcrArtifactStream", "HelmChartSpecification",
         "EcsServiceSpecification", "PcfServiceSpecification", "LambdaSpecification", "UserDataSpecification",
-        "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand");
+        "EcsContainerTask", "KubernetesContainerTask", "ConfigFile", "SettingAttribute", "ServiceCommand",
+        "ManifestFile");
   }
 }

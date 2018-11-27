@@ -14,6 +14,7 @@ import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 import static software.wings.beans.yaml.YamlType.ACCOUNT_DEFAULTS;
 import static software.wings.beans.yaml.YamlType.APPLICATION;
 import static software.wings.beans.yaml.YamlType.APPLICATION_DEFAULTS;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_SERVER;
 import static software.wings.beans.yaml.YamlType.ARTIFACT_STREAM;
 import static software.wings.beans.yaml.YamlType.CLOUD_PROVIDER;
@@ -27,6 +28,7 @@ import static software.wings.beans.yaml.YamlType.DEPLOYMENT_SPECIFICATION;
 import static software.wings.beans.yaml.YamlType.ENVIRONMENT;
 import static software.wings.beans.yaml.YamlType.INFRA_MAPPING;
 import static software.wings.beans.yaml.YamlType.LOADBALANCER_PROVIDER;
+import static software.wings.beans.yaml.YamlType.MANIFEST_FILE;
 import static software.wings.beans.yaml.YamlType.NOTIFICATION_GROUP;
 import static software.wings.beans.yaml.YamlType.PIPELINE;
 import static software.wings.beans.yaml.YamlType.PROVISIONER;
@@ -129,8 +131,9 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
   private List<YamlType> getEntityProcessingOrder() {
     return Lists.newArrayList(ACCOUNT_DEFAULTS, CLOUD_PROVIDER, ARTIFACT_SERVER, COLLABORATION_PROVIDER,
         LOADBALANCER_PROVIDER, VERIFICATION_PROVIDER, NOTIFICATION_GROUP, APPLICATION, APPLICATION_DEFAULTS, SERVICE,
-        PROVISIONER, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE, ENVIRONMENT,
-        INFRA_MAPPING, CONFIG_FILE_OVERRIDE_CONTENT, CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
+        PROVISIONER, ARTIFACT_STREAM, COMMAND, DEPLOYMENT_SPECIFICATION, CONFIG_FILE_CONTENT, CONFIG_FILE,
+        APPLICATION_MANIFEST, MANIFEST_FILE, ENVIRONMENT, INFRA_MAPPING, CONFIG_FILE_OVERRIDE_CONTENT,
+        CONFIG_FILE_OVERRIDE, WORKFLOW, PIPELINE);
   }
 
   @Override
@@ -326,6 +329,13 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           } else {
             addToFailedYamlMap(failedYamlFileChangeMap, change, "Unsupported type: " + yamlType);
           }
+        } else if (yamlFilePath.contains(YamlConstants.MANIFEST_FILE_FOLDER)) {
+          ChangeContext.Builder changeContextBuilder =
+              ChangeContext.Builder.aChangeContext()
+                  .withChange(change)
+                  .withYamlType(YamlType.MANIFEST_FILE)
+                  .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE));
+          changeContextList.add(changeContextBuilder.build());
         }
       } catch (ScannerException ex) {
         String message;
@@ -492,7 +502,7 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
     }
 
     // If its not a yaml file, we don't have a handler for that file
-    if (!change.getFilePath().endsWith(YAML_EXTENSION)) {
+    if (!change.getFilePath().endsWith(YAML_EXTENSION) && !doesEntityUsesActualFile(change.getFilePath())) {
       return;
     }
 
@@ -512,6 +522,14 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
         // TODO
         break;
     }
+  }
+
+  private boolean doesEntityUsesActualFile(String filePath) {
+    if (Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches()) {
+      return true;
+    }
+
+    return false;
   }
 
   private void upsertFromYaml(ChangeContext changeContext, List<ChangeContext> changeContextList)

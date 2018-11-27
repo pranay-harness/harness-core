@@ -10,9 +10,8 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
+import software.wings.beans.yaml.YamlType;
 import software.wings.yaml.BaseEntityYaml;
-
-import java.util.List;
 
 @Entity("applicationManifests")
 @Data
@@ -24,14 +23,9 @@ public class ApplicationManifest extends Base {
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
   @NonNull StoreType storeType;
 
-  List<ManifestFile> manifestFiles;
-
   public ApplicationManifest cloneInternal() {
-    ApplicationManifest manifest = ApplicationManifest.builder()
-                                       .serviceId(this.serviceId)
-                                       .storeType(this.storeType)
-                                       .manifestFiles(this.manifestFiles)
-                                       .build();
+    ApplicationManifest manifest =
+        ApplicationManifest.builder().serviceId(this.serviceId).storeType(this.storeType).build();
     manifest.setAppId(this.appId);
     return manifest;
   }
@@ -40,9 +34,11 @@ public class ApplicationManifest extends Base {
   @EqualsAndHashCode(callSuper = false)
   @NoArgsConstructor
   public static final class Yaml extends BaseEntityYaml {
+    private String storeType;
     @Builder
-    public Yaml(String type, String harnessApiVersion) {
-      super(type, harnessApiVersion);
+    public Yaml(String type, String harnessApiVersion, String storeType) {
+      super(YamlType.APPLICATION_MANIFEST.name(), harnessApiVersion);
+      this.storeType = storeType;
     }
   }
 }

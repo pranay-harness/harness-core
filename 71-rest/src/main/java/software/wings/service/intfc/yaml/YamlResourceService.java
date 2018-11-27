@@ -108,4 +108,8 @@ public interface YamlResourceService {
   RestResponse<YamlPayload> getProvisioner(String appId, String provisionerId);
 
   <T> RestResponse<YamlPayload> obtainEntityYamlVersion(String accountId, T entity);
+
+  RestResponse<YamlPayload> getApplicationManifest(String appId, String applicationManifestId);
+
+  RestResponse<YamlPayload> getManifestFile(String appId, String manifestFileId);
 }

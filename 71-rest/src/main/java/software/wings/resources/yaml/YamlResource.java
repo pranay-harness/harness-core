@@ -33,6 +33,7 @@ import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.exception.YamlProcessingException;
@@ -215,6 +216,47 @@ public class YamlResource {
   public RestResponse<YamlPayload> getPipeline(
       @QueryParam("appId") String appId, @PathParam("pipelineId") String pipelineId) {
     return yamlResourceService.getPipeline(appId, pipelineId);
+  }
+
+  @GET
+  @Path("/application-manifests/{applicationManifestId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
+  public RestResponse<YamlPayload> getApplicationManifestId(@QueryParam("appId") String appId,
+      @QueryParam("serviceId") String serviceId, @PathParam("applicationManifestId") String applicationManifestId) {
+    return yamlResourceService.getApplicationManifest(appId, applicationManifestId);
+  }
+
+  @PUT
+  @Path("/application-manifests/{applicationManifestId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  public RestResponse<YamlPayload> updateApplicationManifest(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId,
+      @PathParam("applicationManifestId") String applicationManifestId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
+  }
+
+  @GET
+  @Path("/manifest-files/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
+  public RestResponse<YamlPayload> getApplicationManifestFile(@QueryParam("appId") String appId,
+      @QueryParam("serviceId") String serviceId, @PathParam("manifestFileId") String manifestFileId) {
+    return yamlResourceService.getManifestFile(appId, manifestFileId);
+  }
+
+  @PUT
+  @Path("/manifest-files/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
+  public RestResponse<ManifestFile> updateManifestFile(@QueryParam("accountId") String accountId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("appId") String appId, YamlPayload yamlPayload) {
+    return yamlService.update(yamlPayload, accountId);
   }
 
   /**
@@ -523,6 +565,16 @@ public class YamlResource {
   public RestResponse<DirectoryNode> getDirectory(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId) {
     return new RestResponse<>(yamlDirectoryService.getDirectory(accountId, appId));
+  }
+
+  @GET
+  @Path("/manifest")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.READ)
+  public RestResponse<DirectoryNode> getApplicationManifestForService(@QueryParam("accountId") String accountId,
+      @QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId) {
+    return new RestResponse<>(yamlDirectoryService.getApplicationManifestYamlFolderNode(accountId, appId, serviceId));
   }
 
   /**

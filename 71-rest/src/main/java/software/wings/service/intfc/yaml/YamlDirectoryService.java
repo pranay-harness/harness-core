@@ -11,6 +11,8 @@ import software.wings.beans.Pipeline;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -117,4 +119,11 @@ public interface YamlDirectoryService {
   FolderNode doApplication(String applicationId, boolean applyPermissions,
       Map<String, AppPermissionSummary> appPermissionSummaryMap, FolderNode applicationsFolder,
       DirectoryPath directoryPath);
+
+  String getRootPathByApplicationManifest(ApplicationManifest applicationManifest);
+
+  String getRootPathByManifestFile(ManifestFile manifestFile);
+
+  DirectoryNode getApplicationManifestYamlFolderNode(
+      @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String serviceId);
 }
