@@ -1,7 +1,7 @@
 package software.wings.yaml;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import software.wings.beans.ResponseMessage;
+import io.harness.eraro.ResponseMessage;
 
 import java.util.ArrayList;
 import java.util.List;

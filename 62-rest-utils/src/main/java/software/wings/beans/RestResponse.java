@@ -2,6 +2,8 @@ package software.wings.beans;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.eraro.ResponseMessage;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

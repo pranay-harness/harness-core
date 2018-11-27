@@ -4,11 +4,11 @@ import static io.harness.eraro.ErrorCode.INVALID_CREDENTIAL;
 import static io.harness.eraro.ErrorCode.SSL_HANDSHAKE_FAILED;
 import static io.harness.eraro.ErrorCode.UNKNOWN_ERROR;
 import static io.harness.eraro.ErrorCode.UNREACHABLE_HOST;
+import static io.harness.eraro.ResponseMessage.ResponseMessageBuilder;
 import static java.lang.String.format;
-import static software.wings.beans.ResponseMessage.ResponseMessageBuilder;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import software.wings.beans.ResponseMessage;
+import io.harness.eraro.ResponseMessage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;

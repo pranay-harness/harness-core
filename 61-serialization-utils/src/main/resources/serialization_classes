@@ -355,7 +355,7 @@ software.wings.service.impl.analysis.TimeSeries, 5312
 software.wings.metrics.MetricType, 5313
 software.wings.beans.PrometheusConfig, 5314
 software.wings.service.impl.prometheus.PrometheusMetricDataResponse, 5315
-software.wings.beans.ResponseMessage, 5316
+io.harness.eraro.ResponseMessage, 5316
 software.wings.service.impl.cloudwatch.CloudWatchDataCollectionInfo, 5317
 software.wings.service.impl.cloudwatch.CloudWatchMetric, 5318
 software.wings.service.impl.cloudwatch.AwsNameSpace, 5319
