@@ -12,6 +12,7 @@ import software.wings.api.KmsTransitionEvent;
 import software.wings.audit.AuditHeader;
 import software.wings.beans.alert.Alert;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.AcrArtifactStream;
 import software.wings.beans.artifact.AmazonS3ArtifactStream;
 import software.wings.beans.artifact.AmiArtifactStream;
@@ -163,5 +164,5 @@ public class ManagerMorphiaClasses {
       MetricAnalysisRecord.class, YamlVersion.class, EncryptionConfig.class, Principal.class,
       PrometheusCVServiceConfiguration.class, EncryptedData.class, NewRelicCVServiceConfiguration.class,
       ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class, YamlGitConfig.class,
-      TimeSeriesMLTransactionThresholds.class, GitSyncWebhook.class, ExecutionEvent.class);
+      TimeSeriesMLTransactionThresholds.class, GitSyncWebhook.class, ExecutionEvent.class, ManifestFile.class);
 }

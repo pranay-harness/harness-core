@@ -23,6 +23,7 @@ import software.wings.beans.Environment;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.yaml.Change.ChangeType;
 import software.wings.beans.yaml.GitFileChange;
@@ -74,7 +75,7 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
         .build();
   }
 
-  private GitFileChange createConfigFileChange(
+  private GitFileChange createGitChangeWhenUsingActualFile(
       String accountId, String path, String fileName, String content, ChangeType changeType) {
     return Builder.aGitFileChange()
         .withAccountId(accountId)
@@ -174,17 +175,24 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       return obtainServiceVariableChangeSet(accountId, (ServiceVariable) entity, changeType);
     }
 
-    if (!changeType.equals(ChangeType.DELETE)) {
+    boolean isNonLeafEntity = yamlHandlerFactory.isNonLeafEntity(entity);
+    boolean isEntityNeedsActualFile = yamlHandlerFactory.isEntityNeedsActualFile(entity);
+    if (!changeType.equals(ChangeType.DELETE) && !isEntityNeedsActualFile) {
       yaml = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource().getYaml();
     }
 
     String yamlFileName = yamlHandlerFactory.obtainYamlFileName(entity);
-    yamlFileName = Util.normalize(yamlFileName);
-    boolean isNonLeafEntity = yamlHandlerFactory.isNonLeafEntity(entity);
+
+    // For Manifest File "/" is allowed in name
+    if (!(entity instanceof ManifestFile)) {
+      yamlFileName = Util.normalize(yamlFileName);
+    }
 
     helperEntity = obtainHelperEntity(helperEntity, entity);
-    gitFileChanges.add(createGitFileChange(accountId, yamlDirectoryService.obtainEntityRootPath(helperEntity, entity),
-        yamlFileName, yaml, changeType, isNonLeafEntity));
+    if (!isEntityNeedsActualFile) {
+      gitFileChanges.add(createGitFileChange(accountId, yamlDirectoryService.obtainEntityRootPath(helperEntity, entity),
+          yamlFileName, yaml, changeType, isNonLeafEntity));
+    }
     gitFileChanges.addAll(obtainAdditionalGitSyncFileChangeSet(accountId, helperEntity, entity, changeType));
 
     return gitFileChanges;
@@ -249,9 +257,14 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
       String fileName = Util.normalize(configFile.getRelativeFilePath());
 
       if (fileContent != null) {
-        gitFileChanges.add(createConfigFileChange(
+        gitFileChanges.add(createGitChangeWhenUsingActualFile(
             accountId, yamlDirectoryService.getRootPathByConfigFile(helperEntity), fileName, fileContent, changeType));
       }
+    } else if (entity instanceof ManifestFile) {
+      ManifestFile manifestFile = (ManifestFile) entity;
+      String path = yamlDirectoryService.getRootPathByManifestFile(manifestFile);
+      gitFileChanges.add(createGitChangeWhenUsingActualFile(
+          accountId, path, manifestFile.getFileName(), manifestFile.getFileContent(), changeType));
     }
 
     return gitFileChanges;
@@ -278,5 +291,21 @@ public class EntityUpdateServiceImpl implements EntityUpdateService {
 
     notNullCheck("Application id cannot be null", appId, SRE);
     return appId;
+  }
+
+  @Override
+  public <T> String obtainAccountIdFromEntity(T entity) {
+    String appId = null;
+
+    if (entity instanceof Base) {
+      appId = ((Base) entity).getAppId();
+    } else if (entity instanceof String) { // Special handling for DefaultVariables
+      appId = (String) entity;
+    }
+
+    notNullCheck("Application id cannot be null", appId, SRE);
+
+    Application application = appService.get(appId);
+    return application.getAccountId();
   }
 }

@@ -39,6 +39,7 @@ import javax.validation.constraints.NotNull;
 @NoArgsConstructor
 public class Base extends PersistentEntity implements UuidAware, CreatedAtAware {
   public static final String APP_ID_KEY = "appId";
+  public static final String APP_MANIFEST_ID_KEY = "applicationManifestId";
   public static final String ACCOUNT_ID_KEY = "accountId";
   public static final String LAST_UPDATED_AT_KEY = "lastUpdatedAt";
   public static final String CREATED_BY_KEY = "createdBy";

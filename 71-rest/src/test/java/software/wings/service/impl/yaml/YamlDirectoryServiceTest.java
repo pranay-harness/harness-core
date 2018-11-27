@@ -209,7 +209,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
     assertEquals(SERVICE_NAME, serviceFolderNode.getChildren().get(0).getName());
     assertEquals(NodeType.FOLDER, serviceFolderNode.getChildren().get(0).getType());
 
-    // These are nested yaml strcutures for service like index.yaml, config files, commands etc.
+    // These are nested yaml structures for service like index.yaml, config files, commands etc.
     Set<String> expectedDirPaths =
         new HashSet<>(Arrays.asList("Setup/Applications/APP_NAME/Services/SERVICE_NAME/Index.yaml",
             "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Commands",
@@ -217,7 +217,7 @@ public class YamlDirectoryServiceTest extends WingsBaseTest {
             "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Artifact Servers",
             "Setup/Applications/APP_NAME/Services/SERVICE_NAME/Config Files"));
 
-    assertEquals(5, ((FolderNode) serviceFolderNode.getChildren().get(0)).getChildren().size());
+    assertEquals(expectedDirPaths.size(), ((FolderNode) serviceFolderNode.getChildren().get(0)).getChildren().size());
     for (DirectoryNode serviceChildNode : ((FolderNode) serviceFolderNode.getChildren().get(0)).getChildren()) {
       assertTrue(expectedDirPaths.contains(serviceChildNode.getDirectoryPath().getPath()));
       expectedDirPaths.remove(serviceChildNode.getDirectoryPath().getPath());

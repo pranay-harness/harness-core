@@ -578,7 +578,12 @@ public class YamlGitServiceImpl implements YamlGitService {
   }
 
   private void matchPathPrefix(String filePath, List<YamlType> folderYamlTypes) {
-    // only check for file sand not directories
+    // only check for file and not directories
+
+    if (Pattern.compile(YamlType.MANIFEST_FILE.getPathExpression()).matcher(filePath).matches()) {
+      return;
+    }
+
     if (filePath.endsWith(YamlConstants.YAML_EXTENSION)) {
       if (!folderYamlTypes.stream().anyMatch(
               yamlType -> Pattern.compile(yamlType.getPathExpression()).matcher(filePath).matches())) {

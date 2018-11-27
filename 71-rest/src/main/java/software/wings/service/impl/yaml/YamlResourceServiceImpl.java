@@ -3,6 +3,7 @@ package software.wings.service.impl.yaml;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
 import static software.wings.beans.yaml.YamlConstants.DEFAULTS_YAML;
+import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.YAML_EXTENSION;
 
 import com.google.inject.Inject;
@@ -29,6 +30,8 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.Workflow;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.Command;
 import software.wings.beans.command.ServiceCommand;
@@ -43,6 +46,7 @@ import software.wings.common.Constants;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.setting.SettingValueYamlHandler;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
@@ -85,6 +89,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
   @Inject private YamlHandlerFactory yamlHandlerFactory;
   @Inject private NotificationSetupService notificationSetupService;
   @Inject private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   private static final Logger logger = LoggerFactory.getLogger(YamlResourceServiceImpl.class);
 
@@ -136,6 +141,28 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         (Pipeline.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.PIPELINE).toYaml(pipeline, appId);
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, pipeline.getUuid(), accountId, pipelineYaml, pipeline.getName() + YAML_EXTENSION);
+  }
+
+  public RestResponse<YamlPayload> getApplicationManifest(String appId, String applicationManifestId) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    ApplicationManifest applicationManifest = applicationManifestService.getById(appId, applicationManifestId);
+
+    Validator.notNullCheck("No Application Manifest with the given id:" + applicationManifestId, applicationManifest);
+    ApplicationManifest.Yaml yaml =
+        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.APPLICATION_MANIFEST)
+            .toYaml(applicationManifest, appId);
+    return YamlHelper.getYamlRestResponse(
+        yamlGitSyncService, applicationManifest.getUuid(), accountId, yaml, INDEX_YAML);
+  }
+
+  public RestResponse<YamlPayload> getManifestFile(String appId, String manifestFileId) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    Validator.notNullCheck("No account found for appId:" + appId, accountId);
+    ManifestFile manifestFile = applicationManifestService.getManifestFileById(appId, manifestFileId);
+
+    Validator.notNullCheck("No Manifest File with the given id:" + manifestFileId, manifestFile);
+    return YamlHelper.getYamlRestResponseForActualFile(manifestFile.getFileContent(), manifestFile.getFileName());
   }
 
   @Override
@@ -214,6 +241,33 @@ public class YamlResourceServiceImpl implements YamlResourceService {
 
     return YamlHelper.getYamlRestResponse(
         yamlGitSyncService, workflow.getUuid(), accountId, workflowYaml, workflow.getName() + YAML_EXTENSION);
+  }
+
+  /**
+   * Gets the yaml for a ApplicationManifest
+   *
+   * @param appId     the app id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getApplicationManifest(String appId, ApplicationManifest manifest) {
+    ApplicationManifest.Yaml yaml =
+        (ApplicationManifest.Yaml) yamlHandlerFactory.getYamlHandler(YamlType.APPLICATION_MANIFEST)
+            .toYaml(manifest, appId);
+
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, null, null, yaml, INDEX_YAML);
+  }
+
+  /**
+   * Gets the yaml for a workflow
+   *
+   * @param appId     the app id
+   * @return the rest response
+   */
+  public RestResponse<YamlPayload> getManifestFile(String appId, ManifestFile manifestFile) {
+    WorkflowYaml workflowYaml =
+        (WorkflowYaml) yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE).toYaml(manifestFile, appId);
+
+    return YamlHelper.getYamlRestResponse(yamlGitSyncService, null, null, workflowYaml, manifestFile.getFileName());
   }
 
   /**

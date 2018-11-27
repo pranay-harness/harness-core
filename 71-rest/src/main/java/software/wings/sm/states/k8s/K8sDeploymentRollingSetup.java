@@ -28,6 +28,8 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.common.Constants;
@@ -56,7 +58,9 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.Misc;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -107,6 +111,12 @@ public class K8sDeploymentRollingSetup extends State {
         throw new InvalidRequestException("Manifests not found for service.");
       }
 
+      List<ManifestFile> manifestFiles = new ArrayList<>();
+      if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+        manifestFiles = applicationManifestService.getManifestFilesByAppManifestId(
+            applicationManifest.getAppId(), applicationManifest.getUuid());
+      }
+
       Activity activity = k8sStateHelper.createK8sActivity(context, K8S_DEPLOYMENT_SETUP_ROLLING_COMMAND_NAME,
           getStateType(), activityService,
           ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
@@ -126,7 +136,7 @@ public class K8sDeploymentRollingSetup extends State {
               .workflowExecutionId(context.getWorkflowExecutionId())
               .timeoutIntervalInMin(10)
               .manifestStoreTypes(applicationManifest.getStoreType())
-              .manifestFiles(applicationManifest.getManifestFiles())
+              .manifestFiles(manifestFiles)
               .build();
 
       DelegateTask delegateTask =

@@ -50,6 +50,10 @@ public class DirectoryNode {
       this.restName = "user-data-specs";
     } else if (this.shortClassName.equals("Account")) {
       this.restName = "setup";
+    } else if (this.shortClassName.equals("ApplicationManifest")) {
+      this.restName = "application-manifests";
+    } else if (this.shortClassName.equals("ManifestFile")) {
+      this.restName = "manifest-files";
     } else {
       this.restName = this.shortClassName.toLowerCase() + "s";
     }
