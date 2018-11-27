@@ -17,6 +17,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 import org.mongodb.morphia.query.Sort;
@@ -31,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionInterrupt;
 import software.wings.sm.ExecutionInterruptManager;
@@ -109,7 +109,7 @@ public class WorkflowExecutionMonitorJob implements Job {
             executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
           }
         } catch (WingsException exception) {
-          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
         } catch (Exception e) {
           logger.error(format("Error in cleaning up the workflow execution %s", workflowExecution.getUuid()), e);
         }
@@ -152,7 +152,7 @@ public class WorkflowExecutionMonitorJob implements Job {
         }
       }
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
       logger.error("Error in monitoring the workflow executions ", e);
     }

@@ -12,6 +12,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -23,7 +24,6 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.info.HostInstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -104,7 +104,7 @@ public class FixInstanceDataForAwsSSH implements Migration {
 
           logger.info("Instance sync done for appId:" + appId);
         } catch (WingsException exception) {
-          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
         } catch (Exception ex) {
           logger.warn(format("Error while syncing instances for app: %s", appId), ex);
         }

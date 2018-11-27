@@ -13,6 +13,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -35,7 +36,6 @@ import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapTestResponse.Status;
 import software.wings.beans.sso.LdapUserResponse;
 import software.wings.delegatetasks.DelegateProxyFactory;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.ldap.LdapConstants;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.SSOService;
@@ -277,7 +277,7 @@ public class LdapGroupSyncJob implements Job {
         ssoSettingService.raiseSyncFailureAlert(
             accountId, ssoId, String.format(LdapConstants.USER_GROUP_SYNC_FAILED, ssoId) + exception.getMessage());
       }
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception ex) {
       ssoSettingService.raiseSyncFailureAlert(
           accountId, ssoId, String.format(LdapConstants.USER_GROUP_SYNC_FAILED, ssoId) + ex.getMessage());

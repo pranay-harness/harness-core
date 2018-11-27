@@ -4,8 +4,8 @@ import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static java.time.Duration.ofSeconds;
-import static software.wings.app.LoggingInitializer.initializeLogging;
 import static software.wings.common.Constants.USER_CACHE;
 import static software.wings.dl.WingsPersistence.LOCKS_STORE;
 

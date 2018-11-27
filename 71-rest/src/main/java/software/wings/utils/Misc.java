@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.trim;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import software.wings.beans.Log.LogLevel;
@@ -18,7 +19,6 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.common.Constants;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import java.security.NoSuchAlgorithmException;
@@ -138,7 +138,7 @@ public class Misc {
   public static String getMessage(Throwable t) {
     if (t instanceof WingsException) {
       WingsException we = (WingsException) t;
-      return WingsExceptionMapper.getResponseMessageList(we, REST_API)
+      return ExceptionLogger.getResponseMessageList(we, REST_API)
           .stream()
           .map(ResponseMessage::getMessage)
           .collect(joining(". "));
@@ -153,7 +153,7 @@ public class Misc {
       Throwable cause = he.getCause();
       if (cause instanceof WingsException) {
         WingsException we = (WingsException) cause;
-        return WingsExceptionMapper.getResponseMessageList(we, REST_API)
+        return ExceptionLogger.getResponseMessageList(we, REST_API)
             .stream()
             .map(ResponseMessage::getMessage)
             .collect(joining(". "));

@@ -10,6 +10,7 @@ import com.mongodb.DBCursor;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.ReadPref;
 import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
@@ -22,7 +23,6 @@ import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -81,7 +81,7 @@ public class PersistentLockCleanupJob implements Job {
         delete(locks.next().get("_id"));
       }
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("Error seen in the PersistentLockCleanupJob execute call", exception);
     }

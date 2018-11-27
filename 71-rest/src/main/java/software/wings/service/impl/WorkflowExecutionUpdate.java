@@ -17,6 +17,7 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.queue.Queue;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -25,7 +26,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.WorkflowType;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.BarrierService;
@@ -147,7 +147,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
         try {
           waitNotifyEngine.notify(workflowExecutionId, new EnvExecutionResponseData(workflowExecutionId, status));
         } catch (WingsException exception) {
-          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
         }
       }
     } else {

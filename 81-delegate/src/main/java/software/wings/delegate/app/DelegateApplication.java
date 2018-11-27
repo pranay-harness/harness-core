@@ -1,6 +1,7 @@
 package software.wings.delegate.app;
 
 import static com.google.common.base.Charsets.UTF_8;
+import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static software.wings.utils.message.MessageConstants.DELEGATE_DASH;
 import static software.wings.utils.message.MessageConstants.NEW_DELEGATE;
 import static software.wings.utils.message.MessageConstants.WATCHER_DATA;
@@ -19,8 +20,6 @@ import com.google.inject.name.Names;
 
 import com.ning.http.client.AsyncHttpClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.harness.eraro.MessageManager;
-import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -28,7 +27,6 @@ import org.apache.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import software.wings.app.WingsModule;
 import software.wings.delegate.service.DelegateService;
 import software.wings.managerclient.ManagerClientModule;
 import software.wings.utils.message.MessageService;
@@ -36,7 +34,6 @@ import software.wings.verification.VerificationServiceClientModule;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,11 +68,7 @@ public class DelegateApplication {
     // Set logging level
     java.util.logging.LogManager.getLogManager().getLogger("").setLevel(Level.INFO);
 
-    try (InputStream in = WingsModule.class.getResourceAsStream(WingsModule.RESPONSE_MESSAGE_FILE)) {
-      MessageManager.getInstance().addMessages(in);
-    } catch (IOException exception) {
-      throw new WingsException(exception);
-    }
+    initializeLogging();
 
     File configFile = new File(args[0]);
 

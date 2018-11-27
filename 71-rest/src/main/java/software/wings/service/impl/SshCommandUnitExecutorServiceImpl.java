@@ -18,6 +18,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log.Builder;
@@ -31,7 +32,6 @@ import software.wings.core.ssh.executors.SshExecutor;
 import software.wings.core.ssh.executors.SshExecutorFactory;
 import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.Misc;
 import software.wings.utils.SshHelperUtil;
@@ -127,7 +127,7 @@ public class SshCommandUnitExecutorServiceImpl implements CommandUnitExecutorSer
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
       }
     } catch (WingsException e) {
-      final List<ResponseMessage> messageList = WingsExceptionMapper.getResponseMessageList(e, REST_API);
+      final List<ResponseMessage> messageList = ExceptionLogger.getResponseMessageList(e, REST_API);
       if (!messageList.isEmpty()) {
         if (messageList.get(0).getCode() == ErrorCode.INVALID_KEY
             || messageList.get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {

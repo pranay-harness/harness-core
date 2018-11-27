@@ -62,6 +62,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.observer.Subject;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.Getter;
@@ -83,7 +84,6 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.impl.ExecutionLogContext;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
@@ -733,7 +733,7 @@ public class StateMachineExecutor {
       currentState =
           sm.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
       addContext(context, exception);
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException ex) {
       logger.error("Error when processing exception", ex);
     }
@@ -1540,7 +1540,7 @@ public class StateMachineExecutor {
         stateMachineExecutor.startExecution(context);
       } catch (WingsException exception) {
         stateMachineExecutor.addContext(context, exception);
-        WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       } catch (Exception exception) {
         logger.error("Unhandled exception", exception);
       }

@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.queue.Queuable;
 import io.harness.queue.Queue;
 import lombok.Getter;
@@ -18,7 +19,6 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.utils.ThreadContext;
 
 import java.time.Duration;
@@ -134,7 +134,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    */
   void onException(Exception exception, T message) {
     if (exception instanceof WingsException) {
-      WingsExceptionMapper.logProcessedMessages((WingsException) exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages((WingsException) exception, MANAGER, logger);
     } else {
       logger.error("Exception happened while processing message " + message, exception);
     }

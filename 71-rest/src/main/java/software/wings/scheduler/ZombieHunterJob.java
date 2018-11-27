@@ -53,6 +53,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.ReadPref;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.AllArgsConstructor;
@@ -74,7 +75,6 @@ import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.Exterminator;
 
@@ -204,7 +204,7 @@ public class ZombieHunterJob implements Job {
       huntingExpedition(zombieType);
 
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("Error seen in the ZombieHunterJob  execute call", exception);
     }

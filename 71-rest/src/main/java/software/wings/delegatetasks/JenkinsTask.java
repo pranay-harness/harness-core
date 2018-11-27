@@ -16,6 +16,7 @@ import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import org.apache.http.client.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,6 @@ import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.JenkinsTaskParams;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
@@ -103,7 +103,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
           jenkinsExecutionResponse.setBuildNumber(String.valueOf(jenkinsBuild.getNumber()));
           jenkinsExecutionResponse.setJobUrl(jenkinsBuild.getUrl());
         } catch (WingsException e) {
-          WingsExceptionMapper.logProcessedMessages(e, DELEGATE, logger);
+          ExceptionLogger.logProcessedMessages(e, DELEGATE, logger);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
         } catch (Exception e) {
@@ -177,7 +177,7 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
             executionStatus = ExecutionStatus.FAILED;
           }
         } catch (WingsException e) {
-          WingsExceptionMapper.logProcessedMessages(e, DELEGATE, logger);
+          ExceptionLogger.logProcessedMessages(e, DELEGATE, logger);
           executionStatus = ExecutionStatus.FAILED;
           jenkinsExecutionResponse.setErrorMessage(Misc.getMessage(e));
         } catch (Exception e) {

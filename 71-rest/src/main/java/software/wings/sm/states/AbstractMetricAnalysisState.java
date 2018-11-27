@@ -12,11 +12,11 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.version.VersionInfoManager;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.MetricDataAnalysisResponse;
 import software.wings.api.PcfInstanceElement;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisContext;
@@ -194,7 +194,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
       continuousVerificationService.setMetaDataExecutionStatus(
           context.getStateExecutionInstanceId(), ExecutionStatus.ERROR);
       if (ex instanceof WingsException) {
-        WingsExceptionMapper.logProcessedMessages((WingsException) ex, MANAGER, getLogger());
+        ExceptionLogger.logProcessedMessages((WingsException) ex, MANAGER, getLogger());
       } else {
         getLogger().error("metric analysis state failed", ex);
       }

@@ -10,12 +10,12 @@ import static software.wings.beans.yaml.YamlConstants.GIT_YAML_LOG_PREFIX;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
 import software.wings.service.intfc.yaml.YamlGitService;
@@ -119,7 +119,7 @@ public class GitChangeSetRunnable implements Runnable {
         }
       });
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error(GIT_YAML_LOG_PREFIX + "Unexpected error", exception);
     }

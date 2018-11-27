@@ -32,6 +32,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.ReadPref;
 import lombok.Data;
@@ -73,7 +74,6 @@ import software.wings.beans.instance.dashboard.service.DeploymentHistory;
 import software.wings.beans.instance.dashboard.service.ServiceInstanceDashboard;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.UserRequestContext;
 import software.wings.security.UserRequestInfo;
 import software.wings.security.UserThreadLocal;
@@ -310,7 +310,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
       }
 
     } else if (exception instanceof WingsException) {
-      WingsExceptionMapper.logProcessedMessages((WingsException) exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages((WingsException) exception, MANAGER, logger);
     } else {
       logger.error("Unable to get instance stats", exception);
     }

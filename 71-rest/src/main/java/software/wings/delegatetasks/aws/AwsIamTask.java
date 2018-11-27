@@ -7,12 +7,12 @@ import com.google.inject.Inject;
 
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.aws.model.AwsIamListInstanceRolesResponse;
 import software.wings.service.impl.aws.model.AwsIamListRolesResponse;
 import software.wings.service.impl.aws.model.AwsIamRequest;
@@ -58,7 +58,7 @@ public class AwsIamTask extends AbstractDelegateRunnableTask {
         }
       }
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
+      ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
       throw exception;
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage(), WingsException.USER);

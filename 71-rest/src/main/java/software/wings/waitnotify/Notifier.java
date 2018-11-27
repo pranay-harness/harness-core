@@ -14,6 +14,7 @@ import com.google.inject.Inject;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.waiter.WaitQueue;
@@ -22,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -65,7 +65,7 @@ public class Notifier implements Runnable {
       }
       executeUnderLock();
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
     }

@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ArtifactCollectionService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.TriggerService;
@@ -90,7 +90,7 @@ public class ArtifactCollectionJob implements Job {
     } catch (WingsException exception) {
       exception.addContext(Application.class, appId);
       exception.addContext(ArtifactStream.class, artifactStreamId);
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception e) {
       log(appId, artifactStreamId, new WingsException(e));
     }

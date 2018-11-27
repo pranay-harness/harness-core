@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.fabric8.utils.Strings;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -18,7 +19,6 @@ import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ResourceConstraintService;
 
 import java.util.Set;
@@ -64,7 +64,7 @@ public class ResourceConstraintBackupJob implements Job {
       // Unblock the constraints that can be unblocked
       resourceConstraintService.updateBlockedConstraints(constraintIds);
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException e) {
       logger.error("", e);
     }
