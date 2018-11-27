@@ -5,9 +5,9 @@ import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import io.harness.eraro.ErrorCodeName;
 import io.harness.eraro.Level;
 import io.harness.eraro.MessageManager;
+import io.harness.eraro.ResponseMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 import software.wings.utils.Misc;
 

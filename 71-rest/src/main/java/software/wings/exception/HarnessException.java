@@ -1,8 +1,8 @@
 package software.wings.exception;
 
 import io.harness.eraro.ErrorCode;
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
-import software.wings.beans.ResponseMessage;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -6,10 +6,10 @@ import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
-import software.wings.beans.ResponseMessage;
 
 import java.util.EnumSet;
 import java.util.List;

@@ -14,13 +14,13 @@ import com.google.common.collect.Iterables;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.dropwizard.validation.ValidationMethod;
 import io.harness.eraro.Level;
+import io.harness.eraro.ResponseMessage;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.ResponseMessage;
 import software.wings.beans.RestResponse;
 
 import java.lang.annotation.Annotation;
