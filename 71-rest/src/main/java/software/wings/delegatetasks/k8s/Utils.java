@@ -206,18 +206,22 @@ public class Utils {
     RolloutHistoryCommand rolloutHistoryCommand =
         client.rollout().history().resource(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
 
-    ProcessResult result = rolloutHistoryCommand.execute(k8sCommandTaskParams.getWorkingDirectory(),
-        new LogOutputStream() {
-          @Override
-          protected void processLine(String line) {}
-        },
-        new LogOutputStream() {
-          @Override
-          protected void processLine(String line) {}
-        });
+    try (LogOutputStream logOutputStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {}
+             };
+         LogOutputStream logErrorStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {}
+             }) {
+      ProcessResult result =
+          rolloutHistoryCommand.execute(k8sCommandTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
 
-    if (result.getExitValue() == 0) {
-      return parseLatestRevisionNumberFromRolloutHistory(result.outputString());
+      if (result.getExitValue() == 0) {
+        return parseLatestRevisionNumberFromRolloutHistory(result.outputString());
+      }
     }
     return "";
   }
