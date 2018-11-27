@@ -14,6 +14,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +36,7 @@ import software.wings.beans.yaml.ChangeContext;
 import software.wings.exception.HarnessException;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
@@ -41,10 +44,10 @@ import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.security.SecretManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 /**
  * @author rktummala on 11/07/17
  */
@@ -57,6 +60,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
   @Inject ServiceVariableService serviceVariableService;
   @Inject ServiceResourceService serviceResourceService;
   @Inject ServiceTemplateService serviceTemplateService;
+  @Inject private AppService appService;
 
   @Override
   public Environment.Yaml toYaml(Environment environment, String appId) {
@@ -117,30 +121,7 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
             throw new WingsException(msg);
           }
 
-          String parentServiceName;
-          if (serviceVariable.getEntityType() == SERVICE_TEMPLATE) {
-            String parentServiceVariableId = serviceVariable.getParentServiceVariableId();
-
-            if (parentServiceVariableId != null) {
-              ServiceVariable parentServiceVariable =
-                  serviceVariableService.get(serviceVariable.getAppId(), parentServiceVariableId);
-              String serviceId = parentServiceVariable.getEntityId();
-              Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
-              notNullCheck("Service not found for id: " + serviceId, service, USER);
-              parentServiceName = service.getName();
-            } else {
-              ServiceTemplate serviceTemplate =
-                  serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
-              notNullCheck(
-                  "Service template not found for id: " + serviceVariable.getEntityId(), serviceTemplate, USER);
-              String serviceId = serviceTemplate.getServiceId();
-              Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
-              notNullCheck("Service not found for id: " + serviceId, service, USER);
-              parentServiceName = service.getName();
-            }
-          } else {
-            parentServiceName = null;
-          }
+          String parentServiceName = getParentServiceName(serviceVariable);
 
           return VariableOverrideYaml.builder()
               .valueType(variableType.name())
@@ -150,6 +131,31 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
               .build();
         })
         .collect(toList());
+  }
+
+  private String getParentServiceName(ServiceVariable serviceVariable) {
+    if (serviceVariable.getEntityType() == SERVICE_TEMPLATE) {
+      String parentServiceVariableId = serviceVariable.getParentServiceVariableId();
+
+      if (parentServiceVariableId != null) {
+        ServiceVariable parentServiceVariable =
+            serviceVariableService.get(serviceVariable.getAppId(), parentServiceVariableId);
+        String serviceId = parentServiceVariable.getEntityId();
+        Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
+        notNullCheck("Service not found for id: " + serviceId, service, USER);
+        return service.getName();
+      } else {
+        ServiceTemplate serviceTemplate =
+            serviceTemplateService.get(serviceVariable.getAppId(), serviceVariable.getEntityId());
+        notNullCheck("Service template not found for id: " + serviceVariable.getEntityId(), serviceTemplate, USER);
+        String serviceId = serviceTemplate.getServiceId();
+        Service service = serviceResourceService.get(serviceVariable.getAppId(), serviceId);
+        notNullCheck("Service not found for id: " + serviceId, service, USER);
+        return service.getName();
+      }
+    }
+
+    return null;
   }
 
   @Override
@@ -264,13 +270,21 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       }
     }
 
-    Map<String, ServiceVariable> variableMap =
-        currentVariables.stream().collect(Collectors.toMap(ServiceVariable::getName, serviceVar -> serviceVar));
+    Map<ServiceVariableKey, ServiceVariable> variableMap = new HashMap<>();
+    for (ServiceVariable serviceVariable : currentVariables) {
+      String serviceName = getParentServiceName(serviceVariable);
+      variableMap.put(ServiceVariableKey.builder().name(serviceVariable.getName()).serviceName(serviceName).build(),
+          serviceVariable);
+    }
 
     // do deletions
     for (VariableOverrideYaml variableOverrideYaml : configVarsToDelete) {
-      if (variableMap.containsKey(variableOverrideYaml.getName())) {
-        serviceVariableService.delete(appId, variableMap.get(variableOverrideYaml.getName()).getUuid(), syncFromGit);
+      ServiceVariableKey serviceVariableKey = ServiceVariableKey.builder()
+                                                  .name(variableOverrideYaml.getName())
+                                                  .serviceName(variableOverrideYaml.getServiceName())
+                                                  .build();
+      if (variableMap.containsKey(serviceVariableKey)) {
+        serviceVariableService.delete(appId, variableMap.get(serviceVariableKey).getUuid(), syncFromGit);
       }
     }
 
@@ -282,7 +296,9 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     try {
       // update the existing variables
       for (VariableOverrideYaml configVar : configVarsToUpdate) {
-        ServiceVariable serviceVar = variableMap.get(configVar.getName());
+        ServiceVariableKey serviceVariableKey =
+            ServiceVariableKey.builder().name(configVar.getName()).serviceName(configVar.getServiceName()).build();
+        ServiceVariable serviceVar = variableMap.get(serviceVariableKey);
         if (serviceVar != null) {
           String value = configVar.getValue();
           if (serviceVar.getType() == Type.ENCRYPTED_TEXT) {
@@ -307,7 +323,9 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
       throws HarnessException {
     notNullCheck("Value type is not set for variable: " + overrideYaml.getName(), overrideYaml.getValueType(), USER);
 
-    ServiceVariableBuilder variableBuilder = ServiceVariable.builder().name(overrideYaml.getName());
+    String accountId = appService.get(appId, false).getAccountId();
+    ServiceVariableBuilder variableBuilder =
+        ServiceVariable.builder().name(overrideYaml.getName()).accountId(accountId);
     if (overrideYaml.getServiceName() == null) {
       variableBuilder.entityType(EntityType.ENVIRONMENT)
           .entityId(envId)
@@ -363,5 +381,13 @@ public class EnvironmentYamlHandler extends BaseYamlHandler<Environment.Yaml, En
     serviceVariable.setAppId(appId);
 
     return serviceVariable;
+  }
+
+  @AllArgsConstructor
+  @lombok.Builder
+  @EqualsAndHashCode
+  private static class ServiceVariableKey {
+    private String name;
+    private String serviceName;
   }
 }
