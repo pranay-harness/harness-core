@@ -414,6 +414,24 @@ public class PageRequest<T> {
     filters.add(SearchFilter.builder().fieldName(fieldName).op(op).fieldValues(fieldValues).build());
   }
 
+  public PageRequest<T> copy() {
+    PageRequest<T> clone = new PageRequest<>();
+    clone.persistentClass = this.persistentClass;
+    clone.offset = this.offset;
+    clone.start = this.start;
+    clone.limit = this.limit;
+    clone.filters = this.filters;
+    clone.orders = this.orders;
+    clone.fieldsExcluded = this.fieldsExcluded;
+    clone.fieldsIncluded = this.fieldsIncluded;
+    clone.uriInfo = this.uriInfo;
+    clone.requestContext = this.requestContext;
+    clone.isOr = this.isOr;
+    clone.readPref = this.readPref;
+    clone.options = this.options;
+    return clone;
+  }
+
   /* (non-Javadoc)
    * @see java.lang.Object#equals(java.lang.Object)
    */
