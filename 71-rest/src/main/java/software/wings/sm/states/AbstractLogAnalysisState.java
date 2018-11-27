@@ -361,7 +361,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
         .isSSL(this.configuration.isSslEnabled())
         .appPort(this.configuration.getApplicationPort())
         .comparisonStrategy(getComparisonStrategy())
-        .timeDuration(Integer.parseInt(timeDuration))
+        .timeDuration(Integer.parseInt(getTimeDuration()))
         .stateType(StateType.valueOf(getStateType()))
         .analysisServerConfigId(getAnalysisServerConfigId())
         .correlationId(correlationId)
