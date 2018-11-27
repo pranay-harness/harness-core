@@ -1,25 +1,32 @@
-package software.wings.exception;
+package io.harness.logging;
 
 import static io.harness.eraro.ErrorCode.DEFAULT_ERROR_CODE;
 import static io.harness.eraro.ErrorCode.INVALID_ARGUMENT;
 import static io.harness.exception.WingsException.ReportTarget.LOG_SYSTEM;
 import static io.harness.exception.WingsException.ReportTarget.REST_API;
+import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.harness.CategoryTest;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
+import org.junit.Before;
 import org.junit.Test;
-import software.wings.WingsBaseTest;
 
 import java.util.EnumSet;
 import java.util.List;
 
-public class WingsExceptionTest extends WingsBaseTest {
+public class ExceptionLoggerTest extends CategoryTest {
+  @Before()
+  public void setup() {
+    initializeLogging();
+  }
+
   @Test
   public void testCollectResponseMessages() {
     final WingsException exception =
         new WingsException(DEFAULT_ERROR_CODE, new Exception(new WingsException(INVALID_ARGUMENT)));
-    assertThat(WingsExceptionMapper.getResponseMessageList(exception, REST_API).size()).isEqualTo(2);
+    assertThat(ExceptionLogger.getResponseMessageList(exception, REST_API).size()).isEqualTo(2);
   }
 
   @Test
@@ -43,8 +50,8 @@ public class WingsExceptionTest extends WingsBaseTest {
     exception.addContext(String.class, "test");
     exception.addContext(Integer.class, 0);
 
-    final List<ResponseMessage> responseMessages = WingsExceptionMapper.getResponseMessageList(exception, LOG_SYSTEM);
-    assertThat(WingsExceptionMapper.calculateErrorMessage(exception, responseMessages))
+    final List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(exception, LOG_SYSTEM);
+    assertThat(ExceptionLogger.calculateErrorMessage(exception, responseMessages))
         .isEqualTo("Response message: An error has occurred. Please contact the Harness support team.\n"
             + "Context objects: java.lang.Integer: 0\n"
             + "                 java.lang.String: test\n"
@@ -59,9 +66,8 @@ public class WingsExceptionTest extends WingsBaseTest {
     WingsException outerException = new WingsException(DEFAULT_ERROR_CODE, innerException);
     outerException.addContext(Integer.class, 0);
 
-    final List<ResponseMessage> responseMessages =
-        WingsExceptionMapper.getResponseMessageList(outerException, LOG_SYSTEM);
-    assertThat(WingsExceptionMapper.calculateErrorMessage(outerException, responseMessages))
+    final List<ResponseMessage> responseMessages = ExceptionLogger.getResponseMessageList(outerException, LOG_SYSTEM);
+    assertThat(ExceptionLogger.calculateErrorMessage(outerException, responseMessages))
         .isEqualTo("Response message: An error has occurred. Please contact the Harness support team.\n"
             + "Context objects: java.lang.Integer: 0\n"
             + "                 java.lang.String: test\n"

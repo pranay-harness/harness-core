@@ -13,6 +13,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import migrations.Migration;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -29,7 +30,6 @@ import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.beans.infrastructure.instance.info.PcfInstanceInfo;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.instance.ContainerInstanceHandler;
 import software.wings.service.impl.instance.InstanceHandler;
 import software.wings.service.impl.instance.InstanceHandlerFactory;
@@ -162,7 +162,7 @@ public class FixInstanceData implements Migration {
 
           logger.info("Instance sync done for appId:" + appId);
         } catch (WingsException exception) {
-          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
         } catch (Exception ex) {
           logger.warn("Error while syncing instances for app: {}", appId, ex);
         }

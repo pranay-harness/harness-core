@@ -366,8 +366,6 @@ import java.util.Set;
  * @author Rishi
  */
 public class WingsModule extends DependencyModule {
-  public static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
-
   private MainConfiguration configuration;
 
   /**

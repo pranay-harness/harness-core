@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import org.mongodb.morphia.query.CountOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +32,6 @@ import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WebhookEventType;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.service.impl.trigger.WebhookEventUtils;
 import software.wings.service.impl.trigger.WebhookTriggerProcessor;
@@ -113,7 +113,7 @@ public class WebHookServiceImpl implements WebHookService {
 
       return constructWebhookResponse(appId, app, workflowExecution);
     } catch (WingsException ex) {
-      WingsExceptionMapper.logProcessedMessages(ex, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
       return WebHookResponse.builder().error(Misc.getMessage(ex)).build();
     } catch (Exception ex) {
       logger.warn(format("Webhook Request call failed"), ex);
@@ -148,7 +148,7 @@ public class WebHookServiceImpl implements WebHookService {
         // Validate the give branch name matches the one with selected one
         webhookTriggerProcessor.validateBranchName(trigger, triggerExecution);
       } catch (WingsException ex) {
-        WingsExceptionMapper.logProcessedMessages(ex, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
         triggerExecution.setMessage(Misc.getMessage(ex));
         triggerExecution.setStatus(Status.REJECTED);
         triggerExecutionService.save(triggerExecution);
@@ -170,7 +170,7 @@ public class WebHookServiceImpl implements WebHookService {
             .build();
       }
     } catch (WingsException ex) {
-      WingsExceptionMapper.logProcessedMessages(ex, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(ex, MANAGER, logger);
       triggerExecution.setStatus(Status.FAILED);
       triggerExecution.setMessage(Misc.getMessage(ex));
       triggerExecutionService.save(triggerExecution);

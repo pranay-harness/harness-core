@@ -1,5 +1,6 @@
-package software.wings.common;
+package io.harness.logging;
 
+import static io.harness.logging.LoggingInitializer.RESPONSE_MESSAGE_FILE;
 import static org.junit.Assert.assertEquals;
 
 import io.harness.eraro.ErrorCode;
@@ -14,8 +15,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ErrorCodePropertiesTest {
-  private static final String RESPONSE_MESSAGE_FILE = "/response_messages.properties";
-
   @Test
   public void testErrorCodesInProperties() {
     Properties messages = new Properties();

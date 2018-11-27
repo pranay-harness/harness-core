@@ -27,6 +27,7 @@ import com.google.inject.name.Named;
 
 import com.amazonaws.services.ecs.model.LaunchType;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.junit.Before;
@@ -51,7 +52,6 @@ import software.wings.beans.yaml.GitFileChange;
 import software.wings.beans.yaml.YamlType;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.exception.HarnessException;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.EcsInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.service.YamlHelper;
@@ -165,7 +165,7 @@ public class EcsInfraMappingYamlHandlerTest extends BaseYamlHandlerTest {
       WingsException wingsException = (WingsException) ((InvocationTargetException) e).getTargetException();
       assertEquals("Invalid argument(s): Failed to parse yaml for EcsInfraMapping: name, App: " + APP_ID
               + ", For Fargate Launch type, VpcId  -  SubnetIds  - SecurityGroupIds are required, can not be blank",
-          WingsExceptionMapper.getResponseMessageList(wingsException, REST_API).get(0).getMessage());
+          ExceptionLogger.getResponseMessageList(wingsException, REST_API).get(0).getMessage());
     }
   }
 

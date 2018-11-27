@@ -48,6 +48,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
@@ -55,7 +56,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.WorkflowExecution;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -258,7 +258,7 @@ public class ExecutionInterruptManager {
 
       workflowNotificationHelper.sendWorkflowStatusChangeNotification(context, status);
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error("Unknown runtime exception: ", exception);
     }

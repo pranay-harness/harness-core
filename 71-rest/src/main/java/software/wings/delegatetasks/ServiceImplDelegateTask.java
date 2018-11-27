@@ -9,12 +9,12 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import org.joor.ReflectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
-import software.wings.exception.WingsExceptionMapper;
 
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -62,7 +62,7 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
         }
       }
       if (exception instanceof WingsException) {
-        WingsExceptionMapper.logProcessedMessages((WingsException) exception, DELEGATE, logger);
+        ExceptionLogger.logProcessedMessages((WingsException) exception, DELEGATE, logger);
       } else {
         logger.error("Task error", exception);
       }

@@ -17,6 +17,7 @@ import com.google.common.util.concurrent.UncheckedTimeoutException;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.version.VersionInfoManager;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.Key;
@@ -29,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
@@ -78,7 +78,7 @@ public class DelegateQueueTask implements Runnable {
     } catch (UncheckedTimeoutException exception) {
       logger.error("Timed out processing delegate tasks");
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in the Notifier call", exception);
     }

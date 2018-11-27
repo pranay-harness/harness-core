@@ -48,6 +48,7 @@ import io.harness.distribution.idempotence.IdempotentResult;
 import io.harness.distribution.idempotence.UnableToRegisterIdempotentOperationException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import lombok.Builder;
 import lombok.Value;
@@ -87,7 +88,6 @@ import software.wings.beans.trigger.WebhookParameters;
 import software.wings.beans.trigger.WebhookSource;
 import software.wings.common.MongoIdempotentRegistry;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse;
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.scheduler.ScheduledTriggerJob;
@@ -388,7 +388,7 @@ public class TriggerServiceImpl implements TriggerService {
           exception.addContext(Application.class, trigger.getAppId());
           exception.addContext(ArtifactStream.class, artifactStreamId);
           exception.addContext(Trigger.class, trigger.getUuid());
-          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
         }
       } else {
         logger.info("No Artifacts matched. Hence Skipping the deployment");
@@ -879,7 +879,7 @@ public class TriggerServiceImpl implements TriggerService {
             exception.addContext(Application.class, trigger.getAppId());
             exception.addContext(TriggerExecution.class, triggerExecution.getUuid());
             exception.addContext(Trigger.class, trigger.getUuid());
-            WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+            ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
           } catch (Exception exception) {
             triggerExecutionService.updateStatus(appId, triggerExecutionId, Status.FAILED, Misc.getMessage(exception));
             logger.error("Exception occurred while starting deployment of the trigger execution {}",

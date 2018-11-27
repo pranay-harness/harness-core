@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import migrations.Migration;
 import org.mongodb.morphia.query.Query;
@@ -16,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.EnvFilter;
 import software.wings.security.EnvFilter.FilterType;
 import software.wings.security.GenericEntityFilter;
@@ -67,7 +67,7 @@ public class UsageRestrictionsMigration implements Migration {
 
       logger.info("Done - Updating usage restrictions for setting attributes");
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception ex) {
       logger.error("Failed - Updating usage restrictions for setting attributes", ex);
     }
@@ -95,7 +95,7 @@ public class UsageRestrictionsMigration implements Migration {
 
       logger.info("Done - Updating usage restrictions for secrets");
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception ex) {
       logger.error("Failed - Updating usage restrictions for secrets", ex);
     }

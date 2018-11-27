@@ -88,6 +88,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import lombok.Builder;
@@ -159,7 +160,6 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.common.Constants;
 import software.wings.common.cache.MongoStore;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.licensing.LicenseService;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -1585,7 +1585,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     try {
       executionInterruptManager.registerExecutionInterrupt(executionInterrupt);
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (RuntimeException exception) {
       logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
                        workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),
@@ -1614,7 +1614,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
         executionInterruptClone.setExecutionUuid(workflowExecution2.getUuid());
         executionInterruptManager.registerExecutionInterrupt(executionInterruptClone);
       } catch (WingsException exception) {
-        WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       } catch (RuntimeException exception) {
         logger.error(format("Error in interrupting workflowExecution - uuid: %s, executionInterruptType: %s",
                          workflowExecution.getUuid(), executionInterrupt.getExecutionInterruptType()),

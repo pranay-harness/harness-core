@@ -19,6 +19,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.swagger.annotations.Api;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotBlank;
@@ -32,7 +33,6 @@ import software.wings.beans.RestResponse.Builder;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
@@ -617,7 +617,7 @@ public class UserResource {
       // TODO: this seems wrong, just letting the exception to be thrown should do the same
       return RestResponse.Builder.aRestResponse()
           .withResource(false)
-          .withResponseMessages(WingsExceptionMapper.getResponseMessageList(exception, REST_API))
+          .withResponseMessages(ExceptionLogger.getResponseMessageList(exception, REST_API))
           .build();
     }
     return new RestResponse<>(true);

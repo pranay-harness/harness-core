@@ -11,13 +11,13 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.DelegateTaskResponse.DelegateTaskResponseBuilder;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ErrorNotifyResponseData;
@@ -100,12 +100,12 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
       logger.info("Completed executing task {}", taskId);
     } catch (DelegateRetryableException exception) {
       exception.addContext(DelegateTask.class, taskId);
-      WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
+      ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
       taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.RETRY_ON_OTHER_DELEGATE);
     } catch (WingsException exception) {
       exception.addContext(DelegateTask.class, taskId);
-      WingsExceptionMapper.logProcessedMessages(exception, DELEGATE, logger);
+      ExceptionLogger.logProcessedMessages(exception, DELEGATE, logger);
       taskResponse.response(ErrorNotifyResponseData.builder().errorMessage(Misc.getMessage(exception)).build());
       taskResponse.responseCode(ResponseCode.FAILED);
     } catch (Throwable exception) {

@@ -19,6 +19,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
@@ -29,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.FeatureName;
 import software.wings.beans.yaml.GitFileChange;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlChangeSetService;
@@ -100,7 +100,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
       return Arrays.asList(modifiedChangeSet);
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }
@@ -161,7 +161,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
       }
       yamlChangeSets = listYamlChangeSets(pageRequestBuilder.build()).getResponse();
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }
@@ -240,7 +240,7 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
 
       return status.getUpdatedCount() != 0;
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception exception) {
       logger.error("Error seen in fetching changeSet", exception);
     }

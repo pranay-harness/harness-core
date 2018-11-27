@@ -13,6 +13,7 @@ import io.harness.beans.SortOrder.OrderType;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -27,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import software.wings.beans.Application;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.impl.instance.InstanceHelper;
 import software.wings.service.intfc.InfrastructureMappingService;
 
@@ -116,7 +116,7 @@ public class InstanceSyncJob implements Job {
         logger.info("Instance sync done for appId:" + appId);
       }
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
     } catch (Exception ex) {
       logger.warn(format("Error while syncing instances for app: %s", appId), ex);
     }

@@ -12,6 +12,7 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.WingsException;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.logging.ExceptionLogger;
 import migrations.Migration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,6 @@ import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.info.KubernetesContainerInfo;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.InfrastructureMappingService;
@@ -120,7 +120,7 @@ public class SetNamespaceToKubernetesInstanceInfo implements Migration {
 
           logger.info("Kubernetes Instance fix done for appId:" + appId);
         } catch (WingsException exception) {
-          WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+          ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
         } catch (Exception ex) {
           logger.warn("Error while fixing Kubernetes instances for app: {}", appId, ex);
         }

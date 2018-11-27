@@ -19,6 +19,7 @@ import com.google.inject.Singleton;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.command.CommandExecutionContext;
@@ -31,7 +32,6 @@ import software.wings.core.winrm.executors.WinRmExecutor;
 import software.wings.core.winrm.executors.WinRmExecutorFactory;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.CommandUnitExecutorService;
 import software.wings.utils.Misc;
 
@@ -127,7 +127,7 @@ public class WinRMCommandUnitExecutorServiceImpl implements CommandUnitExecutorS
         throw new WingsException(ErrorCode.UNKNOWN_ERROR, e);
       }
     } catch (WingsException exception) {
-      final List<ResponseMessage> messageList = WingsExceptionMapper.getResponseMessageList(exception, REST_API);
+      final List<ResponseMessage> messageList = ExceptionLogger.getResponseMessageList(exception, REST_API);
       if (!messageList.isEmpty()) {
         if (messageList.get(0).getCode() == ErrorCode.INVALID_KEY
             || messageList.get(0).getCode() == ErrorCode.INVALID_CREDENTIAL) {

@@ -9,6 +9,7 @@ import com.google.inject.name.Named;
 
 import io.harness.exception.CauseCollection;
 import io.harness.exception.WingsException;
+import io.harness.logging.ExceptionLogger;
 import io.harness.scheduler.PersistentScheduler;
 import org.quartz.Job;
 import org.quartz.JobBuilder;
@@ -33,7 +34,6 @@ import software.wings.beans.Workflow;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
-import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ArtifactStreamService;
@@ -123,7 +123,7 @@ public class PruneEntityJob implements Job {
         lambda.accept(descending);
       } catch (WingsException exception) {
         succeeded = false;
-        WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+        ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       } catch (RuntimeException e) {
         succeeded = false;
         causeCollection.addCause(e);
@@ -168,7 +168,7 @@ public class PruneEntityJob implements Job {
         logger.error("Unsupported class [{}] was scheduled for pruning.", className);
       }
     } catch (WingsException exception) {
-      WingsExceptionMapper.logProcessedMessages(exception, MANAGER, logger);
+      ExceptionLogger.logProcessedMessages(exception, MANAGER, logger);
       return false;
     } catch (RuntimeException e) {
       logger.error("", e);
