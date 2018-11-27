@@ -1076,10 +1076,7 @@ public class SecretManagerImpl implements SecretManager {
 
     int numRecordsReturnedCurrentBatch;
     do {
-      PageRequest<EncryptedData> batchPageRequest = new PageRequest<>();
-      batchPageRequest.setFieldsExcluded(pageRequest.getFieldsExcluded());
-      batchPageRequest.setFieldsIncluded(pageRequest.getFieldsIncluded());
-      batchPageRequest.setFilters(pageRequest.getFilters());
+      PageRequest<EncryptedData> batchPageRequest = pageRequest.copy();
       batchPageRequest.setOffset(String.valueOf(batchOffSet));
       batchPageRequest.setLimit(String.valueOf(batchPageSize));
 
