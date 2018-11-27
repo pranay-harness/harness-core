@@ -1,8 +1,9 @@
 package software.wings.api.pcf;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.google.common.collect.Maps;
 
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -68,14 +69,16 @@ public class PcfRouteUpdateStateExecutionData extends StateExecutionData impleme
           .append(pcfRouteUpdateRequestConfigData.getFinalRoutes())
           .append('}');
 
-      pcfRouteUpdateRequestConfigData.getExistingApplicationNames().forEach(appName
-          -> stringBuilder.append(", {")
-                 .append(appName)
-                 .append(" : ")
-                 .append(pcfRouteUpdateRequestConfigData.getTempRoutes())
-                 .append('}'));
+      if (isNotEmpty(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
+        pcfRouteUpdateRequestConfigData.getExistingApplicationNames().forEach(appName
+            -> stringBuilder.append(", {")
+                   .append(appName)
+                   .append(" : ")
+                   .append(pcfRouteUpdateRequestConfigData.getTempRoutes())
+                   .append('}'));
+      }
     } else {
-      if (EmptyPredicate.isNotEmpty(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
+      if (isNotEmpty(pcfRouteUpdateRequestConfigData.getExistingApplicationNames())) {
         pcfRouteUpdateRequestConfigData.getExistingApplicationNames().forEach(appName
             -> stringBuilder.append(appName)
                    .append("[")
