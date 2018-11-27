@@ -16,6 +16,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.ReadPref;
+import io.harness.waiter.WaitInstanceError;
 import io.harness.waiter.WaitQueue;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.mongodb.morphia.query.Query;
@@ -161,10 +162,11 @@ public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent
           status = ExecutionStatus.ERROR;
           logger.error("WaitInstance callback failed - waitInstanceId:" + waitInstanceId, exception);
           try {
-            WaitInstanceError waitInstanceError = new WaitInstanceError();
-            waitInstanceError.setWaitInstanceId(waitInstanceId);
-            waitInstanceError.setResponseMap(responseMap);
-            waitInstanceError.setErrorStackTrace(ExceptionUtils.getStackTrace(exception));
+            WaitInstanceError waitInstanceError = WaitInstanceError.builder()
+                                                      .waitInstanceId(waitInstanceId)
+                                                      .responseMap(responseMap)
+                                                      .errorStackTrace(ExceptionUtils.getStackTrace(exception))
+                                                      .build();
 
             wingsPersistence.save(waitInstanceError);
           } catch (Exception e2) {
