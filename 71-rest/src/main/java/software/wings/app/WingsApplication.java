@@ -46,6 +46,7 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
+import io.harness.registry.MetricRegistryModule;
 import io.harness.scheduler.PersistentScheduler;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
@@ -228,6 +229,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     modules.add(new QueueModule());
     modules.add(new ExecutorModule());
     modules.add(new TemplateModule());
+    modules.add(new MetricRegistryModule(metricRegistry));
 
     Injector injector = Guice.createInjector(modules);
 

@@ -644,6 +644,12 @@
             <artifactId>google-cloud-datastore</artifactId>
             <version>1.51.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_common</artifactId>
+            <version>0.5.0</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
     <build>
         <finalName>rest</finalName>

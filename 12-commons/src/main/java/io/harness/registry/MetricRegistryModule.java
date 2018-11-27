@@ -1,4 +1,4 @@
-package io.harness.app;
+package io.harness.registry;
 
 import com.google.inject.AbstractModule;
 
