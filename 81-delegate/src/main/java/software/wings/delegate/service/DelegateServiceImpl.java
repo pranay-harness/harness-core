@@ -125,8 +125,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.ConnectException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
@@ -347,12 +345,11 @@ public class DelegateServiceImpl implements DelegateService {
       } else {
         Client client = org.atmosphere.wasync.ClientFactory.getDefault().newClient();
 
-        URI uri = new URI(delegateConfiguration.getManagerUrl());
         // Stream the request body
         RequestBuilder reqBuilder =
             client.newRequestBuilder()
                 .method(METHOD.GET)
-                .uri(uri.getScheme() + "://" + uri.getHost() + ":" + uri.getPort() + "/stream/delegate/" + accountId)
+                .uri(delegateConfiguration.getManagerUrl().replace("/api/", "/stream/") + "delegate/" + accountId)
                 .queryString("delegateId", delegateId)
                 .queryString("delegateConnectionId", delegateConnectionId)
                 .queryString("token", tokenGenerator.getToken("https", "localhost", 9090, hostName))
@@ -438,8 +435,7 @@ public class DelegateServiceImpl implements DelegateService {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       logger.error("Exception while starting/running delegate", e);
-    } catch (
-        RuntimeException | IOException | NoSuchAlgorithmException | KeyManagementException | URISyntaxException e) {
+    } catch (RuntimeException | IOException | NoSuchAlgorithmException | KeyManagementException e) {
       logger.error("Exception while starting/running delegate", e);
     }
   }
