@@ -41,6 +41,7 @@ import io.harness.managerclient.VerificationManagerClientModule;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
+import io.harness.registry.MetricRegistryModule;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.VerificationServiceExecutorService;
