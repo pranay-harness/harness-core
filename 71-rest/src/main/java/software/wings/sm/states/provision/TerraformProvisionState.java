@@ -330,14 +330,14 @@ public abstract class TerraformProvisionState extends State {
 
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
-
     GitConfig gitConfig = getGitConfig(terraformProvisioner.getSourceRepoSettingId());
-    if (isNotEmpty(terraformProvisioner.getSourceRepoBranch())) {
-      gitConfig.setBranch(terraformProvisioner.getSourceRepoBranch());
+    String branch = context.renderExpression(terraformProvisioner.getSourceRepoBranch());
+    if (isNotEmpty(branch)) {
+      gitConfig.setBranch(branch);
     }
+    String path = context.renderExpression(terraformProvisioner.getPath());
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-
     final String entityId = generateEntityId(context);
     final String fileId = fileService.getLatestFileId(entityId, TERRAFORM_STATE);
 
@@ -419,7 +419,7 @@ public abstract class TerraformProvisionState extends State {
             .commandUnit(commandUnit())
             .sourceRepo(gitConfig)
             .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
-            .scriptPath(terraformProvisioner.getPath())
+            .scriptPath(path)
             .variables(variables)
             .encryptedVariables(encryptedVariables)
             .backendConfigs(backendConfigs)
