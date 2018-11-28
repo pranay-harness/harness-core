@@ -388,6 +388,13 @@ public class EcsCommandUnitHelperTest extends WingsBaseTest {
             .withName(CONTAINER_NAME));
   }
 
+  @Test
+  public void testIsServiceWithSamePrefix() {
+    assertTrue(ecsCommandUnitHelper.isServiceWithSamePrefix("Beacons__Conversions__177", "Beacons__Conversions__"));
+    assertFalse(ecsCommandUnitHelper.isServiceWithSamePrefix(
+        "Beacons__Conversions__177__Fargate__4", "Beacons__Conversions__"));
+  }
+
   //  @Test
   //  public void TestSerializeJsonToAwsClasses() {
   //    ExecutionLogCallback executionLogCallback = mock(ExecutionLogCallback.class);
