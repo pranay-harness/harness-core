@@ -317,7 +317,9 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
 
           K8sRollingDeploySetupElement k8sRollingDeploySetupElement =
               K8sRollingDeploySetupElement.builder()
-                  .releaseNumber(k8sDeployRollingSetupExecutionSummary.getReleaseNumber())
+                  .releaseNumber(k8sDeployRollingSetupExecutionSummary.getReleaseNumber() == null
+                          ? 0
+                          : k8sDeployRollingSetupExecutionSummary.getReleaseNumber())
                   .releaseName(k8sDeployRollingSetupExecutionSummary.getReleaseName())
                   .build();
           return asList(k8sRollingDeploySetupElement);

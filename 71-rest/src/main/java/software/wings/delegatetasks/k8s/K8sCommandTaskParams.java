@@ -9,4 +9,5 @@ public class K8sCommandTaskParams {
   String kubectlPath;
   String kubeconfigPath;
   String workingDirectory;
+  String goTemplateClientPath;
 }

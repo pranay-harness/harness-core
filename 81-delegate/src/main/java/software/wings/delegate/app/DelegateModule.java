@@ -29,6 +29,7 @@ import software.wings.delegate.service.DelegateFileManagerImpl;
 import software.wings.delegate.service.DelegateLogServiceImpl;
 import software.wings.delegate.service.DelegateService;
 import software.wings.delegate.service.DelegateServiceImpl;
+import software.wings.delegate.service.K8sGlobalConfigServiceImpl;
 import software.wings.delegate.service.LogAnalysisStoreServiceImpl;
 import software.wings.delegate.service.MetricDataStoreServiceImpl;
 import software.wings.delegatetasks.DelegateConfigService;
@@ -169,6 +170,7 @@ import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
 import software.wings.service.intfc.cloudwatch.CloudWatchDelegateService;
 import software.wings.service.intfc.dynatrace.DynaTraceDelegateService;
 import software.wings.service.intfc.elk.ElkDelegateService;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
 import software.wings.service.intfc.logz.LogzDelegateService;
 import software.wings.service.intfc.newrelic.NewRelicDelegateService;
@@ -348,6 +350,7 @@ public class DelegateModule extends DependencyModule {
     bind(AwsCFHelperServiceDelegate.class).to(AwsCFHelperServiceDelegateImpl.class);
     bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
     bind(SftpService.class).to(SftpServiceImpl.class);
+    bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

@@ -1,5 +1,7 @@
 package io.harness.k8s.kubectl;
 
+import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class Kubectl {
@@ -42,13 +44,13 @@ public class Kubectl {
   public String command() {
     StringBuilder command = new StringBuilder(128);
     if (StringUtils.isNotBlank(kubectlPath)) {
-      command.append(kubectlPath);
+      command.append(encloseWithQuotesIfNeeded(kubectlPath)).append(' ');
     } else {
       command.append("kubectl ");
     }
 
     if (StringUtils.isNotBlank(configPath)) {
-      command.append("--kubeconfig=" + configPath + " ");
+      command.append("--kubeconfig=" + encloseWithQuotesIfNeeded(configPath) + " ");
     }
 
     return command.toString();

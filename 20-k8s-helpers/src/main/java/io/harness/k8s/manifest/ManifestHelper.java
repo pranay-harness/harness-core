@@ -2,6 +2,7 @@ package io.harness.k8s.manifest;
 
 import static io.harness.k8s.manifest.ObjectYamlUtils.YAML_DOCUMENT_DELIMITER;
 import static io.harness.k8s.manifest.ObjectYamlUtils.splitYamlFile;
+import static io.harness.k8s.model.Kind.Secret;
 import static io.harness.k8s.model.KubernetesResource.redactSecretValues;
 
 import com.google.common.collect.ImmutableSet;
@@ -11,6 +12,7 @@ import com.esotericsoftware.yamlbeans.YamlReader;
 import io.harness.exception.KubernetesYamlException;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +94,9 @@ public class ManifestHelper {
     StringBuilder stringBuilder = new StringBuilder();
 
     for (KubernetesResource resource : resources) {
-      String spec = redactSecretValues(resource.getSpec());
+      String spec = StringUtils.equals(Secret.name(), resource.getResourceId().getKind())
+          ? redactSecretValues(resource.getSpec())
+          : resource.getSpec();
       if (!spec.startsWith(YAML_DOCUMENT_DELIMITER)) {
         stringBuilder.append(YAML_DOCUMENT_DELIMITER).append(System.lineSeparator());
       }

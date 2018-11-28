@@ -1,5 +1,6 @@
 package software.wings.delegatetasks.k8s;
 
+import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
 import static java.lang.String.format;
 import static software.wings.beans.Log.LogLevel.ERROR;
@@ -7,9 +8,9 @@ import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Singleton;
 
+import io.harness.exception.KubernetesYamlException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.ApplyCommand;
-import io.harness.k8s.kubectl.DeleteCommand;
 import io.harness.k8s.kubectl.GetCommand;
 import io.harness.k8s.kubectl.Kubectl;
 import io.harness.k8s.kubectl.RolloutHistoryCommand;
@@ -18,19 +19,23 @@ import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceComparer;
 import io.harness.k8s.model.KubernetesResourceId;
-import io.harness.k8s.model.Release;
-import io.harness.k8s.model.ReleaseHistory;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.utils.Misc;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -140,67 +145,6 @@ public class Utils {
     }
   }
 
-  public static void prepareForRolling(Kubectl client, List<KubernetesResource> resources,
-      K8sCommandTaskParams k8sCommandTaskParams, ReleaseHistory releaseHistory,
-      ExecutionLogCallback executionLogCallback) throws Exception {
-    try {
-      executionLogCallback.saveExecutionLog("\nManifests:\n---------\n");
-
-      executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources) + "\n");
-
-      Release lastSuccessfulRelease = releaseHistory.getLastSuccessfulRelease();
-
-      if (lastSuccessfulRelease == null) {
-        executionLogCallback.saveExecutionLog("No successful release found. Nothing to cleanup");
-        return;
-      }
-
-      executionLogCallback.saveExecutionLog("Last Successful Release is " + lastSuccessfulRelease.getNumber());
-
-      executionLogCallback.saveExecutionLog("\nCleaning up older releases");
-
-      for (int releaseIndex = releaseHistory.getReleases().size() - 1; releaseIndex >= 0; releaseIndex--) {
-        Release release = releaseHistory.getReleases().get(releaseIndex);
-        if (release.getNumber() < lastSuccessfulRelease.getNumber()) {
-          for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
-            KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
-            if (resourceId.isVersioned()) {
-              DeleteCommand deleteCommand =
-                  client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
-
-              executionLogCallback.saveExecutionLog("\n" + deleteCommand.command());
-
-              ProcessResult result = deleteCommand.execute(k8sCommandTaskParams.getWorkingDirectory(),
-                  new LogOutputStream() {
-                    @Override
-                    protected void processLine(String line) {
-                      executionLogCallback.saveExecutionLog(line, INFO);
-                    }
-                  },
-                  new LogOutputStream() {
-                    @Override
-                    protected void processLine(String line) {
-                      executionLogCallback.saveExecutionLog(line, ERROR);
-                    }
-                  });
-
-              if (result.getExitValue() != 0) {
-                logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
-              }
-            }
-          }
-        } else {
-          break;
-        }
-      }
-
-      releaseHistory.getReleases().removeIf(release -> release.getNumber() < lastSuccessfulRelease.getNumber());
-
-    } finally {
-      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
-    }
-  }
-
   public static String getLatestRevision(
       Kubectl client, KubernetesResourceId resourceId, K8sCommandTaskParams k8sCommandTaskParams) throws Exception {
     RolloutHistoryCommand rolloutHistoryCommand =
@@ -226,11 +170,66 @@ public class Utils {
     return "";
   }
 
-  public static List<KubernetesResource> readManifests(List<ManifestFile> manifestFiles) {
+  public static List<ManifestFile> renderTemplate(K8sCommandTaskParams k8sCommandTaskParams,
+      List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) throws Exception {
+    Optional<ManifestFile> valuesFile =
+        manifestFiles.stream()
+            .filter(manifestFile -> StringUtils.equals("Values.yaml", manifestFile.getFileName()))
+            .findFirst();
+
+    if (!valuesFile.isPresent()) {
+      executionLogCallback.saveExecutionLog("No Values.yaml file found. Skipping template rendering.");
+      return manifestFiles;
+    }
+
+    FileIo.writeUtf8StringToFile(
+        k8sCommandTaskParams.getWorkingDirectory() + "/Values.yaml", valuesFile.get().getFileContent());
+
+    List<ManifestFile> result = new ArrayList<>();
+
+    for (ManifestFile manifestFile : manifestFiles) {
+      if (StringUtils.equals("Values.yaml", manifestFile.getFileName())) {
+        continue;
+      }
+
+      FileIo.writeUtf8StringToFile(
+          k8sCommandTaskParams.getWorkingDirectory() + "/template.yaml", manifestFile.getFileContent());
+
+      ProcessExecutor processExecutor =
+          new ProcessExecutor()
+              .timeout(10, TimeUnit.SECONDS)
+              .directory(new File(k8sCommandTaskParams.getWorkingDirectory()))
+              .commandSplit(encloseWithQuotesIfNeeded(k8sCommandTaskParams.getGoTemplateClientPath())
+                  + " -t template.yaml -f Values.yaml")
+              .readOutput(true);
+      ProcessResult processResult = processExecutor.execute();
+      result.add(ManifestFile.builder()
+                     .fileName(manifestFile.getFileName())
+                     .fileContent(processResult.outputString())
+                     .build());
+    }
+
+    return result;
+  }
+
+  public static List<KubernetesResource> readManifests(
+      List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) {
     List<KubernetesResource> result = new ArrayList<>();
 
     for (ManifestFile manifestFile : manifestFiles) {
-      result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
+      if (!StringUtils.equals("Values.yaml", manifestFile.getFileName())) {
+        try {
+          result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
+        } catch (Exception e) {
+          executionLogCallback.saveExecutionLog("Exception while processing " + manifestFile.getFileName(), ERROR);
+          if (e instanceof KubernetesYamlException) {
+            executionLogCallback.saveExecutionLog(e.getMessage(), ERROR);
+          } else {
+            executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR);
+          }
+          throw e;
+        }
+      }
     }
 
     return result.stream().sorted(new KubernetesResourceComparer()).collect(Collectors.toList());

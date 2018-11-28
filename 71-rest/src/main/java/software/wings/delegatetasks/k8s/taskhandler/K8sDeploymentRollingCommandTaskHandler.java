@@ -14,16 +14,17 @@ import static software.wings.delegatetasks.k8s.Utils.applyManifests;
 import static software.wings.delegatetasks.k8s.Utils.doStatusCheck;
 import static software.wings.delegatetasks.k8s.Utils.getLatestRevision;
 import static software.wings.delegatetasks.k8s.Utils.getResourcesInTableFormat;
-import static software.wings.delegatetasks.k8s.Utils.prepareForRolling;
 import static software.wings.delegatetasks.k8s.Utils.readManifests;
+import static software.wings.delegatetasks.k8s.Utils.renderTemplate;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidArgumentsException;
-import io.harness.exception.KubernetesYamlException;
+import io.harness.k8s.kubectl.DeleteCommand;
 import io.harness.k8s.kubectl.DescribeCommand;
 import io.harness.k8s.kubectl.Kubectl;
+import io.harness.k8s.manifest.ManifestHelper;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.Release;
@@ -34,8 +35,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
 import software.wings.beans.KubernetesConfig;
+import software.wings.beans.appmanifest.ManifestFile;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
@@ -85,11 +88,13 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
       return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    prepareForRolling(client, resources, k8sCommandTaskParams, releaseHistory,
+    success = prepareForRolling(k8sCommandTaskParams,
         new ExecutionLogCallback(delegateLogService, k8sCommandRequest.getAccountId(), k8sCommandRequest.getAppId(),
             k8sCommandRequest.getActivityId(), Prepare));
 
-    addRevisionNumber(resources, release.getNumber());
+    if (!success) {
+      return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+    }
 
     success = applyManifests(client, resources, namespace, k8sCommandTaskParams,
         new ExecutionLogCallback(delegateLogService, k8sCommandRequest.getAccountId(), k8sCommandRequest.getAppId(),
@@ -142,14 +147,11 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
-      resources = readManifests(request.getManifestFiles());
+      List<ManifestFile> manifestFiles =
+          renderTemplate(k8sCommandTaskParams, request.getManifestFiles(), executionLogCallback);
+      resources = readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
-      if (e instanceof KubernetesYamlException) {
-        executionLogCallback.saveExecutionLog(e.getMessage(), ERROR, CommandExecutionStatus.FAILURE);
-      } else {
-        executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      }
-
+      executionLogCallback.saveExecutionLog(e.getMessage(), ERROR, CommandExecutionStatus.FAILURE);
       return false;
     }
 
@@ -172,6 +174,71 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
 
+    return true;
+  }
+
+  private boolean prepareForRolling(
+      K8sCommandTaskParams k8sCommandTaskParams, ExecutionLogCallback executionLogCallback) {
+    try {
+      executionLogCallback.saveExecutionLog("\nManifests:\n---------\n");
+
+      executionLogCallback.saveExecutionLog(ManifestHelper.toYamlForLogs(resources) + "\n");
+
+      Release lastSuccessfulRelease = releaseHistory.getLastSuccessfulRelease();
+
+      if (lastSuccessfulRelease == null) {
+        executionLogCallback.saveExecutionLog("No successful release found. Nothing to cleanup");
+        return true;
+      }
+
+      executionLogCallback.saveExecutionLog("Last Successful Release is " + lastSuccessfulRelease.getNumber());
+
+      executionLogCallback.saveExecutionLog("\nCleaning up older releases");
+
+      for (int releaseIndex = releaseHistory.getReleases().size() - 1; releaseIndex >= 0; releaseIndex--) {
+        Release release = releaseHistory.getReleases().get(releaseIndex);
+        if (release.getNumber() < lastSuccessfulRelease.getNumber()) {
+          for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
+            KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
+            if (resourceId.isVersioned()) {
+              DeleteCommand deleteCommand =
+                  client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+
+              executionLogCallback.saveExecutionLog("\n" + deleteCommand.command());
+
+              ProcessResult result = deleteCommand.execute(k8sCommandTaskParams.getWorkingDirectory(),
+                  new LogOutputStream() {
+                    @Override
+                    protected void processLine(String line) {
+                      executionLogCallback.saveExecutionLog(line, INFO);
+                    }
+                  },
+                  new LogOutputStream() {
+                    @Override
+                    protected void processLine(String line) {
+                      executionLogCallback.saveExecutionLog(line, ERROR);
+                    }
+                  });
+
+              if (result.getExitValue() != 0) {
+                logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+              }
+            }
+          }
+        } else {
+          break;
+        }
+      }
+
+      releaseHistory.getReleases().removeIf(release -> release.getNumber() < lastSuccessfulRelease.getNumber());
+
+      addRevisionNumber(resources, release.getNumber());
+
+    } catch (Exception e) {
+      executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      return false;
+    }
+    executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
     return true;
   }
 

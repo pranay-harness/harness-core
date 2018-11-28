@@ -22,13 +22,4 @@ public class RolloutStatusCommandTest {
 
     assertEquals("kubectl rollout status Deployment/nginx --watch=false", rolloutStatusCommand.command());
   }
-
-  @Test
-  public void fileNameTest() throws Exception {
-    Kubectl client = Kubectl.client(null, null);
-
-    RolloutStatusCommand rolloutStatusCommand = client.rollout().status().filename("manifest.yaml").watch(true);
-
-    assertEquals("kubectl rollout status --filename=manifest.yaml --watch=true", rolloutStatusCommand.command());
-  }
 }
