@@ -2,7 +2,7 @@ package software.wings.core.ssh.executors;
 
 import com.github.reinert.jjschema.SchemaIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.harness.annotation.Encrypted;
+import io.harness.encryption.Encrypted;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;

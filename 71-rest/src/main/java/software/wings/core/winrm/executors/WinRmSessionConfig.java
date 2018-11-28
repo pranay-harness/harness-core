@@ -1,7 +1,7 @@
 package software.wings.core.winrm.executors;
 
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.Encrypted;
+import io.harness.encryption.Encrypted;
 import lombok.Builder;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;

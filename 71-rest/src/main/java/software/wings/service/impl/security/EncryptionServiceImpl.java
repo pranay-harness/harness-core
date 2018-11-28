@@ -1,9 +1,9 @@
 package software.wings.service.impl.security;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.reflection.ReflectUtils.getEncryptedRefField;
-import static io.harness.reflection.ReflectUtils.getFieldByName;
+import static io.harness.reflection.ReflectionUtils.getFieldByName;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;

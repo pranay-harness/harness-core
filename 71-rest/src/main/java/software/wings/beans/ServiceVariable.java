@@ -5,9 +5,9 @@ import static io.harness.data.validator.EntityNameValidator.ALLOWED_CHARS_SERVIC
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.annotation.Encrypted;
 import io.harness.data.validator.EntityName;
-import io.harness.reflection.ReflectUtils;
+import io.harness.encryption.Encrypted;
+import io.harness.encryption.EncryptionReflectUtils;
 import io.harness.validation.Create;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -108,7 +108,7 @@ public class ServiceVariable extends Base implements EncryptableSetting {
       return Collections.emptyList();
     }
 
-    return ReflectUtils.getEncryptedFields(this.getClass());
+    return EncryptionReflectUtils.getEncryptedFields(this.getClass());
   }
 
   /**

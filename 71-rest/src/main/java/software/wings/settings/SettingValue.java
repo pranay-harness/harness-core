@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.reflection.ReflectUtils;
+import io.harness.encryption.EncryptionReflectUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -86,7 +86,7 @@ public abstract class SettingValue implements ExtensionPoint {
   @SchemaIgnore
   @JsonIgnore
   public List<Field> getEncryptedFields() {
-    return ReflectUtils.getEncryptedFields(this.getClass());
+    return EncryptionReflectUtils.getEncryptedFields(this.getClass());
   }
 
   /**

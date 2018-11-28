@@ -2,7 +2,7 @@ package io.harness.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
-import io.harness.reflection.ReflectUtils;
+import io.harness.encryption.EncryptionReflectUtils;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -14,7 +14,7 @@ public interface Encryptable {
   @JsonIgnore
   @SchemaIgnore
   default List<Field> getEncryptedFields() {
-    return ReflectUtils.getEncryptedFields(this.getClass());
+    return EncryptionReflectUtils.getEncryptedFields(this.getClass());
   }
 
   @JsonIgnore
