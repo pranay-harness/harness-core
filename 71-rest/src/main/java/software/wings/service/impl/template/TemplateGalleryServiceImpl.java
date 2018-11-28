@@ -359,10 +359,12 @@ public class TemplateGalleryServiceImpl implements TemplateGalleryService {
           existingTemplate.setReferencedTemplateId(globalTemplate.getUuid());
           existingTemplate.setTemplateObject(globalTemplate.getTemplateObject());
           existingTemplate.setVariables(globalTemplate.getVariables());
+          logger.info("Updating template in account [{}]", account.getUuid());
           templateService.update(existingTemplate);
           logger.info("Template updated in account [{}]", account.getUuid());
         } else {
-          logger.info("Template gallery does not exist for account [{}]. Do nothing", account.getUuid());
+          logger.info("Template gallery does not exist for account id: [{}] and name:[{}] . Do nothing",
+              account.getUuid(), account.getAccountName());
         }
       }
     }

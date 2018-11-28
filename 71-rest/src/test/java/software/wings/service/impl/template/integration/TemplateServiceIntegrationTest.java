@@ -22,7 +22,7 @@ import com.google.inject.Inject;
 
 import io.harness.beans.PageRequest;
 import migrations.all.SystemTemplateGalleryMigration;
-import migrations.seedata.IISInstallCommandMigration;
+import migrations.seedata.GlobalAccountMigration;
 import org.junit.Ignore;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -59,7 +59,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
   @Inject private SystemTemplateGalleryMigration migration;
   @Inject private TemplateService templateService;
   @Inject private TemplateGalleryService templateGalleryService;
-  @Inject private IISInstallCommandMigration iisInstallCommandMigration;
+  @Inject private GlobalAccountMigration globalAccountMigration;
 
   @Test
   public void shouldMigrateGallery() {
@@ -68,7 +68,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   public void shouldMigrateIISTemplateGallery() {
-    iisInstallCommandMigration.migrate();
+    globalAccountMigration.migrate();
   }
 
   @Test
@@ -80,7 +80,7 @@ public class TemplateServiceIntegrationTest extends WingsBaseTest {
 
   @Test
   public void shouldUpdate() throws IOException {
-    iisInstallCommandMigration.updateExistingInstallCommand();
+    globalAccountMigration.updateExistingInstallCommand();
   }
 
   @Test

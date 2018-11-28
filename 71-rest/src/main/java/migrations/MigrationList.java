@@ -24,6 +24,7 @@ import migrations.all.DropDelegateScopeCollectionMigration;
 import migrations.all.DropOldCollectionMigration;
 import migrations.all.DropStringCollectionMigration;
 import migrations.all.DropYamlGitSyncCollectionMigration;
+import migrations.all.DuplicateGlobalAccountMigration;
 import migrations.all.EntityNameValidationMigration_All_00;
 import migrations.all.EntityNameValidationMigration_All_01;
 import migrations.all.EntityNameValidationMigration_All_02;
@@ -161,6 +162,7 @@ public class MigrationList {
         .add(Pair.of(209, TimeSeriesMLAnalysisCompressionSaveMigration.class))
         .add(Pair.of(210, TimeSeriesMLAnalysisDeleteUncompressedMigration.class))
         .add(Pair.of(211, LicenseDataMigration.class))
+        .add(Pair.of(212, DuplicateGlobalAccountMigration.class))
         .build();
   }
 }
