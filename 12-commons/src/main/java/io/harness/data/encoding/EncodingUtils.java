@@ -35,7 +35,11 @@ public class EncodingUtils {
       StringBuilder sb = new StringBuilder();
       String line;
       while ((line = br.readLine()) != null) {
-        sb.append(line);
+        sb.append(line).append(System.lineSeparator());
+      }
+      int last = sb.lastIndexOf(System.lineSeparator());
+      if (last >= 0) {
+        sb.delete(last, sb.length());
       }
       return sb.toString();
     }

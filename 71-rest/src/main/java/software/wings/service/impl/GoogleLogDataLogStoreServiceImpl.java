@@ -1,12 +1,16 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
+import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.System.currentTimeMillis;
 import static software.wings.beans.Log.Builder.aLog;
 
+import com.google.cloud.datastore.Blob;
+import com.google.cloud.datastore.BlobValue;
 import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
@@ -35,6 +39,7 @@ import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LogDataStoreService;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -176,41 +181,64 @@ public class GoogleLogDataLogStoreServiceImpl implements LogDataStoreService {
     Key taskKey = datastore.newKeyFactory()
                       .setKind(Log.class.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                       .newKey(generateUuid());
-    com.google.cloud.datastore.Entity.Builder logEntityBuilder =
-        com.google.cloud.datastore.Entity.newBuilder(taskKey)
-            .set("activityId", log.getActivityId())
-            .set("logLine", StringValue.newBuilder(log.getLogLine()).setExcludeFromIndexes(true).build())
-            .set("linesCount", LongValue.newBuilder(log.getLinesCount()).setExcludeFromIndexes(true).build())
-            .set("logLevel", StringValue.newBuilder(log.getLogLevel().toString()).setExcludeFromIndexes(true).build())
-            .set("commandExecutionStatus",
-                StringValue.newBuilder(log.getCommandExecutionStatus().name()).setExcludeFromIndexes(true).build())
-            .set("createdAt", currentTimeMillis());
-    if (isNotEmpty(log.getHostName())) {
-      logEntityBuilder.set("hostName", log.getHostName());
-    }
+    try {
+      com.google.cloud.datastore.Entity.Builder logEntityBuilder =
+          com.google.cloud.datastore.Entity.newBuilder(taskKey)
+              .set("activityId", log.getActivityId())
 
-    if (isNotEmpty(log.getAppId())) {
-      logEntityBuilder.set("appId", log.getAppId());
-    }
+              .set("linesCount", LongValue.newBuilder(log.getLinesCount()).setExcludeFromIndexes(true).build())
+              .set("logLevel", StringValue.newBuilder(log.getLogLevel().toString()).setExcludeFromIndexes(true).build())
+              .set("commandExecutionStatus",
+                  StringValue.newBuilder(log.getCommandExecutionStatus().name()).setExcludeFromIndexes(true).build())
+              .set("createdAt", currentTimeMillis());
 
-    if (isNotEmpty(log.getCommandUnitName())) {
-      logEntityBuilder.set("commandUnitName", log.getCommandUnitName());
-    }
+      if (log.getLogLine().length() <= 256) {
+        logEntityBuilder.set("logLine", StringValue.newBuilder(log.getLogLine()).setExcludeFromIndexes(true).build());
+      } else {
+        logEntityBuilder.set("compressedLogLine",
+            BlobValue.newBuilder(Blob.copyFrom(compressString(log.getLogLine()))).setExcludeFromIndexes(true).build());
+      }
 
-    return logEntityBuilder.build();
+      if (isNotEmpty(log.getHostName())) {
+        logEntityBuilder.set("hostName", log.getHostName());
+      }
+
+      if (isNotEmpty(log.getAppId())) {
+        logEntityBuilder.set("appId", log.getAppId());
+      }
+
+      if (isNotEmpty(log.getCommandUnitName())) {
+        logEntityBuilder.set("commandUnitName", log.getCommandUnitName());
+      }
+
+      return logEntityBuilder.build();
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
   }
 
   private Log readLogFromCloudStore(com.google.cloud.datastore.Entity entity) {
-    return aLog()
-        .withUuid(entity.getKey().getName())
-        .withActivityId(readString(entity, "activityId"))
-        .withLogLine(readString(entity, "logLine"))
-        .withLogLevel(LogLevel.valueOf(readString(entity, "logLevel")))
-        .withCreatedAt(readLong(entity, "createdAt"))
-        .withHostName(readString(entity, "hostName"))
-        .withAppId(readString(entity, "appId"))
-        .withCommandUnitName(readString(entity, "commandUnitName"))
-        .build();
+    final Log log = aLog()
+                        .withUuid(entity.getKey().getName())
+                        .withActivityId(readString(entity, "activityId"))
+                        .withLogLevel(LogLevel.valueOf(readString(entity, "logLevel")))
+                        .withCreatedAt(readLong(entity, "createdAt"))
+                        .withHostName(readString(entity, "hostName"))
+                        .withAppId(readString(entity, "appId"))
+                        .withCommandUnitName(readString(entity, "commandUnitName"))
+                        .build();
+    try {
+      byte[] compressedLogLine = readBlob(entity, "compressedLogLine");
+      if (isNotEmpty(compressedLogLine)) {
+        log.setLogLine(deCompressString(compressedLogLine));
+      } else {
+        log.setLogLine(readString(entity, "logLine"));
+      }
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
+
+    return log;
   }
 
   private String readString(Entity entity, String fieldName) {
@@ -219,6 +247,10 @@ public class GoogleLogDataLogStoreServiceImpl implements LogDataStoreService {
 
   private long readLong(Entity entity, String fieldName) {
     return entity.contains(fieldName) ? entity.getLong(fieldName) : 0;
+  }
+
+  public static byte[] readBlob(Entity entity, String fieldName) {
+    return entity.contains(fieldName) ? entity.getBlob(fieldName).toByteArray() : null;
   }
 
   private List<List<Key>> batchKeysToDelete(List<Key> keys) {
