@@ -302,7 +302,15 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
       String yamlFilePath = change.getFilePath();
 
       try {
-        if (yamlFilePath.endsWith(YAML_EXTENSION)) {
+        if (yamlFilePath.contains(
+                YamlConstants.MANIFEST_FOLDER + YamlConstants.PATH_DELIMITER + YamlConstants.MANIFEST_FILE_FOLDER)) {
+          ChangeContext.Builder changeContextBuilder =
+              ChangeContext.Builder.aChangeContext()
+                  .withChange(change)
+                  .withYamlType(YamlType.MANIFEST_FILE)
+                  .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE));
+          changeContextList.add(changeContextBuilder.build());
+        } else if (yamlFilePath.endsWith(YAML_EXTENSION)) {
           validateYaml(change.getFileContent());
           YamlType yamlType = findYamlType(yamlFilePath);
           String yamlSubType = getYamlSubType(change.getFileContent());
@@ -329,13 +337,6 @@ public class YamlServiceImpl<Y extends BaseYaml, B extends Base> implements Yaml
           } else {
             addToFailedYamlMap(failedYamlFileChangeMap, change, "Unsupported type: " + yamlType);
           }
-        } else if (yamlFilePath.contains(YamlConstants.MANIFEST_FILE_FOLDER)) {
-          ChangeContext.Builder changeContextBuilder =
-              ChangeContext.Builder.aChangeContext()
-                  .withChange(change)
-                  .withYamlType(YamlType.MANIFEST_FILE)
-                  .withYamlSyncHandler(yamlHandlerFactory.getYamlHandler(YamlType.MANIFEST_FILE));
-          changeContextList.add(changeContextBuilder.build());
         }
       } catch (ScannerException ex) {
         String message;
