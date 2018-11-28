@@ -1,8 +1,8 @@
 package software.wings.beans;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.harness.annotation.Encrypted;
 import io.harness.beans.EmbeddedUser;
+import io.harness.encryption.Encrypted;
 import io.harness.validation.Create;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

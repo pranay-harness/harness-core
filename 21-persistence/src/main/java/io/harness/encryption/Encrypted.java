@@ -1,4 +1,4 @@
-package io.harness.annotation;
+package io.harness.encryption;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

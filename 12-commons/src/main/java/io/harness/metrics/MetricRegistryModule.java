@@ -1,9 +1,8 @@
-package io.harness.registry;
+package io.harness.metrics;
 
 import com.google.inject.AbstractModule;
 
 import com.codahale.metrics.MetricRegistry;
-import io.harness.metrics.HarnessMetricRegistry;
 import io.prometheus.client.CollectorRegistry;
 
 /**

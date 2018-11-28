@@ -3,13 +3,11 @@ package software.wings.dl;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.encryption.EncryptionReflectUtils.getDecryptedField;
+import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.persistence.ReadPref.NORMAL;
-import static io.harness.reflection.ReflectUtils.getDeclaredAndInheritedFields;
-import static io.harness.reflection.ReflectUtils.getDecryptedField;
-import static io.harness.reflection.ReflectUtils.getEncryptedRefField;
-import static io.harness.reflection.ReflectUtils.getFieldByName;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -25,11 +23,11 @@ import com.google.inject.name.Named;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
-import io.harness.annotation.Encrypted;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.encryption.Encrypted;
 import io.harness.exception.WingsException;
 import io.harness.mongo.MongoPersistence;
 import io.harness.mongo.PageController;
@@ -39,6 +37,7 @@ import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.UuidAware;
+import io.harness.reflection.ReflectionUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.DatastoreImpl;
@@ -222,7 +221,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     UpdateOperations<T> operations = datastore.createUpdateOperations(cls);
     boolean encryptable = EncryptableSetting.class.isAssignableFrom(cls);
     Object savedObject = datastore.get(cls, entityId);
-    List<Field> declaredAndInheritedFields = getDeclaredAndInheritedFields(cls);
+    List<Field> declaredAndInheritedFields = ReflectionUtils.getAllDeclaredAndInheritedFields(cls);
     for (Entry<String, Object> entry : keyValuePairs.entrySet()) {
       Object value = entry.getValue();
       if (cls == SettingAttribute.class && entry.getKey().equalsIgnoreCase("value")
@@ -264,7 +263,7 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
       if (encryptable) {
         EncryptableSetting object = (EncryptableSetting) savedObject;
         String accountId = object.getAccountId();
-        Field f = getFieldByName(savedObject.getClass(), fieldToRemove);
+        Field f = ReflectionUtils.getFieldByName(savedObject.getClass(), fieldToRemove);
         Preconditions.checkNotNull(f, "Can't find " + fieldToRemove + " in class " + cls);
         if (f.getAnnotation(Encrypted.class) != null) {
           try {

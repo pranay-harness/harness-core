@@ -1,9 +1,9 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
+import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
-import static io.harness.reflection.ReflectUtils.getEncryptedFields;
-import static io.harness.reflection.ReflectUtils.getEncryptedRefField;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
