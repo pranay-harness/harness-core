@@ -65,6 +65,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
   @Override
   protected ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
+    String path = context.renderExpression(terraformProvisioner.getPath());
 
     String entityId = generateEntityId(context);
     Iterator<TerraformfConfig> configIterator = wingsPersistence.createQuery(TerraformfConfig.class)
@@ -129,7 +130,7 @@ public class TerraformRollbackState extends TerraformProvisionState {
             .commandUnit(TerraformCommandUnit.Rollback)
             .sourceRepo(gitConfig)
             .sourceRepoEncryptionDetails(secretManager.getEncryptionDetails(gitConfig, GLOBAL_APP_ID, null))
-            .scriptPath(terraformProvisioner.getPath())
+            .scriptPath(path)
             .variables(textVariables)
             .encryptedVariables(encryptedTextVariables)
             .backendConfigs(backendConfigs)
