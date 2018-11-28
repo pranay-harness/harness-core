@@ -5,7 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 public class RolloutStatusCommand extends AbstractExecutable {
   private RolloutCommand rolloutCommand;
   private String resource;
-  private String filename;
   private String namespace;
   private boolean watch;
 
@@ -15,11 +14,6 @@ public class RolloutStatusCommand extends AbstractExecutable {
 
   public RolloutStatusCommand resource(String resource) {
     this.resource = resource;
-    return this;
-  }
-
-  public RolloutStatusCommand filename(String filename) {
-    this.filename = filename;
     return this;
   }
 
@@ -39,10 +33,6 @@ public class RolloutStatusCommand extends AbstractExecutable {
 
     if (StringUtils.isNotBlank(this.resource)) {
       command.append(this.resource).append(' ');
-    }
-
-    if (StringUtils.isNotBlank(this.filename)) {
-      command.append(Kubectl.option(Option.filename, this.filename));
     }
 
     if (StringUtils.isNotBlank(this.namespace)) {

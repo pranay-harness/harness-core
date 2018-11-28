@@ -17,6 +17,7 @@ import software.wings.delegatetasks.k8s.taskhandler.K8sCommandTaskHandler;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
 import software.wings.helpers.ext.k8s.response.K8sCommandExecutionResponse;
+import software.wings.service.intfc.k8s.delegate.K8sGlobalConfigService;
 import software.wings.utils.Misc;
 
 import java.nio.file.Paths;
@@ -27,6 +28,7 @@ import java.util.function.Supplier;
 public class K8sCommandTask extends AbstractDelegateRunnableTask {
   @Inject private Map<String, K8sCommandTaskHandler> k8sCommandTaskTypeToTaskHandlerMap;
   @Inject private ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private K8sGlobalConfigService k8sGlobalConfigService;
   private static final String WORKING_DIR_BASE = "./repository/k8s/";
   private static final String KUBECONFIG_FILENAME = "config";
 
@@ -52,7 +54,12 @@ public class K8sCommandTask extends AbstractDelegateRunnableTask {
       writeUtf8StringToFile(Paths.get(workingDirectory, KUBECONFIG_FILENAME).toString(), kubeconfigFileContent);
 
       K8sCommandTaskParams k8sCommandTaskParams =
-          K8sCommandTaskParams.builder().kubeconfigPath(KUBECONFIG_FILENAME).workingDirectory(workingDirectory).build();
+          K8sCommandTaskParams.builder()
+              .kubectlPath(k8sGlobalConfigService.getKubectlPath())
+              .kubeconfigPath(KUBECONFIG_FILENAME)
+              .workingDirectory(workingDirectory)
+              .goTemplateClientPath(k8sGlobalConfigService.getGoTemplateClientPath())
+              .build();
 
       logger.info("Starting task execution for Command {}", k8sCommandRequest.getCommandType().name());
 

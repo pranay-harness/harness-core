@@ -1,5 +1,7 @@
 package io.harness.k8s.kubectl;
 
+import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class ApplyCommand extends AbstractExecutable {
@@ -44,7 +46,7 @@ public class ApplyCommand extends AbstractExecutable {
     command.append(client.command()).append("apply ");
 
     if (StringUtils.isNotBlank(this.filename)) {
-      command.append(Kubectl.option(Option.filename, this.filename));
+      command.append(Kubectl.option(Option.filename, encloseWithQuotesIfNeeded(this.filename)));
     }
 
     if (StringUtils.isNotBlank(this.namespace)) {

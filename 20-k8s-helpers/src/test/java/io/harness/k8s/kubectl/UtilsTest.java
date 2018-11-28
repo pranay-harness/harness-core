@@ -1,5 +1,7 @@
 package io.harness.k8s.kubectl;
 
+import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
+import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
 import static junit.framework.Assert.assertEquals;
 
 import org.junit.Test;
@@ -14,7 +16,7 @@ public class UtilsTest {
         + "4         kubectl edit deploy/demo1-nginx-deployment\n"
         + "\n";
 
-    assertEquals("4", Utils.parseLatestRevisionNumberFromRolloutHistory(rolloutHistory));
+    assertEquals("4", parseLatestRevisionNumberFromRolloutHistory(rolloutHistory));
 
     rolloutHistory = "daemonsets \"datadog-agent\"\n"
         + "REVISION  CHANGE-CAUSE\n"
@@ -22,6 +24,15 @@ public class UtilsTest {
         + "3         <none>\n"
         + "\n";
 
-    assertEquals("3", Utils.parseLatestRevisionNumberFromRolloutHistory(rolloutHistory));
+    assertEquals("3", parseLatestRevisionNumberFromRolloutHistory(rolloutHistory));
+  }
+
+  @Test
+  public void encloseWithQuotesIfNeededTest() {
+    assertEquals("kubectl", encloseWithQuotesIfNeeded("kubectl"));
+    assertEquals("kubectl", encloseWithQuotesIfNeeded("kubectl "));
+    assertEquals("config", encloseWithQuotesIfNeeded("config"));
+    assertEquals("\"C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe\"",
+        encloseWithQuotesIfNeeded("C:\\Program Files\\Docker\\Docker\\Resources\\bin\\kubectl.exe"));
   }
 }

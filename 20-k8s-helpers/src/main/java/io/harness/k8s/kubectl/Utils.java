@@ -1,5 +1,6 @@
 package io.harness.k8s.kubectl;
 
+import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
@@ -39,5 +40,13 @@ public class Utils {
     // assumes valid input from `kubectl rollout history`
     String[] lines = rolloutHistory.split(newLineRegex);
     return lines[lines.length - 1].split(" ")[0];
+  }
+
+  public static String encloseWithQuotesIfNeeded(String path) {
+    String result = path.trim();
+    if (StringUtils.containsWhitespace(result)) {
+      result = "\"" + result + "\"";
+    }
+    return result;
   }
 }
