@@ -971,11 +971,6 @@ public class UserServiceImpl implements UserService {
   public User update(User user) {
     UpdateOperations<User> updateOperations = wingsPersistence.createUpdateOperations(User.class);
 
-    updateOperations.set("emailVerified", user.isEmailVerified());
-    if (isNotEmpty(user.getAccounts())) {
-      updateOperations.set("accounts", user.getAccounts());
-    }
-
     if (user.getPassword() != null && user.getPassword().length > 0) {
       updateOperations.set("passwordHash", hashpw(new String(user.getPassword()), BCrypt.gensalt()));
       updateOperations.set("passwordChangedAt", System.currentTimeMillis());
