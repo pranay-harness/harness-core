@@ -10,6 +10,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.command.EcsSetupCommandUnit.ERROR;
 import static software.wings.utils.EcsConvention.getServiceNamePrefixFromServiceName;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.inject.Singleton;
@@ -462,6 +463,7 @@ public class EcsCommandUnitHelper {
     awsClusterService.getServices(region, settingAttribute, encryptedDataDetails, clusterName)
         .stream()
         .filter(s -> s.getServiceName().startsWith(serviceNamePrefix))
+        .filter(service -> isServiceWithSamePrefix(service.getServiceName(), serviceNamePrefix))
         .filter(s -> !s.getServiceName().equals(containerServiceName))
         .filter(s -> s.getDesiredCount() == 0)
         .forEach(s -> {
@@ -469,6 +471,15 @@ public class EcsCommandUnitHelper {
           executionLogCallback.saveExecutionLog("Deleting old version: " + oldServiceName, LogLevel.INFO);
           awsClusterService.deleteService(region, settingAttribute, encryptedDataDetails, clusterName, oldServiceName);
         });
+  }
+
+  @VisibleForTesting
+  boolean isServiceWithSamePrefix(String serviceName, String prefix) {
+    if (prefix.length() >= serviceName.length()) {
+      return false;
+    }
+    String temp = serviceName.substring(prefix.length());
+    return temp.matches("[0-9]+");
   }
 
   public void setLoadBalancerToService(EcsSetupParams setupParams, SettingAttribute cloudProviderSetting,
