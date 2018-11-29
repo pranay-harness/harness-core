@@ -20,10 +20,18 @@ public class InstallUtils {
   private static final String defaultKubectlVersion = "v1.12.2";
   private static final String kubectlBaseDir = "./client-tools/kubectl/";
 
+  private static final String goTemplateClientVersion = "v0.1";
+  private static final String goTemplateClientBaseDir = "./client-tools/go-template/";
+
   private static String kubectlPath = "kubectl";
+  private static String goTemplateToolPath = "go-template";
 
   public static String getKubectlPath() {
     return kubectlPath;
+  }
+
+  public static String getGoTemplateToolPath() {
+    return goTemplateToolPath;
   }
 
   static void installKubectl(DelegateConfiguration configuration, String proxySetupScript) {
@@ -49,6 +57,7 @@ public class InstallUtils {
       String kubectlDirectory = kubectlBaseDir + version;
 
       if (Files.exists(Paths.get(kubectlDirectory + "/kubectl"))) {
+        kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
         logger.info("kubectl version {} already installed", version);
         return;
       }
@@ -73,7 +82,7 @@ public class InstallUtils {
       ProcessResult result = processExecutor.execute();
 
       if (result.getExitValue() == 0) {
-        kubectlPath = Paths.get(kubectlBaseDir + version + "/kubectl").toAbsolutePath().normalize().toString();
+        kubectlPath = Paths.get(kubectlDirectory + "/kubectl").toAbsolutePath().normalize().toString();
         logger.info(result.outputString());
         logger.info("kubectl path: {}", kubectlPath);
       } else {
@@ -92,6 +101,64 @@ public class InstallUtils {
     }
     return baseUrl + "/storage/harness-download/kubernetes-release/release/" + version + "/bin/" + getOsPath()
         + "/amd64/kubectl";
+  }
+
+  static void installGoTemplateTool(DelegateConfiguration configuration, String proxySetupScript) {
+    try {
+      if (isWindows()) {
+        logger.info("Skipping go-template install on Windows");
+        return;
+      }
+
+      String goTemplateClientDirectory = goTemplateClientBaseDir + goTemplateClientVersion;
+
+      if (Files.exists(Paths.get(goTemplateClientDirectory + "/go-template"))) {
+        goTemplateToolPath =
+            Paths.get(goTemplateClientDirectory + "/go-template").toAbsolutePath().normalize().toString();
+        logger.info("go-template version {} already installed", goTemplateClientVersion);
+        return;
+      }
+
+      logger.info("Installing go-template");
+
+      createDirectoryIfDoesNotExist(goTemplateClientDirectory);
+
+      String downloadUrl = getGoTemplateDownloadUrl(configuration.getManagerUrl(), goTemplateClientVersion);
+
+      logger.info("download Url is {}", downloadUrl);
+
+      String script = "curl -LO " + downloadUrl + "\n"
+          + "chmod +x ./go-template\n"
+          + "./go-template help\n";
+
+      ProcessExecutor processExecutor = new ProcessExecutor()
+                                            .timeout(10, TimeUnit.MINUTES)
+                                            .directory(new File(goTemplateClientDirectory))
+                                            .command("/bin/bash", "-c", proxySetupScript + script)
+                                            .readOutput(true);
+      ProcessResult result = processExecutor.execute();
+
+      if (result.getExitValue() == 0) {
+        goTemplateToolPath =
+            Paths.get(goTemplateClientDirectory + "/go-template").toAbsolutePath().normalize().toString();
+        logger.info(result.outputString());
+        logger.info("go-template path: {}", goTemplateToolPath);
+      } else {
+        logger.error("go-template install failed");
+        logger.error(result.outputString());
+      }
+    } catch (Exception e) {
+      logger.error("Error installing go-template", e);
+    }
+  }
+
+  private static String getGoTemplateDownloadUrl(String managerUrl, String version) {
+    String baseUrl = managerUrl.substring(0, managerUrl.lastIndexOf("/api"));
+    if (baseUrl.contains("localhost") || baseUrl.contains("127.0.0.1")) {
+      baseUrl = "https://app.harness.io";
+    }
+    return baseUrl + "/storage/harness-download/snapshot-go-template/release/" + version + "/bin/" + getOsPath()
+        + "/amd64/go-template";
   }
 
   private static String getOsPath() {
