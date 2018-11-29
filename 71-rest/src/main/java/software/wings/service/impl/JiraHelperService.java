@@ -13,6 +13,7 @@ import software.wings.beans.JiraConfig;
  */
 public class JiraHelperService {
   private static final Logger logger = LoggerFactory.getLogger(GcpHelperService.class);
+
   /**
    * Validate credential.
    *
