@@ -338,11 +338,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
               .put(ArtifactStreamType.BAMBOO.name(), ArtifactStreamType.BAMBOO.name())
               .put(GCS.name(), GCS.name())
               .put(AMAZON_S3.name(), AMAZON_S3.name())
+              .put(SMB.name(), SMB.name())
               .put(AMI.name(), AMI.name());
-      if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
-        builder.put(SMB.name(), SMB.name());
-      }
-
       if (featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
         builder.put(SFTP.name(), SFTP.name());
       }
@@ -357,11 +354,8 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
             .put(ArtifactStreamType.NEXUS.name(), ArtifactStreamType.NEXUS.name())
             .put(ArtifactStreamType.ARTIFACTORY.name(), ArtifactStreamType.ARTIFACTORY.name())
             .put(AMAZON_S3.name(), AMAZON_S3.name())
+            .put(SMB.name(), SMB.name())
             .put(AMI.name(), AMI.name());
-    if (featureFlagService.isEnabled(FeatureName.SMB_ARTIFACT, accountId)) {
-      builder.put(SMB.name(), SMB.name());
-    }
-
     if (featureFlagService.isEnabled(FeatureName.SFTP_ARTIFACT, accountId)) {
       builder.put(SFTP.name(), SFTP.name());
     }

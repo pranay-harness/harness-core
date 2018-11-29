@@ -20,7 +20,6 @@ public enum FeatureName {
   COPY_ARTIFACT,
   JIRA_INTEGRATION,
   CV_24X7,
-  SMB_ARTIFACT,
   SFTP_ARTIFACT,
   GCD_STORAGE
 }
