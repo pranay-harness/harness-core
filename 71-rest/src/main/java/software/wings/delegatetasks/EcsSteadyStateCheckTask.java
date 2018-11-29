@@ -6,7 +6,9 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.Service;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -50,6 +52,11 @@ public class EcsSteadyStateCheckTask extends AbstractDelegateRunnableTask {
           String.format("No service in cluster: %s with name: %s", clusterName, serviceName));
     }
     return services.get(0);
+  }
+
+  @Override
+  public EcsSteadyStateCheckResponse run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

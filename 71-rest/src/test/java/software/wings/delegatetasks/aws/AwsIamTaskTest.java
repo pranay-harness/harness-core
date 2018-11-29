@@ -32,10 +32,10 @@ public class AwsIamTaskTest extends WingsBaseTest {
   @Test
   public void testRun() {
     AwsIamRequest request = AwsIamListRolesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockIamServiceDelegate).listIAMRoles(any(), anyList());
     request = AwsIamListInstanceRolesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockIamServiceDelegate).listIamInstanceRoles(any(), anyList());
   }
 }

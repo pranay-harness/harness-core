@@ -1,12 +1,13 @@
 package software.wings.helpers.ext.k8s.request;
 
+import io.harness.delegate.task.protocol.TaskParameters;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @AllArgsConstructor
-public class K8sCommandRequest {
+public class K8sCommandRequest implements TaskParameters {
   private String accountId;
   private String appId;
   private String commandName;

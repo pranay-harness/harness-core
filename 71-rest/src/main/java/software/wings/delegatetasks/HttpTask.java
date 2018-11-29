@@ -5,6 +5,8 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
 import com.google.common.base.Splitter;
 
+import io.harness.delegate.task.protocol.TaskParameters;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
@@ -48,6 +50,11 @@ public class HttpTask extends AbstractDelegateRunnableTask {
   public HttpTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
+  }
+
+  @Override
+  public HttpStateExecutionResponse run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

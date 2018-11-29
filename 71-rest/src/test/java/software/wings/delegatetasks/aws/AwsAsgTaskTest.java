@@ -34,13 +34,13 @@ public class AwsAsgTaskTest extends WingsBaseTest {
   @Test
   public void testRun() {
     AwsAsgRequest request = AwsAsgListAllNamesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAsgHelperServiceDelegate).listAutoScalingGroupNames(any(), anyList(), anyString());
     request = AwsAsgListInstancesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAsgHelperServiceDelegate).listAutoScalingGroupInstances(any(), anyList(), anyString(), anyString());
     request = AwsAsgListDesiredCapacitiesRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockAwsAsgHelperServiceDelegate).getDesiredCapacitiesOfAsgs(any(), anyList(), anyString(), anyList());
   }
 }

@@ -4,8 +4,10 @@ import com.google.inject.Inject;
 
 import com.bertramlabs.plugins.hcl4j.HCLParser;
 import com.bertramlabs.plugins.hcl4j.HCLParserException;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,11 @@ public class TerraformInputVariablesObtainTask extends AbstractDelegateRunnableT
   public TerraformInputVariablesObtainTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
+  }
+
+  @Override
+  public TerraformInputVariablesTaskResponse run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

@@ -7,6 +7,8 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.TaskParameters;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -41,7 +43,12 @@ public class K8sCommandTask extends AbstractDelegateRunnableTask {
 
   @Override
   public K8sCommandExecutionResponse run(Object[] parameters) {
-    K8sCommandRequest k8sCommandRequest = (K8sCommandRequest) parameters[0];
+    throw new NotImplementedException("not implemented");
+  }
+
+  @Override
+  public K8sCommandExecutionResponse run(TaskParameters parameters) {
+    K8sCommandRequest k8sCommandRequest = (K8sCommandRequest) parameters;
 
     String workingDirectory =
         Paths.get(WORKING_DIR_BASE, k8sCommandRequest.getWorkflowExecutionId()).normalize().toAbsolutePath().toString();

@@ -4,8 +4,10 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -32,7 +34,12 @@ public class AwsEcsTask extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(Object[] parameters) {
-    AwsEcsRequest request = (AwsEcsRequest) parameters[0];
+    throw new NotImplementedException("not implemented");
+  }
+
+  @Override
+  public AwsResponse run(TaskParameters parameters) {
+    AwsEcsRequest request = (AwsEcsRequest) parameters;
     try {
       AwsEcsRequestType requestType = request.getRequestType();
       switch (requestType) {

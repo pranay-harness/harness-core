@@ -5,8 +5,10 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -37,6 +39,11 @@ public class AwsCodeDeployTask extends AbstractDelegateRunnableTask {
   public AwsCodeDeployTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
+  }
+
+  @Override
+  public AwsResponse run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

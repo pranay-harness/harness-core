@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
@@ -82,7 +83,11 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
 
     try {
       logger.info("Started executing task {}", taskId);
-      ResponseData result = run(parameters);
+
+      ResponseData result = parameters.length == 1 && parameters[0] instanceof TaskParameters
+          ? run((TaskParameters) parameters[0])
+          : run(parameters);
+
       if (result != null) {
         taskResponse.response(result);
         if (result instanceof RemoteMethodReturnValueData) {

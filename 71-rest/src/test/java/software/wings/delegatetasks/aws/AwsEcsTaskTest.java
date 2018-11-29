@@ -32,7 +32,7 @@ public class AwsEcsTaskTest extends WingsBaseTest {
   @Test
   public void testRun() {
     AwsEcsRequest request = AwsEcsListClustersRequest.builder().build();
-    task.run(new Object[] {request});
+    task.run(request);
     verify(mockEcsHelperServiceDelegate).listClusters(any(), anyList(), anyString());
   }
 }

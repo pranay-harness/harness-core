@@ -7,6 +7,8 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.task.protocol.TaskParameters;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
@@ -74,6 +76,10 @@ public abstract class AbstractDelegateDataCollectionTask extends AbstractDelegat
     synchronized (lockObject) {
       lockObject.notifyAll();
     }
+  }
+
+  public DataCollectionTaskResult run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   public DataCollectionTaskResult run(Object[] parameters) {

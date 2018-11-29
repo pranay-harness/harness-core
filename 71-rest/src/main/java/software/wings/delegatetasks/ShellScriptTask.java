@@ -7,7 +7,9 @@ import static software.wings.beans.command.CommandExecutionResult.CommandExecuti
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +47,11 @@ public class ShellScriptTask extends AbstractDelegateRunnableTask {
   public ShellScriptTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
+  }
+
+  @Override
+  public CommandExecutionResult run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

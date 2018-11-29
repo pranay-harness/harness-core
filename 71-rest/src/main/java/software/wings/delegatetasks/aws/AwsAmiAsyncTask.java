@@ -5,8 +5,10 @@ import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.command.ExecutionLogCallback;
@@ -31,6 +33,11 @@ public class AwsAmiAsyncTask extends AbstractDelegateRunnableTask {
   public AwsAmiAsyncTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
+  }
+
+  @Override
+  public AwsResponse run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

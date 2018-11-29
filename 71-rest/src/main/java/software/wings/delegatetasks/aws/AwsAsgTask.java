@@ -5,8 +5,10 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -38,7 +40,12 @@ public class AwsAsgTask extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(Object[] parameters) {
-    AwsAsgRequest request = (AwsAsgRequest) parameters[0];
+    throw new NotImplementedException("not implemented");
+  }
+
+  @Override
+  public AwsResponse run(TaskParameters parameters) {
+    AwsAsgRequest request = (AwsAsgRequest) parameters;
     try {
       AwsAsgRequestType requestType = request.getRequestType();
       switch (requestType) {
@@ -48,15 +55,18 @@ public class AwsAsgTask extends AbstractDelegateRunnableTask {
           return AwsAsgListAllNamesResponse.builder().aSgNames(aSgNames).executionStatus(SUCCESS).build();
         }
         case LIST_ASG_INSTANCES: {
+          AwsAsgListInstancesRequest awsAsgListInstancesRequest = (AwsAsgListInstancesRequest) parameters;
           List<Instance> aSgInstances = awsAsgHelperServiceDelegate.listAutoScalingGroupInstances(
               request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion(),
-              ((AwsAsgListInstancesRequest) request).getAutoScalingGroupName());
+              awsAsgListInstancesRequest.getAutoScalingGroupName());
           return AwsAsgListInstancesResponse.builder().instances(aSgInstances).executionStatus(SUCCESS).build();
         }
         case LIST_DESIRED_CAPACITIES: {
-          Map<String, Integer> capacities = awsAsgHelperServiceDelegate.getDesiredCapacitiesOfAsgs(
-              request.getAwsConfig(), request.getEncryptionDetails(), request.getRegion(),
-              ((AwsAsgListDesiredCapacitiesRequest) request).getAsgs());
+          AwsAsgListDesiredCapacitiesRequest awsAsgListDesiredCapacitiesRequest =
+              (AwsAsgListDesiredCapacitiesRequest) parameters;
+          Map<String, Integer> capacities =
+              awsAsgHelperServiceDelegate.getDesiredCapacitiesOfAsgs(request.getAwsConfig(),
+                  request.getEncryptionDetails(), request.getRegion(), awsAsgListDesiredCapacitiesRequest.getAsgs());
           return AwsAsgListDesiredCapacitiesResponse.builder().capacities(capacities).executionStatus(SUCCESS).build();
         }
         default: {
