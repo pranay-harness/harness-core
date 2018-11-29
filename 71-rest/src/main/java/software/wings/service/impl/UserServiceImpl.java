@@ -267,6 +267,7 @@ public class UserServiceImpl implements UserService {
     userSummary.setName(user.getName());
     userSummary.setUuid(user.getUuid());
     userSummary.setEmail(user.getEmail());
+    userSummary.setEmailVerified(user.isEmailVerified());
     return userSummary;
   }
 
