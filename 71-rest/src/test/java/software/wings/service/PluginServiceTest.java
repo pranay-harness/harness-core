@@ -40,6 +40,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SlackConfig;
+import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.config.ArtifactoryConfig;
@@ -75,7 +76,7 @@ public class PluginServiceTest {
   @Test
   public void shouldGetInstalledPlugins() throws Exception {
     assertThat(pluginService.getInstalledPlugins(accountId))
-        .hasSize(28)
+        .hasSize(29)
         .containsExactly(anAccountPlugin()
                              .withSettingClass(JenkinsConfig.class)
                              .withAccountId(accountId)
@@ -116,14 +117,6 @@ public class PluginServiceTest {
                 .withType("ARTIFACTORY")
                 .withPluginCategories(asList(Artifact))
                 .build(),
-            //            anAccountPlugin()
-            //                .withSettingClass(SmbConfig.class)
-            //                .withAccountId(accountId)
-            //                .withIsEnabled(true)
-            //                .withDisplayName("Smb")
-            //                .withType("SMB")
-            //                .withPluginCategories(asList(Artifact))
-            //                .build(),
             anAccountPlugin()
                 .withSettingClass(AppDynamicsConfig.class)
                 .withAccountId(accountId)
@@ -301,6 +294,14 @@ public class PluginServiceTest {
                 .withPluginCategories(asList(SourceRepo))
                 .build(),
             anAccountPlugin()
+                .withSettingClass(SmbConfig.class)
+                .withAccountId(accountId)
+                .withIsEnabled(true)
+                .withDisplayName("SMB")
+                .withType("SMB")
+                .withPluginCategories(asList(Artifact))
+                .build(),
+            anAccountPlugin()
                 .withSettingClass(JiraConfig.class)
                 .withAccountId(accountId)
                 .withIsEnabled(true)
@@ -313,10 +314,10 @@ public class PluginServiceTest {
   @Test
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
-        .hasSize(28)
+        .hasSize(29)
         .containsOnlyKeys("APP_DYNAMICS", "NEW_RELIC", "DYNA_TRACE", "PROMETHEUS", "APM_VERIFICATION", "DATA_DOG",
             "JENKINS", "BAMBOO", "SMTP", "SLACK", "BUG_SNAG", "SPLUNK", "ELK", "LOGZ", "SUMO", "AWS", "GCP", "AZURE",
             "PHYSICAL_DATA_CENTER", "KUBERNETES_CLUSTER", "DOCKER", "HOST_CONNECTION_ATTRIBUTES", "ELB", "NEXUS",
-            "ARTIFACTORY", "PCF", "GIT", "JIRA");
+            "ARTIFACTORY", "PCF", "GIT", "JIRA", "SMB");
   }
 }
