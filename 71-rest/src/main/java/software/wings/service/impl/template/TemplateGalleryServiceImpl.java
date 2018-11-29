@@ -13,7 +13,6 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.template.TemplateGallery.NAME_KEY;
 import static software.wings.common.TemplateConstants.GENERIC_JSON_PATH;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
-
 import static software.wings.common.TemplateConstants.JBOSS_WAR_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.JBOSS_WAR_START_PATH;
 import static software.wings.common.TemplateConstants.JBOSS_WAR_STOP_PATH;

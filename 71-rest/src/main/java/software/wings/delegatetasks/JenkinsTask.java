@@ -15,8 +15,10 @@ import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.client.HttpResponseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +56,11 @@ public class JenkinsTask extends AbstractDelegateRunnableTask {
   public JenkinsTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> postExecute,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
+  }
+
+  @Override
+  public JenkinsExecutionResponse run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

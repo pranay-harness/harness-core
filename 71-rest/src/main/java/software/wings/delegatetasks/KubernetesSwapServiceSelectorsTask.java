@@ -7,7 +7,9 @@ import static software.wings.sm.states.KubernetesSwapServiceSelectors.KUBERNETES
 import com.google.inject.Inject;
 
 import io.fabric8.kubernetes.api.model.Service;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -39,6 +41,11 @@ public class KubernetesSwapServiceSelectorsTask extends AbstractDelegateRunnable
   public KubernetesSwapServiceSelectorsTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
+  }
+
+  @Override
+  public KubernetesSwapServiceSelectorsResponse run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

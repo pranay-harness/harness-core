@@ -2,6 +2,8 @@ package software.wings.delegatetasks.collect.artifacts;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.TaskParameters;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -29,6 +31,11 @@ public class ArtifactoryCollectionTask extends AbstractDelegateRunnableTask {
   public ArtifactoryCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
+  }
+
+  @Override
+  public ListNotifyResponseData run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

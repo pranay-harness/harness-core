@@ -5,7 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.WingsException;
+import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
 import software.wings.beans.NewRelicDeploymentMarkerPayload;
@@ -25,6 +27,11 @@ public class NewRelicDeploymentMarkerTask extends AbstractDelegateRunnableTask {
   public NewRelicDeploymentMarkerTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
+  }
+
+  @Override
+  public ResponseData run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

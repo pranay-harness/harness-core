@@ -15,9 +15,11 @@ import com.google.inject.Inject;
 import com.bertramlabs.plugins.hcl4j.HCLParser;
 import com.bertramlabs.plugins.hcl4j.HCLParserException;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.NotImplementedException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -83,6 +85,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   public TerraformProvisionTask(String delegateId, DelegateTask delegateTask, Consumer<DelegateTaskResponse> consumer,
       Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, consumer, preExecute);
+  }
+
+  @Override
+  public TerraformExecutionData run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

@@ -5,9 +5,11 @@ import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -36,7 +38,12 @@ public class AwsIamTask extends AbstractDelegateRunnableTask {
 
   @Override
   public AwsResponse run(Object[] parameters) {
-    AwsIamRequest request = (AwsIamRequest) parameters[0];
+    throw new NotImplementedException("not implemented");
+  }
+
+  @Override
+  public AwsResponse run(TaskParameters parameters) {
+    AwsIamRequest request = (AwsIamRequest) parameters;
     try {
       AwsIamRequestType requestType = request.getRequestType();
       switch (requestType) {

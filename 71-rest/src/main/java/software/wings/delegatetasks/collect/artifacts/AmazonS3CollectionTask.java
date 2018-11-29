@@ -4,6 +4,8 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
+import io.harness.delegate.task.protocol.TaskParameters;
+import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -30,6 +32,11 @@ public class AmazonS3CollectionTask extends AbstractDelegateRunnableTask {
   public AmazonS3CollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
+  }
+
+  @Override
+  public ListNotifyResponseData run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override

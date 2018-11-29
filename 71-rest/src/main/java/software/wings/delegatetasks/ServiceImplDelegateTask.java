@@ -8,8 +8,10 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
+import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import org.apache.commons.lang3.NotImplementedException;
 import org.joor.ReflectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +32,11 @@ public class ServiceImplDelegateTask extends AbstractDelegateRunnableTask {
   public ServiceImplDelegateTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> postExecute, Supplier<Boolean> preExecute) {
     super(delegateId, delegateTask, postExecute, preExecute);
+  }
+
+  @Override
+  public RemoteMethodReturnValueData run(TaskParameters parameters) {
+    throw new NotImplementedException("not implemented");
   }
 
   @Override
