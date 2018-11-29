@@ -1,5 +1,8 @@
 package io.harness.reflection;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -7,6 +10,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 public class ReflectionUtils {
+  private static final Logger logger = LoggerFactory.getLogger(ReflectionUtils.class);
   public static Field getFieldByName(Class<?> clazz, String fieldName) {
     while (clazz.getSuperclass() != null) {
       try {
@@ -39,5 +43,29 @@ public class ReflectionUtils {
       clazz = clazz.getSuperclass();
     }
     return declaredFields;
+  }
+
+  interface Functor {
+    Object update(Object o);
+  }
+
+  public static void updateFieldValues(Object o, Predicate<Field> predicate, Functor functor) {
+    Class<?> c = o.getClass();
+    while (c.getSuperclass() != null) {
+      for (Field f : c.getDeclaredFields()) {
+        if (predicate.test(f)) {
+          boolean isAccessible = f.isAccessible();
+          f.setAccessible(true);
+          try {
+            Object value = functor.update(f.get(o));
+            f.set(o, value);
+            f.setAccessible(isAccessible);
+          } catch (IllegalAccessException e) {
+            logger.error("Field [{}] is not accessible ", f.getName());
+          }
+        }
+      }
+      c = c.getSuperclass();
+    }
   }
 }
