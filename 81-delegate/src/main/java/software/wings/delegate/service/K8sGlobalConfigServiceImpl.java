@@ -10,7 +10,6 @@ public class K8sGlobalConfigServiceImpl implements K8sGlobalConfigService {
 
   @Override
   public String getGoTemplateClientPath() {
-    // ToDo: Install go-template on delegates and use that path.
-    return "D:\\git\\harness\\go-template\\go-template";
+    return InstallUtils.getGoTemplateToolPath();
   }
 }
