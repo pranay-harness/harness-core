@@ -960,7 +960,7 @@
         <repository>
             <id>harness</id>
             <name>harness-releases</name>
-            <url>https://harness.jfrog.io/harness/harness-maven</url>
+            <url>https://harness.jfrog.io/harness/thirdparty-annonymous</url>
         </repository>
         <repository>
             <id>spring-io</id>
