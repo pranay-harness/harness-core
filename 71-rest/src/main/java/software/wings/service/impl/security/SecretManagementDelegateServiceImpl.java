@@ -84,10 +84,19 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   @Override
   public EncryptedData encrypt(String accountId, char[] value, KmsConfig kmsConfig) {
     Preconditions.checkNotNull(kmsConfig, "null for " + accountId);
+    ClassLoader callerClassLoader = Thread.currentThread().getContextClassLoader();
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        return timeLimiter.callWithTimeout(
-            () -> encryptInternal(accountId, value, kmsConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callWithTimeout(() -> {
+          ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
+          try {
+            // HAR-6885: Use the caller's context class loader to ensure consistent class loading behavior.
+            Thread.currentThread().setContextClassLoader(callerClassLoader);
+            return encryptInternal(accountId, value, kmsConfig);
+          } finally {
+            Thread.currentThread().setContextClassLoader(prevClassLoader);
+          }
+        }, 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -115,9 +124,19 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
     Preconditions.checkNotNull(kmsConfig, "null for " + data);
 
+    ClassLoader callerClassLoader = Thread.currentThread().getContextClassLoader();
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        return timeLimiter.callWithTimeout(() -> decryptInternal(data, kmsConfig), 15, TimeUnit.SECONDS, true);
+        return timeLimiter.callWithTimeout(() -> {
+          ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
+          try {
+            // HAR-6885: Use the caller's context class loader to ensure consistent class loading behavior.
+            Thread.currentThread().setContextClassLoader(callerClassLoader);
+            return decryptInternal(data, kmsConfig);
+          } finally {
+            Thread.currentThread().setContextClassLoader(prevClassLoader);
+          }
+        }, 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
@@ -138,20 +157,29 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   @Override
   public EncryptedData encrypt(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) {
+    ClassLoader callerClassLoader = Thread.currentThread().getContextClassLoader();
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
-        return timeLimiter.callWithTimeout(
-            ()
-                -> encryptInternal(name, value, accountId, settingType, vaultConfig, savedEncryptedData),
-            15, TimeUnit.SECONDS, true);
+        return timeLimiter.callWithTimeout(() -> {
+          ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
+          try {
+            // HAR-6885: Use the caller's context class loader to ensure consistent class loading behavior.
+            Thread.currentThread().setContextClassLoader(callerClassLoader);
+            return encryptInternal(name, value, accountId, settingType, vaultConfig, savedEncryptedData);
+          } finally {
+            Thread.currentThread().setContextClassLoader(prevClassLoader);
+          }
+        }, 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
-        if (retry < NUM_OF_RETRIES) {
-          logger.warn(format("encryption failed. trial num: %d", retry), e);
-          sleep(ofMillis(1000));
-        } else {
-          logger.error(format("encryption failed after %d retries ", retry), e);
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-              .addParam("reason", "encryption failed after " + NUM_OF_RETRIES + " retries");
+        if (isRetryable(e)) {
+          if (retry < NUM_OF_RETRIES) {
+            logger.warn(format("encryption failed. trial num: %d", retry), e);
+            sleep(ofMillis(1000));
+          } else {
+            logger.error(format("encryption failed after %d retries ", retry), e);
+            throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
+                .addParam("reason", "encryption failed after " + NUM_OF_RETRIES + " retries");
+          }
         }
       }
     }
@@ -163,29 +191,30 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     if (data.getEncryptedValue() == null) {
       return null;
     }
+
+    ClassLoader callerClassLoader = Thread.currentThread().getContextClassLoader();
     for (int retry = 1; retry <= NUM_OF_RETRIES; retry++) {
       try {
         return timeLimiter.callWithTimeout(() -> {
-          logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
-          String value = VaultRestClientFactory.create(vaultConfig)
-                             .readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
-
-          if (EmptyPredicate.isNotEmpty(value)) {
-            return value.toCharArray();
-          } else {
-            String errorMsg = "Request not successful.";
-            logger.error(errorMsg);
-            throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
+          ClassLoader prevClassLoader = Thread.currentThread().getContextClassLoader();
+          try {
+            // HAR-6885: Use the caller's context class loader to ensure consistent class loading behavior.
+            Thread.currentThread().setContextClassLoader(callerClassLoader);
+            return decryptInternal(data, vaultConfig);
+          } finally {
+            Thread.currentThread().setContextClassLoader(prevClassLoader);
           }
         }, 15, TimeUnit.SECONDS, true);
       } catch (Exception e) {
-        if (retry < NUM_OF_RETRIES) {
-          logger.warn(format("decryption failed. trial num: %d", retry), e);
-          sleep(ofMillis(1000));
-        } else {
-          logger.error("decryption failed after {} retries for {}", retry, data, e);
-          throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
-              .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
+        if (isRetryable(e)) {
+          if (retry < NUM_OF_RETRIES) {
+            logger.warn(format("decryption failed. trial num: %d", retry), e);
+            sleep(ofMillis(1000));
+          } else {
+            logger.error("decryption failed after {} retries for {}", retry, data, e);
+            throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
+                .addParam("reason", "Decryption failed after " + NUM_OF_RETRIES + " retries");
+          }
         }
       }
     }
@@ -324,6 +353,19 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     }
   }
 
+  private char[] decryptInternal(EncryptedData data, VaultConfig vaultConfig) throws Exception {
+    logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
+    String value = VaultRestClientFactory.create(vaultConfig)
+                       .readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
+
+    if (EmptyPredicate.isNotEmpty(value)) {
+      return value.toCharArray();
+    } else {
+      String errorMsg = "Request not successful.";
+      logger.error(errorMsg);
+      throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
+    }
+  }
   public static char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
                                                            InvalidKeyException, IllegalBlockSizeException,
                                                            BadPaddingException {
