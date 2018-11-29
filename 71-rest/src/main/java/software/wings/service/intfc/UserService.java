@@ -40,6 +40,10 @@ public interface UserService {
    */
   boolean trialSignup(String email);
 
+  User getUserSummary(User user);
+
+  List<User> getUserSummary(List<User> userList);
+
   /**
    * Register a new user within an existing account.
    *

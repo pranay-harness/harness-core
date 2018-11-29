@@ -21,11 +21,11 @@ public class UserPermissionInfo {
   // Key - appId, Value - app permission summary
   private Map<String, AppPermissionSummaryForUI> appPermissionMap = new HashMap<>();
 
-  private UsageRestrictions usageRestrictionsForUpdateAction;
-  private Map<String, Set<String>> appEnvMapForUpdateAction;
+  @JsonIgnore private UsageRestrictions usageRestrictionsForUpdateAction;
+  @JsonIgnore private Map<String, Set<String>> appEnvMapForUpdateAction;
 
-  private UsageRestrictions usageRestrictionsForReadAction;
-  private Map<String, Set<String>> appEnvMapForReadAction;
+  @JsonIgnore private UsageRestrictions usageRestrictionsForReadAction;
+  @JsonIgnore private Map<String, Set<String>> appEnvMapForReadAction;
 
   // Key - appId, Value - app permission summary
   // This structure is optimized for AuthRuleFilter for faster lookup
@@ -34,5 +34,25 @@ public class UserPermissionInfo {
   @JsonIgnore
   public Map<String, AppPermissionSummary> getAppPermissionMapInternal() {
     return appPermissionMapInternal;
+  }
+
+  @JsonIgnore
+  public UsageRestrictions getUsageRestrictionsForUpdateAction() {
+    return usageRestrictionsForUpdateAction;
+  }
+
+  @JsonIgnore
+  public Map<String, Set<String>> getAppEnvMapForUpdateAction() {
+    return appEnvMapForUpdateAction;
+  }
+
+  @JsonIgnore
+  public UsageRestrictions getUsageRestrictionsForReadAction() {
+    return usageRestrictionsForReadAction;
+  }
+
+  @JsonIgnore
+  public Map<String, Set<String>> getAppEnvMapForReadAction() {
+    return appEnvMapForReadAction;
   }
 }

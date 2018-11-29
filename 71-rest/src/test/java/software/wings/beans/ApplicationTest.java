@@ -30,6 +30,11 @@ public class ApplicationTest extends WingsBaseTest {
     app.setName(appName);
     app.setDescription(desc);
     app.onSave();
+
+    // resetting createdBy and lastUpdatedBy since those fields are marked with @jsonIgnore
+    app.setCreatedBy(null);
+    app.setLastUpdatedBy(null);
+
     if (logger.isDebugEnabled()) {
       logger.debug("TestApp : " + app);
     }
