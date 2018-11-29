@@ -235,7 +235,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     if (currentLicenseInfo == null) {
-      currentLicenseInfo = new LicenseInfo();
+      return getEncryptedLicenseInfo(newLicenseInfo);
     }
 
     if (isNotEmpty(newLicenseInfo.getAccountStatus())) {
