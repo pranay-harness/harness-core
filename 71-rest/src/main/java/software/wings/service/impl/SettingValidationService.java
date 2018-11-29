@@ -6,12 +6,14 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static java.util.Collections.emptyList;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
+import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -28,6 +30,7 @@ import software.wings.beans.BambooConfig;
 import software.wings.beans.Base;
 import software.wings.beans.BugsnagConfig;
 import software.wings.beans.DatadogConfig;
+import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTask.SyncTaskContext;
 import software.wings.beans.DockerConfig;
 import software.wings.beans.DynaTraceConfig;
@@ -46,10 +49,13 @@ import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
+import software.wings.beans.TaskType;
+import software.wings.beans.ValidationResult;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
 import software.wings.delegatetasks.DelegateProxyFactory;
+import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.security.encryption.EncryptedDataDetail;
@@ -57,6 +63,7 @@ import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.ContainerService;
+import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.analysis.AnalysisService;
@@ -67,12 +74,16 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.settings.SettingValue;
+import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
+import software.wings.settings.validation.ConnectivityValidationDelegateResponse;
 import software.wings.sm.StateType;
 import software.wings.utils.WingsReflectionUtils;
+import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by anubhaw on 5/1/17.
@@ -100,6 +111,40 @@ public class SettingValidationService {
   @Inject private SettingsService settingsService;
   @Inject private ManagerDecryptionService managerDecryptionService;
   @Inject private JiraHelperService jiraHelperService;
+  @Inject private DelegateService delegateService;
+
+  public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
+    List<EncryptedDataDetail> encryptionDetails =
+        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    ConnectivityValidationDelegateRequest request = ConnectivityValidationDelegateRequest.builder()
+                                                        .encryptedDataDetails(encryptionDetails)
+                                                        .settingAttribute(settingAttribute)
+                                                        .build();
+    DelegateTask delegateTask = aDelegateTask()
+                                    .withTaskType(TaskType.CONNECTIVITY_VALIDATION)
+                                    .withAccountId(settingAttribute.getAccountId())
+                                    .withAppId(settingAttribute.getAppId())
+                                    .withAsync(false)
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(2))
+                                    .withParameters(new Object[] {request})
+                                    .build();
+    try {
+      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+      if (notifyResponseData instanceof ErrorNotifyResponseData) {
+        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+      } else if (notifyResponseData instanceof RemoteMethodReturnValueData) {
+        throw new WingsException(((RemoteMethodReturnValueData) notifyResponseData).getException());
+      }
+      ConnectivityValidationDelegateResponse connectivityValidationDelegateResponse =
+          (ConnectivityValidationDelegateResponse) notifyResponseData;
+      return ValidationResult.builder()
+          .errorMessage(connectivityValidationDelegateResponse.getErrorMessage())
+          .valid(connectivityValidationDelegateResponse.isValid())
+          .build();
+    } catch (InterruptedException ex) {
+      throw new InvalidRequestException(getMessage(ex), USER);
+    }
+  }
 
   public boolean validate(SettingAttribute settingAttribute) {
     // Name has leading/trailing spaces

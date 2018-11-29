@@ -46,5 +46,6 @@ public enum TaskGroup {
   SMB,
   SFTP,
   TRIGGER,
-  JIRA
+  JIRA,
+  CONNECTIVITY_VALIDATION
 }

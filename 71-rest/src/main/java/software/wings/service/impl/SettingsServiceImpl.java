@@ -32,6 +32,7 @@ import static software.wings.common.Constants.DEFAULT_WINDOWS_RUNTIME_PATH;
 import static software.wings.common.Constants.RUNTIME_PATH;
 import static software.wings.common.Constants.STAGING_PATH;
 import static software.wings.common.Constants.WINDOWS_RUNTIME_PATH;
+import static software.wings.utils.Misc.getMessage;
 import static software.wings.utils.UsageRestrictionsUtil.getAllAppAllEnvUsageRestrictions;
 import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.equalCheck;
@@ -83,7 +84,6 @@ import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.CryptoUtil;
-import software.wings.utils.Misc;
 
 import java.util.Collections;
 import java.util.List;
@@ -131,7 +131,7 @@ public class SettingsServiceImpl implements SettingsService {
           .build();
 
     } catch (Exception e) {
-      throw new InvalidRequestException(Misc.getMessage(e), e);
+      throw new InvalidRequestException(getMessage(e), e);
     }
   }
 
@@ -190,11 +190,20 @@ public class SettingsServiceImpl implements SettingsService {
         "name", settingAttribute.getName());
   }
 
+  @Override
+  public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
+    try {
+      return settingValidationService.validateConnectivity(settingAttribute);
+    } catch (Exception ex) {
+      return new ValidationResult(false, getMessage(ex));
+    }
+  }
+
   private ValidationResult validateInternal(final SettingAttribute settingAttribute) {
     try {
       return new ValidationResult(settingValidationService.validate(settingAttribute), "");
     } catch (Exception ex) {
-      return new ValidationResult(false, Misc.getMessage(ex));
+      return new ValidationResult(false, getMessage(ex));
     }
   }
 

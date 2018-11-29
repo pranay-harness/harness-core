@@ -89,6 +89,8 @@ public interface SettingsService extends OwnedByAccount {
 
   ValidationResult validate(String varId);
 
+  ValidationResult validateConnectivity(SettingAttribute settingAttribute);
+
   void deleteByYamlGit(String appId, String settingAttributeId, boolean syncFromGit);
   Map<String, String> listAccountDefaults(String accountId);
 

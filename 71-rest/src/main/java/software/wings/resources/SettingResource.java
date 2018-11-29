@@ -163,6 +163,17 @@ public class SettingResource {
     return new RestResponse<>(settingsService.validate(variable));
   }
 
+  @POST
+  @Path("validate-connectivity")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ValidationResult> validateConnectivity(
+      @DefaultValue(GLOBAL_APP_ID) @QueryParam("appId") String appId, @QueryParam("accountId") String accountId,
+      SettingAttribute variable) {
+    prePruneSettingAttribute(appId, accountId, variable);
+    return new RestResponse<>(settingsService.validateConnectivity(variable));
+  }
+
   /**
    * Save uploaded GCP service account key file.
    *
