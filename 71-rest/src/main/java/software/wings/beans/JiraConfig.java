@@ -11,6 +11,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
@@ -25,6 +26,9 @@ import java.util.Arrays;
 @EqualsAndHashCode(callSuper = false)
 @Builder
 public class JiraConfig extends SettingValue implements EncryptableSetting {
+  public enum JiraSetupType { JIRA_CLOUD, JIRA_SERVER }
+  private static final CharSequence JIRA_CLOUD_DOMAINNAME = ".atlassian.net";
+
   @Attributes(title = "Base URL", required = true) @NotEmpty private String baseUrl;
 
   @Attributes(title = "Username", required = true) @NotEmpty private String username;
@@ -48,6 +52,15 @@ public class JiraConfig extends SettingValue implements EncryptableSetting {
     this.password = Arrays.copyOf(password, password.length);
     this.encryptedPassword = encryptedPassword;
     this.accountId = accountId;
+  }
+
+  private JiraSetupType getSetupType() {
+    JiraSetupType setupType = null;
+    if (StringUtils.isNotEmpty(baseUrl)) {
+      setupType = baseUrl.contains(JIRA_CLOUD_DOMAINNAME) ? JiraSetupType.JIRA_CLOUD : JiraSetupType.JIRA_SERVER;
+    }
+
+    return setupType;
   }
 
   @Data
