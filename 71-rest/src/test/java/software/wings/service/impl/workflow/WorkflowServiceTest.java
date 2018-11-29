@@ -162,6 +162,7 @@ import io.fabric8.kubernetes.api.model.HorizontalPodAutoscaler;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
 import org.junit.Before;
@@ -2056,6 +2057,24 @@ public class WorkflowServiceTest extends WingsBaseTest {
     CanaryOrchestrationWorkflow orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) workflow2.getOrchestrationWorkflow();
     assertThat(orchestrationWorkflow).isNotNull().hasFieldOrPropertyWithValue("userVariables", userVariables);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void shouldUpdateUserVariablesValidationFixedEmptyValue() {
+    Workflow workflow1 = createCanaryWorkflow();
+    List<Variable> userVariables = newArrayList(aVariable().withName("name1").withValue("").withFixed(true).build());
+
+    workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  public void shouldUpdateUserVariablesValidationDuplicateNames() {
+    Workflow workflow1 = createCanaryWorkflow();
+    List<Variable> userVariables =
+        newArrayList(aVariable().withName("name1").withValue("value").withFixed(true).build(),
+            aVariable().withName("name1").withValue("value").withFixed(true).build());
+
+    workflowService.updateUserVariables(workflow1.getAppId(), workflow1.getUuid(), userVariables);
   }
 
   @Test
