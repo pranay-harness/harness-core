@@ -59,6 +59,7 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -175,7 +176,7 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<User> register(User user) {
     user.setAppId(GLOBAL_APP_ID);
-    return getPublicUser(userService.register(user));
+    return new RestResponse<>(userService.register(user));
   }
 
   /**
@@ -253,7 +254,7 @@ public class UserResource {
     if (isEmpty(user.getAppId())) {
       user.setAppId(GLOBAL_APP_ID);
     }
-    return getPublicUser(userService.update(user));
+    return new RestResponse<>(userService.update(user));
   }
 
   /**
@@ -851,7 +852,9 @@ public class UserResource {
       return new RestResponse<>();
     }
 
-    setUserGroupSummary(user);
+    List<UserGroup> userGroups = user.getUserGroups();
+    user = userService.getUserSummary(user);
+    setUserGroupSummary(user, userGroups);
     return new RestResponse<>(user);
   }
 
@@ -864,15 +867,22 @@ public class UserResource {
     if (isEmpty(users)) {
       return new RestResponse<>(pageResponse);
     }
-    users.forEach(user -> setUserGroupSummary(user));
+
+    AtomicInteger index = new AtomicInteger(0);
+    users.forEach(user -> {
+      List<UserGroup> userGroups = user.getUserGroups();
+      user = userService.getUserSummary(user);
+      setUserGroupSummary(user, userGroups);
+      users.set(index.getAndIncrement(), user);
+    });
     return new RestResponse<>(pageResponse);
   }
 
-  private void setUserGroupSummary(User user) {
+  private void setUserGroupSummary(User user, List<UserGroup> userGroups) {
     if (user == null) {
       return;
     }
-    List<UserGroup> userGroupSummaryList = userGroupService.getUserGroupSummary(user.getUserGroups());
+    List<UserGroup> userGroupSummaryList = userGroupService.getUserGroupSummary(userGroups);
     user.setUserGroups(userGroupSummaryList);
   }
 
