@@ -421,6 +421,8 @@ TASK_TYPES:
       value: AWS
     - name: Trigger
       value: TRIGGER
+    - name: Connectivity Validation
+      value: CONNECTIVITY_VALIDATION
 
 EXECUTION_STATUS:
     - name: Aborted

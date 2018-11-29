@@ -60,6 +60,7 @@ import software.wings.security.EncryptionType;
 import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.settings.UsageRestrictions;
+import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.yaml.BaseYaml;
 
 import java.util.List;
@@ -84,6 +85,7 @@ public class SettingAttribute extends Base {
   @NotEmpty private String accountId;
   @NotEmpty @EntityName @Trimmed private String name;
   @Valid private SettingValue value;
+  @Valid @Transient private ConnectivityValidationAttributes validationAttributes;
   private Category category = Category.SETTING;
   private List<String> appIds;
   private UsageRestrictions usageRestrictions;
@@ -120,6 +122,7 @@ public class SettingAttribute extends Base {
     private String accountId;
     private String name;
     private SettingValue value;
+    private ConnectivityValidationAttributes connectivityValidationAttributes;
     private Category category = Category.SETTING;
     private List<String> appIds;
     private String uuid;
@@ -201,6 +204,12 @@ public class SettingAttribute extends Base {
       return this;
     }
 
+    public Builder withConnectivityValidationAttributes(
+        ConnectivityValidationAttributes connectivityValidationAttributes) {
+      this.connectivityValidationAttributes = connectivityValidationAttributes;
+      return this;
+    }
+
     public Builder but() {
       return aSettingAttribute()
           .withEnvId(envId)
@@ -215,7 +224,8 @@ public class SettingAttribute extends Base {
           .withCreatedAt(createdAt)
           .withLastUpdatedBy(lastUpdatedBy)
           .withLastUpdatedAt(lastUpdatedAt)
-          .withUsageRestrictions(usageRestrictions);
+          .withUsageRestrictions(usageRestrictions)
+          .withConnectivityValidationAttributes(connectivityValidationAttributes);
     }
 
     public SettingAttribute build() {
@@ -233,6 +243,7 @@ public class SettingAttribute extends Base {
       settingAttribute.setLastUpdatedBy(lastUpdatedBy);
       settingAttribute.setLastUpdatedAt(lastUpdatedAt);
       settingAttribute.setUsageRestrictions(usageRestrictions);
+      settingAttribute.setValidationAttributes(connectivityValidationAttributes);
       return settingAttribute;
     }
   }

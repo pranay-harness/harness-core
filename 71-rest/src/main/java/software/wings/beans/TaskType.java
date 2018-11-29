@@ -11,6 +11,7 @@ import software.wings.delegatetasks.BambooTask;
 import software.wings.delegatetasks.CloudWatchDataCollectionTask;
 import software.wings.delegatetasks.CollaborationProviderTask;
 import software.wings.delegatetasks.CommandTask;
+import software.wings.delegatetasks.ConnectivityValidationTask;
 import software.wings.delegatetasks.DynaTraceDataCollectionTask;
 import software.wings.delegatetasks.EcsSteadyStateCheckTask;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
@@ -59,6 +60,7 @@ import software.wings.delegatetasks.validation.AwsConnectionValidation;
 import software.wings.delegatetasks.validation.BambooValidation;
 import software.wings.delegatetasks.validation.CollaborationProviderTaskValidation;
 import software.wings.delegatetasks.validation.CommandValidation;
+import software.wings.delegatetasks.validation.ConnectivityBasicValidation;
 import software.wings.delegatetasks.validation.ContainerValidation;
 import software.wings.delegatetasks.validation.DelegateConnectionResult;
 import software.wings.delegatetasks.validation.DelegateValidateTask;
@@ -282,7 +284,9 @@ public enum TaskType {
   AWS_CF_TASK(TaskGroup.AWS, AwsCFTask.class, AwsConnectionValidation.class),
   K8S_COMMAND_TASK(TaskGroup.K8S, K8sCommandTask.class, K8sCommandValidation.class),
   TRIGGER_TASK(TaskGroup.TRIGGER, TriggerTask.class, TriggerValidation.class),
-  JIRA(TaskGroup.JIRA, JiraTask.class, JiraValidation.class);
+  JIRA(TaskGroup.JIRA, JiraTask.class, JiraValidation.class),
+  CONNECTIVITY_VALIDATION(
+      TaskGroup.CONNECTIVITY_VALIDATION, ConnectivityValidationTask.class, ConnectivityBasicValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;
