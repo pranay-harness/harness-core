@@ -1,5 +1,7 @@
 package software.wings.resources;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
@@ -12,6 +14,7 @@ import io.harness.exception.InvalidRequestException;
 import io.swagger.annotations.Api;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.beans.RestResponse;
+import software.wings.beans.User;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.LdapLinkGroupRequest;
 import software.wings.beans.sso.SSOType;
@@ -20,7 +23,9 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.UserService;
 
+import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
@@ -48,6 +53,7 @@ import javax.ws.rs.core.MediaType;
 @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
 public class UserGroupResource {
   private UserGroupService userGroupService;
+  private UserService userService;
 
   /**
    * Instantiates a new User resource.
@@ -55,8 +61,9 @@ public class UserGroupResource {
    * @param userGroupService    the userGroupService
    */
   @Inject
-  public UserGroupResource(UserGroupService userGroupService) {
+  public UserGroupResource(UserGroupService userGroupService, UserService userService) {
     this.userGroupService = userGroupService;
+    this.userService = userService;
   }
 
   /**
@@ -73,7 +80,7 @@ public class UserGroupResource {
   public RestResponse<PageResponse<UserGroup>> list(
       @BeanParam PageRequest<UserGroup> pageRequest, @QueryParam("accountId") @NotEmpty String accountId) {
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, true);
-    return new RestResponse<>(pageResponse);
+    return getPublicUserGroups(pageResponse);
   }
 
   /**
@@ -89,7 +96,7 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> get(
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId) {
-    return new RestResponse<>(userGroupService.get(accountId, userGroupId));
+    return getPublicUserGroup(userGroupService.get(accountId, userGroupId));
   }
 
   /**
@@ -106,7 +113,7 @@ public class UserGroupResource {
   public RestResponse<UserGroup> clone(@QueryParam("accountId") String accountId,
       @PathParam("userGroupId") String userGroupId, @QueryParam("newName") String newName,
       @QueryParam("newDescription") String newDescription) {
-    return new RestResponse<>(userGroupService.cloneUserGroup(accountId, userGroupId, newName, newDescription));
+    return getPublicUserGroup(userGroupService.cloneUserGroup(accountId, userGroupId, newName, newDescription));
   }
 
   /**
@@ -121,9 +128,37 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> save(@QueryParam("accountId") String accountId, UserGroup userGroup) {
     userGroup.setAccountId(accountId);
-    return new RestResponse<>(userGroupService.save(userGroup));
+    return getPublicUserGroup(userGroupService.save(userGroup));
   }
 
+  private RestResponse<UserGroup> getPublicUserGroup(UserGroup userGroup) {
+    if (userGroup == null) {
+      return new RestResponse<>();
+    }
+    setUserSummary(userGroup);
+    return new RestResponse<>(userGroup);
+  }
+
+  private RestResponse<PageResponse<UserGroup>> getPublicUserGroups(PageResponse<UserGroup> pageResponse) {
+    if (pageResponse == null) {
+      return new RestResponse<>();
+    }
+
+    List<UserGroup> userGroups = pageResponse.getResponse();
+    if (isEmpty(userGroups)) {
+      return new RestResponse<>(pageResponse);
+    }
+    userGroups.forEach(userGroup -> setUserSummary(userGroup));
+    return new RestResponse<>(pageResponse);
+  }
+
+  private void setUserSummary(UserGroup userGroup) {
+    if (userGroup == null) {
+      return;
+    }
+    List<User> userSummaryList = userService.getUserSummary(userGroup.getMembers());
+    userGroup.setMembers(userSummaryList);
+  }
   /**
    * Update Overview.
    *
@@ -140,7 +175,7 @@ public class UserGroupResource {
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId, UserGroup userGroup) {
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
-    return new RestResponse<>(userGroupService.updateOverview(userGroup));
+    return getPublicUserGroup(userGroupService.updateOverview(userGroup));
   }
 
   /**
@@ -167,7 +202,7 @@ public class UserGroupResource {
 
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
-    return new RestResponse<>(userGroupService.updateMembers(userGroup, true));
+    return getPublicUserGroup(userGroupService.updateMembers(userGroup, true));
   }
 
   /**
@@ -186,7 +221,7 @@ public class UserGroupResource {
       @QueryParam("accountId") String accountId, @PathParam("userGroupId") String userGroupId, UserGroup userGroup) {
     userGroup.setUuid(userGroupId);
     userGroup.setAccountId(accountId);
-    return new RestResponse<>(userGroupService.updatePermissions(userGroup));
+    return getPublicUserGroup(userGroupService.updatePermissions(userGroup));
   }
 
   /**
@@ -222,7 +257,7 @@ public class UserGroupResource {
                                              .addFieldsIncluded("_id", "name")
                                              .build();
     PageResponse<UserGroup> pageResponse = userGroupService.list(accountId, pageRequest, false);
-    return new RestResponse<>(pageResponse);
+    return getPublicUserGroups(pageResponse);
   }
 
   /**
@@ -241,7 +276,7 @@ public class UserGroupResource {
   public RestResponse<UserGroup> linkToLdapGroup(@PathParam("userGroupId") String userGroupId,
       @PathParam("ldapId") String ldapId, @QueryParam("accountId") @NotEmpty String accountId,
       @NotNull @Valid LdapLinkGroupRequest groupRequest) {
-    return new RestResponse<>(userGroupService.linkToSsoGroup(
+    return getPublicUserGroup(userGroupService.linkToSsoGroup(
         accountId, userGroupId, SSOType.LDAP, ldapId, groupRequest.getLdapGroupDN(), groupRequest.getLdapGroupName()));
   }
 
@@ -259,6 +294,6 @@ public class UserGroupResource {
   @ExceptionMetered
   public RestResponse<UserGroup> unlinkSsoGroup(@PathParam("userGroupId") String userGroupId,
       @QueryParam("accountId") @NotEmpty String accountId, @QueryParam("retainMembers") boolean retainMembers) {
-    return new RestResponse<>(userGroupService.unlinkSsoGroup(accountId, userGroupId, retainMembers));
+    return getPublicUserGroup(userGroupService.unlinkSsoGroup(accountId, userGroupId, retainMembers));
   }
 }

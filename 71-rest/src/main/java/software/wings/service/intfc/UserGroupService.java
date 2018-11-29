@@ -35,6 +35,10 @@ public interface UserGroupService {
    */
   PageResponse<UserGroup> list(@NotEmpty String accountId, PageRequest<UserGroup> req, boolean loadUsers);
 
+  UserGroup getUserGroupSummary(UserGroup userGroup);
+
+  List<UserGroup> getUserGroupSummary(List<UserGroup> userGroupList);
+
   /**
    * Find by uuid.
    *

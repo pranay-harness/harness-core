@@ -258,6 +258,26 @@ public class UserServiceImpl implements UserService {
     return account;
   }
 
+  @Override
+  public User getUserSummary(User user) {
+    if (user == null) {
+      return null;
+    }
+    User userSummary = new User();
+    userSummary.setName(user.getName());
+    userSummary.setUuid(user.getUuid());
+    userSummary.setEmail(user.getEmail());
+    return userSummary;
+  }
+
+  @Override
+  public List<User> getUserSummary(List<User> userList) {
+    if (isEmpty(userList)) {
+      return Collections.emptyList();
+    }
+    return userList.stream().map(user -> getUserSummary(user)).collect(toList());
+  }
+
   private void sendSuccessfullyAddedToNewAccountEmail(User user, Account account) {
     try {
       String loginUrl = buildAbsoluteUrl(format("/login?company=%s&account=%s&email=%s", account.getCompanyName(),

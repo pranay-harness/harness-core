@@ -95,6 +95,25 @@ public class UserGroupServiceImpl implements UserGroupService {
     return res;
   }
 
+  @Override
+  public UserGroup getUserGroupSummary(UserGroup userGroup) {
+    if (userGroup == null) {
+      return null;
+    }
+    UserGroup userGroupSummary = new UserGroup();
+    userGroupSummary.setName(userGroup.getName());
+    userGroupSummary.setUuid(userGroup.getUuid());
+    return userGroupSummary;
+  }
+
+  @Override
+  public List<UserGroup> getUserGroupSummary(List<UserGroup> userGroupList) {
+    if (isEmpty(userGroupList)) {
+      return Collections.emptyList();
+    }
+    return userGroupList.stream().map(userGroup -> getUserGroupSummary(userGroup)).collect(toList());
+  }
+
   private static class UserGroupComparator implements Comparator<UserGroup>, Serializable {
     @Override
     public int compare(UserGroup lhs, UserGroup rhs) {

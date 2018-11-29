@@ -33,6 +33,7 @@ import software.wings.beans.RestResponse.Builder;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
 import software.wings.beans.ZendeskSsoLoginResponse;
+import software.wings.beans.security.UserGroup;
 import software.wings.security.PermissionAttribute.PermissionType;
 import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.UserPermissionInfo;
@@ -50,6 +51,7 @@ import software.wings.security.authentication.TwoFactorAuthenticationSettings;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.HarnessUserGroupService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 
@@ -96,6 +98,7 @@ public class UserResource {
   private TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private CacheHelper cacheHelper;
   private HarnessUserGroupService harnessUserGroupService;
+  private UserGroupService userGroupService;
 
   /**
    * Instantiates a new User resource.
@@ -110,7 +113,7 @@ public class UserResource {
   @Inject
   public UserResource(UserService userService, AuthService authService, AccountService accountService,
       AuthenticationManager authenticationManager, TwoFactorAuthenticationManager twoFactorAuthenticationManager,
-      CacheHelper cacheHelper, HarnessUserGroupService harnessUserGroupService) {
+      CacheHelper cacheHelper, HarnessUserGroupService harnessUserGroupService, UserGroupService userGroupService) {
     this.userService = userService;
     this.authService = authService;
     this.accountService = accountService;
@@ -118,6 +121,7 @@ public class UserResource {
     this.twoFactorAuthenticationManager = twoFactorAuthenticationManager;
     this.cacheHelper = cacheHelper;
     this.harnessUserGroupService = harnessUserGroupService;
+    this.userGroupService = userGroupService;
   }
 
   /**
@@ -156,7 +160,7 @@ public class UserResource {
         }
       });
     }
-    return new RestResponse<>(pageResponse);
+    return getPublicUsers(pageResponse);
   }
 
   /**
@@ -171,7 +175,7 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<User> register(User user) {
     user.setAppId(GLOBAL_APP_ID);
-    return new RestResponse<>(userService.register(user));
+    return getPublicUser(userService.register(user));
   }
 
   /**
@@ -224,7 +228,7 @@ public class UserResource {
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<User> updateUserGroupsAndNameOfUser(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("userId") String userId, User user) {
-    return new RestResponse<>(
+    return getPublicUser(
         userService.updateUserGroupsAndNameOfUser(userId, user.getUserGroups(), user.getName(), accountId, true));
   }
 
@@ -249,7 +253,7 @@ public class UserResource {
     if (isEmpty(user.getAppId())) {
       user.setAppId(GLOBAL_APP_ID);
     }
-    return new RestResponse<>(userService.update(user));
+    return getPublicUser(userService.update(user));
   }
 
   /**
@@ -444,7 +448,7 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> login(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
-    return new RestResponse<User>(
+    return new RestResponse<>(
         authenticationManager.defaultLogin(authenticationManager.extractToken(authorization, "Basic")));
   }
 
@@ -459,7 +463,7 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> twoFactorLogin(@HeaderParam(HttpHeaders.AUTHORIZATION) String authorization) {
-    return new RestResponse<User>(
+    return new RestResponse<>(
         twoFactorAuthenticationManager.authenticate(authenticationManager.extractToken(authorization, "JWT")));
   }
 
@@ -478,7 +482,7 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> redirectlogin(SsoRedirectRequest request) {
-    return new RestResponse<User>(authenticationManager.ssoRedirectLogin(request.getJwtToken()));
+    return new RestResponse<>(authenticationManager.ssoRedirectLogin(request.getJwtToken()));
   }
 
   @GET
@@ -651,7 +655,7 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> assignRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
-    return new RestResponse<>(userService.addRole(userId, roleId));
+    return getPublicUser(userService.addRole(userId, roleId));
   }
 
   /**
@@ -666,7 +670,7 @@ public class UserResource {
   @Timed
   @ExceptionMetered
   public RestResponse<User> revokeRole(@PathParam("userId") String userId, @PathParam("roleId") String roleId) {
-    return new RestResponse<>(userService.revokeRole(userId, roleId));
+    return getPublicUser(userService.revokeRole(userId, roleId));
   }
 
   /**
@@ -683,7 +687,7 @@ public class UserResource {
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<PageResponse<UserInvite>> listInvites(
       @QueryParam("accountId") @NotEmpty String accountId, @BeanParam PageRequest<UserInvite> pageRequest) {
-    return new RestResponse<>(userService.listInvites(pageRequest));
+    return getPublicUserInvites(userService.listInvites(pageRequest));
   }
 
   /**
@@ -699,7 +703,7 @@ public class UserResource {
   @ExceptionMetered
   public RestResponse<UserInvite> getInvite(
       @QueryParam("accountId") @NotEmpty String accountId, @PathParam("inviteId") @NotEmpty String inviteId) {
-    return new RestResponse<>(userService.getInvite(accountId, inviteId));
+    return getPublicUserInvite(userService.getInvite(accountId, inviteId));
   }
 
   /**
@@ -718,7 +722,7 @@ public class UserResource {
       @QueryParam("accountId") @NotEmpty String accountId, @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
     userInvite.setAppId(GLOBAL_APP_ID);
-    return new RestResponse<>(userService.inviteUsers(userInvite));
+    return getPublicUserInvites(userService.inviteUsers(userInvite));
   }
 
   @GET
@@ -746,7 +750,7 @@ public class UserResource {
       @PathParam("inviteId") @NotEmpty String inviteId, @NotNull UserInvite userInvite) {
     userInvite.setAccountId(accountId);
     userInvite.setUuid(inviteId);
-    return new RestResponse<>(userService.completeInvite(userInvite));
+    return getPublicUserInvite(userService.completeInvite(userInvite));
   }
 
   @PublicApi
@@ -765,7 +769,7 @@ public class UserResource {
                     .withAccountName(accountName)
                     .withCompanyName(companyName)
                     .build();
-    return new RestResponse<>(userService.completeTrialSignup(user, userInvite));
+    return getPublicUserInvite(userService.completeTrialSignup(user, userInvite));
   }
 
   /**
@@ -782,7 +786,7 @@ public class UserResource {
   @AuthRule(permissionType = PermissionType.USER_PERMISSION_MANAGEMENT)
   public RestResponse<UserInvite> deleteInvite(
       @PathParam("inviteId") @NotEmpty String inviteId, @QueryParam("accountId") @NotEmpty String accountId) {
-    return new RestResponse<>(userService.deleteInvite(accountId, inviteId));
+    return getPublicUserInvite(userService.deleteInvite(accountId, inviteId));
   }
 
   @POST
@@ -806,6 +810,70 @@ public class UserResource {
   public RestResponse<Boolean> reset2fa(
       @PathParam("userId") @NotEmpty String userId, @QueryParam("accountId") @NotEmpty String accountId) {
     return new RestResponse<>(twoFactorAuthenticationManager.sendTwoFactorAuthenticationResetEmail(userId));
+  }
+
+  private RestResponse<UserInvite> getPublicUserInvite(UserInvite userInvite) {
+    if (userInvite == null) {
+      return new RestResponse<>();
+    }
+    setUserGroupSummary(userInvite);
+    return new RestResponse<>(userInvite);
+  }
+
+  private RestResponse<PageResponse<UserInvite>> getPublicUserInvites(PageResponse<UserInvite> pageResponse) {
+    if (pageResponse == null) {
+      return new RestResponse<>();
+    }
+
+    List<UserInvite> userInvites = pageResponse.getResponse();
+    if (isEmpty(userInvites)) {
+      return new RestResponse<>(pageResponse);
+    }
+    userInvites.forEach(userInvite -> setUserGroupSummary(userInvite));
+    return new RestResponse<>(pageResponse);
+  }
+
+  private RestResponse<List<UserInvite>> getPublicUserInvites(List<UserInvite> userInvites) {
+    if (isEmpty(userInvites)) {
+      return new RestResponse<>(userInvites);
+    }
+    userInvites.forEach(userInvite -> setUserGroupSummary(userInvite));
+    return new RestResponse<>(userInvites);
+  }
+
+  private void setUserGroupSummary(UserInvite userInvite) {
+    List<UserGroup> userGroupSummaryList = userGroupService.getUserGroupSummary(userInvite.getUserGroups());
+    userInvite.setUserGroups(userGroupSummaryList);
+  }
+
+  private RestResponse<User> getPublicUser(User user) {
+    if (user == null) {
+      return new RestResponse<>();
+    }
+
+    setUserGroupSummary(user);
+    return new RestResponse<>(user);
+  }
+
+  private RestResponse<PageResponse<User>> getPublicUsers(PageResponse<User> pageResponse) {
+    if (pageResponse == null) {
+      return new RestResponse<>();
+    }
+
+    List<User> users = pageResponse.getResponse();
+    if (isEmpty(users)) {
+      return new RestResponse<>(pageResponse);
+    }
+    users.forEach(user -> setUserGroupSummary(user));
+    return new RestResponse<>(pageResponse);
+  }
+
+  private void setUserGroupSummary(User user) {
+    if (user == null) {
+      return;
+    }
+    List<UserGroup> userGroupSummaryList = userGroupService.getUserGroupSummary(user.getUserGroups());
+    user.setUserGroups(userGroupSummaryList);
   }
 
   /**
