@@ -148,7 +148,7 @@ public class ExpressionEvaluator {
   }
 
   public static void isValidVariableName(String name) {
-    // Verify Service variable name should not contain any special character
+    // Verify variable name should not contain any special character
     if (isEmpty(name)) {
       return;
     }

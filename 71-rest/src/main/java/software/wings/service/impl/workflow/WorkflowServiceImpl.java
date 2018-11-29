@@ -18,6 +18,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.atteo.evo.inflector.English.plural;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -1599,8 +1600,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public List<Variable> updateUserVariables(String appId, String workflowId, List<Variable> userVariables) {
-    if (userVariables != null) {
+    if (isNotEmpty(userVariables)) {
       userVariables.forEach(variable -> ManagerExpressionEvaluator.isValidVariableName(variable.getName()));
+      validateWorkflowVariables(userVariables);
     }
     Workflow workflow = readWorkflow(appId, workflowId);
     notNullCheck("Workflow was deleted", workflow, USER);
@@ -1612,6 +1614,21 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     orchestrationWorkflow =
         (CanaryOrchestrationWorkflow) updateWorkflow(workflow, orchestrationWorkflow).getOrchestrationWorkflow();
     return orchestrationWorkflow.getUserVariables();
+  }
+
+  private void validateWorkflowVariables(List<Variable> userVariables) {
+    Set<String> variableNames = new HashSet<>();
+    for (Variable variable : userVariables) {
+      if (variable.isFixed()) {
+        if (isBlank(variable.getValue())) {
+          throw new InvalidRequestException(
+              "Workflow Variable value is mandatory for Fixed Variable Name [" + variable.getName() + "]", USER);
+        }
+      }
+      if (!variableNames.add(variable.getName())) {
+        throw new InvalidRequestException("Duplciate variable names are not allowed.", USER);
+      }
+    }
   }
 
   @Override

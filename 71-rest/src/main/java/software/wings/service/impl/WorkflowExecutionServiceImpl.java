@@ -1101,14 +1101,17 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
       // no input from user
       if (executionArgs == null || isEmpty(executionArgs.getWorkflowVariables())
           || isBlank(executionArgs.getWorkflowVariables().get(variable.getName()))) {
-        if (variable.isMandatory() && variable.getValue() == null) {
+        if (variable.isMandatory() && isBlank(variable.getValue())) {
           throw new InvalidRequestException(
               "Workflow variable [" + variable.getName() + "] is mandatory for execution", USER);
         }
-        setVariables(variable.getName(), variable.getValue(), variables);
+        if (isBlank(variable.getValue())) {
+          setVariables(variable.getName(), "", variables);
+        } else {
+          setVariables(variable.getName(), variable.getValue(), variables);
+        }
         continue;
       }
-
       setVariables(variable.getName(), executionArgs.getWorkflowVariables().get(variable.getName()), variables);
     }
     return variables;
