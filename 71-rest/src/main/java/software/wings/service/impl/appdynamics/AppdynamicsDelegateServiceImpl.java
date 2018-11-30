@@ -193,25 +193,50 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException {
+  public Set<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+    Preconditions.checkNotNull(apiCallLog);
+    apiCallLog.setTitle("Fetching node list for app: " + appdynamicsAppId + " tier: " + tierId);
+    apiCallLog.setRequestTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     final Call<List<AppdynamicsNode>> request =
         getAppdynamicsRestClient(appDynamicsConfig)
             .listNodes(getHeaderWithCredentials(appDynamicsConfig, encryptionDetails), appdynamicsAppId, tierId);
-    final Response<List<AppdynamicsNode>> response = request.execute();
+    apiCallLog.addFieldToRequest(ThirdPartyApiCallField.builder()
+                                     .name("utl")
+                                     .type(FieldType.URL)
+                                     .value(request.request().url().toString())
+                                     .build());
+    Response<List<AppdynamicsNode>> response;
+    try {
+      response = request.execute();
+    } catch (Exception e) {
+      apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
+      apiCallLog.addFieldToResponse(HttpStatus.SC_BAD_REQUEST, ExceptionUtils.getStackTrace(e), FieldType.TEXT);
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+      throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+          .addParam("reason",
+              "Unsuccessful response while fetching nodes from AppDynamics. Error message: " + e.getMessage()
+                  + " Request: " + request.request().url());
+    }
+    apiCallLog.setResponseTimeStamp(OffsetDateTime.now().toInstant().toEpochMilli());
     if (response.isSuccessful()) {
-      return response.body();
+      apiCallLog.addFieldToResponse(response.code(), response.body(), FieldType.JSON);
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
+      return response.body().stream().collect(Collectors.toSet());
     } else {
+      apiCallLog.addFieldToResponse(response.code(), response.errorBody().string(), FieldType.TEXT);
+      delegateLogService.save(appDynamicsConfig.getAccountId(), apiCallLog);
       logger.error("Request not successful. Reason: {}", response);
       throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
-          .addParam("reason", "could not fetch Appdynamics nodes : " + response);
+          .addParam("reason",
+              "Unsuccessful response while fetching nodesfrom AppDynamics. Error code: " + response.code()
+                  + ". Error:" + response.errorBody());
     }
   }
 
   @Override
   public List<AppdynamicsMetric> getTierBTMetrics(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
-      long tierId, List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog)
-      throws IOException, CloneNotSupportedException {
+      long tierId, List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
     final AppdynamicsTier tier = getAppdynamicsTier(appDynamicsConfig, appdynamicsAppId, tierId, encryptionDetails);
     final String tierBTsPath = BT_PERFORMANCE_PATH_PREFIX + tier.getName();
@@ -262,7 +287,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   @Override
   public List<AppdynamicsMetricData> getTierBTMetricData(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       String tierName, String btName, String hostName, Long startTime, Long endTime,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) {
     Preconditions.checkNotNull(apiCallLog);
     for (int i = 1; i <= RETRIES; i++) {
       apiCallLog = apiCallLog.copy();
@@ -348,8 +373,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
 
   private List<AppdynamicsMetric> getChildMetrics(AppDynamicsConfig appDynamicsConfig, long applicationId,
       AppdynamicsMetric appdynamicsMetric, String parentMetricPath, boolean includeExternal,
-      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog)
-      throws IOException, CloneNotSupportedException {
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException {
     Preconditions.checkNotNull(apiCallLog);
     if (appdynamicsMetric.getType() != AppdynamicsMetricType.folder) {
       return Collections.emptyList();
@@ -483,7 +507,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   @Override
   public VerificationNodeDataSetupResponse getMetricsWithDataForNode(AppDynamicsConfig appDynamicsConfig,
       List<EncryptedDataDetail> encryptionDetails, AppdynamicsSetupTestNodeData setupTestNodeData, String hostName,
-      ThirdPartyApiCallLog apiCallLog) throws IOException, CloneNotSupportedException {
+      ThirdPartyApiCallLog apiCallLog) throws IOException {
     final AppdynamicsTier tier = getAppdynamicsTier(
         appDynamicsConfig, setupTestNodeData.getApplicationId(), setupTestNodeData.getTierId(), encryptionDetails);
     final List<AppdynamicsMetric> tierMetrics = getTierBTMetrics(appDynamicsConfig,
@@ -536,8 +560,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
   }
 
   @Override
-  public boolean validateConfig(AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptedDataDetails)
-      throws IOException {
+  public boolean validateConfig(AppDynamicsConfig appDynamicsConfig, List<EncryptedDataDetail> encryptedDataDetails) {
     if (!validUrl(appDynamicsConfig.getControllerUrl())) {
       throw new WingsException("AppDynamics Controller URL must be a valid URL");
     }
