@@ -419,8 +419,7 @@ public class LicenseServiceImpl implements LicenseService {
     LicenseInfo licenseInfo = account.getLicenseInfo();
 
     if (licenseInfo == null) {
-      String deployMode = System.getenv().get("DEPLOY_MODE");
-      return DeployMode.isOnPrem(deployMode);
+      return false;
     }
 
     String accountType = licenseInfo.getAccountType();
