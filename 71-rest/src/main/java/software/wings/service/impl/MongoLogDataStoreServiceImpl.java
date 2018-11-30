@@ -63,7 +63,7 @@ public class MongoLogDataStoreServiceImpl implements LogDataStoreService {
   }
 
   @Override
-  public PageResponse<Log> listExecutionLog(String appId, PageRequest<Log> pageRequest) {
+  public PageResponse<Log> listExecutionLog(PageRequest<Log> pageRequest) {
     return wingsPersistence.query(Log.class, pageRequest);
   }
 

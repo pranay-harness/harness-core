@@ -9,7 +9,7 @@ import java.util.List;
 public interface LogDataStoreService {
   void saveExecutionLog(List<Log> logs);
 
-  PageResponse<Log> listExecutionLog(String appId, PageRequest<Log> pageRequest);
+  PageResponse<Log> listExecutionLog(PageRequest<Log> pageRequest);
 
   void purgeByActivity(String appId, String activityId);
 
