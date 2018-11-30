@@ -36,6 +36,8 @@ import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAn
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.impl.newrelic.NewRelicDataCollectionInfo;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -44,6 +46,7 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 
+import java.text.DecimalFormat;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -230,6 +233,22 @@ public class NewRelicState extends AbstractMetricAnalysisState {
       }
     }
     return parentTemplateFields;
+  }
+
+  public static Double getNormalizedErrorMetric(NewRelicMetricDataRecord metricDataRecord) {
+    if (metricDataRecord != null) {
+      if (metricDataRecord.getValues().containsKey(NewRelicMetricValueDefinition.ERROR)
+          && metricDataRecord.getValues().containsKey(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE)) {
+        double errorCount = metricDataRecord.getValues().get(NewRelicMetricValueDefinition.ERROR);
+        double callsCount = metricDataRecord.getValues().get(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE);
+
+        if (callsCount != 0.0) {
+          DecimalFormat twoDForm = new DecimalFormat("#.00");
+          return Double.valueOf(twoDForm.format(errorCount / callsCount * 100));
+        }
+      }
+    }
+    return 0.0;
   }
 
   @Attributes(required = false, title = "Expression for Host/Container name")

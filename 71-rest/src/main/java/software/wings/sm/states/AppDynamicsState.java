@@ -4,6 +4,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
+import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.service.impl.analysis.TimeSeriesMlAnalysisType.PREDICTIVE;
 
 import com.google.common.base.Preconditions;
@@ -36,7 +37,9 @@ import software.wings.service.impl.analysis.TimeSeriesMetricGroup.TimeSeriesMlAn
 import software.wings.service.impl.analysis.TimeSeriesMlAnalysisType;
 import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
+import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
+import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.appdynamics.AppdynamicsService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -44,8 +47,10 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
+import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -342,5 +347,31 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
 
   private boolean configIdTemplatized() {
     return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
+  }
+
+  public static Double getErrorPercentage(NewRelicMetricDataRecord metricDataRecord) {
+    if (metricDataRecord != null) {
+      if (metricDataRecord.getValues().containsKey(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName())
+          && metricDataRecord.getValues().containsKey(AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName())) {
+        double errorCount = metricDataRecord.getValues().get(AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName());
+        double callsCount = metricDataRecord.getValues().get(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName());
+
+        if (callsCount != 0.0) {
+          DecimalFormat twoDForm = new DecimalFormat("#.00");
+          return Double.valueOf(twoDForm.format(errorCount / callsCount * 100));
+        }
+      }
+    }
+    return 0.0;
+  }
+  public static String formDeeplinkUrl(AppDynamicsConfig appDconfig, AppDynamicsCVServiceConfiguration cvConfig,
+      long startTime, long endTime, String metricString) {
+    String url = appDconfig.getControllerUrl().endsWith("/") ? appDconfig.getControllerUrl()
+                                                             : appDconfig.getControllerUrl() + "/";
+    return url
+        + APPDYNAMICS_DEEPLINK_FORMAT.replace("{applicationId}", cvConfig.getAppDynamicsApplicationId())
+              .replace("{metricString}", metricString)
+              .replace("{startTimeMs}", String.valueOf(startTime))
+              .replace("{endTimeMs}", String.valueOf(endTime));
   }
 }

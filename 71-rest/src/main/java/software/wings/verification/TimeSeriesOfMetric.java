@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.SortedMap;
@@ -32,6 +33,7 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
 
   @Builder.Default int risk = -1;
   private String metricName;
+  private String metricDeeplinkUrl;
 
   @JsonIgnore private SortedMap<Long, TimeSeriesDataPoint> timeSeries;
   @JsonIgnore private SortedMap<Long, TimeSeriesRisk> risksForTimeSeries;
@@ -46,7 +48,10 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   }
 
   public Collection<TimeSeriesRisk> getRisksForTimeSeries() {
-    return risksForTimeSeries.values();
+    if (risksForTimeSeries != null) {
+      return risksForTimeSeries.values();
+    }
+    return new ArrayList<TimeSeriesRisk>();
   }
 
   @JsonIgnore

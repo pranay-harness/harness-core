@@ -17,6 +17,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -205,6 +206,34 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     learningEngineService.markCompleted(taskId);
 
     mlAnalysisResponse.compressTransactions();
+
+    if (isNotEmpty(mlAnalysisResponse.getAnomalies())) {
+      TimeSeriesAnomaliesRecord anomaliesRecord = wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
+                                                      .filter("appId", appId)
+                                                      .filter("cvConfigId", cvConfigId)
+                                                      .project("compressedAnomalies", false)
+                                                      .get();
+
+      if (anomaliesRecord == null) {
+        anomaliesRecord = TimeSeriesAnomaliesRecord.builder().cvConfigId(cvConfigId).build();
+        anomaliesRecord.setAppId(appId);
+        anomaliesRecord.setAnomalies(mlAnalysisResponse.getAnomalies());
+      }
+
+      anomaliesRecord.decompressAnomalies();
+
+      if (anomaliesRecord.getAnomalies() == null) {
+        anomaliesRecord.setAnomalies(new HashMap<>());
+      }
+
+      for (Entry<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies :
+          mlAnalysisResponse.getAnomalies().entrySet()) {
+        anomaliesRecord.getAnomalies().put(anomalies.getKey(), anomalies.getValue());
+      }
+
+      anomaliesRecord.compressAnomalies();
+      wingsPersistence.save(anomaliesRecord);
+    }
     wingsPersistence.save(mlAnalysisResponse);
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
             + "stateType: {}, workflowExecutionId: {} StateExecutionInstanceId: {}",
@@ -865,5 +894,39 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
     result.putAll(getCustomMetricTemplates(appId, stateType, serviceId, groupName));
     return result;
+  }
+
+  @Override
+  public TimeSeriesAnomaliesRecord getPreviousAnomalies(
+      String appId, String cvConfigId, Map<String, List<String>> metrics) {
+    TimeSeriesAnomaliesRecord timeSeriesAnomaliesRecord = wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
+                                                              .filter("appId", appId)
+                                                              .filter("cvConfigId", cvConfigId)
+                                                              .get();
+
+    if (timeSeriesAnomaliesRecord == null) {
+      return null;
+    }
+
+    timeSeriesAnomaliesRecord.decompressAnomalies();
+
+    final Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies = new HashMap<>();
+    metrics.forEach((txnName, metricNames) -> {
+      if (timeSeriesAnomaliesRecord.getAnomalies().containsKey(txnName)) {
+        final Map<String, List<TimeSeriesMLHostSummary>> metricAnomalies =
+            timeSeriesAnomaliesRecord.getAnomalies().get(txnName);
+        metricNames.forEach(metricName -> {
+          if (metricAnomalies.containsKey(metricName)) {
+            if (!anomalies.containsKey(txnName)) {
+              anomalies.put(txnName, new HashMap<>());
+            }
+            anomalies.get(txnName).put(metricName, metricAnomalies.get(metricName));
+          }
+        });
+      }
+    });
+
+    timeSeriesAnomaliesRecord.setAnomalies(anomalies);
+    return timeSeriesAnomaliesRecord;
   }
 }

@@ -37,10 +37,13 @@ import software.wings.utils.Misc;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -58,6 +61,12 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
 
   @Inject private MetricDataStoreService metricStoreService;
   @Inject private EncryptionService encryptionService;
+
+  private static final Set<String> REJECTED_METRICS_24X7 =
+      new HashSet<>(Arrays.asList(AppdynamicsTimeSeries.NUMBER_OF_SLOW_CALLS.getMetricName(),
+          AppdynamicsTimeSeries.RESPONSE_TIME_95.getMetricName()));
+  private static final Set<String> REJECTED_METRICS_WORKFLOW =
+      new HashSet<>(Arrays.asList(AppdynamicsTimeSeries.AVG_RESPONSE_TIME.getMetricName()));
 
   public AppdynamicsDataCollectionTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -251,6 +260,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                              .cvConfigId(dataCollectionInfo.getCvConfigId())
                              .stateType(getStateType())
                              .values(new HashMap<>())
+                             .deeplinkMetadata(new HashMap<>())
                              .build();
             if (hostRecord.getTimeStamp() >= dataCollectionInfo.getStartTime()) {
               hostVsRecordMap.put(nodeName, hostRecord);
@@ -258,11 +268,18 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
               logger.info("Ignoring a record that was before the collectionStartTime.");
             }
           }
-
-          hostRecord.getValues().put(AppdynamicsTimeSeries.getVariableName(metricName), metricDataValue.getValue());
+          Set<String> rejectedMetricsList = is247Task ? REJECTED_METRICS_24X7 : REJECTED_METRICS_WORKFLOW;
+          if (!rejectedMetricsList.contains(metricName)) {
+            hostRecord.getValues().put(AppdynamicsTimeSeries.getVariableName(metricName), metricDataValue.getValue());
+            hostRecord.getDeeplinkMetadata().put(metricName, getDeeplinkString(metricData.getMetricId()));
+          }
         }
       }
       return records;
+    }
+
+    private String getDeeplinkString(long metricId) {
+      return dataCollectionInfo.getTierId() + "." + metricId;
     }
 
     private int getCollectionMinute(final long metricTimeStamp, boolean isHeartbeat) {

@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
 
@@ -10,6 +11,7 @@ import java.util.List;
  */
 @Data
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TimeSeriesMLHostSummary {
   private List<Double> distance;
   private List<Double> control_data;
@@ -28,4 +30,5 @@ public class TimeSeriesMLHostSummary {
   private double score;
   private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType;
   private List<Integer> anomalies;
+  private List<Long> anomalousTimeStamps;
 }

@@ -17,6 +17,7 @@ import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.sm.StateType;
 import software.wings.utils.JsonUtils;
@@ -24,6 +25,7 @@ import software.wings.utils.JsonUtils;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,6 +55,8 @@ public class MetricAnalysisRecord extends Base {
   private Map<String, TimeSeriesMLTxnSummary> transactions;
 
   private byte[] transactionsCompressedJson;
+
+  @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;
 
   private String message;
 

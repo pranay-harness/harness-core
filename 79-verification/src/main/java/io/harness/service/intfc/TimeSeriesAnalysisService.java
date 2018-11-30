@@ -1,5 +1,6 @@
 package io.harness.service.intfc;
 
+import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.validation.Create;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -105,4 +106,6 @@ public interface TimeSeriesAnalysisService {
 
   Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
       String appId, String serviceId, String groupName, StateType stateType, String cvConfigId);
+
+  TimeSeriesAnomaliesRecord getPreviousAnomalies(String appId, String cvConfigId, Map<String, List<String>> metrics);
 }

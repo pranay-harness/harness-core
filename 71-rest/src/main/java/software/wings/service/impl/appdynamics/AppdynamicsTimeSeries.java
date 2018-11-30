@@ -17,7 +17,8 @@ public enum AppdynamicsTimeSeries {
   STALL_COUNT(AppdynamicsConstants.STALL_COUNT, AppdynamicsConstants.STALL_COUNT, MetricType.ERROR),
   NUMBER_OF_SLOW_CALLS(
       AppdynamicsConstants.NUMBER_OF_SLOW_CALLS, AppdynamicsConstants.NUMBER_OF_SLOW_CALLS, MetricType.ERROR),
-  CALLS_PER_MINUTE(AppdynamicsConstants.CALLS_PER_MINUTE, AppdynamicsConstants.CALLS_PER_MINUTE, MetricType.THROUGHPUT);
+  CALLS_PER_MINUTE(AppdynamicsConstants.CALLS_PER_MINUTE, AppdynamicsConstants.CALLS_PER_MINUTE, MetricType.THROUGHPUT),
+  AVG_RESPONSE_TIME(AppdynamicsConstants.AVG_RESPONSE_TIME, AppdynamicsConstants.AVG_RESPONSE_TIME, RESP_TIME);
 
   private final String metricName;
   private final String variableName;

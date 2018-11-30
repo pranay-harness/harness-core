@@ -35,11 +35,17 @@ import java.util.Map;
  */
 @Entity(value = "newRelicMetricRecords", noClassnameStored = true)
 @Indexes({
-  @Index(fields = {
-    @Field("name")
-    , @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId"),
-        @Field("serviceId"), @Field("workflowId"), @Field("level"), @Field("stateType"), @Field("groupName")
-  }, options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
+  @Index(fields =
+      {
+        @Field("name")
+        , @Field("host"), @Field("timeStamp"), @Field("workflowExecutionId"), @Field("stateExecutionId"),
+            @Field("serviceId"), @Field("workflowId"), @Field("level"), @Field("stateType"), @Field("groupName")
+      },
+      options = @IndexOptions(unique = true, name = "metricUniqueIdx"))
+  ,
+      @Index(fields = {
+        @Field("appId"), @Field("cvConfigId"), @Field("dataCollectionMinute")
+      }, options = @IndexOptions(name = "timeSeriesIdx"))
 })
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
@@ -77,6 +83,8 @@ public class NewRelicMetricDataRecord extends Base {
 
   private Map<String, Double> values = new HashMap<>();
 
+  private Map<String, String> deeplinkMetadata = new HashMap<>();
+
   @SchemaIgnore
   @JsonIgnore
   @Indexed(options = @IndexOptions(expireAfterSeconds = 0))
@@ -87,7 +95,7 @@ public class NewRelicMetricDataRecord extends Base {
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
       String name, String workflowId, String workflowExecutionId, String serviceId, String cvConfigId,
       String stateExecutionId, long timeStamp, int dataCollectionMinute, String host, ClusterLevel level, String tag,
-      String groupName, Map<String, Double> values) {
+      String groupName, Map<String, Double> values, Map<String, String> deeplinkMetadata) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.stateType = stateType;
     this.name = name;
@@ -103,6 +111,7 @@ public class NewRelicMetricDataRecord extends Base {
     this.tag = tag;
     this.groupName = isEmpty(groupName) ? DEFAULT_GROUP_NAME : groupName;
     this.values = isEmpty(values) ? new HashMap<>() : values;
+    this.deeplinkMetadata = isEmpty(deeplinkMetadata) ? new HashMap<>() : deeplinkMetadata;
     this.validUntil = Date.from(OffsetDateTime.now().plusMonths(ML_RECORDS_TTL_MONTHS).toInstant());
   }
 }

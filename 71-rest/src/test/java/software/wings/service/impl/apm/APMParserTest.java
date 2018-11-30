@@ -53,7 +53,7 @@ public class APMParserTest extends WingsBaseTest {
     String output = Resources.toString(
         APMParserTest.class.getResource("/apm/datadog_sample_collected_response.json"), Charsets.UTF_8);
 
-    assertEquals(output, JsonUtils.asJson(records));
+    assertEquals(output, JsonUtils.asPrettyJson(records));
   }
 
   @Test
@@ -84,7 +84,7 @@ public class APMParserTest extends WingsBaseTest {
     String output = Resources.toString(
         APMParserTest.class.getResource("/apm/datadog_sample_collected_response.json"), Charsets.UTF_8);
 
-    assertEquals(output, JsonUtils.asJson(records));
+    assertEquals(output, JsonUtils.asPrettyJson(records));
   }
 
   @Test

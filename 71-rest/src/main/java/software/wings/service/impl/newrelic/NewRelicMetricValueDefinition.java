@@ -95,6 +95,11 @@ public class NewRelicMetricValueDefinition {
     metricName = AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName();
     APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
         TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.THROUGHPUT).build());
+
+    // avg response time
+    metricName = AppdynamicsTimeSeries.AVG_RESPONSE_TIME.getMetricName();
+    APP_DYNAMICS_VALUES_TO_ANALYZE.put(metricName,
+        TimeSeriesMetricDefinition.builder().metricName(metricName).metricType(MetricType.RESP_TIME).build());
   }
 
   private String metricName;

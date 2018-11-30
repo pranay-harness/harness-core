@@ -30,6 +30,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import io.harness.entities.VerificationMorphiaClasses;
 import io.harness.health.VerificationServiceHealthCheck;
 import io.harness.jobs.VerificationJob;
 import io.harness.limits.LimitsMorphiaClasses;
@@ -81,6 +82,7 @@ public class VerificationServiceApplication extends Application<VerificationServ
                                                       .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
+                                                      .addAll(VerificationMorphiaClasses.classes)
                                                       .build();
   // pool interval at which the job will schedule. But here in verificationJob it will schedule at POLL_INTERVAL / 2
   private static final Logger logger = LoggerFactory.getLogger(VerificationServiceApplication.class);

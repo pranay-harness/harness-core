@@ -2,7 +2,6 @@ package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
-import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.CV_24x7_STATE_EXECUTION;
 import static software.wings.common.VerificationConstants.DATA_ANALYSIS_TASKS_PER_MINUTE;
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_TASKS_PER_MINUTE;
@@ -70,7 +69,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           : TimeUnit.MINUTES.toMillis(maxCVCollectionMinute);
       long endTime = TimeUnit.MINUTES.toMillis(endMinute);
       if (getMetricAnalysisStates().contains(cvConfiguration.getStateType())
-          && endTime - startTime >= TimeUnit.MINUTES.toMillis(CRON_POLL_INTERVAL_IN_MINUTES)) {
+          && endTime - startTime >= TimeUnit.MINUTES.toMillis(TIME_DELAY_QUERY_MINS)) {
         logger.info("triggering data collection for state {} config {} startTime {} endTime {} collectionMinute {}",
             cvConfiguration.getStateType(), cvConfiguration.getUuid(), startTime, endMinute, endMinute);
         verificationManagerClientHelper.callManagerWithRetry(verificationManagerClient.triggerAPMDataCollection(
@@ -176,6 +175,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .control_input_url("")
             .analysis_save_url(metricAnalysisSaveUrl)
             .metric_template_url(metricTemplateUrl)
+            .previous_anomalies_url(getPreviousAnomaliesUrl(cvConfiguration))
             .control_nodes(Sets.newHashSet("dummy"))
             .test_nodes(Sets.newHashSet("dummy"))
             .stateType(cvConfiguration.getStateType())
@@ -226,5 +226,11 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         + "/historical-analysis-24x7?accountId=" + cvConfiguration.getAccountId()
         + "&applicationId=" + cvConfiguration.getAppId() + "&serviceId=" + cvConfiguration.getServiceId()
         + "&analysisMinute=" + minute + "&cvConfigId=" + cvConfiguration.getUuid();
+  }
+
+  private String getPreviousAnomaliesUrl(CVConfiguration cvConfiguration) {
+    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/previous-anomalies-247"
+        + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
+        + "&cvConfigId=" + cvConfiguration.getUuid();
   }
 }
