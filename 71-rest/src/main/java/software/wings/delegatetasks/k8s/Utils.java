@@ -2,6 +2,7 @@ package software.wings.delegatetasks.k8s;
 
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
+import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static java.lang.String.format;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
@@ -174,21 +175,21 @@ public class Utils {
       List<ManifestFile> manifestFiles, ExecutionLogCallback executionLogCallback) throws Exception {
     Optional<ManifestFile> valuesFile =
         manifestFiles.stream()
-            .filter(manifestFile -> StringUtils.equals("Values.yaml", manifestFile.getFileName()))
+            .filter(manifestFile -> StringUtils.equals(values_filename, manifestFile.getFileName()))
             .findFirst();
 
     if (!valuesFile.isPresent()) {
-      executionLogCallback.saveExecutionLog("No Values.yaml file found. Skipping template rendering.");
+      executionLogCallback.saveExecutionLog("No values.yaml file found. Skipping template rendering.");
       return manifestFiles;
     }
 
     FileIo.writeUtf8StringToFile(
-        k8sCommandTaskParams.getWorkingDirectory() + "/Values.yaml", valuesFile.get().getFileContent());
+        k8sCommandTaskParams.getWorkingDirectory() + '/' + values_filename, valuesFile.get().getFileContent());
 
     List<ManifestFile> result = new ArrayList<>();
 
     for (ManifestFile manifestFile : manifestFiles) {
-      if (StringUtils.equals("Values.yaml", manifestFile.getFileName())) {
+      if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
         continue;
       }
 
@@ -200,7 +201,7 @@ public class Utils {
               .timeout(10, TimeUnit.SECONDS)
               .directory(new File(k8sCommandTaskParams.getWorkingDirectory()))
               .commandSplit(encloseWithQuotesIfNeeded(k8sCommandTaskParams.getGoTemplateClientPath())
-                  + " -t template.yaml -f Values.yaml")
+                  + " -t template.yaml -f " + values_filename)
               .readOutput(true);
       ProcessResult processResult = processExecutor.execute();
       result.add(ManifestFile.builder()
@@ -217,7 +218,7 @@ public class Utils {
     List<KubernetesResource> result = new ArrayList<>();
 
     for (ManifestFile manifestFile : manifestFiles) {
-      if (!StringUtils.equals("Values.yaml", manifestFile.getFileName())) {
+      if (!StringUtils.equals(values_filename, manifestFile.getFileName())) {
         try {
           result.addAll(ManifestHelper.processYaml(manifestFile.getFileContent()));
         } catch (Exception e) {

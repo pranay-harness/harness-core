@@ -137,6 +137,7 @@ import software.wings.service.impl.command.CommandHelper;
 import software.wings.service.impl.yaml.YamlChangeSetHelper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
 import software.wings.service.intfc.ConfigService;
@@ -204,6 +205,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
   @Mock private TriggerService triggerService;
   @Mock private InfrastructureProvisionerService infrastructureProvisionerService;
+  @Mock private ApplicationManifestService applicationManifestService;
 
   @Inject @InjectMocks private ServiceResourceService srs;
 
@@ -511,6 +513,7 @@ public class ServiceResourceServiceTest extends WingsBaseTest {
     savedClonedService.setDescription("clone description");
     savedClonedService.setUuid("CLONED_SERVICE_ID");
     when(mockWingsPersistence.saveAndGet(eq(Service.class), any(Service.class))).thenReturn(savedClonedService);
+    when(applicationManifestService.get(anyString(), anyString())).thenReturn(null);
 
     doReturn(savedClonedService)
         .when(spyServiceResourceService)
