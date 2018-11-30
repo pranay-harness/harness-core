@@ -5,11 +5,17 @@ import static java.util.stream.Collectors.joining;
 
 import org.apache.commons.lang3.tuple.Pair;
 
+import java.util.EnumSet;
 import java.util.stream.Stream;
 
 public class InvalidArgumentsException extends WingsException {
   public InvalidArgumentsException(Pair<String, String> arg1) {
     super(INVALID_ARGUMENT);
+    super.addParam("args", Stream.of(arg1).map(pair -> pair.getKey() + ": " + pair.getValue()).collect(joining("; ")));
+  }
+
+  public InvalidArgumentsException(Pair<String, String> arg1, Throwable cause, EnumSet<ReportTarget> reportTargets) {
+    super(INVALID_ARGUMENT, reportTargets, cause);
     super.addParam("args", Stream.of(arg1).map(pair -> pair.getKey() + ": " + pair.getValue()).collect(joining("; ")));
   }
 
