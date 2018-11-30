@@ -63,7 +63,7 @@ public class LogServiceImpl implements LogService {
    */
   @Override
   public PageResponse<Log> list(String appId, PageRequest<Log> pageRequest) {
-    return logDataStoreService.listExecutionLog(appId, pageRequest);
+    return logDataStoreService.listExecutionLog(pageRequest);
   }
 
   @Override
@@ -72,12 +72,11 @@ public class LogServiceImpl implements LogService {
         Files.createTempDir(), format("ActivityLogs_%s.txt", dateFormatter.format(new Date(currentTimeMillis()))));
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(file), UTF_8)) {
       List<Log> logList = logDataStoreService
-                              .listExecutionLog(appId,
-                                  aPageRequest()
-                                      .addFilter("appId", Operator.EQ, appId)
-                                      .addFilter("activityId", Operator.EQ, activityId)
-                                      .addOrder("createdAt", OrderType.ASC)
-                                      .build())
+                              .listExecutionLog(aPageRequest()
+                                                    .addFilter("appId", Operator.EQ, appId)
+                                                    .addFilter("activityId", Operator.EQ, activityId)
+                                                    .addOrder("createdAt", OrderType.ASC)
+                                                    .build())
                               .getResponse();
       for (Log log : logList) {
         fileWriter.write(format(

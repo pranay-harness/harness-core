@@ -30,12 +30,10 @@ import io.harness.beans.SearchFilter;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.beans.FeatureName;
 import software.wings.beans.Log;
 import software.wings.beans.Log.LogLevel;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.LogDataStoreService;
 
 import java.io.File;
@@ -50,18 +48,15 @@ public class GoogleLogDataLogStoreServiceImpl implements LogDataStoreService {
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
   private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
   private AppService appService;
-  private FeatureFlagService featureFlagService;
   private MongoLogDataStoreServiceImpl mongoLogDataStoreService;
 
   @Inject
-  public GoogleLogDataLogStoreServiceImpl(
-      AppService appService, FeatureFlagService featureFlagService, WingsPersistence wingsPersistence) {
+  public GoogleLogDataLogStoreServiceImpl(AppService appService, WingsPersistence wingsPersistence) {
     String googleCrdentialsPath = System.getenv(GOOGLE_APPLICATION_CREDENTIALS_PATH);
     if (isEmpty(googleCrdentialsPath) || !new File(googleCrdentialsPath).exists()) {
       throw new WingsException("Invalid credentials found at " + googleCrdentialsPath);
     }
     this.appService = appService;
-    this.featureFlagService = featureFlagService;
     mongoLogDataStoreService = new MongoLogDataStoreServiceImpl(wingsPersistence);
   }
 
@@ -70,22 +65,13 @@ public class GoogleLogDataLogStoreServiceImpl implements LogDataStoreService {
     if (logs == null) {
       return;
     }
-    try {
-      List<Entity> logList = new ArrayList<>();
-      logs.forEach(log -> logList.add(convertToCloudStorageEntity(datastore, log)));
-      datastore.put(logList.stream().toArray(Entity[] ::new));
-    } catch (Exception e) {
-      logger.error("Error saving execution logs", e);
-    }
-    mongoLogDataStoreService.saveExecutionLog(logs);
+    List<Entity> logList = new ArrayList<>();
+    logs.forEach(log -> logList.add(convertToCloudStorageEntity(datastore, log)));
+    datastore.put(logList.stream().toArray(Entity[] ::new));
   }
 
   @Override
-  public PageResponse<Log> listExecutionLog(String appId, PageRequest<Log> pageRequest) {
-    if (!featureFlagService.isEnabled(FeatureName.GCD_STORAGE, appService.getAccountIdByAppId(appId))) {
-      return mongoLogDataStoreService.listExecutionLog(appId, pageRequest);
-    }
-
+  public PageResponse<Log> listExecutionLog(PageRequest<Log> pageRequest) {
     CompositeFilter compositeFilter = null;
     if (isNotEmpty(pageRequest.getFilters())) {
       List<PropertyFilter> propertyFilters = new ArrayList<>();
@@ -110,7 +96,7 @@ public class GoogleLogDataLogStoreServiceImpl implements LogDataStoreService {
     }
 
     if (isEmpty(rv)) {
-      rv = mongoLogDataStoreService.listExecutionLog(appId, pageRequest).getResponse();
+      rv = mongoLogDataStoreService.listExecutionLog(pageRequest).getResponse();
     }
 
     return aPageResponse()
@@ -124,7 +110,6 @@ public class GoogleLogDataLogStoreServiceImpl implements LogDataStoreService {
 
   @Override
   public void purgeByActivity(String appId, String activityId) {
-    mongoLogDataStoreService.purgeByActivity(appId, activityId);
     Query<Key> query = Query.newKeyQueryBuilder()
                            .setKind(Log.class.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                            .setFilter(CompositeFilter.and(
