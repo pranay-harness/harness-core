@@ -20,7 +20,6 @@ import software.wings.scheduler.ReminderNotifyResponse;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.impl.DelayEventNotifyData;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -28,7 +27,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.CronUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,9 +36,7 @@ public class ArtifactCheckState extends State {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCheckState.class);
 
   @Inject private transient ArtifactService artifactService;
-  @Inject private transient CronUtil cronUtil;
   @Inject private transient DelayEventHelper delayEventHelper;
-  @Inject private transient FeatureFlagService featureFlagService;
 
   private static int DELAY_TIME_IN_SEC = 60;
 
@@ -96,9 +92,6 @@ public class ArtifactCheckState extends State {
     if (artifactNamesForDownload.isEmpty()) {
       return getExecutionResponse(artifacts);
     }
-
-    logger.info("startArtifactCollection requested - artifactNamesForDownload: {}", artifactNamesForDownload);
-    logger.info("Asynch correlationIds: {}", correlationIds);
 
     return anExecutionResponse()
         .withAsync(true)
@@ -168,6 +161,6 @@ public class ArtifactCheckState extends State {
 
   @Override
   public void handleAbortEvent(ExecutionContext context) {
-    // TODO : abort the cron
+    // TODO :  Abort the delay event
   }
 }

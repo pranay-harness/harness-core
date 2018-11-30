@@ -3,8 +3,6 @@ package software.wings.sm.states;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
-import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 import static software.wings.beans.artifact.Artifact.Builder.anArtifact;
@@ -24,46 +22,34 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
-import software.wings.utils.CronUtil;
 
 import java.util.UUID;
 
-/**
- * Created by rsingh on 5/4/18.
- */
 public class ArtifactCheckStateTest extends WingsBaseTest {
   @Inject private ArtifactService artifactService;
   @Inject private WingsPersistence wingsPersistence;
-  @Mock private CronUtil cronUtil;
   @Mock private ExecutionContext context;
-  @Mock FeatureFlagService featureFlagService;
   @Mock DelayEventHelper delayEventHelper;
 
-  private String accountId;
   private String appId;
   private WorkflowStandardParams workflowStandardParams;
   private ArtifactCheckState artifactCheckState = new ArtifactCheckState("ArtifactCheckState");
 
   @Before
   public void setUp() {
-    accountId = UUID.randomUUID().toString();
     appId = UUID.randomUUID().toString();
     workflowStandardParams = aWorkflowStandardParams().withAppId(appId).build();
     setInternalState(workflowStandardParams, "artifactService", artifactService);
     when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
     when(context.getAppId()).thenReturn(appId);
-    when(cronUtil.scheduleReminder(anyLong(), anyString(), anyString())).thenReturn(UUID.randomUUID().toString());
     when(delayEventHelper.delay(anyInt(), any())).thenReturn("anyGUID");
     setInternalState(artifactCheckState, "artifactService", artifactService);
-    setInternalState(artifactCheckState, "cronUtil", cronUtil);
     setInternalState(artifactCheckState, "delayEventHelper", delayEventHelper);
-    setInternalState(artifactCheckState, "featureFlagService", featureFlagService);
   }
 
   @Test
