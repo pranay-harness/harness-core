@@ -5,6 +5,7 @@ import static com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature.WRITE_
 import static io.fabric8.kubernetes.client.utils.Utils.isNotNullOrEmpty;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -104,7 +105,7 @@ public class KubernetesHelperService {
             Pair.of("Namespace",
                 "\"" + namespace
                     + "\" is an invalid name. Namespaces may only contain lowercase letters, numbers, and '-'."),
-            e);
+            e, USER);
       }
     }
   }
