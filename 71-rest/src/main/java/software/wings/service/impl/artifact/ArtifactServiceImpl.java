@@ -434,12 +434,12 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   @Override
   public Artifact getArtifactByBuildNumber(
-      String appId, String artifactStreamId, String artifactSource, String buildNumber, boolean regex) {
+      String appId, String artifactStreamId, String artifactSource, String buildNumber) {
     return wingsPersistence.createQuery(Artifact.class)
         .filter("appId", appId)
         .filter("artifactStreamId", artifactStreamId)
         .filter("artifactSourceName", artifactSource)
-        .filter("metadata.buildNo", regex ? compile(buildNumber) : buildNumber)
+        .filter("metadata.buildNo", compile(buildNumber))
         .order("-createdAt")
         .disableValidation()
         .get();

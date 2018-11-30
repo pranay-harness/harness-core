@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.valueOf;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -13,13 +14,13 @@ import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 import com.github.reinert.jjschema.Attributes;
+import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.task.protocol.ResponseData;
-import io.harness.scheduler.PersistentScheduler;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.validator.constraints.NotEmpty;
-import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.ArtifactCollectionExecutionData;
@@ -30,7 +31,6 @@ import software.wings.service.impl.ArtifactSourceProvider;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
-import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
@@ -43,27 +43,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by sgurubelli on 11/13/17.
- */
 public class ArtifactCollectionState extends State {
-  @Transient private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionState.class);
-
-  public static final String ARTIFACT_STREAM_ID_KEY = "artifactStreamId";
-  public static final String BUILD_NO_KEY = "buildNo";
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionState.class);
 
   @EnumData(enumDataProvider = ArtifactSourceProvider.class)
   @Attributes(title = "Artifact Source")
   @NotEmpty
+  @Getter
+  @Setter
   private String artifactStreamId;
-  @Attributes(title = "Regex") private boolean regex;
-  @Attributes(title = "Build / Tag") private String buildNo;
-  @Transient @Inject private ArtifactStreamService artifactStreamService;
-  @Transient @Inject private ArtifactService artifactService;
-  @Transient @Inject private WorkflowExecutionService workflowExecutionService;
-  @Inject @Named("BackgroundJobScheduler") private transient PersistentScheduler jobScheduler;
+  @SchemaIgnore @Getter @Setter private boolean regex;
+  @Attributes(title = "Build / Tag") @Getter @Setter private String buildNo;
+  @Inject private transient ArtifactStreamService artifactStreamService;
+  @Inject private transient ArtifactService artifactService;
+  @Inject private transient WorkflowExecutionService workflowExecutionService;
   @Inject private transient DelayEventHelper delayEventHelper;
-  @Inject private transient FeatureFlagService featureFlagService;
 
   private static int DELAY_TIME_IN_SEC = 60;
 
@@ -83,6 +77,29 @@ public class ArtifactCollectionState extends State {
     }
 
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
+
+    Artifact lastCollectedArtifact =
+        fetchCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName(), evaluatedBuildNo);
+
+    if (lastCollectedArtifact != null) {
+      ArtifactCollectionExecutionData artifactCollectionExecutionData =
+          ArtifactCollectionExecutionData.builder().artifactStreamId(artifactStreamId).build();
+      if (getTimeoutMillis() != null) {
+        artifactCollectionExecutionData.setTimeout(valueOf(getTimeoutMillis()));
+      }
+      artifactCollectionExecutionData.setArtifactSource(artifactStream.getSourceName());
+      artifactCollectionExecutionData.setRevision(lastCollectedArtifact.getRevision());
+      artifactCollectionExecutionData.setBuildNo(lastCollectedArtifact.getBuildNo());
+      artifactCollectionExecutionData.setMetadata(lastCollectedArtifact.getMetadata());
+      artifactCollectionExecutionData.setArtifactId(lastCollectedArtifact.getUuid());
+
+      addBuildExecutionSummary(context, artifactCollectionExecutionData, artifactStream);
+      return anExecutionResponse()
+          .withExecutionStatus(ExecutionStatus.SUCCESS)
+          .withErrorMessage("Collected artifact [" + lastCollectedArtifact.getBuildNo() + "] for artifact source ["
+              + lastCollectedArtifact.getArtifactSourceName() + "]")
+          .build();
+    }
 
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         ArtifactCollectionExecutionData.builder()
@@ -111,7 +128,7 @@ public class ArtifactCollectionState extends State {
     String evaluatedBuildNo = getEvaluatedBuildNo(context);
 
     Artifact lastCollectedArtifact =
-        getLastCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName(), evaluatedBuildNo);
+        fetchCollectedArtifact(context, artifactStream.getUuid(), artifactStream.getSourceName(), evaluatedBuildNo);
 
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         ArtifactCollectionExecutionData.builder().artifactStreamId(artifactStreamId).build();
@@ -134,7 +151,6 @@ public class ArtifactCollectionState extends State {
           .withStateExecutionData(artifactCollectionExecutionData)
           .build();
     }
-    logger.info("Build/Tag {} collected of Artifact Source {}", evaluatedBuildNo, artifactStream.getSourceName());
 
     artifactCollectionExecutionData.setRevision(lastCollectedArtifact.getRevision());
     artifactCollectionExecutionData.setBuildNo(lastCollectedArtifact.getBuildNo());
@@ -160,9 +176,13 @@ public class ArtifactCollectionState extends State {
 
   private void addBuildExecutionSummary(ExecutionContext context,
       ArtifactCollectionExecutionData artifactCollectionExecutionData, ArtifactStream artifactStream) {
-    Map<String, String> metadata = artifactCollectionExecutionData.getMetadata();
-    metadata.remove(BUILD_NO);
+    Map<String, String> metadata = new HashMap<>();
+    if (isNotEmpty(artifactCollectionExecutionData.getMetadata())) {
+      metadata.putAll(artifactCollectionExecutionData.getMetadata());
+    }
     String buildUrl = metadata.get(URL);
+    // Rove the the following as no need to store in build execution summary
+    metadata.remove(BUILD_NO);
     metadata.remove(URL);
     BuildExecutionSummary buildExecutionSummary =
         BuildExecutionSummary.builder()
@@ -190,7 +210,8 @@ public class ArtifactCollectionState extends State {
     logger.info("Action aborted either due to timeout or manual user abort");
     ArtifactCollectionExecutionData artifactCollectionExecutionData =
         (ArtifactCollectionExecutionData) context.getStateExecutionData();
-    artifactCollectionExecutionData.setMessage("Failed to collect artifact from Artifact Server. Please verify tag ["
+    artifactCollectionExecutionData.setMessage(
+        "Failed to collect artifact from Artifact Server. Please verify Build No/Tag ["
         + artifactCollectionExecutionData.getBuildNo() + "] exists");
   }
 
@@ -213,37 +234,13 @@ public class ArtifactCollectionState extends State {
     return super.getTimeoutMillis();
   }
 
-  private Artifact getLastCollectedArtifact(
+  private Artifact fetchCollectedArtifact(
       ExecutionContext context, String artifactStreamId, String sourceName, String buildNo) {
     if (isBlank(buildNo)) {
       return artifactService.fetchLastCollectedApprovedArtifactForArtifactStream(
           context.getAppId(), artifactStreamId, sourceName);
     } else {
-      return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, sourceName, buildNo, regex);
+      return artifactService.getArtifactByBuildNumber(context.getAppId(), artifactStreamId, sourceName, buildNo);
     }
-  }
-
-  public String getArtifactStreamId() {
-    return artifactStreamId;
-  }
-
-  public void setArtifactStreamId(String artifactStreamId) {
-    this.artifactStreamId = artifactStreamId;
-  }
-
-  public String getBuildNo() {
-    return buildNo;
-  }
-
-  public void setBuildNo(String buildNo) {
-    this.buildNo = buildNo;
-  }
-
-  public boolean isRegex() {
-    return regex;
-  }
-
-  public void setRegex(boolean regex) {
-    this.regex = regex;
   }
 }

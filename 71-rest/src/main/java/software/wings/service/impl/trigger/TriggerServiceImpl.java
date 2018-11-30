@@ -523,7 +523,7 @@ public class TriggerServiceImpl implements TriggerService {
       }
     } else {
       lastCollectedArtifact = artifactService.getArtifactByBuildNumber(appId, artifactSelection.getArtifactStreamId(),
-          artifactStream.getSourceName(), artifactSelection.getArtifactFilter(), artifactSelection.isRegex());
+          artifactStream.getSourceName(), artifactSelection.getArtifactFilter());
       if (lastCollectedArtifact != null) {
         artifacts.add(lastCollectedArtifact);
       }
@@ -1204,8 +1204,8 @@ public class TriggerServiceImpl implements TriggerService {
     Artifact artifact;
     ArtifactStream artifactStream = validateArtifactStream(trigger.getAppId(), artifactSelection.getArtifactStreamId());
     notNullCheck("Artifact stream was deleted", artifactStream, USER);
-    artifact = artifactService.getArtifactByBuildNumber(trigger.getAppId(), artifactSelection.getArtifactStreamId(),
-        artifactStream.getSourceName(), buildNumber, artifactSelection.isRegex());
+    artifact = artifactService.getArtifactByBuildNumber(
+        trigger.getAppId(), artifactSelection.getArtifactStreamId(), artifactStream.getSourceName(), buildNumber);
     return artifact;
   }
 
