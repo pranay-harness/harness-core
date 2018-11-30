@@ -96,6 +96,7 @@ public class ArtifactCollectionState extends State {
       addBuildExecutionSummary(context, artifactCollectionExecutionData, artifactStream);
       return anExecutionResponse()
           .withExecutionStatus(ExecutionStatus.SUCCESS)
+          .withStateExecutionData(artifactCollectionExecutionData)
           .withErrorMessage("Collected artifact [" + lastCollectedArtifact.getBuildNo() + "] for artifact source ["
               + lastCollectedArtifact.getArtifactSourceName() + "]")
           .build();
