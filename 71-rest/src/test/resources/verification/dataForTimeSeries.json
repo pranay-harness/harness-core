@@ -14764,6 +14764,10 @@
 "95th Percentile Response Time (ms)" : 16.0,
 "Errors per Minute" : 35.0
 },
+  "deeplinkMetadata" :{
+    "Errors per Minute":"APPLICATION.7596.28582524",
+    "95th Percentile Response Time (ms)":"APPLICATION.7596.28582546"
+  },
 "appId" : "22lE5xCaSdiRe2QBrj-UlQ"
 }
 

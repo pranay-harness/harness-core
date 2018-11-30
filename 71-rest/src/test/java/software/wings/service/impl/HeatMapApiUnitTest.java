@@ -1,5 +1,6 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.apache.cxf.ws.addressing.ContextUtils.generateUUID;
 import static org.junit.Assert.assertEquals;
@@ -24,9 +25,11 @@ import org.slf4j.LoggerFactory;
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.AccountType;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.LicenseInfo;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
+import software.wings.beans.SettingAttribute;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
 import software.wings.resources.CVConfigurationResource;
@@ -74,6 +77,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class HeatMapApiUnitTest extends WingsBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(HeatMapApiUnitTest.class);
 
+  //@Mock private SettingsService mockSettingsService;
   @Inject WingsPersistence wingsPersistence;
   @Inject ContinuousVerificationService continuousVerificationService;
   @Inject private CVConfigurationResource cvConfigurationResource;
@@ -84,6 +88,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   private String serviceId;
   private String envId;
   private String envName;
+  private String connectorId;
 
   @Before
   public void setup() {
@@ -96,6 +101,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     accountId = wingsPersistence.save(account);
     appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUUID()).build());
     envName = generateUuid();
+    connectorId = generateUuid();
     serviceId = wingsPersistence.save(Service.builder().appId(appId).name(generateUuid()).build());
     envId = wingsPersistence.save(anEnvironment().withAppId(appId).withName(envName).build());
   }
@@ -262,7 +268,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     cvConfiguration.setAccountId(accountId);
     cvConfiguration.setAppId(appId);
     cvConfiguration.setAnalysisTolerance(AnalysisTolerance.LOW);
-    cvConfiguration.setConnectorId(generateUuid());
+    cvConfiguration.setConnectorId(connectorId);
     cvConfiguration.setConnectorName(generateUuid());
     cvConfiguration.setEnabled24x7(true);
     cvConfiguration.setEnvId(envId);
@@ -271,6 +277,8 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     cvConfiguration.setServiceName(generateUuid());
     cvConfiguration.setStateType(StateType.APP_DYNAMICS);
     cvConfiguration = wingsPersistence.saveAndGet(CVConfiguration.class, cvConfiguration);
+
+    createAppDConnector();
 
     long endTime = Timestamp.currentMinuteBoundary();
     long start12HoursAgo = endTime - TimeUnit.HOURS.toMillis(DURATION_IN_HOURS);
@@ -365,6 +373,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                             .serviceId(cvConfiguration.getServiceId())
                                             .cvConfigId(cvConfiguration.getUuid())
                                             .dataCollectionMinute(min)
+                                            .stateType(StateType.APP_DYNAMICS)
                                             .name("/login")
                                             .values(metricMap)
                                             .build();
@@ -446,6 +455,36 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     assertEquals(7, timeSeries.getResource().size());
   }
 
+  @Test
+  public void testDeeplinkUrlAppDynamicsFromDB() throws IOException {
+    String cvConfigId = readAndSaveAnalysisRecords();
+    long startTime = TimeUnit.MINUTES.toMillis(25685446);
+
+    SortedSet<TransactionTimeSeries> timeSeries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
+        accountId, cvConfigId, startTime + 1, 1541177160000L, 0);
+    assertEquals(7, timeSeries.size());
+    TransactionTimeSeries insideTimeSeries = null;
+    for (TransactionTimeSeries series : timeSeries) {
+      if (series.getTransactionName().equals("/todolist/exception")) {
+        insideTimeSeries = series;
+        break;
+      }
+    }
+    for (TimeSeriesOfMetric metric : insideTimeSeries.getMetricTimeSeries()) {
+      if (isNotEmpty(metric.getMetricDeeplinkUrl())) {
+        assertTrue(metric.getMetricDeeplinkUrl().contains("https://harness-test.saas.appdynamics.com/controller/"));
+      }
+    }
+  }
+
+  private void createAppDConnector() {
+    AppDynamicsConfig appDynamicsConfig =
+        AppDynamicsConfig.builder().controllerUrl("https://harness-test.saas.appdynamics.com/controller/").build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(appDynamicsConfig);
+    attribute.setUuid(connectorId);
+    wingsPersistence.save(attribute);
+  }
   private String readAndSaveAnalysisRecords() throws IOException {
     AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
                                                                    .appDynamicsApplicationId(generateUuid())
@@ -453,11 +492,19 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                                                    .build();
     cvServiceConfiguration.setServiceId(serviceId);
     cvServiceConfiguration.setEnvId(envId);
-    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setConnectorId(connectorId);
     cvServiceConfiguration.setAppId(appId);
     cvServiceConfiguration.setAccountId(accountId);
     cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
     String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    AppDynamicsConfig appDynamicsConfig =
+        AppDynamicsConfig.builder().controllerUrl("https://harness-test.saas.appdynamics.com/controller/").build();
+    SettingAttribute attribute = new SettingAttribute();
+    attribute.setValue(appDynamicsConfig);
+    attribute.setUuid(connectorId);
+    wingsPersistence.save(attribute);
 
     File file1 = new File(getClass().getClassLoader().getResource("./verification/dataForTimeSeries.json").getFile());
     final Gson gson1 = new Gson();
@@ -499,6 +546,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     cvServiceConfiguration.setAppId(appId);
     cvServiceConfiguration.setAccountId(accountId);
     cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
     String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
 
     final Gson gson = new Gson();
@@ -578,11 +626,14 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                                                    .build();
     cvServiceConfiguration.setServiceId(serviceId);
     cvServiceConfiguration.setEnvId(envId);
-    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setConnectorId(connectorId);
     cvServiceConfiguration.setAppId(appId);
     cvServiceConfiguration.setAccountId(accountId);
     cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
     String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    createAppDConnector();
 
     File file1 = new File(getClass().getClassLoader().getResource("./verification/metricsForRisk.json").getFile());
     final Gson gson1 = new Gson();
@@ -639,11 +690,14 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                                                    .build();
     cvServiceConfiguration.setServiceId(serviceId);
     cvServiceConfiguration.setEnvId(envId);
-    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setConnectorId(connectorId);
     cvServiceConfiguration.setAppId(appId);
     cvServiceConfiguration.setAccountId(accountId);
     cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
     String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    createAppDConnector();
 
     TimeSeriesMLAnalysisRecord tsAnalysisRecord = null;
     List<Double> expectedTimeSeries = new ArrayList<>();
@@ -659,6 +713,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
         timeSeriesMLAnalysisRecord.setAppId(appId);
         timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
       });
       wingsPersistence.save(metricDataRecords);
     }
@@ -732,11 +787,14 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                                                    .build();
     cvServiceConfiguration.setServiceId(serviceId);
     cvServiceConfiguration.setEnvId(envId);
-    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setConnectorId(connectorId);
     cvServiceConfiguration.setAppId(appId);
     cvServiceConfiguration.setAccountId(accountId);
     cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
     String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    createAppDConnector();
 
     File file1 = new File(getClass().getClassLoader().getResource("./verification/metricsForRisk.json").getFile());
     final Gson gson1 = new Gson();
@@ -790,11 +848,14 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
                                                                    .build();
     cvServiceConfiguration.setServiceId(serviceId);
     cvServiceConfiguration.setEnvId(envId);
-    cvServiceConfiguration.setConnectorId(generateUuid());
+    cvServiceConfiguration.setConnectorId(connectorId);
     cvServiceConfiguration.setAppId(appId);
     cvServiceConfiguration.setAccountId(accountId);
     cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
     String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    createAppDConnector();
 
     File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
     final Gson gson1 = new Gson();

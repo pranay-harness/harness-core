@@ -1,10 +1,12 @@
 package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
+import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
@@ -23,7 +25,9 @@ import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.wings.beans.AppDynamicsConfig;
 import software.wings.beans.FeatureName;
+import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
@@ -32,18 +36,23 @@ import software.wings.metrics.RiskLevel;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
+import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateType;
+import software.wings.sm.states.AppDynamicsState;
+import software.wings.sm.states.NewRelicState;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.HeatMapResolution;
 import software.wings.verification.TimeSeriesOfMetric;
 import software.wings.verification.TransactionTimeSeries;
+import software.wings.verification.appdynamics.AppDynamicsCVServiceConfiguration;
 import software.wings.verification.dashboard.HeatMapUnit;
 
 import java.text.ParseException;
@@ -631,6 +640,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return getTimeSeriesForTimeRangeFromDataRecords(historyStartTime, endTime, cvConfiguration, startTime);
   }
 
+  private String getBaseUrlOfConnector(CVConfiguration cvConfiguration) {
+    switch (cvConfiguration.getStateType()) {
+      case APP_DYNAMICS:
+        AppDynamicsConfig appDynamicsConfig =
+            (AppDynamicsConfig) wingsPersistence.get(SettingAttribute.class, cvConfiguration.getConnectorId())
+                .getValue();
+        return appDynamicsConfig.getControllerUrl();
+      default:
+        logger.info("Unsupported stateType {} for deeplinking", cvConfiguration.getStateType());
+        return "";
+    }
+  }
+
   private Map<String, Map<String, TimeSeriesOfMetric>> getTimeSeriesForTimeRangeFromDataRecords(
       long startTime, long endTime, CVConfiguration cvConfiguration, long riskCutOffTime) {
     // The object to be returned which contains the map txn => metrics => timeseries per metric
@@ -639,6 +661,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(endTime));
     // int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(startTime));
 
+    String baseUrlForLink = getBaseUrlOfConnector(cvConfiguration);
     int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
     int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
 
@@ -646,13 +669,14 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
     PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
         PageRequestBuilder.aPageRequest()
-            .withLimit("500")
+            .withLimit("5000")
             .withOffset("0")
             .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
             .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
             .addFilter("dataCollectionMinute", Operator.GE, startMinute)
             .addFilter("dataCollectionMinute", Operator.LT_EQ, endMinute)
             .addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME)
+            .addFieldsIncluded("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata")
             .build();
 
     int previousOffSet = 0;
@@ -665,6 +689,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest);
     }
 
+    logger.info("Size of metric records : {}", metricRecords.size());
     for (NewRelicMetricDataRecord metricRecord : metricRecords) {
       if (!observedTimeSeries.containsKey(metricRecord.getName())) {
         observedTimeSeries.put(metricRecord.getName(), new HashMap<>());
@@ -672,7 +697,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       Map<String, TimeSeriesOfMetric> metricMap = observedTimeSeries.get(metricRecord.getName());
       for (Entry<String, Double> metricData : metricRecord.getValues().entrySet()) {
         final String metricName = metricData.getKey();
-        final Double metricValue = metricData.getValue();
         if (!metricMap.containsKey(metricName)) {
           metricMap.put(metricName,
               TimeSeriesOfMetric.builder()
@@ -683,13 +707,56 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         }
 
         // fill in the metrics for this record at the correct spots
-        metricMap.get(metricName).addToTimeSeriesMap(metricRecord.getDataCollectionMinute(), metricValue);
+        metricMap.get(metricName)
+            .addToTimeSeriesMap(
+                metricRecord.getDataCollectionMinute(), getNormalizedMetricValue(metricName, metricRecord));
+        if (isNotEmpty(metricRecord.getDeeplinkMetadata())) {
+          if (metricRecord.getDeeplinkMetadata().containsKey(metricName)) {
+            String deeplinkUrl = getDeeplinkUrl(cvConfiguration, baseUrlForLink, startTime, endTime,
+                metricRecord.getDeeplinkMetadata().get(metricName));
+            metricMap.get(metricName).setMetricDeeplinkUrl(deeplinkUrl);
+          }
+        }
       }
     }
 
     // Find and add the risks for those metrics above
     updateRisksForTimeSeries(startTime, endTime, riskCutOffTime, cvConfiguration, observedTimeSeries);
+
     return observedTimeSeries;
+  }
+
+  private Double getNormalizedMetricValue(String metricName, NewRelicMetricDataRecord dataRecord) {
+    switch (dataRecord.getStateType()) {
+      case APP_DYNAMICS:
+        if (metricName.equals(AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName())) {
+          return AppDynamicsState.getErrorPercentage(dataRecord);
+        }
+        break;
+      case NEW_RELIC:
+        if (metricName.equals(NewRelicMetricValueDefinition.ERROR)) {
+          return NewRelicState.getNormalizedErrorMetric(dataRecord);
+        }
+        break;
+      default:
+        return dataRecord.getValues().get(metricName);
+    }
+    return dataRecord.getValues().get(metricName);
+  }
+  private String getDeeplinkUrl(
+      CVConfiguration cvConfig, String baseUrl, long startTime, long endTime, String metricString) {
+    switch (cvConfig.getStateType()) {
+      case APP_DYNAMICS:
+        AppDynamicsCVServiceConfiguration config = (AppDynamicsCVServiceConfiguration) cvConfig;
+        return baseUrl
+            + APPDYNAMICS_DEEPLINK_FORMAT.replace("{startTimeMs}", String.valueOf(startTime))
+                  .replace("{endTimeMs}", String.valueOf(endTime))
+                  .replace("{applicationId}", config.getAppDynamicsApplicationId())
+                  .replace("{metricString}", metricString);
+      default:
+        logger.info("Unsupported stateType {} for deeplinking", cvConfig.getStateType());
+        return "";
+    }
   }
 
   private void updateRisksForTimeSeries(long startTime, long endTime, long riskCutOff, CVConfiguration cvConfiguration,
@@ -710,6 +777,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           Map<String, TimeSeriesOfMetric> metricMap = observedTimeSeries.get(transaction.getValue().getTxn_name());
           if (metricMap == null) {
             // there's no data in this time range for this txn, so we're  moving on.
+            logger.info("Skipping {}", transaction.getValue().getTxn_name());
             continue;
           }
 
@@ -717,6 +785,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             final String metricName = metricSummary.getMetric_name();
             if (!metricMap.containsKey(metricName)) {
               // there's no data in this time range for this metric, so we're  moving on.
+              logger.info("In transaction {}, skipping {}", transaction.getValue().getTxn_name(), metricName);
               continue;
             }
             if (TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()) > riskCutOff) {
@@ -725,6 +794,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
             metricMap.get(metricSummary.getMetric_name())
                 .addToRiskMap(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()), metricSummary.getMax_risk());
+            logger.info("Add transactionMetric {} {}", transaction.getValue().getTxn_name(), metricName);
           }
         }
       }
@@ -761,6 +831,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       resp.add(txnTimeSeries);
     }
     // logger.info("Timeseries response = {}", resp);
+    logger.info("TimeSeries response size is : {}", resp.size());
     return resp;
   }
 }

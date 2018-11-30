@@ -44,6 +44,9 @@ public class VerificationConstants {
   public static final String DATA_ANALYSIS_TASKS_PER_MINUTE = "data_analysis_tasks_per_min";
   public static final String HEARTBEAT_METRIC_NAME = "Harness heartbeat metric";
 
+  public static final String APPDYNAMICS_DEEPLINK_FORMAT =
+      "#/location=METRIC_BROWSER&viewTree=true&axis=linear&showPoints=false&application={applicationId}"
+      + "&timeRange=Custom_Time_Range.BETWEEN_TIMES.{endTimeMs}.{startTimeMs}.6&metrics=APPLICATION_COMPONENT.{metricString}";
   private VerificationConstants() {}
 
   public static List<StateType> getMetricAnalysisStates() {

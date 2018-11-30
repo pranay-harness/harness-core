@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.entities.TimeSeriesAnomaliesRecord;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
@@ -193,5 +194,17 @@ public class TimeSeriesResource {
       @QueryParam("groupName") String groupName, @QueryParam("cvConfigId") String cvConfigId) {
     return new RestResponse<>(
         timeSeriesAnalysisService.getMetricTemplate(appId, serviceId, groupName, stateType, cvConfigId));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path("/previous-anomalies-247")
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<TimeSeriesAnomaliesRecord> getPreviousAnomalies(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String appId, @QueryParam("cvConfigId") String cvConfigId,
+      Map<String, List<String>> metrics) {
+    return new RestResponse<>(timeSeriesAnalysisService.getPreviousAnomalies(appId, cvConfigId, metrics));
   }
 }
