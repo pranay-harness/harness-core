@@ -131,16 +131,28 @@ public class SettingValidationService {
     try {
       ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
       if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        throw new WingsException(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage());
+        return ValidationResult.builder()
+            .errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
+            .valid(false)
+            .build();
       } else if (notifyResponseData instanceof RemoteMethodReturnValueData) {
-        throw new WingsException(((RemoteMethodReturnValueData) notifyResponseData).getException());
+        return ValidationResult.builder()
+            .errorMessage(getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()))
+            .valid(false)
+            .build();
       }
-      ConnectivityValidationDelegateResponse connectivityValidationDelegateResponse =
-          (ConnectivityValidationDelegateResponse) notifyResponseData;
-      return ValidationResult.builder()
-          .errorMessage(connectivityValidationDelegateResponse.getErrorMessage())
-          .valid(connectivityValidationDelegateResponse.isValid())
-          .build();
+      if (!(notifyResponseData instanceof ConnectivityValidationDelegateResponse)) {
+        throw new WingsException(ErrorCode.GENERAL_ERROR)
+            .addParam("message", "Unknown Response from delegate")
+            .addContext(ResponseData.class, notifyResponseData);
+      } else {
+        ConnectivityValidationDelegateResponse connectivityValidationDelegateResponse =
+            (ConnectivityValidationDelegateResponse) notifyResponseData;
+        return ValidationResult.builder()
+            .errorMessage(connectivityValidationDelegateResponse.getErrorMessage())
+            .valid(connectivityValidationDelegateResponse.isValid())
+            .build();
+      }
     } catch (InterruptedException ex) {
       throw new InvalidRequestException(getMessage(ex), USER);
     }

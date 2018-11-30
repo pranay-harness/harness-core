@@ -6,6 +6,7 @@ import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
@@ -19,8 +20,10 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
+import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
 import software.wings.utils.HostValidationService;
 
 public class ConnectivityValidationTaskTest extends WingsBaseTest {
@@ -53,5 +56,16 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
         .validateHost(anyList(), any(), anyList(), any());
     task.run(new Object[] {request});
     verify(mockHostValidationService).validateHost(anyList(), any(), anyList(), any());
+    request = ConnectivityValidationDelegateRequest.builder()
+                  .encryptedDataDetails(emptyList())
+                  .settingAttribute(aSettingAttribute()
+                                        .withAccountId(ACCOUNT_ID)
+                                        .withValue(WinRmConnectionAttributes.builder().build())
+                                        .withConnectivityValidationAttributes(
+                                            WinRmConnectivityValidationAttributes.builder().hostName("host").build())
+                                        .build())
+                  .build();
+    task.run(new Object[] {request});
+    verify(mockHostValidationService, times(2)).validateHost(anyList(), any(), anyList(), any());
   }
 }
