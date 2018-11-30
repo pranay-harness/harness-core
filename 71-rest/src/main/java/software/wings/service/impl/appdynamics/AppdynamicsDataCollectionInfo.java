@@ -33,6 +33,7 @@ public class AppdynamicsDataCollectionInfo {
   private int collectionTime;
   private int dataCollectionMinute;
   private Map<String, String> hosts;
+  private boolean nodeIdsMapped;
   private List<EncryptedDataDetail> encryptedDataDetails;
   @Default private TimeSeriesMlAnalysisType timeSeriesMlAnalysisType = TimeSeriesMlAnalysisType.COMPARATIVE;
 }

@@ -29,8 +29,8 @@ public interface AppdynamicsDelegateService {
   Set<AppdynamicsTier> getTiers(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,
       List<EncryptedDataDetail> encryptionDetails) throws IOException;
 
-  List<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
-      List<EncryptedDataDetail> encryptionDetails) throws IOException;
+  Set<AppdynamicsNode> getNodes(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId, long tierId,
+      List<EncryptedDataDetail> encryptionDetails, ThirdPartyApiCallLog apiCallLog) throws IOException;
 
   @DelegateTaskType(TaskType.APPDYNAMICS_GET_TIER_MAP)
   Set<AppdynamicsTier> getTierDependencies(AppDynamicsConfig appDynamicsConfig, long appdynamicsAppId,

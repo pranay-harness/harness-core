@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 import static software.wings.common.VerificationConstants.DURATION_TO_ASK_MINUTES;
 import static software.wings.delegatetasks.SplunkDataCollectionTask.RETRY_SLEEP;
@@ -10,6 +11,8 @@ import com.google.common.collect.TreeBasedTable;
 import com.google.inject.Inject;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.time.Timestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +28,7 @@ import software.wings.service.impl.appdynamics.AppdynamicsDataCollectionInfo;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricData;
 import software.wings.service.impl.appdynamics.AppdynamicsMetricDataValue;
+import software.wings.service.impl.appdynamics.AppdynamicsNode;
 import software.wings.service.impl.appdynamics.AppdynamicsTier;
 import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
@@ -35,7 +39,6 @@ import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -103,7 +106,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
   }
 
   @Override
-  protected Runnable getDataCollector(DataCollectionTaskResult taskResult) throws IOException {
+  protected Runnable getDataCollector(DataCollectionTaskResult taskResult) {
     return new AppdynamicsMetricCollector(dataCollectionInfo, taskResult,
         this.getTaskType().equals(TaskType.APPDYNAMICS_COLLECT_24_7_METRIC_DATA.name()));
   }
@@ -204,8 +207,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
     }
 
     private TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> processMetricData(
-        List<AppdynamicsMetricData> metricsData)
-        throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+        List<AppdynamicsMetricData> metricsData) {
       TreeBasedTable<String, Long, Map<String, NewRelicMetricDataRecord>> records = TreeBasedTable.create();
       /*
        * An AppDynamics metric path looks like:
@@ -323,6 +325,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
                 appdynamicsDelegateService.getAppdynamicsTier(appDynamicsConfig, dataCollectionInfo.getAppId(),
                     dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails());
             Preconditions.checkNotNull(dataCollectionInfo, "No trier found for dataCollectionInfo");
+            setHostIdsIfNecessary();
             List<AppdynamicsMetricData> metricsData = getMetricsData();
             logger.info(
                 "Got {} metrics from appdynamics for {}", metricsData.size(), dataCollectionInfo.getStateExecutionId());
@@ -386,8 +389,7 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
           }
         }
 
-      } catch (RuntimeException | IOException | CloneNotSupportedException | InvocationTargetException
-          | IllegalAccessException | NoSuchMethodException e) {
+      } catch (RuntimeException | IOException | CloneNotSupportedException e) {
         completed.set(true);
         taskResult.setStatus(DataCollectionTaskStatus.FAILURE);
         taskResult.setErrorMessage("error fetching appdynamics metrics for minute " + dataCollectionMinute);
@@ -398,6 +400,36 @@ public class AppdynamicsDataCollectionTask extends AbstractDelegateDataCollectio
         logger.info("Shutting down appdynamics data collection");
         shutDownCollection();
         return;
+      }
+    }
+
+    private void setHostIdsIfNecessary() throws IOException {
+      if (!dataCollectionInfo.isNodeIdsMapped() && isNotEmpty(dataCollectionInfo.getHosts())) {
+        final Set<AppdynamicsNode> nodes = appdynamicsDelegateService.getNodes(appDynamicsConfig,
+            dataCollectionInfo.getAppId(), dataCollectionInfo.getTierId(), dataCollectionInfo.getEncryptedDataDetails(),
+            createApiCallLog(dataCollectionInfo.getStateExecutionId()));
+        Map<String, String> hosts = new HashMap<>();
+        dataCollectionInfo.getHosts().forEach((hostName, groupName) -> nodes.forEach(appdynamicsNode -> {
+          if (appdynamicsNode.getName().toLowerCase().equals(hostName.toLowerCase())) {
+            hosts.put(hostName, appdynamicsNode.getName());
+            return;
+          }
+        }));
+
+        dataCollectionInfo.getHosts().forEach((hostName, groupName) -> {
+          if (!hosts.containsKey(hostName)) {
+            logger.error("No corresponding node found in appdynamics state {} for node {}, nodes from appdynamics {}",
+                dataCollectionInfo.getStateExecutionId(), hostName, nodes);
+            throw new WingsException(ErrorCode.APPDYNAMICS_ERROR)
+                .addParam("reason", "No corresponding node found in appdynamics for " + hostName);
+          }
+        });
+
+        Map<String, String> finalHosts = new HashMap<>();
+        dataCollectionInfo.getHosts().forEach((hostName, groupName) -> finalHosts.put(hosts.get(hostName), groupName));
+        logger.info("for state {} final hosts are {}", dataCollectionInfo.getStateExecutionId(), finalHosts);
+        dataCollectionInfo.setHosts(finalHosts);
+        dataCollectionInfo.setNodeIdsMapped(true);
       }
     }
 

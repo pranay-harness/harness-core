@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -35,6 +36,7 @@ import software.wings.beans.RestResponse;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SettingAttribute.Category;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.analysis.VerificationNodeDataSetupResponse;
 import software.wings.service.impl.appdynamics.AppdynamicsDelegateServiceImpl;
 import software.wings.service.impl.appdynamics.AppdynamicsMetric;
@@ -206,7 +208,7 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
   }
 
   @Test
-  @Repeat(times = 5, successes = 1)
+  @Owner(emails = "pranjal@harness.io", intermittent = true)
   public void testGetDataForNode() throws Exception {
     String appId = wingsPersistence.save(anApplication().withAccountId(accountId).withName(generateUuid()).build());
     String workflowId = wingsPersistence.save(aWorkflow().withAppId(appId).withName(generateUuid()).build());
@@ -246,8 +248,8 @@ public class AppdynamicsIntegrationTest extends BaseIntegrationTest {
           continue;
         }
         assertTrue(tier.getId() > 0);
-        List<AppdynamicsNode> nodes = delegateService.getNodes(appDynamicsConfig, application.getId(), tier.getId(),
-            secretManager.getEncryptionDetails(appDynamicsConfig, null, null));
+        Set<AppdynamicsNode> nodes = delegateService.getNodes(appDynamicsConfig, application.getId(), tier.getId(),
+            secretManager.getEncryptionDetails(appDynamicsConfig, null, null), ThirdPartyApiCallLog.builder().build());
 
         for (AppdynamicsNode node : new TreeSet<>(nodes).descendingSet()) {
           AppdynamicsSetupTestNodeData testNodeData =

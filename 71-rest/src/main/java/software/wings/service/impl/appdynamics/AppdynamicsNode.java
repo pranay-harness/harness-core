@@ -1,14 +1,15 @@
 package software.wings.service.impl.appdynamics;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
-
-import java.util.List;
-import java.util.Map;
+import lombok.EqualsAndHashCode;
 
 /**
  * Created by rsingh on 5/15/17.
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
+@EqualsAndHashCode(of = {"id"})
 public class AppdynamicsNode implements Comparable<AppdynamicsNode> {
   private long id;
   private String name;
@@ -16,17 +17,6 @@ public class AppdynamicsNode implements Comparable<AppdynamicsNode> {
   private long tierId;
   private String tierName;
   private long machineId;
-  private String machineName;
-  private String machineOSType;
-  private boolean machineAgentPresent;
-  private boolean appAgentPresent;
-  private String appAgentVersion;
-  private String agentType;
-  private Map<String, List<String>> ipAddresses;
-
-  // backward compatibilty
-  private String machineAgentVersion;
-  private String nodeUniqueLocalId;
 
   @Override
   public int compareTo(AppdynamicsNode o) {
