@@ -21,12 +21,14 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.settings.SettingValue;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
 import software.wings.settings.validation.ConnectivityValidationDelegateResponse;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
+import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
 import software.wings.utils.HostValidationService;
 
 import java.util.List;
@@ -72,6 +74,23 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
             .valid(SUCCESS.name().equals(response.get(0).getStatus()))
             .errorMessage(response.get(0).getErrorDescription())
             .build();
+      } else if (settingValue instanceof WinRmConnectionAttributes) {
+        if (!(connectivityValidationAttributes instanceof WinRmConnectivityValidationAttributes)) {
+          throw new InvalidRequestException("Must send Win Rm connectivity attributes", USER);
+        }
+        List<String> hostNames =
+            singletonList(((WinRmConnectivityValidationAttributes) connectivityValidationAttributes).getHostName());
+        List<HostValidationResponse> response =
+            hostValidationService.validateHost(hostNames, settingAttribute, encryptedDataDetails, null);
+        if (isEmpty(response)) {
+          throw new InvalidRequestException("Did not get hosts validated for SSH", USER);
+        }
+        return ConnectivityValidationDelegateResponse.builder()
+            .executionStatus(SUCCESS)
+            .valid(SUCCESS.name().equals(response.get(0).getStatus()))
+            .errorMessage(response.get(0).getErrorDescription())
+            .build();
+
       } else {
         throw new InvalidRequestException(
             format("Connectivity validation not supported for: [%s]", settingValue.getClass().getName()), USER);
