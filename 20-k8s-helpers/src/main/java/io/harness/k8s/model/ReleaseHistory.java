@@ -65,7 +65,7 @@ public class ReleaseHistory {
     return null;
   }
 
-  public Release getPreviousSuccessfulRelease(int currentReleaseNumber) {
+  public Release getPreviousRollbackEligibleRelease(int currentReleaseNumber) {
     for (Release release : this.getReleases()) {
       if (release.getNumber() < currentReleaseNumber
           && (release.getStatus() == Status.Succeeded || release.getStatus() == Status.RollbackSucceeded)) {

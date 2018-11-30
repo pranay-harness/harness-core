@@ -188,49 +188,50 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
 
       if (lastSuccessfulRelease == null) {
         executionLogCallback.saveExecutionLog("No successful release found. Nothing to cleanup");
-        return true;
-      }
+      } else {
+        executionLogCallback.saveExecutionLog("Last Successful Release is " + lastSuccessfulRelease.getNumber());
 
-      executionLogCallback.saveExecutionLog("Last Successful Release is " + lastSuccessfulRelease.getNumber());
+        executionLogCallback.saveExecutionLog("\nCleaning up older releases");
 
-      executionLogCallback.saveExecutionLog("\nCleaning up older releases");
+        for (int releaseIndex = releaseHistory.getReleases().size() - 1; releaseIndex >= 0; releaseIndex--) {
+          Release release = releaseHistory.getReleases().get(releaseIndex);
+          if (release.getNumber() < lastSuccessfulRelease.getNumber()) {
+            for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
+              KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
+              if (resourceId.isVersioned()) {
+                DeleteCommand deleteCommand =
+                    client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
 
-      for (int releaseIndex = releaseHistory.getReleases().size() - 1; releaseIndex >= 0; releaseIndex--) {
-        Release release = releaseHistory.getReleases().get(releaseIndex);
-        if (release.getNumber() < lastSuccessfulRelease.getNumber()) {
-          for (int resourceIndex = release.getResources().size() - 1; resourceIndex >= 0; resourceIndex--) {
-            KubernetesResourceId resourceId = release.getResources().get(resourceIndex);
-            if (resourceId.isVersioned()) {
-              DeleteCommand deleteCommand =
-                  client.delete().resources(resourceId.kindNameRef()).namespace(resourceId.getNamespace());
+                executionLogCallback.saveExecutionLog("\n" + deleteCommand.command());
 
-              executionLogCallback.saveExecutionLog("\n" + deleteCommand.command());
+                ProcessResult result = deleteCommand.execute(k8sCommandTaskParams.getWorkingDirectory(),
+                    new LogOutputStream() {
+                      @Override
+                      protected void processLine(String line) {
+                        executionLogCallback.saveExecutionLog(line, INFO);
+                      }
+                    },
+                    new LogOutputStream() {
+                      @Override
+                      protected void processLine(String line) {
+                        executionLogCallback.saveExecutionLog(line, ERROR);
+                      }
+                    });
 
-              ProcessResult result = deleteCommand.execute(k8sCommandTaskParams.getWorkingDirectory(),
-                  new LogOutputStream() {
-                    @Override
-                    protected void processLine(String line) {
-                      executionLogCallback.saveExecutionLog(line, INFO);
-                    }
-                  },
-                  new LogOutputStream() {
-                    @Override
-                    protected void processLine(String line) {
-                      executionLogCallback.saveExecutionLog(line, ERROR);
-                    }
-                  });
-
-              if (result.getExitValue() != 0) {
-                logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+                if (result.getExitValue() != 0) {
+                  logger.warn("Failed to delete resource {}. Error {}", resourceId.kindNameRef(), result.getOutput());
+                }
               }
             }
+          } else {
+            break;
           }
-        } else {
-          break;
         }
+
+        releaseHistory.getReleases().removeIf(release -> release.getNumber() < lastSuccessfulRelease.getNumber());
       }
 
-      releaseHistory.getReleases().removeIf(release -> release.getNumber() < lastSuccessfulRelease.getNumber());
+      executionLogCallback.saveExecutionLog("Versioning resources.");
 
       addRevisionNumber(resources, release.getNumber());
 

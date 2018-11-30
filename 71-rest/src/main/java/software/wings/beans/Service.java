@@ -94,6 +94,7 @@ public class Service extends Base {
         .name(name)
         .description(description)
         .artifactType(artifactType)
+        .deploymentType(deploymentType)
         .configMapYaml(configMapYaml)
         .helmValueYaml(helmValueYaml)
         .appContainer(appContainer)

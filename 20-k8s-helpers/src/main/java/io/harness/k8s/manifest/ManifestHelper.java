@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ManifestHelper {
+  public static final String values_filename = "values.yaml";
+
   private static KubernetesResource getKubernetesResourceFromSpec(String spec) {
     Map map = null;
 

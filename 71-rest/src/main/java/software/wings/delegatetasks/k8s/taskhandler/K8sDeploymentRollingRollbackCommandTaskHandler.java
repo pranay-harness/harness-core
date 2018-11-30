@@ -125,24 +125,26 @@ public class K8sDeploymentRollingRollbackCommandTaskHandler extends K8sCommandTa
       return true;
     }
 
-    Release previousSuccessfulRelease = releaseHistory.getPreviousSuccessfulRelease(request.getReleaseNumber());
+    Release previousRollbackEligibleRelease =
+        releaseHistory.getPreviousRollbackEligibleRelease(request.getReleaseNumber());
 
-    if (previousSuccessfulRelease == null) {
-      executionLogCallback.saveExecutionLog("No successful release found. Can't rollback.");
+    if (previousRollbackEligibleRelease == null) {
+      executionLogCallback.saveExecutionLog("No previous eligible release found. Can't rollback.");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return true;
     }
 
-    executionLogCallback.saveExecutionLog("Previous Successful Release is " + previousSuccessfulRelease.getNumber());
+    executionLogCallback.saveExecutionLog("Previous eligible Release is " + previousRollbackEligibleRelease.getNumber()
+        + " with status " + previousRollbackEligibleRelease.getStatus());
 
-    executionLogCallback.saveExecutionLog("\nRolling back to release " + previousSuccessfulRelease.getNumber());
+    executionLogCallback.saveExecutionLog("\nRolling back to release " + previousRollbackEligibleRelease.getNumber());
 
     RolloutUndoCommand rolloutUndoCommand =
         client.rollout()
             .undo()
-            .resource(previousSuccessfulRelease.getManagedWorkload().kindNameRef())
-            .namespace(previousSuccessfulRelease.getManagedWorkload().getNamespace())
-            .toRevision(previousSuccessfulRelease.getManagedWorkloadRevision());
+            .resource(previousRollbackEligibleRelease.getManagedWorkload().kindNameRef())
+            .namespace(previousRollbackEligibleRelease.getManagedWorkload().getNamespace())
+            .toRevision(previousRollbackEligibleRelease.getManagedWorkloadRevision());
 
     executionLogCallback.saveExecutionLog("\n" + rolloutUndoCommand.command());
 

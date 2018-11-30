@@ -20,6 +20,12 @@ public class ManifestFile extends Base {
   private String fileContent;
   @Indexed private String applicationManifestId;
 
+  public ManifestFile cloneInternal() {
+    ManifestFile manifestFile = ManifestFile.builder().fileName(this.fileName).fileContent(this.fileContent).build();
+    manifestFile.setAppId(this.appId);
+    return manifestFile;
+  }
+
   @Data
   @EqualsAndHashCode(callSuper = false)
   @NoArgsConstructor

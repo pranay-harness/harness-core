@@ -35,10 +35,12 @@ import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 import static software.wings.yaml.YamlHelper.trimYaml;
 
+import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -62,6 +64,7 @@ import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
+import software.wings.api.DeploymentType;
 import software.wings.beans.Activity;
 import software.wings.beans.AppContainer;
 import software.wings.beans.CanaryOrchestrationWorkflow;
@@ -82,6 +85,9 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.Setup.SetupStatus;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
+import software.wings.beans.appmanifest.ApplicationManifest;
+import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.AmiCommandUnit;
@@ -109,6 +115,7 @@ import software.wings.service.ServiceHelper;
 import software.wings.service.impl.command.CommandHelper;
 import software.wings.service.impl.template.SshCommandTemplateProcessor;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.CommandService;
@@ -140,6 +147,8 @@ import software.wings.utils.Validator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -162,6 +171,20 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   private static final Logger logger = LoggerFactory.getLogger(ServiceResourceServiceImpl.class);
   private static final String IISWEBSITE_KEYWORD = "iiswebsite";
   public static final String IISAPP_KEYWORD = "iisapp";
+  private static String default_k8s_spec_yaml;
+  private static String default_k8s_values_yaml;
+
+  static {
+    try {
+      URL url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/spec.yaml");
+      default_k8s_spec_yaml = Resources.toString(url, Charsets.UTF_8);
+
+      url = ServiceResourceServiceImpl.class.getClassLoader().getResource("default-k8s-manifests/values.yaml");
+      default_k8s_values_yaml = Resources.toString(url, Charsets.UTF_8);
+    } catch (IOException e) {
+      throw new RuntimeException("Failed to read default k8s manifests", e);
+    }
+  }
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private AppService appService;
@@ -190,6 +213,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private YamlPushService yamlPushService;
   @Inject private PipelineService pipelineService;
   @Inject private SshCommandTemplateProcessor sshCommandTemplateProcessor;
+  @Inject private ApplicationManifestService applicationManifestService;
 
   /**
    * {@inheritDoc}
@@ -229,6 +253,7 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
 
     savedService = createDefaultHelmValueYaml(savedService);
     serviceTemplateService.createDefaultTemplatesByService(savedService);
+    createDefaultK8sManifests(savedService);
 
     sendNotificationAsync(savedService, NotificationMessageType.ENTITY_CREATE_NOTIFICATION);
 
@@ -324,6 +349,8 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
       cloneHelmChartSpecification(appId, clonedServiceId, originalServiceId);
       cloneContainerTasks(appId, clonedServiceId, originalServiceId);
     }
+
+    cloneAppManifests(appId, clonedServiceId, originalServiceId);
   }
 
   private void cloneContainerTasks(String appId, String clonedServiceId, String originalServiceId) {
@@ -1748,5 +1775,53 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
     }
 
     return false;
+  }
+
+  private void createDefaultK8sManifests(Service service) {
+    if (service.getDeploymentType() != DeploymentType.KUBERNETES) {
+      return;
+    }
+
+    if (applicationManifestService.get(service.getAppId(), service.getUuid()) != null) {
+      return;
+    }
+
+    ApplicationManifest applicationManifest =
+        ApplicationManifest.builder().serviceId(service.getUuid()).storeType(StoreType.Local).build();
+    applicationManifest.setAppId(service.getAppId());
+
+    applicationManifestService.create(applicationManifest);
+
+    ManifestFile defaultSpec =
+        ManifestFile.builder().fileName("templates/deploy.yaml").fileContent(default_k8s_spec_yaml).build();
+    defaultSpec.setAppId(service.getAppId());
+    applicationManifestService.createManifestFile(defaultSpec, service.getUuid());
+
+    ManifestFile defaultValues =
+        ManifestFile.builder().fileName("values.yaml").fileContent(default_k8s_values_yaml).build();
+    defaultValues.setAppId(service.getAppId());
+    applicationManifestService.createManifestFile(defaultValues, service.getUuid());
+  }
+
+  private void cloneAppManifests(String appId, String clonedServiceId, String originalServiceId) {
+    ApplicationManifest applicationManifest = applicationManifestService.get(appId, originalServiceId);
+    if (applicationManifest == null) {
+      return;
+    }
+
+    ApplicationManifest applicationManifestNew = applicationManifest.cloneInternal();
+    applicationManifestNew.setServiceId(clonedServiceId);
+    applicationManifestService.create(applicationManifestNew);
+
+    List<ManifestFile> manifestFiles = applicationManifestService.getManifestFiles(appId, originalServiceId);
+
+    if (isEmpty(manifestFiles)) {
+      return;
+    }
+
+    for (ManifestFile manifestFile : manifestFiles) {
+      ManifestFile manifestFileNew = manifestFile.cloneInternal();
+      applicationManifestService.createManifestFile(manifestFileNew, clonedServiceId);
+    }
   }
 }
