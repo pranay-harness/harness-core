@@ -28,7 +28,7 @@ public class GenericDbCache {
   private LoadingCache<String, Object> cache =
       CacheBuilder.newBuilder()
           .maximumSize(10000)
-          .expireAfterAccess(1, TimeUnit.MINUTES)
+          .expireAfterWrite(1, TimeUnit.MINUTES)
           .build(new CacheLoader<String, Object>() {
             @Override
             public Object load(String key) throws Exception {
