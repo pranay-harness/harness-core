@@ -59,10 +59,20 @@ public class EmailHandler implements CollaborationHandler {
   }
 
   @Override
+  public boolean validateDelegateConnection(SmtpConfig smtpConfig, List<EncryptedDataDetail> encryptionDetails) {
+    return validateDelegateConnectionInternal(smtpConfig, encryptionDetails);
+  }
+
+  @Override
   public boolean validateDelegateConnection(CollaborationProviderRequest request) {
     EmailRequest emailRequest = (EmailRequest) request;
     SmtpConfig smtpConfig = emailRequest.getSmtpConfig();
     List<EncryptedDataDetail> encryptionDetails = emailRequest.getEncryptionDetails();
+    return validateDelegateConnectionInternal(smtpConfig, encryptionDetails);
+  }
+
+  private boolean validateDelegateConnectionInternal(
+      SmtpConfig smtpConfig, List<EncryptedDataDetail> encryptionDetails) {
     try {
       return timeLimiter.callWithTimeout(() -> {
         boolean result = false;
@@ -93,13 +103,11 @@ public class EmailHandler implements CollaborationHandler {
         } catch (Exception e) {
           logger.warn("SMTP: Unknown Exception", e);
         }
-
         return result;
       }, 10000, TimeUnit.MILLISECONDS, true);
     } catch (Exception e) {
       logger.warn("Failed to validate email delegate communication", e);
     }
-
     return false;
   }
 }

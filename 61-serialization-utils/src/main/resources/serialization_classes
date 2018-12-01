@@ -609,3 +609,4 @@ software.wings.settings.validation.ConnectivityValidationAttributes, 5567
 software.wings.settings.validation.SshConnectionConnectivityValidationAttributes, 5568
 software.wings.beans.JiraConfig$JiraSetupType, 5569
 software.wings.settings.validation.WinRmConnectivityValidationAttributes, 5570
+software.wings.settings.validation.SmtpConnectivityValidationAttributes, 5571

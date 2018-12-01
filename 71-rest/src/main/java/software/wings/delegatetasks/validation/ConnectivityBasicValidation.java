@@ -4,11 +4,16 @@ import static java.lang.String.format;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+import com.google.inject.Inject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.helpers.ext.external.comm.handlers.EmailHandler;
+import software.wings.helpers.ext.mail.SmtpConfig;
+import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.settings.SettingValue;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
@@ -20,6 +25,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
+  @Inject EmailHandler emailHandler;
   private static final int SOCKET_TIMEOUT = (int) SECONDS.toMillis(15);
   private static final Logger logger = LoggerFactory.getLogger(ConnectivityBasicValidation.class);
 
@@ -36,6 +42,8 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
       return getSshValidationResult(request);
     } else if (settingValue instanceof WinRmConnectionAttributes) {
       return getWinRmValidationResult(request);
+    } else if (settingValue instanceof SmtpConfig) {
+      return getSmtpValidationResult(request);
     } else {
       // Should never happen
       return singletonList(DelegateConnectionResult.builder().criteria("").validated(false).build());
@@ -50,6 +58,8 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
       return getSshCriteria(request);
     } else if (settingValue instanceof WinRmConnectionAttributes) {
       return getWinRmCriteria(request);
+    } else if (settingValue instanceof SmtpConfig) {
+      return getSmtpCriteria(request);
     } else {
       // Should never happen
       return singletonList("");
@@ -82,6 +92,16 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
     return getSocketConnectivity(hostName, port, criteria);
   }
 
+  private List<DelegateConnectionResult> getSmtpValidationResult(ConnectivityValidationDelegateRequest request) {
+    String criteria = getSmtpCriteria(request).get(0);
+    SmtpConfig smtpConfig = (SmtpConfig) request.getSettingAttribute().getValue();
+    List<EncryptedDataDetail> encryptedDataDetails = request.getEncryptedDataDetails();
+    return singletonList(DelegateConnectionResult.builder()
+                             .criteria(criteria)
+                             .validated(emailHandler.validateDelegateConnection(smtpConfig, encryptedDataDetails))
+                             .build());
+  }
+
   private List<DelegateConnectionResult> getSocketConnectivity(String hostName, int port, String criteria) {
     boolean valid = false;
     try (Socket socket = new Socket()) {
@@ -95,15 +115,20 @@ public class ConnectivityBasicValidation extends AbstractDelegateValidateTask {
     return singletonList(DelegateConnectionResult.builder().criteria(criteria).validated(valid).build());
   }
 
+  private List<String> getSshCriteria(ConnectivityValidationDelegateRequest request) {
+    SshConnectionConnectivityValidationAttributes validationAttributes =
+        (SshConnectionConnectivityValidationAttributes) request.getSettingAttribute().getValidationAttributes();
+    return singletonList(format("Basic socket connectivity: %s", validationAttributes.getHostName()));
+  }
+
   private List<String> getWinRmCriteria(ConnectivityValidationDelegateRequest request) {
     WinRmConnectivityValidationAttributes validationAttributes =
         (WinRmConnectivityValidationAttributes) request.getSettingAttribute().getValidationAttributes();
     return singletonList(format("Basic socket connectivity: %s", validationAttributes.getHostName()));
   }
 
-  private List<String> getSshCriteria(ConnectivityValidationDelegateRequest request) {
-    SshConnectionConnectivityValidationAttributes validationAttributes =
-        (SshConnectionConnectivityValidationAttributes) request.getSettingAttribute().getValidationAttributes();
-    return singletonList(format("Basic socket connectivity: %s", validationAttributes.getHostName()));
+  private List<String> getSmtpCriteria(ConnectivityValidationDelegateRequest request) {
+    SmtpConfig smtpConfig = (SmtpConfig) request.getSettingAttribute().getValue();
+    return singletonList(format("%s:%s", smtpConfig.getHost(), smtpConfig.getPort()));
   }
 }
