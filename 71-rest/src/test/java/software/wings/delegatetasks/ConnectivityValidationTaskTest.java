@@ -21,13 +21,17 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import software.wings.WingsBaseTest;
 import software.wings.beans.WinRmConnectionAttributes;
+import software.wings.helpers.ext.mail.Mailer;
+import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
+import software.wings.settings.validation.SmtpConnectivityValidationAttributes;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
 import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
 import software.wings.utils.HostValidationService;
 
 public class ConnectivityValidationTaskTest extends WingsBaseTest {
   @Mock private HostValidationService mockHostValidationService;
+  @Mock private Mailer mockMailer;
 
   @InjectMocks
   private ConnectivityValidationTask task =
@@ -67,5 +71,20 @@ public class ConnectivityValidationTaskTest extends WingsBaseTest {
                   .build();
     task.run(new Object[] {request});
     verify(mockHostValidationService, times(2)).validateHost(anyList(), any(), anyList(), any());
+    request =
+        ConnectivityValidationDelegateRequest.builder()
+            .encryptedDataDetails(emptyList())
+            .settingAttribute(aSettingAttribute()
+                                  .withAccountId(ACCOUNT_ID)
+                                  .withValue(SmtpConfig.builder().build())
+                                  .withConnectivityValidationAttributes(SmtpConnectivityValidationAttributes.builder()
+                                                                            .to("harness@harness.io")
+                                                                            .body("body")
+                                                                            .subject("subject")
+                                                                            .build())
+                                  .build())
+            .build();
+    task.run(new Object[] {request});
+    verify(mockMailer).send(any(), anyList(), any());
   }
 }
