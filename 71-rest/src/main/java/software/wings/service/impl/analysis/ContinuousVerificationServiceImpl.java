@@ -665,29 +665,44 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
     int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
 
-    List<NewRelicMetricDataRecord> metricRecords = new ArrayList<>();
-
-    PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
-        PageRequestBuilder.aPageRequest()
-            .withLimit("5000")
-            .withOffset("0")
-            .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
-            .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
-            .addFilter("dataCollectionMinute", Operator.GE, startMinute)
-            .addFilter("dataCollectionMinute", Operator.LT_EQ, endMinute)
-            .addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME)
-            .addFieldsIncluded("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata")
-            .build();
-
-    int previousOffSet = 0;
-    PageResponse<NewRelicMetricDataRecord> response =
-        wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest);
-    while (!response.isEmpty()) {
-      metricRecords.addAll(response.getResponse());
-      previousOffSet += response.size();
-      dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
-      response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest);
+    Map<Integer, Integer> startEndMap = new HashMap<>();
+    int movingStart = startMinute, movingEnd = startMinute + 60;
+    while (movingEnd <= endMinute) {
+      startEndMap.put(movingStart, movingEnd);
+      movingStart = movingEnd;
+      movingEnd = movingStart + 60;
     }
+    if (movingEnd > endMinute) {
+      startEndMap.put(movingStart, endMinute);
+    }
+    List<NewRelicMetricDataRecord> metricRecords = new ArrayList<>();
+    startEndMap.entrySet().parallelStream().forEach(entry -> {
+      PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
+          PageRequestBuilder.aPageRequest()
+              .withLimit("500")
+              .withOffset("0")
+              .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
+              .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
+              .addFilter("dataCollectionMinute", Operator.GE, entry.getKey())
+              .addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME)
+              .addFieldsIncluded("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata")
+              .build();
+
+      if (entry.getValue() == endMinute) {
+        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, entry.getValue());
+      } else {
+        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, entry.getValue());
+      }
+      int previousOffSet = 0;
+      PageResponse<NewRelicMetricDataRecord> response =
+          wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest);
+      while (!response.isEmpty()) {
+        metricRecords.addAll(response.getResponse());
+        previousOffSet += response.size();
+        dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
+        response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest);
+      }
+    });
 
     logger.info("Size of metric records : {}", metricRecords.size());
     for (NewRelicMetricDataRecord metricRecord : metricRecords) {
