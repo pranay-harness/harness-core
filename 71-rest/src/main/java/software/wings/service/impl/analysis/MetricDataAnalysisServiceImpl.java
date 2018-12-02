@@ -14,8 +14,11 @@ import com.google.inject.Inject;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.CountOptions;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SettingAttribute;
@@ -173,52 +176,54 @@ public class MetricDataAnalysisServiceImpl implements MetricDataAnalysisService 
   }
 
   @Override
-  public boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String groupName,
-      String transactionName, TimeSeriesMetricDefinition metricDefinition) {
-    wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
-                                .filter("appId", appId)
-                                .filter("stateType", stateType)
-                                .filter("serviceId", serviceId)
-                                .filter("groupName", groupName)
-                                .filter("transactionName", transactionName)
-                                .filter("metricName", metricDefinition.getMetricName()));
-    TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds =
-        TimeSeriesMLTransactionThresholds.builder()
-            .stateType(stateType)
-            .groupName(groupName)
-            .serviceId(serviceId)
-            .transactionName(transactionName)
-            .metricName(metricDefinition.getMetricName())
-            .thresholds(metricDefinition)
-            .build();
-    timeSeriesMLTransactionThresholds.setAppId(appId);
-    wingsPersistence.save(timeSeriesMLTransactionThresholds);
+  public boolean saveCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
+      String transactionName, String groupName, TimeSeriesMetricDefinition metricDefinition) {
+    final Query<TimeSeriesMLTransactionThresholds> query =
+        wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
+            .filter("appId", appId)
+            .filter("serviceId", serviceId)
+            .filter("stateType", stateType)
+            .filter("groupName", groupName)
+            .filter("transactionName", transactionName)
+            .filter("metricName", metricDefinition.getMetricName())
+            .filter("cvConfigId", cvConfigId);
+
+    UpdateOperations<TimeSeriesMLTransactionThresholds> updateOperations =
+        wingsPersistence.createUpdateOperations(TimeSeriesMLTransactionThresholds.class)
+            .set("thresholds", metricDefinition)
+            .inc("version");
+
+    final TimeSeriesMLTransactionThresholds savedThreshold =
+        wingsPersistence.findAndModify(query, updateOperations, new FindAndModifyOptions());
+
+    if (savedThreshold == null) {
+      TimeSeriesMLTransactionThresholds timeSeriesMLTransactionThresholds =
+          TimeSeriesMLTransactionThresholds.builder()
+              .stateType(stateType)
+              .groupName(groupName)
+              .serviceId(serviceId)
+              .cvConfigId(cvConfigId)
+              .transactionName(transactionName)
+              .metricName(metricDefinition.getMetricName())
+              .thresholds(metricDefinition)
+              .build();
+      timeSeriesMLTransactionThresholds.setAppId(appId);
+      wingsPersistence.save(timeSeriesMLTransactionThresholds);
+    }
     return true;
   }
 
   @Override
-  public TimeSeriesMLTransactionThresholds getCustomThreshold(String appId, StateType stateType, String serviceId,
+  public boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String cvConfigId,
       String groupName, String transactionName, String metricName) {
-    return wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
-        .filter("appId", appId)
-        .filter("stateType", stateType)
-        .filter("serviceId", serviceId)
-        .filter("groupName", groupName)
-        .filter("transactionName", transactionName)
-        .filter("metricName", metricName)
-        .get();
-  }
-
-  @Override
-  public boolean deleteCustomThreshold(String appId, StateType stateType, String serviceId, String groupName,
-      String transactionName, String metricName) {
     return wingsPersistence.delete(wingsPersistence.createQuery(TimeSeriesMLTransactionThresholds.class)
                                        .filter("appId", appId)
-                                       .filter("stateType", stateType)
                                        .filter("serviceId", serviceId)
+                                       .filter("stateType", stateType)
                                        .filter("groupName", groupName)
                                        .filter("transactionName", transactionName)
-                                       .filter("metricName", metricName));
+                                       .filter("metricName", metricName)
+                                       .filter("cvConfigId", cvConfigId));
   }
 
   public List<NewRelicMetricAnalysisRecord> getMetricsAnalysisForDemo(

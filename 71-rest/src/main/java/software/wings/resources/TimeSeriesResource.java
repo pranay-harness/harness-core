@@ -64,7 +64,7 @@ public class TimeSeriesResource {
       @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workFlowExecutionId") String workFlowExecutionId,
       @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("transactionName") String transactionName,
-      @QueryParam("metricName") String metricName, @QueryParam("groupName") String groupName) throws IOException {
+      @QueryParam("metricName") String metricName, @QueryParam("groupName") String groupName) {
     return new RestResponse<>(metricDataAnalysisService.getToolTip(
         stateExecutionId, workFlowExecutionId, analysisMinute, transactionName, metricName, groupName));
   }
@@ -85,9 +85,10 @@ public class TimeSeriesResource {
   public RestResponse<Boolean> saveCustomThreshold(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
-      @QueryParam("transactionName") String transactionName, TimeSeriesMetricDefinition timeSeriesMetricDefinition) {
+      @QueryParam("transactionName") String transactionName, @QueryParam("cvConfigId") String cvConfigId,
+      TimeSeriesMetricDefinition timeSeriesMetricDefinition) {
     return new RestResponse<>(metricDataAnalysisService.saveCustomThreshold(
-        appId, stateType, serviceId, groupName, transactionName, timeSeriesMetricDefinition));
+        appId, stateType, serviceId, cvConfigId, groupName, transactionName, timeSeriesMetricDefinition));
   }
 
   @DELETE
@@ -97,8 +98,9 @@ public class TimeSeriesResource {
   public RestResponse<Boolean> deleteCustomThreshold(@QueryParam("accountId") String accountId,
       @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName,
-      @QueryParam("transactionName") String transactionName, @QueryParam("metricName") String metricName) {
+      @QueryParam("cvConfigId") String cvConfigId, @QueryParam("transactionName") String transactionName,
+      @QueryParam("metricName") String metricName) {
     return new RestResponse<>(metricDataAnalysisService.deleteCustomThreshold(
-        appId, stateType, serviceId, groupName, transactionName, metricName));
+        appId, stateType, serviceId, cvConfigId, groupName, transactionName, metricName));
   }
 }

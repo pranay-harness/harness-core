@@ -73,10 +73,8 @@ public interface TimeSeriesAnalysisService {
   String getLastSuccessfulWorkflowExecutionIdWithData(
       StateType stateType, String appId, String workflowId, String serviceId);
 
-  Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
-      String appId, StateType stateType, String stateExecutionId, String serviceId, String groupName);
-  Map<String, Map<String, TimeSeriesMetricDefinition>> getCustomMetricTemplates(
-      String appId, StateType stateType, String serviceId, String groupName);
+  Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(String appId, StateType stateType,
+      String stateExecutionId, String serviceId, String cvConfigId, String groupName);
 
   NewRelicMetricDataRecord getAnalysisMinute(StateType stateType, String appId, String stateExecutionId,
       String workflowExecutionId, String serviceId, String groupName);
@@ -103,9 +101,6 @@ public interface TimeSeriesAnalysisService {
 
   List<TimeSeriesMLAnalysisRecord> getHistoricalAnalysis(
       String accountId, String appId, String serviceId, String cvConfigId, long analysisMin);
-
-  Map<String, Map<String, TimeSeriesMetricDefinition>> getMetricTemplate(
-      String appId, String serviceId, String groupName, StateType stateType, String cvConfigId);
 
   TimeSeriesAnomaliesRecord getPreviousAnomalies(String appId, String cvConfigId, Map<String, List<String>> metrics);
 }

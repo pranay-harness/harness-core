@@ -196,7 +196,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   public String getMetricTemplateUrl(
       String accountId, String appId, StateType stateType, String serviceId, String cvConfigId) {
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL
-        + "/get-metric-template_24_7?accountId=" + accountId + "&appId=" + appId + "&stateType=" + stateType
+        + "/get-metric-template?accountId=" + accountId + "&appId=" + appId + "&stateType=" + stateType
         + "&serviceId=" + serviceId + "&cvConfigId=" + cvConfigId;
   }
 

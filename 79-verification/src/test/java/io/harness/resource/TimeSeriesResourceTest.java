@@ -45,6 +45,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   private String workflowId;
   private String workflowExecutionId;
   private String serviceId;
+  private String cvConfigIdId;
   private String groupName;
   private String baseLineExecutionId;
   private String cvConfigId;
@@ -74,6 +75,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
     workflowExecutionId = generateUuid();
     baseLineExecutionId = generateUuid();
     serviceId = generateUuid();
+    cvConfigIdId = generateUuid();
     cvConfigId = generateUuid();
     groupName = "groupName-";
     nodes = new HashSet<String>();
@@ -155,10 +157,11 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
 
   @Test
   public void testGetMetricTemplate() {
-    when(timeSeriesAnalysisService.getMetricTemplate(applicationId, stateType, stateExecutionId, serviceId, groupName))
+    when(timeSeriesAnalysisService.getMetricTemplate(
+             applicationId, stateType, stateExecutionId, serviceId, cvConfigId, groupName))
         .thenReturn(metricTemplate);
     RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> resp = timeSeriesResource.getMetricTemplate(
-        accountId, applicationId, stateType, stateExecutionId, serviceId, groupName);
+        accountId, applicationId, stateType, stateExecutionId, serviceId, cvConfigId, groupName);
     assertEquals(metricTemplate, resp.getResource());
   }
 
