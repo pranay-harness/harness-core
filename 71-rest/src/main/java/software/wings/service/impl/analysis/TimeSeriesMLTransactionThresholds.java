@@ -8,7 +8,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
-import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.metrics.TimeSeriesMetricDefinition;
@@ -18,22 +17,27 @@ import software.wings.sm.StateType;
 @Indexes({
   @Index(fields = {
     @Field("appId")
-    , @Field("serviceId"), @Field("stateType"), @Field("groupName"), @Field("transactionName"), @Field("metricName")
+    , @Field("serviceId"), @Field("stateType"), @Field("groupName"), @Field("transactionName"), @Field("metricName"),
+        @Field("cvConfigId")
   }, options = @IndexOptions(unique = true, name = "timeseriesThresholdsUniqueNewIdx"))
 })
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = false)
 public class TimeSeriesMLTransactionThresholds extends Base {
-  @NotEmpty @Indexed private String serviceId;
+  @NotEmpty private String serviceId;
 
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
-  @NotEmpty @Indexed private String groupName;
+  @NotEmpty private String groupName;
 
-  @NotEmpty @Indexed private String transactionName;
+  @NotEmpty private String transactionName;
 
-  @NotEmpty @Indexed private String metricName;
+  @NotEmpty private String metricName;
+
+  @NotEmpty private String cvConfigId;
 
   TimeSeriesMetricDefinition thresholds;
+
+  private int version;
 }

@@ -60,7 +60,7 @@ public class MetricAnalysisRecord extends Base {
 
   private String message;
 
-  private String cvConfigId;
+  private @Indexed String cvConfigId;
 
   @Default private int aggregatedRisk = -1;
 

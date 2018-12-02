@@ -123,12 +123,29 @@ public class TimeSeriesResource {
   @Timed
   @ExceptionMetered
   @LearningEngineAuth
+  @Deprecated
+  public RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> getMetricTemplatePost(
+      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
+      @QueryParam("stateType") StateType stateType, @QueryParam("stateExecutionId") String stateExecutionId,
+      @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("groupName") String groupName) {
+    return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplate(
+        appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @GET
+  @Path("/get-metric-template")
+  @Timed
+  @ExceptionMetered
+  @LearningEngineAuth
   public RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> getMetricTemplate(
       @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
       @QueryParam("stateType") StateType stateType, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("serviceId") String serviceId, @QueryParam("groupName") String groupName) {
-    return new RestResponse<>(
-        timeSeriesAnalysisService.getMetricTemplate(appId, stateType, stateExecutionId, serviceId, groupName));
+      @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("groupName") String groupName) {
+    return new RestResponse<>(timeSeriesAnalysisService.getMetricTemplate(
+        appId, stateType, stateExecutionId, serviceId, cvConfigId, groupName));
   }
 
   @GET
@@ -180,20 +197,6 @@ public class TimeSeriesResource {
       @QueryParam("serviceId") String serviceId, @QueryParam("cvConfigId") String cvConfigId) {
     return new RestResponse<>(
         timeSeriesAnalysisService.getHistoricalAnalysis(accountId, appId, serviceId, cvConfigId, analysisMinute));
-  }
-
-  @Produces({"application/json", "application/v1+json"})
-  @POST
-  @Path("/get-metric-template_24_7")
-  @Timed
-  @ExceptionMetered
-  @LearningEngineAuth
-  public RestResponse<Map<String, Map<String, TimeSeriesMetricDefinition>>> getMetricTemplates(
-      @QueryParam("accountId") String accountId, @QueryParam("appId") String appId,
-      @QueryParam("stateType") StateType stateType, @QueryParam("serviceId") String serviceId,
-      @QueryParam("groupName") String groupName, @QueryParam("cvConfigId") String cvConfigId) {
-    return new RestResponse<>(
-        timeSeriesAnalysisService.getMetricTemplate(appId, serviceId, groupName, stateType, cvConfigId));
   }
 
   @Produces({"application/json", "application/v1+json"})
