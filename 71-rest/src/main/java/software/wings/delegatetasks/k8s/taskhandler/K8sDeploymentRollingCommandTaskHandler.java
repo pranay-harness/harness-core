@@ -76,8 +76,6 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
           Pair.of("k8sCommandRequest", "Must be instance of K8sDeploymentRollingSetupRequest"));
     }
 
-    final String namespace = k8sCommandRequest.getK8sClusterConfig().getNamespace();
-
     K8sDeploymentRollingSetupRequest request = (K8sDeploymentRollingSetupRequest) k8sCommandRequest;
 
     boolean success = init(request, k8sCommandTaskParams,
@@ -96,7 +94,7 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
       return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     }
 
-    success = applyManifests(client, resources, namespace, k8sCommandTaskParams,
+    success = applyManifests(client, resources, k8sCommandTaskParams,
         new ExecutionLogCallback(delegateLogService, k8sCommandRequest.getAccountId(), k8sCommandRequest.getAppId(),
             k8sCommandRequest.getActivityId(), Apply));
 
@@ -161,9 +159,6 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
         "Manifests processed. Found following resources: \n" + getResourcesInTableFormat(resources));
 
     managedWorkload = getManagedWorkload(resources);
-    if (StringUtils.isEmpty(managedWorkload.getNamespace())) {
-      managedWorkload.setNamespace(kubernetesConfig.getNamespace());
-    }
 
     executionLogCallback.saveExecutionLog("\nManaged Workload is: " + managedWorkload.kindNameRef());
 
@@ -247,8 +242,7 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
       throws Exception {
     executionLogCallback.saveExecutionLog("Wrapping up..\n");
 
-    DescribeCommand describeCommand =
-        client.describe().filename("manifests.yaml").namespace(kubernetesConfig.getNamespace());
+    DescribeCommand describeCommand = client.describe().filename("manifests.yaml");
 
     executionLogCallback.saveExecutionLog(describeCommand.command() + "\n");
 

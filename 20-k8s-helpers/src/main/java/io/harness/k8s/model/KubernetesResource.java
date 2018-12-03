@@ -24,7 +24,6 @@ import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
-import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.harness.k8s.manifest.ObjectYamlUtils;
@@ -47,7 +46,7 @@ public class KubernetesResource {
   private Object value;
   private String spec;
 
-  private static KubernetesClient k8sClient = new DefaultKubernetesClient(new ConfigBuilder().build());
+  private static KubernetesClient k8sClient = new DefaultKubernetesClient().inAnyNamespace();
 
   private static final String dotMatch = "\\.";
 

@@ -46,12 +46,12 @@ public class Utils {
   private static String eventOutputFormat =
       "custom-columns=KIND:involvedObject.kind,NAME:.involvedObject.name,MESSAGE:.message,REASON:.reason";
 
-  public static boolean applyManifests(Kubectl client, List<KubernetesResource> resources, String namespace,
+  public static boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
       K8sCommandTaskParams k8sCommandTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
     FileIo.writeUtf8StringToFile(
         k8sCommandTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
 
-    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").namespace(namespace).record(true);
+    ApplyCommand applyCommand = client.apply().filename("manifests.yaml").record(true);
 
     executionLogCallback.saveExecutionLog(applyCommand.command() + "\n");
 
