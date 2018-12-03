@@ -13,11 +13,7 @@ public class RateLimit implements RateBasedLimit {
   private int count;
   private int duration;
   private TimeUnit durationUnit;
-
-  @Override
-  public LimitType getLimitType() {
-    return LimitType.RATE_LIMIT;
-  }
+  private final LimitType limitType = LimitType.RATE_LIMIT;
 
   // for morphia
   private RateLimit() {

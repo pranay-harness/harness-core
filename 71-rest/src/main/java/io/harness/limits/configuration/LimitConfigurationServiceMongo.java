@@ -7,6 +7,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.eraro.ErrorCode;
+import io.harness.exception.WingsException;
 import io.harness.limits.ActionType;
 import io.harness.limits.ConfiguredLimit;
 import io.harness.limits.defaults.service.DefaultLimitsService;
@@ -14,6 +16,7 @@ import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
 import io.harness.persistence.ReadPref;
+import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
@@ -88,6 +91,10 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
 
   @Override
   public boolean configure(String accountId, ActionType actionType, Limit limit) {
+    if (StringUtils.isEmpty(accountId)) {
+      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Account ID is empty");
+    }
+
     ConfiguredLimit configuredLimit;
 
     switch (limit.getLimitType()) {

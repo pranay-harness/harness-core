@@ -10,6 +10,7 @@ import com.google.inject.Inject;
 
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationServiceMongo;
+import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
 import org.junit.Before;
@@ -19,6 +20,7 @@ import software.wings.integration.BaseIntegrationTest;
 import software.wings.integration.IntegrationTestUtil;
 import software.wings.utils.WingsTestConstants;
 
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 
@@ -45,5 +47,21 @@ public class LimitConfigurationResourceIntegrationTest extends BaseIntegrationTe
     assertTrue(response.getResource());
     Limit fetched = limits.get(accountId, ActionType.CREATE_APPLICATION).getLimit();
     assertEquals("fetched limit from db should be same as POST argument", limit, fetched);
+  }
+
+  @Test
+  public void testConfigureRateLimit() throws Exception {
+    RateLimit limit = new RateLimit(10, 24, TimeUnit.HOURS);
+    String url = IntegrationTestUtil.buildAbsoluteUrl("/api/limits/configure/rate-limit",
+        ImmutableMap.of("accountId", WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID, "action", "DEPLOY"));
+
+    WebTarget target = client.target(url);
+
+    RestResponse<Boolean> response = getRequestBuilderWithAuthHeader(target).post(
+        entity(limit, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
+
+    assertTrue(response.getResource());
+    Limit fetched = limits.get(accountId, ActionType.DEPLOY).getLimit();
+    assertEquals("fetched rate-limit from db should be same as POST argument", limit, fetched);
   }
 }
