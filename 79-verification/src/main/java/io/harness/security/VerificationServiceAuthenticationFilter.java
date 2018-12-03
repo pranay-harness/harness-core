@@ -100,7 +100,7 @@ public class VerificationServiceAuthenticationFilter implements ContainerRequest
     try {
       Algorithm algorithm = Algorithm.HMAC256(jwtLearningEngineServiceSecret);
       JWTVerifier verifier =
-          JWT.require(algorithm).withIssuer("Harness Inc").acceptIssuedAt(TimeUnit.MINUTES.toSeconds(10)).build();
+          JWT.require(algorithm).withIssuer("Harness Inc").acceptIssuedAt(TimeUnit.MINUTES.toSeconds(60)).build();
       verifier.verify(learningEngineServiceToken);
       JWT decode = JWT.decode(learningEngineServiceToken);
       if (decode.getExpiresAt().getTime() < System.currentTimeMillis()) {
