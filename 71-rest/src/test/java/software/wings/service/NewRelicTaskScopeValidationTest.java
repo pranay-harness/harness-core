@@ -65,7 +65,8 @@ public class NewRelicTaskScopeValidationTest extends WingsBaseTest {
   @Test
   public void validationVaultReachable() throws Exception {
     PowerMockito.when(Http.connectableHttpUrl(newRelicUrl)).thenReturn(true);
-    when(vaultRestClient.writeSecret(anyString(), anyString(), any(SettingVariableTypes.class), any(String.class)))
+    when(vaultRestClient.writeSecret(
+             anyString(), anyString(), anyString(), any(SettingVariableTypes.class), any(String.class)))
         .thenReturn(true);
 
     NewRelicValidation newRelicValidation = new NewRelicValidation(generateUuid(),

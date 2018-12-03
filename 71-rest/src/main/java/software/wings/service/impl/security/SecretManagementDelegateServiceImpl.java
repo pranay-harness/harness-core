@@ -225,8 +225,8 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   public boolean deleteVaultSecret(String path, VaultConfig vaultConfig) {
     boolean success = false;
     try {
-      success =
-          VaultRestClientFactory.create(vaultConfig).deleteSecret(String.valueOf(vaultConfig.getAuthToken()), path);
+      success = VaultRestClientFactory.create(vaultConfig)
+                    .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), path);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER, e)
           .addParam("reason", "Deletion of secret failed");
@@ -330,10 +330,12 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
     if (savedEncryptedData != null && isNotBlank(value)) {
       logger.info("deleting vault secret {} for {}", savedEncryptedData.getEncryptionKey(), savedEncryptedData);
       VaultRestClientFactory.create(vaultConfig)
-          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), savedEncryptedData.getEncryptionKey());
+          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(),
+              savedEncryptedData.getEncryptionKey());
     }
     boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
-                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()), name, settingType, value);
+                               .writeSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), name,
+                                   settingType, value);
 
     if (isSuccessful) {
       logger.info("saving vault secret {} for {}", keyUrl, savedEncryptedData);
@@ -355,8 +357,9 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   private char[] decryptInternal(EncryptedData data, VaultConfig vaultConfig) throws Exception {
     logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
-    String value = VaultRestClientFactory.create(vaultConfig)
-                       .readSecret(String.valueOf(vaultConfig.getAuthToken()), data.getEncryptionKey());
+    String value =
+        VaultRestClientFactory.create(vaultConfig)
+            .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), data.getEncryptionKey());
 
     if (EmptyPredicate.isNotEmpty(value)) {
       return value.toCharArray();
