@@ -369,12 +369,6 @@
         <dependency>
             <groupId>com.novemberain</groupId>
             <artifactId>quartz-mongodb</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.mongodb</groupId>
-                    <artifactId>mongo-java-driver</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>net.redhogs.cronparser</groupId>

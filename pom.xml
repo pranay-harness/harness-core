@@ -352,13 +352,7 @@
             <dependency>
                 <groupId>com.novemberain</groupId>
                 <artifactId>quartz-mongodb</artifactId>
-                <version>2.1.0</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.mongodb</groupId>
-                        <artifactId>mongo-java-driver</artifactId>
-                    </exclusion>
-                </exclusions>
+                <version>2.1.1</version>
             </dependency>
             <dependency>
                 <groupId>com.offbytwo.jenkins</groupId>
@@ -608,6 +602,11 @@
                 <version>1.2.2</version>
             </dependency>
             <dependency>
+                <groupId>org.clojure</groupId>
+                <artifactId>clojure</artifactId>
+                <version>1.9.0</version>
+            </dependency>
+            <dependency>
                 <groupId>org.cloudfoundry</groupId>
                 <artifactId>cloudfoundry-client-reactor</artifactId>
                 <version>3.8.0.RELEASE</version>
@@ -720,12 +719,6 @@
                 <groupId>org.quartz-scheduler</groupId>
                 <artifactId>quartz</artifactId>
                 <version>2.2.3</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>c3p0</groupId>
-                        <artifactId>c3p0</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.reflections</groupId>

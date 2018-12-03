@@ -58,7 +58,8 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
     // by default scheduler does not create all needed mongo indexes.
     // it is a bit hack but we are going to add them from here
 
-    if (schedulerConfig.getJobStoreClass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
+    if (schedulerConfig.getJobStoreClass().equals(
+            com.novemberain.quartz.mongodb.DynamicMongoDBJobStore.class.getCanonicalName())) {
       MongoClientURI uri =
           new MongoClientURI(getMongoUri(), MongoClientOptions.builder(MongoModule.mongoClientOptions));
       try (MongoClient mongoClient = new MongoClient(uri)) {
@@ -84,7 +85,8 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
 
   protected Properties getDefaultProperties() {
     Properties props = new Properties();
-    if (schedulerConfig.getJobStoreClass().equals("com.novemberain.quartz.mongodb.DynamicMongoDBJobStore")) {
+    if (schedulerConfig.getJobStoreClass().equals(
+            com.novemberain.quartz.mongodb.DynamicMongoDBJobStore.class.getCanonicalName())) {
       Builder mongoClientOptions = MongoClientOptions.builder()
                                        .connectTimeout(30000)
                                        .serverSelectionTimeout(90000)
@@ -103,8 +105,10 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
     props.setProperty("org.quartz.scheduler.idleWaitTime", schedulerConfig.getIdleWaitTime());
     props.setProperty("org.quartz.threadPool.threadCount", schedulerConfig.getThreadCount());
     props.setProperty("org.quartz.scheduler.skipUpdateCheck", "true");
-    props.setProperty("org.quartz.plugin.triggHistory.class", "org.quartz.plugins.history.LoggingTriggerHistoryPlugin");
-    props.setProperty("org.quartz.plugin.jobHistory.class", "org.quartz.plugins.history.LoggingJobHistoryPlugin");
+    props.setProperty("org.quartz.plugin.triggHistory.class",
+        org.quartz.plugins.history.LoggingTriggerHistoryPlugin.class.getCanonicalName());
+    props.setProperty("org.quartz.plugin.jobHistory.class",
+        org.quartz.plugins.history.LoggingJobHistoryPlugin.class.getCanonicalName());
     props.setProperty("org.quartz.scheduler.instanceName", schedulerConfig.getSchedulerName());
     props.setProperty("org.quartz.scheduler.instanceId", schedulerConfig.getInstanceId());
 
