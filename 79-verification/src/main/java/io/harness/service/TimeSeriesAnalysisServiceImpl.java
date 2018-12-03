@@ -211,7 +211,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       TimeSeriesAnomaliesRecord anomaliesRecord = wingsPersistence.createQuery(TimeSeriesAnomaliesRecord.class)
                                                       .filter("appId", appId)
                                                       .filter("cvConfigId", cvConfigId)
-                                                      .project("compressedAnomalies", false)
                                                       .get();
 
       if (anomaliesRecord == null) {
@@ -889,6 +888,10 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     }
 
     timeSeriesAnomaliesRecord.decompressAnomalies();
+
+    if (isEmpty(metrics)) {
+      return timeSeriesAnomaliesRecord;
+    }
 
     final Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies = new HashMap<>();
     metrics.forEach((txnName, metricNames) -> {
