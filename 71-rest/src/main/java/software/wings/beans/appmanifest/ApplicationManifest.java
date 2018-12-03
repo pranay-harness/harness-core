@@ -10,6 +10,7 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.yaml.YamlType;
 import software.wings.yaml.BaseEntityYaml;
 
@@ -22,10 +23,14 @@ public class ApplicationManifest extends Base {
 
   @NotEmpty @Indexed(options = @IndexOptions(unique = true)) private String serviceId;
   @NonNull StoreType storeType;
+  GitFileConfig gitFileConfig;
 
   public ApplicationManifest cloneInternal() {
-    ApplicationManifest manifest =
-        ApplicationManifest.builder().serviceId(this.serviceId).storeType(this.storeType).build();
+    ApplicationManifest manifest = ApplicationManifest.builder()
+                                       .serviceId(this.serviceId)
+                                       .storeType(this.storeType)
+                                       .gitFileConfig(this.gitFileConfig)
+                                       .build();
     manifest.setAppId(this.appId);
     return manifest;
   }

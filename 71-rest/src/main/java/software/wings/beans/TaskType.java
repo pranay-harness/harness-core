@@ -16,6 +16,7 @@ import software.wings.delegatetasks.DynaTraceDataCollectionTask;
 import software.wings.delegatetasks.EcsSteadyStateCheckTask;
 import software.wings.delegatetasks.ElkLogzDataCollectionTask;
 import software.wings.delegatetasks.GitCommandTask;
+import software.wings.delegatetasks.GitFetchFilesTask;
 import software.wings.delegatetasks.HttpTask;
 import software.wings.delegatetasks.JenkinsTask;
 import software.wings.delegatetasks.KubernetesSteadyStateCheckTask;
@@ -69,6 +70,7 @@ import software.wings.delegatetasks.validation.DynaTraceValidation;
 import software.wings.delegatetasks.validation.ElkValidation;
 import software.wings.delegatetasks.validation.GcrValidation;
 import software.wings.delegatetasks.validation.GcsValidation;
+import software.wings.delegatetasks.validation.GitFetchFilesValidation;
 import software.wings.delegatetasks.validation.GitValidation;
 import software.wings.delegatetasks.validation.HelmCommandValidation;
 import software.wings.delegatetasks.validation.HostValidationValidation;
@@ -286,7 +288,8 @@ public enum TaskType {
   TRIGGER_TASK(TaskGroup.TRIGGER, TriggerTask.class, TriggerValidation.class),
   JIRA(TaskGroup.JIRA, JiraTask.class, JiraValidation.class),
   CONNECTIVITY_VALIDATION(
-      TaskGroup.CONNECTIVITY_VALIDATION, ConnectivityValidationTask.class, ConnectivityBasicValidation.class);
+      TaskGroup.CONNECTIVITY_VALIDATION, ConnectivityValidationTask.class, ConnectivityBasicValidation.class),
+  GIT_FETCH_FILES_TASK(TaskGroup.GIT, GitFetchFilesTask.class, GitFetchFilesValidation.class);
 
   private final TaskGroup taskGroup;
   private final Class<? extends DelegateRunnableTask> delegateRunnableTaskClass;

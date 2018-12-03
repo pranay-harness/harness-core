@@ -2,6 +2,7 @@ package software.wings.api.k8s;
 
 import lombok.Builder;
 import lombok.Data;
+import software.wings.beans.TaskType;
 import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
@@ -13,6 +14,7 @@ import java.util.Map;
 public class K8sRollingDeploySetupElement implements ContextElement {
   String releaseName;
   int releaseNumber;
+  TaskType currentTaskType;
 
   @Override
   public ContextElementType getElementType() {

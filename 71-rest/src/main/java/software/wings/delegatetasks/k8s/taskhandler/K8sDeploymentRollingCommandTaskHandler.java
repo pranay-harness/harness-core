@@ -6,12 +6,14 @@ import static io.harness.k8s.manifest.VersionUtils.markVersionedResources;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 import static software.wings.beans.command.K8sDummyCommandUnit.Apply;
+import static software.wings.beans.command.K8sDummyCommandUnit.FetchFiles;
 import static software.wings.beans.command.K8sDummyCommandUnit.Init;
 import static software.wings.beans.command.K8sDummyCommandUnit.Prepare;
 import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyState;
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.Utils.applyManifests;
 import static software.wings.delegatetasks.k8s.Utils.doStatusCheck;
+import static software.wings.delegatetasks.k8s.Utils.fetchFiles;
 import static software.wings.delegatetasks.k8s.Utils.getLatestRevision;
 import static software.wings.delegatetasks.k8s.Utils.getResourcesInTableFormat;
 import static software.wings.delegatetasks.k8s.Utils.readManifests;
@@ -48,6 +50,8 @@ import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
 import software.wings.helpers.ext.k8s.request.K8sDeploymentRollingSetupRequest;
 import software.wings.helpers.ext.k8s.response.K8sCommandExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sDeploymentRollingSetupResponse;
+import software.wings.service.intfc.GitService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 
 import java.io.IOException;
@@ -61,6 +65,8 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
   private static final Logger logger = LoggerFactory.getLogger(K8sDeploymentRollingCommandTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
+  @Inject private GitService gitService;
+  @Inject private EncryptionService encryptionService;
 
   private KubernetesConfig kubernetesConfig;
   private Kubectl client;
@@ -78,56 +84,66 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
 
     K8sDeploymentRollingSetupRequest request = (K8sDeploymentRollingSetupRequest) k8sCommandRequest;
 
-    boolean success = init(request, k8sCommandTaskParams,
-        new ExecutionLogCallback(
-            delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), Init));
+    List<ManifestFile> manifestFiles = fetchFiles(
+        request.getK8sDelegateManifestConfig(), getLogCallBack(request, FetchFiles), gitService, encryptionService);
+    if (manifestFiles == null) {
+      return getFailureResponse(request.getActivityId());
+    }
+    request.getK8sDelegateManifestConfig().setManifestFiles(manifestFiles);
 
+    boolean success = init(request, k8sCommandTaskParams, getLogCallBack(request, Init));
     if (!success) {
-      return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+      return getFailureResponse(request.getActivityId());
     }
 
-    success = prepareForRolling(k8sCommandTaskParams,
-        new ExecutionLogCallback(delegateLogService, k8sCommandRequest.getAccountId(), k8sCommandRequest.getAppId(),
-            k8sCommandRequest.getActivityId(), Prepare));
-
+    success = prepareForRolling(k8sCommandTaskParams, getLogCallBack(request, Prepare));
     if (!success) {
-      return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+      return getFailureResponse(request.getActivityId());
     }
 
-    success = applyManifests(client, resources, k8sCommandTaskParams,
-        new ExecutionLogCallback(delegateLogService, k8sCommandRequest.getAccountId(), k8sCommandRequest.getAppId(),
-            k8sCommandRequest.getActivityId(), Apply));
-
+    success = applyManifests(client, resources, k8sCommandTaskParams, getLogCallBack(request, Apply));
     if (!success) {
-      return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+      return getFailureResponse(request.getActivityId());
     }
 
     release.setManagedWorkload(managedWorkload);
     release.setManagedWorkloadRevision(getLatestRevision(client, managedWorkload, k8sCommandTaskParams));
 
-    success = doStatusCheck(client, managedWorkload, k8sCommandTaskParams,
-        new ExecutionLogCallback(delegateLogService, k8sCommandRequest.getAccountId(), k8sCommandRequest.getAppId(),
-            k8sCommandRequest.getActivityId(), WaitForSteadyState));
-
+    success = doStatusCheck(client, managedWorkload, k8sCommandTaskParams, getLogCallBack(request, WaitForSteadyState));
     if (!success) {
       releaseHistory.setReleaseStatus(Status.Failed);
       kubernetesContainerService.saveReleaseHistory(
           kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
-      return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+      return getFailureResponse(request.getActivityId());
     }
 
-    wrapUp(k8sCommandTaskParams,
-        new ExecutionLogCallback(
-            delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), WrapUp));
+    wrapUp(k8sCommandTaskParams, getLogCallBack(request, WrapUp));
 
     releaseHistory.setReleaseStatus(Status.Succeeded);
     kubernetesContainerService.saveReleaseHistory(
         kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
 
+    K8sDeploymentRollingSetupResponse rollingSetupResponse =
+        K8sDeploymentRollingSetupResponse.builder().releaseNumber(release.getNumber()).build();
+    rollingSetupResponse.setActivityId(request.getActivityId());
     return K8sCommandExecutionResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)
-        .k8sCommandResponse(K8sDeploymentRollingSetupResponse.builder().releaseNumber(release.getNumber()).build())
+        .k8sCommandResponse(rollingSetupResponse)
         .build();
+  }
+
+  private K8sCommandExecutionResponse getFailureResponse(String activityId) {
+    K8sDeploymentRollingSetupResponse rollingSetupResponse = K8sDeploymentRollingSetupResponse.builder().build();
+    rollingSetupResponse.setActivityId(activityId);
+    return K8sCommandExecutionResponse.builder()
+        .commandExecutionStatus(CommandExecutionStatus.FAILURE)
+        .k8sCommandResponse(rollingSetupResponse)
+        .build();
+  }
+
+  private ExecutionLogCallback getLogCallBack(K8sDeploymentRollingSetupRequest request, String commandUnit) {
+    return new ExecutionLogCallback(
+        delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), commandUnit);
   }
 
   private boolean init(K8sDeploymentRollingSetupRequest request, K8sCommandTaskParams k8sCommandTaskParams,
@@ -145,8 +161,9 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
                                                                : ReleaseHistory.createFromData(releaseHistoryData);
 
     try {
-      List<ManifestFile> manifestFiles =
-          renderTemplate(k8sCommandTaskParams, request.getManifestFiles(), executionLogCallback);
+      List<ManifestFile> manifestFiles = renderTemplate(
+          k8sCommandTaskParams, request.getK8sDelegateManifestConfig().getManifestFiles(), executionLogCallback);
+
       resources = readManifests(manifestFiles, executionLogCallback);
     } catch (Exception e) {
       executionLogCallback.saveExecutionLog(e.getMessage(), ERROR, CommandExecutionStatus.FAILURE);
