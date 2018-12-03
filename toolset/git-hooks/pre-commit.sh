@@ -55,3 +55,26 @@ else
         fi
     done
 fi
+
+POM_FORMAT_PROPERTY=hook.pre-commit.format.pom
+if [ "`git config POM_FORMAT_PROPERTY`" == "false" ]
+then
+    echo '\033[0;31m' formatting poms is disabled - to enable: '\033[0;37m'git config --unset $POM_FORMAT_PROPERTY '\033[0m'
+else
+    echo '\033[0;34m' formatting poms ... to disable: '\033[0;37m'git config --add $POM_FORMAT_PROPERTY false '\033[0m'
+
+    mvn sortpom:sort > /dev/null
+
+    #do the formatting
+    for file in `git diff-index --cached --name-only $against | grep "/pom\.xml$"`
+    do
+        if [ -e "${file}" ]
+        then
+            git diff --exit-code -- "${file}"
+            if [ "$?" -ne "0" ]
+            then
+                git add "${file}"
+            fi
+        fi
+    done
+fi
