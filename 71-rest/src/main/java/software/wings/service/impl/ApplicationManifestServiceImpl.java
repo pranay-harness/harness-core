@@ -1,5 +1,9 @@
 package software.wings.service.impl;
 
+import static io.harness.exception.WingsException.USER;
+import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.utils.Validator.notNullCheck;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
@@ -8,6 +12,7 @@ import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Event.Type;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.Service;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
@@ -102,6 +107,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   private ApplicationManifest upsertApplicationManifest(ApplicationManifest applicationManifest, boolean isCreate) {
+    validateApplicationManifest(applicationManifest);
+
     if (!serviceResourceService.exist(applicationManifest.getAppId(), applicationManifest.getServiceId())) {
       throw new InvalidRequestException("Service doesn't exist");
     }
@@ -178,5 +185,25 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
                                     .filter(ManifestFile.APP_ID_KEY, appId)
                                     .filter(ManifestFile.ID_KEY, manifestFileId);
     wingsPersistence.delete(query);
+  }
+
+  private void validateApplicationManifest(ApplicationManifest applicationManifest) {
+    GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
+
+    if (StoreType.Remote.equals(applicationManifest.getStoreType())) {
+      notNullCheck("Git file config cannot be null for store type remote", gitFileConfig, USER);
+
+      if (isBlank(gitFileConfig.getConnectorId())) {
+        throw new InvalidRequestException("Connector id cannot be empty", USER);
+      }
+
+      if (isBlank(gitFileConfig.getBranch()) && isBlank(gitFileConfig.getCommitId())) {
+        throw new InvalidRequestException("Both branch and commitId cannot be empty", USER);
+      }
+    } else {
+      if (gitFileConfig != null) {
+        throw new InvalidRequestException("Git file config should be null for store type local", USER);
+      }
+    }
   }
 }

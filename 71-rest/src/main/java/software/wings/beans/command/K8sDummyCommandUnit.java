@@ -6,6 +6,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
 public class K8sDummyCommandUnit extends AbstractCommandUnit {
+  public static final String FetchFiles = "Fetch Files";
   public static final String Init = "Initialize";
   public static final String Prepare = "Prepare";
   public static final String Apply = "Apply";

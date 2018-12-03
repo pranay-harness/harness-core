@@ -1,9 +1,12 @@
 package software.wings.delegatetasks.k8s;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.k8s.kubectl.Utils.encloseWithQuotesIfNeeded;
 import static io.harness.k8s.kubectl.Utils.parseLatestRevisionNumberFromRolloutHistory;
 import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
 
@@ -27,9 +30,17 @@ import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.LogOutputStream;
+import software.wings.beans.GitConfig;
+import software.wings.beans.GitFileConfig;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
+import software.wings.beans.yaml.GitFetchFilesResult;
+import software.wings.beans.yaml.GitFile;
+import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
+import software.wings.service.intfc.GitService;
+import software.wings.service.intfc.security.EncryptionService;
 import software.wings.utils.Misc;
 
 import java.io.File;
@@ -251,5 +262,50 @@ public class Utils {
     }
 
     return sb.toString();
+  }
+
+  public static List<ManifestFile> getManifesFilesFromGit(
+      K8sDelegateManifestConfig delegateManifestConfig, GitService gitService, EncryptionService encryptionService) {
+    GitFileConfig gitFileConfig = delegateManifestConfig.getGitFileConfig();
+    GitConfig gitConfig = delegateManifestConfig.getGitConfig();
+
+    encryptionService.decrypt(gitConfig, delegateManifestConfig.getEncryptedDataDetails());
+
+    GitFetchFilesResult gitFetchFilesResult = gitService.fetchFilesByPath(delegateManifestConfig.getGitConfig(),
+        gitFileConfig.getConnectorId(), gitFileConfig.getCommitId(), gitFileConfig.getBranch(),
+        asList(gitFileConfig.getFilePath()), gitFileConfig.isUseBranch());
+
+    List<ManifestFile> manifestFiles = new ArrayList<>();
+    if (isNotEmpty(gitFetchFilesResult.getFiles())) {
+      List<GitFile> files = gitFetchFilesResult.getFiles();
+
+      for (GitFile gitFile : files) {
+        manifestFiles.add(
+            ManifestFile.builder().fileName(gitFile.getFilePath()).fileContent(gitFile.getFileContent()).build());
+      }
+    }
+
+    return manifestFiles;
+  }
+
+  public static List<ManifestFile> fetchFiles(K8sDelegateManifestConfig delegateManifestConfig,
+      ExecutionLogCallback executionLogCallback, GitService gitService, EncryptionService encryptionService) {
+    if (StoreType.Local.equals(delegateManifestConfig.getManifestStoreTypes())) {
+      return delegateManifestConfig.getManifestFiles();
+    }
+
+    String filePath = delegateManifestConfig.getGitFileConfig().getFilePath();
+    executionLogCallback.saveExecutionLog("\nFetching manifest files at path: " + (isBlank(filePath) ? "." : filePath));
+
+    try {
+      List<ManifestFile> manifestFilesFromGit =
+          getManifesFilesFromGit(delegateManifestConfig, gitService, encryptionService);
+      executionLogCallback.saveExecutionLog("Successfully fetched manifest files");
+      executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
+      return manifestFilesFromGit;
+    } catch (Exception e) {
+      executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      return null;
+    }
   }
 }
