@@ -23,15 +23,18 @@ import software.wings.beans.ExecutionCredential;
 import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.HostValidationResponse;
 import software.wings.beans.SettingAttribute;
+import software.wings.beans.SlackConfig;
 import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.helpers.ext.mail.Mailer;
 import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
+import software.wings.service.intfc.SlackNotificationService;
 import software.wings.settings.SettingValue;
 import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
 import software.wings.settings.validation.ConnectivityValidationDelegateResponse;
+import software.wings.settings.validation.SlackConnectivityValidationAttributes;
 import software.wings.settings.validation.SmtpConnectivityValidationAttributes;
 import software.wings.settings.validation.SshConnectionConnectivityValidationAttributes;
 import software.wings.settings.validation.WinRmConnectivityValidationAttributes;
@@ -44,6 +47,7 @@ import java.util.function.Supplier;
 public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
   @Inject private HostValidationService hostValidationService;
   @Inject private Mailer mailer;
+  @Inject private SlackNotificationService slackNotificationService;
 
   public ConnectivityValidationTask(String delegateId, DelegateTask delegateTask,
       Consumer<DelegateTaskResponse> consumer, Supplier<Boolean> preExecute) {
@@ -115,6 +119,26 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
         String errorMessage = "";
         try {
           mailer.send((SmtpConfig) settingValue, encryptedDataDetails, emailData);
+          valid = true;
+        } catch (Exception ex) {
+          errorMessage = getMessage(ex);
+        }
+        return ConnectivityValidationDelegateResponse.builder()
+            .executionStatus(SUCCESS)
+            .errorMessage(errorMessage)
+            .valid(valid)
+            .build();
+      } else if (settingValue instanceof SlackConfig) {
+        if (!(connectivityValidationAttributes instanceof SlackConnectivityValidationAttributes)) {
+          throw new InvalidRequestException("Must send Slack connectivity attributes", USER);
+        }
+        SlackConnectivityValidationAttributes attributes =
+            (SlackConnectivityValidationAttributes) connectivityValidationAttributes;
+        boolean valid = false;
+        String errorMessage = "";
+        try {
+          slackNotificationService.sendMessage(
+              (SlackConfig) settingValue, attributes.getChannel(), attributes.getSender(), attributes.getMessage());
           valid = true;
         } catch (Exception ex) {
           errorMessage = getMessage(ex);

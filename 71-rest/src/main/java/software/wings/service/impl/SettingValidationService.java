@@ -46,6 +46,7 @@ import software.wings.beans.PcfConfig;
 import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.SftpConfig;
+import software.wings.beans.SlackConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
@@ -114,8 +115,12 @@ public class SettingValidationService {
   @Inject private DelegateService delegateService;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
-    List<EncryptedDataDetail> encryptionDetails =
-        secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    List<EncryptedDataDetail> encryptionDetails = null;
+    SettingValue settingValue = settingAttribute.getValue();
+    if (!(settingValue instanceof SlackConfig)) {
+      encryptionDetails =
+          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
+    }
     ConnectivityValidationDelegateRequest request = ConnectivityValidationDelegateRequest.builder()
                                                         .encryptedDataDetails(encryptionDetails)
                                                         .settingAttribute(settingAttribute)

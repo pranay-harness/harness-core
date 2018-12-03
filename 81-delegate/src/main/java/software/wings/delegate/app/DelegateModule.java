@@ -106,6 +106,7 @@ import software.wings.service.impl.JenkinsBuildServiceImpl;
 import software.wings.service.impl.NexusBuildServiceImpl;
 import software.wings.service.impl.ServiceCommandExecutorServiceImpl;
 import software.wings.service.impl.SftpBuildServiceImpl;
+import software.wings.service.impl.SlackNotificationServiceImpl;
 import software.wings.service.impl.SmbBuildServiceImpl;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.impl.WinRMCommandUnitExecutorServiceImpl;
@@ -154,6 +155,7 @@ import software.wings.service.intfc.JenkinsBuildService;
 import software.wings.service.intfc.NexusBuildService;
 import software.wings.service.intfc.ServiceCommandExecutorService;
 import software.wings.service.intfc.SftpBuildService;
+import software.wings.service.intfc.SlackNotificationService;
 import software.wings.service.intfc.SmbBuildService;
 import software.wings.service.intfc.appdynamics.AppdynamicsDelegateService;
 import software.wings.service.intfc.aws.delegate.AwsAmiHelperServiceDelegate;
@@ -351,6 +353,7 @@ public class DelegateModule extends DependencyModule {
     bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
     bind(SftpService.class).to(SftpServiceImpl.class);
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceImpl.class);
+    bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);
