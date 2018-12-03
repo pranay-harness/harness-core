@@ -132,4 +132,6 @@ public interface UserGroupService {
    * @return list of user groups
    */
   List<UserGroup> getUserGroupsBySsoId(@NotBlank String accountId, @NotBlank String ssoId);
+
+  UserGroup fetchUserGroupByName(@NotEmpty String accountId, @NotEmpty String groupName);
 }

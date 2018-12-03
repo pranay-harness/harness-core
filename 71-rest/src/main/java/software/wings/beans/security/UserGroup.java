@@ -33,6 +33,7 @@ import java.util.Set;
 public class UserGroup extends Base {
   public static final String MEMBER_IDS_KEY = "memberIds";
   public static final String NAME_KEY = "name";
+  public static final String ACCOUNT_ID_KEY = "accountId";
 
   @Indexed @NotEmpty private String name;
   private String description;

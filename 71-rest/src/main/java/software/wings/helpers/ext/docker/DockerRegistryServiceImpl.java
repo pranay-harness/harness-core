@@ -46,6 +46,8 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   private static final Logger logger = LoggerFactory.getLogger(DockerRegistryServiceImpl.class);
 
   @Inject private EncryptionService encryptionService;
+  @Inject private DockerPublicRegistryProcessor dockerPublicRegistryProcessor;
+
   private ExpiringMap<String, String> cachedBearerTokens = ExpiringMap.builder().variableExpiration().build();
 
   private DockerRegistryRestClient getDockerRegistryRestClient(
@@ -64,58 +66,66 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   public List<BuildDetails> getBuilds(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, int maxNumberOfBuilds) {
     try {
-      DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
-      String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
-      List<BuildDetails> buildDetails = new ArrayList<>();
-      String token = null;
-      Response<DockerImageTagResponse> response =
-          registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
+      if (!dockerConfig.hasCredentials()) {
+        return dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
+      }
+      return getBuildDetails(dockerConfig, encryptionDetails, imageName);
+
+    } catch (IOException e) {
+      throw new WingsException(GENERAL_ERROR, WingsException.USER, e).addParam("message", Misc.getMessage(e));
+    }
+  }
+
+  private List<BuildDetails> getBuildDetails(
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) throws IOException {
+    DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+    String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+    List<BuildDetails> buildDetails = new ArrayList<>();
+    String token = null;
+    Response<DockerImageTagResponse> response = registryRestClient.listImageTags(basicAuthHeader, imageName).execute();
+    if (response.code() == 401) { // unauthorized
+      token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
+      response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
+    }
+    checkValidImage(imageName, response);
+    DockerImageTagResponse dockerImageTagResponse = response.body();
+    if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
+      logger.warn("There are no tags available for the imageName {}", imageName);
+      return buildDetails;
+    }
+    buildDetails.addAll(processBuildResponse(dockerImageTagResponse, dockerConfig, imageName));
+    // TODO: Limit the no of tags
+    while (true) {
+      String nextLink = findNextLink(response.headers());
+      if (nextLink == null) {
+        return buildDetails;
+      } else {
+        logger.info(
+            "Using pagination to fetch all the builds. The no of builds fetched so far {}", buildDetails.size());
+      }
+      String baseUrl = response.raw().request().url().toString();
+      int queryParamIndex = nextLink.indexOf('?');
+      String nextPageUrl =
+          queryParamIndex == -1 ? baseUrl.concat(nextLink) : baseUrl.concat(nextLink.substring(queryParamIndex));
+      response = registryRestClient.listImageTagsByUrl("Bearer " + token, nextPageUrl).execute();
       if (response.code() == 401) { // unauthorized
         token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
-        response = registryRestClient.listImageTags("Bearer " + token, imageName).execute();
+        response = registryRestClient.listImageTagsByUrl("Bearer " + token, nextPageUrl).execute();
       }
-      checkValidImage(imageName, response);
-      DockerImageTagResponse dockerImageTagResponse = response.body();
+      dockerImageTagResponse = response.body();
       if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
-        logger.warn("There are no tags available for the imageName {}", imageName);
+        logger.info("There are no more tags available for the imageName {}", imageName);
         return buildDetails;
       }
       buildDetails.addAll(processBuildResponse(dockerImageTagResponse, dockerConfig, imageName));
-      // TODO: Limit the no of tags
-      while (true) {
-        String nextLink = findNextLink(response.headers());
-        if (nextLink == null) {
-          return buildDetails;
-        } else {
-          logger.info(
-              "Using pagination to fetch all the builds. The no of builds fetched so far {}", buildDetails.size());
-        }
-        String baseUrl = response.raw().request().url().toString();
-        int queryParamIndex = nextLink.indexOf('?');
-        String nextPageUrl =
-            queryParamIndex == -1 ? baseUrl.concat(nextLink) : baseUrl.concat(nextLink.substring(queryParamIndex));
-        response = registryRestClient.listImageTagsByUrl("Bearer " + token, nextPageUrl).execute();
-        if (response.code() == 401) { // unauthorized
-          token = getToken(dockerConfig, encryptionDetails, response.headers(), registryRestClient);
-          response = registryRestClient.listImageTagsByUrl("Bearer " + token, nextPageUrl).execute();
-        }
-        dockerImageTagResponse = response.body();
-        if (dockerImageTagResponse == null || isEmpty(dockerImageTagResponse.getTags())) {
-          logger.info("There are no more tags available for the imageName {}", imageName);
-          return buildDetails;
-        }
-        buildDetails.addAll(processBuildResponse(dockerImageTagResponse, dockerConfig, imageName));
-        if (buildDetails.size() > MAX_NO_OF_TAGS_PER_IMAGE) {
-          logger.warn(
-              "Image name {} has more than {} tags. We might miss some new tags", imageName, MAX_NO_OF_TAGS_PER_IMAGE);
-          break;
-        }
+      if (buildDetails.size() > MAX_NO_OF_TAGS_PER_IMAGE) {
+        logger.warn(
+            "Image name {} has more than {} tags. We might miss some new tags", imageName, MAX_NO_OF_TAGS_PER_IMAGE);
+        break;
       }
-      logger.info("The complete list  of the the tags {}", buildDetails);
-      return buildDetails;
-    } catch (IOException e) {
-      throw new WingsException(GENERAL_ERROR, WingsException.USER).addParam("message", Misc.getMessage(e));
     }
+    logger.info("The complete list  of the the tags {}", buildDetails);
+    return buildDetails;
   }
 
   private void checkValidImage(String imageName, Response<DockerImageTagResponse> response) {
@@ -145,6 +155,14 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   @Override
   public boolean verifyImageName(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
+    if (!dockerConfig.hasCredentials()) {
+      return dockerPublicRegistryProcessor.verifyImageName(dockerConfig, encryptionDetails, imageName);
+    }
+    return checkImageName(dockerConfig, encryptionDetails, imageName);
+  }
+
+  private boolean checkImageName(
+      DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
     try {
       DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
       String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
@@ -160,28 +178,31 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
             .addParam("args", "Image name [" + imageName + "] does not exist in Docker registry.");
       }
     } catch (IOException e) {
-      throw new WingsException(ErrorCode.REQUEST_TIMEOUT, USER).addParam("name", "Registry server");
+      throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER, e).addParam("message", e.getMessage());
     }
     return true;
   }
 
   @Override
   public boolean validateCredentials(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
-    try {
-      DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
-      String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
-      Response response = registryRestClient.getApiVersion(basicAuthHeader).execute();
-      if (response.code() == 401) { // unauthorized
-        String authHeaderValue = response.headers().get("Www-Authenticate");
-        DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
-        if (dockerRegistryToken != null) {
-          response = registryRestClient.getApiVersion("Bearer " + dockerRegistryToken.getToken()).execute();
+    if (dockerConfig.hasCredentials()) {
+      try {
+        DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
+        String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
+        Response response = registryRestClient.getApiVersion(basicAuthHeader).execute();
+        if (response.code() == 401) { // unauthorized
+          String authHeaderValue = response.headers().get("Www-Authenticate");
+          DockerRegistryToken dockerRegistryToken = fetchToken(registryRestClient, basicAuthHeader, authHeaderValue);
+          if (dockerRegistryToken != null) {
+            response = registryRestClient.getApiVersion("Bearer " + dockerRegistryToken.getToken()).execute();
+          }
         }
+        return isSuccessful(response);
+      } catch (IOException e) {
+        throw new WingsException(GENERAL_ERROR, USER).addParam("message", Misc.getMessage(e));
       }
-      return isSuccessful(response);
-    } catch (IOException e) {
-      throw new WingsException(GENERAL_ERROR, USER).addParam("message", Misc.getMessage(e));
     }
+    return true;
   }
 
   private String getToken(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, Headers headers,
@@ -246,7 +267,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
     return null;
   }
 
-  private boolean isSuccessful(Response<?> response) {
+  public static boolean isSuccessful(Response<?> response) {
     int code = response.code();
     switch (code) {
       case 200:

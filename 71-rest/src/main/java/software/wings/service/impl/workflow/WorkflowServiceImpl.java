@@ -1777,7 +1777,8 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       if (orchestrationWorkflowType == OrchestrationWorkflowType.BLUE_GREEN) {
         workflowServiceHelper.generateNewWorkflowPhaseStepsForKubernetesBlueGreen(appId, workflowPhase, !serviceRepeat);
       } else {
-        workflowServiceHelper.generateNewWorkflowPhaseStepsForKubernetes(appId, workflowPhase, !serviceRepeat);
+        workflowServiceHelper.generateNewWorkflowPhaseStepsForKubernetes(
+            appId, workflowPhase, !serviceRepeat, orchestrationWorkflowType);
       }
     } else if (deploymentType == HELM) {
       workflowServiceHelper.generateNewWorkflowPhaseStepsForHelm(appId, workflowPhase, !serviceRepeat);
@@ -2214,7 +2215,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                             .filter(APP_ID_KEY, appId)
                             .filter(Pipeline.ID_KEY, workflowId)
                             .get();
-    Validator.notNullCheck("Workflow does not exist", USER);
+    Validator.notNullCheck("Workflow does not exist", workflow, USER);
     return workflow.getName();
   }
 

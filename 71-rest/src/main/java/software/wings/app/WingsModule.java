@@ -55,8 +55,6 @@ import software.wings.helpers.ext.azure.AcrService;
 import software.wings.helpers.ext.azure.AcrServiceImpl;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.helpers.ext.bamboo.BambooServiceImpl;
-import software.wings.helpers.ext.docker.DockerRegistryService;
-import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrClassicServiceImpl;
 import software.wings.helpers.ext.ecr.EcrService;
@@ -110,7 +108,6 @@ import software.wings.service.impl.ConfigServiceImpl;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.impl.DelegateScopeServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
-import software.wings.service.impl.DockerBuildServiceImpl;
 import software.wings.service.impl.DownloadTokenServiceImpl;
 import software.wings.service.impl.EcrBuildServiceImpl;
 import software.wings.service.impl.EmailNotificationServiceImpl;
@@ -443,8 +440,6 @@ public class WingsModule extends DependencyModule {
 
     bind(GkeClusterService.class).to(GkeClusterServiceImpl.class);
     bind(KubernetesContainerService.class).to(KubernetesContainerServiceImpl.class);
-    bind(DockerBuildService.class).to(DockerBuildServiceImpl.class);
-    bind(DockerRegistryService.class).to(DockerRegistryServiceImpl.class);
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);
     bind(InfrastructureProvisionerService.class).to(InfrastructureProvisionerServiceImpl.class);
     bind(ResourceConstraintService.class).to(ResourceConstraintServiceImpl.class);

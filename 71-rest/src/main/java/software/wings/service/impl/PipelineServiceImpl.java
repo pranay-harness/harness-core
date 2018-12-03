@@ -297,7 +297,7 @@ public class PipelineServiceImpl implements PipelineService {
                             .filter(APP_ID_KEY, appId)
                             .filter(Pipeline.ID_KEY, pipelineId)
                             .get();
-    Validator.notNullCheck("Pipeline does not exist", USER);
+    Validator.notNullCheck("Pipeline does not exist", pipeline, USER);
     return pipeline.getName();
   }
 

@@ -752,8 +752,8 @@ public class WorkflowServiceHelper {
     workflowPhase.addPhaseStep(aPhaseStep(WRAP_UP, Constants.WRAP_UP).build());
   }
 
-  public void generateNewWorkflowPhaseStepsForKubernetes(
-      String appId, WorkflowPhase workflowPhase, boolean serviceSetupRequired) {
+  public void generateNewWorkflowPhaseStepsForKubernetes(String appId, WorkflowPhase workflowPhase,
+      boolean serviceSetupRequired, OrchestrationWorkflowType orchestrationWorkflowType) {
     Service service = serviceResourceService.get(appId, workflowPhase.getServiceId());
     Map<CommandType, List<Command>> commandMap = getCommandTypeListMap(service);
 
@@ -784,11 +784,17 @@ public class WorkflowServiceHelper {
     }
 
     if (!workflowPhase.isDaemonSet() && !workflowPhase.isStatefulSet()) {
+      Map<String, Object> properties = new HashMap<>();
+      if (BASIC.equals(orchestrationWorkflowType)) {
+        // Setting instance count always 100 percent
+        properties.put("instanceCount", "100");
+      }
       workflowPhase.addPhaseStep(aPhaseStep(CONTAINER_DEPLOY, Constants.DEPLOY_CONTAINERS)
                                      .addStep(aGraphNode()
                                                   .withId(generateUuid())
                                                   .withType(KUBERNETES_DEPLOY.name())
                                                   .withName(Constants.UPGRADE_CONTAINERS)
+                                                  .withProperties(properties)
                                                   .build())
                                      .build());
     }
