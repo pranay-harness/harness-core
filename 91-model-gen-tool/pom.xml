@@ -20,7 +20,6 @@
         <dependency>
             <groupId>io.github.benas</groupId>
             <artifactId>random-beans</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>junit</groupId>

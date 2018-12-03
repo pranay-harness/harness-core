@@ -6,42 +6,39 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-
     <artifactId>63-limits</artifactId>
-
     <dependencies>
-
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>annotations</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.intellij</groupId>
             <artifactId>annotations</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
+            <groupId>ru.vyarus</groupId>
+            <artifactId>guice-validator</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>12-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>ru.vyarus</groupId>
-            <artifactId>guice-validator</artifactId>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
-
         <!-- TEST -->
         <dependency>
             <groupId>software.wings</groupId>
@@ -49,13 +46,5 @@
             <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
     </dependencies>
-
 </project>

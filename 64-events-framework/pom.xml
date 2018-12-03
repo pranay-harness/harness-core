@@ -6,11 +6,13 @@
         <artifactId>portal</artifactId>
         <version>0.0.1-SNAPSHOT</version>
     </parent>
-
     <artifactId>64-events-framework</artifactId>
-
     <dependencies>
-
+        <dependency>
+            <groupId>software.wings</groupId>
+            <artifactId>12-commons</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
         <!-- TEST -->
         <dependency>
             <groupId>software.wings</groupId>
@@ -18,12 +20,5 @@
             <version>${project.parent.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>12-commons</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-
     </dependencies>
-
 </project>
