@@ -61,10 +61,10 @@ public class Base extends PersistentEntity implements UuidAware, CreatedAtAware 
 
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @Indexed @NotNull @SchemaIgnore protected String appId;
-  @JsonIgnore @SchemaIgnore private EmbeddedUser createdBy;
+  @SchemaIgnore private EmbeddedUser createdBy;
   @SchemaIgnore @Indexed private long createdAt;
 
-  @JsonIgnore @SchemaIgnore private EmbeddedUser lastUpdatedBy;
+  @SchemaIgnore private EmbeddedUser lastUpdatedBy;
   @SchemaIgnore @NotNull private long lastUpdatedAt;
 
   @SchemaIgnore @Indexed private List<String> keywords;
