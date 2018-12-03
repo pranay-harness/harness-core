@@ -69,6 +69,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
@@ -656,7 +657,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private Map<String, Map<String, TimeSeriesOfMetric>> getTimeSeriesForTimeRangeFromDataRecords(
       long startTime, long endTime, CVConfiguration cvConfiguration, long riskCutOffTime) {
     // The object to be returned which contains the map txn => metrics => timeseries per metric
-    Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries = new HashMap<>();
+    Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries = new ConcurrentHashMap<>();
 
     // int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(endTime));
     // int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(startTime));
@@ -736,7 +737,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
 
     // Find and add the risks for those metrics above
-    updateRisksForTimeSeries(startTime, endTime, riskCutOffTime, cvConfiguration, observedTimeSeries);
+    Map<Long, Long> startEndMsMap = new HashMap<>();
+    Long startMs = startTime, endMs = startTime + TimeUnit.MINUTES.toMillis(60);
+    while (endMs <= endTime) {
+      startEndMsMap.put(startMs, endMs);
+      startMs = endMs;
+      endMs = startMs + TimeUnit.MINUTES.toMillis(60);
+    }
+    if (endMs > endTime) {
+      startEndMsMap.put(startMs, endTime);
+    }
+    startEndMsMap.entrySet().parallelStream().forEach(entry -> {
+      updateRisksForTimeSeries(entry.getKey(), entry.getValue(), riskCutOffTime, cvConfiguration, observedTimeSeries);
+    });
 
     return observedTimeSeries;
   }
@@ -758,6 +771,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
     return dataRecord.getValues().get(metricName);
   }
+
   private String getDeeplinkUrl(
       CVConfiguration cvConfig, String baseUrl, long startTime, long endTime, String metricString) {
     switch (cvConfig.getStateType()) {
