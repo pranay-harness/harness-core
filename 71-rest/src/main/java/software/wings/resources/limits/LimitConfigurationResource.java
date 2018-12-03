@@ -12,7 +12,6 @@ import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.impl.model.StaticLimit;
 import io.harness.limits.lib.Limit;
 import io.swagger.annotations.Api;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.http.Body;
@@ -78,10 +77,6 @@ public class LimitConfigurationResource {
   }
 
   private Boolean configure(String accountId, String action, Limit limit) {
-    if (StringUtils.isEmpty(accountId)) {
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, "Account ID is empty");
-    }
-
     ActionType actionType;
 
     try {
