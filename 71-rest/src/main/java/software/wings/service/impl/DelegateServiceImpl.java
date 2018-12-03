@@ -907,6 +907,12 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
               .ip(existingDelegate.getIp())
               .hostName(existingDelegate.getHostName())
               .build());
+      alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegateProfileError,
+          DelegateProfileErrorAlert.builder()
+              .accountId(accountId)
+              .ip(existingDelegate.getIp())
+              .hostName(existingDelegate.getHostName())
+              .build());
     }
 
     wingsPersistence.delete(
