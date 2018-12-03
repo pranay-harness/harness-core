@@ -214,8 +214,13 @@ public class DataGenApplication extends Application<MainConfiguration> {
     logger.info("Populating the data");
 
     DataGenService dataGenService = injector.getInstance(DataGenService.class);
-    dataGenService.populateData();
-    logger.info("Populating data is completed");
-    System.exit(0);
+    try {
+      dataGenService.populateData();
+      logger.info("Populating data is completed");
+      System.exit(0);
+    } catch (Exception e) {
+      logger.error("Exception occurred. Exiting datagen application...", e);
+      System.exit(0);
+    }
   }
 }

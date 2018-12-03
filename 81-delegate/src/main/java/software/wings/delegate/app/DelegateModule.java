@@ -61,6 +61,8 @@ import software.wings.helpers.ext.bamboo.BambooServiceImpl;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.docker.DockerRegistryService;
 import software.wings.helpers.ext.docker.DockerRegistryServiceImpl;
+import software.wings.helpers.ext.docker.client.DockerRestClientFactory;
+import software.wings.helpers.ext.docker.client.DockerRestClientFactoryImpl;
 import software.wings.helpers.ext.ecr.EcrClassicService;
 import software.wings.helpers.ext.ecr.EcrClassicServiceImpl;
 import software.wings.helpers.ext.ecr.EcrService;
@@ -354,6 +356,7 @@ public class DelegateModule extends DependencyModule {
     bind(SftpService.class).to(SftpServiceImpl.class);
     bind(K8sGlobalConfigService.class).to(K8sGlobalConfigServiceImpl.class);
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
+    bind(DockerRestClientFactory.class).to(DockerRestClientFactoryImpl.class);
 
     MapBinder<String, CommandUnitExecutorService> serviceCommandExecutorServiceMapBinder =
         MapBinder.newMapBinder(binder(), String.class, CommandUnitExecutorService.class);

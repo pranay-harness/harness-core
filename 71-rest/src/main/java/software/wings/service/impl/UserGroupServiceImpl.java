@@ -411,4 +411,12 @@ public class UserGroupServiceImpl implements UserGroupService {
     PageResponse<UserGroup> pageResponse = list(accountId, pageRequest, true);
     return pageResponse.getResponse();
   }
+
+  @Override
+  public UserGroup fetchUserGroupByName(String accountId, String groupName) {
+    return wingsPersistence.createQuery(UserGroup.class)
+        .filter(UserGroup.ACCOUNT_ID_KEY, accountId)
+        .filter(UserGroup.NAME_KEY, groupName)
+        .get();
+  }
 }

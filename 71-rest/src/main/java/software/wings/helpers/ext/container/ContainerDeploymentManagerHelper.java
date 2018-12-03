@@ -245,12 +245,19 @@ public class ContainerDeploymentManagerHelper {
       String domainName = getDomainName(dockerConfig.getDockerRegistryUrl());
       String imageName = dockerArtifactStream.getImageName();
 
-      imageDetails.name(imageName)
-          .sourceName(dockerArtifactStream.getSourceName())
-          .registryUrl(dockerConfig.getDockerRegistryUrl())
-          .username(dockerConfig.getUsername())
-          .password(new String(dockerConfig.getPassword()))
-          .domainName(domainName);
+      if (dockerConfig.hasCredentials()) {
+        imageDetails.name(imageName)
+            .sourceName(dockerArtifactStream.getSourceName())
+            .registryUrl(dockerConfig.getDockerRegistryUrl())
+            .username(dockerConfig.getUsername())
+            .password(new String(dockerConfig.getPassword()))
+            .domainName(domainName);
+      } else {
+        imageDetails.name(imageName)
+            .sourceName(dockerArtifactStream.getSourceName())
+            .registryUrl(dockerConfig.getDockerRegistryUrl())
+            .domainName(domainName);
+      }
     } else if (artifactStream.getArtifactStreamType().equals(ECR.name())) {
       EcrArtifactStream ecrArtifactStream = (EcrArtifactStream) artifactStream;
       String imageUrl = getImageUrl(ecrArtifactStream, workflowExecutionId, appId);

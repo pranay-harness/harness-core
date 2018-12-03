@@ -840,10 +840,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertWorkflowPhase(orchestrationWorkflow);
     WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
     assertThat(workflowPhase).isNotNull();
-    assertThat(workflowPhase)
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("valid", false)
-        .hasFieldOrPropertyWithValue("validationMessage", format(PHASE_VALIDATION_MESSAGE, asList(DEPLOY_CONTAINERS)));
+    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("valid", true);
 
     assertThat(workflowPhase.getPhaseSteps())
         .isNotEmpty()
@@ -869,10 +866,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
     assertWorkflowPhase(orchestrationWorkflow);
     WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
     assertThat(workflowPhase).isNotNull();
-    assertThat(workflowPhase)
-        .isNotNull()
-        .hasFieldOrPropertyWithValue("valid", false)
-        .hasFieldOrPropertyWithValue("validationMessage", format(PHASE_VALIDATION_MESSAGE, asList(DEPLOY_CONTAINERS)));
+    assertThat(workflowPhase).isNotNull().hasFieldOrPropertyWithValue("valid", true);
 
     assertThat(workflowPhase.getPhaseSteps())
         .isNotEmpty()

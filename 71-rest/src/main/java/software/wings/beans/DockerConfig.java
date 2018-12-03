@@ -1,5 +1,7 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -29,8 +31,8 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @ToString(exclude = "password")
 public class DockerConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {
   @Attributes(title = "Docker Registry URL", required = true) @NotEmpty private String dockerRegistryUrl;
-  @Attributes(title = "Username", required = true) @NotEmpty private String username;
-  @Attributes(title = "Password", required = true) @Encrypted private char[] password;
+  @Attributes(title = "Username") private String username;
+  @Attributes(title = "Password") @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
@@ -40,6 +42,11 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
    */
   public DockerConfig() {
     super(SettingVariableTypes.DOCKER.name());
+  }
+
+  @SchemaIgnore
+  public boolean hasCredentials() {
+    return isNotEmpty(username) && isNotEmpty(password);
   }
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")

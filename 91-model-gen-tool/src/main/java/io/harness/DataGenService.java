@@ -80,6 +80,7 @@ import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.persistence.ReadPref;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
+import io.harness.seeddata.SeedDataProviderService;
 import org.junit.rules.TemporaryFolder;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Morphia;
@@ -221,6 +222,7 @@ public class DataGenService {
   @Inject private ConfigService configService;
   @Inject private HarnessUserGroupService harnessUserGroupService;
   @Inject private WingsPersistence wingsPersistence;
+  @Inject private SeedDataProviderService seedDataProviderService;
 
   protected String accountId = "INVALID_ID";
   protected String userToken = "INVALID_TOKEN";
@@ -253,8 +255,11 @@ public class DataGenService {
     learningEngineService.initializeServiceSecretKeys();
 
     createTestApplication(account);
+
+    // TODO: Remove once the create kubernetes app on acccount creation
+    seedDataProviderService.createKubernetesApp(account);
     // createSeedEntries();
-    executorService.submit(() -> loadAppStackCatalogs());
+    loadAppStackCatalogs();
   }
 
   protected void dropDBAndEnsureIndexes() {
@@ -759,60 +764,6 @@ public class DataGenService {
       systemCatalog = fileToSystemCatalog.get("apache-tomcat-7.0.78.tar.gz");
       systemCatalog.setVersion("7.0.78");
       systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT7, PLATFORMS, fileSize);
-    }
-    if (!fileToSystemCatalog.containsKey("apache-tomcat-7.0.78-hardened.tar.gz")) {
-      systemCatalog = aSystemCatalog()
-                          .withCatalogType(APPSTACK)
-                          .withName("Hardened Tomcat 7")
-                          .withFileName("apache-tomcat-7.0.78-hardened.tar.gz")
-                          .withAppId(Base.GLOBAL_APP_ID)
-                          .withFamily(TOMCAT)
-                          .withNotes("System created. Hardened Version")
-                          .withVersion("7.0.78")
-                          .withHardened(true)
-                          .build();
-      systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT7_HARDENED, PLATFORMS, fileSize);
-    } else {
-      systemCatalog = fileToSystemCatalog.get("apache-tomcat-7.0.78-hardened.tar.gz");
-      systemCatalog.setVersion("7.0.78");
-      systemCatalog.setHardened(true);
-      systemCatalog.setStackRootDirectory("apache-tomcat-7.0.78-hardened");
-      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT7_HARDENED, PLATFORMS, fileSize);
-    }
-    if (!fileToSystemCatalog.containsKey("apache-tomcat-8.5.15.tar.gz")) {
-      systemCatalog = aSystemCatalog()
-                          .withCatalogType(APPSTACK)
-                          .withName("Standard Tomcat 8")
-                          .withFileName("apache-tomcat-8.5.15.tar.gz")
-                          .withAppId(Base.GLOBAL_APP_ID)
-                          .withFamily(TOMCAT)
-                          .withNotes("System created.")
-                          .withVersion("8.5.15")
-                          .build();
-      systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT8, PLATFORMS, fileSize);
-    } else {
-      systemCatalog = fileToSystemCatalog.get("apache-tomcat-8.5.15.tar.gz");
-      systemCatalog.setVersion("8.5.15");
-      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT8, PLATFORMS, fileSize);
-    }
-    if (!fileToSystemCatalog.containsKey("apache-tomcat-8.5.15-hardened.tar.gz")) {
-      systemCatalog = aSystemCatalog()
-                          .withCatalogType(APPSTACK)
-                          .withName("Hardened Tomcat 8")
-                          .withFileName("apache-tomcat-8.5.15-hardened.tar.gz")
-                          .withAppId(Base.GLOBAL_APP_ID)
-                          .withFamily(TOMCAT)
-                          .withNotes("System created. Hardened Version.")
-                          .withVersion("8.5.15")
-                          .withHardened(true)
-                          .build();
-      systemCatalogService.save(systemCatalog, AWS_S3_CATALOG_TOMCAT8_HARDENED, PLATFORMS, fileSize);
-    } else {
-      systemCatalog = fileToSystemCatalog.get("apache-tomcat-8.5.15-hardened.tar.gz");
-      systemCatalog.setVersion("8.5.15");
-      systemCatalog.setHardened(true);
-      systemCatalog.setStackRootDirectory("apache-tomcat-8.5.15-hardened");
-      systemCatalogService.update(systemCatalog, AWS_S3_CATALOG_TOMCAT8_HARDENED, PLATFORMS, fileSize);
     }
   }
 
