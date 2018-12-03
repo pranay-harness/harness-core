@@ -4,6 +4,7 @@ import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import io.harness.exception.WingsException;
@@ -42,7 +43,7 @@ import java.util.Map;
 public class TimeSeriesAnomaliesRecord extends Base {
   @NotEmpty @Indexed private String cvConfigId;
   @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;
-  private byte[] compressedAnomalies;
+  @JsonIgnore private byte[] compressedAnomalies;
 
   @Builder
   public TimeSeriesAnomaliesRecord(
