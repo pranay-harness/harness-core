@@ -543,7 +543,7 @@ public class SecretManagerImpl implements SecretManager {
         String encryptionKey = encryptedData.getEncryptionKey();
 
         SettingVariableTypes settingVariableType = encryptedData.getType();
-        String keyName = settingVariableType + "/" + encryptedData.getName();
+        String keyName = encryptedData.getName();
         encrypted = vaultService.encrypt(keyName, decrypted == null ? null : String.valueOf(decrypted), accountId,
             settingVariableType, (VaultConfig) toConfig, EncryptedData.builder().encryptionKey(encryptionKey).build());
         break;

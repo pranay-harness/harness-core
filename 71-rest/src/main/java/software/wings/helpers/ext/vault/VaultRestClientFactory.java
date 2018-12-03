@@ -1,5 +1,7 @@
 package software.wings.helpers.ext.vault;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.harness.network.Http;
@@ -26,6 +28,8 @@ import java.util.concurrent.TimeUnit;
  * @author mark.lu on 10/11/18
  */
 public class VaultRestClientFactory {
+  private static final String DEFAULT_BASE_PATH = "harness";
+
   // This Jackson object mapper always ignore unknown properties while deserialize JSON documents.
   private static ObjectMapper objectMapper = new ObjectMapper();
   static {
@@ -72,20 +76,25 @@ public class VaultRestClientFactory {
     }
 
     @Override
-    public boolean writeSecret(String authToken, String keyName, SettingVariableTypes settingType, String value)
-        throws IOException {
+    public boolean writeSecret(String authToken, String basePath, String keyName, SettingVariableTypes settingType,
+        String value) throws IOException {
       VaultSecretValue vaultSecretValue = new VaultSecretValue(value);
-      return vaultRestClient.writeSecret(authToken, keyName, settingType, vaultSecretValue).execute().isSuccessful();
+      String nonEmptyBasePath = isEmpty(basePath) ? DEFAULT_BASE_PATH : basePath;
+      return vaultRestClient.writeSecret(authToken, nonEmptyBasePath, keyName, settingType, vaultSecretValue)
+          .execute()
+          .isSuccessful();
     }
 
     @Override
-    public boolean deleteSecret(String authToken, String path) throws IOException {
-      return vaultRestClient.deleteSecret(authToken, path).execute().isSuccessful();
+    public boolean deleteSecret(String authToken, String basePath, String path) throws IOException {
+      String nonEmptyBasePath = isEmpty(basePath) ? DEFAULT_BASE_PATH : basePath;
+      return vaultRestClient.deleteSecret(authToken, nonEmptyBasePath, path).execute().isSuccessful();
     }
 
     @Override
-    public String readSecret(String authToken, String keyName) throws IOException {
-      VaultReadResponse response = vaultRestClient.readSecret(authToken, keyName).execute().body();
+    public String readSecret(String authToken, String basePath, String keyName) throws IOException {
+      String nonEmptyBasePath = isEmpty(basePath) ? DEFAULT_BASE_PATH : basePath;
+      VaultReadResponse response = vaultRestClient.readSecret(authToken, nonEmptyBasePath, keyName).execute().body();
       return response.getData().getValue();
     }
 
@@ -103,22 +112,27 @@ public class VaultRestClientFactory {
     }
 
     @Override
-    public boolean writeSecret(String authToken, String keyName, SettingVariableTypes settingType, String value)
-        throws IOException {
+    public boolean writeSecret(String authToken, String basePath, String keyName, SettingVariableTypes settingType,
+        String value) throws IOException {
+      String nonEmptyBasePath = isEmpty(basePath) ? DEFAULT_BASE_PATH : basePath;
       Map<String, String> dataMap = new HashMap<>();
       dataMap.put("value", value);
       VaultSecretValueV2 vaultSecretValue = new VaultSecretValueV2(dataMap);
-      return vaultRestClient.writeSecret(authToken, keyName, settingType, vaultSecretValue).execute().isSuccessful();
+      return vaultRestClient.writeSecret(authToken, nonEmptyBasePath, keyName, settingType, vaultSecretValue)
+          .execute()
+          .isSuccessful();
     }
 
     @Override
-    public boolean deleteSecret(String authToken, String path) throws IOException {
-      return vaultRestClient.deleteSecret(authToken, path).execute().isSuccessful();
+    public boolean deleteSecret(String authToken, String basePath, String path) throws IOException {
+      String nonEmptyBasePath = isEmpty(basePath) ? DEFAULT_BASE_PATH : basePath;
+      return vaultRestClient.deleteSecret(authToken, nonEmptyBasePath, path).execute().isSuccessful();
     }
 
     @Override
-    public String readSecret(String authToken, String keyName) throws IOException {
-      VaultReadResponseV2 response = vaultRestClient.readSecret(authToken, keyName).execute().body();
+    public String readSecret(String authToken, String basePath, String keyName) throws IOException {
+      String nonEmptyBasePath = isEmpty(basePath) ? DEFAULT_BASE_PATH : basePath;
+      VaultReadResponseV2 response = vaultRestClient.readSecret(authToken, nonEmptyBasePath, keyName).execute().body();
       return response.getData().getData().get("value");
     }
 

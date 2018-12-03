@@ -45,6 +45,8 @@ public class VaultConfig extends Base implements EncryptionConfig {
 
   @Attributes(title = "Auth token", required = true) private String authToken;
 
+  @Attributes(title = "Base Path") private String basePath;
+
   @Attributes(title = "Renew token interval", required = true) private int renewIntervalHours;
 
   /**
