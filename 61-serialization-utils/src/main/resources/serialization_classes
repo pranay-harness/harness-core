@@ -610,3 +610,5 @@ software.wings.settings.validation.SshConnectionConnectivityValidationAttributes
 software.wings.beans.JiraConfig$JiraSetupType, 5569
 software.wings.settings.validation.WinRmConnectivityValidationAttributes, 5570
 software.wings.settings.validation.SmtpConnectivityValidationAttributes, 5571
+software.wings.settings.validation.SlackConnectivityValidationAttributes, 5572
+software.wings.beans.SlackConfig, 5573
