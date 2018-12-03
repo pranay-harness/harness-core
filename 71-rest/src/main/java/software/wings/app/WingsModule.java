@@ -49,6 +49,7 @@ import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
+import software.wings.dl.exportimport.WingsMongoExportImport;
 import software.wings.helpers.ext.ami.AmiService;
 import software.wings.helpers.ext.ami.AmiServiceImpl;
 import software.wings.helpers.ext.azure.AcrService;
@@ -520,6 +521,8 @@ public class WingsModule extends DependencyModule {
     bind(SmbBuildService.class).to(SmbBuildServiceImpl.class);
     bind(SftpService.class).to(SftpServiceImpl.class);
     bind(SftpBuildService.class).to(SftpBuildServiceImpl.class);
+
+    bind(WingsMongoExportImport.class);
 
     MapBinder<String, InfrastructureProvider> infrastructureProviderMapBinder =
         MapBinder.newMapBinder(binder(), String.class, InfrastructureProvider.class);
