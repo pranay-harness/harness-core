@@ -137,8 +137,10 @@ public class ConnectivityValidationTask extends AbstractDelegateRunnableTask {
         boolean valid = false;
         String errorMessage = "";
         try {
-          slackNotificationService.sendMessage(
-              (SlackConfig) settingValue, attributes.getChannel(), attributes.getSender(), attributes.getMessage());
+          slackNotificationService.sendMessage((SlackConfig) settingValue, attributes.getChannel(),
+              isNotEmpty(attributes.getSender()) ? attributes.getSender() : "Harness",
+              isNotEmpty(attributes.getMessage()) ? attributes.getMessage()
+                                                  : "Test Slack connectivity message from Harness Inc.");
           valid = true;
         } catch (Exception ex) {
           errorMessage = getMessage(ex);

@@ -52,6 +52,7 @@ import software.wings.beans.SplunkConfig;
 import software.wings.beans.SumoConfig;
 import software.wings.beans.TaskType;
 import software.wings.beans.ValidationResult;
+import software.wings.beans.WinRmConnectionAttributes;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
@@ -59,6 +60,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
 import software.wings.dl.WingsPersistence;
 import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.intfc.AppService;
@@ -115,51 +117,60 @@ public class SettingValidationService {
   @Inject private DelegateService delegateService;
 
   public ValidationResult validateConnectivity(SettingAttribute settingAttribute) {
-    List<EncryptedDataDetail> encryptionDetails = null;
     SettingValue settingValue = settingAttribute.getValue();
-    if (!(settingValue instanceof SlackConfig)) {
-      encryptionDetails =
-          secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
-    }
-    ConnectivityValidationDelegateRequest request = ConnectivityValidationDelegateRequest.builder()
-                                                        .encryptedDataDetails(encryptionDetails)
-                                                        .settingAttribute(settingAttribute)
-                                                        .build();
-    DelegateTask delegateTask = aDelegateTask()
-                                    .withTaskType(TaskType.CONNECTIVITY_VALIDATION)
-                                    .withAccountId(settingAttribute.getAccountId())
-                                    .withAppId(settingAttribute.getAppId())
-                                    .withAsync(false)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(2))
-                                    .withParameters(new Object[] {request})
-                                    .build();
-    try {
-      ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
-      if (notifyResponseData instanceof ErrorNotifyResponseData) {
-        return ValidationResult.builder()
-            .errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
-            .valid(false)
-            .build();
-      } else if (notifyResponseData instanceof RemoteMethodReturnValueData) {
-        return ValidationResult.builder()
-            .errorMessage(getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()))
-            .valid(false)
-            .build();
+    if (settingValue instanceof HostConnectionAttributes || settingValue instanceof WinRmConnectionAttributes
+        || settingValue instanceof SmtpConfig || settingValue instanceof SlackConfig) {
+      List<EncryptedDataDetail> encryptionDetails = null;
+      if (!(settingValue instanceof SlackConfig)) {
+        encryptionDetails =
+            secretManager.getEncryptionDetails((EncryptableSetting) settingAttribute.getValue(), null, null);
       }
-      if (!(notifyResponseData instanceof ConnectivityValidationDelegateResponse)) {
-        throw new WingsException(ErrorCode.GENERAL_ERROR)
-            .addParam("message", "Unknown Response from delegate")
-            .addContext(ResponseData.class, notifyResponseData);
-      } else {
-        ConnectivityValidationDelegateResponse connectivityValidationDelegateResponse =
-            (ConnectivityValidationDelegateResponse) notifyResponseData;
-        return ValidationResult.builder()
-            .errorMessage(connectivityValidationDelegateResponse.getErrorMessage())
-            .valid(connectivityValidationDelegateResponse.isValid())
-            .build();
+      ConnectivityValidationDelegateRequest request = ConnectivityValidationDelegateRequest.builder()
+                                                          .encryptedDataDetails(encryptionDetails)
+                                                          .settingAttribute(settingAttribute)
+                                                          .build();
+      DelegateTask delegateTask = aDelegateTask()
+                                      .withTaskType(TaskType.CONNECTIVITY_VALIDATION)
+                                      .withAccountId(settingAttribute.getAccountId())
+                                      .withAppId(settingAttribute.getAppId())
+                                      .withAsync(false)
+                                      .withTimeout(TimeUnit.MINUTES.toMillis(2))
+                                      .withParameters(new Object[] {request})
+                                      .build();
+      try {
+        ResponseData notifyResponseData = delegateService.executeTask(delegateTask);
+        if (notifyResponseData instanceof ErrorNotifyResponseData) {
+          return ValidationResult.builder()
+              .errorMessage(((ErrorNotifyResponseData) notifyResponseData).getErrorMessage())
+              .valid(false)
+              .build();
+        } else if (notifyResponseData instanceof RemoteMethodReturnValueData) {
+          return ValidationResult.builder()
+              .errorMessage(getMessage(((RemoteMethodReturnValueData) notifyResponseData).getException()))
+              .valid(false)
+              .build();
+        }
+        if (!(notifyResponseData instanceof ConnectivityValidationDelegateResponse)) {
+          throw new WingsException(ErrorCode.GENERAL_ERROR)
+              .addParam("message", "Unknown Response from delegate")
+              .addContext(ResponseData.class, notifyResponseData);
+        } else {
+          ConnectivityValidationDelegateResponse connectivityValidationDelegateResponse =
+              (ConnectivityValidationDelegateResponse) notifyResponseData;
+          return ValidationResult.builder()
+              .errorMessage(connectivityValidationDelegateResponse.getErrorMessage())
+              .valid(connectivityValidationDelegateResponse.isValid())
+              .build();
+        }
+      } catch (InterruptedException ex) {
+        throw new InvalidRequestException(getMessage(ex), USER);
       }
-    } catch (InterruptedException ex) {
-      throw new InvalidRequestException(getMessage(ex), USER);
+    } else {
+      try {
+        return ValidationResult.builder().valid(validate(settingAttribute)).errorMessage("").build();
+      } catch (Exception ex) {
+        return ValidationResult.builder().valid(false).errorMessage(getMessage(ex)).build();
+      }
     }
   }
 

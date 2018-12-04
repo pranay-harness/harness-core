@@ -12,6 +12,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 @JsonTypeName("SLACK")
 public class SlackConnectivityValidationAttributes extends ConnectivityValidationAttributes {
   @NotEmpty private String channel;
-  @NotEmpty private String message;
-  @NotEmpty private String sender;
+  private String message;
+  private String sender;
 }
