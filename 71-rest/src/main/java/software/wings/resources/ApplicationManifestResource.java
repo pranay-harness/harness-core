@@ -20,6 +20,7 @@ import software.wings.service.intfc.ApplicationManifestService;
 
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -89,5 +90,16 @@ public class ApplicationManifestResource {
       @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
     manifestFile.setAppId(appId);
     return new RestResponse<>(applicationManifestService.updateManifestFile(manifestFile, serviceId));
+  }
+
+  @DELETE
+  @Path("{serviceId}/manifest-file/{manifestFieldId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.DELETE)
+  public RestResponse deleteManifestFile(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
+      @PathParam("manifestFieldId") String manifestFieldId) {
+    applicationManifestService.deleteManifestFileById(appId, manifestFieldId);
+    return new RestResponse();
   }
 }
