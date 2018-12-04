@@ -197,8 +197,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         throw new InvalidRequestException("Connector id cannot be empty", USER);
       }
 
-      if (isBlank(gitFileConfig.getBranch()) && isBlank(gitFileConfig.getCommitId())) {
-        throw new InvalidRequestException("Both branch and commitId cannot be empty", USER);
+      if (gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getBranch())) {
+        throw new InvalidRequestException("Branch cannot be empty if useBranch is selected", USER);
+      }
+
+      if (!gitFileConfig.isUseBranch() && isBlank(gitFileConfig.getCommitId())) {
+        throw new InvalidRequestException("CommitId cannot be empty if useBranch is not selected", USER);
       }
     } else {
       if (gitFileConfig != null) {
