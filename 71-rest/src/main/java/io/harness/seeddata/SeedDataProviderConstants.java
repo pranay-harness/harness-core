@@ -12,16 +12,16 @@ public interface SeedDataProviderConstants {
   String KUBERNETES_APP_NAME = "Sample App";
   String KUBERNETES_APP_DESC = "Sample To-Do List Application";
 
-  String KUBERNETES_SERVICE_NAME = "To-Do List";
+  String KUBERNETES_SERVICE_NAME = "To-Do List K8s";
   String KUBERNETES_SERVICE_DESC = "To Do List Docker Image";
 
-  String KUBERNETES_SERVICE_INFRA_NAME = "To-Do List";
+  String KUBERNETES_SERVICE_INFRA_NAME = "To-Do List K8s";
   String KUBERNETES_SERVICE_INFRA_NAME_SPACE = "default";
 
   String KUBE_QA_ENVIRONMENT = "QA";
   String KUBE_PROD_ENVIRONMENT = "Prod";
 
-  String KUBE_WORKFLOW_NAME = "To-Do List";
+  String KUBE_WORKFLOW_NAME = "To-Do List K8s";
 
-  String KUBE_PIPELINE_NAME = "To-Do List";
+  String KUBE_PIPELINE_NAME = "K8s Deployment";
 }
