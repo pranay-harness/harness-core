@@ -31,8 +31,7 @@ public class LogFeedbackRecordsMigration implements Migration {
     DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "logMlFeedbackRecords");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-    DBCursor logFeedbackRecords =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "logMlFeedbackRecords").find();
+    DBCursor logFeedbackRecords = collection.find();
 
     logger.info("will go through " + logFeedbackRecords.size() + " records");
 

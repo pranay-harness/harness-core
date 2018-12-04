@@ -34,8 +34,6 @@ public class MongoStore implements DistributedStore {
   private static final Logger logger = LoggerFactory.getLogger(MongoStore.class);
   private static final int version = 1;
 
-  private static final String collectionName = "cache";
-
   @Inject WingsPersistence wingsPersistence;
 
   String canonicalKey(long algorithmId, long structureHash, String key) {
@@ -59,8 +57,8 @@ public class MongoStore implements DistributedStore {
 
       final Query<CacheEntity> entityQuery =
           factory
-              .createQuery(datastore, wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, collectionName),
-                  CacheEntity.class)
+              .createQuery(
+                  datastore, wingsPersistence.getCollection(CacheEntity.class, ReadPref.NORMAL), CacheEntity.class)
               .filter(CacheEntity.CANONICAL_KEY_KEY, canonicalKey(algorithmId, structureHash, key));
 
       if (contextValue != null) {

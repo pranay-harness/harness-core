@@ -1,6 +1,5 @@
 package migrations.all;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static software.wings.beans.Base.ID_KEY;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
@@ -26,7 +25,7 @@ public class NewRelicMetricDataGroupNameMigration implements Migration {
 
   @Override
   public void migrate() {
-    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "newRelicMetricRecords");
+    DBCollection collection = wingsPersistence.getCollection(NewRelicMetricDataRecord.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int updated = 0;
     int batched = 0;

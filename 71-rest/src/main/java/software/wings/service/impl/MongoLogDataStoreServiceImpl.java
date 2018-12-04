@@ -59,7 +59,7 @@ public class MongoLogDataStoreServiceImpl implements LogDataStoreService {
         logger.error(format("Exception in saving log [%s]", log), e);
       }
     }
-    wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "commandLogs").insert(dbObjects);
+    wingsPersistence.getCollection(Log.class, ReadPref.NORMAL).insert(dbObjects);
   }
 
   @Override

@@ -27,18 +27,18 @@ public interface HPersistence {
   /**
    * Gets the datastore.
    *
-   * @param store the store
+   * @param store    the store
    * @param readPref the readPref
-   * @return the datastore
+   * @return         the datastore
    */
   AdvancedDatastore getDatastore(Store store, ReadPref readPref);
 
   /**
    * Gets the datastore.
    *
-   * @param entity the entity
+   * @param entity   the entity
    * @param readPref the readPref
-   * @return the datastore
+   * @return         the datastore
    */
   default AdvancedDatastore getDatastore(PersistentEntity entity, ReadPref readPref) {
     return getDatastore(entity.getClass(), readPref);
@@ -49,9 +49,9 @@ public interface HPersistence {
   /**
    * Gets the datastore.
    *
-   * @param cls the entity class
+   * @param cls      the entity class
    * @param readPref the readPref
-   * @return the datastore
+   * @return         the datastore
    */
 
   default AdvancedDatastore getDatastore(Class cls, ReadPref readPref) {
@@ -68,11 +68,21 @@ public interface HPersistence {
   /**
    * Gets the collection.
    *
+   * @param store          the store
    * @param collectionName the collection name
-   * @param readPref the readPref
-   * @return the collection
+   * @param readPref       the readPref
+   * @return               the collection
    */
   DBCollection getCollection(Store store, ReadPref readPref, String collectionName);
+
+  /**
+   * Gets the collection.
+   *
+   * @param cls            the class of the collection
+   * @param readPref       the readPref
+   * @return               the collection
+   */
+  DBCollection getCollection(Class cls, ReadPref readPref);
 
   /**
    * Close.

@@ -1,6 +1,5 @@
 package software.wings.yaml.gitSync;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import com.google.inject.Singleton;
@@ -31,15 +30,13 @@ public class GitChangeSetRunnableHelper {
   }
 
   public List<String> getQueuedAccountIdList(WingsPersistence wingsPersistence) {
-    return wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
-        .getCollection(YamlChangeSet.class)
+    return wingsPersistence.getCollection(YamlChangeSet.class, ReadPref.NORMAL)
         .distinct(
             "accountId", new BasicDBObject("status", new BasicDBObject("$in", new String[] {Status.QUEUED.name()})));
   }
 
   public List<String> getRunningAccountIdList(WingsPersistence wingsPersistence) {
-    return wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
-        .getCollection(YamlChangeSet.class)
+    return wingsPersistence.getCollection(YamlChangeSet.class, ReadPref.NORMAL)
         .distinct("accountId", new BasicDBObject("status", Status.RUNNING.name()));
   }
 }

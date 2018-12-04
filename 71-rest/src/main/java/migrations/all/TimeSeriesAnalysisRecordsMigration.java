@@ -1,7 +1,6 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static software.wings.beans.Base.ID_KEY;
 
 import com.google.inject.Inject;
@@ -28,12 +27,10 @@ public class TimeSeriesAnalysisRecordsMigration implements Migration {
 
   @Override
   public void migrate() {
-    DBCollection collection =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "timeSeriesAnalysisRecords");
+    DBCollection collection = wingsPersistence.getCollection(TimeSeriesMLAnalysisRecord.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-    DBCursor timeSeriesAnalysisRecords =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "timeSeriesAnalysisRecords").find();
+    DBCursor timeSeriesAnalysisRecords = collection.find();
 
     logger.info("will go through " + timeSeriesAnalysisRecords.size() + " records");
 

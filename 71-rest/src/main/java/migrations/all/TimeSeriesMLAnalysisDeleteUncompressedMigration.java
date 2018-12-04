@@ -1,6 +1,5 @@
 package migrations.all;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.UuidAware.ID_KEY;
 
 import com.google.inject.Inject;
@@ -23,8 +22,7 @@ public class TimeSeriesMLAnalysisDeleteUncompressedMigration implements Migratio
 
   @Override
   public void migrate() {
-    final DBCollection collection =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "timeSeriesAnalysisRecords");
+    final DBCollection collection = wingsPersistence.getCollection(TimeSeriesMLAnalysisRecord.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int batched = 0;
     int processed = 0;

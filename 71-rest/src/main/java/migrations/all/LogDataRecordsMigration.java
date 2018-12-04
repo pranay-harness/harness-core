@@ -31,7 +31,7 @@ public class LogDataRecordsMigration implements Migration {
     DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "logDataRecords");
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-    DBCursor logDataRecords = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "logDataRecords").find();
+    DBCursor logDataRecords = collection.find();
 
     logger.info("will go through " + logDataRecords.size() + " records");
 

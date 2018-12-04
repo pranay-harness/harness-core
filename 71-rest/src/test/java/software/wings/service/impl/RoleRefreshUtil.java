@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -62,6 +61,6 @@ public class RoleRefreshUtil extends WingsBaseTest {
   }
 
   private void dropRolesCollection() {
-    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).getDB().getCollection("roles").drop();
+    wingsPersistence.getCollection(Role.class, ReadPref.NORMAL).drop();
   }
 }
