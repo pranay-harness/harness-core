@@ -75,7 +75,7 @@ import io.harness.generator.ServiceGenerator.Services;
 import io.harness.generator.SettingGenerator;
 import io.harness.generator.WorkflowGenerator;
 import io.harness.generator.WorkflowGenerator.Workflows;
-import io.harness.mongo.MongoModule;
+import io.harness.mongo.IndexManagement;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.persistence.ReadPref;
 import io.harness.scm.ScmSecret;
@@ -285,7 +285,7 @@ public class DataGenService {
         List<Indexes> indexesAnnotations = mc.getAnnotations(Indexes.class);
         if (indexesAnnotations != null) {
           indexesAnnotations.stream().flatMap(indexes -> Arrays.stream(indexes.value())).forEach(index -> {
-            MongoModule.reportDeprecatedUnique(index);
+            IndexManagement.reportDeprecatedUnique(index);
 
             BasicDBObject keys = new BasicDBObject();
             for (Field field : index.fields()) {
@@ -300,7 +300,7 @@ public class DataGenService {
         for (final MappedField mf : mc.getPersistenceFields()) {
           if (mf.hasAnnotation(Indexed.class)) {
             final Indexed indexed = mf.getAnnotation(Indexed.class);
-            MongoModule.reportDeprecatedUnique(indexed);
+            IndexManagement.reportDeprecatedUnique(indexed);
 
             try {
               primaryDatastore.getCollection(mc.getClazz())
