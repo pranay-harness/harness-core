@@ -679,7 +679,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     startEndMap.entrySet().parallelStream().forEach(entry -> {
       PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
           PageRequestBuilder.aPageRequest()
-              .withLimit("500")
+              .withLimit("5000")
               .withOffset("0")
               .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
               .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
