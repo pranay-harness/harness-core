@@ -173,6 +173,7 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
   }
 
   @Test
+  @Owner(emails = "raghu@harness.io", intermittent = true)
   public void getNewRelicApplicationInstances() throws Exception {
     WebTarget target = client.target(API_BASE + "/newrelic/nodes?settingId=" + newRelicConfigId
         + "&accountId=" + accountId + "&applicationId=" + 107019083);
