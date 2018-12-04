@@ -84,6 +84,7 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.common.Constants;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.StateMachineIssueException;
 import software.wings.service.impl.DelayEventHelper;
 import software.wings.service.impl.ExecutionLogContext;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
@@ -705,6 +706,13 @@ public class StateMachineExecutor {
     StateMachine sm = context.getStateMachine();
     State nextState =
         sm.getState(executionEventAdvice.getNextChildStateMachineId(), executionEventAdvice.getNextStateName());
+
+    if (nextState == null) {
+      throw new StateMachineIssueException(
+          String.format("The advice suggests as next state %s, that is not in state machine: %s.",
+              executionEventAdvice.getNextStateName(), executionEventAdvice.getNextChildStateMachineId()));
+    }
+
     StateExecutionInstance cloned =
         clone(context.getStateExecutionInstance(), executionEventAdvice.getNextChildStateMachineId(), nextState);
     if (executionEventAdvice.getNextStateDisplayName() != null) {
