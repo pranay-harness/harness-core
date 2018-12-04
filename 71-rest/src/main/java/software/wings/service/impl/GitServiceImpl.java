@@ -45,4 +45,18 @@ public class GitServiceImpl implements GitService {
             .gitConnectorId(connectorId)
             .build());
   }
+
+  @Override
+  public GitFetchFilesResult fetchFilesByPath(GitConfig gitConfig, String connectorId, String commitId, String branch,
+      List<String> filePaths, boolean useBranch, List<String> fileExtensions) {
+    return gitClient.fetchFilesByPath(gitConfig,
+        GitFetchFilesRequest.builder()
+            .commitId(commitId)
+            .branch(branch)
+            .filePaths(filePaths)
+            .gitConnectorId(connectorId)
+            .useBranch(useBranch)
+            .fileExtensions(fileExtensions)
+            .build());
+  }
 }
