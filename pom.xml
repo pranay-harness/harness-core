@@ -233,6 +233,11 @@
                 <version>3.1.0</version>
             </dependency>
             <dependency>
+                <groupId>com.bertramlabs.plugins</groupId>
+                <artifactId>hcl4j</artifactId>
+                <version>0.1.7</version>
+            </dependency>
+            <dependency>
                 <groupId>com.deftlabs</groupId>
                 <artifactId>mongo-java-distributed-lock</artifactId>
                 <version>0.1.7</version>
@@ -320,6 +325,11 @@
                 <version>2.0.0</version>
             </dependency>
             <dependency>
+                <groupId>com.hazelcast</groupId>
+                <artifactId>hazelcast-kubernetes</artifactId>
+                <version>1.1.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.hierynomus</groupId>
                 <artifactId>smbj</artifactId>
                 <version>0.9.0</version>
@@ -343,6 +353,17 @@
                 <groupId>com.jcraft</groupId>
                 <artifactId>jsch</artifactId>
                 <version>0.1.54</version>
+            </dependency>
+            <dependency>
+                <groupId>com.microsoft.azure</groupId>
+                <artifactId>azure</artifactId>
+                <version>1.5.1</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.nimbusds</groupId>
@@ -443,6 +464,11 @@
                 <groupId>info.jerrinot</groupId>
                 <artifactId>subzero-core</artifactId>
                 <version>0.7</version>
+            </dependency>
+            <dependency>
+                <groupId>io.cloudsoft.windows</groupId>
+                <artifactId>winrm4j</artifactId>
+                <version>0.6.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard-bundles</groupId>

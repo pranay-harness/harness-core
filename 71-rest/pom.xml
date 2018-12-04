@@ -8,12 +8,33 @@
     </parent>
     <artifactId>71-rest</artifactId>
     <dependencies>
-        <?SORTPOM IGNORE?>
         <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>11-commons-test</artifactId>
-            <version>${project.parent.version}</version>
-            <scope>test</scope>
+            <groupId>com.bertramlabs.plugins</groupId>
+            <artifactId>hcl4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hazelcast</groupId>
+            <artifactId>hazelcast-kubernetes</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hierynomus</groupId>
+            <artifactId>smbj</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.hierynomus</groupId>
+            <artifactId>sshj</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.cloudsoft.windows</groupId>
+            <artifactId>winrm4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
@@ -22,18 +43,12 @@
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
-            <artifactId>20-persistence-test</artifactId>
+            <artifactId>20-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>software.wings</groupId>
             <artifactId>20-k8s-helpers</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>software.wings</groupId>
-            <artifactId>20-delegate-tasks</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -62,46 +77,18 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.bertramlabs.plugins</groupId>
-            <artifactId>hcl4j</artifactId>
-            <version>0.1.7</version>
+            <groupId>software.wings</groupId>
+            <artifactId>11-commons-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.hierynomus</groupId>
-            <artifactId>smbj</artifactId>
-            <version>0.9.0</version>
+            <groupId>software.wings</groupId>
+            <artifactId>20-persistence-test</artifactId>
+            <version>${project.parent.version}</version>
+            <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.hierynomus</groupId>
-            <artifactId>sshj</artifactId>
-            <version>0.26.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-collections4</artifactId>
-            <version>4.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.microsoft.azure</groupId>
-            <artifactId>azure</artifactId>
-            <version>1.5.1</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>io.cloudsoft.windows</groupId>
-            <artifactId>winrm4j</artifactId>
-            <version>0.6.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast-kubernetes</artifactId>
-            <version>1.1.0</version>
-        </dependency>
+        <?SORTPOM IGNORE?>
         <dependency>
             <groupId>com.j256.two-factor-auth</groupId>
             <artifactId>two-factor-auth</artifactId>
