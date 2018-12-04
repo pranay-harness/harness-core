@@ -142,6 +142,7 @@ import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
 import software.wings.sm.states.k8s.K8sDeploymentRollingRollbackSetup;
 import software.wings.sm.states.k8s.K8sDeploymentRollingSetup;
+import software.wings.sm.states.k8s.K8sScale;
 import software.wings.sm.states.pcf.MapRouteState;
 import software.wings.sm.states.pcf.PcfDeployState;
 import software.wings.sm.states.pcf.PcfRollbackState;
@@ -502,6 +503,11 @@ public enum StateType implements StateTypeDescriptor {
       singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
   K8S_DEPLOYMENT_ROLLING(K8sDeploymentRollingSetup.class, KUBERNETES, Constants.K8S_DEPLOYMENT_ROLLING,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  K8S_SCALE(K8sScale.class, KUBERNETES, Constants.K8S_SCALE,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),

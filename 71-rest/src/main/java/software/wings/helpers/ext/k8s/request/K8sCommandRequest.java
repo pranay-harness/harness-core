@@ -19,6 +19,7 @@ public class K8sCommandRequest implements TaskParameters {
   @NotEmpty private K8sCommandType commandType;
   public enum K8sCommandType {
     DEPLOYMENT_ROLLING,
-    DEPLOYMENT_ROLLING_ROLLBACK;
+    DEPLOYMENT_ROLLING_ROLLBACK,
+    SCALE;
   }
 }

@@ -9,5 +9,6 @@ public enum Option {
     public String toString() {
       return "to-revision";
     }
-  }
+  },
+  replicas
 }

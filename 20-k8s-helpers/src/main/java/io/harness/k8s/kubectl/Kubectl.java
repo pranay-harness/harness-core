@@ -41,6 +41,10 @@ public class Kubectl {
     return new RolloutCommand(this);
   }
 
+  public ScaleCommand scale() {
+    return new ScaleCommand(this);
+  }
+
   public String command() {
     StringBuilder command = new StringBuilder(128);
     if (StringUtils.isNotBlank(kubectlPath)) {
@@ -57,6 +61,10 @@ public class Kubectl {
   }
 
   public static String option(Option type, String value) {
+    return "--" + type.toString() + "=" + value + " ";
+  }
+
+  public static String option(Option type, int value) {
     return "--" + type.toString() + "=" + value + " ";
   }
 
