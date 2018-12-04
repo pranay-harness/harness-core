@@ -1,6 +1,7 @@
 package software.wings.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.when;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -21,10 +22,12 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
+import software.wings.service.intfc.yaml.YamlPushService;
 
 public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Mock private AppService appService;
   @Mock private ServiceResourceService serviceResourceService;
+  @Mock private YamlPushService yamlPushService;
 
   @Inject private WingsPersistence wingsPersistence;
 
@@ -33,6 +36,7 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
   @Before
   public void setUp() throws Exception {
     applicationManifest.setAppId(APP_ID);
+    manifestFile.setAppId(APP_ID);
   }
 
   private static ApplicationManifest applicationManifest =
@@ -94,5 +98,21 @@ public class ApplicationManifestServiceTest extends WingsBaseTest {
     ApplicationManifest manifest = applicationManifestService.get(APP_ID, SERVICE_ID);
 
     assertThat(manifest).isEqualTo(savedManifest);
+  }
+
+  @Test
+  public void deleteTest() {
+    when(serviceResourceService.exist(anyString(), anyString())).thenReturn(true);
+    ApplicationManifest savedManifest = applicationManifestService.create(applicationManifest);
+
+    ManifestFile savedmManifestFile =
+        applicationManifestService.createManifestFile(ApplicationManifestServiceTest.manifestFile, SERVICE_ID);
+
+    ManifestFile manifestFileById = applicationManifestService.getManifestFileById(APP_ID, manifestFile.getUuid());
+    assertThat(savedmManifestFile).isEqualTo(manifestFileById);
+
+    applicationManifestService.deleteManifestFileById(APP_ID, savedmManifestFile.getUuid());
+    manifestFileById = applicationManifestService.getManifestFileById(APP_ID, manifestFile.getUuid());
+    assertNull(manifestFileById);
   }
 }
