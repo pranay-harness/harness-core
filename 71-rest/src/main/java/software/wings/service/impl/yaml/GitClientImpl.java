@@ -25,7 +25,6 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import groovy.lang.Singleton;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
@@ -106,6 +105,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -614,8 +614,10 @@ public class GitClientImpl implements GitClient {
           try (Stream<Path> paths = Files.walk(Paths.get(repoPath + "/" + filePath))) {
             paths.filter(Files::isRegularFile)
                 .filter(path -> !path.toString().contains(".git"))
+                .filter(matchingFilesExtensions(gitRequest))
                 .forEach(path -> gitClientHelper.addFiles(gitFiles, path));
           } catch (Exception e) {
+            resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
             throw new WingsException(GENERAL_ERROR,
                 new StringBuilder("Unable to checkout files for filePath [")
                     .append(filePath)
@@ -653,6 +655,21 @@ public class GitClientImpl implements GitClient {
             e);
       }
     }
+  }
+
+  private Predicate<Path> matchingFilesExtensions(GitFetchFilesRequest gitRequest) {
+    return path -> {
+      if (isEmpty(gitRequest.getFileExtensions())) {
+        return true;
+      } else {
+        for (String fileExtension : gitRequest.getFileExtensions()) {
+          if (path.toString().endsWith(fileExtension)) {
+            return true;
+          }
+        }
+        return false;
+      }
+    };
   }
 
   private void validateRequiredArgs(GitFetchFilesRequest gitRequest) {
@@ -953,7 +970,7 @@ public class GitClientImpl implements GitClient {
         sshTransport.setSshSessionFactory(sshSessionFactory);
       });
     } catch (Exception e) {
-      if (EmptyPredicate.isNotEmpty(keyPath)) {
+      if (isNotEmpty(keyPath)) {
         new File(keyPath).delete();
       }
       throw new InvalidRequestException("Error setting SSH credentials", e);

@@ -73,7 +73,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
                          + "}")
                      .build());
 
-    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
+    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean(), any()))
         .thenReturn(GitFetchFilesResult.builder().files(gitFiles).build());
 
     TerraformInputVariablesTaskResponse inputVariables = delegateRunnableTask.run(new Object[] {parameters});
@@ -82,7 +82,7 @@ public class TerraformInputVariablesObtainTaskTest extends WingsBaseTest {
 
   @Test
   public void testNoTerraformFilesFound() {
-    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean()))
+    when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean(), any()))
         .thenReturn(GitFetchFilesResult.builder().files(Collections.EMPTY_LIST).build());
 
     TerraformInputVariablesTaskResponse response = delegateRunnableTask.run(new Object[] {parameters});
