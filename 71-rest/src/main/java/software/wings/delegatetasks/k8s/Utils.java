@@ -13,6 +13,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 import com.google.inject.Singleton;
 
 import io.harness.exception.KubernetesYamlException;
+import io.harness.exception.WingsException;
 import io.harness.filesystem.FileIo;
 import io.harness.k8s.kubectl.ApplyCommand;
 import io.harness.k8s.kubectl.GetCommand;
@@ -180,6 +181,34 @@ public class Utils {
       }
     }
     return "";
+  }
+
+  public static int getCurrentReplicas(
+      Kubectl client, KubernetesResourceId resourceId, K8sCommandTaskParams k8sCommandTaskParams) throws Exception {
+    GetCommand getCommand = client.get()
+                                .resources(resourceId.kindNameRef())
+                                .namespace(resourceId.getNamespace())
+                                .output("jsonpath={$.spec.replicas}");
+
+    try (LogOutputStream logOutputStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {}
+             };
+         LogOutputStream logErrorStream =
+             new LogOutputStream() {
+               @Override
+               protected void processLine(String line) {}
+             }) {
+      ProcessResult result =
+          getCommand.execute(k8sCommandTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
+
+      if (result.getExitValue() == 0) {
+        return Integer.parseInt(result.outputString());
+      } else {
+        throw new WingsException("Failed to get current replicas. error: " + result.outputString());
+      }
+    }
   }
 
   public static List<ManifestFile> renderTemplate(K8sCommandTaskParams k8sCommandTaskParams,

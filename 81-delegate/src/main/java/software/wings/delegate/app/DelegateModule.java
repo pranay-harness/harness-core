@@ -40,6 +40,7 @@ import software.wings.delegatetasks.MetricDataStoreService;
 import software.wings.delegatetasks.k8s.taskhandler.K8sCommandTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sDeploymentRollingCommandTaskHandler;
 import software.wings.delegatetasks.k8s.taskhandler.K8sDeploymentRollingRollbackCommandTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sScaleCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfApplicationDetailsCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDataFetchCommandTaskHandler;
@@ -391,6 +392,7 @@ public class DelegateModule extends DependencyModule {
         .to(K8sDeploymentRollingCommandTaskHandler.class);
     k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sCommandType.DEPLOYMENT_ROLLING_ROLLBACK.name())
         .to(K8sDeploymentRollingRollbackCommandTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sCommandType.SCALE.name()).to(K8sScaleCommandTaskHandler.class);
   }
 
   @Override
