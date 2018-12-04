@@ -69,11 +69,13 @@ public class VerificationJob implements Job {
     PageResponse<Account> accounts;
     int offSet = 0;
     List<Account> accountsFetched = new ArrayList<>();
+    int numOfAccountsFetched = 0;
     do {
       accounts = verificationManagerClientHelper
                      .callManagerWithRetry(verificationManagerClient.getAccounts(String.valueOf(offSet)))
                      .getResource();
       accountsFetched.addAll(accounts);
+      numOfAccountsFetched = accounts.size();
       // get all the disabled account and delete the APM and log cron's
       List<Account> enabledAccounts =
           accounts.stream()
@@ -93,7 +95,7 @@ public class VerificationJob implements Job {
       triggerDataProcessorCron(enabledAccounts);
       logger.info("Completed scheduling APM and Log processing jobs");
       offSet = offSet + PageRequest.DEFAULT_PAGE_SIZE;
-    } while (accounts.size() >= PageRequest.DEFAULT_PAGE_SIZE);
+    } while (numOfAccountsFetched >= PageRequest.DEFAULT_PAGE_SIZE);
     lastAvailableAccounts.removeAll(accountsFetched);
     // delete lastAvailableAccounts that are no longer available
     logger.info("Trying to Delete crons for Deleted Accounts");
