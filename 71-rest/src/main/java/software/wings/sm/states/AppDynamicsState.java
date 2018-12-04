@@ -349,21 +349,25 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
     return TemplateExpressionProcessor.checkFieldTemplatized("analysisServerConfigId", getTemplateExpressions());
   }
 
-  public static Double getErrorPercentage(NewRelicMetricDataRecord metricDataRecord) {
+  public static Double getNormalizedValue(String metricName, NewRelicMetricDataRecord metricDataRecord) {
     if (metricDataRecord != null) {
       if (metricDataRecord.getValues().containsKey(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName())
-          && metricDataRecord.getValues().containsKey(AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName())) {
-        double errorCount = metricDataRecord.getValues().get(AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName());
+          && AppdynamicsTimeSeries.getErrorMetrics().contains(metricName)) {
+        double errorCount = metricDataRecord.getValues().get(metricName);
         double callsCount = metricDataRecord.getValues().get(AppdynamicsTimeSeries.CALLS_PER_MINUTE.getMetricName());
 
         if (callsCount != 0.0) {
           DecimalFormat twoDForm = new DecimalFormat("#.00");
           return Double.valueOf(twoDForm.format(errorCount / callsCount * 100));
+        } else {
+          return 0.0;
         }
       }
+      return metricDataRecord.getValues().get(metricName);
     }
-    return 0.0;
+    return null;
   }
+
   public static String formDeeplinkUrl(AppDynamicsConfig appDconfig, AppDynamicsCVServiceConfiguration cvConfig,
       long startTime, long endTime, String metricString) {
     String url = appDconfig.getControllerUrl().endsWith("/") ? appDconfig.getControllerUrl()

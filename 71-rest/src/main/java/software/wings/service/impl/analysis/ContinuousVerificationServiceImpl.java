@@ -8,6 +8,7 @@ import static java.lang.Math.min;
 import static java.util.Collections.emptySet;
 import static software.wings.common.VerificationConstants.APPDYNAMICS_DEEPLINK_FORMAT;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
+import static software.wings.common.VerificationConstants.ERROR_METRIC_NAMES;
 import static software.wings.common.VerificationConstants.HEARTBEAT_METRIC_NAME;
 import static software.wings.verification.TimeSeriesDataPoint.initializeTimeSeriesDataPointsList;
 
@@ -36,9 +37,7 @@ import software.wings.metrics.RiskLevel;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
-import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.verification.CVConfigurationService;
@@ -716,7 +715,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         if (!metricMap.containsKey(metricName)) {
           metricMap.put(metricName,
               TimeSeriesOfMetric.builder()
-                  .metricName(metricName)
+                  .metricName(getDisplayNameOfMetric(metricName))
                   .timeSeries(initializeTimeSeriesDataPointsList(startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1))
                   .risk(-1)
                   .build());
@@ -757,19 +756,19 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   private Double getNormalizedMetricValue(String metricName, NewRelicMetricDataRecord dataRecord) {
     switch (dataRecord.getStateType()) {
       case APP_DYNAMICS:
-        if (metricName.equals(AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName())) {
-          return AppDynamicsState.getErrorPercentage(dataRecord);
-        }
-        break;
+        return AppDynamicsState.getNormalizedValue(metricName, dataRecord);
       case NEW_RELIC:
-        if (metricName.equals(NewRelicMetricValueDefinition.ERROR)) {
-          return NewRelicState.getNormalizedErrorMetric(dataRecord);
-        }
-        break;
+        return NewRelicState.getNormalizedErrorMetric(metricName, dataRecord);
       default:
         return dataRecord.getValues().get(metricName);
     }
-    return dataRecord.getValues().get(metricName);
+  }
+
+  private String getDisplayNameOfMetric(String metricName) {
+    if (ERROR_METRIC_NAMES.containsKey(metricName)) {
+      return ERROR_METRIC_NAMES.get(metricName);
+    }
+    return metricName;
   }
 
   private String getDeeplinkUrl(

@@ -235,9 +235,10 @@ public class NewRelicState extends AbstractMetricAnalysisState {
     return parentTemplateFields;
   }
 
-  public static Double getNormalizedErrorMetric(NewRelicMetricDataRecord metricDataRecord) {
+  public static Double getNormalizedErrorMetric(String metricName, NewRelicMetricDataRecord metricDataRecord) {
     if (metricDataRecord != null) {
-      if (metricDataRecord.getValues().containsKey(NewRelicMetricValueDefinition.ERROR)
+      if (metricName.equals(NewRelicMetricValueDefinition.ERROR)
+          && metricDataRecord.getValues().containsKey(NewRelicMetricValueDefinition.ERROR)
           && metricDataRecord.getValues().containsKey(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE)) {
         double errorCount = metricDataRecord.getValues().get(NewRelicMetricValueDefinition.ERROR);
         double callsCount = metricDataRecord.getValues().get(NewRelicMetricValueDefinition.REQUSET_PER_MINUTE);
@@ -245,10 +246,13 @@ public class NewRelicState extends AbstractMetricAnalysisState {
         if (callsCount != 0.0) {
           DecimalFormat twoDForm = new DecimalFormat("#.00");
           return Double.valueOf(twoDForm.format(errorCount / callsCount * 100));
+        } else {
+          return 0.0;
         }
       }
+      return metricDataRecord.getValues().get(metricName);
     }
-    return 0.0;
+    return null;
   }
 
   @Attributes(required = false, title = "Expression for Host/Container name")
