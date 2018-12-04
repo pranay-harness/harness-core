@@ -591,7 +591,7 @@ public class AppdynamicsDelegateServiceImpl implements AppdynamicsDelegateServic
             .baseUrl(appDynamicsConfig.getControllerUrl().endsWith("/") ? appDynamicsConfig.getControllerUrl()
                                                                         : appDynamicsConfig.getControllerUrl() + "/")
             .addConverterFactory(JacksonConverterFactory.create())
-            .client(Http.getOkHttpClientWithNoProxyValueSet(appDynamicsConfig.getControllerUrl()).build())
+            .client(Http.getUnsafeOkHttpClient(appDynamicsConfig.getControllerUrl()))
             .build();
     return retrofit.create(AppdynamicsRestClient.class);
   }
