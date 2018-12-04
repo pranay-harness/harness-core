@@ -40,10 +40,13 @@ public class ApplicationManifest extends Base {
   @NoArgsConstructor
   public static final class Yaml extends BaseEntityYaml {
     private String storeType;
+
+    private GitFileConfig gitFileConfig;
     @Builder
-    public Yaml(String type, String harnessApiVersion, String storeType) {
+    public Yaml(String harnessApiVersion, String storeType, GitFileConfig gitFileConfig) {
       super(YamlType.APPLICATION_MANIFEST.name(), harnessApiVersion);
       this.storeType = storeType;
+      this.gitFileConfig = gitFileConfig;
     }
   }
 }
