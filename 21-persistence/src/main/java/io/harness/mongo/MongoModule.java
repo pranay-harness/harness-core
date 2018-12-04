@@ -229,9 +229,9 @@ public class MongoModule extends AbstractModule {
         .filter(entry -> !entry.getKey().startsWith("createdAt"))
         // Alert for every index that left:
         .forEach(entry -> {
-          Duration passed = Duration.between(ZonedDateTime.now().toInstant(), entry.getValue().getSince().toInstant());
+          Duration passed = Duration.between(entry.getValue().getSince().toInstant(), ZonedDateTime.now().toInstant());
           logger.info(
-              format("Index %s.%s is not used at for days %d", collection.getName(), entry.getKey(), passed.toDays()));
+              format("Index %s.%s is not used at for %d days", collection.getName(), entry.getKey(), passed.toDays()));
         });
   }
 
@@ -274,7 +274,14 @@ public class MongoModule extends AbstractModule {
                     + "WARNING: this index will not be created",
                 collection.getName());
           } else {
-            creators.put(indexName, () -> collection.createIndex(keys, indexName, index.options().unique()));
+            DBObject options = new BasicDBObject();
+            options.put("name", indexName);
+            if (index.options().unique()) {
+              options.put("unique", Boolean.TRUE);
+            } else {
+              options.put("background", Boolean.TRUE);
+            }
+            creators.put(indexName, () -> collection.createIndex(keys, options));
           }
         });
       }
@@ -295,6 +302,8 @@ public class MongoModule extends AbstractModule {
           options.put("name", indexName);
           if (indexed.options().unique()) {
             options.put("unique", Boolean.TRUE);
+          } else {
+            options.put("background", Boolean.TRUE);
           }
           if (indexed.options().expireAfterSeconds() != -1) {
             options.put("expireAfterSeconds", indexed.options().expireAfterSeconds());
