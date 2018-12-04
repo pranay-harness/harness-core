@@ -6,19 +6,26 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
+import org.mongodb.morphia.annotations.Indexes;
 import software.wings.beans.Base;
 import software.wings.beans.yaml.YamlType;
 import software.wings.yaml.BaseEntityYaml;
 
 @Entity("manifestFile")
+
+@Indexes(@Index(options = @IndexOptions(name = "manifestFileIdx", unique = true),
+    fields = { @Field("applicationManifestId")
+               , @Field("fileName") }))
 @Data
 @Builder
 public class ManifestFile extends Base {
   public static final String APP_MANIFEST_FILE_NAME = "fileName";
   @NotEmpty String fileName;
   private String fileContent;
-  @Indexed private String applicationManifestId;
+  private String applicationManifestId;
 
   public ManifestFile cloneInternal() {
     ManifestFile manifestFile = ManifestFile.builder().fileName(this.fileName).fileContent(this.fileContent).build();

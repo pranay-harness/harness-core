@@ -2,6 +2,8 @@ package software.wings.service.impl;
 
 import static io.harness.exception.WingsException.USER;
 import static org.apache.commons.lang3.StringUtils.isBlank;
+import static software.wings.beans.appmanifest.ManifestFile.APP_MANIFEST_FILE_NAME;
+import static software.wings.utils.Validator.duplicateCheck;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.inject.Inject;
@@ -102,7 +104,7 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   public ManifestFile getManifestFileByFileName(String applicationManifestId, String fileName) {
     Query<ManifestFile> query = wingsPersistence.createQuery(ManifestFile.class)
                                     .filter(ManifestFile.APP_MANIFEST_ID_KEY, applicationManifestId)
-                                    .filter(ManifestFile.APP_MANIFEST_FILE_NAME, fileName);
+                                    .filter(APP_MANIFEST_FILE_NAME, fileName);
     return query.get();
   }
 
@@ -142,7 +144,10 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     }
 
     manifestFile.setApplicationManifestId(applicationManifest.getUuid());
-    ManifestFile savedManifestFile = wingsPersistence.saveAndGet(ManifestFile.class, manifestFile);
+    ManifestFile savedManifestFile =
+        duplicateCheck(()
+                           -> wingsPersistence.saveAndGet(ManifestFile.class, manifestFile),
+            APP_MANIFEST_FILE_NAME, manifestFile.getFileName());
 
     String appId = applicationManifest.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
