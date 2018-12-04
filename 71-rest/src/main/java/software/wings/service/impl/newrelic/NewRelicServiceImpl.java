@@ -147,7 +147,7 @@ public class NewRelicServiceImpl implements NewRelicService {
           throw new IllegalStateException("Invalid state" + stateType);
       }
     } catch (Exception e) {
-      throw new WingsException(errorCode, USER).addParam("reason", Misc.getMessage(e));
+      throw new WingsException(errorCode, USER, e).addParam("reason", Misc.getMessage(e));
     }
   }
 
