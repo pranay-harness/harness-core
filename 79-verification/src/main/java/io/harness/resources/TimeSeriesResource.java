@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import io.harness.entities.TimeSeriesAnomaliesRecord;
+import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.service.intfc.TimeSeriesAnalysisService;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
@@ -209,5 +210,18 @@ public class TimeSeriesResource {
       @QueryParam("applicationId") String appId, @QueryParam("cvConfigId") String cvConfigId,
       Map<String, List<String>> metrics) {
     return new RestResponse<>(timeSeriesAnalysisService.getPreviousAnomalies(appId, cvConfigId, metrics));
+  }
+
+  @Produces({"application/json", "application/v1+json"})
+  @POST
+  @Path("/cumulative-sums-247")
+  @Timed
+  @LearningEngineAuth
+  @ExceptionMetered
+  public RestResponse<List<TimeSeriesCumulativeSums>> getCumulativeSums(@QueryParam("accountId") String accountId,
+      @QueryParam("applicationId") String appId, @QueryParam("cvConfigId") String cvConfigId,
+      @QueryParam("analysisMinStart") Integer startMinute, @QueryParam("analysisMinEnd") Integer endMinute) {
+    return new RestResponse<>(
+        timeSeriesAnalysisService.getCumulativeSumsForRange(appId, cvConfigId, startMinute, endMinute));
   }
 }

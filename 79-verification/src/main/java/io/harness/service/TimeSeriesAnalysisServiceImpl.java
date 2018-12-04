@@ -18,6 +18,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.entities.TimeSeriesAnomaliesRecord;
+import io.harness.entities.TimeSeriesCumulativeSums;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -240,6 +241,17 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
       anomaliesRecord.compressAnomalies();
       wingsPersistence.save(anomaliesRecord);
+    }
+    if (isNotEmpty(mlAnalysisResponse.getTransactionMetricSums())) {
+      TimeSeriesCumulativeSums cumulativeSums =
+          TimeSeriesCumulativeSums.builder()
+              .analysisMinute(mlAnalysisResponse.getAnalysisMinute())
+              .cvConfigId(mlAnalysisResponse.getCvConfigId())
+              .transactionMetricSums(mlAnalysisResponse.getTransactionMetricSums())
+              .build();
+      cumulativeSums.setAppId(appId);
+
+      wingsPersistence.save(cumulativeSums);
     }
     wingsPersistence.save(mlAnalysisResponse);
     logger.info("inserted MetricAnalysisRecord to persistence layer for "
@@ -911,5 +923,29 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
 
     timeSeriesAnomaliesRecord.setAnomalies(anomalies);
     return timeSeriesAnomaliesRecord;
+  }
+
+  @Override
+  public List<TimeSeriesCumulativeSums> getCumulativeSumsForRange(
+      String appId, String cvConfigId, int startMinute, int endMinute) {
+    if (isNotEmpty(appId) && isNotEmpty(cvConfigId) && startMinute <= endMinute) {
+      List<TimeSeriesCumulativeSums> cumulativeSums = wingsPersistence.createQuery(TimeSeriesCumulativeSums.class)
+                                                          .filter("appId", appId)
+                                                          .filter("cvConfigId", cvConfigId)
+                                                          .field("analysisMinute")
+                                                          .greaterThanOrEq(startMinute)
+                                                          .field("analysisMinute")
+                                                          .lessThanOrEq(endMinute)
+                                                          .asList();
+
+      logger.info(
+          "Returning a list of size {} from getCumulativeSumsForRange for appId {}, cvConfigId {} and start {} and end {}",
+          cumulativeSums.size(), appId, cvConfigId, startMinute, endMinute);
+      return cumulativeSums;
+    } else {
+      final String errorMsg = "AppId or CVConfigId is null in getCumulativeSumsForRange";
+      logger.error(errorMsg);
+      throw new WingsException(errorMsg);
+    }
   }
 }

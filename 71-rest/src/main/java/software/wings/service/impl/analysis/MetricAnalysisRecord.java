@@ -58,6 +58,8 @@ public class MetricAnalysisRecord extends Base {
 
   @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;
 
+  @Transient private Map<String, Map<String, Map<String, Double>>> transactionMetricSums;
+
   private String message;
 
   private @Indexed String cvConfigId;

@@ -176,6 +176,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
             .analysis_save_url(metricAnalysisSaveUrl)
             .metric_template_url(metricTemplateUrl)
             .previous_anomalies_url(getPreviousAnomaliesUrl(cvConfiguration))
+            .cumulative_sums_url(getCumulativeSumsUrl(cvConfiguration, (int) endMin))
             .control_nodes(Sets.newHashSet("dummy"))
             .test_nodes(Sets.newHashSet("dummy"))
             .stateType(cvConfiguration.getStateType())
@@ -232,5 +233,13 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/previous-anomalies-247"
         + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
         + "&cvConfigId=" + cvConfiguration.getUuid();
+  }
+
+  private String getCumulativeSumsUrl(CVConfiguration cvConfiguration, int analysisMinute) {
+    int startMin = analysisMinute - (int) TimeUnit.DAYS.toMinutes(1);
+    return VERIFICATION_SERVICE_BASE_URL + "/" + MetricDataAnalysisService.RESOURCE_URL + "/cumulative-sums-247"
+        + "?accountId=" + cvConfiguration.getAccountId() + "&applicationId=" + cvConfiguration.getAppId()
+        + "&cvConfigId=" + cvConfiguration.getUuid() + "&analysisMinStart=" + startMin
+        + "&analysisMinEnd=" + analysisMinute;
   }
 }
