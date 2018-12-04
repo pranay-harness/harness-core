@@ -191,7 +191,7 @@ public class AccountExportImportResource {
 
     // 1. Export harness schema collection.
     String schemaCollectionName = getCollectionName(Schema.class);
-    if (toBeExported.get(schemaCollectionName)) {
+    if (isExportable(toBeExported, schemaCollectionName)) {
       DBObject emptyFilter = new BasicDBObject();
       List<String> schemas = mongoExportImport.exportRecords(emptyFilter, schemaCollectionName);
       if (schemas.size() == 0) {
@@ -203,7 +203,7 @@ public class AccountExportImportResource {
 
     // 2. Export account data.
     String accountCollectionName = getCollectionName(Account.class);
-    if (toBeExported.get(accountCollectionName)) {
+    if (isExportable(toBeExported, accountCollectionName)) {
       DBObject idFilter = new BasicDBObject("_id", accountId);
       List<String> accounts = mongoExportImport.exportRecords(idFilter, accountCollectionName);
       if (accounts.size() == 0) {
@@ -216,7 +216,7 @@ public class AccountExportImportResource {
 
     // 3. Export all users
     String userCollectionName = getCollectionName(User.class);
-    if (toBeExported.get(userCollectionName)) {
+    if (isExportable(toBeExported, userCollectionName)) {
       DBObject accountsFilter = new BasicDBObject("accounts", new BasicDBObject("$in", new String[] {accountId}));
       List<String> users = mongoExportImport.exportRecords(accountsFilter, userCollectionName);
       exportToStream(zipOutputStream, users, userCollectionName);
@@ -227,7 +227,7 @@ public class AccountExportImportResource {
 
     // 4. Export all applications
     String applicationsCollectionName = getCollectionName(Application.class);
-    if (toBeExported.get(applicationsCollectionName)) {
+    if (isExportable(toBeExported, applicationsCollectionName)) {
       List<String> applications = mongoExportImport.exportRecords(accountIdFilter, applicationsCollectionName);
       exportToStream(zipOutputStream, applications, applicationsCollectionName);
     }
@@ -246,7 +246,7 @@ public class AccountExportImportResource {
 
     // 6. Export all other Harness entities that has @Entity annotation excluding what's in the blacklist.
     for (Entry<String, Class<? extends Base>> entry : genericExportableEntityTypes.entrySet()) {
-      if (toBeExported.get(entry.getKey())) {
+      if (isExportable(toBeExported, entry.getKey())) {
         Class<? extends Base> entityClazz = entry.getValue();
         if (entityClazz != null) {
           String collectionName = getCollectionName(entityClazz);
@@ -263,6 +263,11 @@ public class AccountExportImportResource {
     return Response.ok(outputStream.toByteArray(), MediaType.APPLICATION_OCTET_STREAM)
         .header("content-disposition", "attachment; filename = " + zipFileName)
         .build();
+  }
+
+  private boolean isExportable(Map<String, Boolean> toBeExported, String collectionName) {
+    Boolean exportable = toBeExported.get(collectionName);
+    return exportable != null && exportable;
   }
 
   private void exportToStream(ZipOutputStream zipOutputStream, List<String> records, String collectionName)
@@ -324,7 +329,7 @@ public class AccountExportImportResource {
   public RestResponse<ImportStatusReport> importAccountData(@QueryParam("accountId") final String accountId,
       @QueryParam("mode") @DefaultValue("UPSERT") ImportMode importMode,
       @FormDataParam("file") final InputStream uploadInputStream) throws Exception {
-    Map<String, String> zipEntryDataMap = readZipEntries(new ZipInputStream(uploadInputStream));
+    Map<String, String> zipEntryDataMap = readZipEntries(uploadInputStream);
 
     List<ImportStatus> importStatuses = new ArrayList<>();
 
@@ -394,20 +399,23 @@ public class AccountExportImportResource {
     return new RestResponse<>(ImportStatusReport.builder().statuses(importStatuses).mode(importMode).build());
   }
 
-  private Map<String, String> readZipEntries(ZipInputStream zipInputStream) throws IOException {
-    Map<String, String> collectionDataMap = new HashMap<>();
-    ZipEntry zipEntry;
-    while ((zipEntry = zipInputStream.getNextEntry()) != null) {
-      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+  private Map<String, String> readZipEntries(InputStream inputStream) throws IOException {
+    try (ZipInputStream zipInputStream = new ZipInputStream(inputStream)) {
+      Map<String, String> collectionDataMap = new HashMap<>();
+      ZipEntry zipEntry;
+      while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-      int len = 0;
-      byte[] buffer = new byte[1024];
-      while ((len = zipInputStream.read(buffer)) > 0) {
-        outputStream.write(buffer, 0, len);
+        int len = 0;
+        byte[] buffer = new byte[1024];
+        while ((len = zipInputStream.read(buffer)) > 0) {
+          outputStream.write(buffer, 0, len);
+        }
+        collectionDataMap.put(zipEntry.getName(), new String(outputStream.toByteArray(), Charset.defaultCharset()));
       }
-      collectionDataMap.put(zipEntry.getName(), new String(outputStream.toByteArray(), Charset.defaultCharset()));
+
+      return collectionDataMap;
     }
-    return collectionDataMap;
   }
 
   private JsonArray getJsonArray(Map<String, String> zipDataMap, String collectionName) {

@@ -12,5 +12,6 @@ import software.wings.settings.UsageRestrictions;
 public class SecretText {
   private String name;
   private String value;
+  private String path;
   private UsageRestrictions usageRestrictions;
 }

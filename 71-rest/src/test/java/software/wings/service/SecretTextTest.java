@@ -30,7 +30,6 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.WingsException;
 import io.harness.persistence.UuidAware;
 import io.harness.rule.OwnerRule.Owner;
@@ -72,7 +71,6 @@ import software.wings.security.UserThreadLocal;
 import software.wings.security.encryption.EncryptedData;
 import software.wings.security.encryption.SecretChangeLog;
 import software.wings.service.impl.UsageRestrictionsServiceImplTest;
-import software.wings.service.impl.security.ExportableSecret;
 import software.wings.service.impl.security.SecretText;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ConfigService;
@@ -217,23 +215,6 @@ public class SecretTextTest extends WingsBaseTest {
 
   private String getRandomServiceVariableName() {
     return generateUuid().replaceAll("-", "_");
-  }
-
-  @Test
-  public void testExportImportSecrets() throws Exception {
-    String secretName = generateUuid();
-    String secretValue = generateUuid();
-    String secretId =
-        secretManagementResource.saveSecret(accountId, SecretText.builder().name(secretName).value(secretValue).build())
-            .getResource();
-    assertNotNull(secretId);
-
-    String encryptionKey = UUIDGenerator.generateUuid();
-    List<ExportableSecret> exportedSecrets = secretManager.exportSecrets(accountId, encryptionKey);
-    assertTrue(exportedSecrets.size() > 0);
-
-    // No exception is expected.
-    secretManager.importSecrets(accountId, exportedSecrets, encryptionKey);
   }
 
   @Test
