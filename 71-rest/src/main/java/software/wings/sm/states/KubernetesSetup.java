@@ -195,6 +195,24 @@ public class KubernetesSetup extends ContainerServiceSetup {
       evaluatedIstioConfig.setHosts(context.renderExpressionList(istioConfig.getHosts()));
     }
 
+    if (blueGreenConfig != null) {
+      if (isNotBlank(blueGreenConfig.getIngressYaml())) {
+        blueGreenConfig.setIngressYaml(context.renderExpression(blueGreenConfig.getIngressYaml()));
+      }
+      if (blueGreenConfig.getPrimaryService() != null) {
+        if (isNotBlank(blueGreenConfig.getPrimaryService().getServiceYaml())) {
+          blueGreenConfig.getPrimaryService().setServiceYaml(
+              context.renderExpression(blueGreenConfig.getPrimaryService().getServiceYaml()));
+        }
+      }
+      if (blueGreenConfig.getStageService() != null) {
+        if (isNotBlank(blueGreenConfig.getStageService().getServiceYaml())) {
+          blueGreenConfig.getStageService().setServiceYaml(
+              context.renderExpression(blueGreenConfig.getStageService().getServiceYaml()));
+        }
+      }
+    }
+
     String evaluatedReleaseName;
     if (isNotBlank(releaseName)) {
       evaluatedReleaseName = context.renderExpression(releaseName);
