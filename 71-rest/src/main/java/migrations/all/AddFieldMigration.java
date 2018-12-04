@@ -1,6 +1,5 @@
 package migrations.all;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static software.wings.beans.Base.ID_KEY;
 
 import com.google.inject.Inject;
@@ -23,10 +22,10 @@ public abstract class AddFieldMigration implements Migration {
 
   @Override
   public void migrate() {
-    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, getCollectionName());
+    DBCollection collection = wingsPersistence.getCollection(getCollectionClass(), ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
-    DBCursor dataRecords = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, getCollectionName()).find();
+    DBCursor dataRecords = collection.find();
 
     getLogger().info("will go through " + dataRecords.size() + " records");
 

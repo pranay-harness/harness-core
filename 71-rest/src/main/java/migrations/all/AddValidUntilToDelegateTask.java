@@ -1,7 +1,5 @@
 package migrations.all;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
-
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -26,7 +24,7 @@ public class AddValidUntilToDelegateTask implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "delegateTasks");
+    final DBCollection collection = wingsPersistence.getCollection(DelegateTask.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int i = 1;

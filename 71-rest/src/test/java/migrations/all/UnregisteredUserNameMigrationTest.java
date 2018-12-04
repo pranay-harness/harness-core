@@ -1,7 +1,5 @@
 package migrations.all;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
-
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -10,6 +8,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
+import software.wings.beans.User;
 import software.wings.beans.User.Builder;
 import software.wings.common.Constants;
 import software.wings.dl.WingsPersistence;
@@ -35,12 +34,12 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
     long initialCount = 10;
     prepareTest(initialCount, Constants.NOT_REGISTERED);
     Assertions
-        .assertThat(wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "users")
+        .assertThat(wingsPersistence.getCollection(User.class, ReadPref.NORMAL)
                         .count(new BasicDBObject("name", Constants.NOT_REGISTERED)))
         .isEqualTo(initialCount);
     unregisteredUserNameMigration.migrate();
     Assertions
-        .assertThat(wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "users")
+        .assertThat(wingsPersistence.getCollection(User.class, ReadPref.NORMAL)
                         .count(new BasicDBObject("name", Constants.NOT_REGISTERED)))
         .isEqualTo(0);
   }
@@ -50,13 +49,13 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
     long initialCount = 10;
     prepareTest(initialCount, "TestUser");
     Assertions
-        .assertThat(wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "users")
-                        .count(new BasicDBObject("name", "TestUser")))
+        .assertThat(
+            wingsPersistence.getCollection(User.class, ReadPref.NORMAL).count(new BasicDBObject("name", "TestUser")))
         .isEqualTo(10);
     unregisteredUserNameMigration.migrate();
     Assertions
-        .assertThat(wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "users")
-                        .count(new BasicDBObject("name", "TestUser")))
+        .assertThat(
+            wingsPersistence.getCollection(User.class, ReadPref.NORMAL).count(new BasicDBObject("name", "TestUser")))
         .isEqualTo(10);
   }
 
@@ -66,20 +65,20 @@ public class UnregisteredUserNameMigrationTest extends WingsBaseTest {
     prepareTest(initialCount, "TestUser");
     prepareTest(initialCount, Constants.NOT_REGISTERED);
     Assertions
-        .assertThat(wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "users")
-                        .count(new BasicDBObject("name", "TestUser")))
+        .assertThat(
+            wingsPersistence.getCollection(User.class, ReadPref.NORMAL).count(new BasicDBObject("name", "TestUser")))
         .isEqualTo(10);
     Assertions
-        .assertThat(wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "users")
+        .assertThat(wingsPersistence.getCollection(User.class, ReadPref.NORMAL)
                         .count(new BasicDBObject("name", Constants.NOT_REGISTERED)))
         .isEqualTo(initialCount);
     unregisteredUserNameMigration.migrate();
     Assertions
-        .assertThat(wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "users")
-                        .count(new BasicDBObject("name", "TestUser")))
+        .assertThat(
+            wingsPersistence.getCollection(User.class, ReadPref.NORMAL).count(new BasicDBObject("name", "TestUser")))
         .isEqualTo(10);
     Assertions
-        .assertThat(wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "users")
+        .assertThat(wingsPersistence.getCollection(User.class, ReadPref.NORMAL)
                         .count(new BasicDBObject("name", Constants.NOT_REGISTERED)))
         .isEqualTo(0);
   }

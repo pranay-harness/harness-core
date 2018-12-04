@@ -1,6 +1,5 @@
 package software.wings.dl;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 
 import com.google.common.cache.CacheBuilder;
@@ -42,8 +41,8 @@ public class GenericDbCache {
               if (Account.class.getCanonicalName().equals(className)) {
                 return accountService.get(uuid);
               }
-
-              return wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).get(Class.forName(className), uuid);
+              final Class<?> aClass = Class.forName(className);
+              return wingsPersistence.getDatastore(aClass, ReadPref.NORMAL).get(aClass, uuid);
             }
           });
 

@@ -2,7 +2,6 @@ package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.UuidAware.ID_KEY;
 import static java.lang.Integer.max;
 
@@ -28,8 +27,7 @@ public class TimeSeriesMLAnalysisCompressionSaveMigration implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "timeSeriesAnalysisRecords");
+    final DBCollection collection = wingsPersistence.getCollection(TimeSeriesMLAnalysisRecord.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
     int batched = 0;
     int processed = 0;

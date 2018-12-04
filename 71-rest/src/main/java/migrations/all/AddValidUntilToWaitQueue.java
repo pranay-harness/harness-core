@@ -1,7 +1,5 @@
 package migrations.all;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
-
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -27,7 +25,7 @@ public class AddValidUntilToWaitQueue implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "waitQueues");
+    final DBCollection collection = wingsPersistence.getCollection(WaitQueue.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int i = 1;

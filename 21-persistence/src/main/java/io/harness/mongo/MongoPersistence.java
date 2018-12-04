@@ -86,6 +86,12 @@ public class MongoPersistence implements HPersistence {
   }
 
   @Override
+  public DBCollection getCollection(Class cls, ReadPref readPref) {
+    final AdvancedDatastore datastore = getDatastore(cls, readPref);
+    return datastore.getDB().getCollection(datastore.getCollection(cls).getName());
+  }
+
+  @Override
   public void close() {
     Set<AdvancedDatastore> datastores = new HashSet<>();
     datastores.addAll(datastoreMap.values());

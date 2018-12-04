@@ -1,7 +1,5 @@
 package migrations.all;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
-
 import com.google.inject.Inject;
 
 import com.mongodb.BasicDBObject;
@@ -26,8 +24,7 @@ public class AddValidUntilToStateExecutionInstance implements Migration {
 
   @Override
   public void migrate() {
-    final DBCollection collection =
-        wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "stateExecutionInstances");
+    final DBCollection collection = wingsPersistence.getCollection(StateExecutionInstance.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     int i = 1;

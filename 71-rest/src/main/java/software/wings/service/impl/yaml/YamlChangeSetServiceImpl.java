@@ -5,7 +5,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.mongo.MongoUtils.setUnset;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -90,8 +89,8 @@ public class YamlChangeSetServiceImpl implements YamlChangeSetService {
                                            .order("createdAt");
       UpdateOperations<YamlChangeSet> updateOperations =
           wingsPersistence.createUpdateOperations(YamlChangeSet.class).set("status", Status.RUNNING);
-      YamlChangeSet modifiedChangeSet =
-          wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(findQuery, updateOperations);
+      YamlChangeSet modifiedChangeSet = wingsPersistence.getDatastore(YamlChangeSet.class, ReadPref.NORMAL)
+                                            .findAndModify(findQuery, updateOperations);
 
       if (modifiedChangeSet == null) {
         logger.info("No change set found in queued state");
