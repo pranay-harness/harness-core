@@ -25,6 +25,10 @@
             <artifactId>sshj</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.j256.two-factor-auth</groupId>
+            <artifactId>two-factor-auth</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.microsoft.azure</groupId>
             <artifactId>azure</artifactId>
         </dependency>
@@ -89,11 +93,6 @@
             <scope>test</scope>
         </dependency>
         <?SORTPOM IGNORE?>
-        <dependency>
-            <groupId>com.j256.two-factor-auth</groupId>
-            <artifactId>two-factor-auth</artifactId>
-            <version>1.0</version>
-        </dependency>
         <dependency>
             <groupId>com.coveo</groupId>
             <artifactId>saml-client</artifactId>
