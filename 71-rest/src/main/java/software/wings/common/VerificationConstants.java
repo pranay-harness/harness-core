@@ -1,9 +1,14 @@
 package software.wings.common;
 
+import software.wings.service.impl.appdynamics.AppdynamicsTimeSeries;
+import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.sm.StateType;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public class VerificationConstants {
@@ -47,6 +52,16 @@ public class VerificationConstants {
   public static final String APPDYNAMICS_DEEPLINK_FORMAT =
       "#/location=METRIC_BROWSER&viewTree=true&axis=linear&showPoints=false&application={applicationId}"
       + "&timeRange=Custom_Time_Range.BETWEEN_TIMES.{endTimeMs}.{startTimeMs}.6&metrics=APPLICATION_COMPONENT.{metricString}";
+
+  public static final Map<String, String> ERROR_METRIC_NAMES =
+      Collections.unmodifiableMap(new HashMap<String, String>() {
+        {
+          put(AppdynamicsTimeSeries.ERRORS_PER_MINUTE.getMetricName(), "Error Percentage");
+          put(AppdynamicsTimeSeries.STALL_COUNT.getMetricName(), "Stall Count Percentage");
+          put(NewRelicMetricValueDefinition.ERROR, "Error Percentage");
+        }
+      });
+
   private VerificationConstants() {}
 
   public static List<StateType> getMetricAnalysisStates() {
