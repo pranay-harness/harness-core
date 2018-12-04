@@ -57,5 +57,10 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
     variables.add(NameValuePair.builder().name("baz").valueType("ENCYPTED_TEXT").build());
     assertThatThrownBy(() -> TerraformProvisionState.validateAndFilterVariables(variables, provisionerVariables))
         .isInstanceOf(InvalidRequestException.class);
+
+    assertThat(TerraformProvisionState.validateAndFilterVariables(null, null)).isEmpty();
+    assertThat(TerraformProvisionState.validateAndFilterVariables(variables, null)).isEmpty();
+    assertThatThrownBy(() -> TerraformProvisionState.validateAndFilterVariables(null, provisionerVariables))
+        .isInstanceOf(InvalidRequestException.class);
   }
 }

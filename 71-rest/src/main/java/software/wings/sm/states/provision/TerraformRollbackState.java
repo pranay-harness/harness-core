@@ -106,9 +106,12 @@ public class TerraformRollbackState extends TerraformProvisionState {
     }
 
     List<NameValuePair> allVariables = configParameter.getVariables();
-    Map<String, String> textVariables = extractTextVariables(allVariables.stream(), context);
-    Map<String, EncryptedDataDetail> encryptedTextVariables =
-        extractEncryptedTextVariables(allVariables.stream(), context);
+    Map<String, String> textVariables = null;
+    Map<String, EncryptedDataDetail> encryptedTextVariables = null;
+    if (allVariables != null) {
+      textVariables = extractTextVariables(allVariables.stream(), context);
+      encryptedTextVariables = extractEncryptedTextVariables(allVariables.stream(), context);
+    }
 
     List<NameValuePair> allBackendConfigs = configParameter.getBackendConfigs();
     Map<String, String> backendConfigs = null;

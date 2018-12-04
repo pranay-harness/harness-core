@@ -288,12 +288,14 @@ public abstract class TerraformProvisionState extends State {
   }
 
   protected static List<NameValuePair> validateAndFilterVariables(
-      List<NameValuePair> variables, List<NameValuePair> provisionerVariables) {
-    Map<String, String> variableTypesMap = provisionerVariables.stream().collect(
-        Collectors.toMap(variable -> variable.getName(), variable -> variable.getValueType()));
+      List<NameValuePair> workflowVariables, List<NameValuePair> provisionerVariables) {
+    Map<String, String> variableTypesMap = isNotEmpty(provisionerVariables)
+        ? provisionerVariables.stream().collect(
+              Collectors.toMap(variable -> variable.getName(), variable -> variable.getValueType()))
+        : Maps.newHashMap();
     List<NameValuePair> validVariables = new ArrayList<>();
-    if (isNotEmpty(variables)) {
-      variables.stream()
+    if (isNotEmpty(workflowVariables)) {
+      workflowVariables.stream()
           .filter(variable -> {
             if (!variableTypesMap.containsKey(variable.getName())) {
               return false;
@@ -308,7 +310,7 @@ public abstract class TerraformProvisionState extends State {
           .forEach(variable -> validVariables.add(variable));
     }
 
-    if (provisionerVariables.size() > validVariables.size()) {
+    if (isNotEmpty(provisionerVariables) && (provisionerVariables.size() > validVariables.size())) {
       throw new InvalidRequestException(
           "The provisioner requires more variables. Please correct it in the workflow step.");
     }
@@ -486,11 +488,13 @@ public abstract class TerraformProvisionState extends State {
     final InfrastructureProvisioner infrastructureProvisioner =
         infrastructureProvisionerService.get(context.getAppId(), provisionerId);
 
-    if (infrastructureProvisioner == null
-        || (!(infrastructureProvisioner instanceof TerraformInfrastructureProvisioner))) {
-      throw new InvalidRequestException("");
+    if (infrastructureProvisioner == null) {
+      throw new InvalidRequestException("Infrastructure Provisioner does not exist. Please check again.");
     }
-
+    if (!(infrastructureProvisioner instanceof TerraformInfrastructureProvisioner)) {
+      throw new InvalidRequestException("Infrastructure Provisioner " + infrastructureProvisioner.getName()
+          + "should be of Terraform type. Please check again.");
+    }
     return (TerraformInfrastructureProvisioner) infrastructureProvisioner;
   }
 

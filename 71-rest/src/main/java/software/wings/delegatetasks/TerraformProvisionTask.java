@@ -297,7 +297,8 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code);
 
-      if (parameters.getCommandUnit() != TerraformCommandUnit.Destroy) {
+      if (parameters.getCommandUnit() != TerraformCommandUnit.Destroy
+          && commandExecutionStatus == CommandExecutionStatus.SUCCESS) {
         terraformExecutionDataBuilder.outputs(new String(Files.readAllBytes(tfOutputsFile.toPath()), Charsets.UTF_8));
       }
 
