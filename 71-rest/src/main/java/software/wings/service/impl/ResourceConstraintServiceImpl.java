@@ -268,6 +268,7 @@ public class ResourceConstraintServiceImpl implements ResourceConstraintService,
         final ActiveScopeBuilder builder = ActiveScope.builder()
                                                .releaseEntityType(instance.getReleaseEntityType())
                                                .releaseEntityId(instance.getReleaseEntityId())
+                                               .unit(instance.getResourceUnit())
                                                .permits(instance.getPermits())
                                                .acquiredAt(instance.getAcquiredAt());
 

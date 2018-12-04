@@ -120,7 +120,8 @@ public class ResourceConstraintState extends State {
       sendNotification(accountId, context, resourceConstraint, RESOURCE_CONSTRAINT_UNBLOCKED_NOTIFICATION);
     }
 
-    final Builder executionResponseBuilder = executionResponseBuilder(resourceConstraint);
+    final Builder executionResponseBuilder =
+        executionResponseBuilder(resourceConstraint, context.renderExpression(resourceUnit));
     return executionResponseBuilder.build();
   }
 
@@ -128,8 +129,6 @@ public class ResourceConstraintState extends State {
     String accountId = applicationService.getAccountIdByAppId(context.getAppId());
     final ResourceConstraint resourceConstraint = resourceConstraintService.get(accountId, resourceConstraintId);
     final Constraint constraint = resourceConstraintService.createAbstraction(resourceConstraint);
-
-    final Builder executionResponseBuilder = executionResponseBuilder(resourceConstraint);
 
     String releaseEntityId = null;
     switch (HoldingScope.valueOf(holdingScope)) {
@@ -148,6 +147,9 @@ public class ResourceConstraintState extends State {
         ResourceConstraintInstance.ORDER_KEY, resourceConstraintService.getMaxOrder(resourceConstraintId) + 1);
 
     ConstraintUnit renderedResourceUnit = new ConstraintUnit(context.renderExpression(resourceUnit));
+
+    final Builder executionResponseBuilder =
+        executionResponseBuilder(resourceConstraint, renderedResourceUnit.getValue());
 
     String consumerId = generateUuid();
     try {
@@ -233,10 +235,11 @@ public class ResourceConstraintState extends State {
     notificationService.sendNotificationAsync(notification, asList(notificationRule));
   }
 
-  private Builder executionResponseBuilder(ResourceConstraint resourceConstraint) {
+  private Builder executionResponseBuilder(ResourceConstraint resourceConstraint, String resourceUnit) {
     ResourceConstraintExecutionData stateExecutionData = new ResourceConstraintExecutionData();
     stateExecutionData.setResourceConstraintName(resourceConstraint.getName());
     stateExecutionData.setResourceConstraintCapacity(resourceConstraint.getCapacity());
+    stateExecutionData.setUnit(resourceUnit);
     stateExecutionData.setUsage(permits);
     return anExecutionResponse().withStateExecutionData(stateExecutionData);
   }

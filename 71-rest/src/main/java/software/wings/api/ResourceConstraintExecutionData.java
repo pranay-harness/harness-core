@@ -10,6 +10,7 @@ import java.util.Map;
 public class ResourceConstraintExecutionData extends StateExecutionData {
   @Getter @Setter private String resourceConstraintName;
   @Getter @Setter private int resourceConstraintCapacity;
+  @Getter @Setter private String unit;
   @Getter @Setter private int usage;
 
   @Override
@@ -19,6 +20,7 @@ public class ResourceConstraintExecutionData extends StateExecutionData {
         ExecutionDataValue.builder().displayName("Name").value(resourceConstraintName).build());
     putNotNull(executionDetails, "Capacity",
         ExecutionDataValue.builder().displayName("Capacity").value(resourceConstraintCapacity).build());
+    putNotNull(executionDetails, "Unit", ExecutionDataValue.builder().displayName("Unit").value(unit).build());
     putNotNull(executionDetails, "Usage", ExecutionDataValue.builder().displayName("Usage").value(usage).build());
     return executionDetails;
   }
@@ -30,6 +32,7 @@ public class ResourceConstraintExecutionData extends StateExecutionData {
         ExecutionDataValue.builder().displayName("Name").value(resourceConstraintName).build());
     putNotNull(executionDetails, "Capacity",
         ExecutionDataValue.builder().displayName("Capacity").value(resourceConstraintCapacity).build());
+    putNotNull(executionDetails, "Unit", ExecutionDataValue.builder().displayName("Unit").value(unit).build());
     putNotNull(executionDetails, "Usage", ExecutionDataValue.builder().displayName("Usage").value(usage).build());
     return executionDetails;
   }
@@ -40,6 +43,7 @@ public class ResourceConstraintExecutionData extends StateExecutionData {
     populateStepExecutionSummary(executionSummary);
     executionSummary.setResourceConstraintName(resourceConstraintName);
     executionSummary.setResourceConstraintCapacity(resourceConstraintCapacity);
+    executionSummary.setUnit(unit);
     executionSummary.setUsage(usage);
     return executionSummary;
   }
