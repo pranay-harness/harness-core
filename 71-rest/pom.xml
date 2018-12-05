@@ -81,6 +81,38 @@
             <artifactId>commons-collections4</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-hazelcast</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.atmosphere</groupId>
+            <artifactId>atmosphere-runtime</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.websocket</groupId>
+            <artifactId>websocket-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb.morphia</groupId>
+            <artifactId>morphia</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb.morphia</groupId>
+            <artifactId>morphia-logging-slf4j</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.mortbay.jetty.alpn</groupId>
+            <artifactId>alpn-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+        </dependency>
+        <dependency>
             <groupId>software.wings</groupId>
             <artifactId>12-commons</artifactId>
             <version>${project.parent.version}</version>
@@ -133,38 +165,6 @@
             <scope>test</scope>
         </dependency>
         <?SORTPOM IGNORE?>
-        <dependency>
-            <groupId>org.mortbay.jetty.alpn</groupId>
-            <artifactId>alpn-boot</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.atmosphere</groupId>
-            <artifactId>atmosphere-runtime</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.atmosphere</groupId>
-            <artifactId>atmosphere-hazelcast</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-server</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.ow2.asm</groupId>
-            <artifactId>asm-commons</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb.morphia</groupId>
-            <artifactId>morphia</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb.morphia</groupId>
-            <artifactId>morphia-logging-slf4j</artifactId>
-        </dependency>
         <dependency>
             <groupId>ru.vyarus</groupId>
             <artifactId>guice-validator</artifactId>
