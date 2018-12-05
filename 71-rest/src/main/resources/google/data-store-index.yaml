@@ -9,3 +9,10 @@ indexes:
   - name: activityId
   - name: appId
   - name: createdAt
+
+- kind: thirdPartyApiCallLog
+  properties:
+  - name: appId
+  - name: stateExecutionId
+  - name: createdAt
+    direction: desc

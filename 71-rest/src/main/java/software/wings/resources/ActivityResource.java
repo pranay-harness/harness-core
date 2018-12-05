@@ -19,8 +19,8 @@ import software.wings.common.Constants;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.LogDataStoreService;
 import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.ThirdPartyApiService;
 
 import java.io.File;
 import java.util.List;
@@ -44,7 +44,7 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 public class ActivityResource {
   private ActivityService activityService;
   private LogService logService;
-  private ThirdPartyApiService thirdPartyApiService;
+  private LogDataStoreService logDataStoreService;
 
   /**
    * Instantiates a new activity resource.
@@ -54,10 +54,10 @@ public class ActivityResource {
    */
   @Inject
   public ActivityResource(
-      ActivityService activityService, LogService logService, ThirdPartyApiService thirdPartyApiService) {
+      ActivityService activityService, LogService logService, LogDataStoreService logDataStoreService) {
     this.activityService = activityService;
     this.logService = logService;
-    this.thirdPartyApiService = thirdPartyApiService;
+    this.logDataStoreService = logDataStoreService;
   }
 
   /**
@@ -160,6 +160,6 @@ public class ActivityResource {
       @PathParam("stateExecutionId") String stateExecutionId, @BeanParam PageRequest<ThirdPartyApiCallLog> request) {
     request.addFilter("appId", EQ, appId);
     request.addFilter("stateExecutionId", EQ, stateExecutionId);
-    return new RestResponse<>(thirdPartyApiService.list(request));
+    return new RestResponse<>(logDataStoreService.listLogs(ThirdPartyApiCallLog.class, request));
   }
 }

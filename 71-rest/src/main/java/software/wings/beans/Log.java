@@ -1,8 +1,27 @@
 package software.wings.beans;
 
+import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static java.lang.System.currentTimeMillis;
+import static software.wings.beans.Log.Builder.aLog;
+import static software.wings.service.impl.GoogleLogDataStoreServiceImpl.readBlob;
+import static software.wings.service.impl.GoogleLogDataStoreServiceImpl.readLong;
+import static software.wings.service.impl.GoogleLogDataStoreServiceImpl.readString;
+
+import com.google.cloud.datastore.Blob;
+import com.google.cloud.datastore.BlobValue;
+import com.google.cloud.datastore.Datastore;
+import com.google.cloud.datastore.Key;
+import com.google.cloud.datastore.LongValue;
+import com.google.cloud.datastore.StringValue;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
+import io.harness.exception.WingsException;
+import io.harness.persistence.GoogleDataStoreAware;
 import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,6 +31,7 @@ import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 
+import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.Date;
 import java.util.Map;
@@ -23,7 +43,7 @@ import javax.validation.constraints.NotNull;
 @Entity(value = "commandLogs", noClassnameStored = true)
 @Data
 @EqualsAndHashCode(callSuper = false, exclude = {"validUntil"})
-public class Log extends Base {
+public class Log extends Base implements GoogleDataStoreAware {
   @NotEmpty @Indexed private String activityId;
   private String hostName;
   @NotEmpty @Indexed private String commandUnitName;
@@ -44,6 +64,77 @@ public class Log extends Base {
     Map<String, Object> shardKeys = super.getShardKeys();
     shardKeys.put("activityId", activityId);
     return shardKeys;
+  }
+
+  @Override
+  public com.google.cloud.datastore.Entity convertToCloudStorageEntity(Datastore datastore) {
+    Key taskKey = datastore.newKeyFactory()
+                      .setKind(Log.class.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
+                      .newKey(generateUuid());
+    try {
+      com.google.cloud.datastore.Entity.Builder logEntityBuilder =
+          com.google.cloud.datastore.Entity.newBuilder(taskKey)
+              .set("activityId", getActivityId())
+
+              .set("linesCount", LongValue.newBuilder(getLinesCount()).setExcludeFromIndexes(true).build())
+              .set("logLevel",
+                  com.google.cloud.datastore.StringValue.newBuilder(getLogLevel().toString())
+                      .setExcludeFromIndexes(true)
+                      .build())
+              .set("commandExecutionStatus",
+                  com.google.cloud.datastore.StringValue.newBuilder(getCommandExecutionStatus().name())
+                      .setExcludeFromIndexes(true)
+                      .build())
+              .set("createdAt", currentTimeMillis());
+
+      if (getLogLine().length() <= 256) {
+        logEntityBuilder.set("logLine", StringValue.newBuilder(getLogLine()).setExcludeFromIndexes(true).build());
+      } else {
+        logEntityBuilder.set("compressedLogLine",
+            BlobValue.newBuilder(Blob.copyFrom(compressString(getLogLine()))).setExcludeFromIndexes(true).build());
+      }
+
+      if (isNotEmpty(getHostName())) {
+        logEntityBuilder.set("hostName", getHostName());
+      }
+
+      if (isNotEmpty(getAppId())) {
+        logEntityBuilder.set("appId", getAppId());
+      }
+
+      if (isNotEmpty(getCommandUnitName())) {
+        logEntityBuilder.set("commandUnitName", getCommandUnitName());
+      }
+
+      return logEntityBuilder.build();
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  @Override
+  public GoogleDataStoreAware readFromCloudStorageEntity(com.google.cloud.datastore.Entity entity) {
+    final Log log = aLog()
+                        .withUuid(entity.getKey().getName())
+                        .withActivityId(readString(entity, "activityId"))
+                        .withLogLevel(LogLevel.valueOf(readString(entity, "logLevel")))
+                        .withCreatedAt(readLong(entity, "createdAt"))
+                        .withHostName(readString(entity, "hostName"))
+                        .withAppId(readString(entity, "appId"))
+                        .withCommandUnitName(readString(entity, "commandUnitName"))
+                        .build();
+    try {
+      byte[] compressedLogLine = readBlob(entity, "compressedLogLine");
+      if (isNotEmpty(compressedLogLine)) {
+        log.setLogLine(deCompressString(compressedLogLine));
+      } else {
+        log.setLogLine(readString(entity, "logLine"));
+      }
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
+
+    return log;
   }
 
   /**

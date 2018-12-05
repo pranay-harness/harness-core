@@ -2,14 +2,14 @@ package software.wings.service.intfc;
 
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
-import software.wings.beans.Log;
+import io.harness.persistence.GoogleDataStoreAware;
 
 import java.util.List;
 
 public interface LogDataStoreService {
-  void saveExecutionLog(List<Log> logs);
+  <T extends GoogleDataStoreAware> void saveLogs(Class<T> clazz, List<T> logs);
 
-  PageResponse<Log> listExecutionLog(PageRequest<Log> pageRequest);
+  <T extends GoogleDataStoreAware> PageResponse<T> listLogs(Class<T> clazz, PageRequest<T> pageRequest);
 
   void purgeByActivity(String appId, String activityId);
 

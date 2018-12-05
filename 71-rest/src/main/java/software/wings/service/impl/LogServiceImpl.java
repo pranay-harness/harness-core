@@ -63,7 +63,7 @@ public class LogServiceImpl implements LogService {
    */
   @Override
   public PageResponse<Log> list(String appId, PageRequest<Log> pageRequest) {
-    return logDataStoreService.listExecutionLog(pageRequest);
+    return logDataStoreService.listLogs(Log.class, pageRequest);
   }
 
   @Override
@@ -72,11 +72,12 @@ public class LogServiceImpl implements LogService {
         Files.createTempDir(), format("ActivityLogs_%s.txt", dateFormatter.format(new Date(currentTimeMillis()))));
     try (OutputStreamWriter fileWriter = new OutputStreamWriter(new FileOutputStream(file), UTF_8)) {
       List<Log> logList = logDataStoreService
-                              .listExecutionLog(aPageRequest()
-                                                    .addFilter("appId", Operator.EQ, appId)
-                                                    .addFilter("activityId", Operator.EQ, activityId)
-                                                    .addOrder("createdAt", OrderType.ASC)
-                                                    .build())
+                              .listLogs(Log.class,
+                                  aPageRequest()
+                                      .addFilter("appId", Operator.EQ, appId)
+                                      .addFilter("activityId", Operator.EQ, activityId)
+                                      .addOrder("createdAt", OrderType.ASC)
+                                      .build())
                               .getResponse();
       for (Log log : logList) {
         fileWriter.write(format(
@@ -97,7 +98,7 @@ public class LogServiceImpl implements LogService {
   public void batchedSave(List<Log> logs) {
     if (isNotEmpty(logs)) {
       logs = logs.stream().filter(Objects::nonNull).collect(toList());
-      logDataStoreService.saveExecutionLog(logs);
+      logDataStoreService.saveLogs(Log.class, logs);
 
       // Map of [ActivityId -> [CommandUnitName -> LastLogLineStatus]]
 
@@ -115,7 +116,7 @@ public class LogServiceImpl implements LogService {
 
   @Override
   public boolean batchedSaveCommandUnitLogs(String activityId, String unitName, Log log) {
-    logDataStoreService.saveExecutionLog(singletonList(log));
+    logDataStoreService.saveLogs(Log.class, singletonList(log));
     activityService.updateCommandUnitStatus(log.getAppId(), activityId, unitName, log.getCommandExecutionStatus());
     return true;
   }

@@ -37,8 +37,8 @@ import software.wings.common.Constants;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.LogDataStoreService;
 import software.wings.service.intfc.LogService;
-import software.wings.service.intfc.ThirdPartyApiService;
 import software.wings.utils.ResourceTestRule;
 
 import java.io.IOException;
@@ -61,7 +61,7 @@ public class ActivityResourceTest {
    */
   public static final LogService LOG_SERVICE = mock(LogService.class);
 
-  public static final ThirdPartyApiService API_CALL_LOG_SERVICE = mock(ThirdPartyApiService.class);
+  public static final LogDataStoreService LOG_DATA_STORE_SERVICE = mock(LogDataStoreService.class);
 
   /**
    * The constant RESOURCES.
@@ -69,7 +69,7 @@ public class ActivityResourceTest {
   @ClassRule
   public static final ResourceTestRule RESOURCES =
       ResourceTestRule.builder()
-          .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE, API_CALL_LOG_SERVICE))
+          .addResource(new ActivityResource(ACTIVITY_SERVICE, LOG_SERVICE, LOG_DATA_STORE_SERVICE))
           .addProvider(WingsExceptionMapper.class)
           .build();
 
