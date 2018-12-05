@@ -1,7 +1,7 @@
 package software.wings.scheduler;
 
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static software.wings.dl.WingsPersistence.LOCKS_STORE;
+import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 
 import com.google.inject.Inject;
 

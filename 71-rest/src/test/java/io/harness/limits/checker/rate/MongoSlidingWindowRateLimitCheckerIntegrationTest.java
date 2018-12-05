@@ -10,7 +10,6 @@ import io.harness.limits.Action;
 import io.harness.limits.ActionType;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.LimitChecker;
-import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import lombok.Value;
 import lombok.experimental.NonFinal;
@@ -49,7 +48,7 @@ public class MongoSlidingWindowRateLimitCheckerIntegrationTest extends BaseInteg
   public void init() throws Exception {
     this.cleanUp();
     if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
-      persistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL).ensureIndexes(UsageBucket.class);
+      persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL).ensureIndexes(UsageBucket.class);
       indexesEnsured = true;
     }
   }

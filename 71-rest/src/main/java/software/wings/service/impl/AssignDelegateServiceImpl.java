@@ -2,7 +2,6 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -253,7 +252,8 @@ public class AssignDelegateServiceImpl implements AssignDelegateService {
                 wingsPersistence.createUpdateOperations(DelegateConnectionResult.class)
                     .set("lastUpdatedAt", clock.millis());
             DelegateConnectionResult result =
-                wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(query, updateOperations);
+                wingsPersistence.getDatastore(DelegateConnectionResult.class, ReadPref.NORMAL)
+                    .findAndModify(query, updateOperations);
             if (result != null) {
               logger.info("Whitelist entry refreshed for task {} and delegate {}", task.getUuid(), delegateId);
             } else {

@@ -8,7 +8,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.NO_APPS_ASSIGNED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.stream.Collectors.toList;
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
 import static org.mongodb.morphia.aggregation.Group.grouping;
@@ -169,7 +168,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<EntitySummaryStats> getEntitySummaryStats(
       String entityIdColumn, String entityNameColumn, String groupByEntityType, Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
-    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping(entityIdColumn)), grouping("count", accumulator("$sum", 1)),
@@ -187,7 +186,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private long getInstanceCount(Query<Instance> query) {
     AtomicLong totalCount = new AtomicLong();
-    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
         .createAggregation(Instance.class)
         .match(query)
         .group("_id", grouping("count", accumulator("$sum", 1)))
@@ -199,7 +198,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
   private List<EntitySummaryStats> getServiceSummaryStats(
       String entityIdColumn, String entityNameColumn, String groupByEntityType, Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = new ArrayList<>();
-    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping(entityIdColumn)), grouping("count", accumulator("$sum", 1)),
@@ -217,7 +216,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
 
   private List<EntitySummaryStats> getEnvironmentTypeSummaryStats(Query<Instance> query) {
     List<EntitySummaryStats> entitySummaryStatsList = Lists.newArrayList();
-    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping("envType")), grouping("count", accumulator("$sum", 1)))
@@ -388,7 +387,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
 
     List<AggregationInfo> instanceInfoList = new ArrayList<>();
-    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping("serviceId"), grouping("envId"), grouping("lastArtifactId")),
@@ -584,7 +583,7 @@ public class DashboardStatisticsServiceImpl implements DashboardStatisticsServic
     }
 
     List<AggregationInfo> instanceInfoList = new ArrayList<>();
-    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+    wingsPersistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL)
         .createAggregation(Instance.class)
         .match(query)
         .group(Group.id(grouping("envId"), grouping("infraMappingId"), grouping("lastArtifactId")),

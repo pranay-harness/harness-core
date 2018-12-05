@@ -1,6 +1,6 @@
 package io.harness.lock;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+import static io.harness.lock.PersistentLocker.LOCKS_STORE;
 import static io.harness.threading.Morpheus.sleep;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertFalse;
@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 
 import com.deftlabs.lock.mongo.DistributedLockSvc;
 import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
 import com.mongodb.DBObject;
 import io.harness.PersistenceTest;
 import io.harness.exception.WingsException;
@@ -41,7 +42,9 @@ public class PersistentLockerDBTest extends PersistenceTest {
 
     final BasicDBObject filter = new BasicDBObject().append("_id", "foo");
 
-    DBObject dbLock = persistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "locks").findOne(filter);
+    final DBCollection locks = persistence.getCollection(LOCKS_STORE, ReadPref.NORMAL, "locks");
+
+    DBObject dbLock = locks.findOne(filter);
     assertNotNull(dbLock);
 
     boolean damage = false;
@@ -54,7 +57,7 @@ public class PersistentLockerDBTest extends PersistenceTest {
 
     assertFalse(damage);
 
-    dbLock = persistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "locks").findOne(filter);
+    dbLock = locks.findOne(filter);
     assertNull(dbLock);
   }
 

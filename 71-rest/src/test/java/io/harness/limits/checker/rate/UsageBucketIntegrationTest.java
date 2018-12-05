@@ -5,7 +5,6 @@ import static org.junit.Assert.assertNotNull;
 
 import com.google.inject.Inject;
 
-import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import org.junit.After;
 import org.junit.Before;
@@ -26,14 +25,14 @@ public class UsageBucketIntegrationTest extends BaseIntegrationTest {
   @Before
   public void ensureIndices() throws Exception {
     if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
-      persistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL).ensureIndexes(UsageBucket.class);
+      persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL).ensureIndexes(UsageBucket.class);
       indexesEnsured = true;
     }
   }
 
   @After
   public void cleanUp() throws Exception {
-    persistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL)
+    persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL)
         .delete(persistence.createQuery(UsageBucket.class).filter("key", KEY));
   }
 

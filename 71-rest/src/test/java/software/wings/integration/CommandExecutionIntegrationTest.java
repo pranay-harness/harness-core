@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
@@ -131,7 +130,7 @@ public class CommandExecutionIntegrationTest extends WingsBaseTest {
    */
   @Before
   public void setUp() throws Exception {
-    wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).getCollection(AppContainer.class).drop();
+    wingsPersistence.getCollection(AppContainer.class, ReadPref.NORMAL).drop();
     String uuid = fileService.saveFile(anArtifactFile().withName("app").build(),
         new ByteArrayInputStream("echo 'hello world'".getBytes(StandardCharsets.UTF_8)), ARTIFACTS);
     ArtifactFile artifactFile = anArtifactFile().withFileUuid(uuid).withName("service").build();

@@ -1,7 +1,6 @@
 package software.wings.common.cache;
 
 import static com.mongodb.ErrorCategory.DUPLICATE_KEY;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 
 import com.google.inject.Inject;
@@ -52,7 +51,7 @@ public class MongoStore implements DistributedStore {
 
   private <T extends Distributable> T get(Long contextValue, long algorithmId, long structureHash, String key) {
     try {
-      final Datastore datastore = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+      final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class, ReadPref.NORMAL);
       final QueryFactory factory = datastore.getQueryFactory();
 
       final Query<CacheEntity> entityQuery =
@@ -88,7 +87,7 @@ public class MongoStore implements DistributedStore {
       contextValue = ((Ordinal) entity).contextOrder();
     }
     try {
-      final Datastore datastore = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+      final Datastore datastore = wingsPersistence.getDatastore(CacheEntity.class, ReadPref.NORMAL);
       final UpdateOperations<CacheEntity> updateOperations = datastore.createUpdateOperations(CacheEntity.class);
       updateOperations.set(CacheEntity.CONTEXT_VALUE_KEY, contextValue);
       updateOperations.set(CacheEntity.CANONICAL_KEY_KEY, canonicalKey);
