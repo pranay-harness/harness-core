@@ -23,6 +23,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.WingsException;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,7 +96,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.stencils.Expand;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.util.Collections;
 import java.util.List;

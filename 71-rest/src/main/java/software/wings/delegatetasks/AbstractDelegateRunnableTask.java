@@ -13,6 +13,7 @@ import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.DelegateRetryableException;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
@@ -21,7 +22,6 @@ import software.wings.beans.DelegateTaskResponse.DelegateTaskResponseBuilder;
 import software.wings.beans.DelegateTaskResponse.ResponseCode;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.io.IOException;
 import java.util.List;

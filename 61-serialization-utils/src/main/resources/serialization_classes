@@ -252,7 +252,7 @@ software.wings.beans.yaml.GitPullResult, 5209
 software.wings.beans.yaml.GitPushResult, 5210
 software.wings.beans.yaml.YamlType, 5211
 software.wings.beans.yaml.Change$ChangeType, 5212
-software.wings.waitnotify.ErrorNotifyResponseData, 5213
+io.harness.waiter.ErrorNotifyResponseData, 5213
 software.wings.beans.VaultConfig, 5214
 software.wings.beans.yaml.GitPushResult$RefUpdate, 5215
 software.wings.service.impl.analysis.ElkConnector, 5216

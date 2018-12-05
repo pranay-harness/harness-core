@@ -22,6 +22,7 @@ import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -63,7 +64,6 @@ import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;

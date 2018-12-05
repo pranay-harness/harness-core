@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.delegatetasks.RemoteMethodReturnValueData;
@@ -13,7 +14,6 @@ import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.service.intfc.TriggerService;
 import software.wings.sm.ExecutionStatus;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.NotifyCallback;
 
 import java.util.Map;

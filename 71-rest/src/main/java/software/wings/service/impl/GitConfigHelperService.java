@@ -12,6 +12,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.ManagerDecryptionService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

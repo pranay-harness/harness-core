@@ -26,6 +26,7 @@ import io.harness.persistence.HIterator;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
@@ -69,7 +70,6 @@ import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 import software.wings.utils.Misc;
 import software.wings.utils.Validator;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.util.HashMap;
 import java.util.List;

@@ -12,6 +12,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -28,7 +29,6 @@ import software.wings.service.impl.aws.model.AwsAsgRequest;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsAsgHelperServiceManager;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.util.List;
 import java.util.Map;
