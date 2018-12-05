@@ -2,6 +2,7 @@ package software.wings.beans;
 
 import com.google.common.collect.ImmutableSet;
 
+import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.WaitInstanceError;
 import io.harness.waiter.WaitQueue;
 import software.wings.annotation.EncryptableSetting;
@@ -100,7 +101,6 @@ import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
-import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyResponse;
 import software.wings.waitnotify.WaitInstance;
 import software.wings.yaml.YamlHistory;

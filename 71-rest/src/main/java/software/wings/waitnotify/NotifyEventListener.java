@@ -16,6 +16,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.persistence.ReadPref;
+import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.WaitInstanceError;
 import io.harness.waiter.WaitQueue;
 import org.apache.commons.lang3.exception.ExceptionUtils;

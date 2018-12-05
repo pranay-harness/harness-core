@@ -5,6 +5,7 @@ import com.google.inject.TypeLiteral;
 
 import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queue;
+import io.harness.waiter.NotifyEvent;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.collect.ArtifactCollectEventListener;
@@ -18,7 +19,6 @@ import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.instance.DeploymentEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
-import software.wings.waitnotify.NotifyEvent;
 import software.wings.waitnotify.NotifyEventListener;
 
 public class QueueModule extends AbstractModule {

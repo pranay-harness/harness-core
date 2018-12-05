@@ -3,9 +3,9 @@ package software.wings.waitnotify;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.RateLimiter;
@@ -17,6 +17,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
+import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.WaitQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
