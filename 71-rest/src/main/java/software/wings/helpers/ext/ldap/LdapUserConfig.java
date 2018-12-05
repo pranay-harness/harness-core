@@ -16,4 +16,6 @@ public interface LdapUserConfig extends LdapSearchConfig {
   String getLoadUsersFilter();
 
   String getGroupMembershipFilter(String groupDn);
+
+  String getFallbackGroupMembershipFilter(String groupName);
 }

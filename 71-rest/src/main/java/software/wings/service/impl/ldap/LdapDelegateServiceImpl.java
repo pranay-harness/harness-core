@@ -142,7 +142,7 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
           .map(group -> buildLdapGroupResponse(group, settings))
           .collect(Collectors.toList());
     } catch (LdapException e) {
-      throw new WingsException(e.getResultCode().toString());
+      throw new WingsException(e.getResultCode().toString(), e);
     }
   }
 
@@ -171,9 +171,11 @@ public class LdapDelegateServiceImpl implements LdapDelegateService {
       return groupResponse;
     } catch (LdapException e) {
       if (e.getResultCode().equals(ResultCode.NO_SUCH_OBJECT)) {
+        logger.error(String.format("Ldap [%s] received while fetching group by dn: [%s] for Ldap Name: [%s]",
+            e.getResultCode().toString(), dn, settings.getPublicSSOSettings().getDisplayName()));
         return null;
       }
-      throw new WingsException(e.getResultCode().toString());
+      throw new WingsException(e.getResultCode().toString(), e);
     }
   }
 }
