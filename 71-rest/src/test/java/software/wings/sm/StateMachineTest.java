@@ -4,7 +4,6 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.failBecauseExceptionWasNotThrown;
 import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
-import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -658,9 +657,9 @@ public class StateMachineTest extends WingsBaseTest {
       }
       StaticMap.putValue(name, System.currentTimeMillis());
       if (shouldFail) {
-        waitNotifyEngine.notify(uuid, aStringNotifyResponseData().withData("FAILURE").build());
+        waitNotifyEngine.notify(uuid, StringNotifyResponseData.builder().data("FAILURE").build());
       } else {
-        waitNotifyEngine.notify(uuid, aStringNotifyResponseData().withData("SUCCESS").build());
+        waitNotifyEngine.notify(uuid, StringNotifyResponseData.builder().data("SUCCESS").build());
       }
     }
   }
