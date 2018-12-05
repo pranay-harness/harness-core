@@ -135,6 +135,32 @@ public class LdapHelperTest extends WingsBaseTest {
   }
 
   @Test
+  public void populateGroupSizeWithoutExtendedMatchingFilterShouldFailAndThenSucceed() throws LdapException {
+    LdapEntry group = new LdapEntry("groupDN");
+    SearchResult groups = new SearchResult(group);
+    mockLdapSearchBuilder(searchBuilder, search);
+    when(search.execute(Matchers.anyVararg()))
+        .thenThrow(new LdapException("Error", ResultCode.UNAVAILABLE_CRITICAL_EXTENSION))
+        .thenReturn(searchResult);
+    when(searchResult.getEntries()).thenReturn(Collections.singletonList(group));
+    when(searchResult.size()).thenReturn(1);
+    helper.populateGroupSize(groups, ldapSettings.getUserSettings());
+    assertThat(group.getAttribute("groupSize").getStringValue()).isEqualTo("1");
+  }
+
+  @Test(expected = LdapException.class)
+  public void populateGroupSizeWithoutExtendedMatchingFilterShouldFail() throws LdapException {
+    LdapEntry group = new LdapEntry("groupDN");
+    SearchResult groups = new SearchResult(group);
+    mockLdapSearchBuilder(searchBuilder, search);
+    when(search.execute(Matchers.anyVararg())).thenThrow(new LdapException("Error", ResultCode.INVALID_RESPONSE));
+    when(searchResult.getEntries()).thenReturn(Collections.singletonList(group));
+    when(searchResult.size()).thenReturn(1);
+    helper.populateGroupSize(groups, ldapSettings.getUserSettings());
+    assertThat(group.getAttribute("groupSize").getStringValue()).isEqualTo("1");
+  }
+
+  @Test
   public void getGroupByDn() throws LdapException {
     mockLdapSearchBuilder(searchBuilder, search);
     when(search.execute(any())).thenReturn(searchResult);

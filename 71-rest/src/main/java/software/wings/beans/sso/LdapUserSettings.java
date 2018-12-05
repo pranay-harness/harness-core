@@ -39,6 +39,12 @@ public class LdapUserSettings implements LdapUserConfig {
 
   @JsonIgnore
   @Override
+  public String getFallbackGroupMembershipFilter(String groupDn) {
+    return String.format("(&%s(%s=%s))", searchFilter, groupMembershipAttr, groupDn);
+  }
+
+  @JsonIgnore
+  @Override
   public String[] getReturnAttrs() {
     return new String[] {emailAttr, displayNameAttr};
   }

@@ -13,6 +13,7 @@ import org.ldaptive.DefaultConnectionFactory;
 import org.ldaptive.LdapAttribute;
 import org.ldaptive.LdapEntry;
 import org.ldaptive.LdapException;
+import org.ldaptive.ResultCode;
 import org.ldaptive.SearchResult;
 import org.ldaptive.auth.AuthenticationRequest;
 import org.ldaptive.auth.AuthenticationResponse;
@@ -20,6 +21,8 @@ import org.ldaptive.auth.Authenticator;
 import org.ldaptive.auth.BindAuthenticationHandler;
 import org.ldaptive.auth.SearchDnResolver;
 import org.ldaptive.auth.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import software.wings.beans.sso.LdapSearchConfig;
 import software.wings.helpers.ext.ldap.LdapConnectionConfig;
 import software.wings.helpers.ext.ldap.LdapConstants;
@@ -35,6 +38,8 @@ import java.time.Duration;
 public class LdapHelper {
   LdapConnectionConfig connectionConfig;
   ConnectionConfig ldaptiveConfig;
+
+  private static final Logger logger = LoggerFactory.getLogger(LdapHelper.class);
 
   public LdapHelper(LdapConnectionConfig connectionConfig) {
     this.connectionConfig = connectionConfig;
@@ -68,6 +73,7 @@ public class LdapHelper {
       connection.open();
       return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.CONNECTION_SUCCESS).build();
     } catch (LdapException e) {
+      logger.error(String.format("Ldap connection validation failed for url: [%s]", connectionConfig.generateUrl()), e);
       return LdapResponse.builder().status(Status.FAILURE).message(e.getResultCode().toString()).build();
     }
   }
@@ -92,6 +98,7 @@ public class LdapHelper {
 
       return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.USER_CONFIG_SUCCESS).build();
     } catch (LdapException e) {
+      logger.error(String.format("Ldap user config validation failed for: [%s]", config.getDisplayNameAttr()), e);
       return LdapResponse.builder().status(Status.FAILURE).message(e.getResultCode().toString()).build();
     }
   }
@@ -107,6 +114,7 @@ public class LdapHelper {
       }
       return LdapResponse.builder().status(Status.SUCCESS).message(LdapConstants.GROUP_CONFIG_SUCCESS).build();
     } catch (LdapException e) {
+      logger.error(String.format("Ldap validate group config failed for: [%s] ", config.getNameAttr()), e);
       return LdapResponse.builder().status(Status.FAILURE).message(e.getResultCode().toString()).build();
     }
   }
@@ -138,9 +146,24 @@ public class LdapHelper {
   }
 
   public SearchResult listGroupUsers(LdapUserConfig userConfig, String groupDn) throws LdapException {
-    LdapSearch search =
-        getDefaultLdapSearchBuilder(userConfig).searchFilter(userConfig.getGroupMembershipFilter(groupDn)).build();
-    return search.execute(userConfig.getReturnAttrs());
+    LdapSearch search;
+    try {
+      search =
+          getDefaultLdapSearchBuilder(userConfig).searchFilter(userConfig.getGroupMembershipFilter(groupDn)).build();
+      return search.execute(userConfig.getReturnAttrs());
+    } catch (LdapException ldapException) {
+      if (ResultCode.UNAVAILABLE_CRITICAL_EXTENSION == ldapException.getResultCode()) {
+        logger.error(
+            "Ldap: Failed in fetching user groups for groupDn: [%s] with error %s. Now trying to fetch the users without extended filter.",
+            groupDn, ldapException.getMessage());
+        search = getDefaultLdapSearchBuilder(userConfig)
+                     .searchFilter(userConfig.getFallbackGroupMembershipFilter(groupDn))
+                     .build();
+        return search.execute(userConfig.getReturnAttrs());
+      } else {
+        throw ldapException;
+      }
+    }
   }
 
   public int getGroupUserCount(LdapUserConfig config, String groupDn) throws LdapException {
@@ -195,6 +218,9 @@ public class LdapHelper {
         return LdapResponse.builder().status(Status.FAILURE).message(response.getResultCode().toString()).build();
       }
     } catch (LdapException e) {
+      logger.error(String.format("Ldap authentication failed for identifier: [%s] and Ldap display Name: [%s]",
+                       identifier, config.getDisplayNameAttr()),
+          e);
       return LdapResponse.builder().status(Status.FAILURE).message(e.getResultCode().toString()).build();
     }
   }
