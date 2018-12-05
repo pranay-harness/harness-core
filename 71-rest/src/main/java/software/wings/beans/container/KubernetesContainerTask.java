@@ -58,7 +58,7 @@ public class KubernetesContainerTask extends ContainerTask {
   public static final String CONFIG_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{CONFIG_MAP_NAME}";
   public static final String SECRET_MAP_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_MAP_NAME}";
 
-  private static final String SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
+  private static final String REGISTRY_SECRET_NAME_PLACEHOLDER_REGEX = "\\$\\{SECRET_NAME}";
 
   private static final String DUMMY_SECRET_NAME = "hv--secret-name--hv";
 
@@ -185,7 +185,7 @@ public class KubernetesContainerTask extends ContainerTask {
     return isNotBlank(getAdvancedConfig()) && STATEFUL_SET_PATTERN.matcher(getAdvancedConfig()).find();
   }
 
-  public HasMetadata createController(String containerName, String imageNameTag, String secretName,
+  public HasMetadata createController(String containerName, String imageNameTag, String registrySecretName,
       String configMapName, String secretMapName, String domainName) {
     try {
       String configTemplate = isNotBlank(getAdvancedConfig()) ? getAdvancedConfig() : fetchYamlConfig();
@@ -201,7 +201,7 @@ public class KubernetesContainerTask extends ContainerTask {
 
       String controllerYaml = configTemplate.replaceAll(DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX, imageNameTag)
                                   .replaceAll(CONTAINER_NAME_PLACEHOLDER_REGEX, containerName)
-                                  .replaceAll(SECRET_NAME_PLACEHOLDER_REGEX, secretName)
+                                  .replaceAll(REGISTRY_SECRET_NAME_PLACEHOLDER_REGEX, registrySecretName)
                                   .replaceAll(CONFIG_MAP_NAME_PLACEHOLDER_REGEX, configMapName)
                                   .replaceAll(SECRET_MAP_NAME_PLACEHOLDER_REGEX, secretMapName);
       HasMetadata controller = KubernetesHelper.loadYaml(controllerYaml);
@@ -220,7 +220,7 @@ public class KubernetesContainerTask extends ContainerTask {
       return toYaml(createDeployment())
           .replaceAll(DUMMY_DOCKER_IMAGE_NAME, DOCKER_IMAGE_NAME_PLACEHOLDER_REGEX)
           .replaceAll(DUMMY_CONTAINER_NAME, CONTAINER_NAME_PLACEHOLDER_REGEX)
-          .replaceAll(DUMMY_SECRET_NAME, SECRET_NAME_PLACEHOLDER_REGEX);
+          .replaceAll(DUMMY_SECRET_NAME, REGISTRY_SECRET_NAME_PLACEHOLDER_REGEX);
     } catch (IOException e) {
       throw new WingsException(ErrorCode.INVALID_ARGUMENT, e).addParam("args", Misc.getMessage(e));
     }
