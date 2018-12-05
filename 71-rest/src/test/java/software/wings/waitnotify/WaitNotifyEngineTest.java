@@ -18,6 +18,7 @@ import io.harness.queue.Queue.Filter;
 import io.harness.threading.Concurrent;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.NotifyEvent;
+import io.harness.waiter.StringNotifyResponseData;
 import io.harness.waiter.WaitQueue;
 import org.junit.Before;
 import org.junit.Test;

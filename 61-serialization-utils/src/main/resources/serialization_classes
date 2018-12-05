@@ -310,7 +310,7 @@ software.wings.api.HelmSetupExecutionSummary, 5267
 software.wings.helpers.ext.helm.request.HelmRollbackCommandRequest, 5268
 software.wings.beans.container.HelmChartSpecification, 5269
 software.wings.beans.GitConfig$GitRepositoryType, 5270
-software.wings.waitnotify.StringNotifyResponseData, 5271
+io.harness.waiter.StringNotifyResponseData, 5271
 software.wings.beans.command.InitPowerShellCommandUnit, 5272
 software.wings.beans.command.CleanupPowerShellCommandUnit, 5273
 software.wings.beans.command.ShellCommandExecutionContext, 5274
