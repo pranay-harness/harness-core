@@ -6,6 +6,7 @@ import static software.wings.beans.Base.GLOBAL_APP_ID;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.waiter.NotifyCallback;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +15,6 @@ import software.wings.beans.alert.EmailSendingFailedAlert;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.service.intfc.AlertService;
-import software.wings.waitnotify.NotifyCallback;
 
 import java.util.Map;
 

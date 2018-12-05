@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.waiter.ErrorNotifyResponseData;
+import io.harness.waiter.NotifyCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.MetricDataAnalysisResponse;
@@ -14,7 +15,6 @@ import software.wings.service.impl.analysis.DataCollectionTaskResult.DataCollect
 import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
-import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.Map;

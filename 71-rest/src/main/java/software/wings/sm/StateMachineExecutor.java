@@ -66,6 +66,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.observer.Subject;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.waiter.ErrorNotifyResponseData;
+import io.harness.waiter.NotifyCallback;
 import lombok.Getter;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -104,7 +105,6 @@ import software.wings.sm.states.PhaseSubWorkflow;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.MapperUtils;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.NotifyCallback;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.time.Duration;

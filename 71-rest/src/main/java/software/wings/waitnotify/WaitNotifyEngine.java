@@ -18,6 +18,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.queue.Queue;
 import io.harness.waiter.ErrorNotifyResponseData;
+import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.WaitQueue;
 import org.slf4j.Logger;

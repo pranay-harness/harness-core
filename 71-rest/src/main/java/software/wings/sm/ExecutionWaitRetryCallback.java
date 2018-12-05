@@ -6,7 +6,7 @@ import static software.wings.sm.ExecutionInterruptType.RETRY;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.ResponseData;
-import software.wings.waitnotify.NotifyCallback;
+import io.harness.waiter.NotifyCallback;
 
 import java.util.Map;
 

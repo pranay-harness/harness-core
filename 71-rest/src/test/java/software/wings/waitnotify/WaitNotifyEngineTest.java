@@ -16,6 +16,7 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.queue.Queue;
 import io.harness.queue.Queue.Filter;
 import io.harness.threading.Concurrent;
+import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.WaitQueue;
 import org.junit.Before;
