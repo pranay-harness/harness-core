@@ -801,6 +801,9 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     analysisRecords.forEach(timeSeriesMLAnalysisRecord -> timeSeriesMLAnalysisRecord.decompressTransactions());
     try {
       for (TimeSeriesMLAnalysisRecord record : analysisRecords) {
+        if (isEmpty(record.getTransactions())) {
+          continue;
+        }
         for (Entry<String, TimeSeriesMLTxnSummary> transaction : record.getTransactions().entrySet()) {
           Map<String, TimeSeriesOfMetric> metricMap = observedTimeSeries.get(transaction.getValue().getTxn_name());
           if (metricMap == null) {
