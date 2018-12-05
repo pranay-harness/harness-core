@@ -313,10 +313,15 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
         cleanupStageDeployment(kubernetesConfig, encryptedDataDetails, setupParams, executionLogCallback);
       }
 
-      String registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
-      Secret registrySecret = createRegistrySecret(registrySecretName, setupParams.getNamespace(),
-          setupParams.getImageDetails(), controllerLabels, executionLogCallback);
-      kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
+      String registrySecretName = "none";
+      if (isNotBlank(setupParams.getImageDetails().getRegistryUrl())
+          && isNotBlank(setupParams.getImageDetails().getUsername())
+          && isNotBlank(setupParams.getImageDetails().getPassword())) {
+        registrySecretName = getKubernetesRegistrySecretName(setupParams.getImageDetails());
+        Secret registrySecret = createRegistrySecret(registrySecretName, setupParams.getNamespace(),
+            setupParams.getImageDetails(), controllerLabels, executionLogCallback);
+        kubernetesContainerService.createOrReplaceSecret(kubernetesConfig, encryptedDataDetails, registrySecret);
+      }
 
       Map<String, String> previousYamlConfig = new HashMap<>();
       List<Pod> originalPods = null;
