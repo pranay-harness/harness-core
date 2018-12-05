@@ -66,11 +66,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   public List<BuildDetails> getBuilds(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName, int maxNumberOfBuilds) {
     try {
-      if (!dockerConfig.hasCredentials()) {
-        return dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
+      if (dockerConfig.hasCredentials()) {
+        return getBuildDetails(dockerConfig, encryptionDetails, imageName);
       }
-      return getBuildDetails(dockerConfig, encryptionDetails, imageName);
-
+      return dockerPublicRegistryProcessor.getBuilds(dockerConfig, encryptionDetails, imageName, maxNumberOfBuilds);
     } catch (IOException e) {
       throw new WingsException(GENERAL_ERROR, WingsException.USER, e).addParam("message", Misc.getMessage(e));
     }
@@ -155,10 +154,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   @Override
   public boolean verifyImageName(
       DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails, String imageName) {
-    if (!dockerConfig.hasCredentials()) {
-      return dockerPublicRegistryProcessor.verifyImageName(dockerConfig, encryptionDetails, imageName);
+    if (dockerConfig.hasCredentials()) {
+      return checkImageName(dockerConfig, encryptionDetails, imageName);
     }
-    return checkImageName(dockerConfig, encryptionDetails, imageName);
+    return dockerPublicRegistryProcessor.verifyImageName(dockerConfig, encryptionDetails, imageName);
   }
 
   private boolean checkImageName(
@@ -186,6 +185,10 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
   @Override
   public boolean validateCredentials(DockerConfig dockerConfig, List<EncryptedDataDetail> encryptionDetails) {
     if (dockerConfig.hasCredentials()) {
+      if (isEmpty(dockerConfig.getPassword()) && isEmpty(dockerConfig.getEncryptedPassword())) {
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER)
+            .addParam("message", "Password is required field along with Username");
+      }
       try {
         DockerRegistryRestClient registryRestClient = getDockerRegistryRestClient(dockerConfig, encryptionDetails);
         String basicAuthHeader = Credentials.basic(dockerConfig.getUsername(), new String(dockerConfig.getPassword()));
@@ -199,7 +202,7 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
         }
         return isSuccessful(response);
       } catch (IOException e) {
-        throw new WingsException(GENERAL_ERROR, USER).addParam("message", Misc.getMessage(e));
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, USER).addParam("message", Misc.getMessage(e));
       }
     }
     return true;
