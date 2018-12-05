@@ -11,6 +11,7 @@ import static software.wings.beans.artifact.Artifact.Status.ERROR;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.waiter.NotifyCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.EntityType;
@@ -21,7 +22,6 @@ import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.NotificationService;
 import software.wings.waitnotify.ListNotifyResponseData;
-import software.wings.waitnotify.NotifyCallback;
 
 import java.util.Map;
 

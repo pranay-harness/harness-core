@@ -1,4 +1,4 @@
-package software.wings.waitnotify;
+package io.harness.waiter;
 
 import io.harness.delegate.task.protocol.ResponseData;
 
@@ -6,16 +6,8 @@ import java.util.Map;
 
 /**
  * Function to call when all correlationIds are completed for a wait instance.
- *
- * @author Rishi
  */
 public interface NotifyCallback {
-  /**
-   * Notify.
-   *
-   * @param response the response
-   */
   void notify(Map<String, ResponseData> response);
-
   void notifyError(Map<String, ResponseData> response);
 }

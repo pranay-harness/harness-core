@@ -4,6 +4,7 @@ import static java.util.Arrays.asList;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.WaitQueue;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;

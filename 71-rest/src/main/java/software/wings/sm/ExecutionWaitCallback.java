@@ -3,9 +3,9 @@ package software.wings.sm;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.ResponseData;
+import io.harness.waiter.NotifyCallback;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import software.wings.waitnotify.NotifyCallback;
 
 import java.util.Map;
 
