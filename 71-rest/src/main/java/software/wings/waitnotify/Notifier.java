@@ -5,9 +5,9 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.maintenance.MaintenanceController.isMaintenance;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static software.wings.waitnotify.NotifyEvent.Builder.aNotifyEvent;
 
 import com.google.inject.Inject;
 
@@ -17,6 +17,7 @@ import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
+import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.WaitQueue;
 import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;

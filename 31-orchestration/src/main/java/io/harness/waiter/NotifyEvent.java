@@ -1,4 +1,4 @@
-package software.wings.waitnotify;
+package io.harness.waiter;
 
 import com.google.common.base.MoreObjects;
 
@@ -9,9 +9,6 @@ import org.mongodb.morphia.annotations.Entity;
 import java.util.Date;
 import java.util.List;
 
-/**
- * Created by peeyushaggarwal on 4/13/16.
- */
 @Entity(value = "notifyQueue", noClassnameStored = true)
 public class NotifyEvent extends Queuable {
   private String waitInstanceId;
