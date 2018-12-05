@@ -1,4 +1,4 @@
-package software.wings.waitnotify;
+package io.harness.waiter;
 
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;

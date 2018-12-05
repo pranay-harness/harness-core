@@ -76,6 +76,7 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.persistence.ReadPref;
 import io.harness.version.VersionInfoManager;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream;
@@ -140,7 +141,6 @@ import software.wings.sm.DelegateMetaInfo;
 import software.wings.utils.BoundedInputStream;
 import software.wings.utils.KryoUtils;
 import software.wings.waitnotify.DelegateTaskNotifyResponseData;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.io.BufferedWriter;

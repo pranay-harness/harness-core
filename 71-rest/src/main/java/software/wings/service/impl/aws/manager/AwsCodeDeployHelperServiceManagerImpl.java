@@ -12,6 +12,7 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.waiter.ErrorNotifyResponseData;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
@@ -31,7 +32,6 @@ import software.wings.service.impl.aws.model.AwsCodeDeployS3LocationData;
 import software.wings.service.impl.aws.model.AwsResponse;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.aws.manager.AwsCodeDeployHelperServiceManager;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

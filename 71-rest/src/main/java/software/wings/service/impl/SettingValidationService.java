@@ -17,6 +17,7 @@ import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.waiter.ErrorNotifyResponseData;
 import org.mongodb.morphia.annotations.Transient;
 import org.mongodb.morphia.mapping.Mapper;
 import org.slf4j.Logger;
@@ -81,7 +82,6 @@ import software.wings.settings.validation.ConnectivityValidationDelegateRequest;
 import software.wings.settings.validation.ConnectivityValidationDelegateResponse;
 import software.wings.sm.StateType;
 import software.wings.utils.WingsReflectionUtils;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.lang.reflect.Field;
 import java.util.Collections;

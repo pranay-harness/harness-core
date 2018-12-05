@@ -18,6 +18,7 @@ import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
+import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
@@ -74,7 +75,6 @@ import software.wings.stencils.DefaultValue;
 import software.wings.stencils.EnumData;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.ErrorNotifyResponseData;
 
 import java.util.Collections;
 import java.util.List;
