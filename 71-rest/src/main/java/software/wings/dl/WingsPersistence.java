@@ -7,7 +7,6 @@ import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
-import io.harness.persistence.Store;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -21,8 +20,6 @@ import java.util.Set;
  * The Interface WingsPersistence.
  */
 public interface WingsPersistence extends HPersistence {
-  Store LOCKS_STORE = Store.builder().name("locks").build();
-
   /**
    * Gets the.
    *

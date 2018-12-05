@@ -11,7 +11,6 @@ import static io.harness.exception.WingsException.NOBODY;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.mongo.MongoUtils.setUnset;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -1358,7 +1357,7 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
                                                           .set("delegateId", delegateId)
                                                           .set("status", STARTED);
     DelegateTask task =
-        wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(query, updateOperations);
+        wingsPersistence.getDatastore(DelegateTask.class, ReadPref.NORMAL).findAndModify(query, updateOperations);
     // If the task wasn't updated because delegateId already exists then query for the task with the delegateId in case
     // client is retrying the request
     if (task == null) {

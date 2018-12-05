@@ -1,7 +1,5 @@
 package io.harness.limits.checker;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
@@ -14,6 +12,7 @@ import io.harness.persistence.ReadPref;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Value;
+import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -102,22 +101,20 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
     Preconditions.checkArgument(change > 0, "use decrementAndGet for -ve change");
 
     try {
-      Query<Counter> q = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
-                             .createQuery(Counter.class)
+      final AdvancedDatastore datastore = persistence.getDatastore(Counter.class, ReadPref.NORMAL);
+      Query<Counter> q = datastore.createQuery(Counter.class)
                              .field("key")
                              .equal(keyToIncrement)
                              .field("value")
                              .lessThan(limit.getCount());
 
-      UpdateOperations<Counter> updateOp = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
-                                               .createUpdateOperations(Counter.class)
-                                               .inc("value", change);
+      UpdateOperations<Counter> updateOp = datastore.createUpdateOperations(Counter.class).inc("value", change);
 
       FindAndModifyOptions optns = new FindAndModifyOptions();
       optns.returnNew(true);
       optns.upsert(true);
 
-      return persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(q, updateOp, optns);
+      return datastore.findAndModify(q, updateOp, optns);
     } catch (MongoCommandException e) {
       if (e.getErrorCode() == MongoError.DUPLICATE_KEY.getErrorCode()) {
         log.info(
@@ -132,20 +129,16 @@ public class MongoStaticLimitChecker implements StaticLimitCheckerWithDecrement 
 
   private UpdateResponse decrementAndGet(String keyToDecrement, int change) {
     Preconditions.checkArgument(change < 0, "use incrementAndGet for +ve change");
-    Query<Counter> q = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
-                           .createQuery(Counter.class)
-                           .field("key")
-                           .equal(keyToDecrement)
-                           .field("value")
-                           .greaterThan(0);
 
-    UpdateOperations<Counter> updateOp = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
-                                             .createUpdateOperations(Counter.class)
-                                             .inc("value", change);
+    final AdvancedDatastore datastore = persistence.getDatastore(Counter.class, ReadPref.NORMAL);
+    Query<Counter> q =
+        datastore.createQuery(Counter.class).field("key").equal(keyToDecrement).field("value").greaterThan(0);
+
+    UpdateOperations<Counter> updateOp = datastore.createUpdateOperations(Counter.class).inc("value", change);
 
     FindAndModifyOptions optns = new FindAndModifyOptions();
     optns.returnNew(true);
-    Counter counter = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).findAndModify(q, updateOp, optns);
+    Counter counter = datastore.findAndModify(q, updateOp, optns);
 
     if (counter == null) {
       log.info("new counter is null. "

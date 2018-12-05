@@ -1,6 +1,5 @@
 package software.wings.beans.infrastructure.instance.stats;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -42,21 +41,21 @@ public class InstanceStatServiceIntegrationTest extends BaseIntegrationTest {
   @Before
   public void ensureIndices() throws URISyntaxException {
     if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
-      persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).ensureIndexes(InstanceStatsSnapshot.class);
+      persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL).ensureIndexes(InstanceStatsSnapshot.class);
       indexesEnsured = true;
     }
   }
 
   @After
   public void clearCollection() {
-    val ds = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+    val ds = persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL);
     ds.delete(fetchQuery());
   }
 
   @Test
   public void testSave() {
     val stats = sampleSnapshot();
-    val ds = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+    val ds = persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL);
     val initialCount = ds.getCount(fetchQuery());
 
     val saved = statService.save(stats);

@@ -4,7 +4,6 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.network.Localhost.getLocalHostName;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static javax.ws.rs.client.Entity.entity;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -192,7 +191,7 @@ public abstract class BaseIntegrationTest extends WingsBaseTest implements Wings
 
   protected void deleteAllDocuments(List<Class> classes) {
     classes.forEach(
-        cls -> wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).delete(wingsPersistence.createQuery(cls)));
+        cls -> wingsPersistence.getDatastore(cls, ReadPref.NORMAL).delete(wingsPersistence.createQuery(cls)));
   }
 
   protected Application createApp(String appName) {

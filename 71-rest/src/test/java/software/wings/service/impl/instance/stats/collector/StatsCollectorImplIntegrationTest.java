@@ -1,6 +1,5 @@
 package software.wings.service.impl.instance.stats.collector;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -54,7 +53,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
     loginAdminUser();
 
     if (!ensureIndices) {
-      Datastore ds = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+      Datastore ds = persistence.getDatastore(InstanceStatsSnapshot.class, ReadPref.NORMAL);
       this.cleanUp();
       ds.ensureIndexes(InstanceStatsSnapshot.class);
       ensureIndices = true;
@@ -63,7 +62,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
 
   @After
   public void cleanUp() {
-    Datastore ds = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+    Datastore ds = persistence.getDatastore(Instance.class, ReadPref.NORMAL);
     ds.delete(ds.createQuery(Instance.class)
                   .filter("accountId", WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID)
                   .filter("appName", SOME_APP_NAME));
@@ -73,7 +72,7 @@ public class StatsCollectorImplIntegrationTest extends BaseIntegrationTest {
 
   @Test
   public void testCreateStats() throws URISyntaxException {
-    Datastore ds = persistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+    Datastore ds = persistence.getDatastore(Instance.class, ReadPref.NORMAL);
 
     Instant start = Instant.now();
     String accountId = WingsTestConstants.INTEGRATION_TEST_ACCOUNT_ID;

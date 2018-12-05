@@ -1,6 +1,5 @@
 package software.wings.integration;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -137,7 +136,7 @@ public class ConfigFileOverrideIntegrationTest extends WingsBaseTest {
     Arrays
         .asList(Application.class, Environment.class, Host.class, ConfigFile.class, ServiceTemplate.class,
             Service.class, SettingAttribute.class)
-        .forEach(aClass -> wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL).getCollection(aClass).drop());
+        .forEach(aClass -> wingsPersistence.getCollection(aClass, ReadPref.NORMAL).drop());
 
     String accountId = wingsPersistence.save(anAccount().withCompanyName(HARNESS_NAME).build());
 

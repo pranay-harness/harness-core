@@ -1,7 +1,5 @@
 package io.harness.limits.configuration;
 
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
-
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -108,7 +106,7 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
         throw new IllegalArgumentException("Unknown limit type: " + limit.getLimitType());
     }
 
-    Datastore ds = dao.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+    Datastore ds = dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL);
 
     UpdateOperations<ConfiguredLimit> updateOp = ds.createUpdateOperations(ConfiguredLimit.class)
                                                      .set("accountId", configuredLimit.getAccountId())

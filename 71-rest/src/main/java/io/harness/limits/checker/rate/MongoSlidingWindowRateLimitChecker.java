@@ -4,7 +4,6 @@ import com.mongodb.BasicDBObject;
 import io.harness.limits.Action;
 import io.harness.limits.impl.model.RateLimit;
 import io.harness.limits.lib.RateLimitChecker;
-import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import lombok.Getter;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -52,7 +51,7 @@ public class MongoSlidingWindowRateLimitChecker implements RateLimitChecker {
   private void removeExpiredTimes(long leastAllowedTime) {
     Query<UsageBucket> query = persistence.createQuery(UsageBucket.class).field("key").equal(key);
 
-    AdvancedDatastore ds = persistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL);
+    AdvancedDatastore ds = persistence.getDatastore(UsageBucket.class, ReadPref.NORMAL);
     UpdateOperations<UsageBucket> update = ds.createUpdateOperations(UsageBucket.class,
         new BasicDBObject("$pull", new BasicDBObject("accessTimes", new BasicDBObject("$lt", leastAllowedTime))));
 

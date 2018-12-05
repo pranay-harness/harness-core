@@ -1,7 +1,6 @@
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static java.lang.String.format;
 import static software.wings.service.impl.LogServiceImpl.MAX_LOG_ROWS_PER_ACTIVITY;
 
@@ -50,7 +49,7 @@ public class MongoLogDataStoreServiceImpl implements LogDataStoreService {
     for (Log log : logs) {
       try {
         DBObject dbObject =
-            ((DatastoreImpl) wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)).getMapper().toDBObject(log);
+            ((DatastoreImpl) wingsPersistence.getDatastore(Log.class, ReadPref.NORMAL)).getMapper().toDBObject(log);
         dbObjects.add(dbObject);
         if (dbObjects.size() >= MAX_LOG_ROWS_PER_ACTIVITY) {
           break;

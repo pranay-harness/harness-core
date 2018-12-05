@@ -1,7 +1,6 @@
 package io.harness.limits;
 
 import static io.harness.limits.ActionType.CREATE_APPLICATION;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -40,18 +39,19 @@ public class LimitsEnforcementIntegrationTest extends BaseIntegrationTest {
   public void init() throws Exception {
     this.cleanUp();
     if (!indexesEnsured && !IntegrationTestUtil.isManagerRunning(client)) {
-      Datastore ds = dao.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
-      ds.ensureIndexes(Counter.class);
-      ds.ensureIndexes(ConfiguredLimit.class);
+      dao.getDatastore(Counter.class, ReadPref.NORMAL).ensureIndexes(Counter.class);
+      dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL).ensureIndexes(ConfiguredLimit.class);
       indexesEnsured = true;
     }
   }
 
   @After
   public void cleanUp() {
-    Datastore ds = dao.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
-    ds.delete(ds.createQuery(ConfiguredLimit.class).filter("accountId", ACTION.getAccountId()));
-    ds.delete(ds.createQuery(Counter.class).filter("key", ACTION.key()));
+    Datastore clds = dao.getDatastore(ConfiguredLimit.class, ReadPref.NORMAL);
+    clds.delete(clds.createQuery(ConfiguredLimit.class).filter("accountId", ACTION.getAccountId()));
+
+    Datastore cds = dao.getDatastore(Counter.class, ReadPref.NORMAL);
+    cds.delete(cds.createQuery(Counter.class).filter("key", ACTION.key()));
   }
 
   @Test

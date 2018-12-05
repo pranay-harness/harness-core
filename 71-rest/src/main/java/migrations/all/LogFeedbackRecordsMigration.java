@@ -1,7 +1,6 @@
 package migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.persistence.HPersistence.DEFAULT_STORE;
 import static software.wings.beans.Base.ID_KEY;
 
 import com.google.inject.Inject;
@@ -28,7 +27,7 @@ public class LogFeedbackRecordsMigration implements Migration {
 
   @Override
   public void migrate() {
-    DBCollection collection = wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "logMlFeedbackRecords");
+    DBCollection collection = wingsPersistence.getCollection(LogMLFeedbackRecord.class, ReadPref.NORMAL);
     BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
 
     DBCursor logFeedbackRecords = collection.find();

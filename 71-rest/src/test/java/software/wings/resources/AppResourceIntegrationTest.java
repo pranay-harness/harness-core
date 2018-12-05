@@ -12,7 +12,6 @@ import com.google.inject.Inject;
 import io.harness.limits.ActionType;
 import io.harness.limits.configuration.LimitConfigurationService;
 import io.harness.limits.impl.model.StaticLimit;
-import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
 import io.harness.rule.RepeatRule.Repeat;
 import lombok.val;
@@ -60,8 +59,9 @@ public class AppResourceIntegrationTest extends BaseIntegrationTest {
 
   @After
   public void cleanUp() {
-    val ds = persistence.getDatastore(HPersistence.DEFAULT_STORE, ReadPref.NORMAL);
-    ds.delete(fetchAppsQuery());
+    final Query<Application> query = fetchAppsQuery();
+    val ds = persistence.getDatastore(query.getEntityClass(), ReadPref.NORMAL);
+    ds.delete(query);
     initializeAppCounters.migrate();
   }
 
