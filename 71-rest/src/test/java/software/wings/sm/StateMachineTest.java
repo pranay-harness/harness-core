@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.waiter.StringNotifyResponseData;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,6 @@ import software.wings.service.StaticMap;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
 import software.wings.waitnotify.NotifyEventListener;
-import software.wings.waitnotify.StringNotifyResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;
