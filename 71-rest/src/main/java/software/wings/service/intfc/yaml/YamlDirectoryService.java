@@ -126,4 +126,6 @@ public interface YamlDirectoryService {
 
   DirectoryNode getApplicationManifestYamlFolderNode(
       @NotEmpty String accountId, @NotEmpty String appId, @NotEmpty String serviceId);
+
+  String getRootPathByApplicationManifest(Service service);
 }

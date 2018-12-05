@@ -1453,6 +1453,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   @Override
+  public String getRootPathByApplicationManifest(Service service) {
+    return getRootPathByService(service) + PATH_DELIMITER + MANIFEST_FOLDER;
+  }
+
+  @Override
   public String getRootPathByContainerTask(Service service, ContainerTask containerTask) {
     return getRootPathByService(service) + PATH_DELIMITER + DEPLOYMENT_SPECIFICATION_FOLDER;
   }
@@ -1642,6 +1647,8 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     } else if (helperEntity instanceof Service) {
       if (entity instanceof ServiceCommand) {
         return getRootPathByServiceCommand((Service) helperEntity, (ServiceCommand) entity);
+      } else if (entity instanceof ApplicationManifest) {
+        return getRootPathByApplicationManifest((Service) helperEntity);
       }
 
       return getEntitySpecPathByService((Service) helperEntity);
