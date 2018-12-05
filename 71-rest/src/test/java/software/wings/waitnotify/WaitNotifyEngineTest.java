@@ -8,7 +8,6 @@ import static java.time.Duration.ofMinutes;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
-import static software.wings.waitnotify.StringNotifyResponseData.Builder.aStringNotifyResponseData;
 
 import com.google.inject.Inject;
 
@@ -69,7 +68,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
         .containsExactly(tuple(waitInstanceId, "123"));
 
-    ResponseData data = aStringNotifyResponseData().withData("response-123").build();
+    ResponseData data = StringNotifyResponseData.builder().data("response-123").build();
     String id = waitNotifyEngine.notify("123", data);
 
     assertThat(wingsPersistence.get(NotifyResponse.class, id))
@@ -99,7 +98,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
           .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
           .containsExactly(tuple(waitInstanceId, "123"));
 
-      ResponseData data = aStringNotifyResponseData().withData("response-123").build();
+      ResponseData data = StringNotifyResponseData.builder().data("response-123").build();
       String id = waitNotifyEngine.notify("123", data);
 
       Concurrent.test(10, i -> { notifier.execute(); });
@@ -134,7 +133,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
         .containsExactly(tuple(waitInstanceId, "123"), tuple(waitInstanceId, "456"), tuple(waitInstanceId, "789"));
 
-    ResponseData data1 = aStringNotifyResponseData().withData("response-123").build();
+    ResponseData data1 = StringNotifyResponseData.builder().data("response-123").build();
 
     String id = waitNotifyEngine.notify("123", data1);
 
@@ -148,7 +147,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     }
 
     assertThat(responseMap).hasSize(0);
-    ResponseData data2 = aStringNotifyResponseData().withData("response-456").build();
+    ResponseData data2 = StringNotifyResponseData.builder().data("response-456").build();
 
     id = waitNotifyEngine.notify("456", data2);
 
@@ -162,7 +161,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
     }
 
     assertThat(responseMap).hasSize(0);
-    ResponseData data3 = aStringNotifyResponseData().withData("response-789").build();
+    ResponseData data3 = StringNotifyResponseData.builder().data("response-789").build();
 
     id = waitNotifyEngine.notify("789", data3);
 
@@ -198,7 +197,7 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
         .extracting(WaitQueue::getWaitInstanceId, WaitQueue::getCorrelationId)
         .containsExactly(tuple(waitInstanceId1, "123"), tuple(waitInstanceId2, "123"), tuple(waitInstanceId3, "123"));
 
-    ResponseData data = aStringNotifyResponseData().withData("response-123").build();
+    ResponseData data = StringNotifyResponseData.builder().data("response-123").build();
     String id = waitNotifyEngine.notify("123", data);
 
     assertThat(wingsPersistence.get(NotifyResponse.class, id))
