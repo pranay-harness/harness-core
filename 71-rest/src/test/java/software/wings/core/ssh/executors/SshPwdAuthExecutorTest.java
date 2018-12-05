@@ -146,7 +146,6 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should throw exception for invalid credential.
    */
   @Test
-  @Ignore
   @Repeat(times = 3, successes = 1)
   public void shouldThrowExceptionForInvalidCredential() {
     executor.init(configBuilder.but().withPassword("INVALID_PASSWORD".toCharArray()).build());
@@ -159,14 +158,13 @@ public class SshPwdAuthExecutorTest extends WingsBaseTest {
    * Should return success for successful command execution.
    */
   @Test
-  @Ignore
   // Too unstable to keep even with repeats
   public void shouldReturnSuccessForSuccessfulCommandExecution() {
     SshSessionConfig sshSessionConfig = configBuilder.but().build();
 
     executor.init(sshSessionConfig);
     String fileName = generateUuid();
-    CommandExecutionStatus execute = executor.executeCommandString(format("touch %s && rm %s", fileName, fileName));
+    CommandExecutionStatus execute = executor.executeCommandString("pwd && whoami");
     assertEquals("ssh command result is " + execute.toString(), SUCCESS, execute);
   }
 
