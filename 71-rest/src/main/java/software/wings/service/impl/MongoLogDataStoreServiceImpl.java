@@ -9,6 +9,7 @@ import com.google.inject.Inject;
 import com.mongodb.DBObject;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.persistence.GoogleDataStoreAware;
 import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.DatastoreImpl;
 import org.slf4j.Logger;
@@ -30,23 +31,25 @@ public class MongoLogDataStoreServiceImpl implements LogDataStoreService {
   }
 
   @Override
-  public void saveExecutionLog(List<Log> logs) {
+  public <T extends GoogleDataStoreAware> void saveLogs(Class<T> clazz, List<T> logs) {
     if (isEmpty(logs)) {
       return;
     }
-    long count = wingsPersistence.createQuery(Log.class)
-                     .filter("appId", logs.get(0).getAppId())
-                     .filter("activityId", logs.get(0).getActivityId())
-                     .count();
-    if (count >= MAX_LOG_ROWS_PER_ACTIVITY) {
-      logger.warn(
-          "Number of log rows per activity threshold [{}] crossed. [{}] log lines truncated for activityId: [{}], commandUnitName: [{}]",
-          MAX_LOG_ROWS_PER_ACTIVITY, logs.get(0).getLinesCount(), logs.get(0).getActivityId(),
-          logs.get(0).getCommandUnitName());
-      return;
+    if (logs.get(0) instanceof Log) {
+      Log log = (Log) logs.get(0);
+      long count = wingsPersistence.createQuery(Log.class)
+                       .filter("appId", log.getAppId())
+                       .filter("activityId", log.getActivityId())
+                       .count();
+      if (count >= MAX_LOG_ROWS_PER_ACTIVITY) {
+        logger.warn(
+            "Number of log rows per activity threshold [{}] crossed. [{}] log lines truncated for activityId: [{}], commandUnitName: [{}]",
+            MAX_LOG_ROWS_PER_ACTIVITY, log.getLinesCount(), log.getActivityId(), log.getCommandUnitName());
+        return;
+      }
     }
     List<DBObject> dbObjects = new ArrayList<>(logs.size());
-    for (Log log : logs) {
+    for (T log : logs) {
       try {
         DBObject dbObject =
             ((DatastoreImpl) wingsPersistence.getDatastore(Log.class, ReadPref.NORMAL)).getMapper().toDBObject(log);
@@ -58,12 +61,12 @@ public class MongoLogDataStoreServiceImpl implements LogDataStoreService {
         logger.error(format("Exception in saving log [%s]", log), e);
       }
     }
-    wingsPersistence.getCollection(Log.class, ReadPref.NORMAL).insert(dbObjects);
+    wingsPersistence.getCollection(clazz, ReadPref.NORMAL).insert(dbObjects);
   }
 
   @Override
-  public PageResponse<Log> listExecutionLog(PageRequest<Log> pageRequest) {
-    return wingsPersistence.query(Log.class, pageRequest);
+  public <T extends GoogleDataStoreAware> PageResponse<T> listLogs(Class<T> clazz, PageRequest<T> pageRequest) {
+    return wingsPersistence.query(clazz, pageRequest);
   }
 
   @Override

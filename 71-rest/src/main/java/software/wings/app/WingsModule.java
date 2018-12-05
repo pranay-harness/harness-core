@@ -120,7 +120,7 @@ import software.wings.service.impl.FileServiceImpl;
 import software.wings.service.impl.GcpInfrastructureProvider;
 import software.wings.service.impl.GcrBuildServiceImpl;
 import software.wings.service.impl.GcsBuildServiceImpl;
-import software.wings.service.impl.GoogleLogDataLogStoreServiceImpl;
+import software.wings.service.impl.GoogleLogDataStoreServiceImpl;
 import software.wings.service.impl.HarnessUserGroupServiceImpl;
 import software.wings.service.impl.HostServiceImpl;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
@@ -153,7 +153,6 @@ import software.wings.service.impl.StaticInfrastructureProvider;
 import software.wings.service.impl.StatisticsServiceImpl;
 import software.wings.service.impl.SweepingOutputServiceImpl;
 import software.wings.service.impl.SystemCatalogSeviceImpl;
-import software.wings.service.impl.ThirdPartyApiServiceImpl;
 import software.wings.service.impl.UsageRestrictionsServiceImpl;
 import software.wings.service.impl.UserGroupServiceImpl;
 import software.wings.service.impl.UserServiceImpl;
@@ -293,7 +292,6 @@ import software.wings.service.intfc.StateExecutionService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.SweepingOutputService;
 import software.wings.service.intfc.SystemCatalogService;
-import software.wings.service.intfc.ThirdPartyApiService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.UserGroupService;
@@ -572,7 +570,6 @@ public class WingsModule extends DependencyModule {
     bind(SSOSettingService.class).to(SSOSettingServiceImpl.class);
     bind(SSOService.class).to(SSOServiceImpl.class);
     bind(DeploymentService.class).to(DeploymentServiceImpl.class);
-    bind(ThirdPartyApiService.class).to(ThirdPartyApiServiceImpl.class);
     bind(HelmDeployService.class).to(HelmDeployServiceUnsupported.class).in(Singleton.class);
     bind(PcfDeploymentManager.class).to(PcfDeploymentManagerUnsupported.class).in(Singleton.class);
 
@@ -597,7 +594,7 @@ public class WingsModule extends DependencyModule {
     }
     switch (configuration.getExecutionLogsStorageMode()) {
       case GOOGLE_CLOUD_DATA_STORE:
-        bind(LogDataStoreService.class).to(GoogleLogDataLogStoreServiceImpl.class);
+        bind(LogDataStoreService.class).to(GoogleLogDataStoreServiceImpl.class);
         break;
       case MONGO:
         bind(LogDataStoreService.class).to(MongoLogDataStoreServiceImpl.class);

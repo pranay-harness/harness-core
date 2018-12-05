@@ -47,7 +47,7 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.DownloadTokenService;
-import software.wings.service.intfc.ThirdPartyApiService;
+import software.wings.service.intfc.LogDataStoreService;
 
 import java.io.File;
 import java.io.IOException;
@@ -83,18 +83,18 @@ public class DelegateResource {
   private DelegateScopeService delegateScopeService;
   private DownloadTokenService downloadTokenService;
   private MainConfiguration mainConfiguration;
-  private ThirdPartyApiService thirdPartyApiService;
+  private LogDataStoreService logDataStoreService;
   private AccountService accountService;
 
   @Inject
   public DelegateResource(DelegateService delegateService, DelegateScopeService delegateScopeService,
       DownloadTokenService downloadTokenService, MainConfiguration mainConfiguration,
-      ThirdPartyApiService thirdPartyApiService, AccountService accountService) {
+      LogDataStoreService logDataStoreService, AccountService accountService) {
     this.delegateService = delegateService;
     this.delegateScopeService = delegateScopeService;
     this.downloadTokenService = downloadTokenService;
     this.mainConfiguration = mainConfiguration;
-    this.thirdPartyApiService = thirdPartyApiService;
+    this.logDataStoreService = logDataStoreService;
     this.accountService = accountService;
   }
 
@@ -519,8 +519,8 @@ public class DelegateResource {
   @Path("{delegateId}/state-executions")
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> saveApiCallLogs(@PathParam("delegateId") String delegateId,
-      @QueryParam("accountId") String accountId, List<ThirdPartyApiCallLog> logs) {
-    return new RestResponse<>(thirdPartyApiService.saveApiCallLog(logs));
+  public void saveApiCallLogs(@PathParam("delegateId") String delegateId, @QueryParam("accountId") String accountId,
+      List<ThirdPartyApiCallLog> logs) {
+    logDataStoreService.saveLogs(ThirdPartyApiCallLog.class, logs);
   }
 }

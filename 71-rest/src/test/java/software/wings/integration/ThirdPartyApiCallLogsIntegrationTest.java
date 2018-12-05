@@ -71,7 +71,6 @@ public class ThirdPartyApiCallLogsIntegrationTest extends BaseIntegrationTest {
         + "?accountId=" + accountId);
     RestResponse<Boolean> restResponse = getDelegateRequestBuilderWithAuthHeader(target).post(
         entity(apiCallLogs, APPLICATION_JSON), new GenericType<RestResponse<Boolean>>() {});
-    assertTrue(restResponse.getResource());
     Thread.sleep(2000);
 
     target = client.target(
