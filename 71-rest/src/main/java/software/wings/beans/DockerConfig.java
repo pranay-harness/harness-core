@@ -46,7 +46,7 @@ public class DockerConfig extends SettingValue implements EncryptableSetting, Ar
 
   @SchemaIgnore
   public boolean hasCredentials() {
-    return isNotEmpty(username) && isNotEmpty(encryptedPassword);
+    return isNotEmpty(username);
   }
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")

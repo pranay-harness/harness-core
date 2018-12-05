@@ -19,13 +19,21 @@ public class DockerRegistryConfigYamlHandler extends ArtifactServerYamlHandler<Y
   public Yaml toYaml(SettingAttribute settingAttribute, String appId) {
     DockerConfig dockerConfig = (DockerConfig) settingAttribute.getValue();
 
-    return Yaml.builder()
-        .harnessApiVersion(getHarnessApiVersion())
-        .type(dockerConfig.getType())
-        .url(dockerConfig.getDockerRegistryUrl())
-        .username(dockerConfig.getUsername())
-        .password(getEncryptedValue(dockerConfig, "password", false))
-        .build();
+    if (dockerConfig.hasCredentials()) {
+      return Yaml.builder()
+          .harnessApiVersion(getHarnessApiVersion())
+          .type(dockerConfig.getType())
+          .url(dockerConfig.getDockerRegistryUrl())
+          .username(dockerConfig.getUsername())
+          .password(getEncryptedValue(dockerConfig, "password", false))
+          .build();
+    } else {
+      return Yaml.builder()
+          .harnessApiVersion(getHarnessApiVersion())
+          .type(dockerConfig.getType())
+          .url(dockerConfig.getDockerRegistryUrl())
+          .build();
+    }
   }
 
   protected SettingAttribute toBean(SettingAttribute previous, ChangeContext<Yaml> changeContext,
