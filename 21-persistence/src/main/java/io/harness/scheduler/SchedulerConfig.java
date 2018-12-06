@@ -12,7 +12,7 @@ public class SchedulerConfig {
   @JsonProperty(defaultValue = "scheduler") private String schedulerName = "scheduler";
   @JsonProperty(defaultValue = "scheduler") private String instanceId = "scheduler";
   @JsonProperty(defaultValue = "quartz") private String tablePrefix = "quartz";
-  @JsonProperty(defaultValue = "true") private boolean isClustered;
+  @JsonProperty(defaultValue = "false") private boolean isClustered;
 
   private String mongoUri;
   @JsonProperty(defaultValue = "20000") private String mongoOptionWriteConcernTimeoutMillis = "20000";
