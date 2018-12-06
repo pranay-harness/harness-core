@@ -114,7 +114,12 @@ public class WaitNotifyEngine {
     }
 
     try {
-      String notificationId = wingsPersistence.save(new NotifyResponse(correlationId, response, error));
+      String notificationId = wingsPersistence.save(NotifyResponse.<T>builder()
+                                                        .uuid(correlationId)
+                                                        .createdAt(currentTimeMillis())
+                                                        .response(response)
+                                                        .error(error)
+                                                        .build());
 
       final List<WaitQueue> waitQueues =
           wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
