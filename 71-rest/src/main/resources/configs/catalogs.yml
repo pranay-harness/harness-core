@@ -477,7 +477,7 @@ CONNECTOR_TYPES:
       value: ELK
     - name: LOGZ
       value: LOGZ
-    - name: SumoLogic
+    - name: Sumo Logic
       value: SUMO
     - name: SMTP
       value: SMTP
