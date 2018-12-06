@@ -7,7 +7,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.PersistentEntity;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
 import io.harness.persistence.UuidAware;
 import io.harness.validation.Update;
 import lombok.AllArgsConstructor;
@@ -38,7 +41,8 @@ import javax.validation.constraints.NotNull;
 @EqualsAndHashCode(of = {"uuid", "appId"}, callSuper = false)
 @AllArgsConstructor
 @NoArgsConstructor
-public class Base extends PersistentEntity implements UuidAware, CreatedAtAware {
+public class Base
+    extends PersistentEntity implements UuidAware, CreatedAtAware, CreatedByAware, UpdatedAtAware, UpdatedByAware {
   public static final String APP_ID_KEY = "appId";
   public static final String APP_MANIFEST_ID_KEY = "applicationManifestId";
   public static final String ACCOUNT_ID_KEY = "accountId";

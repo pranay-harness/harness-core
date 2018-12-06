@@ -10,7 +10,6 @@ import io.harness.persistence.ReadPref;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import software.wings.beans.Base;
 
 import java.util.Map;
@@ -66,36 +65,6 @@ public interface WingsPersistence extends HPersistence {
   <T extends Base> T saveAndGet(Class<T> cls, T t);
 
   /**
-   * Upsert t.
-   *
-   * @param <T>              the type parameter
-   * @param query            the query
-   * @param updateOperations the update operations
-   * @return the t
-   */
-  <T> T upsert(Query<T> query, UpdateOperations<T> updateOperations);
-
-  /**
-   * Update.
-   *
-   * @param <T> the generic type
-   * @param ent the ent
-   * @param ops the ops
-   * @return the update results
-   */
-  <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops);
-
-  /**
-   * Update.
-   *
-   * @param <T>              the generic type
-   * @param updateQuery      the update query
-   * @param updateOperations the update operations
-   * @return the update results
-   */
-  <T> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
-
-  /**
    * Update field.
    *
    * @param <T>       the generic type
@@ -104,7 +73,7 @@ public interface WingsPersistence extends HPersistence {
    * @param fieldName the field name
    * @param value     the value
    */
-  <T> void updateField(Class<T> cls, String entityId, String fieldName, Object value);
+  <T extends PersistentEntity> void updateField(Class<T> cls, String entityId, String fieldName, Object value);
 
   /**
    * Update fields.
@@ -114,7 +83,7 @@ public interface WingsPersistence extends HPersistence {
    * @param entityId      the entity id
    * @param keyValuePairs the key value pairs
    */
-  <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs);
+  <T extends PersistentEntity> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs);
 
   /**
    * Update fields
@@ -125,7 +94,8 @@ public interface WingsPersistence extends HPersistence {
    * @param keyValuePairs  the key value pairs
    * @param fieldsToRemove the fields to remove
    */
-  <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove);
+  <T extends PersistentEntity> void updateFields(
+      Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove);
 
   /**
    * Delete with account id

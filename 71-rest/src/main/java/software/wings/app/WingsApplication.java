@@ -350,8 +350,8 @@ public class WingsApplication extends Application<MainConfiguration> {
       Set<Class> classes = ImmutableSet.<Class>of();
 
       persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri(), classes);
-      persistence.registerUserProvider(new ThreadLocalUserProvider());
     }
+    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   private void registerAuditResponseFilter(Environment environment, Injector injector) {

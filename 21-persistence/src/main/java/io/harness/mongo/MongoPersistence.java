@@ -29,9 +29,11 @@ import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
+import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.InsertOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -145,7 +147,7 @@ public class MongoPersistence implements HPersistence {
     return getDatastore(cls, ReadPref.NORMAL).createUpdateOperations(cls);
   }
 
-  private <T extends PersistentEntity> void onUpdate(T entity, long currentTime) {
+  private <T extends PersistentEntity> void onEntityUpdate(T entity, long currentTime) {
     if (entity instanceof UpdatedByAware) {
       UpdatedByAware updatedFromAware = (UpdatedByAware) entity;
       updatedFromAware.setLastUpdatedBy(userProvider.activeUser());
@@ -178,7 +180,7 @@ public class MongoPersistence implements HPersistence {
       }
     }
 
-    onUpdate((T) entity, currentTime);
+    onEntityUpdate((T) entity, currentTime);
   }
 
   @Override
@@ -252,9 +254,60 @@ public class MongoPersistence implements HPersistence {
     return !(result == null || result.getN() == 0);
   }
 
+  private static FindAndModifyOptions UPSERT_OPTIONS = new FindAndModifyOptions().upsert(true);
+
+  @Override
+  public <T extends PersistentEntity> T upsert(Query<T> query, UpdateOperations<T> updateOperations) {
+    // TODO: add encryption handling; right now no encrypted classes use upsert
+    // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
+
+    final long currentTime = currentTimeMillis();
+
+    if (CreatedByAware.class.isAssignableFrom(query.getEntityClass())) {
+      MongoUtils.setUnset(updateOperations, CreatedByAware.CREATED_BY_KEY, userProvider.activeUser());
+    }
+
+    if (CreatedAtAware.class.isAssignableFrom(query.getEntityClass())) {
+      updateOperations.setOnInsert(CreatedAtAware.CREATED_AT_KEY, currentTime);
+    }
+
+    onUpdate(query, updateOperations, currentTime);
+
+    updateOperations.setOnInsert("_id", generateUuid());
+
+    return getDatastore(query.getEntityClass(), ReadPref.NORMAL).findAndModify(query, updateOperations, UPSERT_OPTIONS);
+  }
+
+  private <T extends PersistentEntity> void onUpdate(
+      Query<T> query, UpdateOperations<T> updateOperations, long currentTime) {
+    if (UpdatedByAware.class.isAssignableFrom(query.getEntityClass())) {
+      MongoUtils.setUnset(updateOperations, UpdatedByAware.LAST_UPDATED_BY_KEY, userProvider.activeUser());
+    }
+
+    if (UpdatedAtAware.class.isAssignableFrom(query.getEntityClass())) {
+      updateOperations.set(UpdatedAtAware.LAST_UPDATED_AT_KEY, currentTime);
+    }
+  }
+
+  @Override
+  public <T extends PersistentEntity> UpdateResults update(T entity, UpdateOperations<T> ops) {
+    // TODO: add encryption handling; right now no encrypted classes use update
+    // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
+    onEntityUpdate(entity, currentTimeMillis());
+    return getDatastore(entity, ReadPref.NORMAL).update(entity, ops);
+  }
+
+  @Override
+  public <T extends PersistentEntity> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
+    // TODO: add encryption handling; right now no encrypted classes use update
+    // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
+    onUpdate(updateQuery, updateOperations, currentTimeMillis());
+    return getDatastore(updateQuery.getEntityClass(), ReadPref.NORMAL).update(updateQuery, updateOperations);
+  }
+
   @Override
   public <T extends PersistentEntity> String merge(T entity) {
-    onUpdate((T) entity, currentTimeMillis());
+    onEntityUpdate((T) entity, currentTimeMillis());
     return getDatastore(entity, ReadPref.NORMAL).merge(entity).getId().toString();
   }
 }
