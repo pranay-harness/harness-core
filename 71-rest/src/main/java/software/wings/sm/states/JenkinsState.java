@@ -21,6 +21,7 @@ import com.google.inject.Inject;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.waiter.ErrorNotifyResponseData;
 import lombok.AllArgsConstructor;
@@ -63,7 +64,6 @@ import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.stencils.DefaultValue;
 import software.wings.utils.KryoUtils;
-import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 
 import java.util.ArrayList;
 import java.util.Collections;

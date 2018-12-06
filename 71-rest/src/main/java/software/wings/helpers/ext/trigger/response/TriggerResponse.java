@@ -1,11 +1,11 @@
 package software.wings.helpers.ext.trigger.response;
 
+import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import software.wings.sm.ExecutionStatus;
-import software.wings.waitnotify.DelegateTaskNotifyResponseData;
 
 @Data
 @AllArgsConstructor

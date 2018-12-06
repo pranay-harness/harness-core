@@ -1,4 +1,4 @@
-package software.wings.sm;
+package io.harness.delegate.task.protocol;
 
 import lombok.Builder;
 import lombok.Data;
