@@ -31,8 +31,6 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.lock.AcquiredLock;
-import io.harness.lock.PersistentLocker;
 import io.harness.persistence.HIterator;
 import org.mongodb.morphia.query.Query;
 import org.slf4j.Logger;
@@ -50,7 +48,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.MavenVersionCompareUtil;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -64,15 +61,13 @@ import java.util.stream.Collectors;
  */
 @Singleton
 public class ArtifactCollectionServiceImpl implements ArtifactCollectionService {
+  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionServiceImpl.class);
+
   @Inject private ServiceResourceService serviceResourceService;
-  @Inject private PersistentLocker persistentLocker;
   @Inject private BuildSourceService buildSourceService;
   @Inject private ArtifactService artifactService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ArtifactStreamService artifactStreamService;
-
-  public static final Duration timeout = Duration.ofMinutes(10);
-  private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionServiceImpl.class);
 
   private static final List<String> metadataOnlyStreams = Collections.unmodifiableList(
       asList(DOCKER.name(), ECR.name(), GCR.name(), NEXUS.name(), AMI.name(), ACR.name(), SMB.name(), SFTP.name()));
@@ -88,26 +83,24 @@ public class ArtifactCollectionServiceImpl implements ArtifactCollectionService 
 
   @Override
   public List<Artifact> collectNewArtifacts(String appId, String artifactStreamId) {
-    try (AcquiredLock ignored = persistentLocker.acquireLock(ArtifactStream.class, artifactStreamId, timeout)) {
-      List<Artifact> newArtifacts = new ArrayList<>();
-      ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
-      if (artifactStream == null) {
-        logger.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
-        return newArtifacts;
-      }
-      String artifactStreamType = artifactStream.getArtifactStreamType();
-      if (metadataOnlyStreams.contains(artifactStreamType)) {
-        collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
-      } else if (ARTIFACTORY.name().equals(artifactStreamType)) {
-        collectArtifactoryArtifacts(appId, artifactStream, newArtifacts);
-      } else if (AMAZON_S3.name().equals(artifactStreamType) || GCS.name().equals(artifactStreamType)) {
-        collectGenericArtifacts(appId, artifactStream, newArtifacts);
-      } else {
-        // Jenkins or Bamboo case
-        collectLatestArtifact(appId, artifactStream, newArtifacts);
-      }
+    List<Artifact> newArtifacts = new ArrayList<>();
+    ArtifactStream artifactStream = artifactStreamService.get(appId, artifactStreamId);
+    if (artifactStream == null) {
+      logger.info("Artifact Stream {} does not exist. Returning", artifactStreamId);
       return newArtifacts;
     }
+    String artifactStreamType = artifactStream.getArtifactStreamType();
+    if (metadataOnlyStreams.contains(artifactStreamType)) {
+      collectMetaDataOnlyArtifacts(artifactStream, newArtifacts);
+    } else if (ARTIFACTORY.name().equals(artifactStreamType)) {
+      collectArtifactoryArtifacts(appId, artifactStream, newArtifacts);
+    } else if (AMAZON_S3.name().equals(artifactStreamType) || GCS.name().equals(artifactStreamType)) {
+      collectGenericArtifacts(appId, artifactStream, newArtifacts);
+    } else {
+      // Jenkins or Bamboo case
+      collectLatestArtifact(appId, artifactStream, newArtifacts);
+    }
+    return newArtifacts;
   }
 
   private void collectMetaDataOnlyArtifacts(ArtifactStream artifactStream, List<Artifact> newArtifacts) {

@@ -115,7 +115,7 @@ public class MongoModule extends AbstractModule {
     bind(AdvancedDatastore.class).annotatedWith(Names.named("secondaryDatastore")).toInstance(secondaryDatastore);
     bind(DistributedLockSvc.class).toInstance(distributedLockSvc);
 
-    // TODO: this is should be enabled when all wingsPersistence functionality is promoted to MongoPersistence and the
+    // TODO: this should be enabled when all wingsPersistence functionality is promoted to MongoPersistence and the
     //       class is removed. Till then we are binding the HPersistence to the wingsPersistence instance.
     // bind(HPersistence.class).to(MongoPersistence.class);
   }

@@ -85,6 +85,8 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
 
   protected Properties getDefaultProperties() {
     Properties props = new Properties();
+    props.setProperty("org.quartz.scheduler.instanceId", schedulerConfig.getInstanceId());
+
     if (schedulerConfig.getJobStoreClass().equals(
             com.novemberain.quartz.mongodb.DynamicMongoDBJobStore.class.getCanonicalName())) {
       Builder mongoClientOptions = MongoClientOptions.builder()
@@ -99,7 +101,17 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
       props.setProperty("org.quartz.jobStore.collectionPrefix", schedulerConfig.getTablePrefix());
       props.setProperty("org.quartz.jobStore.mongoOptionWriteConcernTimeoutMillis",
           schedulerConfig.getMongoOptionWriteConcernTimeoutMillis());
-      // props.setProperty("org.quartz.jobStore.isClustered", String.valueOf(schedulerConfig.isClustered()));
+
+      if (schedulerConfig.isClustered()) {
+        props.setProperty("org.quartz.jobStore.isClustered", Boolean.TRUE.toString());
+        props.setProperty("org.quartz.jobStore.checkInErrorHandler",
+            com.novemberain.quartz.mongodb.cluster.NoOpErrorHandler.class.getCanonicalName());
+        props.setProperty("org.quartz.scheduler.instanceId", "AUTO");
+
+        props.setProperty("org.quartz.jobStore.clusterCheckinInterval", "30000");
+      } else {
+        props.setProperty("org.quartz.jobStore.isClustered", Boolean.FALSE.toString());
+      }
     }
 
     props.setProperty("org.quartz.scheduler.idleWaitTime", schedulerConfig.getIdleWaitTime());
@@ -110,7 +122,6 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
     props.setProperty("org.quartz.plugin.jobHistory.class",
         org.quartz.plugins.history.LoggingJobHistoryPlugin.class.getCanonicalName());
     props.setProperty("org.quartz.scheduler.instanceName", schedulerConfig.getSchedulerName());
-    props.setProperty("org.quartz.scheduler.instanceId", schedulerConfig.getInstanceId());
 
     return props;
   }
