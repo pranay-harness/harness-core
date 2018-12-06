@@ -7,6 +7,7 @@ import static org.junit.Assert.assertTrue;
 import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
+import io.harness.rule.OwnerRule.Owner;
 import org.junit.Before;
 import software.wings.beans.Application;
 import software.wings.beans.Environment;
@@ -210,6 +211,7 @@ public class HeatMapApiIntegrationTest extends BaseIntegrationTest {
   }
 
   //  @Test
+  @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
   public void testTimeSeries() {
     String url = API_BASE + "/cvdash" + VerificationConstants.TIMESERIES + "?accountId=" + accountId
         + "&appId=" + savedApp.getUuid() + "&cvConfigId=" + newRelicCVServiceConfiguration.getUuid()
