@@ -148,9 +148,13 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
               .set(
                   "responseTimeStamp", LongValue.newBuilder(getResponseTimeStamp()).setExcludeFromIndexes(true).build())
               .set("request",
-                  BlobValue.newBuilder(Blob.copyFrom(compressString(JsonUtils.asJson(getRequest())))).build())
+                  BlobValue.newBuilder(Blob.copyFrom(compressString(JsonUtils.asJson(getRequest()))))
+                      .setExcludeFromIndexes(true)
+                      .build())
               .set("response",
-                  BlobValue.newBuilder(Blob.copyFrom(compressString(JsonUtils.asJson(getResponse())))).build())
+                  BlobValue.newBuilder(Blob.copyFrom(compressString(JsonUtils.asJson(getResponse()))))
+                      .setExcludeFromIndexes(true)
+                      .build())
               .set("createdAt", currentTimeMillis());
       if (isNotEmpty(getAppId())) {
         logEntityBuilder.set("appId", getAppId());
