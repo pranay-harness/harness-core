@@ -1,0 +1,6 @@
+{
+  "ui:order" : [
+    "jiraAction", "jiraConnectorId", "project", "issueType", "priority",
+    "labels", "summary", "description", "status", "comment", "issueId"
+  ]
+}

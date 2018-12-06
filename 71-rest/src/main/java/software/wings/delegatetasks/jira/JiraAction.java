@@ -1,11 +1,13 @@
 package software.wings.delegatetasks.jira;
 
-import lombok.Getter;
-import lombok.Setter;
+public enum JiraAction {
+  CREATE_TICKET("Create Ticket"),
+  UPDATE_TICKET("Update Ticket"),
+  AUTH("Auth");
 
-public class JiraAction {
-  public enum JiraActionType { CREATE_TICKET, UPDATE_TICKET, AUTH }
+  private String displayName;
 
-  @Getter @Setter private JiraActionType actionType;
-  @Getter @Setter private String jiraBaseUrl;
+  JiraAction(String s) {
+    displayName = s;
+  }
 }

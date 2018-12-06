@@ -124,7 +124,6 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
           .errorMessage(Misc.getMessage(ex))
           .build();
     }
-
     String scriptDirectory = resolveScriptDirectory(gitConfig, parameters.getScriptPath());
 
     String sourceRepoReference = getLatestCommitSHAFromLocalRepo(gitConfig);
