@@ -91,6 +91,7 @@ import software.wings.scheduler.ZombieHunterJob;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
 import software.wings.security.AuthenticationFilter;
+import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.DelegateServiceImpl;
 import software.wings.service.impl.SettingsServiceImpl;
 import software.wings.service.impl.WorkflowExecutionServiceImpl;
@@ -349,6 +350,7 @@ public class WingsApplication extends Application<MainConfiguration> {
       Set<Class> classes = ImmutableSet.<Class>of();
 
       persistence.register(LOCKS_STORE, configuration.getMongoConnectionFactory().getLocksUri(), classes);
+      persistence.registerUserProvider(new ThreadLocalUserProvider());
     }
   }
 

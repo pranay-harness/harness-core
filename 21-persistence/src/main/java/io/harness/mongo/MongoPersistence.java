@@ -1,8 +1,10 @@
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.ReadPref.CRITICAL;
 import static io.harness.persistence.ReadPref.NORMAL;
+import static java.lang.System.currentTimeMillis;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 
 import com.google.inject.Inject;
@@ -12,12 +14,18 @@ import com.google.inject.name.Named;
 import com.mongodb.DBCollection;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import io.harness.persistence.CreatedAtAware;
+import io.harness.persistence.CreatedByAware;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.HQuery;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.ReadPref;
 import io.harness.persistence.Store;
+import io.harness.persistence.UpdatedAtAware;
+import io.harness.persistence.UpdatedByAware;
+import io.harness.persistence.UserProvider;
+import io.harness.persistence.UuidAware;
 import lombok.Builder;
 import lombok.Value;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -46,6 +54,7 @@ public class MongoPersistence implements HPersistence {
   private Map<String, Info> storeInfo = new HashMap<>();
   private Map<Class, Store> classStores = new HashMap<>();
   private Map<String, AdvancedDatastore> datastoreMap;
+  UserProvider userProvider;
 
   @Inject
   public MongoPersistence(@Named("primaryDatastore") AdvancedDatastore primaryDatastore,
@@ -62,6 +71,11 @@ public class MongoPersistence implements HPersistence {
   @Override
   public void register(Store store, String uri, Set<Class> classes) {
     storeInfo.put(store.getName(), Info.builder().uri(uri).classes(classes).build());
+  }
+
+  @Override
+  public void registerUserProvider(UserProvider userProvider) {
+    this.userProvider = userProvider;
   }
 
   @Override
@@ -131,17 +145,54 @@ public class MongoPersistence implements HPersistence {
     return getDatastore(cls, ReadPref.NORMAL).createUpdateOperations(cls);
   }
 
+  private <T extends PersistentEntity> void onUpdate(T entity, long currentTime) {
+    if (entity instanceof UpdatedByAware) {
+      UpdatedByAware updatedFromAware = (UpdatedByAware) entity;
+      updatedFromAware.setLastUpdatedBy(userProvider.activeUser());
+    }
+    if (entity instanceof UpdatedAtAware) {
+      UpdatedAtAware updatedAtAware = (UpdatedAtAware) entity;
+      updatedAtAware.setLastUpdatedAt(currentTime);
+    }
+  }
+
+  private <T extends PersistentEntity> void onSave(T entity) {
+    if (entity instanceof UuidAware) {
+      UuidAware uuidAware = (UuidAware) entity;
+      if (uuidAware.getUuid() == null) {
+        uuidAware.setUuid(generateUuid());
+      }
+    }
+
+    final long currentTime = currentTimeMillis();
+    if (entity instanceof CreatedByAware) {
+      CreatedByAware createdByAware = (CreatedByAware) entity;
+      if (createdByAware.getCreatedBy() == null) {
+        createdByAware.setCreatedBy(userProvider.activeUser());
+      }
+    }
+    if (entity instanceof CreatedAtAware) {
+      CreatedAtAware createdAtAware = (CreatedAtAware) entity;
+      if (createdAtAware.getCreatedAt() == 0) {
+        createdAtAware.setCreatedAt(currentTime);
+      }
+    }
+
+    onUpdate((T) entity, currentTime);
+  }
+
   @Override
-  public <T extends PersistentEntity> String save(T object) {
-    return getDatastore(object, ReadPref.NORMAL).save(object).getId().toString();
+  public <T extends PersistentEntity> String save(T entity) {
+    onSave(entity);
+    return getDatastore(entity, ReadPref.NORMAL).save(entity).getId().toString();
   }
 
   @Override
   public <T extends PersistentEntity> List<String> save(List<T> ts) {
     ts.removeIf(Objects::isNull);
     List<String> ids = new ArrayList<>();
-    for (T t : ts) {
-      ids.add(save(t));
+    for (T entity : ts) {
+      ids.add(save(entity));
     }
     return ids;
   }
@@ -149,11 +200,12 @@ public class MongoPersistence implements HPersistence {
   @Override
   public <T extends PersistentEntity> void saveIgnoringDuplicateKeys(List<T> ts) {
     for (Iterator<T> iterator = ts.iterator(); iterator.hasNext();) {
-      T t = iterator.next();
-      if (t == null) {
+      T entity = iterator.next();
+      if (entity == null) {
         iterator.remove();
         continue;
       }
+      onSave(entity);
     }
 
     if (isEmpty(ts)) {
@@ -202,6 +254,7 @@ public class MongoPersistence implements HPersistence {
 
   @Override
   public <T extends PersistentEntity> String merge(T entity) {
+    onUpdate((T) entity, currentTimeMillis());
     return getDatastore(entity, ReadPref.NORMAL).merge(entity).getId().toString();
   }
 }
