@@ -47,6 +47,7 @@ import migrations.all.MetricMLAnalysisRecordGroupNameMigration;
 import migrations.all.NewRelicMetricAnalysisRecordsMigration;
 import migrations.all.NewRelicMetricDataGroupNameMigration;
 import migrations.all.NewRelicMetricDataRecordsMigration;
+import migrations.all.OverrideDefaultLimits;
 import migrations.all.PreferenceUserIdRemoveDollarSignMigration;
 import migrations.all.RemoveDupInstanceStats;
 import migrations.all.RemoveResizeFromStatefulSetWorkflows;
@@ -163,6 +164,7 @@ public class MigrationList {
         .add(Pair.of(210, TimeSeriesMLAnalysisDeleteUncompressedMigration.class))
         .add(Pair.of(211, LicenseDataMigration.class))
         .add(Pair.of(212, DuplicateGlobalAccountMigration.class))
+        .add(Pair.of(213, OverrideDefaultLimits.class))
         .build();
   }
 }

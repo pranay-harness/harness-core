@@ -100,7 +100,9 @@ public class LimitConfigurationServiceMongo implements LimitConfigurationService
         configuredLimit = new ConfiguredLimit<>(accountId, (StaticLimit) limit, actionType);
         break;
       case RATE_LIMIT:
-        configuredLimit = new ConfiguredLimit<>(accountId, (RateLimit) limit, actionType);
+        RateLimit rateLimit = (RateLimit) limit;
+        Objects.requireNonNull(rateLimit.getDurationUnit(), "durationUnit can't be null for a rate limit");
+        configuredLimit = new ConfiguredLimit<>(accountId, rateLimit, actionType);
         break;
       default:
         throw new IllegalArgumentException("Unknown limit type: " + limit.getLimitType());

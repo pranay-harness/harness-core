@@ -24,8 +24,7 @@ public class LimitEnforcementUtils {
     boolean allowed = checker.checkAndConsume();
     if (!allowed) {
       log.info("Usage Limits Reached. Action: {}, Limit: {}", checker.getAction(), checker.getLimit());
-      throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED,
-          "Usage Limit Reached. Please contact Harness support to upgrade your license.");
+      throw new WingsException(ErrorCode.USAGE_LIMITS_EXCEEDED, "Usage Limit Reached. Please contact Harness support.");
     }
 
     try {
