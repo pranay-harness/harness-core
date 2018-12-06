@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import software.wings.api.ExecutionDataValue;
 import software.wings.beans.CountsByStatuses;
 
