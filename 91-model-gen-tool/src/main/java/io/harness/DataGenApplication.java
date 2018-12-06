@@ -18,6 +18,7 @@ import io.harness.limits.LimitsMorphiaClasses;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
+import io.harness.persistence.HPersistence;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
@@ -39,6 +40,7 @@ import software.wings.beans.User;
 import software.wings.common.Constants;
 import software.wings.health.WingsHealthCheck;
 import software.wings.licensing.LicenseService;
+import software.wings.security.ThreadLocalUserProvider;
 import software.wings.utils.CacheHelper;
 
 import java.lang.management.ManagementFactory;
@@ -141,32 +143,9 @@ public class DataGenApplication extends Application<MainConfiguration> {
 
     streamModule.getAtmosphereServlet().framework().objectFactory(new GuiceObjectFactory(injector));
 
-    //    registerResources(environment, injector);
-
-    //    registerManagedBeans(environment, injector);
-
-    //    registerQueueListeners(injector);
-
-    //    scheduleJobs(injector);
-
-    //    registerObservers(injector);
-
-    //    registerCronJobs(injector);
-
-    //    registerCorsFilter(configuration, environment);
-
-    //    registerAuditResponseFilter(environment, injector);
-
-    //    registerJerseyProviders(environment);
-
-    //    registerCharsetResponseFilter(environment, injector);
-
-    // Authentication/Authorization filters
-    //    registerAuthFilters(configuration, environment, injector);
+    registerStores(injector);
 
     environment.healthChecks().register("WingsApp", new WingsHealthCheck());
-
-    //    startPlugins(injector);
 
     environment.lifecycle().addServerLifecycleListener(server -> {
       for (Connector connector : server.getConnectors()) {
@@ -222,5 +201,10 @@ public class DataGenApplication extends Application<MainConfiguration> {
       logger.error("Exception occurred. Exiting datagen application...", e);
       System.exit(0);
     }
+  }
+
+  private void registerStores(Injector injector) {
+    final HPersistence persistence = injector.getInstance(HPersistence.class);
+    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 }

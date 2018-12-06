@@ -936,13 +936,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <!-- Test Dependencies -->
-            <dependency>
-                <groupId>io.github.benas</groupId>
-                <artifactId>random-beans</artifactId>
-                <version>3.7.0</version>
-                <scope>test</scope>
-            </dependency>
             <dependency>
                 <groupId>io.rest-assured</groupId>
                 <artifactId>rest-assured</artifactId>

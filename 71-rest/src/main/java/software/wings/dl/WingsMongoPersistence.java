@@ -2,13 +2,11 @@ package software.wings.dl;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.encryption.EncryptionReflectUtils.getDecryptedField;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HQuery.allChecks;
 import static io.harness.persistence.ReadPref.NORMAL;
-import static java.lang.System.currentTimeMillis;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
@@ -45,7 +43,6 @@ import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.mapping.Mapper;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.annotation.EncryptableSetting;
@@ -137,47 +134,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations) {
-    // TODO: add encryption handling; right now no encrypted classes use update
-    // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
-    updateOperations.set("lastUpdatedAt", currentTimeMillis());
-    if (UserThreadLocal.get() != null) {
-      updateOperations.set("lastUpdatedBy",
-          EmbeddedUser.builder()
-              .uuid(UserThreadLocal.get().getUuid())
-              .email(UserThreadLocal.get().getEmail())
-              .name(UserThreadLocal.get().getName())
-              .build());
-    }
-    return getDatastore(updateQuery.getEntityClass(), ReadPref.NORMAL).update(updateQuery, updateOperations);
-  }
-
-  @Override
-  public <T> T upsert(Query<T> query, UpdateOperations<T> updateOperations) {
-    // TODO: add encryption handling; right now no encrypted classes use upsert
-    // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
-    updateOperations.set("lastUpdatedAt", currentTimeMillis());
-    if (UserThreadLocal.get() != null) {
-      updateOperations.set("lastUpdatedBy",
-          EmbeddedUser.builder()
-              .uuid(UserThreadLocal.get().getUuid())
-              .email(UserThreadLocal.get().getEmail())
-              .name(UserThreadLocal.get().getName())
-              .build());
-      updateOperations.setOnInsert("createdBy",
-          EmbeddedUser.builder()
-              .uuid(UserThreadLocal.get().getUuid())
-              .email(UserThreadLocal.get().getEmail())
-              .name(UserThreadLocal.get().getName())
-              .build());
-    }
-    updateOperations.setOnInsert("createdAt", currentTimeMillis());
-    updateOperations.setOnInsert("_id", generateUuid());
-    return getDatastore(query.getEntityClass(), ReadPref.NORMAL)
-        .findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true));
-  }
-
-  @Override
   public <T extends Base> T findAndModify(
       Query<T> query, UpdateOperations<T> updateOperations, FindAndModifyOptions findAndModifyOptions) {
     return getDatastore(query.getEntityClass(), ReadPref.NORMAL)
@@ -185,35 +141,20 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
   }
 
   @Override
-  public <T extends Base> UpdateResults update(T ent, UpdateOperations<T> ops) {
-    // TODO: add encryption handling; right now no encrypted classes use update
-    // When necessary, we can fix this by adding Class<T> cls to the args and then similar to updateField
-    ops.set("lastUpdatedAt", currentTimeMillis());
-    if (UserThreadLocal.get() != null) {
-      ops.set("lastUpdatedBy",
-          EmbeddedUser.builder()
-              .uuid(UserThreadLocal.get().getUuid())
-              .email(UserThreadLocal.get().getEmail())
-              .name(UserThreadLocal.get().getName())
-              .build());
-    }
-    return getDatastore(ent, ReadPref.NORMAL).update(ent, ops);
-  }
-
-  @Override
-  public <T> void updateField(Class<T> cls, String entityId, String fieldName, Object value) {
+  public <T extends PersistentEntity> void updateField(Class<T> cls, String entityId, String fieldName, Object value) {
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put(fieldName, value);
     updateFields(cls, entityId, keyValuePairs);
   }
 
   @Override
-  public <T> void updateFields(Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
+  public <T extends PersistentEntity> void updateFields(
+      Class<T> cls, String entityId, Map<String, Object> keyValuePairs) {
     updateFields(cls, entityId, keyValuePairs, Collections.emptySet());
   }
 
   @Override
-  public <T> void updateFields(
+  public <T extends PersistentEntity> void updateFields(
       Class<T> cls, String entityId, Map<String, Object> keyValuePairs, Set<String> fieldsToRemove) {
     final AdvancedDatastore datastore = getDatastore(cls, ReadPref.NORMAL);
 

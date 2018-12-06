@@ -6,6 +6,7 @@ import io.harness.persistence.HQuery.QueryChecks;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
+import org.mongodb.morphia.query.UpdateResults;
 
 import java.util.Arrays;
 import java.util.List;
@@ -212,6 +213,33 @@ public interface HPersistence {
    * @return true, if successful
    */
   <T extends PersistentEntity> boolean delete(T entity);
+
+  /**
+   * Upsert t.
+   *
+   * @param query            the query
+   * @param updateOperations the update operations
+   * @return the entity
+   */
+  <T extends PersistentEntity> T upsert(Query<T> query, UpdateOperations<T> updateOperations);
+
+  /**
+   * Update.
+   *
+   * @param ent the ent
+   * @param ops the ops
+   * @return the update results
+   */
+  <T extends PersistentEntity> UpdateResults update(T ent, UpdateOperations<T> ops);
+
+  /**
+   * Update.
+   *
+   * @param updateQuery      the update query
+   * @param updateOperations the update operations
+   * @return the update results
+   */
+  <T extends PersistentEntity> UpdateResults update(Query<T> updateQuery, UpdateOperations<T> updateOperations);
 
   /**
    * Merge.

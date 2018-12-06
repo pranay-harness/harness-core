@@ -60,6 +60,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
@@ -90,6 +91,7 @@ import software.wings.app.YamlModule;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.core.queue.QueueListenerController;
 import software.wings.integration.BaseIntegrationTest;
+import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 import software.wings.utils.KryoUtils;
 import software.wings.utils.ThreadContext;
@@ -262,7 +264,13 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
     ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);
+    registerProviders();
     registerObservers();
+  }
+
+  protected void registerProviders() {
+    final HPersistence persistence = injector.getInstance(HPersistence.class);
+    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   protected void registerObservers() {
