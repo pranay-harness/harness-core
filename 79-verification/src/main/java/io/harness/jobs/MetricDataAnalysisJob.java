@@ -15,9 +15,9 @@ import org.slf4j.LoggerFactory;
  *  Handles scheduling jobs related to APM
  * Created by Pranjal on 10/04/2018
  */
-public class MetricDataProcessorJob implements Job {
-  private static final Logger logger = LoggerFactory.getLogger(MetricDataProcessorJob.class);
-  public static final String METRIC_DATA_PROCESSOR_CRON_GROUP = "METRIC_DATA_PROCESSOR_CRON_GROUP";
+public class MetricDataAnalysisJob implements Job {
+  private static final Logger logger = LoggerFactory.getLogger(MetricDataAnalysisJob.class);
+  public static final String METRIC_DATA_ANALYSIS_CRON_GROUP = "METRIC_DATA_ANALYSIS_CRON_GROUP";
 
   @Inject private ContinuousVerificationService continuousVerificationService;
 
@@ -26,7 +26,7 @@ public class MetricDataProcessorJob implements Job {
     final String accountId = jobExecutionContext.getMergedJobDataMap().getString("accountId");
     Preconditions.checkState(isNotEmpty(accountId), "account Id not found for " + jobExecutionContext);
 
-    logger.info("Executing APM Data collector Job for {}", accountId);
-    continuousVerificationService.triggerDataCollection(accountId);
+    logger.info("Executing APM data analysis Job for {}", accountId);
+    continuousVerificationService.triggerDataAnalysis(accountId);
   }
 }

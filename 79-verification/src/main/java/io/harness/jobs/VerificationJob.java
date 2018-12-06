@@ -1,6 +1,7 @@
 package io.harness.jobs;
 
 import static io.harness.jobs.LogDataProcessorJob.LOG_DATA_PROCESSOR_CRON_GROUP;
+import static io.harness.jobs.MetricDataAnalysisJob.METRIC_DATA_ANALYSIS_CRON_GROUP;
 import static io.harness.jobs.MetricDataProcessorJob.METRIC_DATA_PROCESSOR_CRON_GROUP;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL;
 
@@ -135,27 +136,47 @@ public class VerificationJob implements Job {
   }
 
   private void scheduleAPMDataProcessorCronJob(String accountId) {
-    if (jobScheduler.checkExists(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)) {
-      return;
-    }
-    Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(1));
-    JobDetail job = JobBuilder.newJob(MetricDataProcessorJob.class)
-                        .withIdentity(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)
-                        .usingJobData("timestamp", System.currentTimeMillis())
-                        .usingJobData("accountId", accountId)
-                        .build();
-
-    Trigger trigger = TriggerBuilder.newTrigger()
+    if (!jobScheduler.checkExists(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)) {
+      Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(1));
+      JobDetail job = JobBuilder.newJob(MetricDataProcessorJob.class)
                           .withIdentity(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule()
-                                            .withIntervalInSeconds((int) (CRON_POLL_INTERVAL / 10))
-                                            .withMisfireHandlingInstructionNowWithExistingCount()
-                                            .repeatForever())
-                          .startAt(startDate)
+                          .usingJobData("timestamp", System.currentTimeMillis())
+                          .usingJobData("accountId", accountId)
                           .build();
 
-    jobScheduler.scheduleJob(job, trigger);
-    logger.info("Scheduled APM data collection Cron Job for Account : {}, with details : {}", accountId, job);
+      Trigger trigger = TriggerBuilder.newTrigger()
+                            .withIdentity(accountId, METRIC_DATA_PROCESSOR_CRON_GROUP)
+                            .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                              .withIntervalInSeconds((int) (CRON_POLL_INTERVAL / 10))
+                                              .withMisfireHandlingInstructionNowWithExistingCount()
+                                              .repeatForever())
+                            .startAt(startDate)
+                            .build();
+
+      jobScheduler.scheduleJob(job, trigger);
+      logger.info("Scheduled APM data collection Cron Job for Account : {}, with details : {}", accountId, job);
+    }
+
+    if (!jobScheduler.checkExists(accountId, METRIC_DATA_ANALYSIS_CRON_GROUP)) {
+      Date startDate = new Date(new Date().getTime() + TimeUnit.MINUTES.toMillis(1));
+      JobDetail job = JobBuilder.newJob(MetricDataAnalysisJob.class)
+                          .withIdentity(accountId, METRIC_DATA_ANALYSIS_CRON_GROUP)
+                          .usingJobData("timestamp", System.currentTimeMillis())
+                          .usingJobData("accountId", accountId)
+                          .build();
+
+      Trigger trigger = TriggerBuilder.newTrigger()
+                            .withIdentity(accountId, METRIC_DATA_ANALYSIS_CRON_GROUP)
+                            .withSchedule(SimpleScheduleBuilder.simpleSchedule()
+                                              .withIntervalInSeconds(30)
+                                              .withMisfireHandlingInstructionNowWithExistingCount()
+                                              .repeatForever())
+                            .startAt(startDate)
+                            .build();
+
+      jobScheduler.scheduleJob(job, trigger);
+      logger.info("Scheduled APM data collection Cron Job for Account : {}, with details : {}", accountId, job);
+    }
   }
 
   private void scheduleLogDataProcessorCronJob(String accountId) {
