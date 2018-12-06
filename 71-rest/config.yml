@@ -32,7 +32,7 @@ backgroundScheduler:
   instanceId: automation_background
   tablePrefix: quartz
   threadCount: 1
-  clustered: true
+  clustered: true #backgroundScheduler
   #mongoUri: mongodb://localhost:27017/background_scheduler
 
 serviceScheduler:
