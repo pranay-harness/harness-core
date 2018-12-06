@@ -15,6 +15,7 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
+import io.harness.rule.OwnerRule.Owner;
 import io.harness.time.Timestamp;
 import org.jetbrains.annotations.NotNull;
 import org.junit.Before;
@@ -260,6 +261,7 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(emails = "vaibhav.tulsyan@harness.io", intermittent = true)
   public void testTimeSeries() {
     final int DURATION_IN_HOURS = 12;
 

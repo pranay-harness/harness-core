@@ -70,12 +70,17 @@ public class AbstractQuartzScheduler implements PersistentScheduler, Maintenance
         final MongoCollection<Document> collection = database.getCollection(prefix + "_triggers");
 
         BasicDBObject jobIdKey = new BasicDBObject("jobId", 1);
-        collection.createIndex(jobIdKey, new IndexOptions().background(false));
+        collection.createIndex(jobIdKey, new IndexOptions().background(true));
 
         BasicDBObject fireKeys = new BasicDBObject();
         fireKeys.append("state", 1);
         fireKeys.append("nextFireTime", 1);
-        collection.createIndex(fireKeys, new IndexOptions().background(false).name("fire"));
+        collection.createIndex(fireKeys, new IndexOptions().background(true).name("fire"));
+
+        BasicDBObject oldKeys = new BasicDBObject();
+        oldKeys.append("lockState", 1);
+        oldKeys.append("lastUpdated", 1);
+        collection.createIndex(oldKeys, new IndexOptions().background(true).name("old"));
       }
     }
 
