@@ -1,5 +1,7 @@
 package software.wings.service.impl;
 
+import com.google.inject.Inject;
+
 import io.harness.exception.InvalidRequestException;
 import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.JiraClient;
@@ -7,12 +9,14 @@ import net.rcarz.jiraclient.JiraException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.JiraConfig;
+import software.wings.dl.WingsPersistence;
 
 /**
  * All Jira apis should be accessed via this object.
  */
 public class JiraHelperService {
   private static final Logger logger = LoggerFactory.getLogger(GcpHelperService.class);
+  @Inject WingsPersistence wingsPersistence;
 
   /**
    * Validate credential.

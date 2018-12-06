@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.validation;
 
 import software.wings.beans.DelegateTask;
-import software.wings.delegatetasks.jira.JiraAction;
+import software.wings.beans.jira.JiraTaskParameters;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +20,8 @@ public class JiraValidation extends AbstractDelegateValidateTask {
     List<String> jiraUrls = new ArrayList<>();
 
     if (parameters.length > 0) {
-      JiraAction parameter = (JiraAction) parameters[0];
-      jiraUrls.add(parameter.getJiraBaseUrl());
+      JiraTaskParameters parameter = (JiraTaskParameters) parameters[0];
+      jiraUrls.add(parameter.getJiraConfig().getBaseUrl());
     }
 
     return jiraUrls;

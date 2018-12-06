@@ -617,3 +617,7 @@ software.wings.beans.GitFetchFilesTaskParams, 5575
 software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig, 5576
 software.wings.helpers.ext.k8s.request.K8sScaleRequest, 5577
 software.wings.helpers.ext.k8s.response.K8sScaleResponse, 5578
+software.wings.beans.jira.JiraTaskParameters, 5579
+software.wings.delegatetasks.jira.JiraAction, 5580
+software.wings.beans.JiraConfig, 5581
+software.wings.api.JiraExecutionData, 5582

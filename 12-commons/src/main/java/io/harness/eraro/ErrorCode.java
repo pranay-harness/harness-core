@@ -292,7 +292,9 @@ public enum ErrorCode {
 
   USAGE_LIMITS_EXCEEDED(Status.FORBIDDEN, "Usage Limit Exceeded"),
 
-  EVENT_PUBLISH_FAILED("Event published failed");
+  EVENT_PUBLISH_FAILED("Event published failed"),
+
+  JIRA_ERROR;
 
   private Status status = BAD_REQUEST;
   private String description;

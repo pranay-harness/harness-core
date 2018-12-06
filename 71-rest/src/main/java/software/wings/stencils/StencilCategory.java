@@ -80,7 +80,9 @@ public enum StencilCategory {
    */
   PROVISIONERS(0),
 
-  KUBERNETES("Kubernetes", 3);
+  KUBERNETES("Kubernetes", 3),
+
+  COLLABORATION("Collaboration", 11);
 
   private String displayName;
 

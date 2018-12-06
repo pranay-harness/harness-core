@@ -52,6 +52,7 @@ import static software.wings.sm.StateTypeScope.NONE;
 import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
 import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
 import static software.wings.stencils.StencilCategory.CLOUD;
+import static software.wings.stencils.StencilCategory.COLLABORATION;
 import static software.wings.stencils.StencilCategory.COLLECTIONS;
 import static software.wings.stencils.StencilCategory.COMMANDS;
 import static software.wings.stencils.StencilCategory.CONTROLS;
@@ -140,6 +141,7 @@ import software.wings.sm.states.SplunkV2State;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
+import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.k8s.K8sDeploymentRollingRollbackSetup;
 import software.wings.sm.states.k8s.K8sDeploymentRollingSetup;
 import software.wings.sm.states.k8s.K8sScale;
@@ -515,7 +517,12 @@ public enum StateType implements StateTypeDescriptor {
   K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sDeploymentRollingRollbackSetup.class, KUBERNETES, K8S_DEPLOYMENT_ROLLING_ROLLBAK,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
-      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS);
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  JIRA_CREATE_UPDATE(JiraCreateUpdate.class, COLLABORATION, 0, "JIRA",
+      asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE,
+          DISABLE_SERVICE, CONTAINER_SETUP, CONTAINER_DEPLOY, WRAP_UP),
+      ORCHESTRATION_STENCILS);
 
   private static final String stencilsPath = "/templates/stencils/";
   private static final String uiSchemaSuffix = "-UISchema.json";
