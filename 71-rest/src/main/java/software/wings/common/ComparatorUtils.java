@@ -29,7 +29,7 @@ package software.wings.common;
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-public class ComparatorUtil {
+public class ComparatorUtils {
   public static boolean isDigit(char ch) {
     return (ch >= 48) && (ch <= 57);
   }
@@ -113,5 +113,9 @@ public class ComparatorUtil {
       }
     }
     return chunk.toString();
+  }
+
+  public static int compareDecending(String s1, String s2) {
+    return compare(s2, s1);
   }
 }

@@ -461,6 +461,13 @@ public class NexusServiceTest extends WingsBaseTest {
         .hasSize(2)
         .extracting(BuildDetails::getNumber, BuildDetails::getRevision)
         .containsExactly(tuple("3.0", "3.0"), tuple("3.1.2", "3.1.2"));
+
+    assertThat(buildDetails)
+        .hasSize(2)
+        .extracting(BuildDetails::getBuildUrl)
+        .containsExactly(
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.0&p=jar&e=jar",
+            "http://localhost:8881/nexus/service/local/artifact/maven/content?r=releases&g=software.wings.nexus&a=rest-client&v=3.1.2&p=jar&e=jar&c=capsule");
   }
 
   @Test
