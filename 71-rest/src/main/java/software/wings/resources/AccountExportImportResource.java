@@ -16,14 +16,13 @@ import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
-
 import io.harness.exception.WingsException;
+import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queuable;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-
 import org.mongodb.morphia.Morphia;
 import org.mongodb.morphia.annotations.Entity;
 import software.wings.audit.AuditHeader;
@@ -127,10 +126,10 @@ public class AccountExportImportResource {
   private Gson gson = new GsonBuilder().setPrettyPrinting().create();
   private JsonParser jsonParser = new JsonParser();
 
-  private static Set<Class<? extends Base>> includedEntities =
+  private static Set<Class<? extends PersistentEntity>> includedEntities =
       new HashSet<>(Arrays.asList(Account.class, User.class, Application.class, Schema.class, EncryptedData.class));
 
-  private static Set<Class<? extends Base>> excludedEntities = new HashSet<>(Arrays.asList(
+  private static Set<Class<? extends PersistentEntity>> excludedEntities = new HashSet<>(Arrays.asList(
       // Execution/Command/Audit logs
       Log.class, LogDataRecord.class, ThirdPartyApiCallLog.class, AuditHeader.class,
       // Notification/alert records
@@ -155,10 +154,10 @@ public class AccountExportImportResource {
   private static Set<String> excludedMongoCollections = new HashSet<>();
 
   static {
-    for (Class<? extends Base> entityClazz : includedEntities) {
+    for (Class<? extends PersistentEntity> entityClazz : includedEntities) {
       includedMongoCollections.add(getCollectionName(entityClazz));
     }
-    for (Class<? extends Base> entityClazz : excludedEntities) {
+    for (Class<? extends PersistentEntity> entityClazz : excludedEntities) {
       excludedMongoCollections.add(getCollectionName(entityClazz));
     }
   }
@@ -486,7 +485,7 @@ public class AccountExportImportResource {
     }
   }
 
-  private static String getCollectionName(Class<? extends Base> clazz) {
+  private static String getCollectionName(Class<? extends PersistentEntity> clazz) {
     return clazz.getAnnotation(Entity.class).value();
   }
 

@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.waiter.NotifyEvent.Builder.aNotifyEvent;
 import static java.lang.System.currentTimeMillis;
+import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Preconditions;
@@ -72,7 +73,8 @@ public class WaitNotifyEngine {
 
     // It is important we to save the wait instance first and then the wait queues. From now on we will
     // assume that wait queue without an instance is a zombie and we are going to remove it.
-    String waitInstanceId = wingsPersistence.save(new WaitInstance(callback, correlationIds));
+    String waitInstanceId = wingsPersistence.save(
+        WaitInstance.builder().uuid(generateUuid()).callback(callback).correlationIds(asList(correlationIds)).build());
 
     // create queue
     for (String correlationId : correlationIds) {
