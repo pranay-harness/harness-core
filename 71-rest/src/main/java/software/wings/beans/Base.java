@@ -1,5 +1,6 @@
 package software.wings.beans;
 
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.lang.System.currentTimeMillis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -109,7 +110,9 @@ public class Base extends PersistentEntity implements UuidAware, CreatedAtAware 
    */
   @PrePersist
   public void onSave() {
-    super.onSave();
+    if (uuid == null) {
+      uuid = generateUuid();
+    }
 
     if (this instanceof Application) {
       this.appId = uuid;
@@ -120,7 +123,12 @@ public class Base extends PersistentEntity implements UuidAware, CreatedAtAware 
       createdBy = embeddedUser;
     }
 
-    lastUpdatedAt = currentTimeMillis();
+    final long currentTime = currentTimeMillis();
+
+    if (createdAt == 0) {
+      createdAt = currentTime;
+    }
+    lastUpdatedAt = currentTime;
     lastUpdatedBy = embeddedUser;
   }
 

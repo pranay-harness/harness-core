@@ -25,6 +25,13 @@ public interface HPersistence {
   void register(Store store, String uri, Set<Class> classes);
 
   /**
+   * Register User provider.
+   *
+   * @param userProvider user provider
+   */
+  void registerUserProvider(UserProvider userProvider);
+
+  /**
    * Gets the datastore.
    *
    * @param store    the store

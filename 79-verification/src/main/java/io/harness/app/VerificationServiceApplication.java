@@ -43,6 +43,7 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
+import io.harness.persistence.HPersistence;
 import io.harness.resources.LogVerificationResource;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.VerificationServiceExecutorService;
@@ -65,6 +66,7 @@ import software.wings.exception.GenericExceptionMapper;
 import software.wings.exception.JsonProcessingExceptionMapper;
 import software.wings.exception.WingsExceptionMapper;
 import software.wings.jersey.JsonViews;
+import software.wings.security.ThreadLocalUserProvider;
 import software.wings.utils.JsonSubtypeResolver;
 
 import java.util.Set;
@@ -165,6 +167,8 @@ public class VerificationServiceApplication extends Application<VerificationServ
 
     initMetrics();
 
+    registerStores(configuration, injector);
+
     registerResources(environment, injector);
 
     registerManagedBeans(environment, injector);
@@ -192,6 +196,11 @@ public class VerificationServiceApplication extends Application<VerificationServ
   private void initMetrics() {
     harnessMetricRegistry.registerGaugeMetric(DATA_ANALYSIS_TASKS_PER_MINUTE, null, null);
     harnessMetricRegistry.registerGaugeMetric(DATA_COLLECTION_TASKS_PER_MINUTE, null, null);
+  }
+
+  private void registerStores(VerificationServiceConfiguration configuration, Injector injector) {
+    final HPersistence persistence = injector.getInstance(HPersistence.class);
+    persistence.registerUserProvider(new ThreadLocalUserProvider());
   }
 
   private void registerResources(Environment environment, Injector injector) {
