@@ -1,18 +1,16 @@
 package software.wings.service.impl.artifact;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import software.wings.beans.artifact.Artifact;
-import software.wings.common.ComparatorUtil;
+import software.wings.common.ComparatorUtils;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 /**
  * Compares build number in descending order
  */
-@SuppressFBWarnings("SE_COMPARATOR_SHOULD_BE_SERIALIZABLE")
-public class ArtifactComparator implements Comparator<Artifact> {
-  @SuppressFBWarnings("RV_NEGATING_RESULT_OF_COMPARETO")
+public class ArtifactComparator implements Comparator<Artifact>, Serializable {
   public int compare(Artifact artifact1, Artifact artifact2) {
-    return -(ComparatorUtil.compare(artifact1.getBuildNo(), artifact2.getBuildNo()));
+    return ComparatorUtils.compareDecending(artifact1.getBuildNo(), artifact2.getBuildNo());
   }
 }

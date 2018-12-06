@@ -486,11 +486,8 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     }
     List<BuildDetails> filePaths = null;
 
-    try {
-      filePaths = getFilePaths(artifactoryConfig, encryptionDetails, repositoryName, artifactPath, repositoryType, 1);
-    } catch (Exception e) {
-      prepareAndThrowException("Invalid artifact path", USER, null);
-    }
+    filePaths = getFilePaths(artifactoryConfig, encryptionDetails, repositoryName, artifactPath, repositoryType, 1);
+
     if (isEmpty(filePaths)) {
       prepareAndThrowException("No artifact files matching with the artifact path [" + artifactPath + "]", USER, null);
     }

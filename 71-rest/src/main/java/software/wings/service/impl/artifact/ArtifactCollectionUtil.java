@@ -7,6 +7,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
+import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
@@ -62,6 +63,9 @@ public class ArtifactCollectionUtil {
         metadata.put(ARTIFACT_PATH, buildDetails.getArtifactPath());
         metadata.put(
             ARTIFACT_FILE_NAME, buildDetails.getNumber().substring(buildDetails.getNumber().lastIndexOf('/') + 1));
+        if (isNotEmpty(buildDetails.getBuildUrl())) {
+          metadata.put(URL, buildDetails.getBuildUrl());
+        }
         if (buildDetails.getArtifactFileSize() != null) {
           metadata.put(ARTIFACT_FILE_SIZE, buildDetails.getArtifactFileSize());
         }
@@ -90,6 +94,12 @@ public class ArtifactCollectionUtil {
       metadata.put(ARTIFACT_PATH, metadata.get(ARTIFACT_PATH));
       metadata.put(BUILD_FULL_DISPLAY_NAME, buildDetails.getBuildFullDisplayName());
       metadata.put(URL, buildDetails.getBuildUrl());
+      return metadata;
+    } else if (artifactStreamType.equals(NEXUS.name())) {
+      metadata.put(BUILD_NO, buildDetails.getNumber());
+      if (isNotEmpty(buildDetails.getBuildUrl())) {
+        metadata.put(URL, buildDetails.getBuildUrl());
+      }
       return metadata;
     }
     return ImmutableMap.of(BUILD_NO, buildDetails.getNumber());
