@@ -119,3 +119,7 @@ fi
 if [[ -v "EXECUTION_LOG_DATA_STORE" ]]; then
     sed -i "s|executionLogStorageMode: MONGO|executionLogStorageMode: ${EXECUTION_LOG_DATA_STORE}|" /opt/harness/config.yml
 fi
+
+if [[ -v "BACKGROUND_SCHEDULER_CLUSTERED" ]]; then
+    sed -i "s|clustered: true #backgroundScheduler|clustered: ${BACKGROUND_SCHEDULER_CLUSTERED}|" /opt/harness/config.yml
+fi
