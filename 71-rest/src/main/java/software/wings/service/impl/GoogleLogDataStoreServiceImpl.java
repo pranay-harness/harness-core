@@ -57,14 +57,9 @@ public class GoogleLogDataStoreServiceImpl implements LogDataStoreService {
     if (isEmpty(logs)) {
       return;
     }
-    try {
-      List<Entity> logList = new ArrayList<>();
-      logs.forEach(log -> logList.add(log.convertToCloudStorageEntity(datastore)));
-      datastore.put(logList.stream().toArray(Entity[] ::new));
-    } catch (Exception e) {
-      logger.error("Error saving execution logs", e);
-    }
-    mongoLogDataStoreService.saveLogs(clazz, logs);
+    List<Entity> logList = new ArrayList<>();
+    logs.forEach(log -> logList.add(log.convertToCloudStorageEntity(datastore)));
+    datastore.put(logList.stream().toArray(Entity[] ::new));
   }
 
   @Override
@@ -160,6 +155,7 @@ public class GoogleLogDataStoreServiceImpl implements LogDataStoreService {
     Query<Key> query = Query.newKeyQueryBuilder()
                            .setKind(clazz.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
                            .setFilter(createCompositeFilter(pageRequest))
+                           .setLimit(10000)
                            .build();
     List<Key> keys = new ArrayList<>();
     datastore.run(query).forEachRemaining(key -> keys.add(key));
