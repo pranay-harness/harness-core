@@ -32,4 +32,6 @@ public interface ApplicationManifestService extends OwnedByService {
   ManifestFile upsertApplicationManifestFile(ManifestFile manifestFile, String serviceId, boolean isCreate);
 
   void deleteManifestFileById(String appId, String manifestFileId);
+
+  void deleteAppManifest(String appId, String appManifestId);
 }

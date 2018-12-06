@@ -59,6 +59,14 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   }
 
   @Override
+  public void deleteAppManifest(String appId, String appManifestId) {
+    Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
+                                           .filter(ApplicationManifest.APP_ID_KEY, appId)
+                                           .filter(ApplicationManifest.ID_KEY, appManifestId);
+    wingsPersistence.delete(query);
+  }
+
+  @Override
   public ApplicationManifest get(String appId, String serviceId) {
     Query<ApplicationManifest> query = wingsPersistence.createQuery(ApplicationManifest.class)
                                            .filter(ApplicationManifest.APP_ID_KEY, appId)

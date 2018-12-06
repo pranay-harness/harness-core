@@ -16,6 +16,7 @@ import software.wings.beans.LambdaSpecification;
 import software.wings.beans.RestResponse;
 import software.wings.beans.Service;
 import software.wings.beans.Setup.SetupStatus;
+import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
@@ -29,6 +30,7 @@ import software.wings.security.PermissionAttribute.ResourceType;
 import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ListAPI;
 import software.wings.security.annotations.Scope;
+import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.stencils.Stencil;
 
@@ -57,6 +59,7 @@ import javax.ws.rs.QueryParam;
 @AuthRule(permissionType = PermissionType.SERVICE)
 public class ServiceResource {
   private ServiceResourceService serviceResourceService;
+  @Inject ApplicationManifestService applicationManifestService;
 
   /**
    * Instantiates a new service resource.
@@ -620,5 +623,14 @@ public class ServiceResource {
   public RestResponse<List<CommandCategory>> getCommandUnitItems(@QueryParam("appId") String appId,
       @PathParam("serviceId") String serviceId, @QueryParam("filterCommand") String commandName) {
     return new RestResponse<>(serviceResourceService.getCommandCategories(appId, serviceId, commandName));
+  }
+
+  @GET
+  @Path("{serviceId}/app-manifest")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ApplicationManifest> getAppManifest(
+      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId) {
+    return new RestResponse<>(applicationManifestService.get(appId, serviceId));
   }
 }

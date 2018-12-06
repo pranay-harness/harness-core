@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import io.harness.beans.PageRequest;
 import io.swagger.annotations.Api;
 import software.wings.beans.RestResponse;
 import software.wings.beans.appmanifest.ApplicationManifest;
@@ -18,7 +17,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.ApplicationManifestService;
 
-import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -38,68 +36,95 @@ public class ApplicationManifestResource {
   @Inject private ApplicationManifestService applicationManifestService;
 
   @POST
-  @Path("{serviceId}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.CREATE)
   public RestResponse<ApplicationManifest> createApplicationManifest(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, ApplicationManifest applicationManifest) {
+      @QueryParam("serviceId") String serviceId, ApplicationManifest applicationManifest) {
     applicationManifest.setAppId(appId);
     applicationManifest.setServiceId(serviceId);
     return new RestResponse<>(applicationManifestService.create(applicationManifest));
   }
 
   @GET
-  @Path("{serviceId}")
+  @Path("{appManifestId}")
   @Timed
   @ExceptionMetered
   public RestResponse<ApplicationManifest> getApplicationManifest(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, @BeanParam PageRequest<ApplicationManifest> pageRequest) {
-    return new RestResponse<>(applicationManifestService.get(appId, serviceId));
+      @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId) {
+    return new RestResponse<>(applicationManifestService.getById(appId, appManifestId));
   }
 
   @PUT
-  @Path("{serviceId}")
+  @Path("{appManifestId}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
   public RestResponse<ApplicationManifest> updateApplicationManifest(@QueryParam("appId") String appId,
-      @PathParam("serviceId") String serviceId, ApplicationManifest applicationManifest) {
+      @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId,
+      ApplicationManifest applicationManifest) {
+    applicationManifest.setUuid(appManifestId);
     applicationManifest.setAppId(appId);
     applicationManifest.setServiceId(serviceId);
     return new RestResponse<>(applicationManifestService.update(applicationManifest));
   }
 
+  @DELETE
+  @Path("{appManifestId}")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = PermissionType.SERVICE, action = Action.DELETE)
+  public RestResponse deleteApplicationManifest(@QueryParam("appId") String appId,
+      @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId) {
+    applicationManifestService.deleteAppManifest(appId, appManifestId);
+    return new RestResponse();
+  }
+
   @POST
-  @Path("{serviceId}/manifest-file")
+  @Path("{appManifestId}/manifest-file")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.CREATE)
-  public RestResponse<ManifestFile> createManifestFile(
-      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
+  public RestResponse<ManifestFile> createManifestFile(@QueryParam("appId") String appId,
+      @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId,
+      ManifestFile manifestFile) {
     manifestFile.setAppId(appId);
+    manifestFile.setApplicationManifestId(appManifestId);
     return new RestResponse<>(applicationManifestService.createManifestFile(manifestFile, serviceId));
   }
 
+  @GET
+  @Path("{appManifestId}/manifest-file/{manifestFileId}")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<ManifestFile> getManifestFile(@QueryParam("appId") String appId,
+      @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId,
+      @PathParam("manifestFileId") String manifestFileId) {
+    return new RestResponse<>(applicationManifestService.getManifestFileById(appId, manifestFileId));
+  }
+
   @PUT
-  @Path("{serviceId}/manifest-file")
+  @Path("{appManifestId}/manifest-file/{manifestFileId}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.UPDATE)
-  public RestResponse<ManifestFile> updateManifestFile(
-      @QueryParam("appId") String appId, @PathParam("serviceId") String serviceId, ManifestFile manifestFile) {
+  public RestResponse<ManifestFile> updateManifestFile(@QueryParam("appId") String appId,
+      @QueryParam("serviceId") String serviceId, @PathParam("appManifestId") String appManifestId,
+      @PathParam("manifestFileId") String manifestFileId, ManifestFile manifestFile) {
+    manifestFile.setUuid(manifestFileId);
     manifestFile.setAppId(appId);
+    manifestFile.setApplicationManifestId(appManifestId);
     return new RestResponse<>(applicationManifestService.updateManifestFile(manifestFile, serviceId));
   }
 
   @DELETE
-  @Path("{serviceId}/manifest-file/{manifestFieldId}")
+  @Path("{appManifestId}/manifest-file/{manifestFileId}")
   @Timed
   @ExceptionMetered
   @AuthRule(permissionType = PermissionType.SERVICE, action = Action.DELETE)
-  public RestResponse deleteManifestFile(@QueryParam("appId") String appId, @PathParam("serviceId") String serviceId,
-      @PathParam("manifestFieldId") String manifestFieldId) {
-    applicationManifestService.deleteManifestFileById(appId, manifestFieldId);
+  public RestResponse deleteManifestFile(@QueryParam("appId") String appId, @QueryParam("serviceId") String serviceId,
+      @PathParam("appManifestId") String appManifestId, @PathParam("manifestFileId") String manifestFileId) {
+    applicationManifestService.deleteManifestFileById(appId, manifestFileId);
     return new RestResponse();
   }
 }
