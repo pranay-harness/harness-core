@@ -542,7 +542,14 @@ public interface Constants {
    * The constant ARTIFACT_PATH.
    */
   String ARTIFACT_PATH = "artifactPath";
-
+  /**
+   * The constant PATH.
+   */
+  String PATH = "path";
+  /**
+   * The constant PARENT.
+   */
+  String PARENT = "parent";
   /**
    * The constant ARTIFACT_FILE_NAME.
    */

@@ -25,6 +25,7 @@ import software.wings.yaml.setting.ArtifactServerYaml;
 @Builder
 public class SftpConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "SFTP URL", required = true) @NotEmpty private String sftpUrl;
+  @Attributes(title = "Domain") private String domain;
   @Attributes(title = "Username") private String username;
   @Attributes(title = "Password") @Encrypted private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
@@ -35,9 +36,11 @@ public class SftpConfig extends SettingValue implements EncryptableSetting {
   }
 
   @SuppressFBWarnings("EI_EXPOSE_REP2")
-  public SftpConfig(String sftpUrl, String username, char[] password, String accountId, String encryptedPassword) {
+  public SftpConfig(
+      String sftpUrl, String domain, String username, char[] password, String accountId, String encryptedPassword) {
     this();
     this.sftpUrl = sftpUrl;
+    this.domain = domain;
     this.username = username;
     this.password = password;
     this.accountId = accountId;
@@ -48,10 +51,12 @@ public class SftpConfig extends SettingValue implements EncryptableSetting {
   @EqualsAndHashCode(callSuper = true)
   @NoArgsConstructor
   public static final class Yaml extends ArtifactServerYaml {
+    String domain;
     @Builder
-    public Yaml(String type, String harnessApiVersion, String url, String username, String password,
+    public Yaml(String type, String harnessApiVersion, String url, String domain, String username, String password,
         UsageRestrictions usageRestrictions) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
+      this.domain = domain;
     }
   }
 }
