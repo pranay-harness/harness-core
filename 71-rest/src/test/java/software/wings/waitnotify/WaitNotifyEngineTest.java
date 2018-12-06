@@ -217,8 +217,11 @@ public class WaitNotifyEngineTest extends WingsBaseTest {
 
   @Test
   public void shouldCleanZombieNotifyResponse() {
-    final NotifyResponse notifyResponse = new NotifyResponse(generateUuid(), null, false);
-    notifyResponse.setCreatedAt(System.currentTimeMillis() - ofMinutes(6).toMillis());
+    final NotifyResponse notifyResponse = NotifyResponse.builder()
+                                              .uuid(generateUuid())
+                                              .createdAt(System.currentTimeMillis() - ofMinutes(6).toMillis())
+                                              .error(false)
+                                              .build();
     String notificationId = wingsPersistence.save(notifyResponse);
 
     notifier.executeUnderLock();
