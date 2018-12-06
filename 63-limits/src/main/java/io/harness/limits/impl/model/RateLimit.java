@@ -6,13 +6,14 @@ import lombok.AllArgsConstructor;
 import lombok.Value;
 
 import java.util.concurrent.TimeUnit;
+import javax.validation.constraints.NotNull;
 
 @Value
 @AllArgsConstructor
 public class RateLimit implements RateBasedLimit {
   private int count;
   private int duration;
-  private TimeUnit durationUnit;
+  @NotNull private TimeUnit durationUnit;
   private final LimitType limitType = LimitType.RATE_LIMIT;
 
   // for morphia
