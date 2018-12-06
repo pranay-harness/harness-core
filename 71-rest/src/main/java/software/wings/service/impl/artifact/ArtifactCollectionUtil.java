@@ -7,6 +7,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.ARTIFACTORY;
 import static software.wings.beans.artifact.ArtifactStreamType.BAMBOO;
 import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.JENKINS;
+import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
 import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_FILE_SIZE;
@@ -83,7 +84,7 @@ public class ArtifactCollectionUtil {
       metadata.put(BUILD_FULL_DISPLAY_NAME, buildDetails.getBuildFullDisplayName());
       metadata.put(URL, buildDetails.getBuildUrl());
       return metadata;
-    } else if (artifactStreamType.equals(SMB.name())) {
+    } else if (artifactStreamType.equals(SMB.name()) || artifactStreamType.equals(SFTP.name())) {
       metadata = buildDetails.getBuildParameters();
       metadata.put(BUILD_NO, buildDetails.getNumber());
       metadata.put(ARTIFACT_PATH, metadata.get(ARTIFACT_PATH));

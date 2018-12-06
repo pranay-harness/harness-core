@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.ScriptType;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.Log.LogLevel;
+import software.wings.beans.SftpConfig;
 import software.wings.beans.SmbConfig;
 import software.wings.beans.artifact.ArtifactStreamType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
@@ -33,6 +34,7 @@ import software.wings.common.Constants;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
+import software.wings.service.impl.SftpHelperService;
 import software.wings.service.impl.SmbHelperService;
 import software.wings.service.intfc.security.EncryptionService;
 
@@ -60,6 +62,7 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
   @Inject @Transient private transient DelegateLogService delegateLogService;
   @Inject private AwsHelperService awsHelperService;
   @Inject private SmbHelperService smbHelperService;
+  @Inject private SftpHelperService sftpHelperService;
   private static Map<String, String> bucketRegions = new HashMap<>();
 
   /**
@@ -104,6 +107,13 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         saveExecutionLog(
             context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
         return context.executeCommandString(command, false);
+      case SFTP:
+        command = constructCommandStringForSFTP(context);
+        logger.info("Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        saveExecutionLog(
+            context, INFO, "Downloading artifact from " + artifactStreamType.name() + " to " + getCommandPath());
+        return context.executeCommandString(command, false);
+
       default:
         throw new WingsException(ErrorCode.UNKNOWN_ARTIFACT_TYPE);
     }
@@ -272,6 +282,70 @@ public class DownloadArtifactCommandUnit extends ExecCommandUnit {
         String roboCopyCommand = "robocopy \\\\" + shareUrl + " " + getCommandPath() + " " + artifactFileName;
         command = "net use \\\\" + shareUrl + " " + userPassword + " /persistent:no\n " + roboCopyCommand;
         break;
+      default:
+        throw new WingsException("Invalid Script type");
+    }
+    return command;
+  }
+
+  private String constructCommandStringForSFTP(ShellCommandExecutionContext context) {
+    Map<String, String> metadata = context.getMetadata();
+    String artifactFileName = metadata.get(Constants.ARTIFACT_FILE_NAME);
+    SftpConfig sftpConfig = (SftpConfig) context.getArtifactStreamAttributes().getServerSetting().getValue();
+    List<EncryptedDataDetail> encryptionDetails = context.getArtifactServerEncryptedDataDetails();
+    encryptionService.decrypt(sftpConfig, encryptionDetails);
+    String command;
+    switch (this.getScriptType()) {
+      case POWERSHELL:
+        String artifactPath = artifactFileName;
+        command = "if (Get-Module -ListAvailable -Name Posh-SSH) {\n"
+            + "    Write-Host \"Posh-SSH Module exists\"\n"
+            + "\n"
+            + "} else {\n"
+            + "    Write-Host \"Module does not exist, Installing\"\n"
+            + "    Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force\n"
+            + "    Install-Module -Name Posh-SSH -SkipPublisherCheck -Force\n"
+            + "}\n"
+            + "\n"
+            + "Import-Module Posh-SSH\n"
+            + "\n"
+            + "$Password = ConvertTo-SecureString "
+            + "\'" + new String(sftpConfig.getPassword()) + "\'"
+            + " -AsPlainText -Force\n"
+            + "$Credential = New-Object System.Management.Automation.PSCredential ('" + sftpConfig.getUsername() + "\'"
+            + ", $Password)\n"
+            + "\n"
+            + "$RemotePath = \"" + artifactPath + "\"\n"
+            + "$LocalPath = " + getCommandPath() + "\n"
+            + "\n"
+            + "$SftpIp = \'" + sftpHelperService.getSFTPConnectionHost(sftpConfig.getSftpUrl()) + "\'\n"
+            + "\n"
+            + "$ThisSession = New-SFTPSession -ComputerName $SftpIp -Credential $Credential\n"
+            + "\n"
+            + "$sftpPathAttribute = Get-SFTPPathAttribute -SessionId ($ThisSession).SessionId -Path  $Remotepath \n"
+            + "if ( $sftpPathAttribute.IsRegularFile ) \n"
+            + "{ \n"
+            + "Get-SFTPFile -SessionId ($ThisSession).SessionId -RemoteFile $Remotepath -LocalPath $LocalPath -Overwrite\n"
+            + "} \n\n"
+            + "if ( $sftpPathAttribute.IsDirectory ) \n"
+            + "{ \n"
+            + "$sublist = New-Object System.Collections.Arraylist \n"
+            + "Get-SFTPChildItem -SessionId ($ThisSession).SessionId -Path $Remotepath -Recursive | ForEach-Object {  $sublist.add($_.FullName) } \n"
+            + "for($i=0; $i -le $sublist.Count; $i++) { \n"
+            + "if ( $sublist[$i] ) {\n"
+            + "$sftpPathAttribute = Get-SFTPPathAttribute -SessionId ($ThisSession).SessionId -Path  $sublist[$i] \n"
+            + "if ( $sftpPathAttribute.IsRegularFile ) {\n"
+            + "$FullLocalPath = $LocalPath + \"\\\" + $Remotepath \n"
+            + "New-Item -ItemType Directory -Force -Path $FullLocalPath \n"
+            + "Get-SFTPFile -SessionId ($ThisSession).SessionId -RemoteFile $sublist[$i] -LocalPath $FullLocalPath -Overwrite \n"
+            + "} \n"
+            + "} \n"
+            + "} \n"
+            + "} \n\n"
+            + "\n"
+            + "Get-SFTPSession | % { Remove-SFTPSession -SessionId ($_.SessionId) }";
+        break;
+
       default:
         throw new WingsException("Invalid Script type");
     }

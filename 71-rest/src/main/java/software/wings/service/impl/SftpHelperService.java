@@ -1,6 +1,11 @@
 package software.wings.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static software.wings.common.Constants.ARTIFACT_FILE_NAME;
 import static software.wings.common.Constants.ARTIFACT_PATH;
+import static software.wings.common.Constants.PARENT;
+import static software.wings.common.Constants.PATH;
+import static software.wings.common.Constants.URL;
 import static software.wings.helpers.ext.jenkins.BuildDetails.Builder.aBuildDetails;
 
 import com.google.api.client.util.Lists;
@@ -9,6 +14,7 @@ import com.google.inject.Singleton;
 
 import net.schmizz.sshj.DefaultConfig;
 import net.schmizz.sshj.SSHClient;
+import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.SFTPClient;
 import org.slf4j.Logger;
@@ -26,6 +32,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -65,7 +72,12 @@ public class SftpHelperService {
 
   public String getSFTPConnectionHost(String sftpUrl) {
     String sftpHost = sftpUrl;
-    sftpHost = sftpHost.replaceFirst("^(sftp?://)", "").split("/")[0];
+    if (sftpHost.contains("/")) {
+      sftpHost = sftpHost.replaceFirst("^(sftp?://)", "").split(Pattern.quote("/"))[0];
+    } else if (sftpHost.contains("\\")) {
+      String[] split = sftpHost.replaceFirst("^(sftp?:\\\\)", "").split(Pattern.quote("\\"));
+      sftpHost = split[1];
+    }
     return sftpHost;
   }
 
@@ -101,7 +113,20 @@ public class SftpHelperService {
             String fileName = ph != null ? ph.toString() : "";
             Path parent = path.getParent();
             String directory = parent != null ? parent.toString() : "";
-            resourceInfos = sftp.ls(directory, RemoteResourceInfo::isRegularFile);
+            // if directory is empty, default is HOME
+            if (isEmpty(directory)) {
+              directory = ROOT_DIR_ARTIFACT_PATH;
+            }
+
+            // Check if artifact is file or folder
+            String artifactFullPath = directory + "\\" + artifactPath;
+            FileAttributes attributes = sftp.lstat(artifactFullPath);
+
+            if ("REGULAR".equals(attributes.getMode().getType().toString())) {
+              resourceInfos = sftp.ls(directory, RemoteResourceInfo::isRegularFile);
+            } else if ("DIRECTORY".equals(attributes.getMode().getType().name())) {
+              resourceInfos = sftp.ls(directory, RemoteResourceInfo::isDirectory);
+            }
             resourceInfos = resourceInfos.stream()
                                 .filter(resourceInfo -> resourceInfo.getName().startsWith(fileName))
                                 .collect(Collectors.toList());
@@ -111,13 +136,14 @@ public class SftpHelperService {
           for (RemoteResourceInfo resourceInfo : resourceInfos) {
             Map<String, String> map = new HashMap<>();
             map.put(ARTIFACT_PATH, artifactPath);
-            map.put("name", resourceInfo.getName());
-            map.put("path", resourceInfo.getPath());
-            map.put("parent", resourceInfo.getParent());
-
+            map.put(URL, sftpConfig.getSftpUrl());
+            map.put(ARTIFACT_FILE_NAME, resourceInfo.getName());
+            map.put(PATH, resourceInfo.getPath());
+            map.put(PARENT, resourceInfo.getParent());
             buildDetailsListForArtifactPath.add(aBuildDetails()
                                                     .withNumber(resourceInfo.getName())
                                                     .withArtifactPath(artifactPath)
+                                                    .withBuildUrl(sftpConfig.getSftpUrl())
                                                     .withBuildParameters(map)
                                                     .build());
           }
