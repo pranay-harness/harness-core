@@ -77,20 +77,26 @@ public class JiraTask extends AbstractDelegateRunnableTask {
     CommandExecutionStatus commandExecutionStatus = CommandExecutionStatus.RUNNING;
     try {
       issue = jira.getIssue(parameters.getIssueId());
+      boolean fieldsUpdated = false;
+
       FluentUpdate update = issue.update();
       if (EmptyPredicate.isNotEmpty(parameters.getSummary())) {
         update.field(Field.SUMMARY, parameters.getSummary());
+        fieldsUpdated = true;
       }
 
-      if (EmptyPredicate.isNotEmpty(parameters.getSummary())) {
+      if (EmptyPredicate.isNotEmpty(parameters.getLabels())) {
         update.field(Field.LABELS, parameters.getLabels());
+        fieldsUpdated = true;
+      }
+
+      if (fieldsUpdated) {
+        update.execute();
       }
 
       if (EmptyPredicate.isNotEmpty(parameters.getComment())) {
         issue.addComment(parameters.getComment());
       }
-
-      update.execute();
 
       if (EmptyPredicate.isNotEmpty(parameters.getStatus())) {
         issue.transition().execute(parameters.getStatus());
