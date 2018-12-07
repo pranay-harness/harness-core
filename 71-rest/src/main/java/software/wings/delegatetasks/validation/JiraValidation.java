@@ -20,8 +20,12 @@ public class JiraValidation extends AbstractDelegateValidateTask {
     List<String> jiraUrls = new ArrayList<>();
 
     if (parameters.length > 0) {
-      JiraTaskParameters parameter = (JiraTaskParameters) parameters[0];
-      jiraUrls.add(parameter.getJiraConfig().getBaseUrl());
+      for (Object param : parameters) {
+        JiraTaskParameters parameter = (JiraTaskParameters) param;
+        if (parameter.getJiraConfig() != null) {
+          jiraUrls.add(parameter.getJiraConfig().getBaseUrl());
+        }
+      }
     }
 
     return jiraUrls;

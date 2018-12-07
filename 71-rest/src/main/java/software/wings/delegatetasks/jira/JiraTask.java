@@ -15,6 +15,10 @@ import net.rcarz.jiraclient.Issue;
 import net.rcarz.jiraclient.Issue.FluentUpdate;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.Resource;
+import net.rcarz.jiraclient.RestException;
+import net.sf.json.JSON;
+import net.sf.json.JSONArray;
 import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +33,10 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.ExecutionStatus;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -63,11 +70,54 @@ public class JiraTask extends AbstractDelegateRunnableTask {
       case CREATE_TICKET:
         return createTicket(parameters);
 
+      case GET_PROJECTS:
+        return getProjects(parameters);
+
+      case GET_FIELDS:
+        return getFields(parameters);
+
       default:
         break;
     }
 
     return null;
+  }
+
+  private ResponseData getFields(JiraTaskParameters parameters) {
+    JiraClient jiraClient = getJiraClient(parameters);
+
+    URI uri = null;
+    JSONArray fieldsArray = null;
+    try {
+      uri = jiraClient.getRestClient().buildURI(Resource.getBaseUri() + "field");
+      JSON response = jiraClient.getRestClient().get(uri);
+      fieldsArray = JSONArray.fromObject(response);
+    } catch (URISyntaxException | IOException | RestException e) {
+      String errorMessage = "Failed to fetch fields from JIRA server.";
+      logger.error(errorMessage);
+
+      return JiraExecutionData.builder().errorMessage(errorMessage).build();
+    }
+
+    return JiraExecutionData.builder().fields(fieldsArray).build();
+  }
+
+  private ResponseData getProjects(JiraTaskParameters parameters) {
+    JiraClient jira = getJiraClient(parameters);
+
+    JSONArray projectsArray = null;
+    try {
+      URI uri = jira.getRestClient().buildURI(Resource.getBaseUri() + "project");
+      JSON response = jira.getRestClient().get(uri);
+      projectsArray = JSONArray.fromObject(response);
+    } catch (URISyntaxException | IOException | RestException e) {
+      String errorMessage = "Failed to fetch projects from JIRA server.";
+      logger.error(errorMessage);
+
+      return JiraExecutionData.builder().errorMessage(errorMessage).build();
+    }
+
+    return JiraExecutionData.builder().projects(projectsArray).build();
   }
 
   private ResponseData updateTicket(JiraTaskParameters parameters) {
