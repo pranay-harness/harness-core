@@ -2,10 +2,11 @@ package software.wings.sm.states.k8s;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
-import static io.harness.k8s.manifest.ManifestHelper.values_filename;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
+import static software.wings.delegatetasks.k8s.Utils.getValuesYamlGitFilePath;
+import static software.wings.delegatetasks.k8s.Utils.normalizeFilePath;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 
@@ -136,7 +137,7 @@ public class K8sDeploymentRollingSetup extends State {
     GitFileConfig gitFileConfig = applicationManifest.getGitFileConfig();
     GitConfig gitConfig = settingsService.fetchGitConfigFromConnectorId(gitFileConfig.getConnectorId());
 
-    gitFileConfig.setFilePath(gitFileConfig.getFilePath() + values_filename);
+    gitFileConfig.setFilePath(getValuesYamlGitFilePath(gitFileConfig.getFilePath()));
     GitFetchFilesTaskParams fetchFilesTaskParams =
         GitFetchFilesTaskParams.builder()
             .accountId(app.getAccountId())
@@ -250,6 +251,7 @@ public class K8sDeploymentRollingSetup extends State {
       List<EncryptedDataDetail> encryptionDetails =
           secretManager.getEncryptionDetails(gitConfig, appManifest.getAppId(), null);
 
+      gitFileConfig.setFilePath(normalizeFilePath(gitFileConfig.getFilePath()));
       manifestConfigBuilder.gitFileConfig(gitFileConfig);
       manifestConfigBuilder.gitConfig(gitConfig);
       manifestConfigBuilder.encryptedDataDetails(encryptionDetails);

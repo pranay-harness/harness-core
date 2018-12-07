@@ -13,7 +13,7 @@ import static software.wings.beans.command.K8sDummyCommandUnit.WaitForSteadyStat
 import static software.wings.beans.command.K8sDummyCommandUnit.WrapUp;
 import static software.wings.delegatetasks.k8s.Utils.applyManifests;
 import static software.wings.delegatetasks.k8s.Utils.doStatusCheck;
-import static software.wings.delegatetasks.k8s.Utils.fetchFiles;
+import static software.wings.delegatetasks.k8s.Utils.fetchManifestFiles;
 import static software.wings.delegatetasks.k8s.Utils.getLatestRevision;
 import static software.wings.delegatetasks.k8s.Utils.getResourcesInTableFormat;
 import static software.wings.delegatetasks.k8s.Utils.readManifests;
@@ -84,7 +84,7 @@ public class K8sDeploymentRollingCommandTaskHandler extends K8sCommandTaskHandle
 
     K8sDeploymentRollingSetupRequest request = (K8sDeploymentRollingSetupRequest) k8sCommandRequest;
 
-    List<ManifestFile> manifestFiles = fetchFiles(
+    List<ManifestFile> manifestFiles = fetchManifestFiles(
         request.getK8sDelegateManifestConfig(), getLogCallBack(request, FetchFiles), gitService, encryptionService);
     if (manifestFiles == null) {
       return getFailureResponse(request.getActivityId());

@@ -293,7 +293,7 @@ public class Utils {
     return sb.toString();
   }
 
-  public static List<ManifestFile> getManifesFilesFromGit(
+  private static List<ManifestFile> getManifesFilesFromGit(
       K8sDelegateManifestConfig delegateManifestConfig, GitService gitService, EncryptionService encryptionService) {
     GitFileConfig gitFileConfig = delegateManifestConfig.getGitFileConfig();
     GitConfig gitConfig = delegateManifestConfig.getGitConfig();
@@ -309,15 +309,15 @@ public class Utils {
       List<GitFile> files = gitFetchFilesResult.getFiles();
 
       for (GitFile gitFile : files) {
-        manifestFiles.add(
-            ManifestFile.builder().fileName(gitFile.getFilePath()).fileContent(gitFile.getFileContent()).build());
+        String filePath = getRelativePath(gitFile, gitFileConfig.getFilePath());
+        manifestFiles.add(ManifestFile.builder().fileName(filePath).fileContent(gitFile.getFileContent()).build());
       }
     }
 
     return manifestFiles;
   }
 
-  public static List<ManifestFile> fetchFiles(K8sDelegateManifestConfig delegateManifestConfig,
+  public static List<ManifestFile> fetchManifestFiles(K8sDelegateManifestConfig delegateManifestConfig,
       ExecutionLogCallback executionLogCallback, GitService gitService, EncryptionService encryptionService) {
     if (StoreType.Local.equals(delegateManifestConfig.getManifestStoreTypes())) {
       return delegateManifestConfig.getManifestFiles();
@@ -336,5 +336,29 @@ public class Utils {
       executionLogCallback.saveExecutionLog(Misc.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
       return null;
     }
+  }
+
+  private static String getRelativePath(GitFile gitFile, String prefixPath) {
+    if (isBlank(prefixPath)) {
+      return gitFile.getFilePath();
+    }
+
+    return gitFile.getFilePath().substring(prefixPath.length());
+  }
+
+  public static String getValuesYamlGitFilePath(String filePath) {
+    if (isBlank(filePath)) {
+      return values_filename;
+    }
+
+    return normalizeFilePath(filePath) + values_filename;
+  }
+
+  public static String normalizeFilePath(String filePath) {
+    if (isBlank(filePath)) {
+      return filePath;
+    }
+
+    return filePath.endsWith("/") ? filePath : filePath + "/";
   }
 }
