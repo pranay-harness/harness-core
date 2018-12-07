@@ -51,7 +51,9 @@ import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
 import software.wings.waitnotify.ListNotifyResponseData;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -68,7 +70,7 @@ import java.util.regex.Pattern;
 @Singleton
 public class ArtifactoryServiceImpl implements ArtifactoryService {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactoryServiceImpl.class);
-
+  private static final int MSG_BUFF_LENGTH = 4096;
   @Inject private ArtifactCollectionTaskHelper artifactCollectionTaskHelper;
   @Inject private EncryptionService encryptionService;
 
@@ -295,8 +297,10 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
     } catch (Exception e) {
       if (e instanceof HttpResponseException) {
         HttpResponseException httpResponseException = (HttpResponseException) e;
-        if (httpResponseException.getStatusCode() == 403) {
-          logger.warn("User not authorized to perform deep level search. Trying with different search api");
+        if (httpResponseException.getStatusCode() == 403 || httpResponseException.getStatusCode() == 400) {
+          logger.warn(
+              "User not authorized to perform or using OSS version deep level search. Trying with different search api. Message {}",
+              prepareActualResponse(httpResponseException));
           artifactPaths = getFilePathsForAnonymousUser(artifactory, repositoryName, artifactPath, maxVersions);
           String finalArtifactPath = artifactPath;
           return artifactPaths.stream()
@@ -580,6 +584,9 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
       } else if (httpResponseException.getStatusCode() == 403) {
         throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
             .addParam("message", "User not authorized to access artifactory");
+      } else if (httpResponseException.getStatusCode() == 400) {
+        throw new WingsException(ErrorCode.INVALID_ARTIFACT_SERVER, reportTargets)
+            .addParam("message", prepareActualResponse(httpResponseException));
       }
     }
     if (e instanceof SocketTimeoutException) {
@@ -588,10 +595,31 @@ public class ArtifactoryServiceImpl implements ArtifactoryService {
               e.getMessage() + "."
                   + "SocketTimeout: Artifactory server may not be running");
     }
+
     if (e instanceof WingsException) {
       throw(WingsException) e;
     }
     throw new WingsException(ARTIFACT_SERVER_ERROR, reportTargets).addParam("message", Misc.getMessage(e));
+  }
+
+  private String prepareActualResponse(HttpResponseException httpResponseException) {
+    try {
+      if (httpResponseException.getResponse() == null || httpResponseException.getResponse().getData() == null) {
+        return Misc.getMessage(httpResponseException);
+      }
+      StringReader responseData = (StringReader) httpResponseException.getResponse().getData();
+      char[] buff = new char[MSG_BUFF_LENGTH];
+      int offset = 0;
+      StringBuilder msg = new StringBuilder("");
+      while (responseData.read(buff, offset, MSG_BUFF_LENGTH) == MSG_BUFF_LENGTH) {
+        msg.append(buff);
+      }
+      msg = msg.append(buff);
+      return msg.toString();
+    } catch (IOException iex) {
+      logger.info("Exception occurred while preparing response. Message {}", iex.getMessage());
+      return iex.getMessage();
+    }
   }
 
   public Long getFileSize(
