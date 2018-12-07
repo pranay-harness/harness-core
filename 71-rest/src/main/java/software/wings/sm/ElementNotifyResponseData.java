@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.ExecutionStatus;
 import software.wings.beans.StatusInstanceBreakdown;
 
 import java.util.ArrayList;

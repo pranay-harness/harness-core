@@ -12,6 +12,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -27,7 +28,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.WingsPersistence;
-import software.wings.sm.ExecutionStatus;
 
 import java.time.Duration;
 import java.util.HashMap;

@@ -1,8 +1,8 @@
 package software.wings.beans;
 
+import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Value;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 

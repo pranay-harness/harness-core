@@ -18,6 +18,7 @@ import static software.wings.utils.WingsTestConstants.PHASE_STEP;
 
 import com.google.common.collect.Lists;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.WingsException;
 import org.joor.Reflect;
@@ -37,7 +38,6 @@ import software.wings.beans.PhaseStepType;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 

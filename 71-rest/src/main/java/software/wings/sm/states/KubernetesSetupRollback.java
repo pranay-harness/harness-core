@@ -6,6 +6,7 @@ import static software.wings.common.Constants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static software.wings.sm.StateType.KUBERNETES_SETUP_ROLLBACK;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.beans.ExecutionStatus;
 import software.wings.api.CommandStateExecutionData;
 import software.wings.api.ContainerRollbackRequestElement;
 import software.wings.api.ContainerServiceElement;
@@ -28,7 +29,6 @@ import software.wings.beans.container.ImageDetails;
 import software.wings.common.Constants;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionStatus;
 
 /**
  * Created by brett on 12/18/17

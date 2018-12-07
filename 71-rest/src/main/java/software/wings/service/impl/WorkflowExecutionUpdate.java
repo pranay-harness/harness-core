@@ -4,18 +4,19 @@
 
 package software.wings.service.impl;
 
+import static io.harness.beans.ExecutionStatus.NEW;
+import static io.harness.beans.ExecutionStatus.QUEUED;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.STARTING;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptySet;
 import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
-import static software.wings.sm.ExecutionStatus.NEW;
-import static software.wings.sm.ExecutionStatus.QUEUED;
-import static software.wings.sm.ExecutionStatus.RUNNING;
-import static software.wings.sm.ExecutionStatus.STARTING;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
 import io.harness.queue.Queue;
@@ -35,7 +36,6 @@ import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionInterruptManager;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutionCallback;
 import software.wings.sm.states.EnvState.EnvExecutionResponseData;
 import software.wings.waitnotify.WaitNotifyEngine;

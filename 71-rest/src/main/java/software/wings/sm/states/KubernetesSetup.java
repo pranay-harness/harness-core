@@ -16,6 +16,7 @@ import static software.wings.yaml.YamlHelper.trimYaml;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.beans.ExecutionStatus;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +49,6 @@ import software.wings.service.impl.KubernetesHelperService;
 import software.wings.service.intfc.ConfigService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KubernetesConvention;
 
 import java.util.List;

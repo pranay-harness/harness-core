@@ -1,5 +1,7 @@
 package software.wings.service;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
@@ -18,8 +20,6 @@ import static software.wings.beans.PipelineExecution.Builder.aPipelineExecution;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.WorkflowType.ORCHESTRATION;
 import static software.wings.beans.WorkflowType.PIPELINE;
-import static software.wings.sm.ExecutionStatus.FAILED;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -29,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.persistence.HIterator;
 import org.junit.Before;
@@ -50,7 +51,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.StatisticsService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ExecutionStatus;
 
 import java.time.LocalDate;
 import java.time.ZoneId;

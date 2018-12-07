@@ -9,13 +9,13 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Activity;
 import software.wings.beans.DeploymentExecutionContext;
 import software.wings.beans.artifact.Artifact;
 import software.wings.service.intfc.ArtifactService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 import java.util.List;

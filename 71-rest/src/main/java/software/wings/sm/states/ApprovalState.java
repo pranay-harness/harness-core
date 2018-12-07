@@ -1,5 +1,9 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.ABORTED;
+import static io.harness.beans.ExecutionStatus.EXPIRED;
+import static io.harness.beans.ExecutionStatus.PAUSED;
+import static io.harness.beans.ExecutionStatus.SKIPPED;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.govern.Switch.unhandled;
@@ -14,13 +18,10 @@ import static software.wings.common.NotificationMessageResolver.NotificationMess
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_NEEDED_NOTIFICATION;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.APPROVAL_STATE_CHANGE_NOTIFICATION;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.ExecutionStatus.ABORTED;
-import static software.wings.sm.ExecutionStatus.EXPIRED;
-import static software.wings.sm.ExecutionStatus.PAUSED;
-import static software.wings.sm.ExecutionStatus.SKIPPED;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import lombok.Getter;
@@ -49,7 +50,6 @@ import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.State;
 import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;

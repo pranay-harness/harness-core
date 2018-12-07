@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -62,7 +63,6 @@ import software.wings.sm.ElementNotifyResponseData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.PhaseExecutionSummary;
 import software.wings.sm.PhaseStepExecutionSummary;

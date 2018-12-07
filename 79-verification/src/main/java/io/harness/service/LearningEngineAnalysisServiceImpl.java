@@ -11,6 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.service.intfc.LearningEngineService;
 import io.harness.time.Timestamp;
 import org.apache.commons.lang3.StringUtils;
@@ -29,7 +30,6 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.sm.ExecutionStatus;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -5,6 +5,7 @@ import static software.wings.service.impl.analysis.LogAnalysisResponse.Builder.a
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -26,7 +27,6 @@ import software.wings.service.impl.analysis.LogAnalysisResponse;
 import software.wings.service.impl.analysis.LogMLAnalysisSummary;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 
 import java.util.Collections;

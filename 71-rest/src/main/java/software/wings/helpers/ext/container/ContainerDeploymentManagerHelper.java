@@ -16,6 +16,7 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import org.mongodb.morphia.Key;
 import org.slf4j.Logger;
@@ -72,7 +73,6 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.utils.Validator;

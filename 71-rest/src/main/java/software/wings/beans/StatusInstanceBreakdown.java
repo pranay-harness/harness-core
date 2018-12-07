@@ -1,6 +1,6 @@
 package software.wings.beans;
 
-import software.wings.sm.ExecutionStatus;
+import io.harness.beans.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;

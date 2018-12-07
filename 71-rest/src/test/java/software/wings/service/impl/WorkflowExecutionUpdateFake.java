@@ -2,10 +2,10 @@ package software.wings.service.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.beans.ExecutionStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionStatus;
 
 import java.time.Duration;
 import java.util.HashMap;

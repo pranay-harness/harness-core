@@ -8,6 +8,7 @@ import static org.mockito.internal.util.reflection.Whitebox.setInternalState;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import org.junit.Before;
@@ -28,7 +29,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.UserService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.PipelineSummary;
 import software.wings.sm.StateType;
 import software.wings.utils.WingsIntegrationTestConstants;

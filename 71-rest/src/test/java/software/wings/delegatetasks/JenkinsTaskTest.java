@@ -16,6 +16,7 @@ import com.offbytwo.jenkins.model.Build;
 import com.offbytwo.jenkins.model.BuildResult;
 import com.offbytwo.jenkins.model.BuildWithDetails;
 import com.offbytwo.jenkins.model.QueueReference;
+import io.harness.beans.ExecutionStatus;
 import org.apache.http.client.HttpResponseException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -33,7 +34,6 @@ import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.service.impl.jenkins.JenkinsUtil;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.JenkinsState;
 
 import java.util.Collections;

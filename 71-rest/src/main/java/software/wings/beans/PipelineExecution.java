@@ -3,10 +3,10 @@ package software.wings.beans;
 import com.google.common.base.MoreObjects;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Version;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;

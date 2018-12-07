@@ -1,7 +1,7 @@
 package software.wings.service.impl.apm;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

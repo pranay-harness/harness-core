@@ -4,6 +4,7 @@ import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Builder.Default;
 import lombok.Data;
@@ -13,7 +14,6 @@ import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import software.wings.beans.Base;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 import java.time.OffsetDateTime;

@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 import freemarker.template.TemplateException;
+import io.harness.beans.ExecutionStatus;
 import org.apache.commons.mail.EmailException;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.EmailNotificationService;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.WorkflowStandardParams;
 

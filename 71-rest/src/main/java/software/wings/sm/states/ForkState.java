@@ -6,6 +6,7 @@ import static software.wings.api.ForkElement.Builder.aForkElement;
 import com.google.common.base.Joiner;
 
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +16,6 @@ import software.wings.common.Constants;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.ExecutionStatusData;
 import software.wings.sm.SpawningExecutionResponse;
 import software.wings.sm.State;

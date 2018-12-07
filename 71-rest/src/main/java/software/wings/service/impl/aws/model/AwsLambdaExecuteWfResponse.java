@@ -1,10 +1,10 @@
 package software.wings.service.impl.aws.model;
 
+import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.AwsConfig;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 

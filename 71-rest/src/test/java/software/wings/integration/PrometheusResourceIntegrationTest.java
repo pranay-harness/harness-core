@@ -12,6 +12,7 @@ import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
@@ -21,7 +22,6 @@ import software.wings.beans.PrometheusConfig;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.service.impl.analysis.TimeSeries;
 import software.wings.service.impl.prometheus.PrometheusSetupTestNodeData;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;

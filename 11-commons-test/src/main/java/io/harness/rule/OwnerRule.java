@@ -17,9 +17,9 @@ import java.util.List;
 public class OwnerRule extends RepeatRule {
   private static final Logger logger = LoggerFactory.getLogger(OwnerRule.class);
 
-  private static List<String> active =
-      asList("aaditi.joag@harness.io", "george@harness.io", "raghu@harness.io", "pranjal@harness.io",
-          "puneet.saraswat@harness.io", "srinivas@harness.io", "sriram@harness.io", "vaibhav.tulsyan@harness.io");
+  private static List<String> active = asList("aaditi.joag@harness.io", "george@harness.io", "raghu@harness.io",
+      "pranjal@harness.io", "praveen.sugavanam@harness.io", "puneet.saraswat@harness.io", "srinivas@harness.io",
+      "sriram@harness.io", "vaibhav.tulsyan@harness.io");
 
   @Retention(RetentionPolicy.RUNTIME)
   @Target({java.lang.annotation.ElementType.METHOD})

@@ -15,6 +15,7 @@ import static software.wings.beans.PhaseStepType.PCF_SETUP;
 import static software.wings.sm.StateType.FORK;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.harness.beans.ExecutionStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -22,7 +23,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.common.Constants;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.sm.TransitionType;
 import software.wings.yaml.BaseYamlWithType;

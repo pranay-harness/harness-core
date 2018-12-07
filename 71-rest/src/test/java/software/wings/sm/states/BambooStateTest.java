@@ -17,6 +17,7 @@ import static software.wings.utils.WingsTestConstants.SETTING_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.ExecutionStatus;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -35,7 +36,6 @@ import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;

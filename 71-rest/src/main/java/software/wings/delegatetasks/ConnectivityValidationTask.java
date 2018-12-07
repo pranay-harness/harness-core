@@ -1,5 +1,6 @@
 package software.wings.delegatetasks;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
@@ -8,7 +9,6 @@ import static java.util.Collections.singletonList;
 import static software.wings.beans.ExecutionCredential.ExecutionType.SSH;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.settings.validation.SmtpConnectivityValidationAttributes.DEFAULT_TEXT;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.utils.Misc.getMessage;
 
 import com.google.inject.Inject;

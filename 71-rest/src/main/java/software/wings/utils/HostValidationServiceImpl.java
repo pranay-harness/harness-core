@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.eraro.ResponseMessage;
 import org.slf4j.Logger;
@@ -30,7 +31,6 @@ import software.wings.core.winrm.executors.WinRmSession;
 import software.wings.core.winrm.executors.WinRmSessionConfig;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.Collections;

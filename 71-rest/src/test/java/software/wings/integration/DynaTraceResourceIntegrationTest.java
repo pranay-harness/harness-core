@@ -14,6 +14,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -25,7 +26,6 @@ import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.service.impl.dynatrace.DynaTraceSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 import java.util.HashSet;

@@ -15,6 +15,7 @@ import static software.wings.service.impl.newrelic.LearningEngineAnalysisTask.TI
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.beans.ExecutionStatus;
 import io.harness.service.intfc.ContinuousVerificationService;
 import io.harness.service.intfc.LearningEngineService;
 import org.junit.After;
@@ -36,7 +37,6 @@ import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.utils.Misc;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;

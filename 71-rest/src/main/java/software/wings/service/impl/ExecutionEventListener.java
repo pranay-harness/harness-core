@@ -1,18 +1,19 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.NEW;
+import static io.harness.beans.ExecutionStatus.PAUSED;
+import static io.harness.beans.ExecutionStatus.QUEUED;
+import static io.harness.beans.ExecutionStatus.RUNNING;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.ExpressionEvaluator.containsVariablePattern;
 import static java.util.Arrays.asList;
-import static software.wings.sm.ExecutionStatus.FAILED;
-import static software.wings.sm.ExecutionStatus.NEW;
-import static software.wings.sm.ExecutionStatus.PAUSED;
-import static software.wings.sm.ExecutionStatus.QUEUED;
-import static software.wings.sm.ExecutionStatus.RUNNING;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Ordering;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import org.mongodb.morphia.query.Query;
@@ -29,7 +30,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfrastructureMappingService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateMachineExecutor;
 
 import java.time.Duration;

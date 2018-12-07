@@ -7,10 +7,10 @@ import static org.apache.commons.lang3.StringUtils.strip;
 import static org.apache.commons.lang3.StringUtils.substringAfterLast;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StepExecutionSummary;
 

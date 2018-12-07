@@ -26,6 +26,7 @@ import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_KEY_ID;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;

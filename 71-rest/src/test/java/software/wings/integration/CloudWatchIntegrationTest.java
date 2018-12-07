@@ -17,6 +17,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.beans.ExecutionStatus;
 import io.harness.rule.RepeatRule.Repeat;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
@@ -29,7 +30,6 @@ import software.wings.service.impl.cloudwatch.AwsNameSpace;
 import software.wings.service.impl.cloudwatch.CloudWatchMetric;
 import software.wings.service.impl.cloudwatch.CloudWatchSetupTestNodeData;
 import software.wings.service.intfc.SettingsService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 import java.util.ArrayList;

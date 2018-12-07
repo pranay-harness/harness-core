@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.ExecutionStatus;
 import software.wings.beans.ServiceSecretKey.ServiceApiVersion;
 import software.wings.beans.ServiceSecretKey.ServiceType;
 import software.wings.service.impl.analysis.MLAnalysisType;
@@ -7,7 +8,6 @@ import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.newrelic.MLExperiments;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 import java.util.Optional;

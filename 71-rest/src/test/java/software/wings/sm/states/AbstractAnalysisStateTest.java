@@ -23,6 +23,7 @@ import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuild
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
@@ -50,7 +51,6 @@ import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;

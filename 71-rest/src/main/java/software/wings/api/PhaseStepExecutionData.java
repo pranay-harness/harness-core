@@ -1,10 +1,10 @@
 package software.wings.api;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import software.wings.beans.ElementExecutionSummary;
 import software.wings.beans.FailureStrategy;
 import software.wings.beans.PhaseStepType;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.PhaseStepExecutionSummary;
 import software.wings.sm.states.ElementStateExecutionData;
 

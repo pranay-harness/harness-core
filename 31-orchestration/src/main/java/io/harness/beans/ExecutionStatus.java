@@ -1,4 +1,4 @@
-package software.wings.sm;
+package io.harness.beans;
 
 import java.util.EnumSet;
 import java.util.Set;

@@ -1,5 +1,6 @@
 package software.wings.sm.states;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,7 +12,6 @@ import static software.wings.api.HostElement.Builder.aHostElement;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.FeatureName.CV_SUCCEED_FOR_ANOMALY;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.utils.Misc.replaceDotWithUnicode;
 
 import com.google.common.base.Preconditions;
@@ -22,6 +22,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.github.reinert.jjschema.Attributes;
 import com.github.reinert.jjschema.SchemaIgnore;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
@@ -81,7 +82,6 @@ import software.wings.sm.ContextElement;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.State;
 import software.wings.sm.StateExecutionData;

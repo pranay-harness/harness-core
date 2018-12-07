@@ -32,6 +32,7 @@ import com.google.common.io.Resources;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
+import io.harness.beans.ExecutionStatus;
 import io.harness.jobs.MetricAnalysisJob.MetricAnalysisGenerator;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.managerclient.VerificationManagerClientHelper;
@@ -75,7 +76,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricData;
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicSetupTestNodeData;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateType;

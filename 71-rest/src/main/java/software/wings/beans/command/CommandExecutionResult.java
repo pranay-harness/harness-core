@@ -2,8 +2,8 @@ package software.wings.beans.command;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.Objects;
 

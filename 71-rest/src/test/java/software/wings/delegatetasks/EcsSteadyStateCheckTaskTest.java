@@ -15,6 +15,7 @@ import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import com.amazonaws.services.ecs.model.DescribeServicesResult;
 import com.amazonaws.services.ecs.model.Service;
+import io.harness.beans.ExecutionStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -26,7 +27,6 @@ import software.wings.beans.container.EcsSteadyStateCheckResponse;
 import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.sm.ExecutionStatus;
 
 public class EcsSteadyStateCheckTaskTest extends WingsBaseTest {
   @Mock private AwsHelperService mockAwsHelperService;

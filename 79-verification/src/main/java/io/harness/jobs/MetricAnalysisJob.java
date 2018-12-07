@@ -10,6 +10,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClientHelper;
 import io.harness.resources.intfc.ExperimentalMetricAnalysisResource;
@@ -43,7 +44,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricAnalysisRecord.NewReli
 import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.impl.newrelic.NewRelicMetricValueDefinition;
 import software.wings.service.intfc.MetricDataAnalysisService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 import software.wings.utils.Misc;
 

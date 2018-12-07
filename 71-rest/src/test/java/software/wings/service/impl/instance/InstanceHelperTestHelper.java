@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import io.harness.beans.ExecutionStatus;
 import software.wings.api.AmiStepExecutionSummary;
 import software.wings.api.CommandStepExecutionSummary;
 import software.wings.api.ContainerServiceData;
@@ -24,7 +25,6 @@ import software.wings.beans.infrastructure.instance.Instance;
 import software.wings.beans.infrastructure.instance.InstanceType;
 import software.wings.beans.infrastructure.instance.info.InstanceInfo;
 import software.wings.beans.infrastructure.instance.key.HostInstanceKey;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder;
 import software.wings.sm.PhaseExecutionSummary;

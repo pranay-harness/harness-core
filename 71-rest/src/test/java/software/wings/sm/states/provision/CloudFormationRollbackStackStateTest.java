@@ -25,6 +25,7 @@ import static software.wings.utils.WingsTestConstants.PROVISIONER_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -51,7 +52,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.Map;
 

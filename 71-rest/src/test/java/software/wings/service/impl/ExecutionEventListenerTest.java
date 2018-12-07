@@ -1,13 +1,13 @@
 package software.wings.service.impl;
 
+import static io.harness.beans.ExecutionStatus.QUEUED;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
-import static software.wings.sm.ExecutionStatus.QUEUED;
-import static software.wings.sm.ExecutionStatus.RUNNING;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;

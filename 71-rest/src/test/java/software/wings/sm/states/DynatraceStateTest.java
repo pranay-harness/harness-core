@@ -11,6 +11,7 @@ import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFA
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,7 +31,6 @@ import software.wings.service.impl.newrelic.MetricAnalysisExecutionData;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 
 import java.text.ParseException;
 import java.util.Collections;

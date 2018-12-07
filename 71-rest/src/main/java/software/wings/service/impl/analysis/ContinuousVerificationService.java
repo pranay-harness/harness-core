@@ -1,10 +1,10 @@
 package software.wings.service.impl.analysis;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
-import software.wings.sm.ExecutionStatus;
 import software.wings.verification.CVConfiguration;
 import software.wings.verification.HeatMap;
 import software.wings.verification.TimeSeriesOfMetric;

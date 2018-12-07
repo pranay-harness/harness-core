@@ -67,6 +67,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.waiter.ErrorNotifyResponseData;
 import org.junit.Before;
 import org.junit.Test;
@@ -115,7 +116,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.waitnotify.WaitNotifyEngine;
 

@@ -2,6 +2,7 @@ package software.wings.sm.states.k8s;
 
 import com.google.inject.Singleton;
 
+import io.harness.beans.ExecutionStatus;
 import software.wings.beans.Activity;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
@@ -11,7 +12,6 @@ import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.service.intfc.ActivityService;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 

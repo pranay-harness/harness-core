@@ -36,6 +36,7 @@ import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.HQuery;
@@ -55,7 +56,6 @@ import software.wings.beans.infrastructure.Host;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.ServiceInstanceServiceImpl;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 

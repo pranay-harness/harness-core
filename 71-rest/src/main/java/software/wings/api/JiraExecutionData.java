@@ -1,11 +1,11 @@
 package software.wings.api;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import net.sf.json.JSONArray;
 import software.wings.delegatetasks.jira.JiraAction;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;

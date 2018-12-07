@@ -1,5 +1,6 @@
 package software.wings.service.impl.trigger;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -42,7 +43,6 @@ import static software.wings.service.impl.trigger.TriggerServiceTestHelper.build
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflowArtifactTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.buildWorkflowWebhookTrigger;
 import static software.wings.service.impl.trigger.TriggerServiceTestHelper.setPipelineStages;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_FILTER;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;

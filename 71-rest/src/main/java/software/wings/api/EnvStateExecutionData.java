@@ -1,7 +1,7 @@
 package software.wings.api;
 
+import io.harness.beans.ExecutionStatus;
 import software.wings.beans.OrchestrationWorkflowType;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 /**

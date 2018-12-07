@@ -32,6 +32,7 @@ import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import com.google.common.collect.ImmutableMap;
 
 import com.amazonaws.regions.Regions;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -59,7 +60,6 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Map;

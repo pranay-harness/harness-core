@@ -1,6 +1,7 @@
 package software.wings.service.intfc;
 
 import static com.google.common.collect.ImmutableMap.of;
+import static io.harness.beans.ExecutionStatus.RUNNING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyMap;
@@ -12,7 +13,6 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.service.impl.WebHookServiceImpl.X_BIT_BUCKET_EVENT;
 import static software.wings.service.impl.WebHookServiceImpl.X_GIT_HUB_EVENT;
-import static software.wings.sm.ExecutionStatus.RUNNING;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.BUILD_NO;

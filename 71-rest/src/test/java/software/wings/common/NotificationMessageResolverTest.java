@@ -19,6 +19,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_EXECUTION_ID;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.exception.WingsException;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -30,7 +31,6 @@ import software.wings.beans.WorkflowType;
 import software.wings.beans.alert.AlertType;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.Map;

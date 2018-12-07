@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.serializer.YamlUtils;
@@ -28,7 +29,6 @@ import software.wings.common.NotificationMessageResolver.ChannelTemplate.EmailTe
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.net.URISyntaxException;

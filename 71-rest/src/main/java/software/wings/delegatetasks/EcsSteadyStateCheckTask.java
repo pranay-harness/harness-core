@@ -6,6 +6,7 @@ import com.google.inject.Inject;
 
 import com.amazonaws.services.ecs.model.DescribeServicesRequest;
 import com.amazonaws.services.ecs.model.Service;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -22,7 +23,6 @@ import software.wings.cloudprovider.ContainerInfo;
 import software.wings.cloudprovider.aws.EcsContainerService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -11,6 +11,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.apache.http.HttpStatus;
@@ -21,7 +22,6 @@ import software.wings.beans.DatadogConfig;
 import software.wings.beans.SettingAttribute.Builder;
 import software.wings.service.impl.datadog.DataDogFetchConfig;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 import java.util.concurrent.TimeUnit;

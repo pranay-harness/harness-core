@@ -8,6 +8,7 @@ import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anE
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Ignore;

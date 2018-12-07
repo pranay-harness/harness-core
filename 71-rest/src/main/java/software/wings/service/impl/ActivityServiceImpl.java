@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.exception.WingsException;
@@ -36,7 +37,6 @@ import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
 import software.wings.service.intfc.ownership.OwnedByActivity;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.ArrayList;
 import java.util.List;

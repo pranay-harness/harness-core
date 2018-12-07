@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import org.junit.Before;
@@ -23,7 +24,6 @@ import software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededRespon
 import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.utils.WingsTestConstants;
 
 import java.util.ArrayList;

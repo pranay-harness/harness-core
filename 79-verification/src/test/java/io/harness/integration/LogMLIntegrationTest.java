@@ -24,6 +24,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseIntegrationTest;
+import io.harness.beans.ExecutionStatus;
 import io.harness.jobs.LogAnalysisManagerJob.LogAnalysisTask;
 import io.harness.jobs.LogMLClusterGenerator;
 import io.harness.managerclient.VerificationManagerClient;
@@ -60,7 +61,6 @@ import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;

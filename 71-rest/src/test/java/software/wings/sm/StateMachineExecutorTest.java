@@ -1,5 +1,7 @@
 package software.wings.sm;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.NEW;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -17,8 +19,6 @@ import static software.wings.beans.NotificationGroup.NotificationGroupBuilder.aN
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
 import static software.wings.common.NotificationMessageResolver.NotificationMessageType.MANUAL_INTERVENTION_NEEDED_NOTIFICATION;
 import static software.wings.sm.ExecutionEventAdvice.ExecutionEventAdviceBuilder.anExecutionEventAdvice;
-import static software.wings.sm.ExecutionStatus.FAILED;
-import static software.wings.sm.ExecutionStatus.NEW;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -29,6 +29,7 @@ import static software.wings.utils.WingsTestConstants.USER_NAME;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
