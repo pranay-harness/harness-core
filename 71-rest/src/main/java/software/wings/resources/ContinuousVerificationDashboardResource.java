@@ -19,6 +19,7 @@ import software.wings.security.annotations.Scope;
 import software.wings.service.impl.analysis.CVDeploymentData;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.analysis.TimeSeriesFilter;
 import software.wings.verification.HeatMap;
 import software.wings.verification.TransactionTimeSeries;
 
@@ -29,6 +30,7 @@ import java.util.SortedSet;
 import javax.validation.Valid;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
@@ -154,7 +156,21 @@ public class ContinuousVerificationDashboardResource {
       @QueryParam("accountId") @Valid final String accountId, @QueryParam("startTime") long startTime,
       @QueryParam("endTime") long endTime, @QueryParam("cvConfigId") String cvConfigId,
       @QueryParam("historyStartTime") long historyStartTime) {
-    return new RestResponse<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(
-        accountId, cvConfigId, startTime, endTime, historyStartTime));
+    return new RestResponse<>(
+        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
+                                                                     .cvConfigId(cvConfigId)
+                                                                     .startTime(startTime)
+                                                                     .endTime(endTime)
+                                                                     .historyStartTime(historyStartTime)
+                                                                     .build()));
+  }
+
+  @POST
+  @Path(VerificationConstants.TIMESERIES)
+  @Timed
+  @ExceptionMetered
+  public RestResponse<SortedSet<TransactionTimeSeries>> getFilteredTimeSeriesOfHeatMapUnit(
+      @QueryParam("accountId") @Valid final String accountId, @Valid TimeSeriesFilter timeSeriesFilter) {
+    return new RestResponse<>(continuousVerificationService.getTimeSeriesOfHeatMapUnit(timeSeriesFilter));
   }
 }

@@ -2,6 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
@@ -61,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -641,7 +643,8 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     if (TimeUnit.MILLISECONDS.toDays(endTime - historyStartTime) > 30L) {
       historyStartTime = startTime - TimeUnit.HOURS.toMillis(2) + 1;
     }
-    return getTimeSeriesForTimeRangeFromDataRecords(historyStartTime, endTime, cvConfiguration, startTime);
+    return getTimeSeriesForTimeRangeFromDataRecords(cvConfiguration,
+        TimeSeriesFilter.builder().startTime(startTime).endTime(endTime).historyStartTime(historyStartTime).build());
   }
 
   private String getBaseUrlOfConnector(CVConfiguration cvConfiguration) {
@@ -655,106 +658,6 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
         logger.info("Unsupported stateType {} for deeplinking", cvConfiguration.getStateType());
         return "";
     }
-  }
-
-  private Map<String, Map<String, TimeSeriesOfMetric>> getTimeSeriesForTimeRangeFromDataRecords(
-      long startTime, long endTime, CVConfiguration cvConfiguration, long riskCutOffTime) {
-    // The object to be returned which contains the map txn => metrics => timeseries per metric
-    Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries = new ConcurrentHashMap<>();
-
-    // int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(endTime));
-    // int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(Timestamp.minuteBoundary(startTime));
-
-    String baseUrlForLink = getBaseUrlOfConnector(cvConfiguration);
-    int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
-    int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
-
-    Map<Integer, Integer> startEndMap = new HashMap<>();
-    int movingStart = startMinute, movingEnd = startMinute + 60;
-    while (movingEnd <= endMinute) {
-      startEndMap.put(movingStart, movingEnd);
-      movingStart = movingEnd;
-      movingEnd = movingStart + 60;
-    }
-    if (movingEnd > endMinute) {
-      startEndMap.put(movingStart, endMinute);
-    }
-    List<NewRelicMetricDataRecord> metricRecords = new ArrayList<>();
-    startEndMap.entrySet().parallelStream().forEach(entry -> {
-      PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
-          PageRequestBuilder.aPageRequest()
-              .withLimit("5000")
-              .withOffset("0")
-              .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
-              .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
-              .addFilter("dataCollectionMinute", Operator.GE, entry.getKey())
-              .addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME)
-              .addFieldsIncluded("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata")
-              .build();
-
-      if (entry.getValue() == endMinute) {
-        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, entry.getValue());
-      } else {
-        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, entry.getValue());
-      }
-      int previousOffSet = 0;
-      PageResponse<NewRelicMetricDataRecord> response =
-          wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
-      while (!response.isEmpty()) {
-        metricRecords.addAll(response.getResponse());
-        previousOffSet += response.size();
-        dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
-        response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
-      }
-    });
-
-    logger.info("Size of metric records : {}", metricRecords.size());
-    for (NewRelicMetricDataRecord metricRecord : metricRecords) {
-      if (!observedTimeSeries.containsKey(metricRecord.getName())) {
-        observedTimeSeries.put(metricRecord.getName(), new HashMap<>());
-      }
-      Map<String, TimeSeriesOfMetric> metricMap = observedTimeSeries.get(metricRecord.getName());
-      for (Entry<String, Double> metricData : metricRecord.getValues().entrySet()) {
-        final String metricName = metricData.getKey();
-        if (!metricMap.containsKey(metricName)) {
-          metricMap.put(metricName,
-              TimeSeriesOfMetric.builder()
-                  .metricName(getDisplayNameOfMetric(metricName))
-                  .timeSeries(initializeTimeSeriesDataPointsList(startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1))
-                  .risk(-1)
-                  .build());
-        }
-
-        // fill in the metrics for this record at the correct spots
-        metricMap.get(metricName)
-            .addToTimeSeriesMap(
-                metricRecord.getDataCollectionMinute(), getNormalizedMetricValue(metricName, metricRecord));
-        if (isNotEmpty(metricRecord.getDeeplinkMetadata())) {
-          if (metricRecord.getDeeplinkMetadata().containsKey(metricName)) {
-            String deeplinkUrl = getDeeplinkUrl(cvConfiguration, baseUrlForLink, startTime, endTime,
-                metricRecord.getDeeplinkMetadata().get(metricName));
-            metricMap.get(metricName).setMetricDeeplinkUrl(deeplinkUrl);
-          }
-        }
-      }
-    }
-
-    // Find and add the risks for those metrics above
-    Map<Long, Long> startEndMsMap = new HashMap<>();
-    Long startMs = startTime, endMs = startTime + TimeUnit.MINUTES.toMillis(60);
-    while (endMs <= endTime) {
-      startEndMsMap.put(startMs, endMs);
-      startMs = endMs;
-      endMs = startMs + TimeUnit.MINUTES.toMillis(60);
-    }
-    if (endMs > endTime) {
-      startEndMsMap.put(startMs, endTime);
-    }
-    startEndMsMap.entrySet().parallelStream().forEach(entry -> {
-      updateRisksForTimeSeries(entry.getKey(), entry.getValue(), riskCutOffTime, cvConfiguration, observedTimeSeries);
-    });
-
-    return observedTimeSeries;
   }
 
   private Double getNormalizedMetricValue(String metricName, NewRelicMetricDataRecord dataRecord) {
@@ -839,18 +742,24 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     }
   }
 
-  public SortedSet<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(
-      String accountId, String cvConfigId, long startTime, long endTime, long historyStartTime) {
-    startTime = Timestamp.nextMinuteBoundary(startTime);
-    endTime = Timestamp.minuteBoundary(endTime);
-    historyStartTime = Timestamp.nextMinuteBoundary(historyStartTime);
-    CVConfiguration cvConfiguration =
-        wingsPersistence.createQuery(CVConfiguration.class).filter("_id", cvConfigId).get();
+  @Override
+  public SortedSet<TransactionTimeSeries> getTimeSeriesOfHeatMapUnit(TimeSeriesFilter filter) {
+    CVConfiguration cvConfiguration = wingsPersistence.get(CVConfiguration.class, filter.getCvConfigId());
     if (cvConfiguration == null) {
-      logger.info("No cvConfig found for cvConfigId={}", cvConfigId);
+      logger.info("No cvConfig found for cvConfigId={}", filter.getCvConfigId());
       return new TreeSet<>();
     }
-    return convertTimeSeriesResponse(fetchObservedTimeSeries(startTime, endTime, cvConfiguration, historyStartTime));
+
+    filter.setStartTime(Timestamp.nextMinuteBoundary(filter.getStartTime()));
+    filter.setEndTime(Timestamp.minuteBoundary(filter.getEndTime()));
+    filter.setHistoryStartTime(Timestamp.nextMinuteBoundary(filter.getHistoryStartTime()));
+
+    // 1. Get time series for the entire duration from historyStartTime to endTime
+    // 2. Pass startTime as the riskCutOffTime as that's the starting point where we consider risk
+    if (TimeUnit.MILLISECONDS.toDays(filter.getEndTime() - filter.getHistoryStartTime()) > 30L) {
+      filter.setHistoryStartTime(filter.getStartTime() - TimeUnit.HOURS.toMillis(2) + 1);
+    }
+    return convertTimeSeriesResponse(getTimeSeriesForTimeRangeFromDataRecords(cvConfiguration, filter));
   }
 
   private SortedSet<TransactionTimeSeries> convertTimeSeriesResponse(
@@ -868,5 +777,135 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
     // logger.info("Timeseries response = {}", resp);
     logger.info("TimeSeries response size is : {}", resp.size());
     return resp;
+  }
+
+  private Map<String, Map<String, TimeSeriesOfMetric>> getTimeSeriesForTimeRangeFromDataRecords(
+      CVConfiguration cvConfiguration, TimeSeriesFilter filter) {
+    // The object to be returned which contains the map txn => metrics => timeseries per metric
+    Map<String, Map<String, TimeSeriesOfMetric>> observedTimeSeries = new ConcurrentHashMap<>();
+
+    long startTime = filter.getHistoryStartTime();
+    long endTime = filter.getEndTime();
+    long riskCutOffTime = filter.getStartTime();
+
+    String baseUrlForLink = getBaseUrlOfConnector(cvConfiguration);
+    int endMinute = (int) TimeUnit.MILLISECONDS.toMinutes(endTime);
+    int startMinute = (int) TimeUnit.MILLISECONDS.toMinutes(startTime);
+
+    Map<Integer, Integer> startEndMap = new HashMap<>();
+    int movingStart = startMinute, movingEnd = startMinute + 60;
+    while (movingEnd <= endMinute) {
+      startEndMap.put(movingStart, movingEnd);
+      movingStart = movingEnd;
+      movingEnd = movingStart + 60;
+    }
+    if (movingEnd > endMinute) {
+      startEndMap.put(movingStart, endMinute);
+    }
+    List<NewRelicMetricDataRecord> metricRecords = new ArrayList<>();
+    startEndMap.entrySet().parallelStream().forEach(entry -> {
+      PageRequest<NewRelicMetricDataRecord> dataRecordPageRequest =
+          PageRequestBuilder.aPageRequest()
+              .withLimit("5000")
+              .withOffset("0")
+              .addFilter("appId", Operator.EQ, cvConfiguration.getAppId())
+              .addFilter("cvConfigId", Operator.EQ, cvConfiguration.getUuid())
+              .addFilter("dataCollectionMinute", Operator.GE, entry.getKey())
+              .addFilter("name", Operator.NOT_EQ, HEARTBEAT_METRIC_NAME)
+              .addFieldsIncluded("name", "values", "dataCollectionMinute", "stateType", "deeplinkMetadata")
+              .build();
+
+      if (entry.getValue() == endMinute) {
+        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT_EQ, entry.getValue());
+      } else {
+        dataRecordPageRequest.addFilter("dataCollectionMinute", Operator.LT, entry.getValue());
+      }
+      int previousOffSet = 0;
+      PageResponse<NewRelicMetricDataRecord> response =
+          wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
+      while (!response.isEmpty()) {
+        final List<NewRelicMetricDataRecord> records = new ArrayList<>();
+        response.getResponse().forEach(dataRecord -> {
+          // filter for txnName
+          if (isEmpty(filter.getTxnNames())) {
+            records.add(dataRecord);
+          } else if (filter.getTxnNames().contains(dataRecord.getName())) {
+            records.add(dataRecord);
+          }
+        });
+
+        // filter for metric names
+        if (isNotEmpty(filter.getMetricNames())) {
+          records.forEach(dataRecord -> {
+            for (Iterator<Entry<String, Double>> iterator = dataRecord.getValues().entrySet().iterator();
+                 iterator.hasNext();) {
+              final Entry<String, Double> valueEntry = iterator.next();
+              if (!filter.getMetricNames().contains(valueEntry.getKey())) {
+                iterator.remove();
+              }
+            }
+          });
+
+          for (Iterator<NewRelicMetricDataRecord> recordIterator = records.iterator(); recordIterator.hasNext();) {
+            NewRelicMetricDataRecord dataRecord = recordIterator.next();
+            if (isEmpty(dataRecord.getValues())) {
+              recordIterator.remove();
+            }
+          }
+        }
+        metricRecords.addAll(records);
+        previousOffSet += response.size();
+        dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
+        response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeAuthority);
+      }
+    });
+
+    logger.info("Size of metric records : {}", metricRecords.size());
+    for (NewRelicMetricDataRecord metricRecord : metricRecords) {
+      if (!observedTimeSeries.containsKey(metricRecord.getName())) {
+        observedTimeSeries.put(metricRecord.getName(), new HashMap<>());
+      }
+      Map<String, TimeSeriesOfMetric> metricMap = observedTimeSeries.get(metricRecord.getName());
+      for (Entry<String, Double> metricData : metricRecord.getValues().entrySet()) {
+        final String metricName = metricData.getKey();
+        if (!metricMap.containsKey(metricName)) {
+          metricMap.put(metricName,
+              TimeSeriesOfMetric.builder()
+                  .metricName(getDisplayNameOfMetric(metricName))
+                  .timeSeries(initializeTimeSeriesDataPointsList(startTime, endTime, TimeUnit.MINUTES.toMillis(1), -1))
+                  .risk(-1)
+                  .build());
+        }
+
+        // fill in the metrics for this record at the correct spots
+        metricMap.get(metricName)
+            .addToTimeSeriesMap(
+                metricRecord.getDataCollectionMinute(), getNormalizedMetricValue(metricName, metricRecord));
+        if (isNotEmpty(metricRecord.getDeeplinkMetadata())) {
+          if (metricRecord.getDeeplinkMetadata().containsKey(metricName)) {
+            String deeplinkUrl = getDeeplinkUrl(cvConfiguration, baseUrlForLink, startTime, endTime,
+                metricRecord.getDeeplinkMetadata().get(metricName));
+            metricMap.get(metricName).setMetricDeeplinkUrl(deeplinkUrl);
+          }
+        }
+      }
+    }
+
+    // Find and add the risks for those metrics above
+    Map<Long, Long> startEndMsMap = new HashMap<>();
+    Long startMs = startTime, endMs = startTime + TimeUnit.MINUTES.toMillis(60);
+    while (endMs <= endTime) {
+      startEndMsMap.put(startMs, endMs);
+      startMs = endMs;
+      endMs = startMs + TimeUnit.MINUTES.toMillis(60);
+    }
+    if (endMs > endTime) {
+      startEndMsMap.put(startMs, endTime);
+    }
+    startEndMsMap.entrySet().parallelStream().forEach(entry -> {
+      updateRisksForTimeSeries(entry.getKey(), entry.getValue(), riskCutOffTime, cvConfiguration, observedTimeSeries);
+    });
+
+    return observedTimeSeries;
   }
 }
