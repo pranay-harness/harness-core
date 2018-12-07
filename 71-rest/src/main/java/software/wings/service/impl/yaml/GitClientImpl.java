@@ -615,7 +615,7 @@ public class GitClientImpl implements GitClient {
             paths.filter(Files::isRegularFile)
                 .filter(path -> !path.toString().contains(".git"))
                 .filter(matchingFilesExtensions(gitRequest))
-                .forEach(path -> gitClientHelper.addFiles(gitFiles, path));
+                .forEach(path -> gitClientHelper.addFiles(gitFiles, path, repoPath));
           } catch (Exception e) {
             resetWorkingDir(gitConfig, gitRequest.getGitConnectorId());
             throw new WingsException(GENERAL_ERROR,

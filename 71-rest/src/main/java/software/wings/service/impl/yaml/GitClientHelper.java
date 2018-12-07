@@ -101,7 +101,7 @@ public class GitClientHelper {
     }
   }
 
-  public void addFiles(List<GitFile> gitFiles, Path path) {
+  public void addFiles(List<GitFile> gitFiles, Path path, String repoPath) {
     if (gitFiles == null || path == null) {
       throw new WingsException(GENERAL_ERROR, "GitFiles arg is null, will cause NPE", SRE);
     }
@@ -114,13 +114,25 @@ public class GitClientHelper {
       throw new WingsException(GENERAL_ERROR, "Failed to read file Content {}", e);
     }
 
-    String filePath = StringUtils.EMPTY;
-    Path fileNamePath = path.getFileName();
-    if (fileNamePath != null) {
-      filePath = fileNamePath.toString();
-    }
+    String filePath = getFilePath(path, repoPath);
 
     gitFiles.add(GitFile.builder().filePath(filePath).fileContent(contentBuilder.toString()).build());
+  }
+
+  private String getFilePath(Path path, String repoPath) {
+    String filePath = StringUtils.EMPTY;
+    Path fileAbsolutePath = path.toAbsolutePath();
+
+    if (fileAbsolutePath != null) {
+      String absolutePath = fileAbsolutePath.toString();
+      int firstIndex = absolutePath.indexOf(repoPath);
+      filePath = absolutePath.substring(firstIndex + repoPath.length());
+      if (filePath.charAt(0) == '/') {
+        filePath = filePath.substring(1);
+      }
+    }
+
+    return filePath;
   }
 
   public String getRepoPathForFileDownload(GitConfig gitConfig, String gitConnectorId) {
