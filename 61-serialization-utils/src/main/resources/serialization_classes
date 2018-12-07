@@ -621,3 +621,5 @@ software.wings.beans.jira.JiraTaskParameters, 5579
 software.wings.delegatetasks.jira.JiraAction, 5580
 software.wings.beans.JiraConfig, 5581
 software.wings.api.JiraExecutionData, 5582
+net.sf.json.JSONArray, 5583
+net.sf.json.JSONObject, 5584
