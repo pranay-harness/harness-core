@@ -19,6 +19,19 @@ variables:
 - name: "DownloadDirectory"
   value: "$env:TEMP"
   description: "Download Directory"
+- name: "AppPhysicalDirectory"
+  value: "$env:SYSTEMDRIVE"
+  description: "App Physical Base Directory"
+- name: "SiteProtocol"
+  value: "http"
+  description: "Site Protocol"
+- name: "SitePort"
+  value: "80"
+  description: "Site Port"
+- name: "SiteHostName"
+  value: "*"
+  description: "Site Host Name"
+
 templateObject:
   type: "SSH"
   commandType: "INSTALL"
@@ -32,7 +45,7 @@ templateObject:
       $serviceName="${ServiceName}"
       $releaseId="${ReleaseNo}"
       $artifactFilename = "${DownloadDirectory}" + "\" + "${artifact.fileName}"
-      $appPhysicalDirectory=$env:SYSTEMDRIVE + "\Artifacts\" + $serviceName + "\release-" + $releaseId
+      $appPhysicalDirectory="${AppPhysicalDirectory}" + "\Artifacts\" + $serviceName + "\release-" + $releaseId
 
       Write-Host "Extracting package from" $artifactFilename "to" $appPhysicalDirectory
       Expand-Archive -Path $artifactFilename -DestinationPath $appPhysicalDirectory -Force
@@ -71,22 +84,19 @@ templateObject:
 
       $releaseId="${ReleaseNo}"
       $SiteName = "${ServiceName}"
-      $SiteProtocol = "http"
-      $SitePort=80
-      $SiteHostName = "*"
-      $SitePhysicalDirectory = $env:SYSTEMDRIVE + "\Artifacts\" + $SiteName + "\release-" + $releaseId
+      $SitePhysicalDirectory = "${AppPhysicalDirectory}" + "\Artifacts\" + $SiteName + "\release-" + $releaseId
       $AppPoolName = "${AppPoolName}"
 
       if (!(Test-Path IIS:\Sites\$SiteName -pathType container))
       {
-          $site = New-Item IIS:\Sites\$SiteName -physicalPath $sitePhysicalDirectory -bindings @{protocol=$SiteProtocol;bindingInformation=":"+$SitePort+":"+$SiteHostName} -ApplicationPool $AppPoolName -AutoStart $true
+          $site = New-Item IIS:\Sites\$SiteName -physicalPath $sitePhysicalDirectory -bindings @{protocol="${SiteProtocol}";bindingInformation=":"+ "${SitePort}" +":"+ "${SiteHostName}"} -ApplicationPool $AppPoolName -AutoStart $true
           Write-Host "Created Website:" $SiteName
       }
       else
       {
           $site = Get-Item IIS:\Sites\$SiteName
           $Site | Set-ItemProperty -Name "physicalPath" -Value $sitePhysicalDirectory
-          $Site | Set-ItemProperty -Name "bindings" -Value @{protocol=$SiteProtocol;bindingInformation=":"+$SitePort+":"+$SiteHostName}
+          $Site | Set-ItemProperty -Name "bindings" -Value @{protocol="${SiteProtocol}";bindingInformation=":"+ "${SitePort}" +":"+ "${SiteHostName}"}
           Write-Host "Updated Website:" $SiteName
       }
 

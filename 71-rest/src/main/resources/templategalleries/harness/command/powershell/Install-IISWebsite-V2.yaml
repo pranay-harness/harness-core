@@ -1,10 +1,10 @@
-name: "Install"
+name: "Install IIS Website"
 gallery: "Harness"
 folderPath: "Harness/Power Shell Commands"
 version: "1"
 description: "This is a command to install service by invoking scripts over SSH to the individual instances."
-keywords: [ssh, iis, powershell, install]
-referencedTemplateUri: "Harness/Power Shell Commands/Install:1"
+keywords: [ssh, iiswebsite, powershell, install]
+referencedTemplateUri: "Harness/Power Shell Commands/Install IIS Website:1"
 variables:
 - name: "ReleaseNo"
   description: "ReleaseId."
@@ -16,6 +16,9 @@ variables:
 - name: "AppPoolDotNetVersion"
   value: "v4.0"
   description: "Application pool DotNet Version"
+- name: "DownloadDirectory"
+  value: "$env:TEMP"
+  description: "Download Directory"
 - name: "AppPhysicalDirectory"
   value: "$env:SYSTEMDRIVE"
   description: "App Physical Base Directory"
@@ -33,27 +36,34 @@ templateObject:
   type: "SSH"
   commandType: "INSTALL"
   commands:
-  - command: |-
-      $releaseId="${ReleaseNo}"
-      $serviceName="${ServiceName}"
-      $artifactFilename = $env:TEMP + "\" + $serviceName + "-release-" + $releaseId + ".zip"
-
-      Write-Host "Starting Deployment [id:" $releaseId "]"
-      Write-Host "Downloading artifact file - URL: ${artifact.url} to File: " $artifactFilename
-      Invoke-WebRequest -Uri "${artifact.url}" -OutFile $artifactFilename
-      Write-Host "Done."
-    commandUnitType: EXEC
+  - commandUnitType: DOWNLOAD_ARTIFACT
     deploymentType: SSH
-    name: Download Artifacts
+    name: Download Artifact
     scriptType: POWERSHELL
+    workingDirectory: ${DownloadDirectory}
   - command: |-
       $serviceName="${ServiceName}"
       $releaseId="${ReleaseNo}"
-      $artifactFilename = $env:TEMP + "\" + $serviceName + "-release-" + $releaseId + ".zip"
+      $artifactFilename = "${DownloadDirectory}" + "\" + "${artifact.fileName}"
       $appPhysicalDirectory="${AppPhysicalDirectory}" + "\Artifacts\" + $serviceName + "\release-" + $releaseId
 
-      Write-Host "Extracting package from" $artifactFilename "to" $appPhysicalDirectory
-      Expand-Archive -Path $artifactFilename -DestinationPath $appPhysicalDirectory -Force
+      # Check if artifact is File or Folder structure
+      $isFile = Test-Path -Path $artifactFilename -PathType Leaf
+      $isFolder = Test-Path -Path $artifactFilename -PathType Container
+       if ($isFile -and ([IO.Path]::GetExtension($artifactFilename) -eq "*.zip" ))
+      {
+          Write-Host "Extracting package from" $artifactFilename "to" $appPhysicalDirectory
+          Expand-Archive -Path $artifactFilename -DestinationPath $appPhysicalDirectory -Force
+      }
+      else
+      {
+          Write-Host "Artifact type is not a zip file. Skipping extract."
+      }
+      if ($isFolder)
+      {
+          Write-Host "Copying folder from" $artifactFilename "to" $appPhysicalDirectory
+          Copy-Item -Path $artifactFilename -Filter "*.*" -Recurse -Destination $appPhysicalDirectory -Container
+      }
       Write-Host "Done."
     commandUnitType: EXEC
     deploymentType: SSH
