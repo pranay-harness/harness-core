@@ -94,7 +94,6 @@ import software.wings.integration.BaseIntegrationTest;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 import software.wings.utils.KryoUtils;
-import software.wings.utils.ThreadContext;
 import software.wings.waitnotify.Notifier;
 
 import java.lang.annotation.Annotation;
@@ -261,7 +260,6 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
     injector = Guice.createInjector(modules);
 
-    ThreadContext.setContext(testName + "-");
     registerListeners(annotations.stream().filter(annotation -> Listeners.class.isInstance(annotation)).findFirst());
     registerScheduledJobs(injector);
     registerProviders();
