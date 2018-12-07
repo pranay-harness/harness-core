@@ -34,6 +34,7 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
   @Builder.Default int risk = -1;
   private String metricName;
   private String metricDeeplinkUrl;
+  private boolean isLongTermPattern;
 
   @JsonIgnore private SortedMap<Long, TimeSeriesDataPoint> timeSeries;
   @JsonIgnore private SortedMap<Long, TimeSeriesRisk> risksForTimeSeries;
@@ -85,6 +86,10 @@ public class TimeSeriesOfMetric implements Comparable<TimeSeriesOfMetric> {
     }
     timeSeries.put(
         dataCollectionMillis, TimeSeriesDataPoint.builder().timestamp(dataCollectionMillis).value(metricValue).build());
+  }
+
+  public void setLongTermPattern(int longTermPattern) {
+    isLongTermPattern = longTermPattern == 1;
   }
 
   @Override

@@ -18,4 +18,5 @@ public class TimeSeriesMLMetricSummary {
   private double control_avg;
   private double test_avg;
   private int max_risk;
+  private int long_term_pattern;
 }

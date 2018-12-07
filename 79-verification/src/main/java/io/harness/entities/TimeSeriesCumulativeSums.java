@@ -1,6 +1,13 @@
 package io.harness.entities;
 
+import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.type.TypeReference;
+import io.harness.exception.WingsException;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,8 +20,11 @@ import org.mongodb.morphia.annotations.Index;
 import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Indexes;
+import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
+import software.wings.utils.JsonUtils;
 
+import java.io.IOException;
 import java.util.Map;
 
 /**
@@ -35,5 +45,32 @@ import java.util.Map;
 public class TimeSeriesCumulativeSums extends Base {
   @NotEmpty @Indexed private String cvConfigId;
   @NotEmpty @Indexed private int analysisMinute;
-  private Map<String, Map<String, Map<String, Double>>> transactionMetricSums;
+  @Transient private Map<String, Map<String, Map<String, Double>>> transactionMetricSums;
+  @JsonIgnore private byte[] compressedMetricSums;
+
+  public void compressMetricSums() {
+    if (isEmpty(transactionMetricSums)) {
+      return;
+    }
+    try {
+      setCompressedMetricSums(compressString(JsonUtils.asJson(transactionMetricSums)));
+      setTransactionMetricSums(null);
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
+  }
+
+  public void decompressMetricSums() {
+    if (isEmpty(compressedMetricSums)) {
+      return;
+    }
+    try {
+      String decompressedTransactionsJson = deCompressString(compressedMetricSums);
+      setTransactionMetricSums(JsonUtils.asObject(
+          decompressedTransactionsJson, new TypeReference<Map<String, Map<String, Map<String, Double>>>>() {}));
+      setCompressedMetricSums(null);
+    } catch (IOException e) {
+      throw new WingsException(e);
+    }
+  }
 }

@@ -54,6 +54,8 @@ public class MetricAnalysisRecord extends Base {
 
   private Map<String, TimeSeriesMLTxnSummary> transactions;
 
+  private Map<String, Double> overallMetricScores;
+
   private byte[] transactionsCompressedJson;
 
   @Transient private Map<String, Map<String, List<TimeSeriesMLHostSummary>>> anomalies;

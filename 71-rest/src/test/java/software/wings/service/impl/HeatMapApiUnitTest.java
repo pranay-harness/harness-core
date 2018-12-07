@@ -163,6 +163,12 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
       analysisRecord.setAppId(appId);
       analysisRecord.setCvConfigId(cvConfigId);
       analysisRecord.setAnalysisMinute((int) analysisMinute);
+      analysisRecord.setOverallMetricScores(new HashMap<String, Double>() {
+        {
+          put("key1", 0.76);
+          put("key2", 0.5);
+        }
+      });
 
       Map<String, TimeSeriesMLTxnSummary> txnSummaryMap = new HashMap<>();
       TimeSeriesMLTxnSummary timeSeriesMLTxnSummary = new TimeSeriesMLTxnSummary();
@@ -213,9 +219,9 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     heatMapSummary.getRiskLevelSummary().forEach(riskLevel -> {
       if (index.get() == 0 || index.get() >= 25) {
         assertEquals(0, riskLevel.getHighRisk());
-        assertEquals(2, riskLevel.getNa());
+        assertEquals(1, riskLevel.getNa());
       } else {
-        assertEquals(2, riskLevel.getHighRisk());
+        assertEquals(1, riskLevel.getHighRisk());
         assertEquals(0, riskLevel.getNa());
       }
       assertEquals(0, riskLevel.getMediumRisk());
@@ -246,12 +252,12 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     heatMapSummary.getRiskLevelSummary().forEach(riskLevel -> {
       if (index.get() == 0 || index.get() >= 25) {
         assertEquals(0, riskLevel.getHighRisk());
-        assertEquals(2, riskLevel.getNa());
+        assertEquals(1, riskLevel.getNa());
       } else if (index.get() == 7 || index.get() == 21 || index.get() == 22) {
         assertEquals(1, riskLevel.getHighRisk());
-        assertEquals(1, riskLevel.getNa());
+        assertEquals(0, riskLevel.getNa());
       } else {
-        assertEquals(2, riskLevel.getHighRisk());
+        assertEquals(1, riskLevel.getHighRisk());
         assertEquals(0, riskLevel.getNa());
       }
       assertEquals(0, riskLevel.getMediumRisk());
@@ -737,9 +743,19 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
         tsAnalysisRecord.setCvConfigId(cvConfigId);
         // 2nd record in json list contains the expected timeseries
         // metrics.0.test.data contains 135 elements: 2hrs of history + 15mins of current heatmap unit
+        tsAnalysisRecord.getTransactions()
+            .values()
+            .iterator()
+            .next()
+            .getMetrics()
+            .values()
+            .iterator()
+            .next()
+            .setLong_term_pattern(1);
         if (idx == 1
             && tsAnalysisRecord.getTransactions().get("45").getMetrics().get("0").getMetric_name().equals(
                    "95th Percentile Response Time (ms)")) {
+          tsAnalysisRecord.getTransactions().get("45").getMetrics().get("0").setLong_term_pattern(1);
           expectedTimeSeries =
               tsAnalysisRecord.getTransactions().get("45").getMetrics().get("0").getTest().getData().get(0);
         }
@@ -751,8 +767,17 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long startTime = 1541522760001L;
     long endTime = 1541523660000L;
     long historyStart = 1541515560001L;
+    boolean longterm = false;
     SortedSet<TransactionTimeSeries> timeseries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
         accountId, cvConfigId, startTime, endTime, historyStart);
+    for (TransactionTimeSeries s : timeseries) {
+      for (TimeSeriesOfMetric tms : s.getMetricTimeSeries()) {
+        if (tms.isLongTermPattern()) {
+          longterm = true;
+        }
+      }
+    }
+    assertTrue("Atleast one record has longterm set to true", longterm);
     TransactionTimeSeries apiArtifactsTransaction = null;
     for (Iterator<TransactionTimeSeries> it = timeseries.iterator(); it.hasNext();) {
       TransactionTimeSeries txnTimeSeries = it.next();
