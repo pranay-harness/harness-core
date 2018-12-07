@@ -21,6 +21,8 @@ import io.harness.queue.Queue;
 import io.harness.waiter.ErrorNotifyResponseData;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.NotifyEvent;
+import io.harness.waiter.NotifyResponse;
+import io.harness.waiter.WaitInstance;
 import io.harness.waiter.WaitQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

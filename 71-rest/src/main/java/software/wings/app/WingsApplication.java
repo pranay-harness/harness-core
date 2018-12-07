@@ -48,6 +48,7 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.waiter.WaiterMorphiaClasses;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -134,6 +135,7 @@ public class WingsApplication extends Application<MainConfiguration> {
   public static final Set<Class> morphiaClasses = ImmutableSet.<Class>builder()
                                                       .addAll(ManagerMorphiaClasses.classes)
                                                       .addAll(LimitsMorphiaClasses.classes)
+                                                      .addAll(WaiterMorphiaClasses.classes)
                                                       .addAll(PersistenceMorphiaClasses.classes)
                                                       .build();
 
