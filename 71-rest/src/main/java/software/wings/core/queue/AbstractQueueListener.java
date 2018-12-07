@@ -19,7 +19,6 @@ import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.utils.ThreadContext;
 
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,7 +48,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    */
   @Override
   public void run() {
-    String threadName = ThreadContext.getContext() + queue.name() + "-handler-" + generateUuid();
+    String threadName = queue.name() + "-handler-" + generateUuid();
     logger.debug("Setting thread name to {}", threadName);
     Thread.currentThread().setName(threadName);
 
