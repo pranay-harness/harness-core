@@ -106,7 +106,6 @@ public class AccountServiceTest extends WingsBaseTest {
                                               .withLicenseInfo(licenseInfo)
                                               .build());
     assertThat(wingsPersistence.get(Account.class, account.getUuid())).isEqualTo(account);
-    verify(settingsService).createDefaultAccountSettings(account.getUuid());
     verify(jobScheduler, times(2)).deleteJob(eq(account.getUuid()), anyString());
   }
 

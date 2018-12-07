@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static software.wings.beans.BastionConnectionAttributes.Builder.aBastionConnectionAttributes;
 import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
+import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.SSH_KEY;
 import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
 import static software.wings.beans.SSHExecutionCredential.Builder.aSSHExecutionCredential;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -34,7 +35,6 @@ import static software.wings.utils.WingsTestConstants.FILE_PATH;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_ID;
 import static software.wings.utils.WingsTestConstants.HOST_CONN_ATTR_KEY_ID;
 import static software.wings.utils.WingsTestConstants.HOST_NAME;
-import static software.wings.utils.WingsTestConstants.SSH_KEY;
 import static software.wings.utils.WingsTestConstants.SSH_USER_NAME;
 import static software.wings.utils.WingsTestConstants.SSH_USER_PASSWORD;
 
@@ -71,6 +71,7 @@ import software.wings.core.ssh.executors.SshSessionConfig;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.impl.SshCommandUnitExecutorServiceImpl;
 import software.wings.service.intfc.CommandUnitExecutorService;
+import software.wings.utils.WingsTestConstants;
 
 import java.io.File;
 import java.io.IOException;
@@ -84,21 +85,24 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
    * The constant EXEC_CMD.
    */
   public static final String EXEC_CMD = "ls";
-  private static final SettingAttribute HOST_CONN_ATTR_PWD =
-      aSettingAttribute()
-          .withUuid(HOST_CONN_ATTR_ID)
-          .withValue(aHostConnectionAttributes().withAccessType(USER_PASSWORD).build())
-          .build();
+  private static final SettingAttribute HOST_CONN_ATTR_PWD = aSettingAttribute()
+                                                                 .withUuid(HOST_CONN_ATTR_ID)
+                                                                 .withValue(aHostConnectionAttributes()
+                                                                                .withAccessType(USER_PASSWORD)
+                                                                                .withUserName(SSH_USER_NAME)
+                                                                                .withSshPassword(SSH_USER_PASSWORD)
+                                                                                .build())
+                                                                 .build();
   private static final SettingAttribute BASTION_HOST_ATTR =
       aSettingAttribute()
           .withUuid(BASTION_CONN_ATTR_ID)
-          .withValue(aBastionConnectionAttributes().withHostName(HOST_NAME).withKey(SSH_KEY).build())
+          .withValue(aBastionConnectionAttributes().withHostName(HOST_NAME).withKey(WingsTestConstants.SSH_KEY).build())
           .build();
   private static final SettingAttribute HOST_CONN_ATTR_KEY = aSettingAttribute()
                                                                  .withUuid(HOST_CONN_ATTR_KEY_ID)
                                                                  .withValue(aHostConnectionAttributes()
                                                                                 .withAccessType(AccessType.KEY)
-                                                                                .withKey(SSH_KEY)
+                                                                                .withKey(WingsTestConstants.SSH_KEY)
                                                                                 .withUserName(SSH_USER_NAME)
                                                                                 .build())
                                                                  .build();
@@ -138,8 +142,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
           .withRuntimePath("/tmp/runtime")
           .withBackupPath("/tmp/backup")
           .withStagingPath("/tmp/staging")
-          .withExecutionCredential(
-              aSSHExecutionCredential().withSshUser(SSH_USER_NAME).withSshPassword(SSH_USER_PASSWORD).build())
+          .withExecutionCredential(aSSHExecutionCredential().withSshUser(SSH_USER_NAME).build())
           .withArtifactFiles(
               Lists.newArrayList(anArtifactFile().withName("artifact.war").withFileUuid(FILE_ID).build()))
           .withServiceVariables(ImmutableMap.of("PORT", "8080", "PASSWORD", "aSecret"))
@@ -166,8 +169,10 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                              .withHost(HOST_NAME)
                                              .withUserName(SSH_USER_NAME)
                                              .withExecutorType(PASSWORD_AUTH)
-                                             .withPassword(SSH_USER_PASSWORD)
+                                             .withSshPassword(SSH_USER_PASSWORD)
                                              .withAccountId(ACCOUNT_ID)
+                                             .withAccessType(USER_PASSWORD)
+                                             .withAuthenticationScheme(SSH_KEY)
                                              .build();
 
     when(sshExecutorFactory.getExecutor(PASSWORD_AUTH)).thenReturn(sshPwdAuthExecutor);
@@ -189,7 +194,7 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                              .withHost(HOST_NAME)
                                              .withUserName(SSH_USER_NAME)
                                              .withExecutorType(KEY_AUTH)
-                                             .withKey(SSH_KEY)
+                                             .withKey(WingsTestConstants.SSH_KEY)
                                              .withKeyName(HOST_CONN_ATTR_KEY.getUuid())
                                              .withAccountId(ACCOUNT_ID)
                                              .build();
@@ -214,10 +219,12 @@ public class SshCommandUnitExecutorServiceTest extends WingsBaseTest {
                                              .withHost(HOST_NAME)
                                              .withUserName(SSH_USER_NAME)
                                              .withExecutorType(BASTION_HOST)
-                                             .withPassword(SSH_USER_PASSWORD)
+                                             .withAuthenticationScheme(SSH_KEY)
+                                             .withAccessType(USER_PASSWORD)
+                                             .withSshPassword(SSH_USER_PASSWORD)
                                              .withBastionHostConfig(aSshSessionConfig()
                                                                         .withHost(HOST_NAME)
-                                                                        .withKey(SSH_KEY)
+                                                                        .withKey(WingsTestConstants.SSH_KEY)
                                                                         .withKeyName(BASTION_HOST_ATTR.getUuid())
                                                                         .build())
                                              .withAccountId(ACCOUNT_ID)

@@ -62,8 +62,6 @@ public interface SettingsService extends OwnedByAccount {
 
   void createDefaultApplicationSettings(String appId, String accountId, boolean syncFromGit);
 
-  void createDefaultAccountSettings(String accountId);
-
   List<SettingAttribute> getSettingAttributesByType(String appId, String type);
 
   List<SettingAttribute> getFilteredSettingAttributesByType(

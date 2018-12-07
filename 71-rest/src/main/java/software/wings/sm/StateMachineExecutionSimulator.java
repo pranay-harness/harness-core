@@ -137,8 +137,6 @@ public class StateMachineExecutionSimulator {
   public static void populateRequiredEntityTypesByAccessType(Set<EntityType> entityTypes, AccessType accessType) {
     switch (accessType) {
       case USER_PASSWORD: {
-        entityTypes.add(EntityType.SSH_USER);
-        entityTypes.add(EntityType.SSH_PASSWORD);
         break;
       }
       case USER_PASSWORD_SU_APP_USER: {
