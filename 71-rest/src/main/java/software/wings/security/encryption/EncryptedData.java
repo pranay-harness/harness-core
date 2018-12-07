@@ -11,6 +11,7 @@ import lombok.Builder.Default;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
@@ -37,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
+@ToString(exclude = {"encryptionKey", "encryptedValue"})
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -51,7 +53,12 @@ public class EncryptedData extends Base {
   @NotEmpty @Indexed private String name;
 
   @NotEmpty private String encryptionKey;
+
   @NotEmpty private char[] encryptedValue;
+
+  // When 'path' value is set, no actual encryption is needed since it's just referring to a secret in a Vault path.
+  private String path;
+
   @NotEmpty private SettingVariableTypes type;
 
   @NotEmpty @Indexed @Default private Set<String> parentIds = new HashSet<>();
@@ -210,13 +217,5 @@ public class EncryptedData extends Base {
     if (!isEmpty(searchTags)) {
       searchTags.clear();
     }
-  }
-
-  @Override
-  public String toString() {
-    return "EncryptedData{"
-        + "name='" + name + '\'' + ", type=" + type + ", parentIds=" + parentIds + ", accountId='" + accountId + '\''
-        + ", enabled=" + enabled + ", kmsId='" + kmsId + '\'' + ", encryptionType=" + encryptionType + ", encryptedBy='"
-        + encryptedBy + '\'' + "} " + super.toString();
   }
 }

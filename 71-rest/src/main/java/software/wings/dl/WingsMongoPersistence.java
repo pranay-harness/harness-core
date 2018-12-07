@@ -523,8 +523,9 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     String encryptedId =
         savedObject == null ? (String) encryptedField.get(object) : (String) encryptedField.get(savedObject);
     EncryptedData encryptedData = isBlank(encryptedId) ? null : get(EncryptedData.class, encryptedId);
-    EncryptedData encryptedPair = secretManager.encrypt(
-        encryptionType, accountId, object.getSettingType(), secret, encryptedData, UUID.randomUUID().toString(), null);
+    String path = encryptedData == null ? null : encryptedData.getPath();
+    EncryptedData encryptedPair = secretManager.encrypt(encryptionType, accountId, object.getSettingType(), secret,
+        path, encryptedData, UUID.randomUUID().toString(), null);
 
     String changeLogDescription = "";
 

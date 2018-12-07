@@ -870,7 +870,7 @@ public class VaultTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -895,7 +895,7 @@ public class VaultTest extends WingsBaseTest {
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
-    secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", "newName");
@@ -931,7 +931,7 @@ public class VaultTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     String serviceId = wingsPersistence.save(Service.builder().name(UUID.randomUUID().toString()).build());
     String serviceTemplateId =

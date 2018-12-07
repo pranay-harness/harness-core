@@ -100,6 +100,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -163,7 +164,7 @@ public class SecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
+      char[] secret, String path, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
     EncryptedData rv;
     switch (encryptionType) {
       case LOCAL:
@@ -188,6 +189,19 @@ public class SecretManagerImpl implements SecretManager {
       case VAULT:
         final VaultConfig vaultConfig = vaultService.getSecretConfig(accountId);
         String toEncrypt = secret == null ? null : String.valueOf(secret);
+        // Need to initialize an EncrytpedData instance to carry the 'path' value for delegate to validate against.
+        if (encryptedData == null) {
+          encryptedData = EncryptedData.builder()
+                              .name(secretName)
+                              .path(path)
+                              .encryptionType(encryptionType)
+                              .accountId(accountId)
+                              .type(settingType)
+                              .enabled(true)
+                              .parentIds(new HashSet<>())
+                              .kmsId(vaultConfig.getUuid())
+                              .build();
+        }
         rv = vaultService.encrypt(secretName, toEncrypt, accountId, settingType, vaultConfig, encryptedData);
         rv.setType(settingType);
         break;
@@ -203,7 +217,7 @@ public class SecretManagerImpl implements SecretManager {
   public String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions) {
     EncryptedData encryptedData =
         encrypt(getEncryptionType(accountId), accountId, SettingVariableTypes.APM_VERIFICATION, secret.toCharArray(),
-            null, UUID.randomUUID().toString(), usageRestrictions);
+            null, null, UUID.randomUUID().toString(), usageRestrictions);
     return wingsPersistence.save(encryptedData);
   }
 
@@ -513,6 +527,15 @@ public class SecretManagerImpl implements SecretManager {
     Preconditions.checkNotNull(
         toConfig, "No kms found for account " + accountId + " with id " + entityId + " type: " + fromEncryptionType);
 
+    // Can't not transition secrets with path reference to a different secret manager. Customer has to manually
+    // transfer.
+    if (isNotEmpty(encryptedData.getPath())) {
+      logger.warn(
+          "Encrypted secret '{}' with path '{}' in account '{}' is not allowed to be transferred to a different secret manager.",
+          encryptedData.getName(), encryptedData.getPath(), accountId);
+      return;
+    }
+
     if (encryptedData.getType() == SettingVariableTypes.CONFIG_FILE) {
       changeFileSecretManager(accountId, encryptedData, fromEncryptionType, toEncryptionType, toConfig);
       return;
@@ -628,22 +651,23 @@ public class SecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, null, name, value, getEncryptionType(accountId),
+  public String saveSecret(
+      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
+    return upsertSecretInternal(accountId, null, name, value, path, getEncryptionType(accountId),
         SettingVariableTypes.SECRET_TEXT, usageRestrictions, false, true);
   }
 
   @Override
   public String saveSecretUsingLocalMode(
-      String accountId, String name, String value, UsageRestrictions usageRestrictions) {
-    return upsertSecretInternal(accountId, null, name, value, EncryptionType.LOCAL, SettingVariableTypes.SECRET_TEXT,
-        usageRestrictions, false, true);
+      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
+    return upsertSecretInternal(accountId, null, name, value, path, EncryptionType.LOCAL,
+        SettingVariableTypes.SECRET_TEXT, usageRestrictions, false, true);
   }
 
   @Override
   public boolean updateSecret(
-      String accountId, String uuId, String name, String value, UsageRestrictions usageRestrictions) {
-    String encryptedDataId = upsertSecretInternal(accountId, uuId, name, value, getEncryptionType(accountId),
+      String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions) {
+    String encryptedDataId = upsertSecretInternal(accountId, uuId, name, value, path, getEncryptionType(accountId),
         SettingVariableTypes.SECRET_TEXT, usageRestrictions, false, true);
     return encryptedDataId != null;
   }
@@ -657,17 +681,23 @@ public class SecretManagerImpl implements SecretManager {
    * It will return the generated UUID in a INSERT operation, and return null in the UPDATE operation if the record
    * doesn't exist.
    */
-  private String upsertSecretInternal(String accountId, String uuid, String name, String value,
+  private String upsertSecretInternal(String accountId, String uuid, String name, String value, String path,
       EncryptionType encryptionType, SettingVariableTypes settingVariableType, UsageRestrictions usageRestrictions,
       boolean upsert, boolean audit) {
     String auditMessage;
     String encryptedDataId;
+
+    if (isNotEmpty(path) && encryptionType != EncryptionType.VAULT) {
+      throw new WingsException("Secret path can be specified only if the secret manager is of VAULT type!");
+    }
+
+    char[] secretValue = isEmpty(value) ? null : value.toCharArray();
     if (isEmpty(uuid)) {
       // INSERT use case
       usageRestrictionsService.validateUsageRestrictionsOnEntitySave(accountId, usageRestrictions);
-      char[] secretValue = isEmpty(value) ? null : value.toCharArray();
+
       EncryptedData encryptedData =
-          encrypt(encryptionType, accountId, settingVariableType, secretValue, null, name, usageRestrictions);
+          encrypt(encryptionType, accountId, settingVariableType, secretValue, path, null, name, usageRestrictions);
       encryptedData.addSearchTag(name);
       try {
         encryptedDataId = wingsPersistence.save(encryptedData);
@@ -690,17 +720,36 @@ public class SecretManagerImpl implements SecretManager {
           accountId, savedData.getUsageRestrictions(), usageRestrictions);
 
       encryptedDataId = uuid;
-      auditMessage = value.equals(SECRET_MASK) ? "Changed name" : "Changed name & value";
-      if (usageRestrictions != null) {
-        auditMessage += " & usage restrictions";
+
+      boolean nameChanged = !Objects.equals(name, savedData.getName());
+      boolean valueChanged = isNotEmpty(value) && !value.equals(SECRET_MASK);
+      boolean pathChanged = !Objects.equals(path, savedData.getPath());
+
+      StringBuilder builder = new StringBuilder();
+      if (nameChanged) {
+        builder.append("Changed name");
       }
+      if (valueChanged) {
+        builder.append(builder.length() > 0 ? " & value" : " Changed value");
+      }
+      if (pathChanged) {
+        builder.append(builder.length() > 0 ? " & path" : " Changed path");
+      }
+      if (usageRestrictions != null) {
+        builder.append(builder.length() > 0 ? " & usage restrictions" : "Changed usage restrictions");
+      }
+      auditMessage = builder.toString();
 
       savedData.removeSearchTag(null, savedData.getName(), null);
       savedData.setName(name);
+      savedData.setPath(path);
       savedData.addSearchTag(name);
-      if (!value.equals(SECRET_MASK)) {
-        EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, settingVariableType,
-            value.toCharArray(), savedData, name, usageRestrictions);
+
+      // Re-encrypt if secret value or path has changed. Update should not change the existing Encryption type and
+      // secret manager if the secret is 'path' enabled!
+      if (valueChanged || pathChanged) {
+        EncryptedData encryptedData = encrypt(getEncryptionType(accountId), accountId, settingVariableType, secretValue,
+            path, savedData, name, usageRestrictions);
         savedData.setEncryptionKey(encryptedData.getEncryptionKey());
         savedData.setEncryptedValue(encryptedData.getEncryptedValue());
         savedData.setEncryptionType(encryptedData.getEncryptionType());
@@ -773,6 +822,13 @@ public class SecretManagerImpl implements SecretManager {
     Preconditions.checkNotNull(encryptedData, "No encrypted record found with id " + uuId);
     if (!usageRestrictionsService.userHasPermissionsToChangeEntity(accountId, encryptedData.getUsageRestrictions())) {
       throw new WingsException(ErrorCode.USER_NOT_AUTHORIZED, USER);
+    }
+
+    if (encryptedData.getEncryptionType() == EncryptionType.VAULT && isEmpty(encryptedData.getPath())) {
+      // For harness managed secrets, we need to delete the corresponding entries in the Vault service.
+      String keyName = encryptedData.getEncryptionKey();
+      VaultConfig vaultConfig = vaultService.getVaultConfig(accountId, encryptedData.getKmsId());
+      vaultService.deleteSecret(accountId, keyName, vaultConfig);
     }
 
     return wingsPersistence.delete(EncryptedData.class, uuId);
