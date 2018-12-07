@@ -505,14 +505,9 @@ public class SettingsServiceImpl implements SettingsService {
   }
 
   private void ensureCloudProviderSafeToDelete(SettingAttribute cloudProviderSetting) {
-    List<InfrastructureMapping> infrastructureMappings =
-        infrastructureMappingService
-            .list(aPageRequest()
-                      .addFilter(InfrastructureMapping.APP_ID_KEY, EQ, cloudProviderSetting.getAppId())
-                      .addFilter("computeProviderSettingId", EQ, cloudProviderSetting.getUuid())
-                      .withLimit(PageRequest.UNLIMITED)
-                      .build())
-            .getResponse();
+    List<InfrastructureMapping> infrastructureMappings = infrastructureMappingService.listByComputeProviderId(
+        cloudProviderSetting.getAccountId(), cloudProviderSetting.getUuid());
+
     if (!infrastructureMappings.isEmpty()) {
       List<String> infraMappingNames =
           infrastructureMappings.stream().map(InfrastructureMapping::getName).collect(toList());
@@ -523,14 +518,7 @@ public class SettingsServiceImpl implements SettingsService {
           USER);
     }
 
-    List<ArtifactStream> artifactStreams =
-        artifactStreamService
-            .list(aPageRequest()
-                      .addFilter(ArtifactStream.APP_ID_KEY, EQ, cloudProviderSetting.getAppId())
-                      .addFilter("settingId", EQ, cloudProviderSetting.getUuid())
-                      .withLimit(PageRequest.UNLIMITED)
-                      .build())
-            .getResponse();
+    List<ArtifactStream> artifactStreams = artifactStreamService.listBySettingId(cloudProviderSetting.getUuid());
     if (!artifactStreams.isEmpty()) {
       List<String> artifactStreamNames = artifactStreams.stream().map(ArtifactStream::getName).collect(toList());
       throw new InvalidRequestException(

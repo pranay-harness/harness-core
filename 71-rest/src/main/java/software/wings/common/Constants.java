@@ -925,4 +925,6 @@ public interface Constants {
 
   String EMAIL_BODY_ACCOUNT_EXPIRED = "Customer License has Expired";
   String EMAIL_BODY_ACCOUNT_ABOUT_TO_EXPIRE = "Customer License is about to Expire";
+
+  Integer REFERENCED_ENTITIES_TO_SHOW = 10;
 }

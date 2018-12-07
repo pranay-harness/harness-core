@@ -286,14 +286,12 @@ public class SettingsServiceImplTest extends WingsBaseTest {
                                             .withValue(AwsConfig.builder().build())
                                             .build();
     when(mockWingsPersistence.get(SettingAttribute.class, SETTING_ID)).thenReturn(settingAttribute);
-    when(infrastructureMappingService.list(any(PageRequest.class)))
-        .thenReturn(aPageResponse()
-                        .withResponse(asList(anAwsInfrastructureMapping()
-                                                 .withName("NAME")
-                                                 .withComputeProviderType(AWS.name())
-                                                 .withComputeProviderName("NAME")
-                                                 .build()))
-                        .build());
+    when(infrastructureMappingService.listByComputeProviderId(any(), any()))
+        .thenReturn(asList(anAwsInfrastructureMapping()
+                               .withName("NAME")
+                               .withComputeProviderType(AWS.name())
+                               .withComputeProviderName("NAME")
+                               .build()));
     assertThatThrownBy(() -> settingsService.delete(APP_ID, SETTING_ID))
         .isInstanceOf(WingsException.class)
         .hasMessage(INVALID_REQUEST.name());
