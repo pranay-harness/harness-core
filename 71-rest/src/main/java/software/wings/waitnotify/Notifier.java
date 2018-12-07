@@ -18,6 +18,7 @@ import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
 import io.harness.queue.Queue;
 import io.harness.waiter.NotifyEvent;
+import io.harness.waiter.NotifyResponse;
 import io.harness.waiter.WaitQueue;
 import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;

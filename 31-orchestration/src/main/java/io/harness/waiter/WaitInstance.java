@@ -1,11 +1,9 @@
-package software.wings.waitnotify;
+package io.harness.waiter;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.persistence.CreatedAtAccess;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAccess;
-import io.harness.waiter.NotifyCallback;
-import io.harness.waiter.WaitQueue;
 import lombok.Builder;
 import lombok.Value;
 import org.mongodb.morphia.annotations.Entity;

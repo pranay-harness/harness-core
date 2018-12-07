@@ -2,9 +2,6 @@ package software.wings.beans;
 
 import com.google.common.collect.ImmutableSet;
 
-import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.WaitInstanceError;
-import io.harness.waiter.WaitQueue;
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.DeploymentSummary;
@@ -101,8 +98,6 @@ import software.wings.verification.datadog.DatadogCVServiceConfiguration;
 import software.wings.verification.dynatrace.DynaTraceCVServiceConfiguration;
 import software.wings.verification.newrelic.NewRelicCVServiceConfiguration;
 import software.wings.verification.prometheus.PrometheusCVServiceConfiguration;
-import software.wings.waitnotify.NotifyResponse;
-import software.wings.waitnotify.WaitInstance;
 import software.wings.yaml.YamlHistory;
 import software.wings.yaml.YamlVersion;
 import software.wings.yaml.errorhandling.GitSyncError;
@@ -149,20 +144,20 @@ public class ManagerMorphiaClasses {
       AwsInfrastructureMapping.class, DelegateConnection.class, ApplicationManifest.class, Delegate.class,
       InformationNotification.class, NotificationBatch.class, WorkflowExecution.class, VersionedTemplate.class,
       Artifact.class, TerraformInfrastructureProvisioner.class, ArtifactSourceable.class, InfrastructureMapping.class,
-      WaitQueue.class, LogMLFeedbackRecord.class, MLExperiments.class, ThirdPartyApiCallLog.class,
-      NewRelicMetricDataRecord.class, WaitInstance.class, GitSyncError.class, KmsTransitionEvent.class,
-      TimeSeriesMetricGroup.class, ContinuousVerificationExecutionMetaData.class, CommandUnit.class,
-      CloudWatchCVServiceConfiguration.class, DelayEvent.class, ExperimentalLogMLAnalysisRecord.class,
-      NewRelicMetricAnalysisRecord.class, CollectEvent.class, SecretChangeLog.class, TimeSeriesMLScores.class,
-      NotifyResponse.class, AppDynamicsCVServiceConfiguration.class, EncryptableSetting.class, DeploymentSummary.class,
-      LearningEngineExperimentalAnalysisTask.class, StateMachine.class, CVConfiguration.class,
-      DelegateConnectionResult.class, DeploymentEvent.class, AuditHeader.class, NotifyEvent.class,
-      TimeSeriesMetricTemplates.class, SecretUsageLog.class, DynaTraceCVServiceConfiguration.class, LogDataRecord.class,
-      InstanceChangeEvent.class, YamlChangeSet.class, YamlHistory.class, LearningEngineAnalysisTask.class,
-      ExperimentalMetricAnalysisRecord.class, Comparable.class, WaitInstanceError.class, LogMLAnalysisRecord.class,
-      TimeSeriesMLAnalysisRecord.class, StateExecutionInstance.class, DatadogCVServiceConfiguration.class,
-      MetricAnalysisRecord.class, YamlVersion.class, EncryptionConfig.class, Principal.class,
-      PrometheusCVServiceConfiguration.class, EncryptedData.class, NewRelicCVServiceConfiguration.class,
-      ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class, YamlGitConfig.class,
-      TimeSeriesMLTransactionThresholds.class, GitSyncWebhook.class, ExecutionEvent.class, ManifestFile.class);
+      LogMLFeedbackRecord.class, MLExperiments.class, ThirdPartyApiCallLog.class, NewRelicMetricDataRecord.class,
+      GitSyncError.class, KmsTransitionEvent.class, TimeSeriesMetricGroup.class,
+      ContinuousVerificationExecutionMetaData.class, CommandUnit.class, CloudWatchCVServiceConfiguration.class,
+      DelayEvent.class, ExperimentalLogMLAnalysisRecord.class, NewRelicMetricAnalysisRecord.class, CollectEvent.class,
+      SecretChangeLog.class, TimeSeriesMLScores.class, AppDynamicsCVServiceConfiguration.class,
+      EncryptableSetting.class, DeploymentSummary.class, LearningEngineExperimentalAnalysisTask.class,
+      StateMachine.class, CVConfiguration.class, DelegateConnectionResult.class, DeploymentEvent.class,
+      AuditHeader.class, TimeSeriesMetricTemplates.class, SecretUsageLog.class, DynaTraceCVServiceConfiguration.class,
+      LogDataRecord.class, InstanceChangeEvent.class, YamlChangeSet.class, YamlHistory.class,
+      LearningEngineAnalysisTask.class, ExperimentalMetricAnalysisRecord.class, Comparable.class,
+      LogMLAnalysisRecord.class, TimeSeriesMLAnalysisRecord.class, StateExecutionInstance.class,
+      DatadogCVServiceConfiguration.class, MetricAnalysisRecord.class, YamlVersion.class, EncryptionConfig.class,
+      Principal.class, PrometheusCVServiceConfiguration.class, EncryptedData.class,
+      NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
+      YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, GitSyncWebhook.class, ExecutionEvent.class,
+      ManifestFile.class);
 }

@@ -19,6 +19,8 @@ import com.mongodb.DBObject;
 import io.harness.exception.WingsException;
 import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queuable;
+import io.harness.waiter.NotifyResponse;
+import io.harness.waiter.WaitInstance;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.types.ObjectId;
@@ -72,8 +74,6 @@ import software.wings.service.intfc.AppService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
-import software.wings.waitnotify.NotifyResponse;
-import software.wings.waitnotify.WaitInstance;
 import software.wings.yaml.errorhandling.GitSyncError;
 
 import java.io.ByteArrayOutputStream;
