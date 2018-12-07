@@ -2,7 +2,7 @@ package software.wings.service.impl.analysis;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.persistence.HQuery.excludeCount;
 import static java.lang.Math.abs;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
@@ -34,7 +34,6 @@ import software.wings.beans.User;
 import software.wings.beans.WorkflowExecution;
 import software.wings.common.VerificationConstants;
 import software.wings.dl.WingsPersistence;
-import software.wings.metrics.RiskLevel;
 import software.wings.security.AppPermissionSummary;
 import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
@@ -533,15 +532,17 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
   }
 
   private HeatMapUnit merge(List<HeatMapUnit> units) {
-    HeatMapUnit mergedUnit = new HeatMapUnit();
-    mergedUnit.setStartTime(units.get(0).getStartTime());
-    mergedUnit.setEndTime(units.get(units.size() - 1).getEndTime());
+    HeatMapUnit mergedUnit = HeatMapUnit.builder()
+                                 .startTime(units.get(0).getStartTime())
+                                 .endTime(units.get(units.size() - 1).getEndTime())
+                                 .overallScore(-1)
+                                 .build();
     units.forEach(unit -> {
-      mergedUnit.setHighRisk(mergedUnit.getHighRisk() + unit.getHighRisk());
-      mergedUnit.setMediumRisk(mergedUnit.getMediumRisk() + unit.getMediumRisk());
-      mergedUnit.setLowRisk(mergedUnit.getLowRisk() + unit.getLowRisk());
-      mergedUnit.setNa(mergedUnit.getNa() + unit.getNa());
+      if (unit.getScoreList() != null) {
+        mergedUnit.updateOverallScore(unit.getOverallScore());
+      }
     });
+
     return mergedUnit;
   }
 
@@ -575,8 +576,10 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
           HeatMapUnit.builder()
               .startTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute() - CRON_POLL_INTERVAL_IN_MINUTES) + 1)
               .endTime(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()))
+              .overallScore(-1)
               .build();
-      heatMapUnit.increment(RiskLevel.getRiskLevel(record.getAggregatedRisk()));
+
+      heatMapUnit.updateOverallScore(record.getOverallMetricScores());
       unitsFromDB.add(heatMapUnit);
     });
 
@@ -696,12 +699,12 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
       }
       int previousOffSet = 0;
       PageResponse<NewRelicMetricDataRecord> response =
-          wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest);
+          wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
       while (!response.isEmpty()) {
         metricRecords.addAll(response.getResponse());
         previousOffSet += response.size();
         dataRecordPageRequest.setOffset(String.valueOf(previousOffSet));
-        response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeAuthority);
+        response = wingsPersistence.query(NewRelicMetricDataRecord.class, dataRecordPageRequest, excludeCount);
       }
     });
 
@@ -826,7 +829,7 @@ public class ContinuousVerificationServiceImpl implements ContinuousVerification
 
             metricMap.get(metricSummary.getMetric_name())
                 .addToRiskMap(TimeUnit.MINUTES.toMillis(record.getAnalysisMinute()), metricSummary.getMax_risk());
-            logger.info("Add transactionMetric {} {}", transaction.getValue().getTxn_name(), metricName);
+            metricMap.get(metricSummary.getMetric_name()).setLongTermPattern(metricSummary.getLong_term_pattern());
           }
         }
       }

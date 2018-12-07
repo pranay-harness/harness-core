@@ -251,6 +251,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
               .build();
       cumulativeSums.setAppId(appId);
 
+      cumulativeSums.compressMetricSums();
       wingsPersistence.save(cumulativeSums);
     }
     wingsPersistence.save(mlAnalysisResponse);
@@ -941,6 +942,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
       logger.info(
           "Returning a list of size {} from getCumulativeSumsForRange for appId {}, cvConfigId {} and start {} and end {}",
           cumulativeSums.size(), appId, cvConfigId, startMinute, endMinute);
+      cumulativeSums.forEach(metricSum -> metricSum.decompressMetricSums());
       return cumulativeSums;
     } else {
       final String errorMsg = "AppId or CVConfigId is null in getCumulativeSumsForRange";

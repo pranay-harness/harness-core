@@ -33,7 +33,9 @@ public class VerificationConstants {
   public static final String VERIFICATION_SERVICE_BASE_URL = "/verification";
   public static final String HEATMAP_SUMMARY = "/heatmap-summary";
   public static final String TIMESERIES = "/timeseries";
-
+  public static final Double HIGH_RISK_CUTOFF = 0.5;
+  public static final Double MEDIUM_RISK_CUTOFF = 0.3;
+  public static final Double NO_DATA_CUTOFF = 0.0;
   public static final int DURATION_TO_ASK_MINUTES = 5;
   public static final int CANARY_DAYS_TO_COLLECT = 7;
   public static final int PERIODIC_GAP_IN_DAYS = 7;
