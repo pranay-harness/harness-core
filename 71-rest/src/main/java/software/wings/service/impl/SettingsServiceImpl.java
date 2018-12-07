@@ -17,11 +17,6 @@ import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.Base.APP_ID_KEY;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.Base.GLOBAL_ENV_ID;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SUDO_APP_USER;
-import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD_SU_APP_USER;
-import static software.wings.beans.HostConnectionAttributes.Builder.aHostConnectionAttributes;
-import static software.wings.beans.HostConnectionAttributes.ConnectionType.SSH;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.beans.StringValue.Builder.aStringValue;
 import static software.wings.common.Constants.BACKUP_PATH;
@@ -611,52 +606,6 @@ public class SettingsServiceImpl implements SettingsService {
     // We only need to queue one of them since it will fetch all the setting attributes and pushes them
     yamlPushService.pushYamlChangeSet(
         settingAttribute.getAccountId(), null, settingAttribute, Type.CREATE, syncFromGit, false);
-  }
-
-  @Override
-  public void createDefaultAccountSettings(String accountId) {
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(GLOBAL_APP_ID)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName("User/Password")
-                              .withValue(aHostConnectionAttributes()
-                                             .withConnectionType(SSH)
-                                             .withAccessType(USER_PASSWORD)
-                                             .withAccountId(accountId)
-                                             .build())
-                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-                              .build());
-    wingsPersistence.save(aSettingAttribute()
-                              .withAppId(GLOBAL_APP_ID)
-                              .withAccountId(accountId)
-                              .withEnvId(GLOBAL_ENV_ID)
-                              .withName("User/Password :: su - <app-account>")
-                              .withValue(aHostConnectionAttributes()
-                                             .withConnectionType(SSH)
-                                             .withAccessType(USER_PASSWORD_SU_APP_USER)
-                                             .withAccountId(accountId)
-                                             .build())
-                              .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-                              .build());
-
-    SettingAttribute settingAttribute = aSettingAttribute()
-                                            .withAppId(GLOBAL_APP_ID)
-                                            .withAccountId(accountId)
-                                            .withEnvId(GLOBAL_ENV_ID)
-                                            .withName("User/Password :: sudo - <app-account>")
-                                            .withValue(aHostConnectionAttributes()
-                                                           .withConnectionType(SSH)
-                                                           .withAccessType(USER_PASSWORD_SUDO_APP_USER)
-                                                           .withAccountId(accountId)
-                                                           .build())
-                                            .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
-                                            .build();
-    wingsPersistence.save(settingAttribute);
-
-    // We only need to queue one of them since it will fetch all the setting attributes and pushes them
-    yamlPushService.pushYamlChangeSet(
-        settingAttribute.getAccountId(), null, settingAttribute, Type.CREATE, false, false);
   }
 
   /* (non-Javadoc)

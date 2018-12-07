@@ -157,14 +157,23 @@ public class SshHelperUtil {
     if (context.getHostConnectionAttributes() != null) {
       SettingAttribute settingAttribute = context.getHostConnectionAttributes();
       HostConnectionAttributes hostConnectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
-      if (hostConnectionAttributes.getAuthenticationScheme() != null
-          && hostConnectionAttributes.getAuthenticationScheme().equals(
-                 HostConnectionAttributes.AuthenticationScheme.KERBEROS)) {
-        KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
-        builder.withPassword(hostConnectionAttributes.getKerberosPassword())
-            .withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.KERBEROS)
-            .withKerberosConfig(kerberosConfig)
-            .withPort(hostConnectionAttributes.getSshPort());
+      if (hostConnectionAttributes.getAuthenticationScheme() != null) {
+        if (hostConnectionAttributes.getAuthenticationScheme().equals(
+                HostConnectionAttributes.AuthenticationScheme.KERBEROS)) {
+          KerberosConfig kerberosConfig = hostConnectionAttributes.getKerberosConfig();
+          builder.withPassword(hostConnectionAttributes.getKerberosPassword())
+              .withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.KERBEROS)
+              .withKerberosConfig(kerberosConfig)
+              .withPort(hostConnectionAttributes.getSshPort());
+        } else {
+          if (hostConnectionAttributes.getAccessType().equals(AccessType.USER_PASSWORD)) {
+            builder.withAuthenticationScheme(HostConnectionAttributes.AuthenticationScheme.SSH_KEY)
+                .withAccessType(hostConnectionAttributes.getAccessType())
+                .withUserName(hostConnectionAttributes.getUserName())
+                .withSshPassword(hostConnectionAttributes.getSshPassword())
+                .withPort(hostConnectionAttributes.getSshPort());
+          }
+        }
       }
     }
     return builder.build();

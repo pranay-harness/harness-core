@@ -30,6 +30,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
   @Attributes(title = "Access Type", required = true) @NotNull private AccessType accessType;
 
   @Attributes(title = "User Name") private String userName;
+  @Attributes(title = "SSH Password") @Encrypted private char[] sshPassword;
+  @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedSshPassword;
   @Attributes(title = "SSH Port") private Integer sshPort = 22;
   @Attributes(title = "Key") @Encrypted private char[] key;
   @SchemaIgnore @NotNull private String accountId;
@@ -121,6 +123,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
     private KerberosConfig kerberosConfig;
     private char[] passphrase;
     private String encryptedPassphrase;
+    private char[] sshPassword;
+    private String encryptedSshPassword;
 
     private Builder() {}
 
@@ -195,6 +199,17 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public Builder withSshPassword(char[] sshPassword) {
+      this.sshPassword = sshPassword;
+      return this;
+    }
+
+    public Builder withEncryptedSshPassword(String encryptedSshPassword) {
+      this.encryptedSshPassword = encryptedSshPassword;
+      return this;
+    }
+
     public Builder but() {
       return aHostConnectionAttributes()
           .withConnectionType(connectionType)
@@ -209,7 +224,9 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
           .withAuthenticationScheme(authenticationScheme)
           .withKerberosConfig(kerberosConfig)
           .withPassphrase(passphrase)
-          .withEncryptedPassphrase(encryptedPassphrase);
+          .withEncryptedPassphrase(encryptedPassphrase)
+          .withSshPassword(sshPassword)
+          .withEncryptedSshPassword(encryptedSshPassword);
     }
 
     public HostConnectionAttributes build() {
@@ -227,6 +244,8 @@ public class HostConnectionAttributes extends SettingValue implements Encryptabl
       hostConnectionAttributes.setKerberosConfig(kerberosConfig);
       hostConnectionAttributes.setPassphrase(passphrase);
       hostConnectionAttributes.setEncryptedPassphrase(encryptedPassphrase);
+      hostConnectionAttributes.setSshPassword(sshPassword);
+      hostConnectionAttributes.setEncryptedSshPassword(encryptedSshPassword);
       return hostConnectionAttributes;
     }
   }

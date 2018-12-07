@@ -2,6 +2,7 @@ package software.wings.core.ssh.executors;
 
 import static io.harness.govern.Switch.unhandled;
 import static java.lang.String.format;
+import static software.wings.beans.HostConnectionAttributes.AccessType.USER_PASSWORD;
 import static software.wings.beans.HostConnectionAttributes.AuthenticationScheme.KERBEROS;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.core.ssh.executors.SshSessionConfig.Builder.aSshSessionConfig;
@@ -114,6 +115,12 @@ public class SshSessionFactory {
 
       session = jsch.getSession(config.getKerberosConfig().getPrincipal(), config.getHost(), config.getPort());
       session.setConfig("PreferredAuthentications", "gssapi-with-mic");
+    } else if (config.getAccessType() != null && config.getAccessType().equals(USER_PASSWORD)) {
+      logger.info("SSH using Username Password");
+      session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
+      byte[] password = EncryptionUtils.toBytes(config.getSshPassword(), Charsets.UTF_8);
+      session.setPassword(password);
+      session.setUserInfo(new SshUserInfo(new String(password, Charsets.UTF_8)));
     } else if (config.isKeyLess()) {
       String keyPath = getKeyPath(config);
       if (!new File(keyPath).isFile()) {
@@ -134,6 +141,7 @@ public class SshSessionFactory {
       }
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
     } else {
+      logger.warn("User password on commandline is not supported...");
       session = jsch.getSession(config.getUserName(), config.getHost(), config.getPort());
       session.setPassword(new String(config.getPassword()));
       session.setUserInfo(new SshUserInfo(new String(config.getPassword())));

@@ -6,6 +6,7 @@ import io.harness.encryption.Encrypted;
 import lombok.Data;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.annotation.EncryptableSetting;
+import software.wings.beans.HostConnectionAttributes.AccessType;
 import software.wings.beans.HostConnectionAttributes.AuthenticationScheme;
 import software.wings.beans.KerberosConfig;
 import software.wings.core.ssh.executors.SshExecutor.ExecutorType;
@@ -51,6 +52,9 @@ public class SshSessionConfig implements EncryptableSetting {
 
   private AuthenticationScheme authenticationScheme;
   private KerberosConfig kerberosConfig;
+  @Encrypted private char[] sshPassword;
+  @SchemaIgnore private String encryptedSshPassword;
+  private AccessType accessType;
 
   @Override
   public SettingVariableTypes getSettingType() {
@@ -92,6 +96,8 @@ public class SshSessionConfig implements EncryptableSetting {
     private String workingDirectory;
     private AuthenticationScheme authenticationScheme;
     private KerberosConfig kerberosConfig;
+    private char[] sshPassword;
+    private AccessType accessType;
 
     private Builder() {}
 
@@ -223,6 +229,17 @@ public class SshSessionConfig implements EncryptableSetting {
       return this;
     }
 
+    @SuppressFBWarnings("EI_EXPOSE_REP2")
+    public Builder withSshPassword(char[] sshPassword) {
+      this.sshPassword = sshPassword;
+      return this;
+    }
+
+    public Builder withAccessType(AccessType accessType) {
+      this.accessType = accessType;
+      return this;
+    }
+
     public Builder but() {
       return aSshSessionConfig()
           .withAccountId(accountId)
@@ -248,7 +265,9 @@ public class SshSessionConfig implements EncryptableSetting {
           .withKeyLess(keyLess)
           .withWorkingDirectory(workingDirectory)
           .withAuthenticationScheme(authenticationScheme)
-          .withKerberosConfig(kerberosConfig);
+          .withKerberosConfig(kerberosConfig)
+          .withSshPassword(sshPassword)
+          .withAccessType(accessType);
     }
 
     public SshSessionConfig build() {
@@ -277,6 +296,8 @@ public class SshSessionConfig implements EncryptableSetting {
       sshSessionConfig.setWorkingDirectory(workingDirectory);
       sshSessionConfig.setAuthenticationScheme(authenticationScheme);
       sshSessionConfig.setKerberosConfig(kerberosConfig);
+      sshSessionConfig.setSshPassword(sshPassword);
+      sshSessionConfig.setAccessType(accessType);
       return sshSessionConfig;
     }
   }

@@ -152,7 +152,6 @@ public class AccountServiceImpl implements AccountService {
   }
 
   private void createDefaultAccountEntities(Account account) {
-    settingsService.createDefaultAccountSettings(account.getUuid());
     createDefaultRoles(account)
         .stream()
         .filter(role -> RoleType.ACCOUNT_ADMIN.equals(role.getRoleType()))

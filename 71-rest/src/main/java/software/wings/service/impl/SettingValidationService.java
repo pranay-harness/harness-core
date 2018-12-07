@@ -338,7 +338,12 @@ public class SettingValidationService {
           throw new InvalidRequestException("Private key file path is not specified", USER);
         }
       } else {
-        if (isEmpty(hostConnectionAttributes.getKey())) {
+        if (hostConnectionAttributes.getAccessType() != null
+            && hostConnectionAttributes.getAccessType().equals(HostConnectionAttributes.AccessType.USER_PASSWORD)) {
+          if (isEmpty(hostConnectionAttributes.getSshPassword())) {
+            throw new InvalidRequestException("Password field is mandatory in SSH Configuration", USER);
+          }
+        } else if (isEmpty(hostConnectionAttributes.getKey())) {
           throw new InvalidRequestException("Private key is not specified", USER);
         }
       }
