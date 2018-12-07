@@ -26,7 +26,6 @@ import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
 import software.wings.sm.StateType;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -54,7 +53,7 @@ public class LogVerificationResource {
   public RestResponse<List<LogDataRecord>> getRawLogData(@QueryParam("accountId") String accountId,
       @QueryParam("workflowExecutionId") String workflowExecutionId,
       @QueryParam("clusterLevel") ClusterLevel clusterLevel, @QueryParam("compareCurrent") boolean compareCurrent,
-      @QueryParam("stateType") StateType stateType, LogRequest logRequest) throws IOException {
+      @QueryParam("stateType") StateType stateType, LogRequest logRequest) {
     return new RestResponse<>(
         analysisService.getLogData(logRequest, compareCurrent, workflowExecutionId, clusterLevel, stateType));
   }
@@ -71,7 +70,7 @@ public class LogVerificationResource {
       @QueryParam("workflowExecutionId") String workflowExecutionId, @QueryParam("appId") final String appId,
       @QueryParam("serviceId") String serviceId, @QueryParam("clusterLevel") ClusterLevel clusterLevel,
       @QueryParam("delegateTaskId") String delegateTaskId, @QueryParam("stateType") StateType stateType,
-      List<LogElement> logData) throws IOException {
+      List<LogElement> logData) {
     return new RestResponse<>(analysisService.saveLogData(stateType, accountId, appId, stateExecutionId, workflowId,
         workflowExecutionId, serviceId, clusterLevel, delegateTaskId, logData));
   }
@@ -87,7 +86,7 @@ public class LogVerificationResource {
       @QueryParam("logCollectionMinute") Integer logCollectionMinute,
       @QueryParam("isBaselineCreated") boolean isBaselineCreated, @QueryParam("taskId") String taskId,
       @QueryParam("baseLineExecutionId") String baseLineExecutionId, @QueryParam("stateType") StateType stateType,
-      LogMLAnalysisRecord mlAnalysisResponse) throws IOException {
+      LogMLAnalysisRecord mlAnalysisResponse) {
     mlAnalysisResponse.setStateExecutionId(stateExecutionId);
     mlAnalysisResponse.setLogCollectionMinute(logCollectionMinute);
     mlAnalysisResponse.setBaseLineCreated(isBaselineCreated);
@@ -104,32 +103,18 @@ public class LogVerificationResource {
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<LogMLAnalysisRecord> getLogMLAnalysisRecords(@QueryParam("accountId") String accountId,
-      @QueryParam("stateType") StateType stateType, LogMLAnalysisRequest mlAnalysisRequest) throws IOException {
+      @QueryParam("stateType") StateType stateType, LogMLAnalysisRequest mlAnalysisRequest) {
     return new RestResponse<>(analysisService.getLogAnalysisRecords(mlAnalysisRequest.getApplicationId(),
         mlAnalysisRequest.getStateExecutionId(), mlAnalysisRequest.getQuery(), stateType,
         mlAnalysisRequest.getLogCollectionMinute()));
   }
 
-  /*@GET
-  @Path(LogAnalysisResource.ANALYSIS_STATE_GET_ANALYSIS_SUMMARY_URL)
-  @Timed
-  @ExceptionMetered
-  public RestResponse<LogMLAnalysisSummary> getLogAnalysisSummary(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("stateType") StateType stateType) throws IOException {
-    if (featureFlagService.isEnabledReloadCache(FeatureName.CV_DEMO, accountId)) {
-      return new RestResponse<>(analysisService.getAnalysisSummaryForDemo(stateExecutionId, applicationId, stateType));
-    } else {
-      return new RestResponse<>(analysisService.getAnalysisSummary(stateExecutionId, applicationId, stateType));
-    }
-  }*/
-
   @POST
   @Path(LogAnalysisResource.ANALYSIS_USER_FEEDBACK)
   @Timed
   @ExceptionMetered
-  public RestResponse<Boolean> createUserFeedback(@QueryParam("accountId") String accountId,
-      @QueryParam("stateType") StateType stateType, LogMLFeedback feedback) throws IOException {
+  public RestResponse<Boolean> createUserFeedback(
+      @QueryParam("accountId") String accountId, @QueryParam("stateType") StateType stateType, LogMLFeedback feedback) {
     if (!isEmpty(feedback.getLogMLFeedbackId())) {
       throw new WingsException("feedback id should not be set in POST call. to update feedback use PUT");
     }
@@ -141,7 +126,7 @@ public class LogVerificationResource {
   @Timed
   @ExceptionMetered
   public RestResponse<Boolean> deleteUserFeedback(
-      @QueryParam("accountId") String accountId, @PathParam("feedbackId") String feedbackId) throws IOException {
+      @QueryParam("accountId") String accountId, @PathParam("feedbackId") String feedbackId) {
     return new RestResponse<>(analysisService.deleteFeedback(feedbackId));
   }
 

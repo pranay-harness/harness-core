@@ -1,7 +1,6 @@
 package io.harness.service;
 
 import static io.harness.beans.ExecutionStatus.SUCCESS;
-import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -18,10 +17,6 @@ import com.google.inject.Inject;
 
 import com.mongodb.DuplicateKeyException;
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.PageRequest;
-import io.harness.beans.PageResponse;
-import io.harness.beans.SearchFilter.Operator;
-import io.harness.beans.SortOrder.OrderType;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.managerclient.VerificationManagerClient;
@@ -39,13 +34,11 @@ import org.slf4j.LoggerFactory;
 import software.wings.api.InstanceElement;
 import software.wings.api.PhaseElement;
 import software.wings.beans.ElementExecutionSummary;
-import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.metrics.RiskLevel;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.AnalysisServiceImpl;
-import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.analysis.ExperimentalLogMLAnalysisRecord;
 import software.wings.service.impl.analysis.LogDataRecord;
 import software.wings.service.impl.analysis.LogElement;
@@ -58,7 +51,6 @@ import software.wings.service.impl.analysis.LogMLFeedbackRecord;
 import software.wings.service.impl.analysis.LogMLHostSummary;
 import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.impl.analysis.MLAnalysisType;
-import software.wings.service.impl.newrelic.LearningEngineAnalysisTask;
 import software.wings.service.impl.newrelic.LearningEngineExperimentalAnalysisTask;
 import software.wings.service.impl.splunk.LogMLClusterScores;
 import software.wings.service.impl.splunk.LogMLClusterScores.LogMLScore;
@@ -138,33 +130,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
       query = query.field("host").in(host);
     }
     wingsPersistence.delete(query);
-  }
-
-  @Override
-  public void cleanUpForLogRetry(String stateExecutionId) {
-    // delete log data records
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(LogDataRecord.class).filter("stateExecutionId", stateExecutionId));
-
-    // delete log analysis records
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(LogMLAnalysisRecord.class).filter("stateExecutionId", stateExecutionId));
-
-    // delete cv dashboard execution data
-    wingsPersistence.delete(wingsPersistence.createQuery(ContinuousVerificationExecutionMetaData.class)
-                                .filter("stateExecutionId", stateExecutionId));
-
-    // delete learning engine tasks
-    wingsPersistence.delete(
-        wingsPersistence.createQuery(LearningEngineAnalysisTask.class).filter("state_execution_id", stateExecutionId));
-
-    // delete experimental learning engine tasks
-    wingsPersistence.delete(wingsPersistence.createQuery(LearningEngineExperimentalAnalysisTask.class)
-                                .filter("state_execution_id", stateExecutionId));
-
-    // delete experimental log analysis records
-    wingsPersistence.delete(wingsPersistence.createQuery(ExperimentalLogMLAnalysisRecord.class)
-                                .filter("stateExecutionId", stateExecutionId));
   }
 
   @Override
@@ -547,8 +512,8 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
   }
 
   @Override
-  public LogMLAnalysisRecord getLogAnalysisRecords(String appId, String stateExecutionId, String query,
-      StateType stateType, Integer logCollectionMinute) throws IOException {
+  public LogMLAnalysisRecord getLogAnalysisRecords(
+      String appId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute) {
     LogMLAnalysisRecord logMLAnalysisRecord = wingsPersistence.createQuery(LogMLAnalysisRecord.class)
                                                   .filter("stateExecutionId", stateExecutionId)
                                                   .filter("appId", appId)
@@ -985,37 +950,6 @@ public class LogAnalysisServiceImpl implements LogAnalysisService {
     final int sprinkleRatio = random.nextInt() % 8;
     double adjustmentBase = coordinate - Math.floor(coordinate);
     return coordinate + (adjustmentBase * sprinkleRatio) / 100;
-  }
-
-  @Override
-  public boolean purgeLogs() {
-    final PageRequest<Workflow> workflowRequest = aPageRequest().build();
-    PageResponse<Workflow> workflows = wingsPersistence.query(Workflow.class, workflowRequest);
-    for (Workflow workflow : workflows) {
-      final PageRequest<WorkflowExecution> workflowExecutionRequest =
-          aPageRequest()
-              .addFilter("workflowId", Operator.EQ, workflow.getUuid())
-              .addFilter("status", Operator.EQ, ExecutionStatus.SUCCESS)
-              .addOrder("createdAt", OrderType.DESC)
-              .build();
-
-      // TODO: PRAVEEN FIX THIS PART
-      // final PageResponse<WorkflowExecution> workflowExecutions =
-      //    workflowExecutionService.listExecutions(workflowExecutionRequest, false, true, false, false);
-      // for (StateType stateType : logAnalysisStates) {
-      //  purgeLogs(stateType, workflowExecutions);
-      //}
-    }
-    return true;
-  }
-
-  private void purgeLogs(StateType stateType, PageResponse<WorkflowExecution> workflowExecutions) {
-    for (WorkflowExecution workflowExecution : workflowExecutions) {
-      if (logExist(stateType, workflowExecution)) {
-        deleteNotRequiredLogs(stateType, workflowExecution);
-        return;
-      }
-    }
   }
 
   private boolean logExist(StateType stateType, WorkflowExecution workflowExecution) {

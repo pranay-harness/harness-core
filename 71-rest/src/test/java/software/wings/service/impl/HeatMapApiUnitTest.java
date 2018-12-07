@@ -11,6 +11,7 @@ import static software.wings.beans.Application.Builder.anApplication;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.common.VerificationConstants.CRON_POLL_INTERVAL_IN_MINUTES;
 
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.google.inject.Inject;
@@ -38,6 +39,7 @@ import software.wings.resources.ContinuousVerificationDashboardResource;
 import software.wings.security.encryption.EncryptionUtils;
 import software.wings.service.impl.analysis.AnalysisTolerance;
 import software.wings.service.impl.analysis.ContinuousVerificationService;
+import software.wings.service.impl.analysis.TimeSeriesFilter;
 import software.wings.service.impl.analysis.TimeSeriesMLAnalysisRecord;
 import software.wings.service.impl.analysis.TimeSeriesMLHostSummary;
 import software.wings.service.impl.analysis.TimeSeriesMLMetricSummary;
@@ -469,8 +471,13 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     String cvConfigId = readAndSaveAnalysisRecords();
     long startTime = TimeUnit.MINUTES.toMillis(25685446);
 
-    SortedSet<TransactionTimeSeries> timeSeries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
-        accountId, cvConfigId, startTime + 1, 1541177160000L, 0);
+    SortedSet<TransactionTimeSeries> timeSeries =
+        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
+                                                                     .cvConfigId(cvConfigId)
+                                                                     .startTime(startTime + 1)
+                                                                     .endTime(1541177160000L)
+                                                                     .historyStartTime(0)
+                                                                     .build());
     assertEquals(7, timeSeries.size());
     TransactionTimeSeries insideTimeSeries = null;
     for (TransactionTimeSeries series : timeSeries) {
@@ -670,8 +677,13 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long startTime = TimeUnit.MINUTES.toMillis(25685446);
     long endTime = TimeUnit.MINUTES.toMillis(25685461);
     long historyStart = TimeUnit.MINUTES.toMillis(25685326);
-    SortedSet<TransactionTimeSeries> timeseries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
-        accountId, cvConfigId, startTime + 1, endTime, historyStart + 1);
+    SortedSet<TransactionTimeSeries> timeseries =
+        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
+                                                                     .cvConfigId(cvConfigId)
+                                                                     .startTime(startTime + 1)
+                                                                     .endTime(endTime)
+                                                                     .historyStartTime(historyStart + 1)
+                                                                     .build());
     assertEquals(5, timeseries.size());
     assertNotNull("Metric timeseries shouldn't be null", timeseries.first().getMetricTimeSeries());
     assertEquals(9, timeseries.first().getMetricTimeSeries().first().getRisksForTimeSeries().size());
@@ -769,8 +781,13 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long endTime = 1541523660000L;
     long historyStart = 1541515560001L;
     boolean longterm = false;
-    SortedSet<TransactionTimeSeries> timeseries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
-        accountId, cvConfigId, startTime, endTime, historyStart);
+    SortedSet<TransactionTimeSeries> timeseries =
+        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
+                                                                     .cvConfigId(cvConfigId)
+                                                                     .startTime(startTime)
+                                                                     .endTime(endTime)
+                                                                     .historyStartTime(historyStart)
+                                                                     .build());
     for (TransactionTimeSeries s : timeseries) {
       for (TimeSeriesOfMetric tms : s.getMetricTimeSeries()) {
         if (tms.isLongTermPattern()) {
@@ -850,8 +867,13 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
     long startTime = TimeUnit.MINUTES.toMillis(25685326);
     long endTime = TimeUnit.MINUTES.toMillis(25685461);
     long historyStart = TimeUnit.MINUTES.toMillis(25685326);
-    SortedSet<TransactionTimeSeries> timeseries = continuousVerificationService.getTimeSeriesOfHeatMapUnit(
-        accountId, cvConfigId, startTime + 1, endTime, historyStart + 1);
+    SortedSet<TransactionTimeSeries> timeseries =
+        continuousVerificationService.getTimeSeriesOfHeatMapUnit(TimeSeriesFilter.builder()
+                                                                     .cvConfigId(cvConfigId)
+                                                                     .startTime(startTime + 1)
+                                                                     .endTime(endTime)
+                                                                     .historyStartTime(historyStart + 1)
+                                                                     .build());
     for (Iterator<TransactionTimeSeries> txnIterator = timeseries.iterator(); txnIterator.hasNext();) {
       TransactionTimeSeries txnTimeSeries = txnIterator.next();
       for (Iterator<TimeSeriesOfMetric> metricTSIterator = txnTimeSeries.getMetricTimeSeries().iterator();
@@ -919,5 +941,239 @@ public class HeatMapApiUnitTest extends WingsBaseTest {
           >= timeSeriesList.get(i + 1).getMetricTimeSeries().first().getRisk());
     }
     assertEquals("/api/setup-as-code", timeSeriesList.get(0).getTransactionName());
+  }
+
+  @Test
+  public void testNoTxnMetricFilter() throws Exception {
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(connectorId);
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    createAppDConnector();
+
+    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
+    final Gson gson1 = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
+      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
+      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
+      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setAppId(appId);
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
+      });
+      wingsPersistence.save(metricDataRecords);
+    }
+
+    final SortedSet<TransactionTimeSeries> timeSeries = cvDashboardResource
+                                                            .getFilteredTimeSeriesOfHeatMapUnit(accountId,
+                                                                TimeSeriesFilter.builder()
+                                                                    .cvConfigId(cvConfigId)
+                                                                    .startTime(1541678400000L)
+                                                                    .endTime(1541685600000L)
+                                                                    .build())
+                                                            .getResource();
+    assertEquals(43, timeSeries.size());
+  }
+
+  @Test
+  public void testTxnFilter() throws Exception {
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(connectorId);
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    createAppDConnector();
+
+    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
+    final Gson gson1 = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
+      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
+      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
+      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setAppId(appId);
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
+      });
+      wingsPersistence.save(metricDataRecords);
+    }
+
+    final SortedSet<TransactionTimeSeries> timeSeries =
+        cvDashboardResource
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId,
+                TimeSeriesFilter.builder()
+                    .cvConfigId(cvConfigId)
+                    .startTime(1541678400000L)
+                    .endTime(1541685600000L)
+                    .txnNames(Sets.newHashSet("/api/setup-as-code", "/api/infrastructure-mappings", "/api/userGroups"))
+                    .build())
+            .getResource();
+    List<TransactionTimeSeries> timeSeriesList = new ArrayList<>(timeSeries);
+    assertEquals(3, timeSeries.size());
+    assertEquals("/api/userGroups", timeSeriesList.get(0).getTransactionName());
+    assertEquals(1, timeSeriesList.get(0).getMetricTimeSeries().size());
+    assertEquals(
+        "95th Percentile Response Time (ms)", timeSeriesList.get(0).getMetricTimeSeries().first().getMetricName());
+
+    assertEquals("/api/setup-as-code", timeSeriesList.get(1).getTransactionName());
+    assertEquals(2, timeSeriesList.get(1).getMetricTimeSeries().size());
+    assertEquals(
+        "95th Percentile Response Time (ms)", timeSeriesList.get(1).getMetricTimeSeries().first().getMetricName());
+    assertEquals("Number of Slow Calls", timeSeriesList.get(1).getMetricTimeSeries().last().getMetricName());
+
+    assertEquals("/api/infrastructure-mappings", timeSeriesList.get(2).getTransactionName());
+    assertEquals(2, timeSeriesList.get(2).getMetricTimeSeries().size());
+    assertEquals(
+        "95th Percentile Response Time (ms)", timeSeriesList.get(2).getMetricTimeSeries().first().getMetricName());
+    assertEquals("Number of Slow Calls", timeSeriesList.get(2).getMetricTimeSeries().last().getMetricName());
+  }
+
+  @Test
+  public void testMetricFilter() throws Exception {
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(connectorId);
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    createAppDConnector();
+
+    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
+    final Gson gson1 = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
+      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
+      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
+      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setAppId(appId);
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
+      });
+      wingsPersistence.save(metricDataRecords);
+    }
+
+    SortedSet<TransactionTimeSeries> timeSeries =
+        cvDashboardResource
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId,
+                TimeSeriesFilter.builder()
+                    .cvConfigId(cvConfigId)
+                    .startTime(1541678400000L)
+                    .endTime(1541685600000L)
+                    .metricNames(Sets.newHashSet("95th Percentile Response Time (ms)"))
+                    .build())
+            .getResource();
+    assertEquals(43, timeSeries.size());
+    timeSeries.forEach(transactionTimeSeries -> {
+      assertEquals(1, transactionTimeSeries.getMetricTimeSeries().size());
+      assertEquals(
+          "95th Percentile Response Time (ms)", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
+    });
+
+    timeSeries = cvDashboardResource
+                     .getFilteredTimeSeriesOfHeatMapUnit(accountId,
+                         TimeSeriesFilter.builder()
+                             .cvConfigId(cvConfigId)
+                             .startTime(1541678400000L)
+                             .endTime(1541685600000L)
+                             .metricNames(Sets.newHashSet("Number of Slow Calls"))
+                             .build())
+                     .getResource();
+    assertEquals(17, timeSeries.size());
+    timeSeries.forEach(transactionTimeSeries -> {
+      assertEquals(1, transactionTimeSeries.getMetricTimeSeries().size());
+      assertEquals("Number of Slow Calls", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
+    });
+  }
+
+  @Test
+  public void testTxnMetricFilter() throws Exception {
+    AppDynamicsCVServiceConfiguration cvServiceConfiguration = AppDynamicsCVServiceConfiguration.builder()
+                                                                   .appDynamicsApplicationId(generateUuid())
+                                                                   .tierId(generateUuid())
+                                                                   .build();
+    cvServiceConfiguration.setServiceId(serviceId);
+    cvServiceConfiguration.setEnvId(envId);
+    cvServiceConfiguration.setConnectorId(connectorId);
+    cvServiceConfiguration.setAppId(appId);
+    cvServiceConfiguration.setAccountId(accountId);
+    cvServiceConfiguration.setEnabled24x7(true);
+    cvServiceConfiguration.setStateType(StateType.APP_DYNAMICS);
+    String cvConfigId = wingsPersistence.save(cvServiceConfiguration);
+
+    createAppDConnector();
+
+    File file1 = new File(getClass().getClassLoader().getResource("./verification/metricRecords.json").getFile());
+    final Gson gson1 = new Gson();
+    try (BufferedReader br = new BufferedReader(new FileReader(file1))) {
+      Type type = new TypeToken<List<NewRelicMetricDataRecord>>() {}.getType();
+      List<NewRelicMetricDataRecord> metricDataRecords = gson1.fromJson(br, type);
+      metricDataRecords.forEach(timeSeriesMLAnalysisRecord -> {
+        timeSeriesMLAnalysisRecord.setAppId(appId);
+        timeSeriesMLAnalysisRecord.setCvConfigId(cvConfigId);
+        timeSeriesMLAnalysisRecord.setStateType(StateType.APP_DYNAMICS);
+      });
+      wingsPersistence.save(metricDataRecords);
+    }
+
+    SortedSet<TransactionTimeSeries> timeSeries =
+        cvDashboardResource
+            .getFilteredTimeSeriesOfHeatMapUnit(accountId,
+                TimeSeriesFilter.builder()
+                    .cvConfigId(cvConfigId)
+                    .startTime(1541678400000L)
+                    .endTime(1541685600000L)
+                    .txnNames(Sets.newHashSet("/api/setup-as-code", "/api/infrastructure-mappings"))
+                    .metricNames(Sets.newHashSet("95th Percentile Response Time (ms)", "Number of Slow Calls"))
+                    .build())
+            .getResource();
+    assertEquals(2, timeSeries.size());
+    assertEquals("/api/setup-as-code", timeSeries.first().getTransactionName());
+    assertEquals("/api/infrastructure-mappings", timeSeries.last().getTransactionName());
+    timeSeries.forEach(transactionTimeSeries -> {
+      assertEquals(2, transactionTimeSeries.getMetricTimeSeries().size());
+      assertEquals(
+          "95th Percentile Response Time (ms)", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
+      assertEquals("Number of Slow Calls", transactionTimeSeries.getMetricTimeSeries().last().getMetricName());
+    });
+
+    timeSeries = cvDashboardResource
+                     .getFilteredTimeSeriesOfHeatMapUnit(accountId,
+                         TimeSeriesFilter.builder()
+                             .cvConfigId(cvConfigId)
+                             .startTime(1541678400000L)
+                             .endTime(1541685600000L)
+                             .txnNames(Sets.newHashSet("/api/setup-as-code", "/api/infrastructure-mappings"))
+                             .metricNames(Sets.newHashSet("Number of Slow Calls"))
+                             .build())
+                     .getResource();
+    assertEquals(2, timeSeries.size());
+    assertEquals("/api/setup-as-code", timeSeries.first().getTransactionName());
+    assertEquals("/api/infrastructure-mappings", timeSeries.last().getTransactionName());
+    timeSeries.forEach(transactionTimeSeries -> {
+      assertEquals(1, transactionTimeSeries.getMetricTimeSeries().size());
+      assertEquals("Number of Slow Calls", transactionTimeSeries.getMetricTimeSeries().first().getMetricName());
+    });
   }
 }

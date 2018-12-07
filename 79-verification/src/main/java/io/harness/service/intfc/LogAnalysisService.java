@@ -16,7 +16,6 @@ import software.wings.service.impl.analysis.LogRequest;
 import software.wings.service.intfc.analysis.ClusterLevel;
 import software.wings.sm.StateType;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -28,7 +27,7 @@ public interface LogAnalysisService {
   @ValidationGroups(Create.class)
   Boolean saveLogData(@NotNull StateType stateType, String accountId, @NotNull String appId,
       @NotNull String stateExecutionId, String workflowId, String workflowExecutionId, String serviceId,
-      ClusterLevel clusterLevel, String delegateTaskId, @Valid List<LogElement> logData) throws IOException;
+      ClusterLevel clusterLevel, String delegateTaskId, @Valid List<LogElement> logData);
 
   @ValidationGroups(Create.class)
   List<LogDataRecord> getLogData(LogRequest logRequest, boolean compareCurrent, String workflowExecutionId,
@@ -36,8 +35,8 @@ public interface LogAnalysisService {
 
   Boolean saveLogAnalysisRecords(LogMLAnalysisRecord mlAnalysisResponse, StateType stateType, Optional<String> taskId);
 
-  LogMLAnalysisRecord getLogAnalysisRecords(String appId, String stateExecutionId, String query, StateType stateType,
-      Integer logCollectionMinute) throws IOException;
+  LogMLAnalysisRecord getLogAnalysisRecords(
+      String appId, String stateExecutionId, String query, StateType stateType, Integer logCollectionMinute);
 
   LogMLAnalysisSummary getExperimentalAnalysisSummary(
       String stateExecutionId, String appId, StateType stateType, String expName);
@@ -48,8 +47,6 @@ public interface LogAnalysisService {
 
   boolean isBaselineCreated(AnalysisComparisonStrategy comparisonStrategy, StateType stateType, String appId,
       String workflowId, String workflowExecutionId, String serviceId);
-
-  boolean purgeLogs();
 
   void deleteClusterLevel(StateType stateType, String stateExecutionId, String appId, String searchQuery,
       Set<String> host, int logCollectionMinute, ClusterLevel... clusterLevels);
@@ -65,9 +62,7 @@ public interface LogAnalysisService {
   List<LogMLFeedbackRecord> getMLFeedback(
       String appId, String serviceId, String workflowId, String workflowExecutionId);
 
-  void cleanUpForLogRetry(String stateExecutionId);
-
-  boolean deleteFeedback(String feedbackId) throws IOException;
+  boolean deleteFeedback(String feedbackId);
 
   Map<String, InstanceElement> getLastExecutionNodes(String appId, String workflowId);
 
