@@ -106,6 +106,10 @@ public class Log extends Base implements GoogleDataStoreAware {
         logEntityBuilder.set("commandUnitName", getCommandUnitName());
       }
 
+      if (validUntil != null) {
+        logEntityBuilder.set("validUntil", validUntil.getTime());
+      }
+
       return logEntityBuilder.build();
     } catch (IOException e) {
       throw new WingsException(e);

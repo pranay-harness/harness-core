@@ -22,33 +22,31 @@ import io.harness.beans.SearchFilter;
 import io.harness.exception.WingsException;
 import io.harness.persistence.GoogleDataStoreAware;
 import org.jetbrains.annotations.Nullable;
+import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.Log;
 import software.wings.dl.WingsPersistence;
-import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.LogDataStoreService;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 
 public class GoogleLogDataStoreServiceImpl implements LogDataStoreService {
   private static int PURGE_BATCH_SIZE = 10000;
   private static final Logger logger = LoggerFactory.getLogger(GoogleLogDataStoreServiceImpl.class);
   private static final String GOOGLE_APPLICATION_CREDENTIALS_PATH = "GOOGLE_APPLICATION_CREDENTIALS";
   private final Datastore datastore = DatastoreOptions.getDefaultInstance().getService();
-  private AppService appService;
   private LogDataStoreService mongoLogDataStoreService;
 
   @Inject
-  public GoogleLogDataStoreServiceImpl(AppService appService, WingsPersistence wingsPersistence) {
+  public GoogleLogDataStoreServiceImpl(WingsPersistence wingsPersistence) {
     String googleCrdentialsPath = System.getenv(GOOGLE_APPLICATION_CREDENTIALS_PATH);
     if (isEmpty(googleCrdentialsPath) || !new File(googleCrdentialsPath).exists()) {
       throw new WingsException("Invalid credentials found at " + googleCrdentialsPath);
     }
-    this.appService = appService;
     mongoLogDataStoreService = new MongoLogDataStoreServiceImpl(wingsPersistence);
   }
 
@@ -105,18 +103,26 @@ public class GoogleLogDataStoreServiceImpl implements LogDataStoreService {
 
   @Override
   public void purgeOlderLogs() {
-    Query<Key> query =
-        Query.newKeyQueryBuilder()
-            .setKind(Log.class.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value())
-            .setFilter(PropertyFilter.lt("createdAt", System.currentTimeMillis() - TimeUnit.DAYS.toMillis(180)))
-            .build();
-    List<Key> keysToDelete = new ArrayList<>();
-    datastore.run(query).forEachRemaining(key -> keysToDelete.add(key));
-    logger.info("Total keys to delete {}", keysToDelete.size());
-    final List<List<Key>> keyBatches = batchKeysToDelete(keysToDelete);
-    keyBatches.forEach(keys -> {
-      logger.info("purging {} records", keys.size());
-      datastore.delete(keys.stream().toArray(Key[] ::new));
+    Reflections reflections = new Reflections("software.wings");
+    Set<Class<? extends GoogleDataStoreAware>> dataStoreClasses = reflections.getSubTypesOf(GoogleDataStoreAware.class);
+    reflections = new Reflections("io.harness");
+    dataStoreClasses.addAll(reflections.getSubTypesOf(GoogleDataStoreAware.class));
+
+    dataStoreClasses.forEach(dataStoreClass -> {
+      String collectionName = dataStoreClass.getAnnotation(org.mongodb.morphia.annotations.Entity.class).value();
+      logger.info("cleaning up {}", collectionName);
+      Query<Key> query = Query.newKeyQueryBuilder()
+                             .setKind(collectionName)
+                             .setFilter(PropertyFilter.lt("validUntil", System.currentTimeMillis()))
+                             .build();
+      List<Key> keysToDelete = new ArrayList<>();
+      datastore.run(query).forEachRemaining(key -> keysToDelete.add(key));
+      logger.info("Total keys to delete {} for {}", keysToDelete.size(), collectionName);
+      final List<List<Key>> keyBatches = batchKeysToDelete(keysToDelete);
+      keyBatches.forEach(keys -> {
+        logger.info("purging {} records from {}", keys.size(), collectionName);
+        datastore.delete(keys.stream().toArray(Key[] ::new));
+      });
     });
   }
 

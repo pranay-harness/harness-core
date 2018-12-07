@@ -36,7 +36,7 @@ public class ExecutionLogsPruneJob implements Job {
 
     Trigger trigger = TriggerBuilder.newTrigger()
                           .withIdentity(EXECUTION_LOGS_PRUNE_CRON_NAME, EXECUTION_LOGS_PRUNE_CRON_GROUP)
-                          .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(12).repeatForever())
+                          .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(1).repeatForever())
                           .build();
 
     jobScheduler.scheduleJob(job, trigger);

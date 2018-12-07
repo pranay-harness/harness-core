@@ -168,6 +168,9 @@ public class ThirdPartyApiCallLog extends Base implements GoogleDataStoreAware {
       if (isNotEmpty(getDelegateTaskId())) {
         logEntityBuilder.set("delegateTaskId", getDelegateTaskId());
       }
+      if (validUntil != null) {
+        logEntityBuilder.set("validUntil", validUntil.getTime());
+      }
       return logEntityBuilder.build();
     } catch (IOException e) {
       throw new WingsException(e);
