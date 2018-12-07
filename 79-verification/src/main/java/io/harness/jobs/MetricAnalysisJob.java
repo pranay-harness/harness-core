@@ -149,16 +149,13 @@ public class MetricAnalysisJob implements Job {
               context.getStateType(), context.getAppId(), context.getWorkflowId(), context.getServiceId());
       final List<NewRelicMetricDataRecord> controlRecords =
           context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_PREVIOUS
-          ? analysisService.getPreviousSuccessfulRecords(context.getStateType(), context.getAppId(),
-                context.getWorkflowId(), lastSuccessfulWorkflowExecutionIdWithData, context.getServiceId(), groupName,
-                analysisMinute, analysisStartMin)
-          : analysisService.getRecords(context.getStateType(), context.getAppId(), context.getWorkflowExecutionId(),
-                context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(), groupName,
+          ? analysisService.getPreviousSuccessfulRecords(context.getAppId(), lastSuccessfulWorkflowExecutionIdWithData,
+                groupName, analysisMinute, analysisStartMin)
+          : analysisService.getRecords(context.getAppId(), context.getStateExecutionId(), groupName,
                 getNodesForGroup(groupName, context.getControlNodes()), analysisMinute, analysisStartMin);
 
       final List<NewRelicMetricDataRecord> testRecords =
-          analysisService.getRecords(context.getStateType(), context.getAppId(), context.getWorkflowExecutionId(),
-              context.getStateExecutionId(), context.getWorkflowId(), context.getServiceId(), groupName,
+          analysisService.getRecords(context.getAppId(), context.getStateExecutionId(), groupName,
               getNodesForGroup(groupName, context.getTestNodes()), analysisMinute, analysisStartMin);
 
       String message = "";
@@ -171,10 +168,8 @@ public class MetricAnalysisJob implements Job {
 
       NewRelicMetricAnalysisRecord analysisRecord = NewRelicMetricAnalysisRecord.builder()
                                                         .appId(context.getAppId())
-                                                        .stateType(context.getStateType())
                                                         .stateExecutionId(context.getStateExecutionId())
                                                         .workflowExecutionId(context.getWorkflowExecutionId())
-                                                        .workflowId(context.getWorkflowId())
                                                         .riskLevel(RiskLevel.LOW)
                                                         .groupName(groupName)
                                                         .message(message)
@@ -419,9 +414,8 @@ public class MetricAnalysisJob implements Job {
                       context.getStateExecutionId(), analysisMinute, maxControlMinute, context);
                   // Do nothing. Don't run any analysis.
                   taskQueued = true;
-                  analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getAppId(),
-                      context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(),
-                      groupName, analysisMinute);
+                  analysisService.bumpCollectionMinuteToProcess(context.getAppId(), context.getStateExecutionId(),
+                      context.getWorkflowExecutionId(), groupName, analysisMinute);
                   break;
                 }
                 taskQueued = timeSeriesML(analysisMinute, groupName, timeSeriesMlAnalysisType);
@@ -442,9 +436,8 @@ public class MetricAnalysisJob implements Job {
             logger.info("running local time series analysis for {}", context.getStateExecutionId());
             NewRelicMetricAnalysisRecord analysisRecord = analyzeLocal(analysisMinute, groupName);
             analysisService.saveAnalysisRecords(analysisRecord);
-            analysisService.bumpCollectionMinuteToProcess(context.getStateType(), context.getAppId(),
-                context.getStateExecutionId(), context.getWorkflowExecutionId(), context.getServiceId(), groupName,
-                analysisMinute);
+            analysisService.bumpCollectionMinuteToProcess(context.getAppId(), context.getStateExecutionId(),
+                context.getWorkflowExecutionId(), groupName, analysisMinute);
           } else if (!taskQueued) {
             continue;
           }
@@ -611,11 +604,9 @@ public class MetricAnalysisJob implements Job {
     private String getMetricAnalysisSaveUrl(
         String resourceUrl, String saveApiName, String uuid, String groupName, int analysisMinute) {
       String metricAnalysisSaveUrl = "/verification/" + resourceUrl + saveApiName
-          + "?accountId=" + context.getAccountId() + "&stateType=" + context.getStateType()
-          + "&applicationId=" + context.getAppId() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-          + "&stateExecutionId=" + context.getStateExecutionId() + "&analysisMinute=" + analysisMinute
-          + "&taskId=" + uuid + "&serviceId=" + context.getServiceId() + "&workflowId=" + context.getWorkflowId()
-          + "&groupName=" + groupName;
+          + "?accountId=" + context.getAccountId() + "&applicationId=" + context.getAppId() + "&workflowExecutionId="
+          + context.getWorkflowExecutionId() + "&stateExecutionId=" + context.getStateExecutionId()
+          + "&analysisMinute=" + analysisMinute + "&taskId=" + uuid + "&groupName=" + groupName;
 
       if (!isEmpty(context.getPrevWorkflowExecutionId())) {
         metricAnalysisSaveUrl += "&baseLineExecutionId=" + context.getPrevWorkflowExecutionId();
@@ -624,11 +615,10 @@ public class MetricAnalysisJob implements Job {
     }
 
     private String getControlInputUrl(String groupName) throws UnsupportedEncodingException {
-      String controlInputUrl = "/verification/" + MetricDataAnalysisService.RESOURCE_URL
-          + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-          + "&stateType=" + context.getStateType() + "&groupName=" + groupName + "&compareCurrent=";
+      String controlInputUrl = "/verification/" + MetricDataAnalysisService.RESOURCE_URL + "/get-metrics?accountId="
+          + context.getAccountId() + "&appId=" + context.getAppId() + "&groupName=" + groupName + "&compareCurrent=";
       if (context.getComparisonStrategy() == AnalysisComparisonStrategy.COMPARE_WITH_CURRENT) {
-        controlInputUrl = controlInputUrl + true + "&workflowExecutionId=" + context.getWorkflowExecutionId();
+        controlInputUrl = controlInputUrl + true + "&stateExecutionId=" + context.getStateExecutionId();
       } else {
         controlInputUrl = controlInputUrl + false + "&workflowExecutionId=" + context.getPrevWorkflowExecutionId();
       }
@@ -639,8 +629,7 @@ public class MetricAnalysisJob implements Job {
     private String getTestInputUrl(String groupName) throws UnsupportedEncodingException {
       String testInputUrl = "/verification/" + MetricDataAnalysisService.RESOURCE_URL
           + "/get-metrics?accountId=" + context.getAccountId() + "&appId=" + context.getAppId()
-          + "&stateType=" + context.getStateType() + "&workflowExecutionId=" + context.getWorkflowExecutionId()
-          + "&groupName=" + groupName + "&compareCurrent=true";
+          + "&stateExecutionId=" + context.getStateExecutionId() + "&groupName=" + groupName + "&compareCurrent=true";
       return testInputUrl.replaceAll(" ", URLEncoder.encode(" ", "UTF-8"));
     }
   }

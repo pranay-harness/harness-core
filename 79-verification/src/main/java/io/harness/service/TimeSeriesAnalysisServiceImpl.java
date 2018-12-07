@@ -121,12 +121,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
    * Method to save ml analysed records to mongoDB
    *
    * @param stateType
-   * @param accountId
    * @param appId
    * @param stateExecutionId
    * @param workflowExecutionId
-   * @param workflowId
-   * @param serviceId
    * @param groupName
    * @param analysisMinute
    * @param taskId
@@ -136,9 +133,9 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
    * @return
    */
   @Override
-  public boolean saveAnalysisRecordsML(StateType stateType, String accountId, String appId, String stateExecutionId,
-      String workflowExecutionId, String workflowId, String serviceId, String groupName, Integer analysisMinute,
-      String taskId, String baseLineExecutionId, String cvConfigId, MetricAnalysisRecord mlAnalysisResponse) {
+  public boolean saveAnalysisRecordsML(StateType stateType, String appId, String stateExecutionId,
+      String workflowExecutionId, String groupName, Integer analysisMinute, String taskId, String baseLineExecutionId,
+      String cvConfigId, MetricAnalysisRecord mlAnalysisResponse) {
     logger.info("saveAnalysisRecordsML stateType  {} stateExecutionId {} analysisMinute {}", stateType,
         stateExecutionId, analysisMinute);
     mlAnalysisResponse.setStateType(stateType);
@@ -158,7 +155,6 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
                                                 .appId(appId)
                                                 .stateExecutionId(stateExecutionId)
                                                 .workflowExecutionId(workflowExecutionId)
-                                                .workflowId(workflowId)
                                                 .analysisMinute(analysisMinute)
                                                 .stateType(stateType)
                                                 .scoresMap(new HashMap<>())
@@ -202,8 +198,7 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
     mlAnalysisResponse.setAggregatedRisk(aggregatedRisk);
 
     saveTimeSeriesMLScores(timeSeriesMLScores);
-    bumpCollectionMinuteToProcess(
-        stateType, appId, stateExecutionId, workflowExecutionId, serviceId, groupName, analysisMinute);
+    bumpCollectionMinuteToProcess(appId, stateExecutionId, workflowExecutionId, groupName, analysisMinute);
     learningEngineService.markCompleted(taskId);
 
     mlAnalysisResponse.compressTransactions();
@@ -298,16 +293,11 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public List<NewRelicMetricDataRecord> getRecords(StateType stateType, String appId, String workflowExecutionId,
-      String stateExecutionId, String workflowId, String serviceId, String groupName, Set<String> nodes,
-      int analysisMinute, int analysisStartMinute) {
+  public List<NewRelicMetricDataRecord> getRecords(String appId, String stateExecutionId, String groupName,
+      Set<String> nodes, int analysisMinute, int analysisStartMinute) {
     return wingsPersistence.createQuery(NewRelicMetricDataRecord.class, excludeCount)
-        .filter("stateType", stateType)
-        .filter("appId", appId)
-        .filter("workflowId", workflowId)
-        .filter("workflowExecutionId", workflowExecutionId)
         .filter("stateExecutionId", stateExecutionId)
-        .filter("serviceId", serviceId)
+        .filter("appId", appId)
         .filter("groupName", groupName)
         .field("host")
         .hasAnyOf(nodes)
@@ -321,16 +311,12 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(StateType stateType, String appId,
-      String workflowId, String workflowExecutionID, String serviceId, String groupName, int analysisMinute,
-      int analysisStartMinute) {
+  public List<NewRelicMetricDataRecord> getPreviousSuccessfulRecords(
+      String appId, String workflowExecutionID, String groupName, int analysisMinute, int analysisStartMinute) {
     MorphiaIterator<NewRelicMetricDataRecord, NewRelicMetricDataRecord> iterator =
         wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-            .filter("stateType", stateType)
-            .filter("appId", appId)
-            .filter("workflowId", workflowId)
             .filter("workflowExecutionId", workflowExecutionID)
-            .filter("serviceId", serviceId)
+            .filter("appId", appId)
             .field("groupName")
             .in(asList(groupName, NewRelicMetricDataRecord.DEFAULT_GROUP_NAME))
             .field("level")
@@ -706,17 +692,15 @@ public class TimeSeriesAnalysisServiceImpl implements TimeSeriesAnalysisService 
   }
 
   @Override
-  public void bumpCollectionMinuteToProcess(StateType stateType, String appId, String stateExecutionId,
-      String workflowExecutionId, String serviceId, String groupName, int analysisMinute) {
+  public void bumpCollectionMinuteToProcess(
+      String appId, String stateExecutionId, String workflowExecutionId, String groupName, int analysisMinute) {
     logger.info(
         "bumpCollectionMinuteToProcess. Going to update the record for stateExecutionId {} and dataCollectionMinute {}",
         stateExecutionId, analysisMinute);
     Query<NewRelicMetricDataRecord> query = wingsPersistence.createQuery(NewRelicMetricDataRecord.class)
-                                                .filter("stateType", stateType)
                                                 .filter("appId", appId)
                                                 .filter("workflowExecutionId", workflowExecutionId)
                                                 .filter("stateExecutionId", stateExecutionId)
-                                                .filter("serviceId", serviceId)
                                                 .filter("groupName", groupName)
                                                 .filter("level", ClusterLevel.H0)
                                                 .field("dataCollectionMinute")
