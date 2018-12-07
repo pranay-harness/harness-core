@@ -46,7 +46,8 @@ public interface SecretManager {
   String encrypt(String accountId, String secret, UsageRestrictions usageRestrictions);
 
   EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions);
+      char[] secret, String secretPath, EncryptedData encryptedData, String secretName,
+      UsageRestrictions usageRestrictions);
 
   Optional<EncryptedDataDetail> encryptedDataDetails(String accountId, String fieldName, String refId);
 
@@ -74,9 +75,10 @@ public interface SecretManager {
 
   EncryptedData getSecretById(String accountId, String id);
 
-  String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions);
+  String saveSecret(String accountId, String name, String value, String path, UsageRestrictions usageRestrictions);
 
-  boolean updateSecret(String accountId, String uuId, String name, String value, UsageRestrictions usageRestrictions);
+  boolean updateSecret(
+      String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions);
 
   boolean updateUsageRestrictionsForSecretOrFile(String accountId, String uuId, UsageRestrictions usageRestrictions);
 
@@ -103,5 +105,6 @@ public interface SecretManager {
 
   List<UuidAware> getSecretUsage(String accountId, String secretTextId);
 
-  String saveSecretUsingLocalMode(String accountId, String name, String value, UsageRestrictions usageRestrictions);
+  String saveSecretUsingLocalMode(
+      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions);
 }

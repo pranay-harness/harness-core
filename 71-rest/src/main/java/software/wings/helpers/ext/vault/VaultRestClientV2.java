@@ -32,7 +32,7 @@ public interface VaultRestClientV2 {
       @Path("keyName") String keyName, @Path("variableType") SettingVariableTypes settingType,
       @Body VaultSecretValueV2 value);
 
-  @DELETE(BASE_VAULT_URL + "{basePath}/{variableType}/{path}")
+  @DELETE(BASE_VAULT_URL + "{basePath}/{path}")
   Call<Void> deleteSecret(
       @Header("X-Vault-Token") String header, @Path("basePath") String basePath, @Path("path") String path);
 

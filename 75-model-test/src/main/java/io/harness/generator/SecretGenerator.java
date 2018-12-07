@@ -24,7 +24,7 @@ public class SecretGenerator {
     }
 
     return secretManager.saveSecret(
-        accountId, name.getValue(), scmSecret.decryptToString(name), getAllAppAllEnvUsageRestrictions());
+        accountId, name.getValue(), scmSecret.decryptToString(name), null, getAllAppAllEnvUsageRestrictions());
   }
 
   public String ensureStored(Owners owners, SecretName name) {

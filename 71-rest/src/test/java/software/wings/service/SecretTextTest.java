@@ -286,7 +286,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(2, changeLogs.size());
     secretChangeLog = changeLogs.get(0);
     assertEquals(accountId, secretChangeLog.getAccountId());
-    assertEquals("Changed name & usage restrictions", secretChangeLog.getDescription());
+    assertEquals("Changed usage restrictions", secretChangeLog.getDescription());
     secretChangeLog = changeLogs.get(1);
     assertEquals(accountId, secretChangeLog.getAccountId());
     assertEquals("Created", secretChangeLog.getDescription());
@@ -307,7 +307,7 @@ public class SecretTextTest extends WingsBaseTest {
     changeLogs = secretManagementResource.getChangeLogs(accountId, secretId, SECRET_TEXT).getResource();
     assertEquals(3, changeLogs.size());
     assertEquals("Changed name", changeLogs.get(0).getDescription());
-    assertEquals("Changed name & usage restrictions", changeLogs.get(1).getDescription());
+    assertEquals("Changed usage restrictions", changeLogs.get(1).getDescription());
     assertEquals("Created", changeLogs.get(2).getDescription());
 
     // change both name and value and test
@@ -319,7 +319,7 @@ public class SecretTextTest extends WingsBaseTest {
     assertEquals(4, changeLogs.size());
     assertEquals("Changed name & value", changeLogs.get(0).getDescription());
     assertEquals("Changed name", changeLogs.get(1).getDescription());
-    assertEquals("Changed name & usage restrictions", changeLogs.get(2).getDescription());
+    assertEquals("Changed usage restrictions", changeLogs.get(2).getDescription());
     assertEquals("Created", changeLogs.get(3).getDescription());
 
     savedVariable = wingsPersistence.get(ServiceVariable.class, savedAttributeId);

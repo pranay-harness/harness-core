@@ -121,8 +121,8 @@ public class SecretManagementResource {
   @Timed
   @ExceptionMetered
   public RestResponse<String> saveSecret(@QueryParam("accountId") final String accountId, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.saveSecret(
-        accountId, secretText.getName(), secretText.getValue(), secretText.getUsageRestrictions()));
+    return new RestResponse<>(secretManager.saveSecret(accountId, secretText.getName(), secretText.getValue(),
+        secretText.getPath(), secretText.getUsageRestrictions()));
   }
 
   @POST
@@ -131,8 +131,8 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<String> saveSecretUsingLocalMode(
       @QueryParam("accountId") final String accountId, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.saveSecretUsingLocalMode(
-        accountId, secretText.getName(), secretText.getValue(), secretText.getUsageRestrictions()));
+    return new RestResponse<>(secretManager.saveSecretUsingLocalMode(accountId, secretText.getName(),
+        secretText.getValue(), secretText.getPath(), secretText.getUsageRestrictions()));
   }
 
   @POST
@@ -141,8 +141,8 @@ public class SecretManagementResource {
   @ExceptionMetered
   public RestResponse<Boolean> updateSecret(@QueryParam("accountId") final String accountId,
       @QueryParam("uuid") final String uuId, @Body SecretText secretText) {
-    return new RestResponse<>(secretManager.updateSecret(
-        accountId, uuId, secretText.getName(), secretText.getValue(), secretText.getUsageRestrictions()));
+    return new RestResponse<>(secretManager.updateSecret(accountId, uuId, secretText.getName(), secretText.getValue(),
+        secretText.getPath(), secretText.getUsageRestrictions()));
   }
 
   @DELETE

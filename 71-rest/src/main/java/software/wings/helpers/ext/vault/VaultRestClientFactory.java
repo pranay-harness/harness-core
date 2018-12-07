@@ -95,7 +95,7 @@ public class VaultRestClientFactory {
     public String readSecret(String authToken, String basePath, String keyName) throws IOException {
       String nonEmptyBasePath = isEmpty(basePath) ? DEFAULT_BASE_PATH : basePath;
       VaultReadResponse response = vaultRestClient.readSecret(authToken, nonEmptyBasePath, keyName).execute().body();
-      return response.getData().getValue();
+      return response == null || response.getData() == null ? null : response.getData().getValue();
     }
 
     @Override
@@ -133,7 +133,7 @@ public class VaultRestClientFactory {
     public String readSecret(String authToken, String basePath, String keyName) throws IOException {
       String nonEmptyBasePath = isEmpty(basePath) ? DEFAULT_BASE_PATH : basePath;
       VaultReadResponseV2 response = vaultRestClient.readSecret(authToken, nonEmptyBasePath, keyName).execute().body();
-      return response.getData().getData().get("value");
+      return response == null || response.getData() == null ? null : response.getData().getData().get("value");
     }
 
     @Override

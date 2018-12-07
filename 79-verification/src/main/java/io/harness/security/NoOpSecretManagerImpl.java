@@ -69,7 +69,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
 
   @Override
   public EncryptedData encrypt(EncryptionType encryptionType, String accountId, SettingVariableTypes settingType,
-      char[] secret, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
+      char[] secret, String path, EncryptedData encryptedData, String secretName, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
   }
 
@@ -137,13 +137,14 @@ public class NoOpSecretManagerImpl implements SecretManager {
   }
 
   @Override
-  public String saveSecret(String accountId, String name, String value, UsageRestrictions usageRestrictions) {
+  public String saveSecret(
+      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
   }
 
   @Override
   public boolean updateSecret(
-      String accountId, String uuId, String name, String value, UsageRestrictions usageRestrictions) {
+      String accountId, String uuId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
   }
 
@@ -209,7 +210,7 @@ public class NoOpSecretManagerImpl implements SecretManager {
 
   @Override
   public String saveSecretUsingLocalMode(
-      String accountId, String name, String value, UsageRestrictions usageRestrictions) {
+      String accountId, String name, String value, String path, UsageRestrictions usageRestrictions) {
     throw new UnsupportedOperationException();
   }
 }

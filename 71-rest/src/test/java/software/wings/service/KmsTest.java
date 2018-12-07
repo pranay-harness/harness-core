@@ -802,7 +802,7 @@ public class KmsTest extends WingsBaseTest {
   public void noKmsEncryptionUpdateServiceVariable() throws IOException, IllegalAccessException {
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     ServiceVariable serviceVariable = ServiceVariable.builder()
                                           .templateId(UUID.randomUUID().toString())
@@ -838,7 +838,7 @@ public class KmsTest extends WingsBaseTest {
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
-    secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     String updatedAppId = UUID.randomUUID().toString();
     String updatedName = UUID.randomUUID().toString();
@@ -1237,7 +1237,7 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
@@ -1294,7 +1294,7 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("type", Type.ENCRYPTED_TEXT);
@@ -1333,7 +1333,7 @@ public class KmsTest extends WingsBaseTest {
     // update to encrypt the variable
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     EncryptedData secretByName = secretManager.getSecretByName(accountId, secretName, true);
     assertThat(secretByName).isNotNull();
@@ -1352,7 +1352,7 @@ public class KmsTest extends WingsBaseTest {
             .envFilter(EnvFilter.builder().filterTypes(Sets.newHashSet(EnvFilter.FilterType.PROD)).build());
     Set<AppEnvRestriction> appEnvRestrictions = new HashSet<>();
     appEnvRestrictions.add(appEnvRestrictionBuilder.build());
-    secretManager.saveSecret(accountId, secretName1, secretValue1,
+    secretManager.saveSecret(accountId, secretName1, secretValue1, null,
         UsageRestrictions.builder().appEnvRestrictions(appEnvRestrictions).build());
 
     secretByName = secretManager.getSecretByName(accountId, secretName1, true);
@@ -1371,7 +1371,7 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     // try with invalid secret id
     final ServiceVariable serviceVariable = ServiceVariable.builder()
@@ -1407,7 +1407,7 @@ public class KmsTest extends WingsBaseTest {
 
     secretName = UUID.randomUUID().toString();
     secretValue = UUID.randomUUID().toString();
-    secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", "newName");
@@ -1460,7 +1460,7 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     String serviceId = wingsPersistence.save(Service.builder().name(UUID.randomUUID().toString()).build());
     String serviceTemplateId =
@@ -1501,7 +1501,7 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())
@@ -1538,7 +1538,7 @@ public class KmsTest extends WingsBaseTest {
     String updatedName = UUID.randomUUID().toString();
     String updatedSecretName = UUID.randomUUID().toString();
     String updatedSecretValue = UUID.randomUUID().toString();
-    String updatedSecretId = secretManager.saveSecret(accountId, updatedSecretName, updatedSecretValue, null);
+    String updatedSecretId = secretManager.saveSecret(accountId, updatedSecretName, updatedSecretValue, null, null);
 
     final Map<String, Object> keyValuePairs = new HashMap<>();
     keyValuePairs.put("name", updatedName);
@@ -2993,7 +2993,7 @@ public class KmsTest extends WingsBaseTest {
 
     String secretName = UUID.randomUUID().toString();
     String secretValue = UUID.randomUUID().toString();
-    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null);
+    String secretId = secretManager.saveSecret(accountId, secretName, secretValue, null, null);
 
     final ServiceVariable serviceVariable = ServiceVariable.builder()
                                                 .templateId(UUID.randomUUID().toString())

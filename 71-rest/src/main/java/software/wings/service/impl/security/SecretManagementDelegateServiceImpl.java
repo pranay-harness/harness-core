@@ -2,11 +2,12 @@ package software.wings.service.impl.security;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.threading.Morpheus.sleep;
 import static java.lang.String.format;
 import static java.time.Duration.ofMillis;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
@@ -141,7 +142,7 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
         if (isRetryable(e)) {
           if (retry < NUM_OF_RETRIES) {
             logger.warn(format("Decryption failed. trial num: %d", retry), e);
-            sleep(ofMillis(100));
+            sleep(ofMillis(1000));
           } else {
             String reason = format("Decryption failed after %d retries", NUM_OF_RETRIES);
             throw new DelegateRetryableException(new KmsOperationException(reason, e, USER));
@@ -314,40 +315,54 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
   private EncryptedData encryptInternal(String name, String value, String accountId, SettingVariableTypes settingType,
       VaultConfig vaultConfig, EncryptedData savedEncryptedData) throws Exception {
     String keyUrl = settingType + "/" + name;
-    if (value == null) {
-      keyUrl = savedEncryptedData == null ? keyUrl : savedEncryptedData.getEncryptionKey();
-      char[] encryptedValue = savedEncryptedData == null ? null : keyUrl.toCharArray();
-      return EncryptedData.builder()
-          .encryptionKey(keyUrl)
-          .encryptedValue(encryptedValue)
-          .encryptionType(EncryptionType.VAULT)
-          .enabled(true)
-          .accountId(accountId)
-          .parentIds(new HashSet<>())
-          .kmsId(vaultConfig.getUuid())
-          .build();
+    char[] encryptedValue = keyUrl.toCharArray();
+
+    EncryptedData encryptedData = savedEncryptedData;
+    if (savedEncryptedData == null) {
+      encryptedData = EncryptedData.builder()
+                          .encryptionKey(keyUrl)
+                          .encryptedValue(encryptedValue)
+                          .encryptionType(EncryptionType.VAULT)
+                          .enabled(true)
+                          .accountId(accountId)
+                          .parentIds(new HashSet<>())
+                          .kmsId(vaultConfig.getUuid())
+                          .build();
     }
-    if (savedEncryptedData != null && isNotBlank(value)) {
-      logger.info("deleting vault secret {} for {}", savedEncryptedData.getEncryptionKey(), savedEncryptedData);
-      VaultRestClientFactory.create(vaultConfig)
-          .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(),
-              savedEncryptedData.getEncryptionKey());
+
+    // When secret path is specified, no need to write secret, since the secret is already created and is just being
+    // referred by a secret text.
+    if (isNotEmpty(encryptedData.getPath())) {
+      // Try decrypting to make sure the 'path' specified is pointing to a valid Vault path.
+      char[] referredSecretValue = decryptInternal(encryptedData, vaultConfig);
+      if (isEmpty(referredSecretValue)) {
+        throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER)
+            .addParam("reason", "Vault path '" + encryptedData.getPath() + "' is not referring to any valid secret.");
+      }
+
+      encryptedData.setEncryptionKey(keyUrl);
+      encryptedData.setEncryptedValue(encryptedValue);
+      return encryptedData;
     }
+
+    if (isEmpty(value)) {
+      return encryptedData;
+    }
+
+    // With existing encrypted value. Need to delete it first and rewrite with new value.
+    logger.info("deleting vault secret {} for {}", keyUrl, encryptedData);
+    VaultRestClientFactory.create(vaultConfig)
+        .deleteSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), keyUrl);
+
     boolean isSuccessful = VaultRestClientFactory.create(vaultConfig)
                                .writeSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), name,
                                    settingType, value);
 
     if (isSuccessful) {
-      logger.info("saving vault secret {} for {}", keyUrl, savedEncryptedData);
-      return EncryptedData.builder()
-          .encryptionKey(keyUrl)
-          .encryptedValue(keyUrl.toCharArray())
-          .encryptionType(EncryptionType.VAULT)
-          .enabled(true)
-          .accountId(accountId)
-          .parentIds(new HashSet<>())
-          .kmsId(vaultConfig.getUuid())
-          .build();
+      logger.info("saving vault secret {} for {}", keyUrl, encryptedData);
+      encryptedData.setEncryptionKey(keyUrl);
+      encryptedData.setEncryptedValue(encryptedValue);
+      return encryptedData;
     } else {
       String errorMsg = "Request not successful.";
       logger.error(errorMsg);
@@ -357,18 +372,19 @@ public class SecretManagementDelegateServiceImpl implements SecretManagementDele
 
   private char[] decryptInternal(EncryptedData data, VaultConfig vaultConfig) throws Exception {
     logger.info("reading secret {} from vault {}", data.getEncryptionKey(), vaultConfig.getVaultUrl());
-    String value =
-        VaultRestClientFactory.create(vaultConfig)
-            .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), data.getEncryptionKey());
+    String keyName = isEmpty(data.getPath()) ? data.getEncryptionKey() : data.getPath();
+    String value = VaultRestClientFactory.create(vaultConfig)
+                       .readSecret(String.valueOf(vaultConfig.getAuthToken()), vaultConfig.getBasePath(), keyName);
 
     if (EmptyPredicate.isNotEmpty(value)) {
       return value.toCharArray();
     } else {
-      String errorMsg = "Request not successful.";
+      String errorMsg = "Secret key path '" + keyName + "' is invalid.";
       logger.error(errorMsg);
       throw new WingsException(ErrorCode.VAULT_OPERATION_ERROR, USER).addParam("reason", errorMsg);
     }
   }
+
   public static char[] encrypt(String src, Key key) throws NoSuchAlgorithmException, NoSuchPaddingException,
                                                            InvalidKeyException, IllegalBlockSizeException,
                                                            BadPaddingException {
