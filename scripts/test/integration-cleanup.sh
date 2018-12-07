@@ -1,5 +1,8 @@
 #!/bin/bash
 
+#kill vault
+pgrep -f "vault"| xargs kill -9 || true
+
 #kill delegate
 pgrep -f "integration-test/wings/delegate" | xargs kill -9
 

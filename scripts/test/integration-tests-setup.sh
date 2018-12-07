@@ -10,6 +10,9 @@ sleep 5
 docker run -p 27017:27017 -d --rm mongo:3.6 || true
 sleep 5
 
+#kill vault
+pgrep -f "vault"| xargs kill -9 || true
+
 echo 'starting vault server'
 touch vault.log
 ~/vault server --dev -dev-root-token-id="root" -dev-listen-address="127.0.0.1:8200" > vault.log &
