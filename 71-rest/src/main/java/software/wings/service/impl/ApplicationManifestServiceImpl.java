@@ -126,10 +126,6 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
     ApplicationManifest savedApplicationManifest =
         wingsPersistence.saveAndGet(ApplicationManifest.class, applicationManifest);
 
-    if (StoreType.Remote.equals(savedApplicationManifest.getStoreType())) {
-      deleteManifestFiles(applicationManifest.getAppId(), applicationManifest.getUuid());
-    }
-
     String appId = savedApplicationManifest.getAppId();
     String accountId = appService.getAccountIdByAppId(appId);
     Service service = serviceResourceService.get(appId, savedApplicationManifest.getServiceId());

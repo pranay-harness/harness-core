@@ -63,6 +63,7 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.GitSyncErrorAlert;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.appmanifest.StoreType;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.command.ServiceCommand;
 import software.wings.beans.container.ContainerTask;
@@ -914,9 +915,11 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
           service.getAppId(), service.getUuid(), INDEX_YAML, ApplicationManifest.class,
           applicationManifestPath.clone().add(INDEX_YAML), yamlGitSyncService, Type.APPLICATION_MANIFEST));
 
-      FolderNode manifestFileFolder =
-          generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
-      applicationManifestFolder.addChild(manifestFileFolder);
+      if (StoreType.Local.equals(applicationManifest.getStoreType())) {
+        FolderNode manifestFileFolder =
+            generateManifestFileFolderNode(accountId, service, applicationManifest, manifestFilePath);
+        applicationManifestFolder.addChild(manifestFileFolder);
+      }
 
       return applicationManifestFolder;
     }
