@@ -26,6 +26,7 @@ import static software.wings.beans.template.TemplateHelper.obtainTemplateFolderP
 import static software.wings.beans.template.TemplateHelper.obtainTemplateName;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V2_INSTALL_PATH;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_V3_INSTALL_PATH;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC_CHANGED;
@@ -518,6 +519,15 @@ public class TemplateServiceTest extends TemplateBaseTest {
   @Test
   public void shouldConvertYamlToTemplate() throws IOException {
     Template template = templateService.convertYamlToTemplate(POWER_SHELL_IIS_V2_INSTALL_PATH);
+    assertThat(template).isNotNull();
+    assertThat(((SshCommandTemplate) template.getTemplateObject()).getCommands().size()).isEqualTo(4);
+    assertThat(((SshCommandTemplate) template.getTemplateObject()).getCommands().get(0).getName())
+        .isEqualTo("Download Artifact");
+  }
+
+  @Test
+  public void shouldConvertYamlToTemplateIISV3() throws IOException {
+    Template template = templateService.convertYamlToTemplate(POWER_SHELL_IIS_V3_INSTALL_PATH);
     assertThat(template).isNotNull();
     assertThat(((SshCommandTemplate) template.getTemplateObject()).getCommands().size()).isEqualTo(4);
     assertThat(((SshCommandTemplate) template.getTemplateObject()).getCommands().get(0).getName())

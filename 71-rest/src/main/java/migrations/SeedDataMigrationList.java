@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 
 import migrations.seedata.GlobalAccountMigration;
 import migrations.seedata.IISInstallCommandMigration;
+import migrations.seedata.IISInstallCommandV2Migration;
 import migrations.seedata.TemplateGalleryDefaultTemplatesMigration;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -17,6 +18,7 @@ public class SeedDataMigrationList {
         .add(Pair.of(3, TemplateGalleryDefaultTemplatesMigration.class))
         .add(Pair.of(4, IISInstallCommandMigration.class))
         .add(Pair.of(5, GlobalAccountMigration.class))
+        .add(Pair.of(6, IISInstallCommandV2Migration.class))
         .build();
   }
 }

@@ -15,7 +15,9 @@ import static software.wings.beans.command.CommandUnitType.DOWNLOAD_ARTIFACT;
 import static software.wings.beans.command.DownloadArtifactCommandUnit.Builder.aDownloadArtifactCommandUnit;
 import static software.wings.common.TemplateConstants.HARNESS_GALLERY;
 import static software.wings.common.TemplateConstants.POWER_SHELL_COMMANDS;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_APP_V2_INSTALL_PATH;
 import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_INSTALL_PATH;
+import static software.wings.common.TemplateConstants.POWER_SHELL_IIS_WEBSITE_V2_INSTALL_PATH;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_CUSTOM_KEYWORD;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_DESC;
 import static software.wings.utils.TemplateTestConstants.TEMPLATE_GALLERY;
@@ -286,6 +288,32 @@ public class TemplateGalleryServiceTest extends WingsBaseTest {
     templateGalleryService.copyHarnessTemplateFromGalleryToAccounts(
         POWER_SHELL_COMMANDS, TemplateType.SSH, "Install IIS Website", POWER_SHELL_IIS_WEBSITE_INSTALL_PATH);
     Template createdTemplate = templateService.fetchTemplateByKeyword(ACCOUNT_ID, "iiswebsite");
+    assertThat(createdTemplate).isNotNull();
+  }
+
+  @Test
+  public void shouldCopyHarnessTemplateFromGalleryToAccountsV2() {
+    // Yaml V2 of IIS Website
+    templateGalleryService.loadHarnessGallery();
+    templateGalleryService.copyHarnessTemplatesToAccount(ACCOUNT_ID, ACCOUNT_NAME);
+    templateService.loadYaml(
+        TemplateType.SSH, POWER_SHELL_IIS_WEBSITE_V2_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    when(accountService.listAllAccounts())
+        .thenReturn(asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build()));
+
+    templateGalleryService.copyHarnessTemplateFromGalleryToAccounts(
+        POWER_SHELL_COMMANDS, TemplateType.SSH, "Install IIS Website", POWER_SHELL_IIS_WEBSITE_V2_INSTALL_PATH);
+    Template createdTemplate = templateService.fetchTemplateByKeyword(ACCOUNT_ID, "iiswebsite");
+    assertThat(createdTemplate).isNotNull();
+
+    // Yaml V2 of IIS Application
+    templateService.loadYaml(TemplateType.SSH, POWER_SHELL_IIS_APP_V2_INSTALL_PATH, GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
+    when(accountService.listAllAccounts())
+        .thenReturn(asList(Account.Builder.anAccount().withUuid(ACCOUNT_ID).withAccountName(ACCOUNT_NAME).build()));
+
+    templateGalleryService.copyHarnessTemplateFromGalleryToAccounts(
+        POWER_SHELL_COMMANDS, TemplateType.SSH, "Install IIS Application", POWER_SHELL_IIS_APP_V2_INSTALL_PATH);
+    createdTemplate = templateService.fetchTemplateByKeyword(ACCOUNT_ID, "iisapp");
     assertThat(createdTemplate).isNotNull();
   }
 
