@@ -31,6 +31,10 @@ public class FileIo {
   }
 
   public static void deleteDirectoryAndItsContentIfExists(final String directoryPath) throws IOException {
+    if (!Files.exists(Paths.get(directoryPath))) {
+      return;
+    }
+
     Files.walkFileTree(Paths.get(directoryPath), new SimpleFileVisitor<Path>() {
       @Override
       public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
