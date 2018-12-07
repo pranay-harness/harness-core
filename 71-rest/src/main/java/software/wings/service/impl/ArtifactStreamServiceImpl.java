@@ -7,6 +7,7 @@ import static io.harness.beans.SortOrder.OrderType.ASC;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
 import static java.util.stream.Collectors.toList;
@@ -21,6 +22,7 @@ import static software.wings.beans.artifact.ArtifactStreamType.GCS;
 import static software.wings.beans.artifact.ArtifactStreamType.NEXUS;
 import static software.wings.beans.artifact.ArtifactStreamType.SFTP;
 import static software.wings.beans.artifact.ArtifactStreamType.SMB;
+import static software.wings.common.Constants.REFERENCED_ENTITIES_TO_SHOW;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +39,7 @@ import io.harness.validation.Create;
 import io.harness.validation.Update;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Transient;
+import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -77,6 +80,8 @@ import javax.ws.rs.NotFoundException;
 @ValidateOnExecution
 public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataProvider {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactStreamService.class);
+
+  private static final String SETTING_ID_KEY = "settingId";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private ExecutorService executorService;
@@ -377,5 +382,11 @@ public class ArtifactStreamServiceImpl implements ArtifactStreamService, DataPro
         .getResponse()
         .stream()
         .collect(Collectors.toMap(ArtifactStream::getUuid, ArtifactStream::getSourceName));
+  }
+
+  public List<ArtifactStream> listBySettingId(String settingId) {
+    return wingsPersistence.createQuery(ArtifactStream.class, excludeAuthority)
+        .filter(SETTING_ID_KEY, settingId)
+        .asList(new FindOptions().limit(REFERENCED_ENTITIES_TO_SHOW));
   }
 }

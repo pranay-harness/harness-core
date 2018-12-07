@@ -25,8 +25,10 @@ import static software.wings.api.DeploymentType.KUBERNETES;
 import static software.wings.api.DeploymentType.PCF;
 import static software.wings.api.DeploymentType.SSH;
 import static software.wings.api.DeploymentType.WINRM;
+import static software.wings.beans.Base.ACCOUNT_ID_KEY;
 import static software.wings.beans.DelegateTask.SyncTaskContext.Builder.aContext;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
+import static software.wings.common.Constants.REFERENCED_ENTITIES_TO_SHOW;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AWS;
 import static software.wings.settings.SettingValue.SettingVariableTypes.AZURE;
 import static software.wings.settings.SettingValue.SettingVariableTypes.GCP;
@@ -59,6 +61,7 @@ import io.harness.validation.Create;
 import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.Key;
+import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
@@ -156,6 +159,8 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class InfrastructureMappingServiceImpl implements InfrastructureMappingService {
   private static final Logger logger = LoggerFactory.getLogger(InfrastructureMappingServiceImpl.class);
+
+  private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
@@ -1759,5 +1764,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           .asList();
     }
     return new ArrayList<>();
+  }
+
+  @Override
+  public List<InfrastructureMapping> listByComputeProviderId(String accountId, String computeProviderId) {
+    return wingsPersistence.createQuery(InfrastructureMapping.class)
+        .filter(ACCOUNT_ID_KEY, accountId)
+        .filter(COMPUTE_PROVIDER_SETTING_ID_KEY, computeProviderId)
+        .asList(new FindOptions().limit(REFERENCED_ENTITIES_TO_SHOW));
   }
 }

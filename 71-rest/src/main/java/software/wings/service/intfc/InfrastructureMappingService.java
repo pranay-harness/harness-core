@@ -136,4 +136,6 @@ public interface InfrastructureMappingService extends OwnedByEnvironment, OwnedB
       throws WingsException;
 
   void deleteByYamlGit(String appId, String infraMappingId, boolean syncFromGit);
+
+  List<InfrastructureMapping> listByComputeProviderId(String accountId, String computeProviderId);
 }
