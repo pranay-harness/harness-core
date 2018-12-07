@@ -73,9 +73,8 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
         TimeSeriesMLAnalysisRecord mlAnalysisResponse = TimeSeriesMLAnalysisRecord.builder().build();
         mlAnalysisResponse.setCreatedAt(j);
         mlAnalysisResponse.setTransactions(Collections.EMPTY_MAP);
-        metricDataAnalysisService.saveAnalysisRecordsML(StateType.DYNA_TRACE, accountId, appId, stateExecutionId,
-            workflowExecutionId, workflowId, serviceId, groupName + i, j, delegateTaskId, "-1", cvConfigId,
-            mlAnalysisResponse);
+        metricDataAnalysisService.saveAnalysisRecordsML(StateType.DYNA_TRACE, appId, stateExecutionId,
+            workflowExecutionId, groupName + i, j, delegateTaskId, "-1", cvConfigId, mlAnalysisResponse);
       }
     }
 
@@ -198,9 +197,9 @@ public class MetricDataAnalysisServiceTest extends VerificationBaseTest {
     }
     assertFalse(isEmpty(timeSeriesMLAnalysisRecord.getTransactions()));
     assertNull(timeSeriesMLAnalysisRecord.getTransactionsCompressedJson());
-    metricDataAnalysisService.saveAnalysisRecordsML(StateType.APP_DYNAMICS, accountId, appId, stateExecutionId,
-        workflowExecutionId, workflowId, serviceId, generateUuid(), (int) analysisMinute, generateUuid(),
-        generateUuid(), cvConfigId, timeSeriesMLAnalysisRecord);
+    metricDataAnalysisService.saveAnalysisRecordsML(StateType.APP_DYNAMICS, appId, stateExecutionId,
+        workflowExecutionId, generateUuid(), (int) analysisMinute, generateUuid(), generateUuid(), cvConfigId,
+        timeSeriesMLAnalysisRecord);
 
     final TimeSeriesMLAnalysisRecord savedRecord = wingsPersistence.createQuery(TimeSeriesMLAnalysisRecord.class)
                                                        .filter("appId", appId)

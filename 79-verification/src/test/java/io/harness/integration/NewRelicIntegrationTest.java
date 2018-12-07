@@ -374,7 +374,6 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
     final NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
-                                                    .workflowId(workflowId)
                                                     .workflowExecutionId("CV-Demo")
                                                     .stateExecutionId("CV-Demo-TS-Success")
                                                     .appId("CV-Demo-" + StateType.NEW_RELIC)
@@ -437,7 +436,6 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     wingsPersistence.saveIgnoringDuplicateKeys(Collections.singletonList(stateExecutionInstance));
 
     final NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
-                                                    .workflowId(workflowId)
                                                     .workflowExecutionId("CV-Demo")
                                                     .stateExecutionId("CV-Demo-TS-Failure")
                                                     .appId("CV-Demo-" + StateType.NEW_RELIC)
@@ -466,14 +464,13 @@ public class NewRelicIntegrationTest extends VerificationBaseIntegrationTest {
     assertEquals("CV-Demo", savedRecord.getWorkflowExecutionId());
   }
 
-  private void analysisSorted() throws Exception {
+  private void analysisSorted() {
     final String workflowId = UUID.randomUUID().toString();
     final String workflowExecutionId = UUID.randomUUID().toString();
     final String stateExecutionId = UUID.randomUUID().toString();
     final String applicationId = createApp(UUID.randomUUID().toString()).getUuid();
 
     final NewRelicMetricAnalysisRecord record = NewRelicMetricAnalysisRecord.builder()
-                                                    .workflowId(workflowId)
                                                     .workflowExecutionId(workflowExecutionId)
                                                     .stateExecutionId(stateExecutionId)
                                                     .appId(applicationId)

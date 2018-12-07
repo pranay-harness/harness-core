@@ -86,7 +86,7 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
 
     timeSeriesResource = new TimeSeriesResource(timeSeriesAnalysisService);
 
-    tsRequest = new TSRequest(applicationId, stateExecutionId, workflowId, workflowExecutionId, serviceId, nodes, 0, 0);
+    tsRequest = new TSRequest(stateExecutionId, workflowExecutionId, nodes, 0, 0);
     timeSeriesMLAnalysisRecord = TimeSeriesMLAnalysisRecord.builder().build();
     timeSeriesMLScores = Collections.singletonList(new TimeSeriesMLScores());
 
@@ -108,41 +108,35 @@ public class TimeSeriesResourceTest extends VerificationBaseTest {
   @Test
   public void testGetMetricData() throws IOException {
     boolean compareCurrent = true;
-    when(timeSeriesAnalysisService.getRecords(stateType, applicationId, workflowExecutionId, stateExecutionId,
-             workflowId, serviceId, groupName, nodes, 0, 0))
+    when(timeSeriesAnalysisService.getRecords(applicationId, stateExecutionId, groupName, nodes, 0, 0))
         .thenReturn(newRelicMetricDataRecords);
     RestResponse<List<NewRelicMetricDataRecord>> resp = timeSeriesResource.getMetricData(
-        accountId, applicationId, stateType, workflowExecutionId, groupName, compareCurrent, tsRequest);
+        accountId, applicationId, workflowExecutionId, groupName, compareCurrent, tsRequest);
     assertEquals(Collections.singletonList(new NewRelicMetricDataRecord()), resp.getResource());
 
-    resp = timeSeriesResource.getMetricData(accountId, applicationId, stateType, null, groupName, false, tsRequest);
+    resp = timeSeriesResource.getMetricData(accountId, applicationId, null, groupName, false, tsRequest);
     assertEquals(new ArrayList<>(), resp.getResource());
 
-    when(timeSeriesAnalysisService.getPreviousSuccessfulRecords(
-             stateType, applicationId, workflowId, workflowExecutionId, serviceId, groupName, 0, 0))
+    when(timeSeriesAnalysisService.getPreviousSuccessfulRecords(applicationId, workflowExecutionId, groupName, 0, 0))
         .thenReturn(newRelicMetricDataRecords);
-    resp = timeSeriesResource.getMetricData(
-        accountId, applicationId, stateType, workflowExecutionId, groupName, false, tsRequest);
+    resp = timeSeriesResource.getMetricData(accountId, applicationId, workflowExecutionId, groupName, false, tsRequest);
     assertEquals(newRelicMetricDataRecords, resp.getResource());
 
-    verify(timeSeriesAnalysisService, times(1))
-        .getRecords(stateType, applicationId, workflowExecutionId, stateExecutionId, workflowId, serviceId, groupName,
-            nodes, 0, 0);
+    verify(timeSeriesAnalysisService, times(1)).getRecords(applicationId, stateExecutionId, groupName, nodes, 0, 0);
 
     verify(timeSeriesAnalysisService, times(1))
-        .getPreviousSuccessfulRecords(
-            stateType, applicationId, workflowId, workflowExecutionId, serviceId, groupName, 0, 0);
+        .getPreviousSuccessfulRecords(applicationId, workflowExecutionId, groupName, 0, 0);
   }
 
   @Test
   public void testSaveMLAnalysisRecords() throws IOException {
-    when(timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, accountId, applicationId, stateExecutionId,
-             workflowExecutionId, workflowId, serviceId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId,
-             timeSeriesMLAnalysisRecord))
+    when(
+        timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, applicationId, stateExecutionId, workflowExecutionId,
+            groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId, timeSeriesMLAnalysisRecord))
         .thenReturn(true);
     RestResponse<Boolean> resp = timeSeriesResource.saveMLAnalysisRecords(accountId, applicationId, stateType,
-        stateExecutionId, workflowExecutionId, workflowId, serviceId, groupName, 0, delegateTaskId, baseLineExecutionId,
-        cvConfigId, timeSeriesMLAnalysisRecord);
+        stateExecutionId, workflowExecutionId, groupName, 0, delegateTaskId, baseLineExecutionId, cvConfigId,
+        timeSeriesMLAnalysisRecord);
     assertTrue(resp.getResource());
   }
 

@@ -22,7 +22,6 @@ import software.wings.service.impl.newrelic.NewRelicMetricDataRecord;
 import software.wings.service.intfc.MetricDataAnalysisService;
 import software.wings.sm.StateType;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -55,8 +54,7 @@ public class TimeSeriesResource {
   @ExceptionMetered
   public RestResponse<Boolean> saveMetricData(@QueryParam("accountId") final String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("stateExecutionId") String stateExecutionId,
-      @QueryParam("delegateTaskId") String delegateTaskId, List<NewRelicMetricDataRecord> metricData)
-      throws IOException {
+      @QueryParam("delegateTaskId") String delegateTaskId, List<NewRelicMetricDataRecord> metricData) {
     return new RestResponse<>(timeSeriesAnalysisService.saveMetricData(
         accountId, applicationId, stateExecutionId, delegateTaskId, metricData));
   }
@@ -68,21 +66,19 @@ public class TimeSeriesResource {
   @LearningEngineAuth
   @ExceptionMetered
   public RestResponse<List<NewRelicMetricDataRecord>> getMetricData(@QueryParam("accountId") String accountId,
-      @QueryParam("appId") String appId, @QueryParam("stateType") StateType stateType,
-      @QueryParam("workflowExecutionId") String workFlowExecutionId, @QueryParam("groupName") final String groupName,
-      @QueryParam("compareCurrent") boolean compareCurrent, TSRequest request) throws IOException {
+      @QueryParam("appId") String appId, @QueryParam("workflowExecutionId") String workFlowExecutionId,
+      @QueryParam("groupName") final String groupName, @QueryParam("compareCurrent") boolean compareCurrent,
+      TSRequest request) {
     if (compareCurrent) {
-      return new RestResponse<>(timeSeriesAnalysisService.getRecords(stateType, appId, request.getWorkflowExecutionId(),
-          request.getStateExecutionId(), request.getWorkflowId(), request.getServiceId(), groupName, request.getNodes(),
-          request.getAnalysisMinute(), request.getAnalysisStartMinute()));
+      return new RestResponse<>(timeSeriesAnalysisService.getRecords(appId, request.getStateExecutionId(), groupName,
+          request.getNodes(), request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     } else {
       if (workFlowExecutionId == null || workFlowExecutionId.equals("-1")) {
         return new RestResponse<>(new ArrayList<>());
       }
 
-      return new RestResponse<>(timeSeriesAnalysisService.getPreviousSuccessfulRecords(stateType, appId,
-          request.getWorkflowId(), workFlowExecutionId, request.getServiceId(), groupName, request.getAnalysisMinute(),
-          request.getAnalysisStartMinute()));
+      return new RestResponse<>(timeSeriesAnalysisService.getPreviousSuccessfulRecords(
+          appId, workFlowExecutionId, groupName, request.getAnalysisMinute(), request.getAnalysisStartMinute()));
     }
   }
 
@@ -93,16 +89,14 @@ public class TimeSeriesResource {
   @ExceptionMetered
   @LearningEngineAuth
   public RestResponse<Boolean> saveMLAnalysisRecords(@QueryParam("accountId") String accountId,
-      @QueryParam("applicationId") String applicationId, @QueryParam("stateType") StateType stateType,
+      @QueryParam("applicationId") String appId, @QueryParam("stateType") StateType stateType,
       @QueryParam("stateExecutionId") String stateExecutionId,
       @QueryParam("workflowExecutionId") final String workflowExecutionId,
-      @QueryParam("workflowId") final String workflowId, @QueryParam("serviceId") final String serviceId,
       @QueryParam("groupName") final String groupName, @QueryParam("analysisMinute") Integer analysisMinute,
       @QueryParam("taskId") String taskId, @QueryParam("baseLineExecutionId") String baseLineExecutionId,
       @QueryParam("cvConfigId") String cvConfigId, TimeSeriesMLAnalysisRecord mlAnalysisResponse) {
-    return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, accountId, applicationId,
-        stateExecutionId, workflowExecutionId, workflowId, serviceId, groupName, analysisMinute, taskId,
-        baseLineExecutionId, cvConfigId, mlAnalysisResponse));
+    return new RestResponse<>(timeSeriesAnalysisService.saveAnalysisRecordsML(stateType, appId, stateExecutionId,
+        workflowExecutionId, groupName, analysisMinute, taskId, baseLineExecutionId, cvConfigId, mlAnalysisResponse));
   }
 
   @Produces({"application/json", "application/v1+json"})
@@ -113,7 +107,7 @@ public class TimeSeriesResource {
   @LearningEngineAuth
   public RestResponse<List<TimeSeriesMLScores>> getScores(@QueryParam("accountId") String accountId,
       @QueryParam("applicationId") String applicationId, @QueryParam("workFlowId") String workflowId,
-      @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("limit") Integer limit) throws IOException {
+      @QueryParam("analysisMinute") Integer analysisMinute, @QueryParam("limit") Integer limit) {
     return new RestResponse<>(
         timeSeriesAnalysisService.getTimeSeriesMLScores(applicationId, workflowId, analysisMinute, limit));
   }

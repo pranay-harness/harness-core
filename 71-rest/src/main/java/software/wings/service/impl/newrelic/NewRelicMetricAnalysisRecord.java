@@ -5,6 +5,7 @@ import static software.wings.common.Constants.ML_RECORDS_TTL_MONTHS;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.SortOrder;
@@ -43,14 +44,13 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NewRelicMetricAnalysisRecord extends Base implements Comparable<NewRelicMetricAnalysisRecord> {
-  @NotEmpty @Indexed private StateType stateType;
+  @NotEmpty private StateType stateType;
 
   @NotEmpty private String message;
 
   @NotEmpty private RiskLevel riskLevel;
-
-  @NotEmpty @Indexed private String workflowId;
 
   @NotEmpty @Indexed private String workflowExecutionId;
 
@@ -66,7 +66,7 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
 
   private String baseLineExecutionId;
 
-  @Default @Indexed private String groupName = DEFAULT_GROUP_NAME;
+  @Default private String groupName = DEFAULT_GROUP_NAME;
 
   private String dependencyPath;
 
@@ -80,15 +80,14 @@ public class NewRelicMetricAnalysisRecord extends Base implements Comparable<New
   @Builder
   public NewRelicMetricAnalysisRecord(String uuid, String appId, EmbeddedUser createdBy, long createdAt,
       EmbeddedUser lastUpdatedBy, long lastUpdatedAt, List<String> keywords, String entityYamlPath, StateType stateType,
-      String message, RiskLevel riskLevel, String workflowId, String workflowExecutionId, String stateExecutionId,
-      String cvConfigId, String groupName, String dependencyPath, TimeSeriesMlAnalysisType mlAnalysisType,
+      String message, RiskLevel riskLevel, String workflowExecutionId, String stateExecutionId, String cvConfigId,
+      String groupName, String dependencyPath, TimeSeriesMlAnalysisType mlAnalysisType,
       List<NewRelicMetricAnalysis> metricAnalyses, int analysisMinute, boolean showTimeSeries,
       String baseLineExecutionId) {
     super(uuid, appId, createdBy, createdAt, lastUpdatedBy, lastUpdatedAt, keywords, entityYamlPath);
     this.stateType = stateType;
     this.message = message;
     this.riskLevel = riskLevel;
-    this.workflowId = workflowId;
     this.workflowExecutionId = workflowExecutionId;
     this.stateExecutionId = stateExecutionId;
     this.cvConfigId = cvConfigId;

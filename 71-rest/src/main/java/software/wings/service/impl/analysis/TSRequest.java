@@ -1,5 +1,6 @@
 package software.wings.service.impl.analysis;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,12 +15,10 @@ import java.util.Set;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TSRequest {
-  private String applicationId;
   private String stateExecutionId;
-  private String workflowId;
   private String workflowExecutionId;
-  private String serviceId;
   private Set<String> nodes;
   private int analysisMinute;
   private int analysisStartMinute;

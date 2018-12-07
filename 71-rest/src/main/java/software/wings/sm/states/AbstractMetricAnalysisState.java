@@ -341,7 +341,6 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
                                                             .stateType(StateType.valueOf(getStateType()))
                                                             .stateExecutionId(context.getStateExecutionInstanceId())
                                                             .workflowExecutionId(context.getWorkflowExecutionId())
-                                                            .workflowId(getWorkflowId(context))
                                                             .build();
     wingsPersistence.save(metricAnalysisRecord);
     continuousVerificationService.setMetaDataExecutionStatus(context.getStateExecutionInstanceId(), status);
