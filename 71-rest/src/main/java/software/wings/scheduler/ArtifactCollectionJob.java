@@ -29,9 +29,6 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
-/**
- * Created by anubhaw on 11/8/16.
- */
 public class ArtifactCollectionJob implements Job {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectionJob.class);
 
