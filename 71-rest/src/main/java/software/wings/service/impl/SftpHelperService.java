@@ -14,9 +14,11 @@ import com.google.inject.Singleton;
 
 import net.schmizz.sshj.DefaultConfig;
 import net.schmizz.sshj.SSHClient;
+import net.schmizz.sshj.common.DisconnectReason;
 import net.schmizz.sshj.sftp.FileAttributes;
 import net.schmizz.sshj.sftp.RemoteResourceInfo;
 import net.schmizz.sshj.sftp.SFTPClient;
+import net.schmizz.sshj.transport.TransportException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.SftpConfig;
@@ -45,11 +47,35 @@ public class SftpHelperService {
     encryptionService.decrypt(sftpConfig, encryptionDetails);
     List<String> artifactPaths = new ArrayList<>();
 
+    // Create a SSH client and try to make a connection
     try (SSHClient ssh = new SSHClient(new DefaultConfig())) {
-      ssh.loadKnownHosts();
-      ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
-      ssh.authPassword(sftpConfig.getUsername(), sftpConfig.getPassword());
+      boolean connectionEstablished = false;
+      try {
+        ssh.loadKnownHosts();
+        ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
+        connectionEstablished = true;
+      } catch (TransportException e) {
+        if (e.getDisconnectReason() == DisconnectReason.HOST_KEY_NOT_VERIFIABLE) {
+          String msg = e.getMessage();
+          String[] split = msg.split("`");
+          String vc = split[3];
+          ssh.addHostKeyVerifier(vc);
+        } else {
+          logger.error(
+              "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
+        }
+      } catch (IOException e) {
+        logger.error(
+            "SFTP server {} could not be reached. Exception Message {}", sftpConfig.getSftpUrl(), e.getMessage());
+      }
 
+      // Host can be reached and host key is verified.
+      // Check if connection is established
+      if (!connectionEstablished) {
+        ssh.connect(getSFTPConnectionHost(sftpConfig.getSftpUrl()));
+      }
+
+      ssh.authPassword(sftpConfig.getUsername(), sftpConfig.getPassword());
       try (SFTPClient sftp = ssh.newSFTPClient()) {
         List<RemoteResourceInfo> resourceInfos = Collections.EMPTY_LIST;
         // Get artifact paths
@@ -72,11 +98,19 @@ public class SftpHelperService {
 
   public String getSFTPConnectionHost(String sftpUrl) {
     String sftpHost = sftpUrl;
+    // Check for server prefix and unix and windows style URI
     if (sftpHost.contains("/")) {
-      sftpHost = sftpHost.replaceFirst("^(sftp?://)", "").split(Pattern.quote("/"))[0];
+      if (sftpHost.startsWith("sftp")) {
+        sftpHost = sftpHost.replaceFirst("^(sftp?://)", "").split(Pattern.quote("/"))[0];
+      } else if (sftpHost.startsWith("ftp")) {
+        sftpHost = sftpHost.replaceFirst("^(ftp?://)", "").split(Pattern.quote("/"))[0];
+      }
     } else if (sftpHost.contains("\\")) {
-      String[] split = sftpHost.replaceFirst("^(sftp?:\\\\)", "").split(Pattern.quote("\\"));
-      sftpHost = split[1];
+      if (sftpHost.startsWith("sftp")) {
+        sftpHost = sftpHost.replaceFirst("^(sftp?:\\\\)", "").split(Pattern.quote("\\"))[1];
+      } else if (sftpHost.startsWith("ftp")) {
+        sftpHost = sftpHost.replaceFirst("^(ftp?:\\\\)", "").split(Pattern.quote("\\"))[1];
+      }
     }
     return sftpHost;
   }
