@@ -1,7 +1,5 @@
 package software.wings.api.k8s;
 
-import com.google.common.collect.Maps;
-
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,7 +35,8 @@ public class K8sDeploymentRollingSetupStateExecutionData extends StateExecutionD
   }
 
   private Map<String, ExecutionDataValue> getInternalExecutionDetails() {
-    Map<String, ExecutionDataValue> executionDetails = Maps.newLinkedHashMap();
+    Map<String, ExecutionDataValue> executionDetails = super.getExecutionDetails();
+
     // putting activityId is very important, as without it UI wont make call to fetch commandLogs that are shown
     // in activity window
     putNotNull(executionDetails, "activityId",
