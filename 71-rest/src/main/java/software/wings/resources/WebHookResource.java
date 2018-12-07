@@ -4,12 +4,12 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
+import io.harness.beans.ExecutionStatus;
 import io.swagger.annotations.Api;
 import software.wings.beans.WebHookRequest;
 import software.wings.beans.WebHookResponse;
 import software.wings.security.annotations.PublicApi;
 import software.wings.service.intfc.WebHookService;
-import software.wings.sm.ExecutionStatus;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;

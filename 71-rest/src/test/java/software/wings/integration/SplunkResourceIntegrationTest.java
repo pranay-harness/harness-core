@@ -14,6 +14,7 @@ import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionIn
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
@@ -26,7 +27,6 @@ import software.wings.beans.SettingAttribute.Builder;
 import software.wings.beans.SplunkConfig;
 import software.wings.service.impl.splunk.SplunkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 import javax.ws.rs.client.WebTarget;

@@ -6,7 +6,7 @@ import static software.wings.common.Constants.SUMMARY_PAYLOAD_LIMIT;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-import software.wings.sm.ExecutionStatus;
+import io.harness.beans.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;

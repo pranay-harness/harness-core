@@ -15,6 +15,7 @@ import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aW
 import static software.wings.delegatetasks.ElkLogzDataCollectionTask.parseElkResponse;
 import static software.wings.sm.StateExecutionInstance.Builder.aStateExecutionInstance;
 
+import io.harness.beans.ExecutionStatus;
 import org.apache.http.HttpStatus;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -28,7 +29,6 @@ import software.wings.service.impl.analysis.LogElement;
 import software.wings.service.impl.elk.ElkQueryType;
 import software.wings.service.impl.elk.ElkSetupTestNodeData;
 import software.wings.service.intfc.analysis.LogAnalysisResource;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 
 import java.io.UnsupportedEncodingException;

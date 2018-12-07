@@ -5,6 +5,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import org.junit.Ignore;
@@ -15,7 +16,6 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.WorkflowExecution;
 import software.wings.dl.WingsPersistence;
 import software.wings.rules.Integration;
-import software.wings.sm.ExecutionStatus;
 import software.wings.utils.KryoUtils;
 
 import java.util.Random;

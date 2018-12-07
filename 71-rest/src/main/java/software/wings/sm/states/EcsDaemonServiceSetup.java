@@ -6,6 +6,7 @@ import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
 import com.google.inject.Inject;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.harness.beans.ExecutionStatus;
 import org.apache.commons.collections.CollectionUtils;
 import org.mongodb.morphia.annotations.Transient;
 import org.slf4j.Logger;
@@ -28,7 +29,6 @@ import software.wings.beans.container.ContainerTask;
 import software.wings.beans.container.EcsServiceSpecification;
 import software.wings.beans.container.ImageDetails;
 import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 

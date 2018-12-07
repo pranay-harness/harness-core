@@ -1,6 +1,6 @@
 package software.wings.service.impl.analysis;
 
-import software.wings.sm.ExecutionStatus;
+import io.harness.beans.ExecutionStatus;
 import software.wings.sm.ExecutionStatusData;
 
 import java.util.Objects;

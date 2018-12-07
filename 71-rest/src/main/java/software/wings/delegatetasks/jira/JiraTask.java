@@ -6,6 +6,7 @@ import static software.wings.beans.Log.LogLevel.INFO;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.delegate.task.protocol.TaskParameters;
@@ -31,7 +32,6 @@ import software.wings.beans.jira.JiraTaskParameters;
 import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.ExecutionStatus;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

@@ -1,12 +1,12 @@
 package software.wings.service.impl.aws.delegate;
 
+import static io.harness.beans.ExecutionStatus.FAILED;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static software.wings.beans.Log.LogLevel.ERROR;
 import static software.wings.beans.Log.LogLevel.INFO;
-import static software.wings.sm.ExecutionStatus.FAILED;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
@@ -40,6 +40,7 @@ import com.amazonaws.services.lambda.model.UpdateFunctionCodeResult;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationRequest;
 import com.amazonaws.services.lambda.model.UpdateFunctionConfigurationResult;
 import com.amazonaws.services.lambda.model.VpcConfig;
+import io.harness.beans.ExecutionStatus;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.apache.commons.codec.binary.Base64;
@@ -59,7 +60,6 @@ import software.wings.service.impl.aws.model.AwsLambdaFunctionParams;
 import software.wings.service.impl.aws.model.AwsLambdaFunctionResult;
 import software.wings.service.impl.aws.model.AwsLambdaVpcConfig;
 import software.wings.service.intfc.aws.delegate.AwsLambdaHelperServiceDelegate;
-import software.wings.sm.ExecutionStatus;
 
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;

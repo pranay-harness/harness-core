@@ -5,6 +5,7 @@ import static java.lang.String.format;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
 import io.harness.exception.InvalidRequestException;
 import org.apache.commons.lang3.NotImplementedException;
@@ -24,7 +25,6 @@ import software.wings.helpers.ext.trigger.response.TriggerResponse;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.utils.Misc;
 
 import java.util.HashSet;

@@ -1,7 +1,7 @@
 package software.wings.delegatetasks.aws;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.exception.WingsException.ExecutionContext.DELEGATE;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 

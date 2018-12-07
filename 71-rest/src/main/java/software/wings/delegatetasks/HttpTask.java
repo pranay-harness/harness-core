@@ -5,6 +5,7 @@ import static org.apache.commons.lang3.exception.ExceptionUtils.getMessage;
 
 import com.google.common.base.Splitter;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.TaskParameters;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpEntity;
@@ -28,7 +29,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.DelegateTaskResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import java.io.IOException;

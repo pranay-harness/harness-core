@@ -1,5 +1,9 @@
 package software.wings.service;
 
+import static io.harness.beans.ExecutionStatus.PAUSED;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
+import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,10 +16,6 @@ import static software.wings.beans.ElementExecutionSummary.ElementExecutionSumma
 import static software.wings.beans.Workflow.WorkflowBuilder.aWorkflow;
 import static software.wings.beans.WorkflowExecution.WorkflowExecutionBuilder.aWorkflowExecution;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
-import static software.wings.sm.ExecutionStatus.PAUSED;
-import static software.wings.sm.ExecutionStatus.RUNNING;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
-import static software.wings.sm.ExecutionStatus.WAITING;
 import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
 import static software.wings.sm.StateMachine.StateMachineBuilder.aStateMachine;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -26,6 +26,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import com.amazonaws.services.ec2.model.Instance;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
 import org.junit.Before;
@@ -43,7 +44,6 @@ import software.wings.resources.WorkflowResource;
 import software.wings.rules.Listeners;
 import software.wings.service.intfc.HostService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionSimulator;

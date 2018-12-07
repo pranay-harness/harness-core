@@ -176,7 +176,7 @@ software.wings.settings.SettingValue$SettingVariableTypes, 5131
 software.wings.waitnotify.ListNotifyResponseData, 5133
 software.wings.sm.StateExecutionInstance, 5134
 software.wings.sm.ExecutionResponse, 5135
-software.wings.sm.ExecutionStatus, 5136
+io.harness.beans.ExecutionStatus, 5136
 software.wings.sm.ExecutionStatusData, 5137
 software.wings.sm.InfraMappingSummary, 5138
 software.wings.sm.InstanceStatusSummary, 5139

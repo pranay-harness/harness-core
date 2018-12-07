@@ -11,6 +11,7 @@ import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandard
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -25,7 +26,6 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.WorkflowStandardParams;
 
 import java.util.UUID;

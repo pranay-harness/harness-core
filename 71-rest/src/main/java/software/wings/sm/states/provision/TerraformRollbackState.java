@@ -1,11 +1,11 @@
 package software.wings.sm.states.provision;
 
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static software.wings.beans.Base.GLOBAL_APP_ID;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.beans.TaskType.TERRAFORM_PROVISION_TASK;
 import static software.wings.service.intfc.FileService.FileBucket.TERRAFORM_STATE;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.ExecutionStatus.SUCCESS;
 
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Getter;

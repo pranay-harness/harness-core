@@ -17,6 +17,7 @@ import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 
 import com.amazonaws.regions.Regions;
+import io.harness.beans.ExecutionStatus;
 import io.harness.scm.ScmSecret;
 import io.harness.scm.SecretName;
 import org.joor.Reflect;
@@ -53,7 +54,6 @@ import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ContextElementType;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 
 import java.security.KeyManagementException;

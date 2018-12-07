@@ -25,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SortOrder.OrderType;
@@ -86,7 +87,6 @@ import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.instance.DashboardStatisticsService;
 import software.wings.service.intfc.instance.InstanceService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.PipelineSummary;
 import software.wings.utils.Validator;
 

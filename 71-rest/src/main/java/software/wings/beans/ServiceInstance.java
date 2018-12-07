@@ -4,11 +4,11 @@ import com.google.common.base.MoreObjects;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Indexed;
 import org.mongodb.morphia.annotations.Property;
 import software.wings.beans.infrastructure.Host;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.Objects;
 

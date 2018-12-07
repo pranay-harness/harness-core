@@ -1,6 +1,6 @@
 package software.wings.delegatetasks.aws;
 
-import static software.wings.sm.ExecutionStatus.SUCCESS;
+import static io.harness.beans.ExecutionStatus.SUCCESS;
 
 import com.google.inject.Inject;
 

@@ -35,6 +35,7 @@ import static software.wings.utils.WingsTestConstants.WORKFLOW_ID;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SearchFilter.Operator;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -55,7 +56,6 @@ import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ServiceInstanceService;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.Collections;
 import java.util.List;

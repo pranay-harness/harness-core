@@ -6,6 +6,7 @@ import static java.util.Arrays.asList;
 import com.google.inject.Inject;
 
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
@@ -14,7 +15,6 @@ import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.security.UserGroup;
 import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;

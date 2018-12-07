@@ -1,6 +1,7 @@
 package software.wings.sm;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.harness.beans.ExecutionStatus;
 
 /**
  * Interface defining StateMachine execution callback.

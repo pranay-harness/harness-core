@@ -1,8 +1,8 @@
 package software.wings.beans;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.eraro.ErrorCode;
 import software.wings.sm.ExecutionInterruptType;
-import software.wings.sm.ExecutionStatus;
 
 /**
  * Created by rishi on 8/20/16.

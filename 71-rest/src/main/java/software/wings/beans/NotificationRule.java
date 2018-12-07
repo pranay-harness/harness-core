@@ -4,11 +4,11 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import com.google.common.base.MoreObjects;
 
+import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import software.wings.sm.ExecutionStatus;
 import software.wings.yaml.BaseYaml;
 
 import java.util.ArrayList;

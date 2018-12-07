@@ -2,6 +2,7 @@ package software.wings.service;
 
 import static org.junit.Assert.assertEquals;
 
+import io.harness.beans.ExecutionStatus;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Test;
@@ -9,7 +10,6 @@ import software.wings.WingsBaseTest;
 import software.wings.service.impl.ThirdPartyApiCallLog;
 import software.wings.service.impl.ThirdPartyApiCallLog.FieldType;
 import software.wings.service.impl.ThirdPartyApiCallLog.ThirdPartyApiCallField;
-import software.wings.sm.ExecutionStatus;
 import software.wings.utils.JsonUtils;
 
 import java.io.IOException;

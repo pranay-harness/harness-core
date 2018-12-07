@@ -1,5 +1,10 @@
 package software.wings.scheduler;
 
+import static io.harness.beans.ExecutionStatus.NEW;
+import static io.harness.beans.ExecutionStatus.PAUSED;
+import static io.harness.beans.ExecutionStatus.RUNNING;
+import static io.harness.beans.ExecutionStatus.STARTING;
+import static io.harness.beans.ExecutionStatus.WAITING;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.lang.String.format;
@@ -7,11 +12,6 @@ import static java.time.Duration.ofSeconds;
 import static java.util.Arrays.asList;
 import static software.wings.sm.ExecutionInterrupt.ExecutionInterruptBuilder.anExecutionInterrupt;
 import static software.wings.sm.ExecutionInterruptType.MARK_EXPIRED;
-import static software.wings.sm.ExecutionStatus.NEW;
-import static software.wings.sm.ExecutionStatus.PAUSED;
-import static software.wings.sm.ExecutionStatus.RUNNING;
-import static software.wings.sm.ExecutionStatus.STARTING;
-import static software.wings.sm.ExecutionStatus.WAITING;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;

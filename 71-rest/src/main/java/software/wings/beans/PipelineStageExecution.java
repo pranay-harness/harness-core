@@ -1,9 +1,9 @@
 package software.wings.beans;
 
+import io.harness.beans.ExecutionStatus;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.ArrayList;

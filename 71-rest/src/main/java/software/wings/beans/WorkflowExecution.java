@@ -11,6 +11,7 @@ import com.google.common.base.MoreObjects;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.harness.beans.EmbeddedUser;
+import io.harness.beans.ExecutionStatus;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -20,7 +21,6 @@ import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Environment.EnvironmentType;
 import software.wings.common.Constants;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.InfraMappingSummary;
 import software.wings.sm.PipelineSummary;
 

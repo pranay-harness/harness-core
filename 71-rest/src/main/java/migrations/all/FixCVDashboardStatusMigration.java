@@ -4,6 +4,7 @@ import static io.harness.mongo.MongoUtils.setUnset;
 
 import com.google.inject.Inject;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.time.Timestamp;
 import migrations.Migration;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -11,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 
 import java.util.List;

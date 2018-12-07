@@ -15,6 +15,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 
 import io.harness.VerificationBaseTest;
+import io.harness.beans.ExecutionStatus;
 import io.harness.managerclient.VerificationManagerClient;
 import io.harness.rule.OwnerRule.Owner;
 import io.harness.rule.RealMongo;
@@ -50,7 +51,6 @@ import software.wings.service.impl.splunk.SplunkAnalysisCluster;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.analysis.AnalysisService;
 import software.wings.service.intfc.analysis.ClusterLevel;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.sm.StateMachine;
 import software.wings.sm.StateType;

@@ -14,6 +14,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.distribution.barrier.Barrier;
 import io.harness.distribution.barrier.BarrierId;
 import io.harness.distribution.barrier.ForceProctor;
@@ -37,7 +38,6 @@ import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.BarrierService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.BarrierStatusData;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionInstance;
 import software.wings.waitnotify.WaitNotifyEngine;
 

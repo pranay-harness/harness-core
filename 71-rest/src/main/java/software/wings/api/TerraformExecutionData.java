@@ -1,12 +1,12 @@
 package software.wings.api;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.delegation.TerraformProvisionParameters.TerraformCommand;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateExecutionData;
 
 import java.util.List;

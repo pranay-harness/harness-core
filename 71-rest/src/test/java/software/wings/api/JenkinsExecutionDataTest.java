@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.beans.ExecutionStatus;
 import org.junit.Before;
 import org.junit.Test;
-import software.wings.sm.ExecutionStatus;
 
 /**
  * Created by peeyushaggarwal on 10/25/16.

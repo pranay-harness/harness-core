@@ -1,5 +1,6 @@
 package software.wings.service.intfc;
 
+import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.validation.Create;
@@ -9,7 +10,6 @@ import software.wings.beans.Activity;
 import software.wings.beans.Log;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.CommandUnitDetails;
-import software.wings.sm.ExecutionStatus;
 
 import java.util.List;
 import java.util.Map;

@@ -3,10 +3,10 @@ package software.wings.sm.states;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
 
 import com.github.reinert.jjschema.Attributes;
+import io.harness.beans.ExecutionStatus;
 import software.wings.api.EmailStateExecutionData;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.ExecutionStatus;
 import software.wings.sm.StateType;
 import software.wings.stencils.DefaultValue;
 
