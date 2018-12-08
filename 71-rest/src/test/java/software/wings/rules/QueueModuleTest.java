@@ -7,6 +7,7 @@ import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queue;
 import io.harness.queue.QueueListener;
 import io.harness.waiter.NotifyEvent;
+import io.harness.waiter.NotifyEventListener;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.InstanceChangeEvent;
 import software.wings.api.KmsTransitionEvent;
@@ -19,7 +20,6 @@ import software.wings.service.impl.DelayEventListener;
 import software.wings.service.impl.ExecutionEvent;
 import software.wings.service.impl.ExecutionEventListener;
 import software.wings.service.impl.security.KmsTransitionEventListener;
-import software.wings.waitnotify.NotifyEventListener;
 
 public class QueueModuleTest extends AbstractModule {
   @Override
