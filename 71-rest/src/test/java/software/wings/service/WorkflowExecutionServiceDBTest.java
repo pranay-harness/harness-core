@@ -29,7 +29,6 @@ import com.amazonaws.services.ec2.model.Instance;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
-import io.harness.waiter.NotifyEventListener;
 import org.junit.Before;
 import org.junit.Test;
 import software.wings.WingsBaseTest;
@@ -50,6 +49,7 @@ import software.wings.sm.StateMachine;
 import software.wings.sm.StateMachineExecutionSimulator;
 import software.wings.sm.states.ApprovalState;
 import software.wings.sm.states.BarrierState;
+import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.ArrayList;
 import java.util.HashMap;
