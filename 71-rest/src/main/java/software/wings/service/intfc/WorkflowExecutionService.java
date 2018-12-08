@@ -3,6 +3,7 @@ package software.wings.service.intfc;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.PersistentEntity;
 import org.hibernate.validator.constraints.NotEmpty;
 import software.wings.api.ApprovalStateExecutionData;
 import software.wings.beans.ApprovalAuthorization;
@@ -10,6 +11,7 @@ import software.wings.beans.ApprovalDetails;
 import software.wings.beans.BuildExecutionSummary;
 import software.wings.beans.CountsByStatuses;
 import software.wings.beans.ElementExecutionSummary;
+import software.wings.beans.EntityType;
 import software.wings.beans.ExecutionArgs;
 import software.wings.beans.GraphNode;
 import software.wings.beans.InfrastructureMapping;
@@ -32,6 +34,7 @@ import software.wings.sm.StateStatusUpdate;
 import software.wings.sm.StateType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -78,6 +81,9 @@ public interface WorkflowExecutionService extends StateStatusUpdate {
   void incrementFailed(String appId, String workflowExecutionId, Integer inc);
 
   RequiredExecutionArgs getRequiredExecutionArgs(String appId, String envId, ExecutionArgs executionArgs);
+
+  Map<EntityType, List<PersistentEntity>> fetchRequiredEntityTypes(
+      @NotEmpty String appId, @NotNull ExecutionArgs executionArgs);
 
   CountsByStatuses getBreakdown(String appId, String workflowExecutionId);
 

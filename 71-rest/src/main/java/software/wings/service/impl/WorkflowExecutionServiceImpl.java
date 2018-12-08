@@ -91,6 +91,7 @@ import io.harness.limits.LimitCheckerFactory;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.PersistentEntity;
 import io.harness.queue.Queue;
 import lombok.Builder;
 import lombok.Data;
@@ -1681,6 +1682,11 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
     }
 
     return null;
+  }
+
+  @Override
+  public Map<EntityType, List<PersistentEntity>> fetchRequiredEntityTypes(String appId, ExecutionArgs executionArgs) {
+    throw new UnsupportedOperationException("Not yet supported");
   }
 
   @Override

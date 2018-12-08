@@ -51,6 +51,7 @@ import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.INFRA_MAPPING_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_COMMAND_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -364,6 +365,7 @@ public class WorkflowServiceTestHelper {
         .withName("START")
         .withCommand(
             aCommand()
+                .withArtifactNeeded(true)
                 .withName("START")
                 .addCommandUnits(
                     anExecCommandUnit().withCommandPath("/home/xxx/tomcat").withCommandString("bin/startup.sh").build())
@@ -488,6 +490,7 @@ public class WorkflowServiceTestHelper {
                 .addWorkflowPhase(aWorkflowPhase()
                                       .withServiceId(SERVICE_ID)
                                       .withInfraMappingId(INFRA_MAPPING_ID)
+                                      .withDeploymentType(DeploymentType.HELM)
                                       .addPhaseStep(aPhaseStep(PhaseStepType.CONTAINER_DEPLOY, DEPLOY_CONTAINERS)
                                                         .addStep(aGraphNode()
                                                                      .withId(generateUuid())
@@ -528,7 +531,18 @@ public class WorkflowServiceTestHelper {
         .withUuid(INFRA_MAPPING_ID)
         .withServiceId(SERVICE_ID)
         .withDeploymentType(DeploymentType.KUBERNETES.name())
-        .withComputeProviderType(AWS.name())
+        .withComputeProviderType(GCP.name())
+        .build();
+  }
+
+  public static DirectKubernetesInfrastructureMapping constructHELMInfra() {
+    return aDirectKubernetesInfrastructureMapping()
+        .withAppId(APP_ID)
+        .withUuid(INFRA_MAPPING_ID)
+        .withServiceId(SERVICE_ID)
+        .withServiceTemplateId(SERVICE_TEMPLATE_ID)
+        .withDeploymentType(DeploymentType.HELM.name())
+        .withComputeProviderType(GCP.name())
         .build();
   }
 

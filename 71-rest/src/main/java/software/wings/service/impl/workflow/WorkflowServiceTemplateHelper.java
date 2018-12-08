@@ -231,6 +231,7 @@ public class WorkflowServiceTemplateHelper {
   }
 
   public static String getInframappingExpressionName(DeploymentType deploymentType, String expression) {
+    // TODO: Handle all other deployment types
     if (SSH.equals(deploymentType)) {
       expression = expression + "_SSH";
     } else if (AWS_CODEDEPLOY.equals(deploymentType)) {
