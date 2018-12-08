@@ -12,8 +12,8 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Data
+@Builder
 public class VaultSecretValue {
   private String value;
 }

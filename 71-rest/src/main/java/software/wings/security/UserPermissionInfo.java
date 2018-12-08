@@ -12,8 +12,8 @@ import java.util.Set;
 /**
  * Created by rktummala on 2/26/18.
  */
-@Builder
 @Data
+@Builder
 public class UserPermissionInfo {
   private String accountId;
   private boolean isRbacEnabled;

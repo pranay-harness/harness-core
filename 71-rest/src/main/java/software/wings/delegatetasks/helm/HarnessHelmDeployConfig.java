@@ -14,9 +14,9 @@ import lombok.Data;
  *             url: google.com
  *        timeout:10  // this is a pseudo field
  */
+@Data
 @Builder
 @AllArgsConstructor
-@Data
 public class HarnessHelmDeployConfig {
   private HelmDeployChartSpec helmDeployChartSpec;
 }

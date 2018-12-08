@@ -6,8 +6,8 @@ import software.wings.sm.ExecutionInterrupt;
 
 import java.util.Date;
 
-@Builder
 @Value
+@Builder
 public class StateExecutionInterrupt {
   ExecutionInterrupt interrupt;
   Date tookAffectAt;

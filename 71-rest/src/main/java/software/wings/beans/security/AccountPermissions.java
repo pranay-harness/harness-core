@@ -9,8 +9,8 @@ import java.util.Set;
 /**
  * @author rktummala on 02/09/18
  */
-@Builder
 @Data
+@Builder
 public class AccountPermissions {
   private Set<PermissionType> permissions;
 }

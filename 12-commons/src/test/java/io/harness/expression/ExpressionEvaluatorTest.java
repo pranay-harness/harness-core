@@ -15,15 +15,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ExpressionEvaluatorTest extends CategoryTest {
-  @Builder
   @Value
+  @Builder
   public static class Person {
     private Address address;
     private int age;
   }
 
-  @Builder
   @Value
+  @Builder
   public static class Address {
     private String city;
   }

@@ -3,8 +3,8 @@ package io.harness.delegate.task.protocol;
 import lombok.Builder;
 import lombok.Data;
 
-@Builder
 @Data
+@Builder
 public class DelegateMetaInfo {
   private String id;
   private String hostName;

@@ -20,8 +20,8 @@ import software.wings.settings.UsageRestrictions;
 import javax.validation.constraints.NotNull;
 
 @JsonTypeName("WINRM_CONNECTION_ATTRIBUTES")
-@Builder
 @Data
+@Builder
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
 public class WinRmConnectionAttributes extends SettingValue implements EncryptableSetting {

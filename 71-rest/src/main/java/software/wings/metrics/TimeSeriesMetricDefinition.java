@@ -10,8 +10,8 @@ import java.util.Set;
 /**
  * Created by sriram_parthasarathy on 11/29/17.
  */
-@Builder
 @Data
+@Builder
 public class TimeSeriesMetricDefinition {
   private String metricName;
   private MetricType metricType;

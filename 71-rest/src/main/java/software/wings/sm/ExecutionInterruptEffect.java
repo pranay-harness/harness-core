@@ -9,8 +9,8 @@ import lombok.Value;
 
 import java.util.Date;
 
-@Builder
 @Value
+@Builder
 public class ExecutionInterruptEffect {
   private String interruptId;
   private Date tookEffectAt;

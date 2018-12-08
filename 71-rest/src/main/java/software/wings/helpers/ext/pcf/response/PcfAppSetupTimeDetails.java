@@ -5,8 +5,8 @@ import lombok.Data;
 
 import java.util.List;
 
-@Builder
 @Data
+@Builder
 public class PcfAppSetupTimeDetails {
   private String applicationGuid;
   private String applicationName;

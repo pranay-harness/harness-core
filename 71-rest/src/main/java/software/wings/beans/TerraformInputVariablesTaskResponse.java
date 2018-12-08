@@ -7,8 +7,8 @@ import software.wings.api.TerraformExecutionData;
 
 import java.util.List;
 
-@Builder
 @Value
+@Builder
 public class TerraformInputVariablesTaskResponse implements ResponseData {
   private final List<NameValuePair> variablesList;
   private final TerraformExecutionData terraformExecutionData;

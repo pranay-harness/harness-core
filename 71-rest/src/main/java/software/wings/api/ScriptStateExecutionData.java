@@ -10,8 +10,8 @@ import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
 
-@Builder
 @Data
+@Builder
 @EqualsAndHashCode(callSuper = false)
 public class ScriptStateExecutionData extends StateExecutionData implements ResponseData {
   private String name;

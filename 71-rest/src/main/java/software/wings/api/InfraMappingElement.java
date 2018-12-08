@@ -10,22 +10,22 @@ public class InfraMappingElement {
   private Kubernetes kubernetes;
   private Helm helm;
 
-  @Builder
   @Data
+  @Builder
   public static class Pcf {
     private String route;
     private String tempRoute;
   }
 
-  @Builder
   @Data
+  @Builder
   public static class Kubernetes {
     private String namespace;
     private String infraId;
   }
 
-  @Builder
   @Data
+  @Builder
   public static class Helm {
     private String shortId;
     private String releaseName;

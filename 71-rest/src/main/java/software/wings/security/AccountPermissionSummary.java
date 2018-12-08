@@ -6,8 +6,8 @@ import software.wings.security.PermissionAttribute.PermissionType;
 
 import java.util.Set;
 
-@Builder
 @Data
+@Builder
 public class AccountPermissionSummary {
   private Set<PermissionType> permissions;
 }
