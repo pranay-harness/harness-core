@@ -50,6 +50,7 @@ import io.harness.persistence.HPersistence;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.scheduler.PersistentScheduler;
+import io.harness.waiter.Notifier;
 import io.harness.waiter.WaiterMorphiaClasses;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
@@ -106,7 +107,6 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.sm.StateMachineExecutor;
 import software.wings.utils.CacheHelper;
 import software.wings.utils.JsonSubtypeResolver;
-import software.wings.waitnotify.Notifier;
 import software.wings.yaml.gitSync.GitChangeSetRunnable;
 
 import java.util.ArrayList;

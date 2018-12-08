@@ -1,4 +1,4 @@
-package software.wings.waitnotify;
+package io.harness.waiter;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -16,15 +16,12 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.logging.ExceptionLogger;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue;
-import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.NotifyResponse;
-import io.harness.waiter.WaitQueue;
+import io.harness.queue.QueueController;
 import org.mongodb.morphia.query.FindOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -41,14 +38,14 @@ import java.util.Set;
 public class Notifier implements Runnable {
   private static final Logger logger = LoggerFactory.getLogger(Notifier.class);
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
   @Inject private PersistentLocker persistentLocker;
   @Inject private Queue<NotifyEvent> notifyQueue;
-  @Inject private ConfigurationController configurationController;
+  @Inject private QueueController queueController;
 
   @Override
   public void run() {
-    if (isMaintenance() || configurationController.isNotPrimary()) {
+    if (isMaintenance() || queueController.isNotPrimary()) {
       return;
     }
 
@@ -75,7 +72,7 @@ public class Notifier implements Runnable {
 
   public void executeUnderLock() {
     logger.info("Execute Notifier response processing");
-    final List<NotifyResponse> notifyResponses = wingsPersistence.createQuery(NotifyResponse.class, excludeAuthority)
+    final List<NotifyResponse> notifyResponses = persistence.createQuery(NotifyResponse.class, excludeAuthority)
                                                      .project(NotifyResponse.ID_KEY, true)
                                                      .project(NotifyResponse.CREATED_AT_KEY, true)
                                                      .asList(new FindOptions().limit(1000));
@@ -91,10 +88,8 @@ public class Notifier implements Runnable {
     Map<String, List<String>> waitInstances = new HashMap<>();
 
     // Get wait queue entries
-    try (HIterator<WaitQueue> iterator = new HIterator<WaitQueue>(wingsPersistence.createQuery(WaitQueue.class)
-                                                                      .field(WaitQueue.CORRELATION_ID_KEY)
-                                                                      .in(correlationIds)
-                                                                      .fetch())) {
+    try (HIterator<WaitQueue> iterator = new HIterator<WaitQueue>(
+             persistence.createQuery(WaitQueue.class).field(WaitQueue.CORRELATION_ID_KEY).in(correlationIds).fetch())) {
       while (iterator.hasNext()) {
         // process distinct set of wait instanceIds
         final WaitQueue waitQueue = iterator.next();
@@ -121,9 +116,9 @@ public class Notifier implements Runnable {
 
       if (isNotEmpty(deleteResponses)) {
         logger.warn("Deleting zombie responses {}", correlationIds.toString());
-        wingsPersistence.delete(wingsPersistence.createQuery(NotifyResponse.class, excludeAuthority)
-                                    .field(NotifyResponse.ID_KEY)
-                                    .in(deleteResponses));
+        persistence.delete(persistence.createQuery(NotifyResponse.class, excludeAuthority)
+                               .field(NotifyResponse.ID_KEY)
+                               .in(deleteResponses));
       }
     }
   }
