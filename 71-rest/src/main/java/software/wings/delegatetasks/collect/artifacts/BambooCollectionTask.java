@@ -5,6 +5,7 @@ import static software.wings.common.Constants.BUILD_NO;
 import com.google.inject.Inject;
 
 import io.harness.delegate.task.protocol.TaskParameters;
+import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -16,7 +17,6 @@ import software.wings.delegatetasks.AbstractDelegateRunnableTask;
 import software.wings.helpers.ext.bamboo.BambooService;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
 import java.util.List;

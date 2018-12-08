@@ -11,6 +11,7 @@ import com.google.common.collect.ImmutableMap;
 
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import io.harness.exception.WingsException;
+import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
 import org.junit.Rule;
@@ -22,7 +23,6 @@ import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.common.Constants;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.security.EncryptionServiceImpl;
-import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.InputStream;
 import java.util.HashMap;

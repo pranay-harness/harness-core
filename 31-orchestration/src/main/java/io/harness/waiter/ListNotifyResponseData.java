@@ -1,16 +1,13 @@
-package software.wings.waitnotify;
+package io.harness.waiter;
 
 import io.harness.delegate.task.protocol.ResponseData;
-import software.wings.beans.Base;
+import io.harness.persistence.PersistentEntity;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Created by rishi on 12/14/16.
- */
 public class ListNotifyResponseData implements ResponseData {
-  private List<Base> data = new ArrayList<>();
+  private List<PersistentEntity> data = new ArrayList<>();
 
   public ListNotifyResponseData() {}
 
@@ -28,7 +25,7 @@ public class ListNotifyResponseData implements ResponseData {
    *
    * @param data the data
    */
-  public void addData(Base data) {
+  public void addData(PersistentEntity data) {
     this.data.add(data);
   }
 
@@ -67,7 +64,7 @@ public class ListNotifyResponseData implements ResponseData {
   }
 
   public static final class Builder {
-    private List<Base> data = new ArrayList<>();
+    private List<PersistentEntity> data = new ArrayList<>();
 
     private Builder() {}
 
@@ -75,7 +72,7 @@ public class ListNotifyResponseData implements ResponseData {
       return new Builder();
     }
 
-    public Builder addData(Base data) {
+    public Builder addData(PersistentEntity data) {
       this.data.add(data);
       return this;
     }

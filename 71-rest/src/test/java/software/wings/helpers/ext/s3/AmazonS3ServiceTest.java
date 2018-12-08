@@ -13,6 +13,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import io.harness.waiter.ListNotifyResponseData;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -25,7 +26,6 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.service.impl.AwsHelperService;
-import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.File;
 import java.io.FileInputStream;
