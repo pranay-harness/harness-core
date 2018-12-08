@@ -51,14 +51,29 @@ import static software.wings.beans.PhaseStepType.WRAP_UP;
 import static software.wings.beans.WorkflowPhase.WorkflowPhaseBuilder.aWorkflowPhase;
 import static software.wings.common.Constants.ROLLBACK_PROVISIONERS;
 import static software.wings.common.Constants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
-import static software.wings.sm.StateMachineExecutionSimulator.populateRequiredEntityTypesByAccessType;
 import static software.wings.sm.StateType.ARTIFACT_COLLECTION;
+import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
+import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
+import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
+import static software.wings.sm.StateType.CLOUD_FORMATION_CREATE_STACK;
+import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
+import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
+import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
+import static software.wings.sm.StateType.HTTP;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
+import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
+import static software.wings.sm.StateType.KUBERNETES_SETUP;
+import static software.wings.sm.StateType.PCF_RESIZE;
+import static software.wings.sm.StateType.PCF_SETUP;
+import static software.wings.sm.StateType.SHELL_SCRIPT;
+import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
 import static software.wings.sm.StateType.values;
 import static software.wings.utils.Validator.notNullCheck;
 
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -76,6 +91,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.observer.Rejection;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.PersistentEntity;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
@@ -108,7 +124,6 @@ import software.wings.beans.FailureStrategy;
 import software.wings.beans.FailureType;
 import software.wings.beans.Graph;
 import software.wings.beans.GraphNode;
-import software.wings.beans.HostConnectionAttributes;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.NotificationGroup;
@@ -195,6 +210,21 @@ import javax.validation.executable.ValidateOnExecution;
 @ValidateOnExecution
 public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceImpl.class);
+
+  private static final List<String> kubernetesArtifactNeededStateTypes =
+      Arrays.asList(KUBERNETES_SETUP.name(), KUBERNETES_DEPLOY.name(), K8S_DEPLOYMENT_ROLLING.name());
+
+  private static final List<String> ecsArtifactNeededStateTypes =
+      Arrays.asList(ECS_SERVICE_DEPLOY.name(), ECS_SERVICE_SETUP.name(), ECS_DAEMON_SERVICE_SETUP.name());
+
+  private static final List<String> amiArtifactNeededStateTypes =
+      Arrays.asList(AWS_AMI_SERVICE_SETUP.name(), AWS_AMI_SERVICE_DEPLOY.name());
+
+  private static final List<String> codeDeployArtifactNeededStateTypes = Arrays.asList(AWS_CODEDEPLOY_STATE.name());
+
+  private static final List<String> awsLambdaArtifactNeededStateTypes = Arrays.asList(AWS_LAMBDA_STATE.name());
+
+  private static final List<String> pcfArtifactNeededStateTypes = Arrays.asList(PCF_SETUP.name(), PCF_RESIZE.name());
 
   private static final Comparator<Stencil> stencilDefaultSorter = (o1, o2) -> {
     int comp = o1.getStencilCategory().getDisplayOrder().compareTo(o2.getStencilCategory().getDisplayOrder());
@@ -1065,26 +1095,25 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   }
 
   StateType getCorrespondingRollbackState(GraphNode step) {
-    if (step.getType().equals(StateType.CLOUD_FORMATION_CREATE_STACK.name())) {
+    if (step.getType().equals(CLOUD_FORMATION_CREATE_STACK.name())) {
       return StateType.CLOUD_FORMATION_ROLLBACK_STACK;
     }
 
     if (step.getType().equals(StateType.TERRAFORM_PROVISION.name())) {
-      return StateType.TERRAFORM_ROLLBACK;
+      return TERRAFORM_ROLLBACK;
     }
 
     return null;
   }
 
   private PhaseStep generateRollbackProvisioners(PhaseStep preDeploymentSteps) {
-    List<GraphNode> provisionerSteps =
-        preDeploymentSteps.getSteps()
-            .stream()
-            .filter(step -> {
-              return StateType.TERRAFORM_PROVISION.name().equals(step.getType())
-                  || StateType.CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType());
-            })
-            .collect(Collectors.toList());
+    List<GraphNode> provisionerSteps = preDeploymentSteps.getSteps()
+                                           .stream()
+                                           .filter(step -> {
+                                             return StateType.TERRAFORM_PROVISION.name().equals(step.getType())
+                                                 || CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType());
+                                           })
+                                           .collect(Collectors.toList());
     if (isEmpty(provisionerSteps)) {
       return null;
     }
@@ -1631,30 +1660,36 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
   }
 
+  public Map<EntityType, List<? extends PersistentEntity>> fetchRequiredEntityTypes(
+      String appId, Workflow workflow, Map<String, String> workflowVaraibles) {
+    return ImmutableMap.of(ARTIFACT, new ArrayList<>());
+  }
+
   @Override
   public Set<EntityType> fetchRequiredEntityTypes(String appId, OrchestrationWorkflow orchestrationWorkflow) {
     notNullCheck("orchestrationWorkflow", orchestrationWorkflow, USER);
     if (orchestrationWorkflow instanceof CanaryOrchestrationWorkflow) {
       CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
-      Set<EntityType> requiredEntityTypes = canaryOrchestrationWorkflow.getWorkflowPhases()
-                                                .stream()
-                                                .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
-                                                .collect(Collectors.toSet());
+      Set<EntityType> requiredEntityTypes =
+          canaryOrchestrationWorkflow.getWorkflowPhases()
+              .stream()
+              .flatMap(phase -> updateRequiredEntityTypes(appId, phase, null).stream())
+              .collect(Collectors.toSet());
 
-      updateRequiredEntityTypes(appId, null, canaryOrchestrationWorkflow.getPreDeploymentSteps(), requiredEntityTypes);
+      updateRequiredEntityTypes(
+          appId, null, canaryOrchestrationWorkflow.getPreDeploymentSteps(), requiredEntityTypes, null, null);
 
       Set<EntityType> rollbackRequiredEntityTypes =
           ((CanaryOrchestrationWorkflow) orchestrationWorkflow)
               .getRollbackWorkflowPhaseIdMap()
               .values()
               .stream()
-              .flatMap(phase -> updateRequiredEntityTypes(appId, phase).stream())
+              .flatMap(phase -> updateRequiredEntityTypes(appId, phase, null).stream())
               .collect(Collectors.toSet());
       requiredEntityTypes.addAll(rollbackRequiredEntityTypes);
 
       return requiredEntityTypes;
     }
-
     return null;
   }
 
@@ -1668,59 +1703,41 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return entityTypes;
   }
 
-  private Set<EntityType> updateRequiredEntityTypes(String appId, WorkflowPhase workflowPhase) {
+  private Set<EntityType> updateRequiredEntityTypes(
+      String appId, WorkflowPhase workflowPhase, Map<String, String> workflowVaraibles) {
     Set<EntityType> requiredEntityTypes = new HashSet<>();
 
     if (workflowPhase == null || workflowPhase.getPhaseSteps() == null) {
       return requiredEntityTypes;
     }
-
-    if (asList(ECS, KUBERNETES, AWS_CODEDEPLOY, AWS_LAMBDA, AMI, PCF).contains(workflowPhase.getDeploymentType())) {
-      requiredEntityTypes.add(ARTIFACT);
-      return requiredEntityTypes;
-    }
-
-    InfrastructureMapping infrastructureMapping = null;
-    if (workflowPhase.getInfraMappingId() != null) {
-      infrastructureMapping = infrastructureMappingService.get(appId, workflowPhase.getInfraMappingId());
-    }
-
-    if (infrastructureMapping != null && HELM.equals(workflowPhase.getDeploymentType())) {
-      if (serviceResourceService.checkArtifactNeededForHelm(appId, infrastructureMapping.getServiceTemplateId())) {
-        requiredEntityTypes.add(ARTIFACT);
-      }
-      return requiredEntityTypes;
-    }
-
-    if (infrastructureMapping != null && infrastructureMapping.getHostConnectionAttrs() != null) {
-      SettingAttribute settingAttribute = settingsService.get(infrastructureMapping.getHostConnectionAttrs());
-      if (settingAttribute != null) {
-        if (settingAttribute.getValue() instanceof HostConnectionAttributes) {
-          HostConnectionAttributes connectionAttributes = (HostConnectionAttributes) settingAttribute.getValue();
-          populateRequiredEntityTypesByAccessType(requiredEntityTypes, connectionAttributes.getAccessType());
+    String serviceId = workflowPhase.getServiceId();
+    if (isNotEmpty(workflowVaraibles)) {
+      // TODO: this check has to be removed once backward compatible change implemented
+      if (workflowPhase.checkServiceTemplatized()) {
+        String serviceTemplatizedName = workflowPhase.fetchServiceTemplatizedName();
+        if (serviceTemplatizedName != null) {
+          serviceId = workflowVaraibles.get(serviceTemplatizedName);
         }
       }
     }
-
-    String serviceId = workflowPhase.getServiceId();
 
     for (PhaseStep phaseStep : workflowPhase.getPhaseSteps()) {
       if (phaseStep.getSteps() == null) {
         continue;
       }
-      updateRequiredEntityTypes(appId, serviceId, phaseStep, requiredEntityTypes);
+      updateRequiredEntityTypes(appId, serviceId, phaseStep, requiredEntityTypes, workflowPhase, workflowVaraibles);
     }
     return requiredEntityTypes;
   }
 
-  private void updateRequiredEntityTypes(
-      String appId, String serviceId, PhaseStep phaseStep, Set<EntityType> requiredEntityTypes) {
+  private void updateRequiredEntityTypes(String appId, String serviceId, PhaseStep phaseStep,
+      Set<EntityType> requiredEntityTypes, WorkflowPhase workflowPhase, Map<String, String> workflowVaraibles) {
     boolean artifactNeeded = false;
 
     for (GraphNode step : phaseStep.getSteps()) {
       if ("COMMAND".equals(step.getType())) {
         if (serviceId != null) {
-          Service service = serviceResourceService.get(appId, serviceId);
+          Service service = serviceResourceService.get(appId, serviceId, false);
           if (service == null) {
             artifactNeeded = true;
           } else {
@@ -1733,16 +1750,16 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             }
           }
         }
-      } else if (StateType.HTTP.name().equals(step.getType())
+      } else if (HTTP.name().equals(step.getType())
           && (isArtifactNeeded(step.getProperties().get("url"), step.getProperties().get("body"),
                  step.getProperties().get("assertion")))) {
         artifactNeeded = true;
         break;
-      } else if (StateType.SHELL_SCRIPT.name().equals(step.getType())
+      } else if (SHELL_SCRIPT.name().equals(step.getType())
           && (isArtifactNeeded(step.getProperties().get("scriptString")))) {
         artifactNeeded = true;
         break;
-      } else if (StateType.CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType())) {
+      } else if (CLOUD_FORMATION_CREATE_STACK.name().equals(step.getType())) {
         List<Map> variables = (List<Map>) step.getProperties().get("variables");
         if (variables != null) {
           List<String> values = (List<String>) variables.stream()
@@ -1752,7 +1769,34 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
             artifactNeeded = true;
           }
         }
+      } else if (kubernetesArtifactNeededStateTypes.contains(step.getType())
+          || ecsArtifactNeededStateTypes.contains(step.getType())
+          || amiArtifactNeededStateTypes.contains(step.getType())
+          || codeDeployArtifactNeededStateTypes.contains(step.getType())
+          || awsLambdaArtifactNeededStateTypes.contains(step.getType())
+          || pcfArtifactNeededStateTypes.contains(step.getType())) {
+        // NOTE: If you add new State Type that needs artifact.. it should be listed down here
+        artifactNeeded = true;
         break;
+      } else if (workflowPhase != null && HELM.equals(workflowPhase.getDeploymentType())
+          && StateType.HELM_DEPLOY.name().equals(step.getType())) {
+        String infraMappingId = workflowPhase.getInfraMappingId();
+        if (isNotEmpty(workflowVaraibles)) {
+          // TODO: this check has to be removed once backward compatible change implemented
+          if (workflowPhase.checkInfraTemplatized()) {
+            String infraTemplatizedName = workflowPhase.fetchInfraMappingTemplatizedName();
+            if (infraTemplatizedName != null) {
+              infraMappingId = workflowVaraibles.get(infraTemplatizedName);
+            }
+          }
+        }
+        InfrastructureMapping infrastructureMapping = infrastructureMappingService.get(appId, infraMappingId);
+        if (infrastructureMapping != null) {
+          if (serviceResourceService.checkArtifactNeededForHelm(appId, infrastructureMapping.getServiceTemplateId())) {
+            artifactNeeded = true;
+            break;
+          }
+        }
       }
     }
 

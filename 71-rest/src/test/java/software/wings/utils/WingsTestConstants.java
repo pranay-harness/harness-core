@@ -17,6 +17,8 @@ public interface WingsTestConstants {
 
   String SERVICE_ID = "SERVICE_ID";
 
+  String SERVICE_TEMPLATE_ID = "SERVICE_TEMPLATE_ID";
+
   String PROVISIONER_ID = "PROVISIONER_ID";
 
   String SERVICE_COMMAND_ID = "SERVICE_COMMAND_ID";

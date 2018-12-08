@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 import software.wings.api.DeploymentType;
 import software.wings.beans.Graph.Builder;
 import software.wings.common.Constants;
+import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
 import software.wings.sm.TransitionType;
 import software.wings.yaml.BaseYamlWithType;
 
@@ -309,6 +310,25 @@ public class WorkflowPhase implements UuidAware {
   @JsonIgnore
   public boolean checkInfraTemplatized() {
     return checkFieldTemplatized("infraMappingId");
+  }
+
+  public String fetchServiceTemplatizedName() {
+    TemplateExpression serviceTemplateExpression =
+        templateExpressions.stream()
+            .filter(templateExpression -> templateExpression.getFieldName().equals("serviceId"))
+            .findFirst()
+            .orElse(null);
+    return WorkflowServiceTemplateHelper.getName(serviceTemplateExpression.getExpression(), EntityType.SERVICE);
+  }
+
+  public String fetchInfraMappingTemplatizedName() {
+    TemplateExpression serviceTemplateExpression =
+        templateExpressions.stream()
+            .filter(templateExpression -> templateExpression.getFieldName().equals("infraMappingId"))
+            .findFirst()
+            .orElse(null);
+    return WorkflowServiceTemplateHelper.getName(
+        serviceTemplateExpression.getExpression(), EntityType.INFRASTRUCTURE_MAPPING);
   }
 
   private boolean checkFieldTemplatized(String fieldName) {

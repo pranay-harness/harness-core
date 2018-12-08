@@ -202,11 +202,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Override
   public List<String> getServiceIds() {
-    if (workflowPhaseIdMap == null) {
-      return null;
+    List<WorkflowPhase> workflowPhases = new ArrayList<>();
+    for (String workflowPhaseId : workflowPhaseIds) {
+      WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
+      workflowPhases.add(workflowPhase);
     }
-    return workflowPhaseIdMap.values()
-        .stream()
+    return workflowPhases.stream()
         .filter(workflowPhase -> workflowPhase.getServiceId() != null)
         .map(WorkflowPhase::getServiceId)
         .distinct()
@@ -215,11 +216,12 @@ public class CanaryOrchestrationWorkflow extends CustomOrchestrationWorkflow {
 
   @Override
   public List<String> getInfraMappingIds() {
-    if (workflowPhaseIdMap == null) {
-      return null;
+    List<WorkflowPhase> workflowPhases = new ArrayList<>();
+    for (String workflowPhaseId : workflowPhaseIds) {
+      WorkflowPhase workflowPhase = workflowPhaseIdMap.get(workflowPhaseId);
+      workflowPhases.add(workflowPhase);
     }
-    return workflowPhaseIdMap.values()
-        .stream()
+    return workflowPhases.stream()
         .filter(workflowPhase -> workflowPhase.getInfraMappingId() != null)
         .map(WorkflowPhase::getInfraMappingId)
         .distinct()

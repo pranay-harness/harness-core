@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -102,6 +103,8 @@ import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.con
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructEcsnfraMapping;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructElkTemplateExpressions;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructGKInfraMapping;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHELMInfra;
+import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHelmWorkflowWithProperties;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructHttpTemplateStep;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructLinkedTemplate;
 import static software.wings.service.impl.workflow.WorkflowServiceTestHelper.constructMulitServiceTemplateWorkflow;
@@ -146,6 +149,7 @@ import static software.wings.utils.WingsTestConstants.ROLE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID_CHANGED;
 import static software.wings.utils.WingsTestConstants.SERVICE_NAME;
+import static software.wings.utils.WingsTestConstants.SERVICE_TEMPLATE_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_APP_ID;
 import static software.wings.utils.WingsTestConstants.TARGET_SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.TEMPLATE_ID;
@@ -171,6 +175,7 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 import org.mongodb.morphia.query.FieldEnd;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -239,6 +244,7 @@ import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.EntityUpdateService;
 import software.wings.service.intfc.yaml.YamlDirectoryService;
+import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingValue.SettingVariableTypes;
 import software.wings.sm.State;
 import software.wings.sm.StateMachine;
@@ -253,6 +259,7 @@ import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.JsonUtils;
 import software.wings.waitnotify.NotifyEventListener;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.ConstraintViolationException;
@@ -280,6 +287,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
   @Mock private PipelineService pipelineService;
   @Mock private EntityUpdateService entityUpdateService;
   @Mock private YamlDirectoryService yamlDirectoryService;
+  @Mock private YamlPushService yamlPushService;
   @Mock private ArtifactStreamService artifactStreamService;
   @Mock private ArtifactStream artifactStream;
   @Mock private TriggerService triggerService;
@@ -310,6 +318,7 @@ public class WorkflowServiceTest extends WingsBaseTest {
    */
   @Before
   public void setupMocks() {
+    Mockito.doNothing().when(yamlPushService).pushYamlChangeSet(anyString(), any(), any(), any(), anyBoolean());
     when(pluginManager.getExtensions(StateTypeDescriptor.class)).thenReturn(newArrayList());
 
     when(appService.get(APP_ID)).thenReturn(application);
@@ -846,6 +855,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotEmpty()
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
+
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
   }
 
   @Test
@@ -872,6 +883,9 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotEmpty()
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CLUSTER_SETUP, CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
+
+    assertThat(workflowService.fetchRequiredEntityTypes(Constants.APP_ID, orchestrationWorkflow))
+        .contains(EntityType.ARTIFACT);
   }
 
   @Test
@@ -919,6 +933,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotEmpty()
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, ROUTE_UPDATE, WRAP_UP);
+
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
   }
 
   @Test
@@ -942,6 +958,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotEmpty()
         .extracting(PhaseStep::getPhaseStepType)
         .contains(CONTAINER_SETUP, CONTAINER_DEPLOY, VERIFY_SERVICE, WRAP_UP);
+
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
   }
 
   @Test
@@ -965,6 +983,8 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotEmpty()
         .extracting(PhaseStep::getPhaseStepType)
         .contains(AMI_DEPLOY_AUTOSCALING_GROUP, VERIFY_SERVICE, WRAP_UP);
+
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
   }
 
   @Test
@@ -988,9 +1008,39 @@ public class WorkflowServiceTest extends WingsBaseTest {
         .isNotEmpty()
         .extracting(PhaseStep::getPhaseStepType)
         .contains(PREPARE_STEPS, DEPLOY_AWS_LAMBDA, VERIFY_SERVICE, WRAP_UP);
+
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
   }
 
-  private void assertWorkflowPhase(BasicOrchestrationWorkflow orchestrationWorkflow) {
+  @Test
+  public void shouldCreateCanaryHelmDeploymentWorkflow() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("helmReleaseNamePrefix", "defaultValue");
+    Workflow workflow = constructHelmWorkflowWithProperties(properties);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(constructHELMInfra());
+    when(serviceResourceService.checkArtifactNeededForHelm(APP_ID, SERVICE_TEMPLATE_ID)).thenReturn(true);
+
+    Workflow savedWorkflow = workflowService.createWorkflow(workflow);
+    assertThat(savedWorkflow).isNotNull().hasFieldOrProperty("uuid").hasFieldOrPropertyWithValue("appId", APP_ID);
+
+    CanaryOrchestrationWorkflow orchestrationWorkflow =
+        (CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertOrchestrationWorkflow(orchestrationWorkflow);
+
+    savedWorkflow = workflowService.readWorkflow(savedWorkflow.getAppId(), savedWorkflow.getUuid());
+
+    orchestrationWorkflow = (CanaryOrchestrationWorkflow) savedWorkflow.getOrchestrationWorkflow();
+    assertWorkflowPhase(orchestrationWorkflow);
+    WorkflowPhase workflowPhase = orchestrationWorkflow.getWorkflowPhases().get(0);
+    assertThat(workflowPhase.getPhaseSteps())
+        .isNotEmpty()
+        .extracting(PhaseStep::getPhaseStepType)
+        .contains(CONTAINER_DEPLOY);
+
+    assertThat(workflowService.fetchRequiredEntityTypes(APP_ID, orchestrationWorkflow)).contains(EntityType.ARTIFACT);
+  }
+
+  private void assertWorkflowPhase(CanaryOrchestrationWorkflow orchestrationWorkflow) {
     assertThat(orchestrationWorkflow).isNotNull();
     assertThat(orchestrationWorkflow.getWorkflowPhases()).isNotEmpty().hasSize(1);
   }
