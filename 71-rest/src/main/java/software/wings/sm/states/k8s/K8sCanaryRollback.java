@@ -1,11 +1,9 @@
 package software.wings.sm.states.k8s;
 
-import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
-import static java.lang.Integer.parseInt;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.K8S_SCALE;
+import static software.wings.sm.StateType.K8S_CANARY_ROLLBACK;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -16,8 +14,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
-import lombok.Getter;
-import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.api.k8s.K8sContextElement;
@@ -26,13 +22,12 @@ import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.InstanceUnitType;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.K8sDummyCommandUnit;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sCanaryRollbackTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
@@ -57,8 +52,8 @@ import java.util.Arrays;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sScale extends State {
-  private static final transient Logger logger = LoggerFactory.getLogger(K8sScale.class);
+public class K8sCanaryRollback extends State {
+  private static final transient Logger logger = LoggerFactory.getLogger(K8sCanaryRollback.class);
 
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
@@ -73,16 +68,11 @@ public class K8sScale extends State {
   @Inject private transient ApplicationManifestService applicationManifestService;
   @Inject private transient AwsCommandHelper awsCommandHelper;
 
-  public static final String K8S_SCALE_COMMAND_NAME = "Scale";
+  public static final String K8S_CANARY_ROLLBACK_COMMAND_NAME = "Canary Rollback";
 
-  public K8sScale(String name) {
-    super(name, K8S_SCALE.name());
+  public K8sCanaryRollback(String name) {
+    super(name, K8S_CANARY_ROLLBACK.name());
   }
-
-  @Getter @Setter @Attributes(title = "Resource") private String resource;
-  @Getter @Setter @Attributes(title = "Instances") private String instances;
-  @Getter @Setter @Attributes(title = "Instance Unit Type") private InstanceUnitType instanceUnitType;
-  @Getter @Setter @Attributes(title = "Skip steady state check") private boolean skipSteadyStateCheck;
 
   @Attributes(title = "Timeout (ms)")
   @DefaultValue("" + DEFAULT_ASYNC_CALL_TIMEOUT)
@@ -98,29 +88,25 @@ public class K8sScale extends State {
 
       ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
-      Integer maxInstances = null;
       K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
-      if (k8sContextElement != null) {
-        maxInstances = Integer.valueOf(k8sContextElement.getTargetInstances());
-      }
 
-      Activity activity = createActivity(context);
+      Activity activity =
+          k8sStateHelper.createK8sActivity(context, K8S_CANARY_ROLLBACK_COMMAND_NAME, getStateType(), activityService,
+              ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
+                  new K8sDummyCommandUnit(K8sDummyCommandUnit.Rollback)));
 
-      K8sTaskParameters commandRequest =
-          K8sScaleTaskParameters.builder()
+      K8sTaskParameters taskParameters =
+          K8sCanaryRollbackTaskParameters.builder()
               .activityId(activity.getUuid())
               .appId(app.getUuid())
               .accountId(app.getAccountId())
-              .releaseName(convertBase64UuidToCanonicalForm(infraMapping.getUuid()))
-              .commandName(K8S_SCALE_COMMAND_NAME)
-              .k8sTaskType(K8sTaskType.SCALE)
+              .releaseName(k8sContextElement.getReleaseName())
+              .releaseNumber(k8sContextElement.getReleaseNumber())
+              .targetReplicas(k8sContextElement.getTargetInstances())
+              .commandName(K8S_CANARY_ROLLBACK_COMMAND_NAME)
+              .k8sTaskType(K8sTaskType.CANARY_ROLLBACK)
               .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping))
               .workflowExecutionId(context.getWorkflowExecutionId())
-              .resource(this.resource)
-              .instances(parseInt(context.renderExpression(this.instances)))
-              .instanceUnitType(this.instanceUnitType)
-              .maxInstances(maxInstances)
-              .skipSteadyStateCheck(this.skipSteadyStateCheck)
               .timeoutIntervalInMin(10)
               .build();
 
@@ -130,8 +116,8 @@ public class K8sScale extends State {
               .withAppId(app.getUuid())
               .withTaskType(TaskType.K8S_COMMAND_TASK)
               .withWaitId(activity.getUuid())
-              .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(commandRequest))
-              .withParameters(new Object[] {commandRequest})
+              .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(taskParameters))
+              .withParameters(new Object[] {taskParameters})
               .withEnvId(k8sStateHelper.getEnvironment(context).getUuid())
               .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
               .withInfrastructureMappingId(infraMapping.getUuid())
@@ -144,10 +130,7 @@ public class K8sScale extends State {
           .withCorrelationIds(Arrays.asList(activity.getUuid()))
           .withStateExecutionData(K8sSetupExecutionData.builder()
                                       .activityId(activity.getUuid())
-                                      .commandName(K8S_SCALE_COMMAND_NAME)
-                                      .namespace(commandRequest.getK8sClusterConfig().getNamespace())
-                                      .clusterName(commandRequest.getK8sClusterConfig().getClusterName())
-                                      .releaseName(commandRequest.getReleaseName())
+                                      .commandName(K8S_CANARY_ROLLBACK_COMMAND_NAME)
                                       .build())
           .withDelegateTaskId(delegateTaskId)
           .build();
@@ -172,6 +155,9 @@ public class K8sScale extends State {
 
       activityService.updateStatus(activityId, appId, executionStatus);
 
+      K8sSetupExecutionData stateExecutionData = (K8sSetupExecutionData) context.getStateExecutionData();
+      stateExecutionData.setStatus(executionStatus);
+
       return anExecutionResponse()
           .withExecutionStatus(executionStatus)
           .withStateExecutionData(context.getStateExecutionData())
@@ -180,19 +166,6 @@ public class K8sScale extends State {
       throw e;
     } catch (Exception e) {
       throw new InvalidRequestException(Misc.getMessage(e), e);
-    }
-  }
-
-  private Activity createActivity(ExecutionContext context) {
-    if (this.skipSteadyStateCheck) {
-      return k8sStateHelper.createK8sActivity(context, K8S_SCALE_COMMAND_NAME, getStateType(), activityService,
-          ImmutableList.of(
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.Init), new K8sDummyCommandUnit(K8sDummyCommandUnit.Scale)));
-    } else {
-      return k8sStateHelper.createK8sActivity(context, K8S_SCALE_COMMAND_NAME, getStateType(), activityService,
-          ImmutableList.of(new K8sDummyCommandUnit(K8sDummyCommandUnit.Init),
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.Scale),
-              new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState)));
     }
   }
 

@@ -7,7 +7,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
 @AllArgsConstructor
-public class K8sCommandRequest implements TaskParameters {
+public class K8sTaskParameters implements TaskParameters {
   private String accountId;
   private String appId;
   private String commandName;
@@ -16,10 +16,12 @@ public class K8sCommandRequest implements TaskParameters {
   private String workflowExecutionId;
   private String releaseName;
   private Integer timeoutIntervalInMin;
-  @NotEmpty private K8sCommandType commandType;
-  public enum K8sCommandType {
+  @NotEmpty private K8sTaskType commandType;
+  public enum K8sTaskType {
     DEPLOYMENT_ROLLING,
     DEPLOYMENT_ROLLING_ROLLBACK,
-    SCALE;
+    SCALE,
+    CANARY_SETUP,
+    CANARY_ROLLBACK;
   }
 }

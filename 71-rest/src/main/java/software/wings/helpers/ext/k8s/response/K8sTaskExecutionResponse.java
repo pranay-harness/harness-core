@@ -7,8 +7,8 @@ import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatu
 
 @Data
 @Builder
-public class K8sCommandExecutionResponse implements ResponseData {
-  private K8sCommandResponse k8sCommandResponse;
+public class K8sTaskExecutionResponse implements ResponseData {
+  private K8sTaskResponse k8sTaskResponse;
   private String errorMessage;
   private CommandExecutionStatus commandExecutionStatus;
 }

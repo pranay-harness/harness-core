@@ -241,6 +241,8 @@ public interface Constants {
   String K8S_DEPLOYMENT_ROLLING = "Rollout Deployment";
   String K8S_DEPLOYMENT_ROLLING_ROLLBAK = "Rollback Deployment";
   String K8S_SCALE = "Scale";
+  String K8S_CANARY_SETUP = "Canary Setup";
+  String K8S_CANARY_ROLLBACK = "Canary Rollback";
 
   /**
    * The constant KUBERNETES_SERVICE_SETUP.

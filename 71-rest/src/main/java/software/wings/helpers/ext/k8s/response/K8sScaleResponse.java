@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class K8sScaleResponse extends K8sCommandResponse {
+public class K8sScaleResponse extends K8sTaskResponse {
   @Builder
   public K8sScaleResponse() {}
 }

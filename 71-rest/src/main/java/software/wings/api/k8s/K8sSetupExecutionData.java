@@ -16,13 +16,14 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class K8sDeploymentRollingSetupStateExecutionData extends StateExecutionData implements ResponseData {
+public class K8sSetupExecutionData extends StateExecutionData implements ResponseData {
   private String activityId;
   private String releaseName;
   private String namespace;
   private String clusterName;
   private Integer releaseNumber;
   private String commandName;
+  private Integer targetInstances;
 
   @Override
   public Map<String, ExecutionDataValue> getExecutionDetails() {
@@ -49,15 +50,18 @@ public class K8sDeploymentRollingSetupStateExecutionData extends StateExecutionD
         ExecutionDataValue.builder().value(releaseName).displayName("Release Name").build());
     putNotNull(executionDetails, "releaseNumber",
         ExecutionDataValue.builder().value(releaseNumber).displayName("Release Number").build());
+    putNotNull(executionDetails, "targetInstances",
+        ExecutionDataValue.builder().value(targetInstances).displayName("Target Instance Count").build());
 
     return executionDetails;
   }
 
   @Override
-  public K8sDeployRollingSetupExecutionSummary getStepExecutionSummary() {
-    return K8sDeployRollingSetupExecutionSummary.builder()
+  public K8sExecutionSummary getStepExecutionSummary() {
+    return K8sExecutionSummary.builder()
         .releaseName(releaseName)
         .releaseNumber(releaseNumber)
+        .targetInstances(targetInstances)
         .build();
   }
 }

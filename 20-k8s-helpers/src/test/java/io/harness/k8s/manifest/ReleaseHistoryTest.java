@@ -53,7 +53,7 @@ public class ReleaseHistoryTest {
     Release release = releaseHistory.getLatestRelease();
 
     assertThat(release.getNumber()).isEqualTo(1);
-    assertThat(release.getStatus()).isEqualTo(Status.Started);
+    assertThat(release.getStatus()).isEqualTo(Status.InProgress);
     assertThat(release.getResources()).hasSize(1);
     assertThat(release.getResources().get(0)).hasFieldOrPropertyWithValue("kind", "Deployment");
     assertThat(release.getResources().get(0)).hasFieldOrPropertyWithValue("name", "nginx");
@@ -68,7 +68,7 @@ public class ReleaseHistoryTest {
     release = releaseHistory.getLatestRelease();
 
     assertThat(release.getNumber()).isEqualTo(2);
-    assertThat(release.getStatus()).isEqualTo(Status.Started);
+    assertThat(release.getStatus()).isEqualTo(Status.InProgress);
     assertThat(release.getResources()).hasSize(1);
     assertThat(release.getResources().get(0)).hasFieldOrPropertyWithValue("kind", "Deployment");
     assertThat(release.getResources().get(0)).hasFieldOrPropertyWithValue("name", "nginx-1");

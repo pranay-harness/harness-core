@@ -41,6 +41,7 @@ import static software.wings.common.Constants.ROLLBACK_AWS_CODE_DEPLOY;
 import static software.wings.common.Constants.ROLLBACK_AWS_LAMBDA;
 import static software.wings.common.Constants.ROLLBACK_CLOUD_FORMATION;
 import static software.wings.common.Constants.ROLLBACK_CONTAINERS;
+import static software.wings.common.Constants.ROLLBACK_ECS_SETUP;
 import static software.wings.common.Constants.ROLLBACK_KUBERNETES_SETUP;
 import static software.wings.common.Constants.ROLLBACK_TERRAFORM_NAME;
 import static software.wings.common.Constants.SELECT_NODE_NAME;
@@ -142,8 +143,10 @@ import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.SumoLogicAnalysisState;
 import software.wings.sm.states.WaitState;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
-import software.wings.sm.states.k8s.K8sDeploymentRollingRollbackSetup;
-import software.wings.sm.states.k8s.K8sDeploymentRollingSetup;
+import software.wings.sm.states.k8s.K8sCanaryRollback;
+import software.wings.sm.states.k8s.K8sCanarySetup;
+import software.wings.sm.states.k8s.K8sRollingDeploy;
+import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 import software.wings.sm.states.k8s.K8sScale;
 import software.wings.sm.states.pcf.MapRouteState;
 import software.wings.sm.states.pcf.PcfDeployState;
@@ -408,7 +411,7 @@ public enum StateType implements StateTypeDescriptor {
   ECS_SERVICE_SETUP(EcsServiceSetup.class, CLOUD, Constants.ECS_SERVICE_SETUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
-  ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, CLOUD, Constants.ROLLBACK_ECS_SETUP,
+  ECS_SERVICE_SETUP_ROLLBACK(EcsSetupRollback.class, CLOUD, ROLLBACK_ECS_SETUP,
       Lists.newArrayList(InfrastructureMappingType.AWS_ECS), asList(CONTAINER_SETUP), ORCHESTRATION_STENCILS),
 
   ECS_DAEMON_SERVICE_SETUP(EcsDaemonServiceSetup.class, CLOUD, Constants.ECS_DAEMON_SERVICE_SETUP,
@@ -504,7 +507,7 @@ public enum StateType implements StateTypeDescriptor {
   TERRAFORM_ROLLBACK(TerraformRollbackState.class, PROVISIONERS, ROLLBACK_TERRAFORM_NAME,
       singletonList(InfrastructureMappingType.AWS_SSH), singletonList(PRE_DEPLOYMENT), ORCHESTRATION_STENCILS),
 
-  K8S_DEPLOYMENT_ROLLING(K8sDeploymentRollingSetup.class, KUBERNETES, Constants.K8S_DEPLOYMENT_ROLLING,
+  K8S_DEPLOYMENT_ROLLING(K8sRollingDeploy.class, KUBERNETES, Constants.K8S_DEPLOYMENT_ROLLING,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
@@ -514,7 +517,17 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sDeploymentRollingRollbackSetup.class, KUBERNETES, K8S_DEPLOYMENT_ROLLING_ROLLBAK,
+  K8S_DEPLOYMENT_ROLLING_ROLLBACK(K8sRollingDeployRollback.class, KUBERNETES, K8S_DEPLOYMENT_ROLLING_ROLLBAK,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  K8S_CANARY_SETUP(K8sCanarySetup.class, KUBERNETES, Constants.K8S_CANARY_SETUP,
+      Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
+          InfrastructureMappingType.AZURE_KUBERNETES),
+      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  K8S_CANARY_ROLLBACK(K8sCanaryRollback.class, KUBERNETES, Constants.K8S_CANARY_ROLLBACK,
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),

@@ -6,11 +6,11 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class K8sDeploymentRollingSetupResponse extends K8sCommandResponse {
+public class K8sRollingDeployResponse extends K8sTaskResponse {
   int releaseNumber;
 
   @Builder
-  public K8sDeploymentRollingSetupResponse(int releaseNumber) {
+  public K8sRollingDeployResponse(int releaseNumber) {
     this.releaseNumber = releaseNumber;
   }
 }

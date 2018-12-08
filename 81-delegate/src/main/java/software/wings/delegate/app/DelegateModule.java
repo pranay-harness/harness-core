@@ -37,10 +37,12 @@ import software.wings.delegatetasks.DelegateFileManager;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.delegatetasks.LogAnalysisStoreService;
 import software.wings.delegatetasks.MetricDataStoreService;
-import software.wings.delegatetasks.k8s.taskhandler.K8sCommandTaskHandler;
-import software.wings.delegatetasks.k8s.taskhandler.K8sDeploymentRollingCommandTaskHandler;
-import software.wings.delegatetasks.k8s.taskhandler.K8sDeploymentRollingRollbackCommandTaskHandler;
-import software.wings.delegatetasks.k8s.taskhandler.K8sScaleCommandTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sCanaryRollbackTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sCanarySetupTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployRollbackTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sRollingDeployTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sScaleTaskHandler;
+import software.wings.delegatetasks.k8s.taskhandler.K8sTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfApplicationDetailsCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfCommandTaskHandler;
 import software.wings.delegatetasks.pcf.pcftaskhandler.PcfDataFetchCommandTaskHandler;
@@ -79,7 +81,7 @@ import software.wings.helpers.ext.helm.HelmDeployServiceImpl;
 import software.wings.helpers.ext.jenkins.Jenkins;
 import software.wings.helpers.ext.jenkins.JenkinsFactory;
 import software.wings.helpers.ext.jenkins.JenkinsImpl;
-import software.wings.helpers.ext.k8s.request.K8sCommandRequest.K8sCommandType;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
 import software.wings.helpers.ext.nexus.NexusService;
 import software.wings.helpers.ext.nexus.NexusServiceImpl;
 import software.wings.helpers.ext.pcf.PcfClient;
@@ -386,13 +388,16 @@ public class DelegateModule extends DependencyModule {
     commandTaskTypeToTaskHandlerMap.addBinding(PcfCommandType.DATAFETCH.name())
         .to(PcfDataFetchCommandTaskHandler.class);
 
-    MapBinder<String, K8sCommandTaskHandler> k8sCommandTaskTypeToTaskHandlerMap =
-        MapBinder.newMapBinder(binder(), String.class, K8sCommandTaskHandler.class);
-    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sCommandType.DEPLOYMENT_ROLLING.name())
-        .to(K8sDeploymentRollingCommandTaskHandler.class);
-    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sCommandType.DEPLOYMENT_ROLLING_ROLLBACK.name())
-        .to(K8sDeploymentRollingRollbackCommandTaskHandler.class);
-    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sCommandType.SCALE.name()).to(K8sScaleCommandTaskHandler.class);
+    MapBinder<String, K8sTaskHandler> k8sCommandTaskTypeToTaskHandlerMap =
+        MapBinder.newMapBinder(binder(), String.class, K8sTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.DEPLOYMENT_ROLLING.name())
+        .to(K8sRollingDeployTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK.name())
+        .to(K8sRollingDeployRollbackTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.CANARY_SETUP.name()).to(K8sCanarySetupTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.CANARY_ROLLBACK.name())
+        .to(K8sCanaryRollbackTaskHandler.class);
+    k8sCommandTaskTypeToTaskHandlerMap.addBinding(K8sTaskType.SCALE.name()).to(K8sScaleTaskHandler.class);
   }
 
   @Override

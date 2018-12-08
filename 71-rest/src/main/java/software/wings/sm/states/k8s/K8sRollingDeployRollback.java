@@ -3,7 +3,7 @@ package software.wings.sm.states.k8s;
 import static software.wings.beans.DelegateTask.Builder.aDelegateTask;
 import static software.wings.common.Constants.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static software.wings.sm.ExecutionResponse.Builder.anExecutionResponse;
-import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
+import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
@@ -16,24 +16,21 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.api.PhaseElement;
-import software.wings.api.k8s.K8sDeploymentRollingSetupStateExecutionData;
-import software.wings.api.k8s.K8sRollingDeploySetupElement;
+import software.wings.api.k8s.K8sContextElement;
+import software.wings.api.k8s.K8sSetupExecutionData;
 import software.wings.beans.Activity;
 import software.wings.beans.Application;
 import software.wings.beans.ContainerInfrastructureMapping;
 import software.wings.beans.DelegateTask;
-import software.wings.beans.Environment;
 import software.wings.beans.TaskType;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.K8sDummyCommandUnit;
-import software.wings.common.Constants;
 import software.wings.delegatetasks.aws.AwsCommandHelper;
 import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
-import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
-import software.wings.helpers.ext.k8s.request.K8sCommandRequest.K8sCommandType;
-import software.wings.helpers.ext.k8s.request.K8sDeploymentRollingRollbackSetupRequest;
-import software.wings.helpers.ext.k8s.response.K8sCommandExecutionResponse;
+import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters.K8sTaskType;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.ApplicationManifestService;
@@ -55,8 +52,8 @@ import java.util.Arrays;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class K8sDeploymentRollingRollbackSetup extends State {
-  private static final transient Logger logger = LoggerFactory.getLogger(K8sDeploymentRollingRollbackSetup.class);
+public class K8sRollingDeployRollback extends State {
+  private static final transient Logger logger = LoggerFactory.getLogger(K8sCanaryRollback.class);
 
   @Inject private transient ConfigService configService;
   @Inject private transient ServiceTemplateService serviceTemplateService;
@@ -73,8 +70,8 @@ public class K8sDeploymentRollingRollbackSetup extends State {
 
   public static final String K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME = "Rolling Deployment Rollback";
 
-  public K8sDeploymentRollingRollbackSetup(String name) {
-    super(name, K8S_DEPLOYMENT_ROLLING.name());
+  public K8sRollingDeployRollback(String name) {
+    super(name, K8S_DEPLOYMENT_ROLLING_ROLLBACK.name());
   }
 
   @Attributes(title = "Timeout (ms)")
@@ -87,16 +84,11 @@ public class K8sDeploymentRollingRollbackSetup extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      PhaseElement phaseElement = context.getContextElement(ContextElementType.PARAM, Constants.PHASE_PARAM);
-      WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       Application app = appService.get(context.getAppId());
-      Environment env = workflowStandardParams.getEnv();
 
-      K8sRollingDeploySetupElement k8sRollingDeploySetupElement =
-          context.getContextElement(ContextElementType.K8S_ROLLING_DEPLOY_SETUP);
+      ContainerInfrastructureMapping infraMapping = k8sStateHelper.getContainerInfrastructureMapping(context);
 
-      ContainerInfrastructureMapping infraMapping = (ContainerInfrastructureMapping) infrastructureMappingService.get(
-          app.getUuid(), phaseElement.getInfraMappingId());
+      K8sContextElement k8sContextElement = context.getContextElement(ContextElementType.K8S);
 
       Activity activity = k8sStateHelper.createK8sActivity(context, K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME,
           getStateType(), activityService,
@@ -104,15 +96,15 @@ public class K8sDeploymentRollingRollbackSetup extends State {
               new K8sDummyCommandUnit(K8sDummyCommandUnit.Rollback),
               new K8sDummyCommandUnit(K8sDummyCommandUnit.WaitForSteadyState)));
 
-      K8sCommandRequest commandRequest =
-          K8sDeploymentRollingRollbackSetupRequest.builder()
+      K8sTaskParameters commandRequest =
+          K8sRollingDeployRollbackTaskParameters.builder()
               .activityId(activity.getUuid())
               .appId(app.getUuid())
               .accountId(app.getAccountId())
-              .releaseName(k8sRollingDeploySetupElement.getReleaseName())
-              .releaseNumber(k8sRollingDeploySetupElement.getReleaseNumber())
+              .releaseName(k8sContextElement.getReleaseName())
+              .releaseNumber(k8sContextElement.getReleaseNumber())
               .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
-              .k8sCommandType(K8sCommandType.DEPLOYMENT_ROLLING_ROLLBACK)
+              .k8sTaskType(K8sTaskType.DEPLOYMENT_ROLLING_ROLLBACK)
               .k8sClusterConfig(containerDeploymentManagerHelper.getK8sClusterConfig(infraMapping))
               .workflowExecutionId(context.getWorkflowExecutionId())
               .timeoutIntervalInMin(10)
@@ -126,7 +118,7 @@ public class K8sDeploymentRollingRollbackSetup extends State {
               .withWaitId(activity.getUuid())
               .withTags(awsCommandHelper.getAwsConfigTagsFromK8sConfig(commandRequest))
               .withParameters(new Object[] {commandRequest})
-              .withEnvId(env.getUuid())
+              .withEnvId(k8sStateHelper.getEnvironment(context).getUuid())
               .withTimeout(getTimeoutMillis() != null ? getTimeoutMillis() : DEFAULT_ASYNC_CALL_TIMEOUT)
               .withInfrastructureMappingId(infraMapping.getUuid())
               .build();
@@ -136,7 +128,7 @@ public class K8sDeploymentRollingRollbackSetup extends State {
       return ExecutionResponse.Builder.anExecutionResponse()
           .withAsync(true)
           .withCorrelationIds(Arrays.asList(activity.getUuid()))
-          .withStateExecutionData(K8sDeploymentRollingSetupStateExecutionData.builder()
+          .withStateExecutionData(K8sSetupExecutionData.builder()
                                       .activityId(activity.getUuid())
                                       .commandName(K8S_DEPLOYMENT_ROLLING_ROLLBACK_COMMAND_NAME)
                                       .build())
@@ -155,7 +147,7 @@ public class K8sDeploymentRollingRollbackSetup extends State {
       WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
       String appId = workflowStandardParams.getAppId();
       String activityId = response.keySet().iterator().next();
-      K8sCommandExecutionResponse executionResponse = (K8sCommandExecutionResponse) response.values().iterator().next();
+      K8sTaskExecutionResponse executionResponse = (K8sTaskExecutionResponse) response.values().iterator().next();
 
       ExecutionStatus executionStatus =
           executionResponse.getCommandExecutionStatus().equals(CommandExecutionStatus.SUCCESS) ? ExecutionStatus.SUCCESS
@@ -163,8 +155,7 @@ public class K8sDeploymentRollingRollbackSetup extends State {
 
       activityService.updateStatus(activityId, appId, executionStatus);
 
-      K8sDeploymentRollingSetupStateExecutionData stateExecutionData =
-          (K8sDeploymentRollingSetupStateExecutionData) context.getStateExecutionData();
+      K8sSetupExecutionData stateExecutionData = (K8sSetupExecutionData) context.getStateExecutionData();
       stateExecutionData.setStatus(executionStatus);
 
       return anExecutionResponse()

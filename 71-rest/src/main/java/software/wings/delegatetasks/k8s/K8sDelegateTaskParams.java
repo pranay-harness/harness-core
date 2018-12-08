@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class K8sCommandTaskParams {
+public class K8sDelegateTaskParams {
   String kubectlPath;
   String kubeconfigPath;
   String workingDirectory;

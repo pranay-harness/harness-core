@@ -10,7 +10,8 @@ import software.wings.sm.StepExecutionSummary;
 @Data
 @Builder
 @EqualsAndHashCode(callSuper = true)
-public class K8sDeployRollingSetupExecutionSummary extends StepExecutionSummary {
+public class K8sExecutionSummary extends StepExecutionSummary {
   private String releaseName;
   private Integer releaseNumber;
+  private Integer targetInstances;
 }
