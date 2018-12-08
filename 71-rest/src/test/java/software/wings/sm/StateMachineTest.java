@@ -12,7 +12,6 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
-import io.harness.waiter.NotifyEventListener;
 import io.harness.waiter.StringNotifyResponseData;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -25,6 +24,7 @@ import software.wings.rules.Listeners;
 import software.wings.service.StaticMap;
 import software.wings.sm.states.ForkState;
 import software.wings.sm.states.RepeatState;
+import software.wings.waitnotify.NotifyEventListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
 import java.util.ArrayList;

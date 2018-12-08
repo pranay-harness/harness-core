@@ -169,7 +169,6 @@ import io.harness.beans.SearchFilter.Operator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.scheduler.PersistentScheduler;
-import io.harness.waiter.NotifyEventListener;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -258,6 +257,7 @@ import software.wings.sm.TransitionType;
 import software.wings.stencils.Stencil;
 import software.wings.stencils.StencilPostProcessor;
 import software.wings.utils.JsonUtils;
+import software.wings.waitnotify.NotifyEventListener;
 
 import java.util.HashMap;
 import java.util.List;
