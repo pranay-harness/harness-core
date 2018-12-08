@@ -67,6 +67,7 @@ import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
 import io.harness.rule.RealMongo;
+import io.harness.waiter.Notifier;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.hibernate.validator.parameternameprovider.ReflectionParameterNameProvider;
 import org.junit.rules.MethodRule;
@@ -94,7 +95,6 @@ import software.wings.integration.BaseIntegrationTest;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
 import software.wings.utils.KryoUtils;
-import software.wings.waitnotify.Notifier;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;

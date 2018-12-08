@@ -38,7 +38,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
   @Inject private Injector injector;
 
-  @Inject private HPersistence wingsPersistence;
+  @Inject private HPersistence persistence;
 
   @Inject private PersistentLocker persistentLocker;
 
@@ -57,7 +57,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
     String waitInstanceId = message.getWaitInstanceId();
 
-    WaitInstance waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
+    WaitInstance waitInstance = persistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
 
     if (waitInstance == null || waitInstance.getStatus() != ExecutionStatus.NEW) {
       // this is considered anomaly that could happened only after database malfunction.
@@ -68,19 +68,19 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
 
       // Removing the wait queues that are for instance that does not exist. It is safe, because the instance is
       // added to the DB first ... and we adding 30 seconds buffer.
-      final Query<WaitQueue> query = wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
+      final Query<WaitQueue> query = persistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
                                          .filter(WaitQueue.WAIT_INSTANCE_ID_KEY, waitInstanceId)
                                          .field(WaitQueue.CREATED_AT_KEY)
                                          .lessThan(System.currentTimeMillis() - ofSeconds(30).toMillis());
 
-      wingsPersistence.delete(query);
+      persistence.delete(query);
 
       // Note that we do not need to remove the responses from here. They will go away as soon as they are selected the
       // next time and no wait queue is found for them.
       return;
     }
 
-    List<WaitQueue> waitQueues = wingsPersistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
+    List<WaitQueue> waitQueues = persistence.createQuery(WaitQueue.class, ReadPref.CRITICAL, excludeAuthority)
                                      .filter(WaitQueue.WAIT_INSTANCE_ID_KEY, waitInstanceId)
                                      .asList();
 
@@ -104,7 +104,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
     }
 
     final List<NotifyResponse> notifyResponses =
-        wingsPersistence.createQuery(NotifyResponse.class, ReadPref.CRITICAL, excludeAuthority)
+        persistence.createQuery(NotifyResponse.class, ReadPref.CRITICAL, excludeAuthority)
             .field(ID_KEY)
             .in(waitQueues.stream().map(WaitQueue::getCorrelationId).collect(toList()))
             .asList();
@@ -138,7 +138,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
       }
 
       // Make sure that the instance status is still new after the lock was obtained
-      waitInstance = wingsPersistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
+      waitInstance = persistence.get(WaitInstance.class, waitInstanceId, ReadPref.CRITICAL);
       if (waitInstance.getStatus() != ExecutionStatus.NEW) {
         return;
       }
@@ -163,7 +163,7 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
                                                       .errorStackTrace(ExceptionUtils.getStackTrace(exception))
                                                       .build();
 
-            wingsPersistence.save(waitInstanceError);
+            persistence.save(waitInstanceError);
           } catch (Exception e2) {
             logger.error("Error in persisting waitInstanceError", e2);
           }
@@ -173,18 +173,18 @@ public final class NotifyEventListener extends QueueListener<NotifyEvent> {
       // time to cleanup
       try {
         UpdateOperations<WaitInstance> waitInstanceUpdate =
-            wingsPersistence.createUpdateOperations(WaitInstance.class).set("status", status);
-        wingsPersistence.update(waitInstance, waitInstanceUpdate);
+            persistence.createUpdateOperations(WaitInstance.class).set("status", status);
+        persistence.update(waitInstance, waitInstanceUpdate);
       } catch (Exception exception) {
         logger.error("Error in waitInstanceUpdate", exception);
       }
 
       UpdateOperations<NotifyResponse> notifyResponseUpdate =
-          wingsPersistence.createUpdateOperations(NotifyResponse.class).set("status", ExecutionStatus.SUCCESS);
+          persistence.createUpdateOperations(NotifyResponse.class).set("status", ExecutionStatus.SUCCESS);
       for (WaitQueue waitQueue : waitQueues) {
         try {
-          wingsPersistence.delete(waitQueue);
-          wingsPersistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);
+          persistence.delete(waitQueue);
+          persistence.update(notifyResponseMap.get(waitQueue.getCorrelationId()), notifyResponseUpdate);
         } catch (Exception exception) {
           logger.error("Error in waitQueue cleanup", exception);
         }
