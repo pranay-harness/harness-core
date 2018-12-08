@@ -1065,10 +1065,10 @@ public class SecretTextTest extends WingsBaseTest {
                                 .overridePath(generateUuid())
                                 .configOverrideType(ConfigOverrideType.CUSTOM)
                                 .configOverrideExpression(generateUuid())
-                                .accountId(accountId)
                                 .encryptedFileId(secretFileId)
                                 .encrypted(true)
                                 .build();
+    configFile.setAccountId(accountId);
     configFile.setAppId(appId);
 
     String configFileId = configService.save(configFile, null);
@@ -1207,10 +1207,10 @@ public class SecretTextTest extends WingsBaseTest {
                                   .overridePath(generateUuid())
                                   .configOverrideType(ConfigOverrideType.CUSTOM)
                                   .configOverrideExpression(generateUuid())
-                                  .accountId(accountId)
                                   .encryptedFileId(secretFileId)
                                   .encrypted(true)
                                   .build();
+      configFile.setAccountId(accountId);
       configFile.setAppId(appId);
 
       String configFileId = configService.save(configFile, null);
@@ -1325,10 +1325,10 @@ public class SecretTextTest extends WingsBaseTest {
                                   .overridePath(generateUuid())
                                   .configOverrideType(ConfigOverrideType.CUSTOM)
                                   .configOverrideExpression(generateUuid())
-                                  .accountId(accountId)
                                   .encryptedFileId(secretFileId)
                                   .encrypted(true)
                                   .build();
+      configFile.setAccountId(accountId);
       configFile.setAppId(appId);
 
       String configFileId = configService.save(configFile, null);
@@ -1427,10 +1427,10 @@ public class SecretTextTest extends WingsBaseTest {
                                 .overridePath(generateUuid())
                                 .configOverrideType(ConfigOverrideType.CUSTOM)
                                 .configOverrideExpression(generateUuid())
-                                .accountId(accountId)
                                 .encryptedFileId(secretFileId)
                                 .encrypted(true)
                                 .build();
+    configFile.setAccountId(accountId);
     configFile.setAppId(appId);
 
     String configFileId = configService.save(configFile, null);

@@ -21,7 +21,7 @@ import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
 import ro.fortsoft.pf4j.DefaultPluginManager;
 import ro.fortsoft.pf4j.PluginManager;
-import software.wings.ExecutionLogsStorageMode;
+import software.wings.DataStorageMode;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AzureConfig;
 import software.wings.beans.BambooConfig;
@@ -386,7 +386,6 @@ public class WingsModule extends DependencyModule {
     bind(ApplicationManifestService.class).to(ApplicationManifestServiceImpl.class);
     bind(ArtifactService.class).to(ArtifactServiceImpl.class);
     bind(AuditService.class).to(AuditServiceImpl.class);
-    bind(FileService.class).to(FileServiceImpl.class);
     bind(ArtifactStreamService.class).to(ArtifactStreamServiceImpl.class);
     bind(UserService.class).to(UserServiceImpl.class);
     bind(UserGroupService.class).to(UserGroupServiceImpl.class);
@@ -589,8 +588,17 @@ public class WingsModule extends DependencyModule {
         MapBinder.newMapBinder(binder(), String.class, TriggerProcessor.class);
 
     triggerProcessorMapBinder.addBinding(Condition.Type.NEW_ARTIFACT.name()).to(ArtifactTriggerProcessor.class);
+
+    // To support storing 'Files' in google cloud storage besides default Mongo GridFs.
+    if (configuration.getFileStorageMode() == null) {
+      // default to MONGO GridFs as file storage
+      configuration.setFileStorageMode(DataStorageMode.MONGO);
+    }
+
+    bind(FileService.class).to(FileServiceImpl.class);
+
     if (configuration.getExecutionLogsStorageMode() == null) {
-      configuration.setExecutionLogsStorageMode(ExecutionLogsStorageMode.MONGO);
+      configuration.setExecutionLogsStorageMode(DataStorageMode.MONGO);
     }
     switch (configuration.getExecutionLogsStorageMode()) {
       case GOOGLE_CLOUD_DATA_STORE:
@@ -600,7 +608,8 @@ public class WingsModule extends DependencyModule {
         bind(LogDataStoreService.class).to(MongoLogDataStoreServiceImpl.class);
         break;
       default:
-        throw new WingsException("Invalid storage mode type " + configuration.getExecutionLogsStorageMode());
+        throw new WingsException(
+            "Invalid execution log data storage mode: " + configuration.getExecutionLogsStorageMode());
     }
 
     // End of deployment trigger dependencies

@@ -130,13 +130,13 @@ public class ConfigServiceTest extends WingsBaseTest {
         .thenReturn(aServiceTemplate().withAppId(APP_ID).withEnvId(ENV_ID).withUuid(TEMPLATE_ID).build());
     when(serviceTemplateService.exist(APP_ID, TEMPLATE_ID)).thenReturn(true);
     ConfigFile configFile = ConfigFile.builder()
-                                .accountId(ACCOUNT_ID)
                                 .envId(ENV_ID)
                                 .entityType(EntityType.SERVICE_TEMPLATE)
                                 .entityId(TEMPLATE_ID)
                                 .templateId(TEMPLATE_ID)
                                 .relativeFilePath("PATH/" + FILE_NAME)
                                 .build();
+    configFile.setAccountId(ACCOUNT_ID);
     configFile.setAppId(APP_ID);
     configFile.setName(FILE_NAME);
     configFile.setFileName(FILE_NAME);
@@ -155,12 +155,9 @@ public class ConfigServiceTest extends WingsBaseTest {
    */
   @Test
   public void shouldThrowExceptionForUnsupportedEntityTypes() {
-    ConfigFile configFile = ConfigFile.builder()
-                                .accountId(ACCOUNT_ID)
-                                .entityType(EntityType.ENVIRONMENT)
-                                .entityId(ENV_ID)
-                                .templateId(TEMPLATE_ID)
-                                .build();
+    ConfigFile configFile =
+        ConfigFile.builder().entityType(EntityType.ENVIRONMENT).entityId(ENV_ID).templateId(TEMPLATE_ID).build();
+    configFile.setAccountId(ACCOUNT_ID);
     configFile.setAppId(APP_ID);
     configFile.setName(FILE_NAME);
     configFile.setFileName(FILE_NAME);
@@ -242,7 +239,6 @@ public class ConfigServiceTest extends WingsBaseTest {
   @Test
   public void shouldUpdate() {
     ConfigFile configFile = ConfigFile.builder()
-                                .accountId(ACCOUNT_ID)
                                 .envId(ENV_ID)
                                 .entityType(EntityType.SERVICE_TEMPLATE)
                                 .entityId(TEMPLATE_ID)
@@ -250,6 +246,7 @@ public class ConfigServiceTest extends WingsBaseTest {
                                 .relativeFilePath("PATH")
                                 .encrypted(true)
                                 .build();
+    configFile.setAccountId(ACCOUNT_ID);
     configFile.setAppId(APP_ID);
     configFile.setUuid(FILE_ID);
     configFile.setFileUuid("GFS_FILE_ID");

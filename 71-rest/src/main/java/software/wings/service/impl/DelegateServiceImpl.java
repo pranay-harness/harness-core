@@ -69,6 +69,7 @@ import freemarker.template.Configuration;
 import freemarker.template.TemplateException;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.protocol.DelegateMetaInfo;
 import io.harness.delegate.task.protocol.DelegateTaskNotifyResponseData;
 import io.harness.delegate.task.protocol.ResponseData;
@@ -1005,8 +1006,11 @@ public class DelegateServiceImpl implements DelegateService, Runnable {
       alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegateProfileError, alertData);
     }
 
-    FileMetadata fileMetadata = new FileMetadata();
-    fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
+    FileMetadata fileMetadata = FileMetadata.builder()
+                                    .fileName(new File(fileDetail.getFileName()).getName())
+                                    .accountId(accountId)
+                                    .fileUuid(UUIDGenerator.generateUuid())
+                                    .build();
     String fileId = fileService.saveFile(fileMetadata,
         new BoundedInputStream(uploadedInputStream, mainConfiguration.getFileUploadLimits().getProfileResultLimit()),
         fileBucket);

@@ -4,7 +4,6 @@ import com.google.common.base.MoreObjects;
 
 import io.harness.beans.EmbeddedUser;
 import org.glassfish.jersey.media.multipart.FormDataParam;
-import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
 import org.mongodb.morphia.annotations.Field;
 import org.mongodb.morphia.annotations.Index;
@@ -31,7 +30,6 @@ public class AppContainer extends BaseFile {
   @FormDataParam("family") private ContainerFamily family;
   private String stackRootDirectory;
   private FileType fileType;
-  @NotEmpty private String accountId;
   private boolean systemCreated;
   @FormDataParam("version") private String version;
   private boolean hardened;
@@ -142,14 +140,6 @@ public class AppContainer extends BaseFile {
    */
   public void setFileType(FileType fileType) {
     this.fileType = fileType;
-  }
-
-  public String getAccountId() {
-    return accountId;
-  }
-
-  public void setAccountId(String accountId) {
-    this.accountId = accountId;
   }
 
   public boolean isSystemCreated() {

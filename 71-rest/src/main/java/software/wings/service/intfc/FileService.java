@@ -1,7 +1,5 @@
 package software.wings.service.intfc;
 
-import com.mongodb.DBObject;
-import com.mongodb.client.gridfs.model.GridFSFile;
 import software.wings.beans.BaseFile;
 import software.wings.beans.FileMetadata;
 import software.wings.utils.BoundedInputStream;
@@ -31,7 +29,7 @@ public interface FileService {
 
   InputStream openDownloadStream(String fileId, FileBucket fileBucket);
 
-  GridFSFile getGridFsFile(String fileId, FileBucket fileBucket);
+  FileMetadata getFileMetadata(String fileId, FileBucket fileBucket);
 
   List<String> getAllFileIds(String entityId, FileBucket fileBucket);
 
@@ -40,8 +38,6 @@ public interface FileService {
   String getFileIdByVersion(String entityId, int version, FileBucket fileBucket);
 
   String uploadFromStream(String filename, BoundedInputStream in, FileBucket fileBucket, Map<String, Object> metaData);
-
-  List<DBObject> getFilesMetaData(List<String> fileIDs, FileBucket fileBucket);
 
   void deleteAllFilesForEntity(String entityId, FileBucket fileBucket);
 

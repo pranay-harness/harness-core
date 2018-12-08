@@ -24,7 +24,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.scheduler.SchedulerConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import software.wings.ExecutionLogsStorageMode;
+import software.wings.DataStorageMode;
 import software.wings.beans.security.access.GlobalWhitelistConfig;
 import software.wings.helpers.ext.mail.SmtpConfig;
 
@@ -66,7 +66,9 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("featuresEnabled") private String featureNames;
   @JsonProperty("kubectlVersion") private String kubectlVersion;
   @JsonProperty("trialRegistrationAllowed") private boolean trialRegistrationAllowed;
-  @JsonProperty("executionLogStorageMode") private ExecutionLogsStorageMode executionLogsStorageMode;
+  @JsonProperty("executionLogStorageMode") private DataStorageMode executionLogsStorageMode;
+  @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
+  @JsonProperty("clusterName") private String clusterName;
 
   private int applicationPort;
   private boolean sslEnabled;

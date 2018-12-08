@@ -16,6 +16,7 @@ import com.google.common.io.ByteStreams;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
 import io.harness.persistence.HIterator;
@@ -278,6 +279,8 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
       char[] encryptedValue = fileData.getEncryptedValue();
       BaseFile baseFile = new BaseFile();
       baseFile.setFileName(name);
+      baseFile.setAccountId(accountId);
+      baseFile.setFileUuid(UUIDGenerator.generateUuid());
       String fileId = fileService.saveFile(
           baseFile, new ByteArrayInputStream(CHARSET.encode(CharBuffer.wrap(encryptedValue)).array()), CONFIGS);
       fileData.setEncryptedValue(fileId.toCharArray());

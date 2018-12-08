@@ -315,13 +315,15 @@ public class ConfigFileIntegrationTest extends BaseIntegrationTest {
   }
 
   private ConfigFile getConfigFile() {
-    return ConfigFile.builder()
-        .accountId(app.getAccountId())
-        .entityId(service.getUuid())
-        .entityType(EntityType.SERVICE)
-        .envId(GLOBAL_ENV_ID)
-        .relativeFilePath("tmp")
-        .build();
+    ConfigFile configFile = ConfigFile.builder()
+                                .entityId(service.getUuid())
+                                .entityType(EntityType.SERVICE)
+                                .envId(GLOBAL_ENV_ID)
+                                .relativeFilePath("tmp")
+                                .build();
+
+    configFile.setAccountId(app.getAccountId());
+    return configFile;
   }
 
   @After

@@ -21,7 +21,6 @@ import com.google.inject.Inject;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.reinert.jjschema.Attributes;
-import com.mongodb.client.gridfs.model.GridFSFile;
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.exception.InvalidRequestException;
@@ -41,6 +40,7 @@ import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
 import software.wings.beans.DelegateTask;
 import software.wings.beans.Environment;
+import software.wings.beans.FileMetadata;
 import software.wings.beans.GitConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
@@ -349,9 +349,9 @@ public abstract class TerraformProvisionState extends State {
     Map<String, EncryptedDataDetail> encryptedBackendConfigs = null;
 
     if (this instanceof DestroyTerraformProvisionState && fileId != null) {
-      final GridFSFile gridFsFile = fileService.getGridFsFile(fileId, FileBucket.TERRAFORM_STATE);
+      final FileMetadata fileMetadata = fileService.getFileMetadata(fileId, FileBucket.TERRAFORM_STATE);
 
-      final Map<String, Object> rawVariables = (Map<String, Object>) gridFsFile.getExtraElements().get(VARIABLES_KEY);
+      final Map<String, Object> rawVariables = (Map<String, Object>) fileMetadata.getMetadata().get(VARIABLES_KEY);
       if (isNotEmpty(rawVariables)) {
         variables = extractTextVariables(rawVariables.entrySet().stream().map(entry
                                              -> NameValuePair.builder()
@@ -363,7 +363,7 @@ public abstract class TerraformProvisionState extends State {
       }
 
       final Map<String, Object> rawBackendConfigs =
-          (Map<String, Object>) gridFsFile.getExtraElements().get(BACKEND_CONFIGS_KEY);
+          (Map<String, Object>) fileMetadata.getMetadata().get(BACKEND_CONFIGS_KEY);
       if (isNotEmpty(rawBackendConfigs)) {
         backendConfigs = extractTextVariables(rawBackendConfigs.entrySet().stream().map(entry
                                                   -> NameValuePair.builder()
@@ -375,7 +375,7 @@ public abstract class TerraformProvisionState extends State {
       }
 
       final Map<String, Object> rawEncryptedVariables =
-          (Map<String, Object>) gridFsFile.getExtraElements().get(ENCRYPTED_VARIABLES_KEY);
+          (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_VARIABLES_KEY);
       if (isNotEmpty(rawEncryptedVariables)) {
         encryptedVariables = extractEncryptedTextVariables(rawEncryptedVariables.entrySet().stream().map(entry
                                                                -> NameValuePair.builder()
@@ -387,7 +387,7 @@ public abstract class TerraformProvisionState extends State {
       }
 
       final Map<String, Object> rawEncryptedBackendConfigs =
-          (Map<String, Object>) gridFsFile.getExtraElements().get(ENCRYPTED_BACKEND_CONFIGS_KEY);
+          (Map<String, Object>) fileMetadata.getMetadata().get(ENCRYPTED_BACKEND_CONFIGS_KEY);
       if (isNotEmpty(rawEncryptedBackendConfigs)) {
         encryptedBackendConfigs = extractEncryptedTextVariables(rawEncryptedBackendConfigs.entrySet().stream().map(entry
                                                                     -> NameValuePair.builder()

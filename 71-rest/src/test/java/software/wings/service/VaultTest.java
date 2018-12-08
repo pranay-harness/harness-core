@@ -1329,11 +1329,11 @@ public class VaultTest extends WingsBaseTest {
                                 .overridePath(UUID.randomUUID().toString())
                                 .configOverrideType(ConfigOverrideType.CUSTOM)
                                 .configOverrideExpression(UUID.randomUUID().toString())
-                                .accountId(accountId)
                                 .encryptedFileId(secretFileId)
                                 .encrypted(true)
                                 .build();
 
+    configFile.setAccountId(accountId);
     configFile.setName(UUID.randomUUID().toString());
     configFile.setFileName(UUID.randomUUID().toString());
     configFile.setAppId(appId);

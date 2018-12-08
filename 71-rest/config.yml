@@ -46,6 +46,7 @@ serviceScheduler:
 
 trialRegistrationAllowed: true
 executionLogStorageMode: MONGO
+fileStorageMode: MONGO
 
 smtp:
   type: SMTP

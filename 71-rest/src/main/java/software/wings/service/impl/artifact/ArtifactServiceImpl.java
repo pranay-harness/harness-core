@@ -55,7 +55,6 @@ import io.harness.queue.Queue;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.validation.Create;
 import io.harness.validation.Update;
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.query.FindOptions;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
@@ -340,7 +339,7 @@ public class ArtifactServiceImpl implements ArtifactService {
 
     if (isNotEmpty(artifact.getArtifactFiles())) {
       List<String> artifactIds = asList(artifactId);
-      List<ObjectId> artifactFileUuids = collectArtifactFileIds(artifact);
+      List<String> artifactFileUuids = collectArtifactFileIds(artifact);
       deleteArtifacts(artifactIds.toArray(), artifactFileUuids);
     } else {
       wingsPersistence.delete(Artifact.class, appId, artifactId);
@@ -356,7 +355,7 @@ public class ArtifactServiceImpl implements ArtifactService {
   public void pruneByArtifactStream(String appId, String artifactStreamId) {
     List<String> artifactIds = new ArrayList<>();
     List<String> artifactIdsWithFiles = new ArrayList<>();
-    List<ObjectId> artifactFileUuids = new ArrayList<>();
+    List<String> artifactFileIds = new ArrayList<>();
     try (HIterator<Artifact> iterator = new HIterator<>(wingsPersistence.createQuery(Artifact.class)
                                                             .filter(APP_ID_KEY, appId)
                                                             .project("artifactFiles", true)
@@ -367,9 +366,9 @@ public class ArtifactServiceImpl implements ArtifactService {
         Artifact artifact = iterator.next();
         if (isNotEmpty(artifact.getArtifactFiles())) {
           artifactIdsWithFiles.add(artifact.getUuid());
-          List<ObjectId> ids = collectArtifactFileIds(artifact);
+          List<String> ids = collectArtifactFileIds(artifact);
           if (isNotEmpty(ids)) {
-            artifactFileUuids.addAll(ids);
+            artifactFileIds.addAll(ids);
           }
         } else {
           artifactIds.add(artifact.getUuid());
@@ -381,15 +380,15 @@ public class ArtifactServiceImpl implements ArtifactService {
           .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds.toArray())));
     }
     if (isNotEmpty(artifactIdsWithFiles)) {
-      deleteArtifacts(artifactIdsWithFiles.toArray(), artifactFileUuids);
+      deleteArtifacts(artifactIdsWithFiles.toArray(), artifactFileIds);
     }
   }
 
-  private List<ObjectId> collectArtifactFileIds(Artifact artifact) {
+  private List<String> collectArtifactFileIds(Artifact artifact) {
     return artifact.getArtifactFiles()
         .stream()
         .filter(artifactFile -> artifactFile.getFileUuid() != null)
-        .map(artifactFile -> new ObjectId(artifactFile.getFileUuid()))
+        .map(artifactFile -> artifactFile.getFileUuid())
         .collect(Collectors.toList());
   }
 
@@ -543,14 +542,14 @@ public class ArtifactServiceImpl implements ArtifactService {
 
   private void deleteArtifacts(String appId, String artifactStreamId, List<Artifact> toBeDeletedArtifacts) {
     try {
-      List<ObjectId> artifactFileUuids = toBeDeletedArtifacts.stream()
-                                             .flatMap(artifact -> artifact.getArtifactFiles().stream())
-                                             .filter(artifactFile -> artifactFile.getFileUuid() != null)
-                                             .map(artifactFile -> new ObjectId(artifactFile.getFileUuid()))
-                                             .collect(Collectors.toList());
-      if (isNotEmpty(artifactFileUuids)) {
+      List<String> artifactFileIds = toBeDeletedArtifacts.stream()
+                                         .flatMap(artifact -> artifact.getArtifactFiles().stream())
+                                         .filter(artifactFile -> artifactFile.getFileUuid() != null)
+                                         .map(artifactFile -> artifactFile.getFileUuid())
+                                         .collect(Collectors.toList());
+      if (isNotEmpty(artifactFileIds)) {
         Object[] artifactIds = toBeDeletedArtifacts.stream().map(Artifact::getUuid).toArray();
-        deleteArtifacts(artifactIds, artifactFileUuids);
+        deleteArtifacts(artifactIds, artifactFileIds);
       }
     } catch (Exception ex) {
       logger.warn(String.format("Failed to purge(delete) artifacts for artifactStreamId %s of size: %s for appId %s",
@@ -561,15 +560,14 @@ public class ArtifactServiceImpl implements ArtifactService {
         toBeDeletedArtifacts.size(), appId);
   }
 
-  private void deleteArtifacts(Object[] artifactIds, List<ObjectId> artifactFileUuids) {
+  private void deleteArtifacts(Object[] artifactIds, List<String> artifactFileIds) {
     logger.info("Deleting artifactIds of artifacts {}", artifactIds);
     wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts")
         .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactIds)));
-    if (isNotEmpty(artifactFileUuids)) {
-      wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts.files")
-          .remove(new BasicDBObject("_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
-      wingsPersistence.getCollection(DEFAULT_STORE, ReadPref.NORMAL, "artifacts.chunks")
-          .remove(new BasicDBObject("files_id", new BasicDBObject("$in", artifactFileUuids.toArray())));
+    if (isNotEmpty(artifactFileIds)) {
+      for (String fileId : artifactFileIds) {
+        fileService.deleteFile(fileId, ARTIFACTS);
+      }
     }
   }
 
