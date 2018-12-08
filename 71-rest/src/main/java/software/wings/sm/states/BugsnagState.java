@@ -206,7 +206,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
             .responseDefinition(constructLogDefinitions(context))
             .shouldInspectHosts(!isBrowserApplication())
             .collectionFrequency(1)
-            .collectionTime(Integer.parseInt(timeDuration))
+            .collectionTime(Integer.parseInt(getTimeDuration()))
             .accountId(accountId)
             .build();
 
@@ -223,7 +223,7 @@ public class BugsnagState extends AbstractLogAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);

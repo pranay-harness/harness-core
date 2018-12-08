@@ -140,7 +140,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
               .query(getRenderedQuery())
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
-              .collectionTime(Integer.parseInt(timeDuration))
+              .collectionTime(Integer.parseInt(getTimeDuration()))
               .hosts(hostBatch)
               .encryptedDataDetails(
                   secretManager.getEncryptionDetails(sumoConfig, context.getAppId(), context.getWorkflowExecutionId()))
@@ -158,7 +158,7 @@ public class SumoLogicAnalysisState extends AbstractLogAnalysisState {
                             .withParameters(new Object[] {dataCollectionInfo})
                             .withEnvId(envId)
                             .withInfrastructureMappingId(infrastructureMappingId)
-                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 60))
+                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 60))
                             .build());
       waitIds[i++] = waitId;
     }

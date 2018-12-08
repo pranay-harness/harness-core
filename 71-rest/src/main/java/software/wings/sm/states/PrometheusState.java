@@ -122,7 +122,7 @@ public class PrometheusState extends AbstractMetricAnalysisState {
                                                                 .workflowExecutionId(context.getWorkflowExecutionId())
                                                                 .serviceId(getPhaseServiceId(context))
                                                                 .startTime(dataCollectionStartTimeStamp)
-                                                                .collectionTime(Integer.parseInt(timeDuration))
+                                                                .collectionTime(Integer.parseInt(getTimeDuration()))
                                                                 .timeSeriesToCollect(timeSeriesToAnalyze)
                                                                 .dataCollectionMinute(0)
                                                                 .hosts(hosts)
@@ -140,7 +140,7 @@ public class PrometheusState extends AbstractMetricAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);

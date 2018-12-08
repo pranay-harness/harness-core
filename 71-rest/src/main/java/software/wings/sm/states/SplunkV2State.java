@@ -136,7 +136,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
               .query(getRenderedQuery())
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
-              .collectionTime(Integer.parseInt(timeDuration))
+              .collectionTime(Integer.parseInt(getTimeDuration()))
               .hostnameField(getHostnameField())
               .hosts(hostBatch)
               .encryptedDataDetails(secretManager.getEncryptionDetails(
@@ -154,7 +154,7 @@ public class SplunkV2State extends AbstractLogAnalysisState {
                             .withParameters(new Object[] {dataCollectionInfo})
                             .withEnvId(envId)
                             .withInfrastructureMappingId(infrastructureMappingId)
-                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                             .build());
       waitIds[i++] = waitId;
     }

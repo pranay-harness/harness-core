@@ -81,7 +81,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
               .queryType(getQueryType())
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
-              .collectionTime(Integer.parseInt(timeDuration))
+              .collectionTime(Integer.parseInt(getTimeDuration()))
               .hosts(hostBatch)
               .encryptedDataDetails(
                   secretManager.getEncryptionDetails(logzConfig, context.getAppId(), context.getWorkflowExecutionId()))
@@ -95,7 +95,7 @@ public class LogzAnalysisState extends ElkAnalysisState {
                             .withWaitId(waitId)
                             .withParameters(new Object[] {dataCollectionInfo})
                             .withEnvId(envId)
-                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                             .build());
       waitIds[i++] = waitId;
     }

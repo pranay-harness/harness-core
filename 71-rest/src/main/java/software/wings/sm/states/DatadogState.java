@@ -147,7 +147,7 @@ public class DatadogState extends AbstractMetricAnalysisState {
     final DatadogConfig datadogConfig = (DatadogConfig) settingAttribute.getValue();
     final long dataCollectionStartTimeStamp = Timestamp.minuteBoundary(System.currentTimeMillis());
     String accountId = appService.get(context.getAppId()).getAccountId();
-    int timeDurationInInteger = Integer.parseInt(timeDuration);
+    int timeDurationInInteger = Integer.parseInt(getTimeDuration());
     final APMDataCollectionInfo dataCollectionInfo =
         APMDataCollectionInfo.builder()
             .baseUrl(datadogConfig.getUrl())
