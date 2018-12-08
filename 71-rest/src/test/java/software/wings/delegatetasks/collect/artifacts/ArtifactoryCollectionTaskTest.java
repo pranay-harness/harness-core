@@ -11,6 +11,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 
 import com.google.common.collect.ImmutableMap;
 
+import io.harness.waiter.ListNotifyResponseData;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -21,7 +22,6 @@ import software.wings.beans.DelegateTask;
 import software.wings.beans.TaskType;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
-import software.wings.waitnotify.ListNotifyResponseData;
 
 /**
  * Created by sgurubelli on 10/1/17.

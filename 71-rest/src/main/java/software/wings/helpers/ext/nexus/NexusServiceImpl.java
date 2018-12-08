@@ -14,6 +14,7 @@ import com.google.inject.Singleton;
 
 import io.harness.exception.WingsException;
 import io.harness.network.Http;
+import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,6 @@ import software.wings.helpers.ext.jenkins.BuildDetails;
 import software.wings.security.encryption.EncryptedDataDetail;
 import software.wings.utils.ArtifactType;
 import software.wings.utils.Misc;
-import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.IOException;
 import java.io.InputStream;

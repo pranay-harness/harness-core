@@ -1,5 +1,6 @@
 package software.wings.collect;
 
+import static io.harness.waiter.ListNotifyResponseData.Builder.aListNotifyResponseData;
 import static java.util.Arrays.asList;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -14,7 +15,6 @@ import static software.wings.utils.WingsTestConstants.ARTIFACT_STREAM_NAME;
 import static software.wings.utils.WingsTestConstants.JOB_NAME;
 import static software.wings.utils.WingsTestConstants.SERVICE_ID;
 import static software.wings.utils.WingsTestConstants.SETTING_ID;
-import static software.wings.waitnotify.ListNotifyResponseData.Builder.aListNotifyResponseData;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;

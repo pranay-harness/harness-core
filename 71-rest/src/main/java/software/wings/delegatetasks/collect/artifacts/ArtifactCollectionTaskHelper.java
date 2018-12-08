@@ -11,6 +11,7 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.waiter.ListNotifyResponseData;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +29,6 @@ import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.amazons3.AmazonS3Service;
 import software.wings.helpers.ext.artifactory.ArtifactoryService;
 import software.wings.service.intfc.FileService.FileBucket;
-import software.wings.waitnotify.ListNotifyResponseData;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
