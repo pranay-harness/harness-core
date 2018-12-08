@@ -152,7 +152,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
             .serviceId(getPhaseServiceId(context))
             .analysisComparisonStrategy(getComparisonStrategy())
             .startTime(dataCollectionStartTimeStamp)
-            .collectionTime(Integer.parseInt(timeDuration))
+            .collectionTime(Integer.parseInt(getTimeDuration()))
             .dataCollectionMinute(0)
             .encryptedDataDetails(
                 secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()))
@@ -183,7 +183,7 @@ public class CloudWatchState extends AbstractMetricAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);

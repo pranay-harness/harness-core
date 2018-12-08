@@ -145,7 +145,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         }
         analysisContext.setPrevWorkflowExecutionId(baselineWorkflowExecutionId);
       }
-      int timeDurationInt = Integer.parseInt(timeDuration);
+      int timeDurationInt = Integer.parseInt(getTimeDuration());
       executionData =
           MetricAnalysisExecutionData.builder()
               .appId(context.getAppId())
@@ -331,7 +331,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         MetricAnalysisExecutionData.builder()
             .stateExecutionInstanceId(context.getStateExecutionInstanceId())
             .serverConfigId(getAnalysisServerConfigId())
-            .timeDuration(Integer.parseInt(timeDuration))
+            .timeDuration(Integer.parseInt(getTimeDuration()))
             .correlationId(UUID.randomUUID().toString())
             .build();
     executionData.setStatus(status);
@@ -359,7 +359,7 @@ public abstract class AbstractMetricAnalysisState extends AbstractAnalysisState 
         : getLastExecutionNodes(context);
     Map<String, String> testNodes = getCanaryNewHostNames(context);
     testNodes.keySet().forEach(testNode -> controlNodes.remove(testNode));
-    int timeDurationInt = Integer.parseInt(timeDuration);
+    int timeDurationInt = Integer.parseInt(getTimeDuration());
     return AnalysisContext.builder()
         .accountId(this.appService.get(context.getAppId()).getAccountId())
         .appId(context.getAppId())

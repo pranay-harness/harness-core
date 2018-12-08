@@ -152,7 +152,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
               .stateExecutionInstanceId(analysisContext.getStateExecutionId())
               .serverConfigId(getAnalysisServerConfigId())
               .query(getRenderedQuery())
-              .timeDuration(Integer.parseInt(timeDuration))
+              .timeDuration(Integer.parseInt(getTimeDuration()))
               .canaryNewHostNames(canaryNewHostNames)
               .lastExecutionNodes(lastExecutionNodes == null ? new HashSet<>() : new HashSet<>(lastExecutionNodes))
               .correlationId(analysisContext.getCorrelationId())
@@ -200,7 +200,7 @@ public abstract class AbstractLogAnalysisState extends AbstractAnalysisState {
                                       .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
                                       .serverConfigId(getAnalysisServerConfigId())
                                       .query(getRenderedQuery())
-                                      .timeDuration(Integer.parseInt(timeDuration))
+                                      .timeDuration(Integer.parseInt(getTimeDuration()))
                                       .delegateTaskId(delegateTaskId)
                                       .build())
           .build();

@@ -234,7 +234,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
             .startTime(dataCollectionStartTimeStamp)
             .dataCollectionMinute(0)
             .dataCollectionFrequency(getDataCollectionRate())
-            .dataCollectionTotalTime(Integer.parseInt(timeDuration))
+            .dataCollectionTotalTime(Integer.parseInt(getTimeDuration()))
             .metricEndpoints(apmMetricInfos)
             .accountId(accountId)
             .strategy(getComparisonStrategy())
@@ -258,7 +258,7 @@ public class APMVerificationState extends AbstractMetricAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);

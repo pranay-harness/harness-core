@@ -298,7 +298,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
               .queryType(getQueryType())
               .startTime(logCollectionStartTimeStamp)
               .startMinute(0)
-              .collectionTime(Integer.parseInt(timeDuration))
+              .collectionTime(Integer.parseInt(getTimeDuration()))
               .hosts(hostBatch)
               .encryptedDataDetails(
                   secretManager.getEncryptionDetails(elkConfig, context.getAppId(), context.getWorkflowExecutionId()))
@@ -312,7 +312,7 @@ public class ElkAnalysisState extends AbstractLogAnalysisState {
                             .withWaitId(waitId)
                             .withParameters(new Object[] {dataCollectionInfo})
                             .withEnvId(envId)
-                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                            .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                             .build());
       waitIds[i++] = waitId;
     }

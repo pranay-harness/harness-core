@@ -117,7 +117,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
-            .collectionTime(Integer.parseInt(timeDuration))
+            .collectionTime(Integer.parseInt(getTimeDuration()))
             .timeSeriesDefinitions(Lists.newArrayList(DynaTraceTimeSeries.values()))
             .serviceMethods(splitServiceMethods(serviceMethods))
             .dataCollectionMinute(0)
@@ -137,7 +137,7 @@ public class DynatraceState extends AbstractMetricAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 5))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 5))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);

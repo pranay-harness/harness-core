@@ -171,7 +171,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
             .startMinute(0)
             .responseDefinition(constructLogDefinitions(context))
             .collectionFrequency(getDataCollectionRate())
-            .collectionTime(Integer.parseInt(timeDuration))
+            .collectionTime(Integer.parseInt(getTimeDuration()))
             .accountId(accountId)
             .build();
 
@@ -186,7 +186,7 @@ public class CustomLogVerificationState extends AbstractLogAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), data, false), waitId);
     return delegateService.queueTask(delegateTask);

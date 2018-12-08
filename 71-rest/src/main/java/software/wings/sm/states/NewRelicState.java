@@ -184,7 +184,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
-            .collectionTime(Integer.parseInt(timeDuration))
+            .collectionTime(Integer.parseInt(getTimeDuration()))
             .newRelicAppId(Long.parseLong(finalNewRelicApplicationId))
             .timeSeriesMlAnalysisType(getAnalysisType())
             .dataCollectionMinute(0)
@@ -205,7 +205,7 @@ public class NewRelicState extends AbstractMetricAnalysisState {
                                     .withParameters(new Object[] {dataCollectionInfo})
                                     .withEnvId(envId)
                                     .withInfrastructureMappingId(infrastructureMappingId)
-                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                                    .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                                     .build();
     waitNotifyEngine.waitForAll(new DataCollectionCallback(context.getAppId(), executionData, false), waitId);
     return delegateService.queueTask(delegateTask);

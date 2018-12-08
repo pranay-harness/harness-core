@@ -257,7 +257,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
             .workflowExecutionId(context.getWorkflowExecutionId())
             .serviceId(getPhaseServiceId(context))
             .startTime(dataCollectionStartTimeStamp)
-            .collectionTime(Integer.parseInt(timeDuration))
+            .collectionTime(Integer.parseInt(getTimeDuration()))
             .appId(Long.parseLong(finalApplicationId))
             .tierId(finalTierId)
             .dataCollectionMinute(0)
@@ -275,7 +275,7 @@ public class AppDynamicsState extends AbstractMetricAnalysisState {
                           .withWaitId(waitId)
                           .withParameters(new Object[] {dataCollectionInfo})
                           .withEnvId(envId)
-                          .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(timeDuration) + 120))
+                          .withTimeout(TimeUnit.MINUTES.toMillis(Integer.parseInt(getTimeDuration()) + 120))
                           .build());
     return waitId;
   }
