@@ -18,8 +18,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
-import com.mongodb.client.gridfs.GridFSBucket;
-import com.mongodb.client.gridfs.GridFSBuckets;
 import io.dropwizard.lifecycle.Managed;
 import io.harness.beans.EmbeddedUser;
 import io.harness.beans.PageRequest;
@@ -85,7 +83,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
    *
    * @param primaryDatastore   primary datastore for critical reads and writes.
    * @param secondaryDatastore replica of primary for non critical reads.
-   * @param datastoreMap       datastore map based on read preference to datastore.
    */
   @Inject
   public WingsMongoPersistence(@Named("primaryDatastore") AdvancedDatastore primaryDatastore,
@@ -302,12 +299,6 @@ public class WingsMongoPersistence extends MongoPersistence implements WingsPers
     Mapper mapper = ((DatastoreImpl) advancedDatastore).getMapper();
 
     return PageController.queryPageRequest(advancedDatastore, query, mapper, cls, req);
-  }
-
-  @Override
-  public GridFSBucket getOrCreateGridFSBucket(String bucketName) {
-    final AdvancedDatastore datastore = getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
-    return GridFSBuckets.create(datastore.getMongo().getDatabase(datastore.getDB().getName()), bucketName);
   }
 
   @Override

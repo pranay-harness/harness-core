@@ -34,6 +34,7 @@ import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter.Operator;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.KmsOperationException;
 import io.harness.exception.WingsException;
@@ -971,6 +972,8 @@ public class SecretManagerImpl implements SecretManager {
           try (InputStream encryptedInputStream = new ByteArrayInputStream(encryptedFileContent)) {
             BaseFile baseFile = new BaseFile();
             baseFile.setFileName(name);
+            baseFile.setAccountId(accountId);
+            baseFile.setFileUuid(UUIDGenerator.generateUuid());
             String fileId = fileService.saveFile(baseFile, encryptedInputStream, CONFIGS);
             encryptedFileData =
                 EncryptedData.builder().encryptionKey(accountId).encryptedValue(fileId.toCharArray()).build();

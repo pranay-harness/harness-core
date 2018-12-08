@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
-import com.mongodb.client.gridfs.model.GridFSFile;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.distribution.idempotence.IdempotentId;
 import io.harness.distribution.idempotence.IdempotentLock;
 import io.harness.distribution.idempotence.IdempotentResult;
@@ -94,8 +94,11 @@ public class DelegateFileResource {
       if (idempotent.alreadyExecuted()) {
         return new RestResponse<>(idempotent.getResult().getFileId());
       }
-      FileMetadata fileMetadata = new FileMetadata();
-      fileMetadata.setFileName(new File(fileDetail.getFileName()).getName());
+      FileMetadata fileMetadata = FileMetadata.builder()
+                                      .fileName(new File(fileDetail.getFileName()).getName())
+                                      .accountId(accountId)
+                                      .fileUuid(UUIDGenerator.generateUuid())
+                                      .build();
       String fileId = fileService.saveFile(fileMetadata,
           new BoundedInputStream(uploadedInputStream, configuration.getFileUploadLimits().getAppContainerLimit()),
           fileBucket);
@@ -154,13 +157,13 @@ public class DelegateFileResource {
       @QueryParam("fileBucket") @NotNull FileBucket fileBucket, @QueryParam("accountId") @NotEmpty String accountId) {
     logger.info("fileId: {}, fileBucket: {}", fileId, fileBucket);
 
-    GridFSFile gridFSFile = fileService.getGridFsFile(fileId, fileBucket);
+    FileMetadata fileMetadata = fileService.getFileMetadata(fileId, fileBucket);
 
     return new RestResponse<>(aDelegateFile()
                                   .withFileId(fileId)
                                   .withBucket(fileBucket)
-                                  .withFileName(gridFSFile.getFilename())
-                                  .withLength(gridFSFile.getLength())
+                                  .withFileName(fileMetadata.getFileName())
+                                  .withLength(fileMetadata.getFileLength())
                                   .build());
   }
 

@@ -2262,11 +2262,11 @@ public class KmsTest extends WingsBaseTest {
                                   .overridePath(UUID.randomUUID().toString())
                                   .configOverrideType(ConfigOverrideType.CUSTOM)
                                   .configOverrideExpression(UUID.randomUUID().toString())
-                                  .accountId(randomAccountId)
                                   .encryptedFileId(secretFileId)
                                   .encrypted(true)
                                   .build();
 
+      configFile.setAccountId(randomAccountId);
       configFile.setName(UUID.randomUUID().toString());
       configFile.setFileName(UUID.randomUUID().toString());
       configFile.setAppId(randomAppId);
@@ -2361,10 +2361,10 @@ public class KmsTest extends WingsBaseTest {
                                 .overridePath(UUID.randomUUID().toString())
                                 .configOverrideType(ConfigOverrideType.CUSTOM)
                                 .configOverrideExpression(UUID.randomUUID().toString())
-                                .accountId(renameAccountId)
                                 .encrypted(false)
                                 .build();
 
+    configFile.setAccountId(renameAccountId);
     configFile.setName(UUID.randomUUID().toString());
     configFile.setFileName(UUID.randomUUID().toString());
     configFile.setAppId(renameAppId);
@@ -2462,10 +2462,10 @@ public class KmsTest extends WingsBaseTest {
                                 .overridePath(UUID.randomUUID().toString())
                                 .configOverrideType(ConfigOverrideType.CUSTOM)
                                 .configOverrideExpression(UUID.randomUUID().toString())
-                                .accountId(renameAccountId)
                                 .encrypted(false)
                                 .build();
 
+    configFile.setAccountId(renameAccountId);
     configFile.setName(UUID.randomUUID().toString());
     configFile.setFileName(UUID.randomUUID().toString());
     configFile.setAppId(renameAppId);
@@ -2523,11 +2523,11 @@ public class KmsTest extends WingsBaseTest {
                                 .overridePath(UUID.randomUUID().toString())
                                 .configOverrideType(ConfigOverrideType.CUSTOM)
                                 .configOverrideExpression(UUID.randomUUID().toString())
-                                .accountId(randomAccountId)
                                 .encryptedFileId(secretFileId)
                                 .encrypted(true)
                                 .build();
 
+    configFile.setAccountId(randomAccountId);
     configFile.setName(UUID.randomUUID().toString());
     configFile.setFileName(UUID.randomUUID().toString());
     configFile.setAppId(randomAppId);
@@ -2652,12 +2652,12 @@ public class KmsTest extends WingsBaseTest {
                                 .overridePath(UUID.randomUUID().toString())
                                 .configOverrideType(ConfigOverrideType.CUSTOM)
                                 .configOverrideExpression(UUID.randomUUID().toString())
-                                .accountId(renameAccountId)
                                 .encryptedFileId(secretFileId)
                                 .templateId(serviceTemplateId)
                                 .encrypted(true)
                                 .build();
 
+    configFile.setAccountId(renameAccountId);
     configFile.setName(UUID.randomUUID().toString());
     configFile.setFileName(UUID.randomUUID().toString());
     configFile.setAppId(renameAppId);

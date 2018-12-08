@@ -8,6 +8,7 @@ import static software.wings.utils.WingsTestConstants.FILE_ID;
 import com.google.common.io.Files;
 import com.google.inject.Inject;
 
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.rule.RealMongo;
 import org.junit.Before;
 import org.junit.Rule;
@@ -52,9 +53,13 @@ public class FileServiceIntegrationTest extends WingsBaseTest {
    */
   @Test
   public void shouldSaveFileWithMetadata() throws Exception {
-    FileMetadata fileMetadata = FileMetadata.builder().fileName("dummy.txt").mimeType("text/plain").build();
+    FileMetadata fileMetadata = FileMetadata.builder()
+                                    .fileName("dummy.txt")
+                                    .mimeType("text/plain")
+                                    .fileUuid(UUIDGenerator.generateUuid())
+                                    .build();
     String fileId = fileService.saveFile(fileMetadata, new FileInputStream(tempFile), FileBucket.ARTIFACTS);
-    assertThat(fileService.getGridFsFile(fileId, FileBucket.ARTIFACTS)).isNotNull();
+    assertThat(fileService.getFileMetadata(fileId, FileBucket.ARTIFACTS)).isNotNull();
   }
 
   /**

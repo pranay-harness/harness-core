@@ -1,6 +1,5 @@
 package software.wings.dl;
 
-import com.mongodb.client.gridfs.GridFSBucket;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.persistence.HPersistence;
@@ -138,14 +137,6 @@ public interface WingsPersistence extends HPersistence {
    * @return             the page response
    */
   <T> PageResponse<T> query(Class<T> cls, PageRequest<T> req, Set<QueryChecks> queryChecks);
-
-  /**
-   * Gets the or create grid fs bucket.
-   *
-   * @param bucketName the bucket name
-   * @return the or create grid fs bucket
-   */
-  GridFSBucket getOrCreateGridFSBucket(String bucketName);
 
   /**
    * Creates a query and runs the authFilter to it.

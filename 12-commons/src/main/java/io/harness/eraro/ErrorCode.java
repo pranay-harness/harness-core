@@ -290,6 +290,10 @@ public enum ErrorCode {
 
   KUBERNETES_YAML_ERROR,
 
+  SAVE_FILE_INTO_GCP_STORAGE_FAILED,
+
+  READ_FILE_FROM_GCP_STORAGE_FAILED,
+
   USAGE_LIMITS_EXCEEDED(Status.FORBIDDEN, "Usage Limit Exceeded"),
 
   EVENT_PUBLISH_FAILED("Event published failed"),

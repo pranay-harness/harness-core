@@ -58,8 +58,6 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
   public static final String ENV_ID_KEY = "envId";
   public static final String RELATIVE_FILE_PATH_KEY = "relativeFilePath";
 
-  @NotEmpty private String accountId;
-
   @FormDataParam("templateId") @DefaultValue(DEFAULT_TEMPLATE_ID) private String templateId;
 
   @FormDataParam("envId") @NotEmpty(groups = {Create.class}) private String envId;
@@ -150,11 +148,11 @@ public class ConfigFile extends BaseFile implements EncryptableSetting {
                                 .relativeFilePath(getRelativeFilePath())
                                 .targetToAllEnv(isTargetToAllEnv())
                                 .encrypted(isEncrypted())
-                                .accountId(getAccountId())
                                 .configOverrideExpression(getConfigOverrideExpression())
                                 .configOverrideType(getConfigOverrideType())
                                 .encryptedFileId(getEncryptedFileId())
                                 .build();
+    configFile.setAccountId(getAccountId());
     configFile.setAppId(getAppId());
     configFile.setFileName(getFileName());
     return configFile;

@@ -1,0 +1,276 @@
+package software.wings.service.impl;
+
+import static com.google.common.collect.ImmutableMap.of;
+import static com.mongodb.client.model.Sorts.descending;
+import static com.mongodb.client.model.Sorts.orderBy;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.persistence.HPersistence.DEFAULT_STORE;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static software.wings.service.impl.FileServiceUtils.verifyFileIntegrity;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBCollection;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
+import com.mongodb.client.gridfs.GridFSFindIterable;
+import com.mongodb.client.gridfs.model.GridFSFile;
+import com.mongodb.client.gridfs.model.GridFSUploadOptions;
+import com.mongodb.client.model.Filters;
+import io.harness.persistence.ReadPref;
+import org.bson.Document;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.AdvancedDatastore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import software.wings.beans.BaseFile;
+import software.wings.beans.ChecksumType;
+import software.wings.beans.FileMetadata;
+import software.wings.dl.WingsPersistence;
+import software.wings.service.intfc.FileService;
+import software.wings.utils.BoundedInputStream;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
+import javax.validation.executable.ValidateOnExecution;
+
+/**
+ * Use Mongo's {@see GridFSFile} as file/blob storage.
+ */
+@ValidateOnExecution
+@Singleton
+public class MongoFileServiceImpl implements FileService {
+  private static final Logger logger = LoggerFactory.getLogger(MongoFileServiceImpl.class);
+
+  @Inject private WingsPersistence wingsPersistence;
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public File download(String fileId, File file, FileBucket fileBucket) {
+    try (FileOutputStream streamToDownload = new FileOutputStream(file)) {
+      getOrCreateGridFSBucket(fileBucket.representationName()).downloadToStream(new ObjectId(fileId), streamToDownload);
+      return file;
+    } catch (IOException ex) {
+      logger.error("Error in download", ex);
+      return null;
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void downloadToStream(String fileId, OutputStream outputStream, FileBucket fileBucket) {
+    getOrCreateGridFSBucket(fileBucket.representationName()).downloadToStream(new ObjectId(fileId), outputStream);
+  }
+
+  @Override
+  public InputStream openDownloadStream(String fileId, FileBucket fileBucket) {
+    return getOrCreateGridFSBucket(fileBucket.representationName()).openDownloadStream(new ObjectId(fileId));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public List<String> getAllFileIds(String entityId, FileBucket fileBucket) {
+    GridFSFindIterable filemetaData =
+        getOrCreateGridFSBucket(fileBucket.representationName()).find(Filters.eq("metadata.entityId", entityId));
+    return stream(filemetaData.sort(descending("uploadDate")).spliterator(), false)
+        .map(gridFSFile -> gridFSFile.getObjectId().toHexString())
+        .collect(toList());
+  }
+
+  @Override
+  public String getLatestFileId(String entityId, FileBucket fileBucket) {
+    final GridFSFile first = getOrCreateGridFSBucket(fileBucket.representationName())
+                                 .find(Filters.and(Filters.eq("metadata.entityId", entityId)))
+                                 .sort(orderBy(descending("uploadDate")))
+                                 .limit(1)
+                                 .first();
+    if (first == null) {
+      return null;
+    }
+    return first.getId().asObjectId().getValue().toHexString();
+  }
+
+  @Override
+  public String getFileIdByVersion(String entityId, int version, FileBucket fileBucket) {
+    final GridFSFile first =
+        getOrCreateGridFSBucket(fileBucket.representationName())
+            .find(Filters.and(Filters.eq("metadata.entityId", entityId), Filters.eq("metadata.version", version)))
+            .limit(1)
+            .first();
+    if (first == null) {
+      return null;
+    }
+    return first.getId().asObjectId().getValue().toHexString();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String uploadFromStream(
+      String filename, BoundedInputStream in, FileBucket bucket, Map<String, Object> metaData) {
+    GridFSUploadOptions gridFSOptions =
+        new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize()).metadata(new Document(metaData));
+    ObjectId fileId =
+        getOrCreateGridFSBucket(bucket.representationName()).uploadFromStream(filename, in, gridFSOptions);
+    return fileId.toHexString();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public FileMetadata getFileMetadata(String fileId, FileBucket fileBucket) {
+    FileMetadata fileMetadata = null;
+
+    GridFSFindIterable gridFSFiles =
+        getOrCreateGridFSBucket(fileBucket.representationName()).find(Filters.eq("_id", new ObjectId(fileId)));
+    GridFSFile gridFSFile = gridFSFiles.first();
+    if (gridFSFile != null) {
+      Document metadata = gridFSFile.getMetadata();
+      if (metadata == null) {
+        fileMetadata = FileMetadata.builder()
+                           .fileName(gridFSFile.getFilename())
+                           .fileUuid(fileId)
+                           .fileLength(gridFSFile.getLength())
+                           .checksumType(ChecksumType.MD5)
+                           .checksum(gridFSFile.getMD5())
+                           .build();
+      } else {
+        fileMetadata = FileMetadata.builder()
+                           .fileName(gridFSFile.getFilename())
+                           .fileUuid(fileId)
+                           .fileLength(gridFSFile.getLength())
+                           .checksumType(ChecksumType.MD5)
+                           .checksum(gridFSFile.getMD5())
+                           .mimeType(metadata.getString("contentType"))
+                           .metadata(gridFSFile.getMetadata().entrySet().stream().collect(
+                               Collectors.toMap(Entry::getKey, Entry::getValue)))
+                           .build();
+      }
+    }
+
+    return fileMetadata;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String saveFile(FileMetadata fileMetadata, InputStream in, FileBucket fileBucket) {
+    logger.info("Saving file {} ", fileMetadata);
+    Document metadata = new Document();
+
+    if (isNotBlank(fileMetadata.getChecksum()) && fileMetadata.getChecksumType() != null) {
+      metadata.append("checksum", fileMetadata.getChecksum());
+      metadata.append("checksumType", fileMetadata.getChecksumType().name());
+    }
+
+    if (isNotBlank(fileMetadata.getMimeType())) {
+      metadata.append("mimeType", fileMetadata.getMimeType());
+    }
+
+    if (isNotBlank(fileMetadata.getRelativePath())) {
+      metadata.append("relativePath", fileMetadata.getRelativePath());
+    }
+
+    GridFSUploadOptions options =
+        new GridFSUploadOptions().chunkSizeBytes(fileBucket.getChunkSize()).metadata(metadata);
+
+    ObjectId fileId = getOrCreateGridFSBucket(fileBucket.representationName())
+                          .uploadFromStream(fileMetadata.getFileName(), in, options);
+    logger.info("Saved file {}. Returning fileId {}", fileMetadata.getFileName(), fileId.toHexString());
+    return fileId.toHexString();
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public boolean updateParentEntityIdAndVersion(Class entityClass, String entityId, Integer version, String fileId,
+      Map<String, Object> others, FileBucket fileBucket) {
+    DBCollection collection = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL)
+                                  .getDB()
+                                  .getCollection(fileBucket.representationName() + ".files");
+
+    // TODO: creating this index here makes no sense
+    collection.createIndex(
+        new BasicDBObject(of("metadata.entityId", 1, "metadata.version", 1)), new BasicDBObject("background", true));
+
+    Map<String, Object> updateMap = new HashMap<>();
+    if (isNotEmpty(others)) {
+      updateMap.putAll(others);
+    }
+
+    if (entityClass != null) {
+      updateMap.put("metadata.class", entityClass.getCanonicalName());
+    }
+    if (entityId != null) {
+      updateMap.put("metadata.entityId", entityId);
+    }
+    if (version != null) {
+      updateMap.put("metadata.version", version);
+    }
+
+    return collection
+               .update(new BasicDBObject("_id", new ObjectId(fileId)),
+                   new BasicDBObject("$set", new BasicDBObject(updateMap)))
+               .getN()
+        > 0;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public String saveFile(BaseFile baseFile, InputStream inputStream, FileBucket bucket) {
+    GridFSUploadOptions gridFSOptions = new GridFSUploadOptions().chunkSizeBytes(bucket.getChunkSize());
+    String fileId = getOrCreateGridFSBucket(bucket.representationName())
+                        .uploadFromStream(baseFile.getFileName(), inputStream, gridFSOptions)
+                        .toHexString();
+    FileMetadata fileMetadata = getFileMetadata(fileId, bucket);
+    verifyFileIntegrity(baseFile, fileMetadata);
+    baseFile.setChecksum(fileMetadata.getChecksum());
+    baseFile.setFileUuid(fileId);
+    return fileId;
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void deleteFile(String fileId, FileBucket fileBucket) {
+    logger.info("Deleting file {}", fileId);
+    getOrCreateGridFSBucket(fileBucket.representationName()).delete(new ObjectId(fileId));
+    logger.info("Deleted file {}", fileId);
+  }
+
+  @Override
+  public void deleteAllFilesForEntity(String entityId, FileBucket fileBucket) {
+    final GridFSBucket bucket = getOrCreateGridFSBucket(fileBucket.representationName());
+    getAllFileIds(entityId, fileBucket).forEach(fileUuid -> bucket.delete(new ObjectId(fileUuid)));
+  }
+
+  GridFSBucket getOrCreateGridFSBucket(String bucketName) {
+    final AdvancedDatastore datastore = wingsPersistence.getDatastore(DEFAULT_STORE, ReadPref.NORMAL);
+    return GridFSBuckets.create(datastore.getMongo().getDatabase(datastore.getDB().getName()), bucketName);
+  }
+}

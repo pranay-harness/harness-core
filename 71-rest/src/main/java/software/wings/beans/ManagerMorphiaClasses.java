@@ -159,5 +159,5 @@ public class ManagerMorphiaClasses {
       Principal.class, PrometheusCVServiceConfiguration.class, EncryptedData.class,
       NewRelicCVServiceConfiguration.class, ExecutionInterrupt.class, APMCVServiceConfiguration.class, EmailData.class,
       YamlGitConfig.class, TimeSeriesMLTransactionThresholds.class, GitSyncWebhook.class, ExecutionEvent.class,
-      ManifestFile.class);
+      ManifestFile.class, MongoGcsFileIdMapping.class);
 }
