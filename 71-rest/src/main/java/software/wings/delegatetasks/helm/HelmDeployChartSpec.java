@@ -15,9 +15,9 @@ import lombok.Data;
  *         version: 1.0.1
  *
  */
+@Data
 @Builder
 @AllArgsConstructor
-@Data
 public class HelmDeployChartSpec {
   private String url;
   private String name;

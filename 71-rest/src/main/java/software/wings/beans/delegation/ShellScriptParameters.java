@@ -23,8 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Builder
 @Value
+@Builder
 public class ShellScriptParameters {
   public static final String CommandUnit = "Execute";
 

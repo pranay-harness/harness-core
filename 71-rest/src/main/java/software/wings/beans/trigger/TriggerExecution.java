@@ -70,8 +70,8 @@ public class TriggerExecution extends Base {
 
   public enum Status { FAILED, REJECTED, SUCCESS, RUNNING }
 
-  @Builder
   @Data
+  @Builder
   public static class WebhookEventDetails {
     String gitConnectorId;
     String branchName;

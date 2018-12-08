@@ -10,8 +10,8 @@ import org.hibernate.validator.constraints.NotBlank;
  * @author Swapni on 28/08/18
  */
 
-@Builder
 @Data
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LdapUserResponse {
   @NotBlank String dn;

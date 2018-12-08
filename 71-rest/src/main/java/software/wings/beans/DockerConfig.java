@@ -25,8 +25,8 @@ import software.wings.yaml.setting.ArtifactServerYaml;
  * Created by anubhaw on 1/5/17.
  */
 @JsonTypeName("DOCKER")
-@Builder
 @Data
+@Builder
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password")
 public class DockerConfig extends SettingValue implements EncryptableSetting, ArtifactSourceable {

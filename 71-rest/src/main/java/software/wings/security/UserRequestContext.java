@@ -11,8 +11,8 @@ import java.util.Set;
 /**
  * @author rktummala on 3/9/18
  */
-@Builder
 @Data
+@Builder
 public class UserRequestContext {
   private String accountId;
   private UserPermissionInfo userPermissionInfo;
@@ -25,8 +25,8 @@ public class UserRequestContext {
   // Key - Entity class name   Value - EntityInfo
   private Map<String, EntityInfo> entityInfoMap = Maps.newHashMap();
 
-  @Builder
   @Data
+  @Builder
   public static class EntityInfo {
     private String entityFieldName;
     private Set<String> entityIds;

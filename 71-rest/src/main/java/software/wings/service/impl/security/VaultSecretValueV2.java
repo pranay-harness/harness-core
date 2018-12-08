@@ -17,8 +17,8 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 @Data
+@Builder
 public class VaultSecretValueV2 {
   private Map<String, String> data;
 }

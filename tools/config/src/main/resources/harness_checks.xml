@@ -48,6 +48,8 @@
             <property name="target" value="CLASS_DEF, INTERFACE_DEF, ENUM_DEF, METHOD_DEF, CTOR_DEF, VARIABLE_DEF"/>
         </module>
 
+        <module name="io.harness.checks.AnnotationOrderCheck"></module>
+
         <!-- DEPENDENCIES -->
 
         <!-- Committing to a single class to do particular job could reduce the memory footprint, startup time,

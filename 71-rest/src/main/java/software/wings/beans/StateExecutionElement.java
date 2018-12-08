@@ -6,8 +6,8 @@ import lombok.Value;
 
 import java.util.List;
 
-@Builder
 @Value
+@Builder
 public class StateExecutionElement {
   private String executionContextElementId;
   private ExecutionStatus status;

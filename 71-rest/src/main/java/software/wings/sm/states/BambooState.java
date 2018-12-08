@@ -297,8 +297,8 @@ public class BambooState extends State {
     activityService.updateStatus(activityId, appId, status);
   }
 
-  @Builder
   @Data
+  @Builder
   @NoArgsConstructor
   @AllArgsConstructor
   @EqualsAndHashCode(callSuper = false)

@@ -10,8 +10,8 @@ import org.hibernate.validator.constraints.NotBlank;
 import java.util.Collection;
 import java.util.Collections;
 
-@Builder
 @Data
+@Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class LdapGroupResponse {
   @NotBlank String dn;

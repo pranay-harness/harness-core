@@ -10,8 +10,8 @@ import java.util.Map;
 /**
  * The type Web hook request.
  */
-@Builder
 @Data
+@Builder
 public class WebHookRequest {
   @NotEmpty private String application;
   private List<Map<String, String>> artifacts;

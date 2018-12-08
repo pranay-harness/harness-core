@@ -46,8 +46,8 @@ import java.util.Set;
 
 @Singleton
 public class MongoPersistence implements HPersistence {
-  @Builder
   @Value
+  @Builder
   private static class Info {
     private String uri;
     private Set<Class> classes;

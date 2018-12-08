@@ -10,8 +10,8 @@ import java.util.List;
 /**
  * Created by rishi on 3/24/17.
  */
-@Builder
 @Data
+@Builder
 public class UserRequestInfo {
   private String accountId;
   private List<String> appIds;

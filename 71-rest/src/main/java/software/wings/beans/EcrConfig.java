@@ -27,8 +27,8 @@ import software.wings.stencils.EnumData;
  */
 @JsonTypeName("ECR")
 @Deprecated
-@Builder
 @Data
+@Builder
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "secretKey")
 public class EcrConfig extends SettingValue implements EncryptableSetting {
