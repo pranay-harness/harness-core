@@ -18,11 +18,13 @@ import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Job;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodSpec;
+import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretVolumeSource;
 import io.fabric8.kubernetes.api.model.Volume;
 import io.fabric8.kubernetes.api.model.extensions.DaemonSet;
 import io.fabric8.kubernetes.api.model.extensions.Deployment;
+import io.fabric8.kubernetes.api.model.extensions.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.extensions.StatefulSet;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -60,6 +62,51 @@ public class KubernetesResource {
 
   public KubernetesResource setField(String key, Object newValue) {
     ObjectYamlUtils.setField(this.getValue(), key, newValue);
+    return this;
+  }
+
+  public KubernetesResource setupDeploymentForCanary(int revisionNumber) {
+    HasMetadata resource = k8sClient.load(IOUtils.toInputStream(this.spec, UTF_8)).get().get(0);
+    Deployment deployment = (Deployment) resource;
+
+    Map<String, String> deploymentLabels = deployment.getMetadata().getLabels();
+    if (deploymentLabels == null) {
+      deploymentLabels = new HashMap<>();
+    }
+
+    deploymentLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
+
+    deployment.getMetadata().setLabels(deploymentLabels);
+
+    Map<String, String> matchLabels = deployment.getSpec().getSelector().getMatchLabels();
+    if (matchLabels == null) {
+      matchLabels = new HashMap<>();
+    }
+
+    matchLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
+
+    deployment.getSpec().getSelector().setMatchLabels(matchLabels);
+
+    DeploymentSpec deploymentSpec = deployment.getSpec();
+    deploymentSpec.setReplicas(0);
+
+    PodTemplateSpec podTemplateSpec = deploymentSpec.getTemplate();
+    Map<String, String> podLabels = podTemplateSpec.getMetadata().getLabels();
+    if (podLabels == null) {
+      podLabels = new HashMap<>();
+    }
+
+    podLabels.put(HarnessLabels.revision, String.valueOf(revisionNumber));
+    podTemplateSpec.getMetadata().setLabels(podLabels);
+
+    try {
+      this.spec = KubernetesHelper.toYaml(resource);
+      this.value = readYaml(this.spec).get(0);
+    } catch (IOException e) {
+      // do nothing
+      noop();
+    }
+
     return this;
   }
 

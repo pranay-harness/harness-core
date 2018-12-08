@@ -39,7 +39,7 @@ public class ReleaseHistory {
       releaseNumber = getLatestRelease().getNumber() + 1;
     }
     this.getReleases().add(
-        0, Release.builder().number(releaseNumber).status(Status.Started).resources(resources).build());
+        0, Release.builder().number(releaseNumber).status(Status.InProgress).resources(resources).build());
 
     return getLatestRelease();
   }
@@ -67,8 +67,7 @@ public class ReleaseHistory {
 
   public Release getPreviousRollbackEligibleRelease(int currentReleaseNumber) {
     for (Release release : this.getReleases()) {
-      if (release.getNumber() < currentReleaseNumber
-          && (release.getStatus() == Status.Succeeded || release.getStatus() == Status.RollbackSucceeded)) {
+      if (release.getNumber() < currentReleaseNumber && release.getStatus() == Status.Succeeded) {
         return release;
       }
     }

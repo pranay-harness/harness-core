@@ -9,7 +9,6 @@ import static software.wings.delegatetasks.k8s.Utils.doStatusCheck;
 import static software.wings.delegatetasks.k8s.Utils.getLatestRevision;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.k8s.kubectl.Kubectl;
@@ -28,105 +27,103 @@ import software.wings.beans.KubernetesConfig;
 import software.wings.beans.command.CommandExecutionResult.CommandExecutionStatus;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
-import software.wings.delegatetasks.k8s.K8sCommandTaskParams;
+import software.wings.delegatetasks.k8s.K8sDelegateTaskParams;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
-import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
-import software.wings.helpers.ext.k8s.request.K8sDeploymentRollingRollbackSetupRequest;
-import software.wings.helpers.ext.k8s.response.K8sCommandExecutionResponse;
+import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
+import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
 import java.io.IOException;
 import java.util.Collections;
 
 @NoArgsConstructor
-@Singleton
-public class K8sDeploymentRollingRollbackCommandTaskHandler extends K8sCommandTaskHandler {
-  private static final Logger logger = LoggerFactory.getLogger(K8sDeploymentRollingRollbackCommandTaskHandler.class);
+public class K8sRollingDeployRollbackTaskHandler extends K8sTaskHandler {
+  private static final Logger logger = LoggerFactory.getLogger(K8sRollingDeployRollbackTaskHandler.class);
   @Inject private transient KubernetesContainerService kubernetesContainerService;
   @Inject private transient ContainerDeploymentDelegateHelper containerDeploymentDelegateHelper;
-
-  public K8sCommandExecutionResponse executeTaskInternal(
-      K8sCommandRequest k8sCommandRequest, K8sCommandTaskParams k8sCommandTaskParams) throws Exception {
-    if (!(k8sCommandRequest instanceof K8sDeploymentRollingRollbackSetupRequest)) {
-      throw new InvalidArgumentsException(
-          Pair.of("k8sCommandRequest", "Must be instance of K8sDeploymentRollingRollbackSetupRequest"));
-    }
-
-    K8sDeploymentRollingRollbackSetupRequest request = (K8sDeploymentRollingRollbackSetupRequest) k8sCommandRequest;
-
-    boolean success = init(request, k8sCommandTaskParams,
-        new ExecutionLogCallback(
-            delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), Init));
-
-    if (!success) {
-      return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
-    }
-
-    success = rollback(request, k8sCommandTaskParams,
-        new ExecutionLogCallback(
-            delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), Rollback));
-
-    if (!success) {
-      return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
-    }
-
-    success = doStatusCheck(client, release.getManagedWorkload(), k8sCommandTaskParams,
-        new ExecutionLogCallback(delegateLogService, k8sCommandRequest.getAccountId(), k8sCommandRequest.getAppId(),
-            k8sCommandRequest.getActivityId(), WaitForSteadyState));
-
-    if (!success) {
-      releaseHistory.setReleaseStatus(Status.RollbackFailed);
-      kubernetesContainerService.saveReleaseHistory(
-          kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
-      return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
-    }
-
-    release.setStatus(Status.RollbackSucceeded);
-    release.setManagedWorkloadRevision(getLatestRevision(client, release.getManagedWorkload(), k8sCommandTaskParams));
-
-    kubernetesContainerService.saveReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
-
-    return K8sCommandExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
-  }
 
   private KubernetesConfig kubernetesConfig;
   private Kubectl client;
   private ReleaseHistory releaseHistory;
-  Release release;
+  private Release release;
+  private Release previousRollbackEligibleRelease;
 
-  private boolean init(K8sDeploymentRollingRollbackSetupRequest request, K8sCommandTaskParams k8sCommandTaskParams,
-      ExecutionLogCallback executionLogCallback) throws IOException {
+  public K8sTaskExecutionResponse executeTaskInternal(
+      K8sTaskParameters k8sTaskParameters, K8sDelegateTaskParams k8sDelegateTaskParams) throws Exception {
+    if (!(k8sTaskParameters instanceof K8sRollingDeployRollbackTaskParameters)) {
+      throw new InvalidArgumentsException(
+          Pair.of("k8sTaskParameters", "Must be instance of K8sRollingDeployRollbackTaskParameters"));
+    }
+
+    K8sRollingDeployRollbackTaskParameters request = (K8sRollingDeployRollbackTaskParameters) k8sTaskParameters;
+
+    boolean success = init(request, k8sDelegateTaskParams,
+        new ExecutionLogCallback(
+            delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), Init));
+
+    if (!success) {
+      return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+    }
+
+    success = rollback(request, k8sDelegateTaskParams,
+        new ExecutionLogCallback(
+            delegateLogService, request.getAccountId(), request.getAppId(), request.getActivityId(), Rollback));
+
+    if (!success) {
+      return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+    }
+
+    doStatusCheck(client, release.getManagedWorkload(), k8sDelegateTaskParams,
+        new ExecutionLogCallback(delegateLogService, k8sTaskParameters.getAccountId(), k8sTaskParameters.getAppId(),
+            k8sTaskParameters.getActivityId(), WaitForSteadyState));
+
+    release.setStatus(Status.Failed);
+    // update the revision on the previous release.
+    previousRollbackEligibleRelease.setManagedWorkloadRevision(
+        getLatestRevision(client, release.getManagedWorkload(), k8sDelegateTaskParams));
+
+    kubernetesContainerService.saveReleaseHistory(
+        kubernetesConfig, Collections.emptyList(), request.getReleaseName(), releaseHistory.getAsYaml());
+
+    return K8sTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+  }
+
+  private boolean init(K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters,
+      K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws IOException {
     executionLogCallback.saveExecutionLog("Initializing..\n");
 
-    kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(request.getK8sClusterConfig());
+    kubernetesConfig = containerDeploymentDelegateHelper.getKubernetesConfig(
+        k8sRollingDeployRollbackTaskParameters.getK8sClusterConfig());
 
-    client = Kubectl.client(k8sCommandTaskParams.getKubectlPath(), k8sCommandTaskParams.getKubeconfigPath());
+    client = Kubectl.client(k8sDelegateTaskParams.getKubectlPath(), k8sDelegateTaskParams.getKubeconfigPath());
 
     String releaseHistoryData = kubernetesContainerService.fetchReleaseHistory(
-        kubernetesConfig, Collections.emptyList(), request.getReleaseName());
+        kubernetesConfig, Collections.emptyList(), k8sRollingDeployRollbackTaskParameters.getReleaseName());
 
-    releaseHistory = (StringUtils.isEmpty(releaseHistoryData)) ? ReleaseHistory.createNew()
-                                                               : ReleaseHistory.createFromData(releaseHistoryData);
-
-    release = releaseHistory.getLatestRelease();
-
-    executionLogCallback.saveExecutionLog("\nManaged Workload is: " + release.getManagedWorkload().kindNameRef());
+    if (StringUtils.isEmpty(releaseHistoryData)) {
+      executionLogCallback.saveExecutionLog(
+          "\nNo release history found for release " + k8sRollingDeployRollbackTaskParameters.getReleaseName());
+    } else {
+      releaseHistory = ReleaseHistory.createFromData(releaseHistoryData);
+      release = releaseHistory.getLatestRelease();
+      executionLogCallback.saveExecutionLog("\nManaged Workload is: " + release.getManagedWorkload().kindNameRef());
+    }
 
     executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
 
     return true;
   }
 
-  public boolean rollback(K8sDeploymentRollingRollbackSetupRequest request, K8sCommandTaskParams k8sCommandTaskParams,
-      ExecutionLogCallback executionLogCallback) throws Exception {
-    if (request.getReleaseNumber() == 0) {
+  public boolean rollback(K8sRollingDeployRollbackTaskParameters k8sRollingDeployRollbackTaskParameters,
+      K8sDelegateTaskParams k8sDelegateTaskParams, ExecutionLogCallback executionLogCallback) throws Exception {
+    if (k8sRollingDeployRollbackTaskParameters.getReleaseNumber() == 0) {
       executionLogCallback.saveExecutionLog("No releaseNumber found. Skipping rollback.");
       executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);
       return true;
     }
 
-    Release previousRollbackEligibleRelease =
-        releaseHistory.getPreviousRollbackEligibleRelease(request.getReleaseNumber());
+    previousRollbackEligibleRelease =
+        releaseHistory.getPreviousRollbackEligibleRelease(k8sRollingDeployRollbackTaskParameters.getReleaseNumber());
 
     if (previousRollbackEligibleRelease == null) {
       executionLogCallback.saveExecutionLog("No previous eligible release found. Can't rollback.");
@@ -164,7 +161,7 @@ public class K8sDeploymentRollingRollbackCommandTaskHandler extends K8sCommandTa
                }
              }) {
       ProcessResult result =
-          rolloutUndoCommand.execute(k8sCommandTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
+          rolloutUndoCommand.execute(k8sDelegateTaskParams.getWorkingDirectory(), logOutputStream, logErrorStream);
 
       if (result.getExitValue() == 0) {
         executionLogCallback.saveExecutionLog("\nDone.", INFO, CommandExecutionStatus.SUCCESS);

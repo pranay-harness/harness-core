@@ -11,14 +11,15 @@ import java.util.Map;
 
 @Data
 @Builder
-public class K8sRollingDeploySetupElement implements ContextElement {
+public class K8sContextElement implements ContextElement {
   String releaseName;
   int releaseNumber;
+  int targetInstances;
   TaskType currentTaskType;
 
   @Override
   public ContextElementType getElementType() {
-    return ContextElementType.K8S_ROLLING_DEPLOY_SETUP;
+    return ContextElementType.K8S;
   }
 
   @Override

@@ -570,10 +570,10 @@ software.wings.beans.command.ShellExecutionData, 5528
 software.wings.service.impl.newrelic.NewRelicSetupTestNodeData, 5529
 software.wings.service.impl.analysis.SetupTestNodeData, 5530
 software.wings.service.impl.appdynamics.AppdynamicsSetupTestNodeData, 5531
-software.wings.helpers.ext.k8s.request.K8sCommandRequest, 5532
-software.wings.helpers.ext.k8s.request.K8sCommandRequest$K8sCommandType, 5533
-software.wings.helpers.ext.k8s.request.K8sDeploymentRollingSetupRequest, 5534
-software.wings.helpers.ext.k8s.response.K8sCommandExecutionResponse, 5535
+software.wings.helpers.ext.k8s.request.K8sTaskParameters, 5532
+software.wings.helpers.ext.k8s.request.K8sTaskParameters$K8sTaskType, 5533
+software.wings.helpers.ext.k8s.request.K8sRollingDeployTaskParameters, 5534
+software.wings.helpers.ext.k8s.response.K8sTaskResponse, 5535
 software.wings.helpers.ext.k8s.request.K8sClusterConfig, 5536
 software.wings.beans.GcpKubernetesCluster, 5537
 software.wings.beans.AzureKubernetesCluster, 5538
@@ -590,7 +590,7 @@ software.wings.yaml.gitSync.YamlGitConfig$SyncMode, 5548
 software.wings.beans.KerberosConfig, 5549
 software.wings.beans.HostConnectionAttributes$AuthenticationScheme, 5550
 software.wings.beans.SmbConfig, 5551
-software.wings.helpers.ext.k8s.request.K8sDeploymentRollingRollbackSetupRequest, 5552
+software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters, 5552
 software.wings.helpers.ext.trigger.request.TriggerDeploymentNeededRequest, 5553
 software.wings.helpers.ext.trigger.response.TriggerDeploymentNeededResponse, 5554
 software.wings.beans.trigger.TriggerCommand$TriggerCommandType, 5555
@@ -599,10 +599,10 @@ software.wings.helpers.ext.trigger.request.TriggerRequest, 5557
 software.wings.beans.yaml.GitFilesBetweenCommitsRequest, 5558
 software.wings.beans.container.AwsAutoScalarConfig, 5559
 software.wings.beans.SftpConfig, 5560
-software.wings.helpers.ext.k8s.response.K8sDeploymentRollingSetupResponse, 5561
-software.wings.api.k8s.K8sDeployRollingSetupExecutionSummary, 5562
-software.wings.api.k8s.K8sRollingDeploySetupElement, 5563
-software.wings.api.k8s.K8sDeploymentRollingSetupStateExecutionData, 5564
+software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse, 5561
+software.wings.api.k8s.K8sExecutionSummary, 5562
+software.wings.api.k8s.K8sContextElement, 5563
+software.wings.api.k8s.K8sSetupExecutionData, 5564
 software.wings.settings.validation.ConnectivityValidationDelegateRequest, 5565
 software.wings.settings.validation.ConnectivityValidationDelegateResponse, 5566
 software.wings.settings.validation.ConnectivityValidationAttributes, 5567
@@ -615,7 +615,7 @@ software.wings.beans.SlackConfig, 5573
 software.wings.beans.yaml.GitFile, 5574
 software.wings.beans.GitFetchFilesTaskParams, 5575
 software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig, 5576
-software.wings.helpers.ext.k8s.request.K8sScaleRequest, 5577
+software.wings.helpers.ext.k8s.request.K8sScaleTaskParameters, 5577
 software.wings.helpers.ext.k8s.response.K8sScaleResponse, 5578
 software.wings.beans.jira.JiraTaskParameters, 5579
 software.wings.delegatetasks.jira.JiraAction, 5580
@@ -623,3 +623,7 @@ software.wings.beans.JiraConfig, 5581
 software.wings.api.JiraExecutionData, 5582
 net.sf.json.JSONArray, 5583
 net.sf.json.JSONObject, 5584
+software.wings.helpers.ext.k8s.request.K8sCanarySetupTaskParameters, 5585
+software.wings.helpers.ext.k8s.response.K8sCanarySetupResponse, 5586
+software.wings.helpers.ext.k8s.request.K8sCanaryRollbackTaskParameters, 5587
+software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse, 5588

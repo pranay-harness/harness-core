@@ -45,8 +45,8 @@ import software.wings.api.RouteUpdateRollbackElement;
 import software.wings.api.ScriptStateExecutionSummary;
 import software.wings.api.ServiceInstanceArtifactParam;
 import software.wings.api.ServiceInstanceIdsParam;
-import software.wings.api.k8s.K8sDeployRollingSetupExecutionSummary;
-import software.wings.api.k8s.K8sRollingDeploySetupElement;
+import software.wings.api.k8s.K8sContextElement;
+import software.wings.api.k8s.K8sExecutionSummary;
 import software.wings.api.pcf.PcfDeployExecutionSummary;
 import software.wings.api.pcf.PcfRouteSwapExecutionSummary;
 import software.wings.api.pcf.PcfSetupContextElement;
@@ -307,22 +307,22 @@ public class PhaseStepSubWorkflow extends SubWorkflowState {
         {
           Optional<StepExecutionSummary> first = phaseStepExecutionSummary.getStepExecutionSummaryList()
                                                      .stream()
-                                                     .filter(s -> s instanceof K8sDeployRollingSetupExecutionSummary)
+                                                     .filter(s -> s instanceof K8sExecutionSummary)
                                                      .findFirst();
           if (!first.isPresent()) {
             return null;
           }
-          K8sDeployRollingSetupExecutionSummary k8sDeployRollingSetupExecutionSummary =
-              (K8sDeployRollingSetupExecutionSummary) first.get();
+          K8sExecutionSummary k8sExecutionSummary = (K8sExecutionSummary) first.get();
 
-          K8sRollingDeploySetupElement k8sRollingDeploySetupElement =
-              K8sRollingDeploySetupElement.builder()
-                  .releaseNumber(k8sDeployRollingSetupExecutionSummary.getReleaseNumber() == null
-                          ? 0
-                          : k8sDeployRollingSetupExecutionSummary.getReleaseNumber())
-                  .releaseName(k8sDeployRollingSetupExecutionSummary.getReleaseName())
+          K8sContextElement k8SContextElement =
+              K8sContextElement.builder()
+                  .releaseNumber(
+                      k8sExecutionSummary.getReleaseNumber() == null ? 0 : k8sExecutionSummary.getReleaseNumber())
+                  .releaseName(k8sExecutionSummary.getReleaseName())
+                  .targetInstances(
+                      k8sExecutionSummary.getTargetInstances() == null ? 0 : k8sExecutionSummary.getTargetInstances())
                   .build();
-          return asList(k8sRollingDeploySetupElement);
+          return asList(k8SContextElement);
         }
       }
       default:

@@ -110,13 +110,13 @@ public class ManifestHelper {
 
   private static final Set<String> managedWorkloadKinds = ImmutableSet.of("Deployment", "StatefulSet", "DaemonSet");
 
-  public static KubernetesResourceId getManagedWorkload(List<KubernetesResource> resources) {
+  public static KubernetesResource getManagedWorkload(List<KubernetesResource> resources) {
     List<KubernetesResource> result =
         resources.stream()
             .filter(resource -> managedWorkloadKinds.contains(resource.getResourceId().getKind()))
             .filter(resource -> !resource.isDirectApply())
             .collect(Collectors.toList());
 
-    return result.get(0).getResourceId().cloneInternal();
+    return result.get(0);
   }
 }

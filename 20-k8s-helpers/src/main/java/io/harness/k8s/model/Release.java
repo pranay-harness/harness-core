@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Release {
-  public enum Status { Started, Succeeded, Failed, RollbackSucceeded, RollbackFailed }
+  public enum Status { InProgress, Succeeded, Failed }
 
   private int number;
   private Status status;

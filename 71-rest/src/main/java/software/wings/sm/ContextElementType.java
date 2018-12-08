@@ -104,5 +104,5 @@ public enum ContextElementType {
 
   TERRAFORM_PROVISION,
 
-  K8S_ROLLING_DEPLOY_SETUP
+  K8S
 }

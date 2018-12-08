@@ -7,7 +7,7 @@ import com.google.inject.Inject;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.DelegateTask;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
-import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -22,7 +22,7 @@ public class K8sCommandValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<DelegateConnectionResult> validate() {
-    K8sClusterConfig k8sClusterConfig = ((K8sCommandRequest) getParameters()[0]).getK8sClusterConfig();
+    K8sClusterConfig k8sClusterConfig = ((K8sTaskParameters) getParameters()[0]).getK8sClusterConfig();
     return singletonList(DelegateConnectionResult.builder()
                              .criteria(getCriteria(k8sClusterConfig))
                              .validated(k8sValidationHelper.validateContainerServiceParams(k8sClusterConfig))
@@ -31,7 +31,7 @@ public class K8sCommandValidation extends AbstractDelegateValidateTask {
 
   @Override
   public List<String> getCriteria() {
-    K8sCommandRequest request = (K8sCommandRequest) getParameters()[0];
+    K8sTaskParameters request = (K8sTaskParameters) getParameters()[0];
     return singletonList(getCriteria(request.getK8sClusterConfig()));
   }
 

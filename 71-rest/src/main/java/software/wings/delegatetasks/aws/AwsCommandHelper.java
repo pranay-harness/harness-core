@@ -10,7 +10,7 @@ import software.wings.beans.AwsConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandExecutionContext;
 import software.wings.helpers.ext.k8s.request.K8sClusterConfig;
-import software.wings.helpers.ext.k8s.request.K8sCommandRequest;
+import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.settings.SettingValue;
 
 import java.util.List;
@@ -28,7 +28,7 @@ public class AwsCommandHelper {
     return emptyList();
   }
 
-  public List<String> getAwsConfigTagsFromK8sConfig(K8sCommandRequest request) {
+  public List<String> getAwsConfigTagsFromK8sConfig(K8sTaskParameters request) {
     if (request == null) {
       return emptyList();
     }
