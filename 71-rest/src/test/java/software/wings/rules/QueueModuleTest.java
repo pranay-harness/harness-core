@@ -5,13 +5,13 @@ import com.google.inject.TypeLiteral;
 
 import io.harness.mongo.MongoQueue;
 import io.harness.queue.Queue;
+import io.harness.queue.QueueListener;
 import io.harness.waiter.NotifyEvent;
 import software.wings.api.DeploymentEvent;
 import software.wings.api.InstanceChangeEvent;
 import software.wings.api.KmsTransitionEvent;
 import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.collect.CollectEvent;
-import software.wings.core.queue.AbstractQueueListener;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.notification.EmailNotificationListener;
 import software.wings.service.impl.DelayEvent;
@@ -33,11 +33,11 @@ public class QueueModuleTest extends AbstractModule {
     bind(new TypeLiteral<Queue<InstanceChangeEvent>>() {}).toInstance(new MongoQueue<>(InstanceChangeEvent.class, 60));
     bind(new TypeLiteral<Queue<DelayEvent>>() {}).toInstance(new MongoQueue<>(DelayEvent.class, 5, false));
 
-    bind(new TypeLiteral<AbstractQueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
-    bind(new TypeLiteral<AbstractQueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
-    bind(new TypeLiteral<AbstractQueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
-    bind(new TypeLiteral<AbstractQueueListener<KmsTransitionEvent>>() {}).to(KmsTransitionEventListener.class);
-    bind(new TypeLiteral<AbstractQueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
-    bind(new TypeLiteral<AbstractQueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
+    bind(new TypeLiteral<QueueListener<EmailData>>() {}).to(EmailNotificationListener.class);
+    bind(new TypeLiteral<QueueListener<CollectEvent>>() {}).to(ArtifactCollectEventListener.class);
+    bind(new TypeLiteral<QueueListener<NotifyEvent>>() {}).to(NotifyEventListener.class);
+    bind(new TypeLiteral<QueueListener<KmsTransitionEvent>>() {}).to(KmsTransitionEventListener.class);
+    bind(new TypeLiteral<QueueListener<ExecutionEvent>>() {}).to(ExecutionEventListener.class);
+    bind(new TypeLiteral<QueueListener<DelayEvent>>() {}).to(DelayEventListener.class);
   }
 }

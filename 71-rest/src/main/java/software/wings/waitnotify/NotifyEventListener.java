@@ -16,7 +16,9 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.task.protocol.ResponseData;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.persistence.HPersistence;
 import io.harness.persistence.ReadPref;
+import io.harness.queue.QueueListener;
 import io.harness.waiter.NotifyCallback;
 import io.harness.waiter.NotifyEvent;
 import io.harness.waiter.NotifyResponse;
@@ -28,8 +30,6 @@ import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.queue.AbstractQueueListener;
-import software.wings.dl.WingsPersistence;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -42,12 +42,12 @@ import java.util.Set;
  * Created by peeyushaggarwal on 4/13/16.
  */
 @Singleton
-public final class NotifyEventListener extends AbstractQueueListener<NotifyEvent> {
+public final class NotifyEventListener extends QueueListener<NotifyEvent> {
   private static final Logger logger = LoggerFactory.getLogger(NotifyEventListener.class);
 
   @Inject private Injector injector;
 
-  @Inject private WingsPersistence wingsPersistence;
+  @Inject private HPersistence wingsPersistence;
 
   @Inject private PersistentLocker persistentLocker;
 

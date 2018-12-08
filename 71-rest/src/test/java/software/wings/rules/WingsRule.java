@@ -61,6 +61,8 @@ import io.harness.mongo.MongoModule;
 import io.harness.mongo.NoDefaultConstructorMorphiaObjectFactory;
 import io.harness.mongo.QueryFactory;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueListener;
+import io.harness.queue.QueueListenerController;
 import io.harness.rule.BypassRuleMixin;
 import io.harness.rule.DistributedLockRuleMixin;
 import io.harness.rule.MongoRuleMixin;
@@ -88,8 +90,6 @@ import software.wings.app.TemplateModule;
 import software.wings.app.WingsApplication;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
-import software.wings.core.queue.AbstractQueueListener;
-import software.wings.core.queue.QueueListenerController;
 import software.wings.integration.BaseIntegrationTest;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.service.impl.EventEmitter;
@@ -370,7 +370,7 @@ public class WingsRule implements MethodRule, BypassRuleMixin, MongoRuleMixin, D
 
   private void registerListeners(java.util.Optional<Annotation> listenerOptional) {
     if (listenerOptional.isPresent()) {
-      for (Class<? extends AbstractQueueListener> queueListenerClass : ((Listeners) listenerOptional.get()).value()) {
+      for (Class<? extends QueueListener> queueListenerClass : ((Listeners) listenerOptional.get()).value()) {
         injector.getInstance(QueueListenerController.class).register(injector.getInstance(queueListenerClass), 1);
       }
     }

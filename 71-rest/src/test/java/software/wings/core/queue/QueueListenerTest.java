@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import io.harness.mongo.MongoQueue;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.Queue.Filter;
+import io.harness.queue.QueueListener;
 import io.harness.rule.RepeatRule.Repeat;
 import io.harness.version.VersionInfoManager;
 import org.junit.Before;
@@ -52,7 +53,7 @@ public class QueueListenerTest extends WingsBaseTest {
     listener.setQueue(queue);
     listener.setRunOnce(true);
     listener.setTimer(new ScheduledThreadPoolExecutor(1));
-    listener.setConfigurationController(new ConfigurationController(1));
+    listener.setQueueController(new ConfigurationController(1));
     listener = spy(listener);
   }
 
@@ -197,7 +198,7 @@ public class QueueListenerTest extends WingsBaseTest {
     verify(queue, times(0)).requeue(message);
   }
 
-  private static class QueuableObjectListener extends AbstractQueueListener<QueuableObject> {
+  private static class QueuableObjectListener extends QueueListener<QueuableObject> {
     private boolean throwException;
 
     /**

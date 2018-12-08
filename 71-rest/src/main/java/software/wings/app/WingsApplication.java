@@ -47,6 +47,8 @@ import io.harness.metrics.MetricRegistryModule;
 import io.harness.mongo.MongoModule;
 import io.harness.mongo.PersistenceMorphiaClasses;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueListener;
+import io.harness.queue.QueueListenerController;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.waiter.WaiterMorphiaClasses;
 import org.eclipse.jetty.server.Connector;
@@ -65,8 +67,6 @@ import software.wings.beans.ManagerMorphiaClasses;
 import software.wings.beans.User;
 import software.wings.common.Constants;
 import software.wings.core.managerConfiguration.ConfigurationController;
-import software.wings.core.queue.AbstractQueueListener;
-import software.wings.core.queue.QueueListenerController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.ConstraintViolationExceptionMapper;
 import software.wings.exception.GenericExceptionMapper;
@@ -404,8 +404,8 @@ public class WingsApplication extends Application<MainConfiguration> {
     Reflections reflections = new Reflections("software.wings");
 
     QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    Set<Class<? extends AbstractQueueListener>> queueListeners = reflections.getSubTypesOf(AbstractQueueListener.class);
-    for (Class<? extends AbstractQueueListener> queueListener : queueListeners) {
+    Set<Class<? extends QueueListener>> queueListeners = reflections.getSubTypesOf(QueueListener.class);
+    for (Class<? extends QueueListener> queueListener : queueListeners) {
       logger.info("Registering queue listener for queue {}", injector.getInstance(queueListener).getQueue().name());
       queueListenerController.register(injector.getInstance(queueListener), 5);
     }

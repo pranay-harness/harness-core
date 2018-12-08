@@ -182,7 +182,7 @@ public class KmsKeysRotationTest extends WingsBaseTest {
   private Thread startTransitionListener() {
     transitionEventListener = new KmsTransitionEventListener();
     Whitebox.setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
-    Whitebox.setInternalState(transitionEventListener, "configurationController", new ConfigurationController(1));
+    Whitebox.setInternalState(transitionEventListener, "queueController", new ConfigurationController(1));
     Whitebox.setInternalState(transitionEventListener, "queue", transitionKmsQueue);
     Whitebox.setInternalState(transitionEventListener, "secretManager", secretManager);
 
