@@ -11,6 +11,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 
 import io.dropwizard.lifecycle.Managed;
+import io.harness.queue.QueueController;
 import io.harness.version.VersionInfoManager;
 import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
@@ -26,7 +27,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Singleton
-public class ConfigurationController implements Managed {
+public class ConfigurationController implements Managed, QueueController {
   private static final Logger logger = LoggerFactory.getLogger(ConfigurationController.class);
   @Inject private WingsPersistence wingsPersistence;
   @Inject private VersionInfoManager versionInfoManager;

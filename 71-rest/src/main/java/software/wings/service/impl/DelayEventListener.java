@@ -2,12 +2,12 @@ package software.wings.service.impl;
 
 import com.google.inject.Inject;
 
+import io.harness.queue.QueueListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.queue.AbstractQueueListener;
 import software.wings.waitnotify.WaitNotifyEngine;
 
-public class DelayEventListener extends AbstractQueueListener<DelayEvent> {
+public class DelayEventListener extends QueueListener<DelayEvent> {
   private static final Logger logger = LoggerFactory.getLogger(DelayEventListener.class);
 
   @Inject private WaitNotifyEngine waitNotifyEngine;

@@ -1,4 +1,4 @@
-package software.wings.core.queue;
+package io.harness.queue;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
@@ -12,13 +12,10 @@ import com.google.inject.name.Named;
 
 import io.harness.exception.WingsException;
 import io.harness.logging.ExceptionLogger;
-import io.harness.queue.Queuable;
-import io.harness.queue.Queue;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import software.wings.core.managerConfiguration.ConfigurationController;
 
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,8 +23,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class AbstractQueueListener<T extends Queuable> implements Runnable {
-  private static final Logger logger = LoggerFactory.getLogger(AbstractQueueListener.class);
+public abstract class QueueListener<T extends Queuable> implements Runnable {
+  private static final Logger logger = LoggerFactory.getLogger(QueueListener.class);
 
   @Inject @Getter @Setter private Queue<T> queue;
 
@@ -37,9 +34,9 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
   private AtomicBoolean shouldStop = new AtomicBoolean(false);
 
   @Inject @Named("timer") @Setter private ScheduledExecutorService timer;
-  @Inject @Setter private ConfigurationController configurationController;
+  @Inject @Setter private QueueController queueController;
 
-  public AbstractQueueListener(boolean primaryOnly) {
+  public QueueListener(boolean primaryOnly) {
     this.primaryOnly = primaryOnly;
   }
 
@@ -53,7 +50,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
     Thread.currentThread().setName(threadName);
 
     do {
-      while (isMaintenance() || (primaryOnly && configurationController.isNotPrimary())) {
+      while (isMaintenance() || (primaryOnly && queueController.isNotPrimary())) {
         sleep(Duration.ofSeconds(1));
       }
 
@@ -131,7 +128,7 @@ public abstract class AbstractQueueListener<T extends Queuable> implements Runna
    * @param exception the exception
    * @param message   the message
    */
-  void onException(Exception exception, T message) {
+  public void onException(Exception exception, T message) {
     if (exception instanceof WingsException) {
       ExceptionLogger.logProcessedMessages((WingsException) exception, MANAGER, logger);
     } else {

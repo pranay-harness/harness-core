@@ -3133,7 +3133,7 @@ public class KmsTest extends WingsBaseTest {
   private Thread startTransitionListener() {
     transitionEventListener = new KmsTransitionEventListener();
     setInternalState(transitionEventListener, "timer", new ScheduledThreadPoolExecutor(1));
-    setInternalState(transitionEventListener, "configurationController", new ConfigurationController(1));
+    setInternalState(transitionEventListener, "queueController", new ConfigurationController(1));
     setInternalState(transitionEventListener, "queue", transitionKmsQueue);
     setInternalState(transitionEventListener, "secretManager", secretManager);
 

@@ -16,6 +16,7 @@ import io.harness.limits.configuration.LimitConfigurationServiceMongo;
 import io.harness.limits.defaults.service.DefaultLimitsService;
 import io.harness.limits.defaults.service.DefaultLimitsServiceImpl;
 import io.harness.persistence.HPersistence;
+import io.harness.queue.QueueController;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.time.TimeModule;
 import io.harness.version.VersionModule;
@@ -47,6 +48,7 @@ import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.cloudprovider.gke.KubernetesContainerService;
 import software.wings.cloudprovider.gke.KubernetesContainerServiceImpl;
 import software.wings.common.WingsExpressionProcessorFactory;
+import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.dl.exportimport.WingsMongoExportImport;
@@ -380,6 +382,7 @@ public class WingsModule extends DependencyModule {
   protected void configure() {
     bind(AuthService.class).to(AuthServiceImpl.class);
     bind(MainConfiguration.class).toInstance(configuration);
+    bind(QueueController.class).to(ConfigurationController.class);
     bind(HPersistence.class).to(WingsMongoPersistence.class);
     bind(WingsPersistence.class).to(WingsMongoPersistence.class);
     bind(AppService.class).to(AppServiceImpl.class);
@@ -435,7 +438,6 @@ public class WingsModule extends DependencyModule {
     bind(SlackNotificationService.class).to(SlackNotificationServiceImpl.class);
     bind(EcsContainerService.class).to(EcsContainerServiceImpl.class);
     bind(AwsClusterService.class).to(AwsClusterServiceImpl.class);
-
     bind(GkeClusterService.class).to(GkeClusterServiceImpl.class);
     bind(KubernetesContainerService.class).to(KubernetesContainerServiceImpl.class);
     bind(InfrastructureMappingService.class).to(InfrastructureMappingServiceImpl.class);

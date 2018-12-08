@@ -12,6 +12,7 @@ import com.google.inject.Singleton;
 
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
+import io.harness.queue.QueueListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import software.wings.beans.AwsConfig;
@@ -33,7 +34,6 @@ import software.wings.beans.artifact.JenkinsArtifactStream;
 import software.wings.beans.artifact.NexusArtifactStream;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.NexusConfig;
-import software.wings.core.queue.AbstractQueueListener;
 import software.wings.service.impl.EventEmitter;
 import software.wings.service.impl.EventEmitter.Channel;
 import software.wings.service.intfc.AppService;
@@ -51,7 +51,7 @@ import software.wings.waitnotify.WaitNotifyEngine;
  * @see CollectEvent
  */
 @Singleton
-public class ArtifactCollectEventListener extends AbstractQueueListener<CollectEvent> {
+public class ArtifactCollectEventListener extends QueueListener<CollectEvent> {
   private static final Logger logger = LoggerFactory.getLogger(ArtifactCollectEventListener.class);
 
   @Inject private AppService appService;
@@ -68,7 +68,7 @@ public class ArtifactCollectEventListener extends AbstractQueueListener<CollectE
   }
 
   /* (non-Javadoc)
-   * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
+   * @see software.wings.core.queue.QueueListener#onMessage(software.wings.core.queue.Queuable)
    */
   @Override
   protected void onMessage(CollectEvent message) {

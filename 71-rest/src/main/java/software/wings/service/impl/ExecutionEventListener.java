@@ -16,6 +16,7 @@ import com.google.inject.Inject;
 import io.harness.beans.ExecutionStatus;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
+import io.harness.queue.QueueListener;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -27,14 +28,13 @@ import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowExecution;
-import software.wings.core.queue.AbstractQueueListener;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.sm.StateMachineExecutor;
 
 import java.time.Duration;
 
-public class ExecutionEventListener extends AbstractQueueListener<ExecutionEvent> {
+public class ExecutionEventListener extends QueueListener<ExecutionEvent> {
   private static final Logger logger = LoggerFactory.getLogger(ExecutionEventListener.class);
 
   @Inject private WingsPersistence wingsPersistence;

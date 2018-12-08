@@ -1,6 +1,6 @@
 package software.wings.rules;
 
-import software.wings.core.queue.AbstractQueueListener;
+import io.harness.queue.QueueListener;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -18,5 +18,5 @@ public @interface Listeners {
    *
    * @return the class<? extends abstract queue listener>[]
    */
-  Class<? extends AbstractQueueListener>[] value() default {};
+  Class<? extends QueueListener>[] value() default {};
 }

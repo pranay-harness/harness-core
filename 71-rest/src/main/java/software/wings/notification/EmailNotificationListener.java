@@ -2,7 +2,7 @@ package software.wings.notification;
 
 import com.google.inject.Inject;
 
-import software.wings.core.queue.AbstractQueueListener;
+import io.harness.queue.QueueListener;
 import software.wings.helpers.ext.mail.EmailData;
 import software.wings.service.intfc.EmailNotificationService;
 
@@ -11,7 +11,7 @@ import software.wings.service.intfc.EmailNotificationService;
  *
  * @see EmailData
  */
-public class EmailNotificationListener extends AbstractQueueListener<EmailData> {
+public class EmailNotificationListener extends QueueListener<EmailData> {
   @Inject private EmailNotificationService emailNotificationService;
 
   public EmailNotificationListener() {
@@ -19,7 +19,7 @@ public class EmailNotificationListener extends AbstractQueueListener<EmailData> 
   }
 
   /* (non-Javadoc)
-   * @see software.wings.core.queue.AbstractQueueListener#onMessage(software.wings.core.queue.Queuable)
+   * @see software.wings.core.queue.QueueListener#onMessage(software.wings.core.queue.Queuable)
    */
   @Override
   protected void onMessage(EmailData message) {

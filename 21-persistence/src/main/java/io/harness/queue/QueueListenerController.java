@@ -1,4 +1,4 @@
-package software.wings.core.queue;
+package io.harness.queue;
 
 import com.google.inject.Singleton;
 
@@ -17,9 +17,9 @@ import java.util.stream.IntStream;
 @Singleton
 public class QueueListenerController implements Managed {
   private ExecutorService executorService = Executors.newCachedThreadPool();
-  private List<AbstractQueueListener<?>> abstractQueueListeners = new ArrayList<>();
+  private List<QueueListener<?>> abstractQueueListeners = new ArrayList<>();
 
-  public void register(AbstractQueueListener<?> listener, int threads) {
+  public void register(QueueListener<?> listener, int threads) {
     IntStream.rangeClosed(1, threads).forEach(value -> {
       abstractQueueListeners.add(listener);
       executorService.submit(listener);
@@ -39,7 +39,7 @@ public class QueueListenerController implements Managed {
    */
   @Override
   public void stop() throws Exception {
-    abstractQueueListeners.forEach(AbstractQueueListener::shutDown);
+    abstractQueueListeners.forEach(QueueListener::shutDown);
     executorService.shutdownNow();
     executorService.awaitTermination(1, TimeUnit.HOURS);
   }
