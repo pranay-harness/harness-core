@@ -56,6 +56,7 @@ import software.wings.service.intfc.UserService;
 import software.wings.utils.CacheHelper;
 
 import java.net.URISyntaxException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -141,25 +142,9 @@ public class UserResource {
     Account account = accountService.get(accountId);
     pageRequest.addFilter("accounts", Operator.HAS, account);
     PageResponse<User> pageResponse = userService.list(pageRequest);
-    if (isNotEmpty(pageResponse)) {
-      pageResponse.forEach(user -> {
-        int i = 0;
-        while (i < user.getAccounts().size()) {
-          if (!accountId.equals(user.getAccounts().get(i).getUuid())) {
-            user.getAccounts().remove(i);
-          } else {
-            i++;
-          }
-        }
-        i = 0;
-        while (i < user.getRoles().size()) {
-          if (!accountId.equals(user.getRoles().get(i).getAccountId())) {
-            user.getRoles().remove(i);
-          } else {
-            i++;
-          }
-        }
-      });
+    List<User> userList = pageResponse.getResponse();
+    if (isNotEmpty(userList)) {
+      userList.forEach(user -> user.setAccounts(Arrays.asList(account)));
     }
     return getPublicUsers(pageResponse);
   }
