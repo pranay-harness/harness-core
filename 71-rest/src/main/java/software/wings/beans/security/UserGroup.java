@@ -11,7 +11,11 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.NotEmpty;
 import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Field;
+import org.mongodb.morphia.annotations.Index;
+import org.mongodb.morphia.annotations.IndexOptions;
 import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Indexes;
 import org.mongodb.morphia.annotations.Transient;
 import software.wings.beans.Base;
 import software.wings.beans.User;
@@ -30,6 +34,9 @@ import java.util.Set;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @NoArgsConstructor
+@Indexes(@Index(fields = { @Field("accountId")
+                           , @Field("memberIds") },
+    options = @IndexOptions(name = "accountAndMemberIds", background = true)))
 public class UserGroup extends Base {
   public static final String MEMBER_IDS_KEY = "memberIds";
   public static final String NAME_KEY = "name";
